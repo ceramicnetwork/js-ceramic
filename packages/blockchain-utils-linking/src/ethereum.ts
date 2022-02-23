@@ -1,8 +1,10 @@
 import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
+import { CapabilityOpts, encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
+import type { StreamID } from '@ceramicnetwork/streamid'
+import { randomString } from '@stablelib/random'
 import { Cacao, SiweMessage } from 'ceramic-cacao'
 
 const ADDRESS_TYPES = {
@@ -61,10 +63,40 @@ export class EthereumAuthProvider implements AuthProvider {
     return createLink(did, accountId, this.provider, this.opts)
   }
 
-  async requestCapability(siweMessage: SiweMessage): Promise<Cacao> {
+  async requestCapability(
+    sessionDID: string,
+    streams: Array<StreamID | string>,
+    opts: CapabilityOpts
+  ): Promise<Cacao> {
     console.warn(
       'WARN: requestCapability os an experimental API, that is subject to change any time.'
     )
+
+    const domain = typeof window !== 'undefined' ? window.location.hostname : opts.domain
+    if (!domain) throw new Error("Missing parameter 'domain'")
+
+    // NOTE: To allow proper customization of the expiry date, we need a solid library to represent
+    // time durations that includes edge cases. We should not try dealing with timestamps ourselves.
+    const now = new Date()
+    const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+    const siweMessage = new SiweMessage({
+      domain: domain,
+      address: this.address,
+      statement: opts.statement
+        ? opts.statement
+        : 'Give this application access to some of your data on Ceramic',
+      uri: sessionDID,
+      version: opts.version ? opts.version : '1',
+      nonce: opts.nonce ? opts.nonce : randomString(10),
+      issuedAt: now.toISOString(),
+      expirationTime: oneWeekLater.toISOString(),
+      chainId: (await this.accountId()).chainId.toString(),
+      resources: streams.map((s) => (typeof s === 'string' ? s : s.toUrl())),
+    })
+
+    if (opts.requestId) siweMessage.requestId = opts.requestId
+
     const account = await this.accountId()
     const signature = await safeSend(this.provider, 'personal_sign', [
       siweMessage.signMessage(),

@@ -238,18 +238,13 @@ describe('Ocap', () => {
       'tile',
       'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
     )
-    const siweMessage = new SiweMessage({
-      domain: 'service.org',
-      address: address,
-      statement: 'I accept the ServiceOrg Terms of Service: https://service.org/tos',
-      uri: 'did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8',
-      version: '1',
-      nonce: '32891757',
-      issuedAt: '2021-09-30T16:25:24.000Z',
-      chainId: '1',
-      resources: [streamId.toUrl()],
-    })
 
-    await expect(auth.requestCapability(siweMessage)).resolves.toMatchSnapshot()
+    await expect(
+      auth.requestCapability(
+        'did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8',
+        [streamId],
+        { domain: 'https://service.org/' }
+      )
+    ).resolves.toMatchSnapshot()
   })
 })

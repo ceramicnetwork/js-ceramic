@@ -23,18 +23,19 @@ Object {
   },
   "p": Object {
     "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
-    "domain": "service.org",
-    "iat": "2021-09-30T16:25:24.000Z",
-    "iss": "did:pkh:eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69",
-    "nonce": "32891757",
+    "domain": "https://service.org/",
+    "exp": "2018-10-08T00:00:00.000Z",
+    "iat": "2018-10-01T00:00:00.000Z",
+    "iss": "did:pkh:eip155:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
+    "nonce": "8188hq9AQg",
     "resources": Array [
       "ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s",
     ],
-    "statement": "I accept the ServiceOrg Terms of Service: https://service.org/tos",
+    "statement": "Give this application access to some of your data on Ceramic",
     "version": "1",
   },
   "s": Object {
-    "s": "0x36d2299b04d4c93e8b1717611431b4a128ad385458c46545b05277aa2284515210dfb5b134d46d99aea01050a447ca0b42fc5012525b0b2520f711a67914cec21c",
+    "s": "0x2fa4f567f8e274f0cb3d70c4fb3f17b49a6ab55c07ba1732c4b26a8fd609c0b6089f1298c4359c0604cfc227d0598afac6d7d5e12732b49ac864e2c0cd7186791b",
   },
 }
 `;

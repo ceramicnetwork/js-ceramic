@@ -22,6 +22,14 @@ export interface ConsentMessage {
   timestamp?: number
 }
 
+export interface CapabilityOpts {
+  domain?: string
+  statement?: string
+  version?: string
+  nonce?: string
+  requestId?: string
+}
+
 export function getConsentMessage(did: string, addTimestamp = true): ConsentMessage {
   const res: any = {
     message: 'Link this account to your identity' + '\n\n' + did,
