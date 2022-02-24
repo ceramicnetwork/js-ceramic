@@ -117,6 +117,8 @@ export class Utils {
     if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
     const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
     let mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
+    // The try catch behaviour of the js-ipfs-http-client was causing timing issues (socket hangup)
+    // https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-http-client/src/block/put.js#L34
     if (mhtype === 'dag-cbor') mhtype = 'cbor'
     else if (mhtype === 'dag-pb') mhtype = 'protobuf'
     const version = cid.version
