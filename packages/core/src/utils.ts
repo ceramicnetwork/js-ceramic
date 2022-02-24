@@ -116,7 +116,9 @@ export class Utils {
   ) {
     if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
     const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
-    const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
+    let mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
+    if (mhtype === 'dag-cbor') mhtype = 'cbor'
+    else if (mhtype === 'dag-pb') mhtype = 'protobuf'
     const version = cid.version
     await ipfsApi.block.put(block, { format, mhtype, version, signal })
   }
