@@ -116,10 +116,12 @@ export class Utils {
   ) {
     if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
     let format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
-    // The try catch behaviour of the js-ipfs-http-client was causing timing issues (socket hangup)
-    // https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-http-client/src/block/put.js#L34
-    if (format === 'dag-cbor') format = 'cbor'
-    else if (format === 'dag-pb') format = 'protobuf'
+    if (!ipfsApi.libp2p) {
+      // The try catch behaviour of the js-ipfs-http-client was causing timing issues (socket hangup)
+      // https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-http-client/src/block/put.js#L34
+      if (format === 'dag-cbor') format = 'cbor'
+      else if (format === 'dag-pb') format = 'protobuf'
+    }
     const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
     const version = cid.version
     await ipfsApi.block.put(block, { format, mhtype, version, signal })
