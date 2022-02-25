@@ -119,6 +119,8 @@ export class Utils {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     if (!ipfsApi.libp2p) {
+      // go-ipfs uses different names for codecs, we want to use the correct ones from js-ipfs-http-client
+      // If we are running in proc js-ipfs we should not be inside of this conditional.
       // The try catch behaviour of the js-ipfs-http-client was causing timing issues (socket hangup)
       // https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-http-client/src/block/put.js#L34
       if (format === 'dag-cbor') format = 'cbor'
