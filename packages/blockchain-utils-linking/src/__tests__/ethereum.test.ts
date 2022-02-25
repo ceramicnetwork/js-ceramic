@@ -241,7 +241,11 @@ describe('Ocap', () => {
       auth.requestCapability(
         'did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8',
         [streamId],
-        { domain: 'https://service.org/', nonce: '12345' }
+        {
+          domain: 'https://service.org/',
+          nonce: '12345',
+          resources: ['ipfs://ABCDEF', 'ar://1234'],
+        }
       )
     ).resolves.toMatchSnapshot()
   })

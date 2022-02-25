@@ -28,6 +28,8 @@ export interface CapabilityOpts {
   version?: string
   nonce?: string
   requestId?: string
+  expirationTime?: string
+  resources?: Array<string>
 }
 
 export function getConsentMessage(did: string, addTimestamp = true): ConsentMessage {

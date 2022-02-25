@@ -29,13 +29,15 @@ Object {
     "iss": "did:pkh:eip155:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
     "nonce": "12345",
     "resources": Array [
+      "ipfs://ABCDEF",
+      "ar://1234",
       "ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s",
     ],
     "statement": "Give this application access to some of your data on Ceramic",
     "version": "1",
   },
   "s": Object {
-    "s": "0x3d8a0f7e9f9941d1e676df237a20173a4d5dd3be73c58796dcfd4d134e17660b225e455a315525040930e710c39d9226bb59e8425df157647ead0528948704801b",
+    "s": "0x9f86a548a375085333581e24e1bf8e5f24c57c7d2db1080f101d1639d9802db876c8c5afd06bdb373efee23a7bdeb0f25d200189edfeab7018ad3a8cbea9028e1c",
   },
 }
 `;
