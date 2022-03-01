@@ -1,6 +1,6 @@
 import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider.js'
-import { getConsentMessage, LinkProof } from './util.js'
+import { getConsentMessage, LinkProof, asOldCaipString } from './util.js'
 import type { Tx, SignMeta } from '@tendermint/sig'
 import { hash } from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
@@ -71,7 +71,7 @@ export class CosmosAuthProvider implements AuthProvider {
       version: 2,
       message,
       signature,
-      account: accountID.toString(),
+      account: asOldCaipString(accountID),
       timestamp,
     }
   }

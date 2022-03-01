@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { Ceramic, CeramicConfig } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
@@ -35,7 +34,6 @@ const generateStringOfSize = (size): string => {
 }
 
 describe('Ceramic API', () => {
-  jest.setTimeout(60000)
   let ipfs: IpfsApi
 
   const stringMapSchema = {
@@ -322,7 +320,7 @@ describe('Ceramic API', () => {
     afterAll(async () => {
       await ceramic.close()
       await tmpFolder.cleanup()
-    })
+    }, 120000)
 
     it('can load linked stream path, returns expected form', async () => {
       const streams = await ceramic._loadLinkedStreams(
@@ -522,6 +520,6 @@ describe('Ceramic API', () => {
       expect(states[1]).toEqual(streamFStates[1])
       expect(states[2]).toEqual(streamFStates[2])
       expect(states[3]).toEqual(streamF.state)
-    })
+    }, 60000)
   })
 })

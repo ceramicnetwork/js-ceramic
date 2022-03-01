@@ -4,7 +4,7 @@ exports[`Blockchain: Cosmos authenticate create proof for cosmoshub3 1`] = `"0x3
 
 exports[`Blockchain: Cosmos createLink create proof for cosmoshub3 1`] = `
 Object {
-  "account": "cosmos:cosmoshub-3:cosmos1gs6gu0w9xvqcfhm3nlhnmqkf8aphnsxyjlgpqd",
+  "account": "cosmos1gs6gu0w9xvqcfhm3nlhnmqkf8aphnsxyjlgpqd@cosmos:cosmoshub-3",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 

@@ -1,6 +1,6 @@
 import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { getConsentMessage, LinkProof } from './util.js'
+import { asOldCaipString, getConsentMessage, LinkProof } from './util.js'
 import { normalizeAccountId } from './ethereum.js'
 import * as sha256Stable from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
@@ -37,7 +37,7 @@ export class EosioAuthProvider implements AuthProvider {
       type: 'eosio',
       message: consentMessage.message,
       signature: signedPayload,
-      account: accountID.toString(),
+      account: asOldCaipString(accountID),
       timestamp: consentMessage.timestamp,
     }
   }

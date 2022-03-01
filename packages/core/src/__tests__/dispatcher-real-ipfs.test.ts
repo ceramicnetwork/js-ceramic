@@ -1,16 +1,17 @@
 import { jest } from '@jest/globals'
-import { Dispatcher } from '../dispatcher'
-import CID from 'cids'
+import { Dispatcher } from '../dispatcher.js'
+import { CID } from 'multiformats/cid'
 import { LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { Repository, RepositoryDependencies } from '../state-management/repository'
+import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store'
-import { PinStore } from '../store/pin-store'
+import { LevelStateStore } from '../store/level-state-store.js'
+import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { TaskQueue } from '../pubsub/task-queue'
+import { TaskQueue } from '../pubsub/task-queue.js'
+import { delay } from './delay.js'
 
 const TOPIC = '/ceramic'
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 30)
@@ -71,8 +72,9 @@ describe('Dispatcher with real ipfs over http', () => {
   it('retries on timeout', async () => {
     const ipfsGetSpy = jest.spyOn(ipfsClient.dag, 'get')
 
-    // try to load a CID that ipfs doesn't know about.  It will timeout
-    await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/context deadline exceeded/)
+    // try to load a CID that ipfs doesn't know about.  It will timeout.
+    // Timeout error message is different depending on if we are talking to a go-ipfs or js-ipfs instance
+    await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/(context deadline exceeded|request timed out)/)
 
     // Make sure we tried 3 times to get the cid from ipfs, not just once
     expect(ipfsGetSpy).toBeCalledTimes(3)
@@ -86,7 +88,13 @@ describe('Dispatcher with real ipfs over http', () => {
     // shutdownController successfully interrupted waiting on IPFS.
 
     const getPromise = dispatcher.retrieveCommit(FAKE_CID)
+    // Apparently, js-ipfs does not react on already triggered AbortSignal.
+    // So we have to add a timeout to make sure an ipfs function is called before the signal is triggered.
+    const isJsIpfsNode = Boolean((ipfsClient as any).preload) // Exists on js-ipfs node, and is not present on ipfs-http-client.
+    if (isJsIpfsNode) {
+      await delay(1000)
+    }
     shutdownController.abort()
-    await expect(getPromise).rejects.toThrow(/The user aborted a request/)
-  }, 5000)
+    await expect(getPromise).rejects.toThrow(/aborted/)
+  }, 50000)
 })

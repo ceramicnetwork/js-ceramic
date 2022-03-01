@@ -5,17 +5,32 @@ import * as ipfsClient from 'ipfs-http-client'
 import { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
 import { IpfsMode } from './daemon-config.js'
 import { path } from 'go-ipfs'
+import * as http from 'http'
+import * as https from 'https'
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
+const ipfsHttpAgent = (ipfsEndpoint: string) => {
+  const agentOptions = {
+    keepAlive: false,
+    maxSockets: Infinity
+  }
+  if (ipfsEndpoint.startsWith('https')) {
+    return new https.Agent(agentOptions)
+  } else {
+    return new http.Agent(agentOptions)
+  }
+}
+
 const ipfsHttpModule = {
   create: (ipfsEndpoint: string) => {
     return ipfsClient.create({
       url: ipfsEndpoint,
       ipld: { codecs: [dagJose] },
+      agent: ipfsHttpAgent(ipfsEndpoint)
     })
   },
 }
@@ -30,6 +45,7 @@ export async function buildIpfsConnection(
       url: ipfsEndpoint,
       ipld: { codecs: [dagJose] },
       timeout: IPFS_GET_TIMEOUT,
+      agent: ipfsHttpAgent(ipfsEndpoint)
     })
   } else {
     return createGoIPFS()

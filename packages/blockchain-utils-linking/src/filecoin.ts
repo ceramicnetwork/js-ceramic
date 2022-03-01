@@ -1,6 +1,6 @@
 import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { getConsentMessage, LinkProof } from './util.js'
+import { asOldCaipString, getConsentMessage, LinkProof } from './util.js'
 import type { MessageParams } from '@zondax/filecoin-signing-tools'
 import * as uint8arrays from 'uint8arrays'
 
@@ -31,7 +31,7 @@ export class FilecoinAuthProvider implements AuthProvider {
       type: 'eoa-tx',
       message: message,
       signature: signatureResponse.Signature.Data,
-      account: accountId.toString(),
+      account: asOldCaipString(accountId),
       timestamp: timestamp,
     }
   }

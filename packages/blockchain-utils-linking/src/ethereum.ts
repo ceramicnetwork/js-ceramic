@@ -1,6 +1,12 @@
 import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { CapabilityOpts, encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
+import {
+  CapabilityOpts,
+  asOldCaipString,
+  encodeRpcMessage,
+  getConsentMessage,
+  LinkProof,
+} from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -189,7 +195,7 @@ async function createEthLink(
     type: ADDRESS_TYPES.ethereumEOA,
     message,
     signature,
-    account: account.toString(),
+    account: asOldCaipString(account),
   }
   if (!opts.skipTimestamp) proof.timestamp = timestamp
   return proof
@@ -215,7 +221,7 @@ async function createErc1271Link(
   await validateChainId(account, provider)
   return Object.assign(res, {
     type: ADDRESS_TYPES.erc1271,
-    account: account.toString(),
+    account: asOldCaipString(account),
   })
 }
 

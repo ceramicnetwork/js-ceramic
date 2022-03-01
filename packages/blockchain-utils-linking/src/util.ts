@@ -1,3 +1,5 @@
+import type { AccountId } from "caip"
+
 export interface LinkProof {
   version: number
   message: string
@@ -50,4 +52,8 @@ export function encodeRpcMessage(method: string, params?: any): any {
     method,
     params,
   }
+}
+
+export function asOldCaipString(input: AccountId): string {
+  return `${input.address}@${input.chainId.namespace}:${input.chainId.reference}`
 }

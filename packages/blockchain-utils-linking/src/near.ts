@@ -1,6 +1,6 @@
 import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider.js'
-import { getConsentMessage, LinkProof } from './util.js'
+import { asOldCaipString, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as nearApiJs from 'near-api-js'
 import * as sha256 from '@stablelib/sha256'
@@ -43,7 +43,7 @@ export class NearAuthProvider implements AuthProvider {
       type: 'near',
       message,
       signature,
-      account: account.toString(),
+      account: asOldCaipString(account),
       timestamp,
     }
   }

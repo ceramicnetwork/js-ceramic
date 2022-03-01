@@ -7,6 +7,7 @@ import * as providers from '@ethersproject/providers'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { proofs } from './fixtures.js'
 import type { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -125,7 +126,7 @@ test('validateLink: valid ethereumEOA proof with legacy account should return pr
   const authProvider = new linking.ethereum.EthereumAuthProvider(provider, addresses[0])
   const proof = await authProvider.createLink(testDid)
   const proofCopy = { ...proof }
-  const accountId = new AccountId(proof.account)
+  const accountId = normalizeAccountId(proof.account)
   proofCopy.account = `${accountId.address}@${accountId.chainId}`
   await expect(ethereum.validateLink(proofCopy)).resolves.toEqual(proof)
 })
