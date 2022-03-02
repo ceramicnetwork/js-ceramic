@@ -13,12 +13,12 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
-const ipfsHttpAgent = (ipfsEndpoint: string) => {
+const ipfsHttpAgent = (ipfsEndpoint: string | ipfsClient.multiaddr) => {
   const agentOptions = {
     keepAlive: false,
     maxSockets: Infinity
   }
-  if (ipfsEndpoint.startsWith('https')) {
+  if (typeof ipfsEndpoint === 'string' && ipfsEndpoint.startsWith('https')) {
     return new https.Agent(agentOptions)
   } else {
     return new http.Agent(agentOptions)
