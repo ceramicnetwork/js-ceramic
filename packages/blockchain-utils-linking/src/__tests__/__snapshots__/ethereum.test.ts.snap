@@ -19,14 +19,14 @@ Timestamp: 1538352000",
 exports[`Ocap requestCapability 1`] = `
 Object {
   "h": Object {
-    "t": "eip4361-eip191",
+    "t": "eip4361",
   },
   "p": Object {
     "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
     "domain": "https://service.org/",
     "exp": "2018-10-08T00:00:00.000Z",
     "iat": "2018-10-01T00:00:00.000Z",
-    "iss": "did:pkh:eip155:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
+    "iss": "did:pkh:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
     "nonce": "12345",
     "resources": Array [
       "ipfs://ABCDEF",
@@ -37,7 +37,8 @@ Object {
     "version": "1",
   },
   "s": Object {
-    "s": "0x9f86a548a375085333581e24e1bf8e5f24c57c7d2db1080f101d1639d9802db876c8c5afd06bdb373efee23a7bdeb0f25d200189edfeab7018ad3a8cbea9028e1c",
+    "s": "0xbcfd6b109fdc12db2b8b86865e1f6085f77160549d887a65b8c521c0b162ee7f774eda09de2728dbd25dc3e5700588be3a3ef737e29a8c6b1441297fed9f34bf1b",
+    "t": "eip191",
   },
 }
 `;
