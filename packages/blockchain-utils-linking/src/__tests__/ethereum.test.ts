@@ -6,7 +6,6 @@ import { Contract, ContractFactory } from '@ethersproject/contracts'
 import * as sigUtils from 'eth-sig-util'
 import MockDate from 'mockdate'
 import * as ethereum from '../ethereum.js'
-import { OcapParams, OcapTypes } from '../ocap-util.js'
 import { encodeRpcMessage } from '../util.js'
 
 const CONTRACT_WALLET_ABI = [
@@ -237,17 +236,17 @@ describe('Ocap', () => {
       'tile',
       'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
     )
-    const fixedDate = new Date('2021-10-14T07:18:41Z')
-    const ocapParams: OcapParams = {
-      type: OcapTypes.EIP4361,
-      did: `did:pkh:eip155:1:${address}`,
-      streams: [streamId],
-      domain: 'self.id',
-      statement: 'Give this app access to your streams',
-      nonce: '12345678',
-      issuedAt: fixedDate.toISOString(),
-    }
 
-    await expect(auth.requestCapability(ocapParams)).resolves.toMatchSnapshot()
+    await expect(
+      auth.requestCapability(
+        'did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8',
+        [streamId],
+        {
+          domain: 'https://service.org/',
+          nonce: '12345',
+          resources: ['ipfs://ABCDEF', 'ar://1234'],
+        }
+      )
+    ).resolves.toMatchSnapshot()
   })
 })

@@ -3,6 +3,7 @@ import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-uti
 import { InMemorySigner } from '@taquito/signer'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { AccountId, ChainId } from 'caip'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
@@ -113,7 +114,7 @@ beforeAll(async () => {
 
   invalidSignatureProof = { ...validProof, signature: 'invalid' }
 
-  const accountId = AccountId.parse(validProof.account)
+  const accountId = normalizeAccountId(validProof.account)
   const chainId = new ChainId(accountId.chainId)
   const invalidAccount = new AccountId({
     address: accountId.address,
