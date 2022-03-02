@@ -95,7 +95,7 @@ export class EthereumAuthProvider implements AuthProvider {
       nonce: opts.nonce ?? randomString(10),
       issuedAt: now.toISOString(),
       expirationTime: opts.expirationTime ?? oneWeekLater.toISOString(),
-      chainId: (await this.accountId()).chainId.toString(),
+      chainId: (await this.accountId()).chainId.reference,
       resources: (opts.resources ?? []).concat(
         streams.map((s) => (typeof s === 'string' ? StreamID.fromString(s) : s).toUrl())
       ),
