@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.2...@ceramicnetwork/core@2.0.0-alpha.3) (2022-03-03)
+
+
+### Bug Fixes
+
+* **core:** Re-enable dispatcher-real-ipfs.test.ts ([#2037](https://github.com/ceramicnetwork/js-ceramic/issues/2037)) ([d06392d](https://github.com/ceramicnetwork/js-ceramic/commit/d06392da6e5fc618501240d9bbad25c2a4f778cd))
+* revert `format` changes and set `keepalive: false` in HTTP(S) agent to IPFS ([#2065](https://github.com/ceramicnetwork/js-ceramic/issues/2065)) ([b0b5e70](https://github.com/ceramicnetwork/js-ceramic/commit/b0b5e701b569d746b9b8e68ac973d4e705f78af5))
+* socket hangup bug ([#2061](https://github.com/ceramicnetwork/js-ceramic/issues/2061)) ([3147fb7](https://github.com/ceramicnetwork/js-ceramic/commit/3147fb7749b08e216cf31c2bcea55693868f4cf2))
+* typo in block.put() API call updates ([9d0e286](https://github.com/ceramicnetwork/js-ceramic/commit/9d0e286913730d90c40e00ed2fafd0726db24672))
+
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
 # [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.1...@ceramicnetwork/core@2.0.0-alpha.2) (2022-02-10)
 
 
