@@ -68,7 +68,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
     if (chainId != provider_chain) {
       throw new Error(
-        `Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`
+        `Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${chainId}`
       )
     }
     this._chainId = chainId
