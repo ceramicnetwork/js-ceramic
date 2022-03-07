@@ -19,18 +19,17 @@ const telosTestnetProvider = new EOSIOProvider({
       '5KFFFvKioakMpt8zWnyGKnLaDzzUSqy5V33PHHoxEam47pLJmo2',
   },
 })
-// TODO(NET-1238) Recover testing with Jungle EOS network
-// const jungleChainId = '2a02a0053e5a8cf73a56ba0fda11e4d92e0238a4a2aa74fccf46d5a910746840'
-// const jungleCAIPChainId = '2a02a0053e5a8cf73a56ba0fda11e4d9'
-// const jungleAccount = 'idx3idctest1'
-// const jungleProvider = new EOSIOProvider({
-//   chainId: jungleChainId,
-//   account: jungleAccount,
-//   keys: {
-//     EOS7f7hdusWKXY1cymDLvUL3m6rTLKmdyPi4e6kquSnmfVxxEwVcC:
-//       '5JRzDcbMqvTJxjHeP8vZqZbU9PwvaaTsoQhoVTAs3xBVSZaPB9U',
-//   },
-// })
+const jungleChainId = '2a02a0053e5a8cf73a56ba0fda11e4d92e0238a4a2aa74fccf46d5a910746840'
+const jungleCAIPChainId = '2a02a0053e5a8cf73a56ba0fda11e4d9'
+const jungleAccount = 'idx3idctest1'
+const jungleProvider = new EOSIOProvider({
+  chainId: jungleChainId,
+  account: jungleAccount,
+  keys: {
+    EOS7f7hdusWKXY1cymDLvUL3m6rTLKmdyPi4e6kquSnmfVxxEwVcC:
+      '5JRzDcbMqvTJxjHeP8vZqZbU9PwvaaTsoQhoVTAs3xBVSZaPB9U',
+  },
+})
 
 describe('validateLink', () => {
   test('Telos testnet', async () => {
@@ -58,23 +57,23 @@ describe('validateLink', () => {
   })
 
   // TODO(NET-1238) Recover testing with Jungle EOS network
-  // test('Jungle', async () => {
-  //   const authProvider = new linking.eosio.EosioAuthProvider(jungleProvider, jungleAccount)
-  //   const proof = await authProvider.createLink(did)
-  //   await expect(validateLink(proof)).resolves.toEqual(proof)
-  //
-  //   let testAccount = new AccountId(`eosio:${telosTestnetCAIPChainId}:${telosTestnetAccount}`)
-  //   proof.account = testAccount.toString()
-  //   await expect(validateLink(proof)).resolves.toEqual(null)
-  //
-  //   testAccount = new AccountId(`eosio:${jungleCAIPChainId}:${telosTestnetAccount}`)
-  //   proof.account = testAccount.toString()
-  //   await expect(validateLink(proof)).resolves.toEqual(null)
-  //
-  //   testAccount = new AccountId(`eosio:${invalidCAIPChainId}:${telosTestnetAccount}`)
-  //   proof.account = testAccount.toString()
-  //   await expect(validateLink(proof)).rejects.toThrow(
-  //     `No node found for chainId: ${invalidCAIPChainId}`
-  //   )
-  // })
+  test.skip('Jungle', async () => {
+    const authProvider = new linking.eosio.EosioAuthProvider(jungleProvider, jungleAccount)
+    const proof = await authProvider.createLink(did)
+    await expect(validateLink(proof)).resolves.toEqual(proof)
+
+    let testAccount = new AccountId(`eosio:${telosTestnetCAIPChainId}:${telosTestnetAccount}`)
+    proof.account = testAccount.toString()
+    await expect(validateLink(proof)).resolves.toEqual(null)
+
+    testAccount = new AccountId(`eosio:${jungleCAIPChainId}:${telosTestnetAccount}`)
+    proof.account = testAccount.toString()
+    await expect(validateLink(proof)).resolves.toEqual(null)
+
+    testAccount = new AccountId(`eosio:${invalidCAIPChainId}:${telosTestnetAccount}`)
+    proof.account = testAccount.toString()
+    await expect(validateLink(proof)).rejects.toThrow(
+      `No node found for chainId: ${invalidCAIPChainId}`
+    )
+  })
 })
