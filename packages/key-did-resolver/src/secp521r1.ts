@@ -1,8 +1,7 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import * as u8a from 'uint8arrays'
-import * as bigintModArith from 'bigint-mod-arith'
-
+import * as bigintModArith from './bigint-mod-arith.js'
 import * as nist_weierstrass_common from './nist_weierstrass_common.js'
 
 /**
@@ -42,7 +41,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
                crv: "P-521",
                x: key.xm,
                y: key.ym,
-       }, 
+       },
     }],
     authentication: [keyId],
     assertionMethod: [keyId],
@@ -53,7 +52,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
 
 /**
  * Decompress a compressed public key in SEC format.
- * See section 2.3.3 in SEC 1 v2 : https://www.secg.org/sec1-v2.pdf. 
+ * See section 2.3.3 in SEC 1 v2 : https://www.secg.org/sec1-v2.pdf.
  *
  * Code based on: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
  * b on page 15 of https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-186-draft.pdf
