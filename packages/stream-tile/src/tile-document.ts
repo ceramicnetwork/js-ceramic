@@ -191,7 +191,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
+    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const commit = await TileDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,

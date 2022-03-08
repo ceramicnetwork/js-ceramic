@@ -79,7 +79,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('tile', commitData.commit)
-      await this._verifySignature(commitData, context, payload.header.controllers[0], streamId)
+      const { controllers, family } = payload.header
+      await this._verifySignature(commitData, context, controllers[0], family, streamId)
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -112,10 +113,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
+    const family = state.next?.metadata?.family || state.metadata.family
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
-    await this._verifySignature(commitData, context, controller, streamId)
+    await this._verifySignature(commitData, context, controller, family, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -220,9 +222,10 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     commitData: CommitData,
     context: Context,
     controller: string,
-    streamId: StreamID
+    family: string,
+    streamId: StreamID,
   ): Promise<void> {
-    const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId)
+    const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId, family)
 
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
@@ -242,7 +245,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   async _verifyCapabilityAuthz(
     commitData: CommitData,
     context: Context,
-    streamId: StreamID
+    streamId: StreamID,
+    family: string
   ): Promise<Cacao | null> {
     const protectedHeader = commitData.envelope.signatures[0].protected
     const decodedProtectedHeader = base64urlToJSON(protectedHeader)
@@ -261,7 +265,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     if (
       !resources.includes(`ceramic://${streamId.toString()}`) &&
-      !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
+      !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`) &&
+      !(family && resources.includes(`ceramic://*?family=${family}`))
     ) {
       throw new Error(
         `Capability does not have appropriate permissions to update this TileDocument`
