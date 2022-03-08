@@ -21,6 +21,7 @@
     "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.3",
     "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.3",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.3",
+    "@stablelib/random": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
     "ceramic-cacao": "^0.0.16",
     "dids": "^3.0.0-alpha.9",
