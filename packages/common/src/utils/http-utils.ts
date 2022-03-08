@@ -1,5 +1,5 @@
 import fetch from 'cross-fetch'
-import { mergeAbortSignals, createTimedAbortSignal } from './abort-signal-utils'
+import { mergeAbortSignals, TimedAbortSignal } from './abort-signal-utils'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
 interface FetchOpts {
@@ -19,7 +19,7 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
   }
 
   const timeoutLength = opts.timeout || DEFAULT_FETCH_TIMEOUT
-  const timedAbortSignal = createTimedAbortSignal(timeoutLength)
+  const timedAbortSignal = new TimedAbortSignal(timeoutLength)
 
   opts.signal = opts.signal
     ? mergeAbortSignals([opts.signal, timedAbortSignal.signal])

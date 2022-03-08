@@ -1,4 +1,4 @@
-import { timer, fromEvent, merge } from 'rxjs'
+import { timer, fromEvent, merge, Subscription } from 'rxjs'
 import { first } from 'rxjs/operators'
 
 export function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
@@ -21,18 +21,25 @@ export function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
 
   return controller.signal
 }
+export class TimedAbortSignal {
+  private readonly _subscription: Subscription
+  readonly signal: AbortSignal
 
-export interface TimedAbortSignal {
-  signal: AbortSignal
-  clear: () => void
-}
+  constructor(timeout: number) {
+    const controller = new AbortController()
+    this.signal = controller.signal
 
-export function createTimedAbortSignal(timeout: number): TimedAbortSignal {
-  const controller = new AbortController()
+    if (timeout <= 0) {
+      controller.abort()
+      return
+    }
 
-  const timerSubscription = timer(timeout).subscribe(() => {
-    controller.abort()
-  })
+    this._subscription = timer(timeout).subscribe(() => {
+      controller.abort()
+    })
+  }
 
-  return { signal: controller.signal, clear: () => timerSubscription.unsubscribe() }
+  clear() {
+    this._subscription?.unsubscribe()
+  }
 }

@@ -9,7 +9,7 @@ import {
   Stream,
   StreamUtils,
   IpfsApi,
-  createTimedAbortSignal,
+  TimedAbortSignal,
 } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -406,11 +406,11 @@ describe('Ceramic interop: core <> http-client', () => {
       return new Promise((resolve) => {
         id = setTimeout(() => {
           resolve(doc)
-        }, 2000)
+        }, 5000)
       })
     })
 
-    const timedAbortSignal = createTimedAbortSignal(1000)
+    const timedAbortSignal = new TimedAbortSignal(1000)
 
     await expect(
       fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
@@ -436,16 +436,15 @@ describe('Ceramic interop: core <> http-client', () => {
       })
     })
 
-    const timedAbortSignal = createTimedAbortSignal(5000)
+    const controller = new AbortController()
 
     await expect(
       fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
-        signal: timedAbortSignal.signal,
+        signal: controller.signal,
         timeout: 1000,
       })
     ).rejects.toThrow(/aborted/)
 
-    timedAbortSignal.clear()
     clearTimeout(id)
   })
 
