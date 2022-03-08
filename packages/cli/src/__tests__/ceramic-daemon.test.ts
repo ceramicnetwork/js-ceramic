@@ -3,7 +3,14 @@ import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon.js'
-import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  fetchJson,
+  Stream,
+  StreamUtils,
+  IpfsApi,
+  TimedAbortSignal,
+} from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
@@ -366,7 +373,7 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(json).toEqual(content3)
   })
 
-  it('times out if fetch is taking too long', async () => {
+  it('Aborts fetch if it is taking too long', async () => {
     const content1 = { test: 123 }
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
@@ -384,9 +391,75 @@ describe('Ceramic interop: core <> http-client', () => {
       fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
         timeout: 1000,
       })
-    ).rejects.toThrow(`Http request timed out after 1000 ms`)
+    ).rejects.toThrow(/aborted/)
 
     clearTimeout(id)
+  })
+
+  it('Aborts fetch through passed in AbortSignal', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const loadStreamMock = jest.spyOn(core, 'loadStream')
+    let id = null
+    loadStreamMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        id = setTimeout(() => {
+          resolve(doc)
+        }, 5000)
+      })
+    })
+
+    const timedAbortSignal = new TimedAbortSignal(1000)
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: timedAbortSignal.signal,
+      })
+    ).rejects.toThrow(/aborted/)
+
+    timedAbortSignal.clear()
+    clearTimeout(id)
+  })
+
+  it('Aborts fetch if taking too long even if given an AbortSignal that did not get aborted', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const loadStreamMock = jest.spyOn(core, 'loadStream')
+    let id = null
+    loadStreamMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        id = setTimeout(() => {
+          resolve(doc)
+        }, 4000)
+      })
+    })
+
+    const controller = new AbortController()
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: controller.signal,
+        timeout: 1000,
+      })
+    ).rejects.toThrow(/aborted/)
+
+    clearTimeout(id)
+  })
+
+  it('Aborts fetch if the AbortSignal given has already been aborted', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const controller = new AbortController()
+    controller.abort()
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: controller.signal,
+      })
+    ).rejects.toThrow(/aborted/)
   })
 
   it('requestAnchor works via http api', async () => {
