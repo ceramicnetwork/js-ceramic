@@ -58,6 +58,45 @@ describe('CACAO Integration test', () => {
     await ceramic.close()
   })
 
+  describe('Updates without CACAO should fail', () => {
+
+    test('can not update with stream without capability', async () => {
+      // Create a determinstic tiledocument owned by the user
+      const deterministicDocument = await TileDocument.deterministic(ceramic, {
+        deterministic: true,
+        family: 'testCapabilities1',
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+      })
+      const streamId = deterministicDocument.id
+
+      await expect(
+        deterministicDocument.update({ foo: 'bar' }, null, {
+          asDID: didKey,
+          anchor: false,
+          publish: false,
+        })
+      ).rejects.toThrowError(
+        /invalid_jws: not a valid verificationMethod for issuer:/
+      )
+    }, 30000)
+
+    test('can not create new stream without capability', async () => {
+      const family = 'testFamily1'
+      await expect(
+        TileDocument.create(ceramic, { foo: 'bar' }, {
+          family: `${family}`,
+          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        }, {
+          asDID: didKey,
+          anchor: false,
+          publish: false,
+        })
+      ).rejects.toThrowError(
+        /invalid_jws: not a valid verificationMethod for issuer:/
+      )
+    }, 30000)
+  })
+
   describe('Resources using StreamId', () => {
     test('can update with streamId in capability', async () => {
       // Create a determinstic tiledocument owned by the user
@@ -118,139 +157,127 @@ describe('CACAO Integration test', () => {
   })
 
   describe('Resources using family', () => {
-    test('can update stream with family resource', async () => {
-      const family = 'testFamily1'
-      // Create a determinstic tiledocument owned by the user
-      const deterministicDocument = await TileDocument.deterministic(ceramic, {
-        deterministic: true,
-        family,
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
-      })
-      const streamId = deterministicDocument.id
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+    describe('Update stream', () => {
+      test('fails to update using capability with wrong family resource', async () => {
+        const family = 'testFamily2'
+        // Create a determinstic tiledocument owned by the user
+        const deterministicDocument = await TileDocument.deterministic(ceramic, {
+          deterministic: true,
+          family,
+          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        })
+        const streamId = deterministicDocument.id
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}-wrong`)
 
-      await deterministicDocument.update({ foo: 'bar' }, null, {
-        asDID: didKeyWithCapability,
-        anchor: false,
-        publish: false,
-      })
+        await expect(
+          deterministicDocument.update({ foo: 'baz' }, null, {
+            asDID: didKeyWithCapability,
+            anchor: false,
+            publish: false,
+          })
+        ).rejects.toThrowError(
+          'Capability does not have appropriate permissions to update this TileDocument'
+        )
+      }, 30000)
 
-      expect(deterministicDocument.content).toEqual({ foo: 'bar' })
-    }, 30000)
+      test('fails to update using capability with empty family resource', async () => {
+        const family = 'testFamily3'
+        // Create a determinstic tiledocument owned by the user
+        const deterministicDocument = await TileDocument.deterministic(ceramic, {
+          deterministic: true,
+          family,
+          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        })
+        const streamId = deterministicDocument.id
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=`)
 
-    test('fails to update using capability with wrong family resource', async () => {
-      const family = 'testFamily2'
-      // Create a determinstic tiledocument owned by the user
-      const deterministicDocument = await TileDocument.deterministic(ceramic, {
-        deterministic: true,
-        family,
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
-      })
-      const streamId = deterministicDocument.id
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}-wrong`)
+        await expect(
+          deterministicDocument.update({ foo: 'baz' }, null, {
+            asDID: didKeyWithCapability,
+            anchor: false,
+            publish: false,
+          })
+        ).rejects.toThrowError(
+          'Capability does not have appropriate permissions to update this TileDocument'
+        )
+      }, 30000)
 
-      await expect(
-        deterministicDocument.update({ foo: 'baz' }, null, {
+      test('fails to update if cacao issuer is not document controller using family resource', async () => {
+        const family = 'testFamily4'
+        // Create a determinstic tiledocument owned by the user
+        const deterministicDocument = await TileDocument.deterministic(ceramic, {
+          deterministic: true,
+          family,
+        })
+        const streamId = deterministicDocument.id
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+
+        await expect(
+          deterministicDocument.update({ foo: 'baz' }, null, {
+            asDID: didKeyWithCapability,
+            anchor: false,
+            publish: false,
+          })
+        ).rejects.toThrow(/invalid_jws/)
+      }, 30000)
+
+      test('can update stream with family resource', async () => {
+        const family = 'testFamily1'
+        // Create a determinstic tiledocument owned by the user
+        const deterministicDocument = await TileDocument.deterministic(ceramic, {
+          deterministic: true,
+          family,
+          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        })
+        const streamId = deterministicDocument.id
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+
+        await deterministicDocument.update({ foo: 'bar' }, null, {
           asDID: didKeyWithCapability,
           anchor: false,
           publish: false,
         })
-      ).rejects.toThrowError(
-        'Capability does not have appropriate permissions to update this TileDocument'
-      )
-    }, 30000)
 
-    test('fails to update using capability with empty family resource', async () => {
-      const family = 'testFamily3'
-      // Create a determinstic tiledocument owned by the user
-      const deterministicDocument = await TileDocument.deterministic(ceramic, {
-        deterministic: true,
-        family,
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
-      })
-      const streamId = deterministicDocument.id
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=`)
+        expect(deterministicDocument.content).toEqual({ foo: 'bar' })
+      }, 30000)
+    })
 
-      await expect(
-        deterministicDocument.update({ foo: 'baz' }, null, {
-          asDID: didKeyWithCapability,
-          anchor: false,
-          publish: false,
-        })
-      ).rejects.toThrowError(
-        'Capability does not have appropriate permissions to update this TileDocument'
-      )
-    }, 30000)
+    describe('Create stream', () => {
+      test('can not create new stream with wrong family', async () => {
+        const family = 'testFamily1'
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
 
-    test('fails to update if cacao issuer is not document controller using family resource', async () => {
-      const family = 'testFamily4'
-      // Create a determinstic tiledocument owned by the user
-      const deterministicDocument = await TileDocument.deterministic(ceramic, {
-        deterministic: true,
-        family,
-      })
-      const streamId = deterministicDocument.id
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+        await expect(
+          TileDocument.create(ceramic, { foo: 'bar' }, {
+            family: `${family}-wrong`,
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          }, {
+            asDID: didKeyWithCapability,
+            anchor: false,
+            publish: false,
+          })
+        ).rejects.toThrowError(
+          'Capability does not have appropriate permissions to update this TileDocument'
+        )
+      }, 30000)
 
-      await expect(
-        deterministicDocument.update({ foo: 'baz' }, null, {
-          asDID: didKeyWithCapability,
-          anchor: false,
-          publish: false,
-        })
-      ).rejects.toThrow(/invalid_jws/)
-    }, 30000)
+      test('can create new stream with family resource', async () => {
+        const family = 'testFamily1'
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
 
-    test('can create new stream with family resource', async () => {
-      const family = 'testFamily1'
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
-
-      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
-        family,
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
-      }, {
-        asDID: didKeyWithCapability,
-        anchor: false,
-        publish: false,
-      })
-
-      expect(doc.content).toEqual({ foo: 'bar' })
-      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
-      expect(doc.metadata.family).toEqual(family)
-    }, 30000)
-
-    test('can not create new stream with wrong family', async () => {
-      const family = 'testFamily1'
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
-
-      await expect(
-        TileDocument.create(ceramic, { foo: 'bar' }, {
-          family: `${family}-wrong`,
+        const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
+          family,
           controllers: [`did:pkh:eip155:1:${wallet.address}`],
         }, {
           asDID: didKeyWithCapability,
           anchor: false,
           publish: false,
         })
-      ).rejects.toThrowError(
-        'Capability does not have appropriate permissions to update this TileDocument'
-      )
-    }, 30000)
 
-    test('can not create new stream without capability', async () => {
-      const family = 'testFamily1'
-      await expect(
-        TileDocument.create(ceramic, { foo: 'bar' }, {
-          family: `${family}`,
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
-        }, {
-          asDID: didKey,
-          anchor: false,
-          publish: false,
-        })
-      ).rejects.toThrowError(
-        /invalid_jws: not a valid verificationMethod for issuer:/
-      )
-    }, 30000)
+        expect(doc.content).toEqual({ foo: 'bar' })
+        expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+        expect(doc.metadata.family).toEqual(family)
+      }, 30000)
+    })
   })
 })
