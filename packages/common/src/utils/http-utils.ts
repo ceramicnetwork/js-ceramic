@@ -1,5 +1,5 @@
 import fetch from 'cross-fetch'
-import { mergeAbortSignals, TimedAbortSignal } from './abort-signal-utils'
+import { mergeAbortSignals, TimedAbortSignal } from './abort-signal-utils.js'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
 interface FetchOpts {
