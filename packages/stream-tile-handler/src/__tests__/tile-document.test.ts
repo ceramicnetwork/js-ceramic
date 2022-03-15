@@ -741,6 +741,7 @@ describe('TileDocumentHandler', () => {
           did
         ),
         didDocumentMetadata: {
+          // 23 hours before signature
           nextUpdate: '2022-03-10T22:28:07.383Z',
         },
       }
