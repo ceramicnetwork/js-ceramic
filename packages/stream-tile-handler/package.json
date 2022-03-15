@@ -44,7 +44,7 @@
     "@types/lodash.clonedeep": "^4.5.6",
     "ceramic-cacao": "^0.0.16",
     "did-resolver": "^3.1.5",
-    "dids": "^3.0.0-alpha.9",
+    "dids": "^3.0.0-alpha.11",
     "key-did-resolver": "^2.0.0-alpha.3",
     "multiformats": "^9.5.8"
   },
