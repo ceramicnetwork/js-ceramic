@@ -17,6 +17,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { base64urlToJSON } from './utils.js'
 import { CID } from 'multiformats/cid'
 
+const DEFAULT_REVOCATION_PHASE_OUT = 24 * 60 * 60
+
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
     return false
@@ -223,7 +225,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     context: Context,
     controller: string,
     family: string,
-    streamId: StreamID,
+    streamId: StreamID
   ): Promise<void> {
     const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId, family)
 
@@ -232,6 +234,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
       capability: cacao,
+      // TODO: rename to revocationPhaseOutSecs
+      revocationPhaseOut: DEFAULT_REVOCATION_PHASE_OUT,
     })
   }
 
