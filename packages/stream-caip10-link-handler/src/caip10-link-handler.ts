@@ -122,7 +122,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     if (legacyAccountCaip10.toLowerCase() !== legacyControllerCaip10.toLowerCase()) {
-      throw new Error("Address doesn't match stream controller")
+      throw new Error(`Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`)
     }
     state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
     return {
