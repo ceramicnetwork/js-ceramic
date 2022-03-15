@@ -213,7 +213,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   }
 
   /**
-   * Verifies commit signature
+   * Verifies commit signature. If a revoked key is used to create the signature, the signature is valid for 24h after the revocation
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param controller - DID value
