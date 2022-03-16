@@ -154,7 +154,7 @@ Object {
 }
 `;
 
-exports[`TileDocumentHandler applies commit if keys revoked but within revocation period 1`] = `
+exports[`TileDocumentHandler applies commit made using an old key if it is applied within the revocation period 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {

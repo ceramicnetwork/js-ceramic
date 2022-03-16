@@ -360,6 +360,7 @@ it('throws error if commit signed by wrong DID', async () => {
     type: CommitType.GENESIS,
     commit: payload,
     envelope: genesisCommit.jws,
+    timestamp: Date.now() / 1000,
   }
   await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
     /invalid_jws: not a valid verificationMethod for issuer/

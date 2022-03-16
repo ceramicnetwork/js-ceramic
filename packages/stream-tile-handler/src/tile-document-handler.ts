@@ -230,12 +230,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId, family)
 
     await context.did.verifyJWS(commitData.envelope, {
-      atTime: commitData.timestamp,
+      atTime: new Date(commitData.timestamp * 1000),
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
       capability: cacao,
       // TODO: rename to revocationPhaseOutSecs
-      revocationPhaseOut: DEFAULT_REVOCATION_PHASE_OUT,
+      revocationPhaseOutSecs: DEFAULT_REVOCATION_PHASE_OUT,
     })
   }
 

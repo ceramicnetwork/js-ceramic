@@ -19,6 +19,7 @@ import {
   TestUtils,
   IpfsApi,
   GenesisCommit,
+  CeramicSigner,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -54,10 +55,34 @@ const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54ad
 
 // did:3:bafyasdfasdf
 
+const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
+
+const jwsForVersion0 = {
+  payload: 'bbbb',
+  signatures: [
+    {
+      protected:
+        'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9',
+      signature: 'cccc',
+    },
+  ],
+}
+
+const jwsForVersion1 = {
+  payload: 'bbbb',
+  signatures: [
+    {
+      protected:
+        'ewogICAgImtpZCI6ImRpZDozOmsydDZ3eWZzdTRwZzB0Mm40ajhtczNzMzN4c2dxamh0dG8wNG12cTh3NWEydjV4bzQ4aWR5ejM4bDd5ZGtpP3ZlcnNpb249MSNzaWduaW5nIgp9',
+      signature: 'cccc',
+    },
+  ],
+}
+
 const COMMITS = {
   genesis: {
     header: {
-      controllers: ['did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'],
+      controllers: [DID_ID],
     },
     data: { much: 'data' },
   },
@@ -78,7 +103,7 @@ const COMMITS = {
         much: 'data',
       },
       header: {
-        controllers: ['did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'],
+        controllers: [DID_ID],
       },
     },
   },
@@ -140,10 +165,81 @@ const serialize = (data: any): any => {
   return data
 }
 
+const ThreeIdResolver = {
+  '3': async (did) => ({
+    didResolutionMetadata: { contentType: 'application/did+json' },
+    didDocument: wrapDocument(
+      {
+        publicKeys: {
+          signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+          encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
+        },
+      },
+      did
+    ),
+    didDocumentMetadata: {},
+  }),
+}
+
+const setDidToNotRotatedState = (did: DID) => {
+  const keyDidResolver = KeyDidResolver.getResolver()
+  did.setResolver({
+    ...keyDidResolver,
+    ...ThreeIdResolver,
+  })
+
+  did.createJWS = async () => jwsForVersion0
+}
+
+const rotateKey = (did: DID, rotateDate: string) => {
+  did.resolve = async (didUrl) => {
+    const { did } = parseDidUrl(didUrl)
+    const isVersion0 = /version=0/.exec(didUrl)
+
+    if (isVersion0) {
+      return {
+        didResolutionMetadata: { contentType: 'application/did+json' },
+        didDocument: wrapDocument(
+          {
+            publicKeys: {
+              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
+            },
+          },
+          did
+        ),
+        didDocumentMetadata: {
+          nextUpdate: rotateDate,
+        },
+      }
+    }
+
+    return {
+      didResolutionMetadata: { contentType: 'application/did+json' },
+      didDocument: wrapDocument(
+        {
+          publicKeys: {
+            signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+            encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
+          },
+        },
+        did
+      ),
+      didDocumentMetadata: {
+        updated: rotateDate,
+      },
+    }
+  }
+
+  did.createJWS = async () => jwsForVersion1
+}
+
 describe('TileDocumentHandler', () => {
   let did: DID
   let tileDocumentHandler: TileDocumentHandler
   let context: Context
+  let signerUsingNewKey: CeramicSigner
+  let signerUsingOldKey: CeramicSigner
 
   beforeAll(async () => {
     const recs: Record<string, any> = {}
@@ -173,26 +269,21 @@ describe('TileDocumentHandler', () => {
         ...keyDidResolver,
       },
     })
-    did.createJWS = jest.fn(async () => {
-      // fake jws
-      return {
-        payload: 'bbbb',
-        signatures: [
-          {
-            protected:
-              'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9',
-            signature: 'cccc',
-          },
-        ],
-      }
-    })
-    ;(did as any)._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
+    ;(did as any)._id = DID_ID
     const api = {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
       }),
       did,
     }
+
+    signerUsingNewKey = { did: new DID({}) }
+    ;(signerUsingNewKey.did as any)._id = DID_ID
+    signerUsingNewKey.did.createJWS = async () => jwsForVersion1
+
+    signerUsingOldKey = { did: new DID({}) }
+    ;(signerUsingOldKey.did as any)._id = DID_ID
+    signerUsingOldKey.did.createJWS = async () => jwsForVersion0
 
     context = {
       did,
@@ -205,22 +296,7 @@ describe('TileDocumentHandler', () => {
   beforeEach(() => {
     tileDocumentHandler = new TileDocumentHandler()
 
-    did.resolve = async (didUrl) => {
-      const { did } = parseDidUrl(didUrl)
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {},
-      }
-    }
+    setDidToNotRotatedState(did)
   })
 
   it('is constructed correctly', async () => {
@@ -507,6 +583,7 @@ describe('TileDocumentHandler', () => {
       type: CommitType.GENESIS,
       commit: payload,
       envelope: genesisCommit.jws,
+      timestamp: Date.now() / 1000,
     }
     await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: not a valid verificationMethod for issuer/
@@ -593,11 +670,14 @@ describe('TileDocumentHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  it('fails to apply commit if keys revoked', async () => {
+  it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
+    const rotateDate = new Date('2022-03-11T21:28:07.383Z')
+
     const tileDocumentHandler = new TileDocumentHandler()
 
+    // make and apply genesis with old key
     const genesisCommit = (await TileDocument.makeGenesis(
-      context.api,
+      signerUsingOldKey,
       COMMITS.genesis.data
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -605,19 +685,24 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
+    // genesis commit applied one hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
       type: CommitType.GENESIS,
       commit: payload,
       envelope: genesisCommit.jws,
+      timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
     const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
+    rotateKey(did, rotateDate.toISOString())
+
+    // make update with old key
     const state$ = TestUtils.runningState(state)
     const doc = new TileDocument(state$, context)
     const signedCommit = (await doc.makeCommit(
-      context.api,
+      signerUsingOldKey,
       COMMITS.r1.desiredContent
     )) as SignedCommitContainer
 
@@ -631,40 +716,24 @@ describe('TileDocumentHandler', () => {
       type: CommitType.SIGNED,
       commit: sPayload,
       envelope: signedCommit.jws,
-      // TODO: in ms will need to change to date
-      timestamp: new Date('2022-03-11T21:28:07.383Z').valueOf(),
+      // 24 hours after rotation
+      timestamp: rotateDate.valueOf() / 1000 + 24 * 60 * 60,
     }
 
-    did.resolve = async (didUrl) => {
-      const { did } = parseDidUrl(didUrl)
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {
-          // 1 day before the signature
-          nextUpdate: '2022-03-10T21:28:07.383Z',
-        },
-      }
-    }
-
+    // applying a commit made with the old key after rotation
     await expect(tileDocumentHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /invalid_jws: signature authored with a revoked DID version/
     )
   })
 
   it('fails to apply commit if new key used before rotation', async () => {
+    const rotateDate = new Date('2022-03-11T21:28:07.383Z')
+
     const tileDocumentHandler = new TileDocumentHandler()
 
+    // make genesis with new key
     const genesisCommit = (await TileDocument.makeGenesis(
-      context.api,
+      signerUsingNewKey,
       COMMITS.genesis.data
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -672,45 +741,31 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
+    // commit is applied 1 hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
       type: CommitType.GENESIS,
       commit: payload,
       envelope: genesisCommit.jws,
-      // TODO: in ms will need to change to date
-      timestamp: new Date('2022-03-11T21:28:07.383Z').valueOf(),
+      timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    did.resolve = async (didUrl) => {
-      const { did } = parseDidUrl(didUrl)
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {
-          // 1s after signature
-          updated: '2022-03-11T21:28:08.383Z',
-        },
-      }
-    }
+    rotateKey(did, rotateDate.toISOString())
 
     await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
     )
   })
 
-  it('applies commit if keys revoked but within revocation period', async () => {
+  it('applies commit made using an old key if it is applied within the revocation period', async () => {
+    const rotateDate = new Date('2022-03-11T21:28:07.383Z')
+    rotateKey(did, rotateDate.toISOString())
+
     const tileDocumentHandler = new TileDocumentHandler()
 
+    // make genesis commit using old key
     const genesisCommit = (await TileDocument.makeGenesis(
-      context.api,
+      signerUsingOldKey,
       COMMITS.genesis.data
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -718,35 +773,14 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
+    // commit is applied 1 hour after the rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
       type: CommitType.GENESIS,
       commit: payload,
       envelope: genesisCommit.jws,
-      // TODO: in ms will need to change to s
-      timestamp: new Date('2022-03-11T21:28:07.383Z').valueOf(),
+      timestamp: rotateDate.valueOf() / 1000 + 60 * 60,
     }
-
-    did.resolve = async (didUrl) => {
-      const { did } = parseDidUrl(didUrl)
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {
-          // 23 hours before signature
-          nextUpdate: '2022-03-10T22:28:07.383Z',
-        },
-      }
-    }
-
     const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
     delete state.metadata.unique
 
