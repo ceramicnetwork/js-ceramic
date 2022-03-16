@@ -234,7 +234,6 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
       capability: cacao,
-      // TODO: rename to revocationPhaseOutSecs
       revocationPhaseOutSecs: DEFAULT_REVOCATION_PHASE_OUT,
     })
   }
