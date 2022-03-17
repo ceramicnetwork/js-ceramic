@@ -583,7 +583,7 @@ describe('TileDocumentHandler', () => {
       type: CommitType.GENESIS,
       commit: payload,
       envelope: genesisCommit.jws,
-      timestamp: Date.now() / 1000,
+      timestamp: Date.now(),
     }
     await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: not a valid verificationMethod for issuer/

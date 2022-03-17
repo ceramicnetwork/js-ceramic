@@ -213,7 +213,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   }
 
   /**
-   * Verifies commit signature. If a revoked key is used to create the signature, the signature is valid for 24h after the revocation
+   * Verifies commit signature. If a revoked key is used to create the signature, the signature is valid for 24h after the revocation. This is so that if an update made before the key revocation winds up getting anchored after the revocation does, we don't fail the write unnecessarily.
+   * TODO: Remove or significantly shorten this grace period once anchors happen far more frequently on the network.
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param controller - DID value
