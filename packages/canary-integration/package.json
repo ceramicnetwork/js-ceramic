@@ -24,7 +24,7 @@
     "@stablelib/random": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
     "ceramic-cacao": "^0.0.16",
-    "dids": "^3.0.0-alpha.11",
+    "dids": "^3.0.0-alpha.12",
     "ethers": "^5.5.4",
     "ganache-core": "^2.13.2",
     "key-did-provider-ed25519": "^1.1.0",
