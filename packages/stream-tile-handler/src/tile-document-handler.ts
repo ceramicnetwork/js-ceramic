@@ -17,6 +17,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { base64urlToJSON } from './utils.js'
 import { CID } from 'multiformats/cid'
 
+const DEFAULT_REVOCATION_PHASE_OUT = 24 * 60 * 60
+
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
     return false
@@ -211,7 +213,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   }
 
   /**
-   * Verifies commit signature
+   * Verifies commit signature. If a revoked key is used to create the signature, the signature is valid for 24h after the revocation. This is so that if an update made before the key revocation winds up getting anchored after the revocation does, we don't fail the write unnecessarily.
+   * TODO: Remove or significantly shorten this grace period once anchors happen far more frequently on the network.
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param controller - DID value
@@ -233,6 +236,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
       capability: cacao,
+      revocationPhaseOutSecs: DEFAULT_REVOCATION_PHASE_OUT,
     })
   }
 
