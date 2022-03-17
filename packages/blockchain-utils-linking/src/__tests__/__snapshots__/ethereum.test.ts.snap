@@ -24,7 +24,7 @@ Object {
   "p": Object {
     "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
     "domain": "https://service.org/",
-    "exp": "2018-10-08T00:00:00.000Z",
+    "exp": "2018-10-02T00:00:00.000Z",
     "iat": "2018-10-01T00:00:00.000Z",
     "iss": "did:pkh:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
     "nonce": "12345",
@@ -37,7 +37,7 @@ Object {
     "version": "1",
   },
   "s": Object {
-    "s": "0xbcfd6b109fdc12db2b8b86865e1f6085f77160549d887a65b8c521c0b162ee7f774eda09de2728dbd25dc3e5700588be3a3ef737e29a8c6b1441297fed9f34bf1b",
+    "s": "0x53b459f3eef15be6fd9cb94d973e1934c0769c0bd455fb70ae050b15d5604d234ddfca1b1119f8c8cdcedc6c49a141553853a8718b17156f0bc19632c5b7f6ee1c",
     "t": "eip191",
   },
 }
