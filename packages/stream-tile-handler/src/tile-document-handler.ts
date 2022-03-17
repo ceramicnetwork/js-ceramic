@@ -223,12 +223,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     context: Context,
     controller: string,
     family: string,
-    streamId: StreamID,
+    streamId: StreamID
   ): Promise<void> {
     const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId, family)
 
     await context.did.verifyJWS(commitData.envelope, {
-      atTime: commitData.timestamp,
+      atTime: new Date(commitData.timestamp * 1000),
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
       capability: cacao,
