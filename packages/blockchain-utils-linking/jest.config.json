@@ -7,5 +7,6 @@
   },
   "transform": {
     "^.+\\.tsx?$": "babel-jest"
-  }
+  },
+  "resolver": "jest-resolver-enhanced"
 }
