@@ -84,7 +84,7 @@ export class EthereumAuthProvider implements AuthProvider {
     // NOTE: To allow proper customization of the expiry date, we need a solid library to represent
     // time durations that includes edge cases. We should not try dealing with timestamps ourselves.
     const now = new Date()
-    const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const oneDayLater = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
     const siweMessage = new SiweMessage({
       domain: domain,
@@ -94,7 +94,7 @@ export class EthereumAuthProvider implements AuthProvider {
       version: opts.version ?? '1',
       nonce: opts.nonce ?? randomString(10),
       issuedAt: now.toISOString(),
-      expirationTime: opts.expirationTime ?? oneWeekLater.toISOString(),
+      expirationTime: opts.expirationTime ?? oneDayLater.toISOString(),
       chainId: (await this.accountId()).chainId.reference,
       resources: (opts.resources ?? []).concat(
         streams.map((s) => (typeof s === 'string' ? StreamID.fromString(s) : s).toUrl())
