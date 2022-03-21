@@ -4,11 +4,16 @@ orbs:
 
 commands:
   build-and-test:
+    parameters:
+      node-version:
+        type: string
     steps:
       - checkout
       - node/install:
-          node-version: '16.13'
+          node-version: << parameters.node-version >>
       - node/install-packages
+      - run: npm -v
+      - run: node -v
       - run: npm run lint
       - run: npm run build
       - run:
@@ -19,6 +24,9 @@ jobs:
   with-go-ipfs:
     machine:
       image: ubuntu-2004:202107-02
+    parameters:
+      node-version:
+        type: string
     environment:
       IPFS_FLAVOR: go
     steps:
@@ -31,14 +39,24 @@ jobs:
   with-js-ipfs:
     machine:
       image: ubuntu-2004:202107-02
+    parameters:
+      node-version:
+        type: string
     environment:
       NODE_OPTIONS: '--max_old_space_size=4096'
       IPFS_FLAVOR: js
     steps:
-      - build-and-test
+      - build-and-test:
+          node-version: << parameters.node-version >>
 
 workflows:
   build-and-test:
     jobs:
-      - with-go-ipfs
-      - with-js-ipfs
+#      - with-go-ipfs:
+#          matrix:
+#            parameters:
+#              node-version: ['14', '16']
+      - with-js-ipfs:
+          matrix:
+            parameters:
+              node-version: ['14', '16']

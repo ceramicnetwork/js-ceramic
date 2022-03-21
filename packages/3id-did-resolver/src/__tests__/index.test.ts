@@ -59,7 +59,7 @@ describe('3ID DID Resolver', () => {
 
     test.each(vectors[v1].queries)('resolves 3id documents correctly %#', async (query) => {
       const ThreeIdResolver = await import('../index.js')
-      const threeIdResolver = ThreeIdResolver.gwetResolver(ceramic)
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v1].did + query.params[0]
       expect(await resolver.resolve(did)).toEqual(query.result)
