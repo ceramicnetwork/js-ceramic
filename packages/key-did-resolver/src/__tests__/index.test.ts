@@ -44,10 +44,10 @@ describe('Index mapper', () => {
       didUrl: 'did:key:zruuPojWkzGPb8sVc42f2YxcTXKUTpAUbdrzVovaTBmGGNyK6cGFaA4Kp7SSLKecrxYz8Sc9d77Rss7rayYt1oFCaNJ/some/path',
       path: '/some/path'
     }
-  
+
     doc = await resolve('did:key:zruuPojWkzGPb8sVc42f2YxcTXKUTpAUbdrzVovaTBmGGNyK6cGFaA4Kp7SSLKecrxYz8Sc9d77Rss7rayYt1oFCaNJ', parsedDid, {}, { accept: 'application/did+ld+json' })
     expect(doc).toMatchSnapshot()
-  
+
     doc = await resolve('did:key:zruuPojWkzGPb8sVc42f2YxcTXKUTpAUbdrzVovaTBmGGNyK6cGFaA4Kp7SSLKecrxYz8Sc9d77Rss7rayYt1oFCaNJ', parsedDid, {}, { accept: 'application/did+json' })
     expect(doc).toMatchSnapshot()
 
@@ -58,10 +58,10 @@ describe('Index mapper', () => {
       didUrl: 'did:key:zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu/some/path',
       path: '/some/path'
     }
-  
+
     doc = await resolve('did:key:zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu', parsedDid, {}, { accept: 'application/did+ld+json' })
     expect(doc).toMatchSnapshot()
-  
+
     doc = await resolve('did:key:zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu', parsedDid, {}, { accept: 'application/did+json' })
     expect(doc).toMatchSnapshot()
 
@@ -72,10 +72,10 @@ describe('Index mapper', () => {
       didUrl: 'did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY/some/path',
       path: '/some/path'
     }
-  
+
     doc = await resolve('did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY', parsedDid, {}, { accept: 'application/did+ld+json' })
     expect(doc).toMatchSnapshot()
-  
+
     doc = await resolve('did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY', parsedDid, {}, { accept: 'application/did+json' })
     expect(doc).toMatchSnapshot()
 
@@ -100,7 +100,7 @@ describe('Index mapper', () => {
       didUrl: 'did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54/some/path',
       path: '/some/path'
     }
- 
+
     doc = await resolve('did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54', parsedDid, {}, { accept: 'application/did+ld+json' })
     expect(doc).toMatchSnapshot()
 
@@ -127,9 +127,9 @@ describe('Exception mapper + default fpr options.accept', () => {
           didUrl: 'did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F/some/path',
           path: '/some/path'
        }
-       await expect(resolve('did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F', parsedDided25519, {}, { accept: 'application/did+ld+json' })).resolves.toEqual({"didDocument": null, "didDocumentMetadata": {}, "didResolutionMetadata": {"contentType": "application/did+ld+json", "error": "invalidDid", "message": "TypeError: Cannot read properties of undefined (reading 'keyToDidDoc')"}})
+       await expect(resolve('did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F', parsedDided25519, {}, { accept: 'application/did+ld+json' })).resolves.toEqual({"didDocument": null, "didDocumentMetadata": {}, "didResolutionMetadata": {"contentType": "application/did+ld+json", "error": "invalidDid", "message": "TypeError: Cannot read property 'keyToDidDoc' of undefined"}})
   })
-   
+
   it('expect index.js to throw an error for an unsupported media type', async () => {
        const resolverRegistry = index.getResolver()
        expect(resolverRegistry).not.toBeUndefined()
