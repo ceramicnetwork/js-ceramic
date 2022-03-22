@@ -170,6 +170,24 @@ export class Dispatcher {
   }
 
   /**
+   * Checks if the local IPFS node has the data for the given CID, without needing to load it from
+   * the network.
+   * @param cid
+   */
+  async cidExistsInLocalIPFSStore(cid: CID | string): Promise<boolean> {
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const result = await this._ipfs.dag.get(asCid, { offline: true })
+      return result != null
+    } catch (err) {
+      console.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
+      return false
+    }
+  }
+
+  /**
    * Helper function for loading a CID from IPFS
    */
   private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {

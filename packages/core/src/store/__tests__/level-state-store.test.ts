@@ -137,6 +137,19 @@ describe('LevelDB state store', () => {
       )
     })
 
+    test('list with limit', async () => {
+      const states = await Promise.all([makeStreamState(), makeStreamState()])
+
+      await stateStore.save(streamFromState(states[0]))
+      await stateStore.save(streamFromState(states[1]))
+
+      let list = await stateStore.list()
+      expect(list.length).toEqual(2)
+
+      list = await stateStore.list(null, 1)
+      expect(list.length).toEqual(1)
+    })
+
     test('report if streamId is saved', async () => {
       const state = makeStreamState()
       const streamID = StreamUtils.streamIdFromState(state)
