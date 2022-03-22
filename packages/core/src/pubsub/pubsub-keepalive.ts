@@ -14,7 +14,7 @@ export class PubsubKeepalive
   private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
   // start at 0 so it always publishes once on startup
-  private lastPublishedKeepAliveMessageDate: number = 0
+  private lastPublishedKeepAliveMessageDate = 0
 
   /**
    * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
