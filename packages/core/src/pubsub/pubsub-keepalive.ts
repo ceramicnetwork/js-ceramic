@@ -1,6 +1,7 @@
 import { Observable, Subscription, interval } from 'rxjs'
 import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message.js'
 import { ObservableWithNext } from './observable-with-next.js'
+import { version } from '../version.js'
 
 /**
  * Wraps an instance of Pubsub and ensures that a pubsub message is generated with some minimum
@@ -11,6 +12,9 @@ export class PubsubKeepalive
   implements ObservableWithNext<PubsubMessage>
 {
   private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
+
+  // start at 0 so it always publishes once on startup
+  private lastPublishedKeepAliveMessageDate: number = 0
 
   /**
    * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
@@ -48,7 +52,9 @@ export class PubsubKeepalive
    * message needs to be sent.
    */
   next(message: PubsubMessage): Subscription {
-    this.lastPublishedMessageDate = Date.now()
+    const now = Date.now()
+    this.lastPublishedMessageDate = now
+    if (message.typ === MsgType.KEEPALIVE) this.lastPublishedKeepAliveMessageDate = now
     return this.pubsub.next(message)
   }
 
@@ -60,12 +66,18 @@ export class PubsubKeepalive
    */
   publishPubsubKeepaliveIfNeeded(): void {
     const now = Date.now()
-    if (now - this.lastPublishedMessageDate < this.maxPubsubPublishInterval / 2) {
-      // We've published a message recently enough, no need to publish another
+    const needToPublishKeepaliveOnceADay =
+      now - this.lastPublishedKeepAliveMessageDate > 24 * 60 * 60 * 1000
+    const needToPublishKeepaliveInactivity =
+      now - this.lastPublishedMessageDate >= this.maxPubsubPublishInterval / 2
+
+    if (!needToPublishKeepaliveInactivity && !needToPublishKeepaliveOnceADay) {
+      // We've published a message recently enough and sent a KeepAlive in the last 24 hours
+      // no need to publish another
       return
     }
 
-    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now }
+    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now, ver: version }
     this.next(message)
   }
 }

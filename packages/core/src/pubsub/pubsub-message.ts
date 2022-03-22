@@ -39,6 +39,7 @@ export type ResponseMessage = {
 export type KeepaliveMessage = {
   typ: MsgType.KEEPALIVE
   ts: number // current time
+  ver: string // current ceramic version
 }
 
 export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage | KeepaliveMessage
@@ -103,6 +104,7 @@ export function serialize(message: PubsubMessage): Uint8Array {
       const payload = {
         typ: MsgType.KEEPALIVE,
         ts: message.ts,
+        ver: message.ver,
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
@@ -148,6 +150,7 @@ export function deserialize(message: any): PubsubMessage {
       return {
         typ: MsgType.KEEPALIVE,
         ts: parsed.ts,
+        ver: parsed.ver,
       }
     }
     default:
