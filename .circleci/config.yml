@@ -9,8 +9,6 @@ commands:
       - node/install:
           node-version: "16"
       - node/install-packages
-      - run: npm -v
-      - run: node -v
       - run: npm run lint
       - run: npm run build
       - run:
