@@ -7,7 +7,7 @@ commands:
     steps:
       - checkout
       - node/install:
-          node-version: 16
+          node-version: "16"
       - node/install-packages
       - run: npm -v
       - run: node -v
