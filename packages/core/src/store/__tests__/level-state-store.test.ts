@@ -8,27 +8,8 @@ import {
   SignatureStatus,
   StreamUtils,
   TestUtils,
+  StreamState,
 } from '@ceramicnetwork/common'
-import { CID } from 'multiformats/cid'
-import { StreamID } from '@ceramicnetwork/streamid'
-
-let mockStorage: Map<string, any>
-const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
-let mockGet: any = jest.fn((id: string) => mockStorage.get(id))
-const mockDel = jest.fn(() => Promise.resolve())
-const mockStreamResult = ['1', '2', '3']
-const mockStream = jest.fn(async () => mockStreamResult)
-
-const streamIdTest = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-
-const levelFactory = jest.fn().mockImplementation(() => {
-  return {
-    put: mockPut,
-    get: mockGet,
-    del: mockDel,
-    stream: mockStream,
-  }
-})
 
 class FakeType extends Stream {
   isReadOnly = true
@@ -37,99 +18,137 @@ class FakeType extends Stream {
   }
 }
 
-let levelPath: string
-let stateStore: LevelStateStore
-const NETWORK = 'fakeNetwork'
-
-beforeEach(async () => {
-  mockStorage = new Map()
-  levelPath = await tmp.tmpName()
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  stateStore = new LevelStateStore(levelPath, levelFactory)
-  mockGet = jest.fn((id: string) => mockStorage.get(id))
-})
-
-const state = {
-  type: 0,
-  content: { num: 0 },
-  metadata: {
-    controllers: [''],
-  },
-  signature: SignatureStatus.GENESIS,
-  anchorStatus: AnchorStatus.NOT_REQUESTED,
-  log: [
-    { type: CommitType.GENESIS, cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
-  ],
+const makeStreamState = function (): StreamState {
+  const cid = TestUtils.randomCID()
+  return {
+    type: 0,
+    content: { num: 0 },
+    metadata: {
+      controllers: [''],
+    },
+    signature: SignatureStatus.GENESIS,
+    anchorStatus: AnchorStatus.NOT_REQUESTED,
+    log: [
+      {
+        type: CommitType.GENESIS,
+        cid,
+      },
+    ],
+  }
 }
 
-test('#open', async () => {
-  expect(levelFactory).not.toBeCalled()
-  expect(stateStore.store).toBeUndefined()
-  stateStore.open(NETWORK)
-  const expectedPath = levelPath + '/' + NETWORK
-  expect(levelFactory).toBeCalledWith(expectedPath)
-})
+const streamFromState = function (state: StreamState) {
+  return new FakeType(TestUtils.runningState(state), {})
+}
 
-test('#save and #load', async () => {
-  const stream = new FakeType(TestUtils.runningState(state), {})
-  stateStore.open(NETWORK)
-  await stateStore.save(stream)
-  const streamId = stream.id.baseID
-  expect(mockPut).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
+describe('LevelDB state store', () => {
+  let tmpFolder: any
+  let stateStore: LevelStateStore
 
-  const retrieved = await stateStore.load(streamId)
-  expect(mockGet).toBeCalledWith(streamId.toString())
-  expect(retrieved).toEqual(state)
-})
+  beforeEach(async () => {
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    stateStore = new LevelStateStore(tmpFolder.path)
+    stateStore.open('fakeNetwork')
 
-describe('#load', () => {
-  test('#load not found', async () => {
-    mockGet = jest.fn(() => {
-      throw { notFound: true }
+    // add a small delay after creating the leveldb instance before trying to use it.
+    await TestUtils.delay(100)
+  })
+
+  afterEach(async () => {
+    await stateStore.close()
+    await tmpFolder.cleanup()
+  })
+
+  test('#save and #load', async () => {
+    const putSpy = jest.spyOn(stateStore.store, 'put')
+
+    const state = makeStreamState()
+    const stream = streamFromState(state)
+    await stateStore.save(stream)
+    const streamId = stream.id.baseID
+    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
+
+    const retrieved = await stateStore.load(streamId)
+    expect(retrieved).toEqual(state)
+
+    putSpy.mockRestore()
+  })
+
+  describe('#load', () => {
+    test('#load not found', async () => {
+      const streamID = StreamUtils.streamIdFromState(makeStreamState())
+      const retrieved = await stateStore.load(streamID)
+      expect(retrieved).toBeNull()
     })
-    stateStore.open(NETWORK)
-    const streamid = StreamID.fromString(streamIdTest)
-    const retrieved = await stateStore.load(streamid)
+
+    test('#load passes errors', async () => {
+      const getSpy = jest.spyOn(stateStore.store, 'get')
+      getSpy.mockImplementationOnce(() => {
+        throw new Error('something internal to LevelDB')
+      })
+      const streamID = StreamUtils.streamIdFromState(makeStreamState())
+      await expect(stateStore.load(streamID)).rejects.toThrow('something internal to LevelDB')
+
+      await getSpy.mockReset()
+      await getSpy.mockRestore()
+    })
+  })
+
+  test('#remove', async () => {
+    const state = makeStreamState()
+    const stream = streamFromState(state)
+    await stateStore.save(stream)
+    const streamId = stream.id.baseID
+
+    let retrieved = await stateStore.load(streamId)
+    expect(retrieved).toEqual(state)
+
+    await stateStore.remove(streamId)
+
+    retrieved = await stateStore.load(streamId)
     expect(retrieved).toBeNull()
   })
 
-  test('#load passes errors', async () => {
-    mockGet = jest.fn(() => {
-      throw new Error('something internal to LevelDB')
+  describe('#list', () => {
+    test('saved entries', async () => {
+      const streamSpy = jest.spyOn(stateStore.store, 'stream')
+
+      const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
+      const streams = states.map((state) => streamFromState(state))
+
+      let list = await stateStore.list()
+      expect(list.length).toEqual(0)
+      expect(streamSpy).toBeCalledWith({ keys: true, values: false })
+      streamSpy.mockRestore()
+
+      await stateStore.save(streamFromState(states[0]))
+
+      list = await stateStore.list()
+      expect(list.length).toEqual(1)
+      expect(list).toEqual([streams[0].id.toString()])
+
+      await stateStore.save(streamFromState(states[1]))
+      await stateStore.save(streamFromState(states[2]))
+
+      list = await stateStore.list()
+      expect(list.length).toEqual(3)
+      expect(list.sort()).toEqual(
+        [streams[0].id.toString(), streams[1].id.toString(), streams[2].id.toString()].sort()
+      )
     })
-    stateStore.open(NETWORK)
-    const streamid = StreamID.fromString(streamIdTest)
-    await expect(stateStore.load(streamid)).rejects.toThrow('something internal to LevelDB')
-  })
-})
 
-test('#remove', async () => {
-  stateStore.open(NETWORK)
-  const streamid = StreamID.fromString(streamIdTest)
-  await stateStore.remove(streamid)
-  expect(mockDel).toBeCalledWith(streamid.toString())
-})
+    test('report if streamId is saved', async () => {
+      const state = makeStreamState()
+      const streamID = StreamUtils.streamIdFromState(state)
 
-describe('#list', () => {
-  test('saved entries', async () => {
-    stateStore.open(NETWORK)
-    const list = await stateStore.list()
-    expect(list).toEqual(mockStreamResult)
-    expect(mockStream).toBeCalledWith({ keys: true, values: false })
-  })
-  test('report if streamId is saved', async () => {
-    stateStore.open(NETWORK)
-    stateStore.load = jest.fn(() => Promise.resolve(state))
-    const streamid = StreamID.fromString(streamIdTest)
-    const list = await stateStore.list(streamid)
-    expect(list).toEqual([streamid.toString()])
-  })
-  test('report if streamId is absent', async () => {
-    stateStore.open(NETWORK)
-    stateStore.load = jest.fn(() => Promise.resolve(null))
-    const streamid = StreamID.fromString(streamIdTest)
-    const list = await stateStore.list(streamid)
-    expect(list).toEqual([])
+      // Stream absent from state store
+      let list = await stateStore.list(streamID)
+      expect(list).toEqual([])
+
+      // Stream present in state store
+      await stateStore.save(streamFromState(state))
+      list = await stateStore.list(streamID)
+      expect(list).toEqual([streamID.toString()])
+    })
   })
 })
