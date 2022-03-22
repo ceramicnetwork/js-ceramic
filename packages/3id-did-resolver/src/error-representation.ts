@@ -15,12 +15,10 @@ export const errorRepresentation = (metadata: DIDResolutionMetadata): DIDResolut
  * Report a thrown error as a DID resolution result.
  */
 export const withResolutionError = (f: WrappedResolver): Promise<DIDResolutionResult> => {
-  return f().catch((e) => {
-    console.error(e)
-      return errorRepresentation({
-        error: 'invalidDid',
-        message: e.toString()
-      })
-    }
+  return f().catch((e) =>
+    errorRepresentation({
+      error: 'invalidDid',
+      message: e.toString(),
+    })
   )
 }
