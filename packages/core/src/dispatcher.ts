@@ -179,7 +179,7 @@ export class Dispatcher {
     try {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const result = await this._ipfs.dag.get(asCid, { offline: true })
+      const result = await this._ipfs.dag.get(asCid, { offline: true, timeout: 100 })
       return result != null
     } catch (err) {
       console.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
