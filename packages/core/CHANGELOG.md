@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.3...@ceramicnetwork/core@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* polyfill AbortController, so that Ceramic node works on Node.js v14 ([#2090](https://github.com/ceramicnetwork/js-ceramic/issues/2090)) ([fff3e8a](https://github.com/ceramicnetwork/js-ceramic/commit/fff3e8a18ef7d2ba86c80743f61f0487dae3e129))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.2...@ceramicnetwork/core@2.0.0-alpha.3) (2022-03-03)
 
 

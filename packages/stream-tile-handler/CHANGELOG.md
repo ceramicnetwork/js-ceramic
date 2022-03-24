@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.0.0-alpha.3...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* Add support for specifying resources by family ([#2070](https://github.com/ceramicnetwork/js-ceramic/issues/2070)) ([2a17f16](https://github.com/ceramicnetwork/js-ceramic/commit/2a17f16937702225d402ce13569e7ea0c3248990))
+* **stream-tile-handler:** use revocationPhaseOutSec option when verifying signatures ([#2081](https://github.com/ceramicnetwork/js-ceramic/issues/2081)) ([af28f57](https://github.com/ceramicnetwork/js-ceramic/commit/af28f5741d031db2cacb39c1f4a48d08473f569d))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.0.0-alpha.2...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.3) (2022-03-03)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.3...@ceramicnetwork/cli@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* **common, cli:** Add optional abort signal to fetch json and merge with timeout ([#2068](https://github.com/ceramicnetwork/js-ceramic/issues/2068)) ([ca05c7c](https://github.com/ceramicnetwork/js-ceramic/commit/ca05c7c503b31f770f9d25878300a65affdb0e78))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.2...@ceramicnetwork/cli@2.0.0-alpha.3) (2022-03-03)
 
 

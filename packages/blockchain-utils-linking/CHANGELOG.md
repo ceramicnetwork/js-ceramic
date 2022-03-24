@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.3...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.4) (2022-03-24)
+
+
+### Bug Fixes
+
+* Quick fix: OMG Forgot to update a snapshot file, it seems. ([7673020](https://github.com/ceramicnetwork/js-ceramic/commit/7673020a0e0a329efefcdcaf94341cb84fa16657))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.2...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.3) (2022-03-03)
 
 
