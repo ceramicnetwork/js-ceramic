@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`collection-based queries get accounts using a definition in their index 1`] = `
+Object {
+  "records": Array [
+    Object {
+      "account": "did:test:1",
+      "recordID": "recordID-1",
+    },
+    Object {
+      "account": "did:test:2",
+      "recordID": "recordID-2",
+    },
+    Object {
+      "account": "did:test:3",
+      "recordID": "recordID-3",
+    },
+  ],
+  "total": 3,
+}
+`;

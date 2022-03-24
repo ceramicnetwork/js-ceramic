@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`account-based queries account index 1`] = `
+Object {
+  "records": Array [
+    Object {
+      "definitionID": "definitionID-1",
+      "recordID": "recordID-1",
+    },
+    Object {
+      "definitionID": "definitionID-2",
+      "recordID": "recordID-2",
+    },
+  ],
+  "total": 2,
+}
+`;
+
+exports[`account-based queries account links 1`] = `
+Object {
+  "links": Array [
+    "did:bob",
+    "did:charlie",
+    "did:dan",
+  ],
+  "total": 3,
+}
+`;
+
+exports[`account-based queries account links 2`] = `
+Object {
+  "links": Array [
+    "did:bob",
+    "did:charlie",
+  ],
+  "total": 2,
+}
+`;
+
+exports[`account-based queries account links 3`] = `
+Object {
+  "links": Array [
+    "did:bob",
+  ],
+  "total": 1,
+}
+`;
+
+exports[`account-based queries account records 1`] = `
+Object {
+  "records": Array [
+    Object {
+      "id": "account-recordID-1",
+      "tags": Array [
+        "foo",
+      ],
+    },
+    Object {
+      "id": "account-recordID-2",
+      "tags": Array [
+        "bar",
+      ],
+    },
+  ],
+  "total": 2,
+}
+`;
+
+exports[`account-based queries account records 2`] = `
+Object {
+  "records": Array [
+    Object {
+      "id": "account-recordID-2",
+      "tags": Array [
+        "bar",
+      ],
+    },
+  ],
+  "total": 1,
+}
+`;

@@ -288,6 +288,8 @@ export class Dispatcher {
     // multiple times if we get the message from more than one peer.
     this.repository.stateManager.update(streamId, tip)
     // TODO: Handle 'anchorService' if present in message
+
+    // await this._tryIndex(streamId)
   }
 
   /**
@@ -333,8 +335,23 @@ export class Dispatcher {
       this.repository.stateManager.update(expectedStreamID, newTip)
       this.messageBus.outstandingQueries.delete(queryId)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
+
+      // await this._tryIndex(expectedStreamID)
     }
   }
+
+  // async _tryIndex(streamID: StreamID): Promise<void> {
+  //   console.log('try to index stream', streamID.toString())
+  //   const stream = await this.repository.get(streamID)
+  //   if (stream != null) {
+  //     await this.indexing.index({
+  //       id: stream.id.toString(),
+  //       tip: stream.tip.toString(),
+  //       metadata: stream.state.metadata,
+  //     })
+  //     console.log('indexed stream', streamID.toString())
+  //   }
+  // }
 
   /**
    * Gracefully closes the Dispatcher.

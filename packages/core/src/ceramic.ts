@@ -23,7 +23,7 @@ import {
   AnchorValidator,
   AnchorStatus,
 } from '@ceramicnetwork/common'
-
+import { IndexingService, type IndexingServiceConfig } from '@ceramicnetwork/indexing-service'
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
@@ -102,6 +102,8 @@ export interface CeramicConfig {
   useCentralizedPeerDiscovery?: boolean
   syncOverride?: SyncOptions
 
+  indexing?: IndexingServiceConfig
+
   [index: string]: any // allow arbitrary properties
 }
 
@@ -120,6 +122,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
+  indexingService: IndexingService | null
 }
 
 /**
@@ -421,9 +424,26 @@ export class Ceramic implements CeramicApi {
       ? parseInt(process.env.CERAMIC_PUBSUB_QPS_LIMIT)
       : DEFAULT_QPS_LIMIT
 
+    const indexingService = config.indexing
+      ? new IndexingService(config.indexing)
+      : new IndexingService({
+          db: {
+            type: 'postgres',
+            host: 'localhost',
+            port: 5432,
+            username: 'root',
+            password: 'root',
+            database: 'indexing_db',
+          },
+        })
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const repository = new Repository(
+      streamCacheLimit,
+      concurrentRequestsLimit,
+      logger,
+      indexingService
+    )
     const shutdownController = new AbortController()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -452,6 +472,7 @@ export class Ceramic implements CeramicApi {
       pinStoreFactory,
       repository,
       shutdownController,
+      indexingService,
     }
 
     return [modules, params]

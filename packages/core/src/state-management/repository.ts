@@ -11,6 +11,7 @@ import {
   SyncOptions,
   UpdateOpts,
 } from '@ceramicnetwork/common'
+import type { IndexingService, StreamInfo } from '@ceramicnetwork/indexing-service'
 import { PinStore } from '../store/pin-store.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ExecutionQueue } from './execution-queue.js'
@@ -71,7 +72,8 @@ export class Repository {
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
-    private readonly logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger,
+    private readonly indexing: IndexingService | null
   ) {
     this.loadingQ = new ExecutionQueue(concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue(concurrencyLimit, logger)
@@ -179,6 +181,12 @@ export class Repository {
 
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
       return this.stateManager.verifyLoneGenesis(stream)
+    })
+
+    await this._tryToIndex({
+      id: state$.id.toString(),
+      tip: state$.tip.toString(),
+      metadata: state$.state.metadata,
     })
 
     return state$
@@ -336,6 +344,11 @@ export class Repository {
         })
       })
     })
+  }
+
+  async _tryToIndex(stream: StreamInfo): Promise<void> {
+    console.log('repository try to index', stream.id.toString())
+    return await this.indexing?.index(stream)
   }
 
   async close(): Promise<void> {

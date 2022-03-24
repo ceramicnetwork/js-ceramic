@@ -1,0 +1,43 @@
+{
+  "name": "@ceramicnetwork/indexing-service",
+  "version": "0.1.0",
+  "description": "Indexing service for Ceramic",
+  "keywords": [
+    "Ceramic",
+    "indexing"
+  ],
+  "author": "3Box Labs",
+  "homepage": "",
+  "license": "(Apache-2.0 OR MIT)",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "directories": {
+    "lib": "./lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "build": "npx tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
+  },
+  "dependencies": {
+    "pg": "^8.7.3",
+    "reflect-metadata": "^0.1.13",
+    "sqlite3": "^5.0.2",
+    "typeorm": "^0.3.1"
+  },
+  "devDependencies": {
+    "@ceramicnetwork/common": "^2.0.0-alpha.3",
+    "@types/node": "^17.0.5"
+  }
+}
