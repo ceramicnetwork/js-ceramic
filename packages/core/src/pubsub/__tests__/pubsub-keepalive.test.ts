@@ -1,9 +1,10 @@
 import { jest } from '@jest/globals'
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub.js'
-import { deserialize, MsgType } from '../pubsub-message.js'
+import { deserialize, KeepaliveMessage, MsgType } from '../pubsub-message.js'
 import { delay } from '../../__tests__/delay.js'
 import { PubsubKeepalive } from '../pubsub-keepalive.js'
+import { version } from '../../version.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
@@ -38,8 +39,9 @@ test('publish keepalive', async () => {
   expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThan(4)
   for (const call of ipfs.pubsub.publish.mock.calls) {
     expect(call[0]).toEqual(TOPIC)
-    const message = deserialize({ data: call[1] })
+    const message = deserialize({ data: call[1] }) as KeepaliveMessage
     expect(message.typ).toEqual(MsgType.KEEPALIVE)
+    expect(message.ver).toEqual(version)
   }
 
   subscription.unsubscribe()

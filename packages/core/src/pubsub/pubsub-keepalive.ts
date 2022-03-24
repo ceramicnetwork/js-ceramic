@@ -16,6 +16,8 @@ export class PubsubKeepalive
   // start at 0 so it always publishes once on startup
   private lastPublishedKeepAliveMessageDate = 0
 
+  private ONE_DAY_MS = 24 * 60 * 60 * 1000
+
   /**
    * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
    *   starts a background job that runs every maxPubsubPublishInterval/2 and publishes a keepalive
@@ -67,7 +69,7 @@ export class PubsubKeepalive
   publishPubsubKeepaliveIfNeeded(): void {
     const now = Date.now()
     const needToPublishKeepaliveOnceADay =
-      now - this.lastPublishedKeepAliveMessageDate > 24 * 60 * 60 * 1000
+      now - this.lastPublishedKeepAliveMessageDate > this.ONE_DAY_MS
     const needToPublishKeepaliveInactivity =
       now - this.lastPublishedMessageDate >= this.maxPubsubPublishInterval / 2
 
