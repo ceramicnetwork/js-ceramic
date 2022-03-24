@@ -1,5 +1,8 @@
 import { timer, fromEvent, merge, Subscription } from 'rxjs'
 import { first } from 'rxjs/operators'
+import { polyfillAbortController } from '../polyfill-abort-controller.js'
+
+polyfillAbortController()
 
 export function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
   const controller = new AbortController()
