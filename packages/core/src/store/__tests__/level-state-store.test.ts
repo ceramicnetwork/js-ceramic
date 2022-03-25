@@ -89,7 +89,6 @@ describe('LevelDB state store', () => {
       const streamID = StreamUtils.streamIdFromState(makeStreamState())
       await expect(stateStore.load(streamID)).rejects.toThrow('something internal to LevelDB')
 
-      await getSpy.mockReset()
       await getSpy.mockRestore()
     })
   })
