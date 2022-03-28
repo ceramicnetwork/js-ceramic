@@ -87,11 +87,12 @@ export class LevelStateStore implements StateStore {
   /**
    * List pinned stream
    * @param streamId - Stream ID
+   * @param limit - limit on number of results
    */
-  async list(streamId?: StreamID): Promise<string[]> {
+  async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     let streamIds: string[]
     if (streamId == null) {
-      return this.#store.stream({ keys: true, values: false })
+      return this.#store.stream({ keys: true, values: false, limit })
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       streamIds = exists ? [streamId.toString()] : []

@@ -89,7 +89,6 @@ describe('LevelDB state store', () => {
       const streamID = StreamUtils.streamIdFromState(makeStreamState())
       await expect(stateStore.load(streamID)).rejects.toThrow('something internal to LevelDB')
 
-      await getSpy.mockReset()
       await getSpy.mockRestore()
     })
   })
@@ -135,6 +134,19 @@ describe('LevelDB state store', () => {
       expect(list.sort()).toEqual(
         [streams[0].id.toString(), streams[1].id.toString(), streams[2].id.toString()].sort()
       )
+    })
+
+    test('list with limit', async () => {
+      const states = await Promise.all([makeStreamState(), makeStreamState()])
+
+      await stateStore.save(streamFromState(states[0]))
+      await stateStore.save(streamFromState(states[1]))
+
+      let list = await stateStore.list()
+      expect(list.length).toEqual(2)
+
+      list = await stateStore.list(null, 1)
+      expect(list.length).toEqual(1)
     })
 
     test('report if streamId is saved', async () => {

@@ -310,6 +310,27 @@ export class Repository {
   }
 
   /**
+   * Returns the StreamState of a random pinned stream from the state store
+   */
+  async randomPinnedStreamState(): Promise<StreamState | null> {
+    // First get a random streamID from the state store.
+    const res = await this.#deps.pinStore.stateStore.list(null, 1)
+    if (res.length == 0) {
+      return null
+    }
+    if (res.length > 1) {
+      // This should be impossible and indicates a programming error with how the state store
+      // list() call is enforcing the limit argument.
+      throw new Error(
+        `Expected a single streamID from the state store, but got ${res.length} streamIDs instead`
+      )
+    }
+
+    const [streamID] = res
+    return this.#deps.pinStore.stateStore.load(StreamID.fromString(streamID))
+  }
+
+  /**
    * Updates for the StreamState, even if a (pinned or not pinned) stream has already been evicted.
    * Marks the stream as durable, that is not subject to cache eviction.
    *
