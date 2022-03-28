@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/canary-integration",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-alpha.4",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
@@ -14,13 +14,13 @@
     "lib": "lib"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.3",
-    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.3",
-    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.3",
-    "@ceramicnetwork/core": "^2.0.0-alpha.3",
-    "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.3",
-    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.3",
-    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.3",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.4",
+    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.4",
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.4",
+    "@ceramicnetwork/core": "^2.0.0-alpha.4",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.4",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.4",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.4",
     "@stablelib/random": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
     "ceramic-cacao": "^0.0.16",
@@ -28,7 +28,7 @@
     "ethers": "^5.5.4",
     "ganache-core": "^2.13.2",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^2.0.0-alpha.3",
+    "key-did-resolver": "^2.0.0-alpha.4",
     "merge-options": "^3.0.4",
     "pkh-did-resolver": "^1.0.0-alpha.3"
   },

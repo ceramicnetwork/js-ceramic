@@ -2,15 +2,23 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import {
+  CommitType,
+  StreamState,
+  LoggerProvider,
+  IpfsApi,
+  TestUtils,
+  polyfillAbortController,
+} from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
-import { delay } from './delay.js'
 import tmp from 'tmp-promise'
 import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
+
+polyfillAbortController()
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
