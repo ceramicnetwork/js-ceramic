@@ -228,7 +228,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     family: string,
     streamId: StreamID
   ): Promise<void> {
-    const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId, family)
+    const cacao = await this._verifyCapabilityAuthz(commitData, streamId, family)
 
     const atTime = commitData.timestamp ? new Date(commitData.timestamp * 1000) : undefined
     await context.did.verifyJWS(commitData.envelope, {
@@ -249,18 +249,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    */
   async _verifyCapabilityAuthz(
     commitData: CommitData,
-    context: Context,
     streamId: StreamID,
     family: string
   ): Promise<Cacao | null> {
-    const protectedHeader = commitData.envelope.signatures[0].protected
-    const decodedProtectedHeader = base64urlToJSON(protectedHeader)
+    const cacao = commitData.capability
 
-    if (!decodedProtectedHeader.cap) return null
+    if (!cacao) return null
 
-    const capIPFSUri = decodedProtectedHeader.cap
-    const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
-    const cacao = (await context.ipfs.dag.get(capCID)).value as Cacao
     const resources = cacao.p.resources as string[]
     const payloadCID = commitData.envelope.link.toString()
 

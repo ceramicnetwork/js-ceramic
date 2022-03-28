@@ -8,6 +8,7 @@ import { Observable } from 'rxjs'
 import type { RunningStateLike } from './running-state-like.js'
 import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
+import type { Cacao } from 'ceramic-cacao'
 
 /**
  * Describes signature status
@@ -122,6 +123,7 @@ export interface CommitData extends LogEntry {
   commit: any
   envelope?: DagJWS
   proof?: AnchorProof
+  capability?: Cacao
   /**
    * Do not time-check a signature.
    */

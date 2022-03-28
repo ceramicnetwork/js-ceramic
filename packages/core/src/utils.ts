@@ -92,6 +92,17 @@ export class Utils {
       if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
       commitData.commit = linkedCommit
       commitData.envelope = commit
+
+      if (commit.signatures && commit.signatures.length > 0) {
+        const protectedHeader = commit.signatures[0].protected
+        const decodedProtectedHeader = base64urlToJSON(protectedHeader)
+        if (decodedProtectedHeader.cap) {
+          const capIPFSUri = decodedProtectedHeader.cap
+          const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+          const cacao = await dispatcher.retrieveFromIPFS(capCID)
+          commitData.capability = cacao
+        }
+      }
     } else if (StreamUtils.isAnchorCommit(commit)) {
       commitData.type = CommitType.ANCHOR
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
