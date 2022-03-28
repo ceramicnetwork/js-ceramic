@@ -3,6 +3,12 @@ import { filter } from 'rxjs/operators'
 import { BehaviorSubject, lastValueFrom } from 'rxjs'
 import { RunningStateLike } from '../running-state-like.js'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
+import * as uint8arrays from 'uint8arrays'
+import * as random from '@stablelib/random'
+import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
+
+const SHA256_CODE = 0x12
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
@@ -50,5 +56,13 @@ export class TestUtils {
     return new Promise<void>((resolve) => {
       setTimeout(() => resolve(), ms)
     })
+  }
+
+  static randomCID(): CID {
+    const body = uint8arrays.concat([
+      uint8arrays.fromString('1220', 'base16'),
+      random.randomBytes(32),
+    ])
+    return CID.create(1, SHA256_CODE, decodeMultiHash(body))
   }
 }
