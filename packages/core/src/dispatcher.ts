@@ -31,7 +31,7 @@ const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
-const IPFS_OFFLINE_GET_TIMEOUT = 50 // low timeout to work around lack of 'offline' flag support in js-ipfs
+const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
