@@ -5,6 +5,7 @@ lerna-debug.log
 .vscode
 *.iml
 docs/
+.run/
 
 packages/*/lib/
 packages/*/node_modules/

@@ -3,6 +3,57 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.0.0-alpha.3...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* Add support for specifying resources by family ([#2070](https://github.com/ceramicnetwork/js-ceramic/issues/2070)) ([2a17f16](https://github.com/ceramicnetwork/js-ceramic/commit/2a17f16937702225d402ce13569e7ea0c3248990))
+* **stream-tile-handler:** use revocationPhaseOutSec option when verifying signatures ([#2081](https://github.com/ceramicnetwork/js-ceramic/issues/2081)) ([af28f57](https://github.com/ceramicnetwork/js-ceramic/commit/af28f5741d031db2cacb39c1f4a48d08473f569d))
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.0.0-alpha.2...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.3) (2022-03-03)
+
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.0.0-alpha.1...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.2) (2022-02-10)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.10...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+* Only allow valid CBOR in deterministic streams ([#1925](https://github.com/ceramicnetwork/js-ceramic/issues/1925)) ([7031283](https://github.com/ceramicnetwork/js-ceramic/commit/7031283637f93192e0be258eaa00dc2be33a746f))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.10...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
 ## [1.5.12-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.11...@ceramicnetwork/stream-tile-handler@1.5.12-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

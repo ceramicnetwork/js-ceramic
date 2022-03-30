@@ -1,19 +1,21 @@
-import { createCeramic } from '../../create-ceramic'
-import { createIPFS } from '../../create-ipfs'
+import { createCeramic } from '../../create-ceramic.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
-import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore CJS-ESM Interop
+import tendermint from '@tendermint/sig'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { clearDid, happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'
-const localProvider = createWalletFromMnemonic(mnemonic)
+const localProvider = tendermint.createWalletFromMnemonic(mnemonic)
 const chainRef = 'cosmoshub-3'
 
 class CosmosMockSigner {
-  constructor(readonly provider: Wallet) {}
+  constructor(readonly provider: tendermint.Wallet) {}
 
-  public async sign(msg: Tx, metadata: SignMeta): Promise<StdTx> {
-    return signTx(msg, metadata, this.provider)
+  public async sign(msg: tendermint.Tx, metadata: tendermint.SignMeta): Promise<tendermint.StdTx> {
+    return tendermint.signTx(msg, metadata, this.provider)
   }
 }
 

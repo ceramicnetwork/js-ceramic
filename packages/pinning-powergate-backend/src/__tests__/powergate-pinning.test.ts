@@ -1,8 +1,5 @@
-import { EmptyTokenError, PowergatePinningBackend } from '../index'
-import * as pow from '@textile/powergate-client'
-import CID from 'cids'
-
-jest.mock('@textile/powergate-client')
+import { jest } from '@jest/globals'
+import { CID } from 'multiformats/cid'
 
 const token = 'FOO_TOKEN'
 const connectionString = `powergate://example.com?token=${token}`
@@ -18,9 +15,22 @@ const mockPow = {
     list: jest.fn(),
   },
 }
+const createPow = jest.fn(() => {
+  return mockPow
+})
 
-beforeEach(() => {
-  jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
+jest.unstable_mockModule('@textile/powergate-client', () => {
+  return {
+    createPow: createPow
+  }
+})
+
+let PowergatePinningBackend: any
+let EmptyTokenError: any
+beforeEach(async () => {
+  const pow = await import('../index.js')
+  PowergatePinningBackend = pow.PowergatePinningBackend
+  EmptyTokenError = pow.EmptyTokenError
 })
 
 describe('constructor', () => {
@@ -47,11 +57,10 @@ describe('constructor', () => {
 })
 
 test('#open', async () => {
-  jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
   const pinning = new PowergatePinningBackend(connectionString)
   expect(pinning.pow).toBeUndefined()
   await pinning.open()
-  expect(pow.createPow).toBeCalledWith({ host: pinning.endpoint })
+  expect(createPow).toBeCalledWith({ host: pinning.endpoint })
   expect(setToken).toBeCalledWith(token)
   expect(pinning.pow).toBe(mockPow)
 })
@@ -60,16 +69,15 @@ describe('#pin', () => {
   test('pin commit', async () => {
     const pinning = new PowergatePinningBackend(connectionString)
     await pinning.open()
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await pinning.pin(cid)
     expect(mockPow.storageConfig.apply).toBeCalledWith(cid.toString(), expect.anything())
   })
 
   test('throw if not double pinning', async () => {
-    jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
     const pinning = new PowergatePinningBackend(connectionString)
     await pinning.open()
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     mockPow.storageConfig.apply = jest.fn(() => {
       throw new Error('something wrong')
     })
@@ -82,7 +90,7 @@ describe('#unpin', () => {
   test('remove from pin set', async () => {
     const pinning = new PowergatePinningBackend(connectionString)
     await pinning.open()
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await pinning.unpin(cid)
     expect(mockPow.storageConfig.remove).toBeCalledWith(cid.toString())
   })
@@ -90,8 +98,8 @@ describe('#unpin', () => {
 
 describe('#ls', () => {
   const cids = [
-    new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
-    new CID('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
+    CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
+    CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
   ]
 
   test('return list of cids pinned', async () => {

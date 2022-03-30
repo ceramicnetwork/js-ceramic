@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId 1`] = `
-AccountID {
+AccountId {
   "address": "testuser1111",
-  "chainId": ChainID {
+  "chainId": ChainId {
     "namespace": "eosio",
     "reference": "1eaa0824707c8c16bd25145493bf062a",
   },

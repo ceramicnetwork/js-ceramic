@@ -1,27 +1,30 @@
+import { jest } from '@jest/globals'
 import {
   AnchorStatus,
   IpfsApi,
   CommitType,
   SignatureStatus,
   StreamUtils,
+  TestUtils,
 } from '@ceramicnetwork/common'
-import CID from 'cids'
-import { RunningState } from '../state-management/running-state'
-import { createIPFS } from './ipfs-util'
-import { createCeramic } from './create-ceramic'
-import Ceramic from '../ceramic'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update'
+import { CID } from 'multiformats/cid'
+import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
+import { RunningState } from '../state-management/running-state.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createCeramic } from './create-ceramic.js'
+import { Ceramic } from '../ceramic.js'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { streamFromState } from '../state-management/stream-from-state'
+import { streamFromState } from '../state-management/stream-from-state.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { from, timer } from 'rxjs'
 import { concatMap, map } from 'rxjs/operators'
-import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus'
+import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import cloneDeep from 'lodash.clonedeep'
 
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -205,7 +208,7 @@ test('commit history and atCommit', async () => {
 
   const commit0 = stream.allCommitIds[0]
   expect(stream.commitId).toEqual(commit0)
-  expect(commit0.equals(streamState.id.atCommit(streamState.id.cid))).toBeTruthy()
+  expect(commit0.equals(CommitID.make(streamState.id, streamState.id.cid))).toBeTruthy()
 
   await anchorUpdate(ceramic, stream)
   expect(stream.allCommitIds.length).toEqual(2)
@@ -255,6 +258,15 @@ test('commit history and atCommit', async () => {
   expect(commit4.equals(stream.anchorCommitIds[1])).toBeFalsy()
   expect(stream.state.log.length).toEqual(5)
 
+  await TestUtils.waitForState(
+    stream,
+    3000,
+    (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+    () => {
+      throw new Error(`Expect anchored`)
+    }
+  )
+
   // Correctly check out a specific commit
   const streamStateOriginal = cloneDeep(streamState.state)
   const streamV0 = await ceramic.repository.stateManager.atCommit(streamState, commit0)
@@ -293,7 +305,9 @@ test('commit history and atCommit', async () => {
   expect(streamV4.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
   // Ensure that stateManager.atCommit does not mutate the passed in state object
-  expect(JSON.stringify(streamState.state)).toEqual(JSON.stringify(streamStateOriginal))
+  expect(StreamUtils.serializeState(streamState.state)).toEqual(
+    StreamUtils.serializeState(streamStateOriginal)
+  )
 })
 
 describe('atCommit', () => {
@@ -301,7 +315,7 @@ describe('atCommit', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const streamState = await ceramic.repository.load(stream.id, {})
     // Emulate loading a non-existing commit
-    const nonExistentCommitID = stream.id.atCommit(FAKE_CID)
+    const nonExistentCommitID = CommitID.make(stream.id, FAKE_CID)
     const originalRetrieve = ceramic.dispatcher.retrieveCommit.bind(ceramic.dispatcher)
     ceramic.dispatcher.retrieveCommit = jest.fn(async (cid: CID) => {
       if (cid.equals(FAKE_CID)) {
@@ -352,7 +366,7 @@ describe('atCommit', () => {
     const newContent = { abc: 321, def: 456, gh: 987 }
     const updateCommit = await stream.makeCommit(ceramic, newContent)
     const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
-    const futureCommitID = stream.id.atCommit(futureCommitCID)
+    const futureCommitID = CommitID.make(stream.id, futureCommitCID)
 
     // Now load the stream at a commitID ahead of what is currently in the state in the repository.
     // The existing RunningState from the repository should also get updated
@@ -387,7 +401,7 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await ceramic.repository.stateManager
-    .atCommit(streamState1, streamId.atCommit(streamId.cid))
+    .atCommit(streamState1, CommitID.make(streamId, streamId.cid))
     .then((stream) => stream.state)
   const state$ = new RunningState(initialState, true)
   ceramic.repository.add(state$)
@@ -425,16 +439,17 @@ test('handles basic conflict', async () => {
   const streamState1Original = cloneDeep(streamState1.state)
   const streamAtValidCommit = await ceramic.repository.stateManager.atCommit(
     streamState1,
-    streamId.atCommit(tipValidUpdate)
+    CommitID.make(streamId, tipValidUpdate)
   )
   expect(streamAtValidCommit.value.content).toEqual(newContent)
 
   // Loading invalid commit fails
   await expect(
-    ceramic.repository.stateManager.atCommit(streamState1, streamId.atCommit(tipInvalidUpdate))
-  ).rejects.toThrow(
-    `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for stream ${streamId.toString()}`
-  )
+    ceramic.repository.stateManager.atCommit(
+      streamState1,
+      CommitID.make(streamId, tipInvalidUpdate)
+    )
+  ).rejects.toThrow(/Commit rejected by conflict resolution/)
 
   // Ensure that stateManager.atCommit does not mutate the passed in state object
   expect(JSON.stringify(streamState1.state)).toEqual(JSON.stringify(streamState1Original))
@@ -513,7 +528,7 @@ describe('sync', () => {
     return uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
   }
   function hash(data: string): CID {
-    return new CID(1, 'sha2-256', Buffer.from('1220' + digest(data), 'hex'))
+    return CID.create(1, 0x12, decodeMultiHash(Buffer.from('1220' + digest(data), 'hex')))
   }
 
   function responseTips(amount: number) {

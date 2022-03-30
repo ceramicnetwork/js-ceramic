@@ -1,12 +1,13 @@
-import Ceramic from '../ceramic'
+import { jest } from '@jest/globals'
+import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { IpfsApi, CeramicApi, SyncOptions } from '@ceramicnetwork/common'
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
+import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -45,16 +46,17 @@ const createCeramic = async (
   return ceramic
 }
 
-async function createStream(
+async function createDeterministicStream(
   ceramic: CeramicApi,
   controller: string,
-  family: string
+  family: string,
+  pin: boolean
 ): Promise<TileDocument> {
   return TileDocument.create(
     ceramic,
     null,
     { deterministic: true, controllers: [controller], family },
-    { anchor: false, publish: false, sync: SyncOptions.NEVER_SYNC }
+    { anchor: false, publish: false, pin, sync: SyncOptions.NEVER_SYNC }
   )
 }
 
@@ -74,28 +76,29 @@ describe('Ceramic stream pinning', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    jest.resetAllMocks()
+    jest.restoreAllMocks()
+    await ipfs1.stop()
     await tmpFolder.cleanup()
   })
 
   it('Stream not pinned will not retain data on restart', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const stream1 = await createStream(ceramic, ceramic.did.id, 'test')
+    const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', false)
     const content = { some: 'data' }
     await stream1.update(content)
     expect(stream1.content).toEqual(content)
     await ceramic.close()
 
     ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const stream2 = await createStream(ceramic, ceramic.did.id, 'test')
+    const stream2 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', false)
     expect(stream2.content).not.toEqual(content)
     await ceramic.close()
   })
 
   it('Stream pinned will retain data on restart', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const stream1 = await createStream(ceramic, ceramic.did.id, 'test')
-    await ceramic.pin.add(stream1.id)
+    const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', true)
     await expect(isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
     const content = { some: 'data' }
     await stream1.update(content)
@@ -110,27 +113,72 @@ describe('Ceramic stream pinning', () => {
 
   it('Stream pinned will retain data on restart, load though create', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const stream1 = await createStream(ceramic, ceramic.did.id, 'test')
-    await ceramic.pin.add(stream1.id)
+    const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', true)
     const content = { some: 'data' }
     await stream1.update(content)
     expect(stream1.content).toEqual(content)
     await ceramic.close()
 
     ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const stream2 = await createStream(ceramic, ceramic.did.id, 'test')
+    const stream2 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', true)
     expect(stream2.content).toEqual(content)
     await ceramic.close()
   })
 
-  it('Stream can be pinned on creation', async () => {
+  it('Node detects if ipfs data is lost', async () => {
+    const content0 = { foo: 'bar' }
+    const content1 = { foo: 'baz' }
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, content0, null, {
+      pin: true,
+      anchor: false,
+      publish: false,
+    })
+    await stream.update(content1)
+    expect(stream.content).toEqual(content1)
+    await ceramic.close()
+
+    // Re-create the ipfs node with a clean repo, losing all the pinned ipfs data, but preserving
+    // the state store data for the Ceramic node.
+    await ipfs1.stop()
+    ipfs1 = await createIPFS()
+
+    // Starting up the Ceramic node should fail as it detects that the IPFS commit data is missing.
+    await expect(createCeramic(ipfs1, tmpFolder.path)).rejects.toThrow(/IPFS data missing/)
+  })
+
+  it('Stream is pinned by default', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
-      pin: true,
     })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+
+    await ceramic.close()
+  })
+
+  it('Stream can be created without pinning', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+      pin: false,
+    })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+
+    await ceramic.close()
+  })
+
+  it('Updating stream does not pin by default', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+      pin: false,
+    })
+    await stream.update({ foo: 'baz' })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -140,13 +188,13 @@ describe('Ceramic stream pinning', () => {
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
+      pin: false,
     })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false, pin: true })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-
     await ceramic.close()
   })
 
@@ -155,6 +203,7 @@ describe('Ceramic stream pinning', () => {
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
+      pin: false,
     })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
@@ -188,9 +237,10 @@ describe('Ceramic stream pinning', () => {
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
+      pin: false,
     })
-    ceramic.pin.add(stream.id)
-    stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
+    await ceramic.pin.add(stream.id)
+    await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
 
@@ -206,6 +256,7 @@ describe('Ceramic stream pinning', () => {
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
+      pin: false,
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
@@ -233,6 +284,7 @@ describe('Ceramic stream pinning', () => {
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
+      pin: false,
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
@@ -255,6 +307,7 @@ describe('Ceramic stream pinning', () => {
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
+      pin: false,
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const unpinSpy = jest.spyOn(ipfs1.pin, 'rm')

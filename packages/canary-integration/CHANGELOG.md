@@ -3,25 +3,60 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.4.11](/compare/@ceramicnetwork/canary-integration@1.4.10-rc.3...@ceramicnetwork/canary-integration@1.4.11) (2022-02-11)
-
-**Note:** Version bump only for package @ceramicnetwork/canary-integration
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.0.0-alpha.3...@ceramicnetwork/canary-integration@2.0.0-alpha.4) (2022-03-24)
 
 
+### Features
 
-
-
-## [1.4.10-rc.3](/compare/@ceramicnetwork/canary-integration@1.4.10-rc.1...@ceramicnetwork/canary-integration@1.4.10-rc.3) (2022-02-09)
-
-**Note:** Version bump only for package @ceramicnetwork/canary-integration
+* Add support for specifying resources by family ([#2070](https://github.com/ceramicnetwork/js-ceramic/issues/2070)) ([2a17f16](https://github.com/ceramicnetwork/js-ceramic/commit/2a17f16937702225d402ce13569e7ea0c3248990))
 
 
 
 
 
-## [1.4.10-rc.1](/compare/@ceramicnetwork/canary-integration@1.4.10-rc.0...@ceramicnetwork/canary-integration@1.4.10-rc.1) (2022-02-09)
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.0.0-alpha.2...@ceramicnetwork/canary-integration@2.0.0-alpha.3) (2022-03-03)
 
-**Note:** Version bump only for package @ceramicnetwork/canary-integration
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.0.0-alpha.1...@ceramicnetwork/canary-integration@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* Cache chainId requests to providers ([#2003](https://github.com/ceramicnetwork/js-ceramic/issues/2003)) ([892d6af](https://github.com/ceramicnetwork/js-ceramic/commit/892d6af6708b32690e9eb0ae5dab6cfad3f822f6))
+* Restore mocked ethereum tests ([#2026](https://github.com/ceramicnetwork/js-ceramic/issues/2026)) ([019ec64](https://github.com/ceramicnetwork/js-ceramic/commit/019ec6427dcc81126a96e01cf8ed88abcb3afa4c))
+* Restore tezos tests that require mocks ([#2027](https://github.com/ceramicnetwork/js-ceramic/issues/2027)) ([8ab174d](https://github.com/ceramicnetwork/js-ceramic/commit/8ab174d201cb9387d3896438545ffc5f5ab31fad))
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@1.4.3-rc.10...@ceramicnetwork/canary-integration@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+* Only allow valid CBOR in deterministic streams ([#1925](https://github.com/ceramicnetwork/js-ceramic/issues/1925)) ([7031283](https://github.com/ceramicnetwork/js-ceramic/commit/7031283637f93192e0be258eaa00dc2be33a746f))
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@1.4.3-rc.10...@ceramicnetwork/canary-integration@2.0.0-alpha.0) (2021-12-07)
+
+
+### Features
+
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
 
 
 

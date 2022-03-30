@@ -1,37 +1,27 @@
-import { Dispatcher } from '../dispatcher'
-import CID from 'cids'
+import { jest } from '@jest/globals'
+import { Dispatcher } from '../dispatcher.js'
+import { CID } from 'multiformats/cid'
 import { LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { Repository, RepositoryDependencies } from '../state-management/repository'
+import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store'
-import { PinStore } from '../store/pin-store'
-import { createIPFS } from './ipfs-util'
-import IpfsHttpClient from 'ipfs-http-client'
-import HttpApi from 'ipfs-http-server'
-import getPort from 'get-port'
+import { LevelStateStore } from '../store/level-state-store.js'
+import { PinStore } from '../store/pin-store.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { TaskQueue } from '../pubsub/task-queue.js'
+import { delay } from './delay.js'
 
 const TOPIC = '/ceramic'
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 describe('Dispatcher with real ipfs over http', () => {
-  jest.setTimeout(1000 * 60 * 2) // 2 minutes. Need at least 1 min 30 for 3 30 second timeouts with retries
+  jest.setTimeout(1000 * 30)
 
   let dispatcher: Dispatcher
-  let ipfsNode: IpfsApi
-  let ipfsApi: HttpApi
   let ipfsClient: IpfsApi
+  let shutdownController: AbortController
 
   beforeAll(async () => {
-    const ipfsPort = await getPort()
-    const ipfsUrl = `http://127.0.0.1:${ipfsPort}`
-    const ipfsApiAddress = `/ip4/127.0.0.1/tcp/${ipfsPort}`
-    const overrideConfig = { config: { Addresses: { API: [ipfsApiAddress] } } }
-    console.log(`creatings ipfs with api port ${ipfsPort}`)
-    ipfsNode = await createIPFS(overrideConfig)
-    ipfsApi = new HttpApi(ipfsNode)
-    await ipfsApi.start()
-
-    ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
+    ipfsClient = await createIPFS()
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
@@ -42,13 +32,18 @@ describe('Dispatcher with real ipfs over http', () => {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
+    shutdownController = new AbortController()
+
     dispatcher = new Dispatcher(
       ipfsClient,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
-      10
+      shutdownController.signal,
+      10,
+      new TaskQueue(),
+      3000 // time out ipfs.dag.get after 3 seconds
     )
   })
 
@@ -59,8 +54,12 @@ describe('Dispatcher with real ipfs over http', () => {
     // has been processed
     await TestUtils.delay(5000)
 
-    await ipfsApi.stop()
-    await ipfsNode.stop()
+    await ipfsClient.stop()
+  })
+
+  afterEach(() => {
+    jest.resetAllMocks()
+    jest.restoreAllMocks()
   })
 
   it('basic ipfs http client functionality', async () => {
@@ -73,12 +72,29 @@ describe('Dispatcher with real ipfs over http', () => {
   it('retries on timeout', async () => {
     const ipfsGetSpy = jest.spyOn(ipfsClient.dag, 'get')
 
-    // try to load a CID that ipfs doesn't know about.  It will timeout
-    await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/Request timed out/)
+    // try to load a CID that ipfs doesn't know about.  It will timeout.
+    // Timeout error message is different depending on if we are talking to a go-ipfs or js-ipfs instance
+    await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/(context deadline exceeded|request timed out)/)
 
     // Make sure we tried 3 times to get the cid from ipfs, not just once
     expect(ipfsGetSpy).toBeCalledTimes(3)
-
-    ipfsGetSpy.mockRestore()
   })
+
+  it('interrupts on shutdown', async () => {
+    // This test has a shorter test timeout than the 'retries on timeout' test above
+    // (5 seconds instead of 30).  That means that if the retrieveCommit call actually goes through
+    // 3 retries that each take 3 seconds to time out, the test will take over 9 seconds and will
+    // fail due to test timeout.  If the test succeeds, that means that signaling the
+    // shutdownController successfully interrupted waiting on IPFS.
+
+    const getPromise = dispatcher.retrieveCommit(FAKE_CID)
+    // Apparently, js-ipfs does not react on already triggered AbortSignal.
+    // So we have to add a timeout to make sure an ipfs function is called before the signal is triggered.
+    const isJsIpfsNode = Boolean((ipfsClient as any).preload) // Exists on js-ipfs node, and is not present on ipfs-http-client.
+    if (isJsIpfsNode) {
+      await delay(1000)
+    }
+    shutdownController.abort()
+    await expect(getPromise).rejects.toThrow(/aborted/)
+  }, 50000)
 })

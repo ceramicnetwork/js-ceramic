@@ -1,38 +1,36 @@
 {
   "name": "@ceramicnetwork/canary-integration",
-  "version": "1.4.11",
+  "version": "2.0.0-alpha.4",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --verbose --coverage --runInBand --forceExit",
+    "build": "npx tsc -p tsconfig.json",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
     "lib": "lib"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.4.17-rc.0",
-    "@ceramicnetwork/blockchain-utils-linking": "^1.5.6-rc.0",
-    "@ceramicnetwork/blockchain-utils-validation": "^1.6.9-rc.0",
-    "@ceramicnetwork/core": "^1.13.2",
-    "@ceramicnetwork/stream-caip10-link": "^1.2.10-rc.0",
-    "@ceramicnetwork/stream-tile": "^1.5.8-rc.0",
-    "@truffle/hdwallet-provider": "^1.5.0",
-    "dids": "^2.4.0",
-    "ganache-core": "^2.13.1",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.4",
+    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.4",
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.4",
+    "@ceramicnetwork/core": "^2.0.0-alpha.4",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.4",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.4",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.4",
+    "@stablelib/random": "^1.0.1",
+    "@truffle/hdwallet-provider": "^2.0.0",
+    "ceramic-cacao": "^0.0.16",
+    "dids": "^3.0.0-alpha.12",
+    "ethers": "^5.5.4",
+    "ganache-core": "^2.13.2",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^1.4.5-rc.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced",
-    "testRegex": ".(spec|test).ts$",
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    }
+    "key-did-resolver": "^2.0.0-alpha.4",
+    "merge-options": "^3.0.4",
+    "pkh-did-resolver": "^1.0.0-alpha.3"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

@@ -2,17 +2,18 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
-import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
+import { CommitData, CommitType, IpfsApi, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
-import { Dispatcher } from './dispatcher'
+import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type CID from 'cids'
+import { CID } from 'multiformats/cid'
+import { fromString, toString } from 'uint8arrays'
 
 /**
  * Various utility functions
  */
-export default class Utils {
+export class Utils {
   @Memoize()
   static get validator() {
     const ajv = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
@@ -99,6 +100,26 @@ export default class Utils {
     if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
     return commitData
   }
+
+  /**
+   * Puts a block on IPFS
+   * @param cid the CID of the block to put
+   * @param block bytes array of block to put
+   * @param ipfsApi the IPFS Api instance to use
+   * @param signal AbortSignal
+   */
+  static async putIPFSBlock(
+    cid: CID | string,
+    block: Uint8Array,
+    ipfsApi: IpfsApi,
+    signal: AbortSignal
+  ) {
+    if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
+    const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
+    const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
+    const version = cid.version
+    await ipfsApi.block.put(block, { format, mhtype, version, signal })
+  }
 }
 
 export class TrieNode {
@@ -137,4 +158,8 @@ export const promiseTimeout = (
     setTimeout(() => reject(new Error(timeoutErrorMsg)), ms)
   })
   return Promise.race([timeout, promise])
+}
+
+export function base64urlToJSON(s: string): Record<string, any> {
+  return JSON.parse(toString(fromString(s, 'base64url'))) as Record<string, any>
 }

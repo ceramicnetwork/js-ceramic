@@ -1,7 +1,7 @@
 import { PinApi, PublishOpts, SyncOptions } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { Repository } from './state-management/repository'
+import { Repository } from './state-management/repository.js'
 
 /**
  * PinApi for Ceramic core.

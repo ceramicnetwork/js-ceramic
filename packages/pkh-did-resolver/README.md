@@ -1,4 +1,8 @@
 # PKH DID method resolver
+![ceramicnetwork](https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+[![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
+[![Twitter](https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social)](https://twitter.com/ceramicnetwork)
 [![npm](https://img.shields.io/npm/dt/pkh-did-resolver.svg)](https://www.npmjs.com/package/pkh-did-resolver)
 [![npm](https://img.shields.io/npm/v/pkh-did-resolver.svg)](https://www.npmjs.com/package/pkh-did-resolver)
 [![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
@@ -8,6 +12,9 @@ This package contains did:pkh method resolver implementation. Please refer to th
 
 ## Usage
 This package is used as a plugin to the [`did-resolver`](https://github.com/decentralized-identity/did-resolver) library, which is the primary interface for resolving DIDs.
+
+See the [ceramic developer site](https://developers.ceramic.network/) for more details about how to use this package.
+
 
 ### Installation
 ```

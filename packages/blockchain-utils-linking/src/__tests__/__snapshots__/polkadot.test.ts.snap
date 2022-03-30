@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId 1`] = `
-AccountID {
+AccountId {
   "address": "5CXU7u72Gz9Jqo6FdAwzSsxX5JhdRwMj2UZ4xrAEoo3AyySx",
-  "chainId": ChainID {
+  "chainId": ChainId {
     "namespace": "polkadot",
     "reference": "b0a8d493285c2df73290dfb7e61f870f",
   },

@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.0.0-alpha.3...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.4) (2022-03-24)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.0.0-alpha.2...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.3) (2022-03-03)
+
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.0.0-alpha.1...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+
+
+
+
+
 ## [1.4.17-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.16...@ceramicnetwork/3id-did-resolver@1.4.17-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
@@ -85,6 +115,22 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 ## [1.4.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.10-rc.11...@ceramicnetwork/3id-did-resolver@1.4.10) (2021-12-06)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.10-rc.11...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.1) (2022-01-14)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.10-rc.11...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.0) (2021-12-07)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
 

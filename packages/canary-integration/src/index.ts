@@ -1,2 +1,2 @@
-export { createIPFS } from './create-ipfs'
+export { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 export { createCeramic } from './create-ceramic'

@@ -1,7 +1,4 @@
-import { StreamID } from './stream-id'
-export { CommitID } from './commit-id'
-export { StreamID } from './stream-id'
-export { StreamRef } from './stream-ref'
-export * from './stream-type'
-
-export default StreamID
+export { CommitID } from './commit-id.js'
+export { StreamID } from './stream-id.js'
+export { StreamRef } from './stream-ref.js'
+export * from './stream-type.js'

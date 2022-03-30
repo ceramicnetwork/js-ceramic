@@ -1,5 +1,6 @@
+import { jest } from '@jest/globals'
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
-import { EosioAuthProvider } from '../eosio'
+import { EosioAuthProvider } from '../eosio.js'
 
 const did = 'did:3:bafysdfwefwe'
 const telosTestnetChainId = '1eaa0824707c8c16bd25145493bf062aecddfeb56c736f6ba6397f3195f33c9f'

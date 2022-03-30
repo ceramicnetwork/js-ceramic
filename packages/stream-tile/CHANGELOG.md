@@ -3,6 +3,55 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.0.0-alpha.3...@ceramicnetwork/stream-tile@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* Add support for specifying resources by family ([#2070](https://github.com/ceramicnetwork/js-ceramic/issues/2070)) ([2a17f16](https://github.com/ceramicnetwork/js-ceramic/commit/2a17f16937702225d402ce13569e7ea0c3248990))
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.0.0-alpha.2...@ceramicnetwork/stream-tile@2.0.0-alpha.3) (2022-03-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.0.0-alpha.1...@ceramicnetwork/stream-tile@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.1-rc.2...@ceramicnetwork/stream-tile@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* Only allow valid CBOR in deterministic streams ([#1925](https://github.com/ceramicnetwork/js-ceramic/issues/1925)) ([7031283](https://github.com/ceramicnetwork/js-ceramic/commit/7031283637f93192e0be258eaa00dc2be33a746f))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.1-rc.2...@ceramicnetwork/stream-tile@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 ## [1.5.8-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.7...@ceramicnetwork/stream-tile@1.5.8-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

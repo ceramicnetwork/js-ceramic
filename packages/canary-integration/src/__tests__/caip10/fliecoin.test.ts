@@ -1,8 +1,8 @@
-import { createCeramic } from '../../create-ceramic'
-import { createIPFS } from '../../create-ipfs'
+import { createCeramic } from '../../create-ceramic.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { clearDid, happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { LocalManagedProvider } from '@glif/local-managed-provider'
 import { Network } from '@glif/filecoin-address'
 

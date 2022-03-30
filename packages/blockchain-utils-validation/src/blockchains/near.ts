@@ -1,9 +1,9 @@
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
 import crypto from 'crypto'
 import nacl from 'tweetnacl'
-import { AccountID } from 'caip'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const verifySignature = async (
   pubKey: Uint8Array,
@@ -23,16 +23,14 @@ const verifySignature = async (
 const namespace = 'near'
 
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
-  const pubKey = uint8arrays.fromString(new AccountID(proof.account).address, 'base58btc')
+  const pubKey = uint8arrays.fromString(normalizeAccountId(proof.account).address, 'base58btc')
   const msg = proof.message
   const sig = uint8arrays.fromString(proof.signature, 'base64')
   const is_sig_valid = await verifySignature(pubKey, msg, sig)
   return is_sig_valid ? proof : null
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

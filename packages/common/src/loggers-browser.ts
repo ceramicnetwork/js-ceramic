@@ -4,7 +4,7 @@ import {
   LogStyle,
   LogLevel,
   ServiceLog,
-} from './logger-base'
+} from './logger-base.js'
 import flatten from 'flat'
 
 const consoleLogger = {

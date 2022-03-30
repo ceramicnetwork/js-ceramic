@@ -1,4 +1,5 @@
 import jsonpatch from 'fast-json-patch'
+import * as dagCbor from '@ipld/dag-cbor'
 import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
@@ -66,7 +67,12 @@ export interface TileMetadataArgs {
   forbidControllerChange?: boolean
 }
 
-const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_OPTS = {
+  anchor: true,
+  publish: true,
+  pin: true,
+  sync: SyncOptions.PREFER_CACHE,
+}
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 
@@ -185,7 +191,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
+    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const commit = await TileDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
@@ -384,10 +391,13 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
 
     if (content == null) {
+      const result = { header }
+      // Check if we can encode it in cbor. Should throw an error when invalid payload.
+      dagCbor.encode(result)
       // No signature needed if no genesis content
-      return { header }
+      return result
     }
     const commit: GenesisCommit = { data: content, header }
-    return await _signDagJWS(signer, commit)
+    return _signDagJWS(signer, commit)
   }
 }

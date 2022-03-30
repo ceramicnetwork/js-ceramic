@@ -1,9 +1,10 @@
+import { jest } from '@jest/globals'
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { Pubsub } from '../pubsub'
-import { MsgType, serialize } from '../pubsub-message'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
-import { PubsubRateLimit } from '../pubsub-ratelimit'
+import { Pubsub } from '../pubsub.js'
+import { MsgType, serialize } from '../pubsub-message.js'
+import { PubsubRateLimit } from '../pubsub-ratelimit.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()

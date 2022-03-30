@@ -1,6 +1,5 @@
 import fetch from 'cross-fetch'
-// TODO: remove with esm upgrade
-import AbortController from 'abort-controller'
+import { mergeAbortSignals, TimedAbortSignal } from './abort-signal-utils.js'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
 interface FetchOpts {
@@ -8,6 +7,7 @@ interface FetchOpts {
   method?: string
   headers?: any
   timeout?: number
+  signal?: AbortSignal
 }
 
 export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any> {
@@ -19,22 +19,13 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
   }
 
   const timeoutLength = opts.timeout || DEFAULT_FETCH_TIMEOUT
-  const controller = new AbortController()
-  const timeout = setTimeout(() => {
-    controller.abort()
-  }, timeoutLength)
-  Object.assign(opts, {
-    signal: controller.signal,
-  })
+  const timedAbortSignal = new TimedAbortSignal(timeoutLength)
 
-  const res = await fetch(url, opts)
-    .catch((err) => {
-      if (err.name == 'AbortError') {
-        throw new Error(`Http request timed out after ${timeoutLength} ms`)
-      }
-      throw err
-    })
-    .finally(() => timeout && clearTimeout(timeout))
+  opts.signal = opts.signal
+    ? mergeAbortSignals([opts.signal, timedAbortSignal.signal])
+    : timedAbortSignal.signal
+
+  const res = await fetch(url, opts).finally(() => timedAbortSignal.clear())
 
   if (!res.ok) {
     const text = await res.text()

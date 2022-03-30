@@ -3,28 +3,70 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.11.1](/compare/@ceramicnetwork/cli@1.11.0-rc.3...@ceramicnetwork/cli@1.11.1) (2022-02-11)
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.3...@ceramicnetwork/cli@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* **common, cli:** Add optional abort signal to fetch json and merge with timeout ([#2068](https://github.com/ceramicnetwork/js-ceramic/issues/2068)) ([ca05c7c](https://github.com/ceramicnetwork/js-ceramic/commit/ca05c7c503b31f770f9d25878300a65affdb0e78))
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.2...@ceramicnetwork/cli@2.0.0-alpha.3) (2022-03-03)
+
+
+### Bug Fixes
+
+* revert `format` changes and set `keepalive: false` in HTTP(S) agent to IPFS ([#2065](https://github.com/ceramicnetwork/js-ceramic/issues/2065)) ([b0b5e70](https://github.com/ceramicnetwork/js-ceramic/commit/b0b5e701b569d746b9b8e68ac973d4e705f78af5))
+
+
+### Features
+
+* Allow running embedded IPFS daemon ([#2066](https://github.com/ceramicnetwork/js-ceramic/issues/2066)) ([2fd767c](https://github.com/ceramicnetwork/js-ceramic/commit/2fd767cebf9e5cd5c585fa4e5a746a3aa2fbc15b))
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.1...@ceramicnetwork/cli@2.0.0-alpha.2) (2022-02-10)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Properly serialize timeout for multiquery requests through the http client ([#1899](https://github.com/ceramicnetwork/js-ceramic/issues/1899)) ([cb968a5](https://github.com/ceramicnetwork/js-ceramic/commit/cb968a53b9cbad825c8c01828fac52eb52752323))
+* **cli:** Pin version of '@types/abstract-leveldown' package ([#1974](https://github.com/ceramicnetwork/js-ceramic/issues/1974)) ([59a98a2](https://github.com/ceramicnetwork/js-ceramic/commit/59a98a2caeb5d0257787e502eebbbf5c4027e152))
+* **cli:** Pin version of '@types/abstract-leveldown' package ([#1974](https://github.com/ceramicnetwork/js-ceramic/issues/1974)) ([f69b71f](https://github.com/ceramicnetwork/js-ceramic/commit/f69b71fcf45e8b0c7bbed6c37c66387fa6393361))
+* return 503 during health-check if connected ipfs is not online ([#1969](https://github.com/ceramicnetwork/js-ceramic/issues/1969)) ([03b739a](https://github.com/ceramicnetwork/js-ceramic/commit/03b739a523f2a4cd41761f8e3769509115f87b17))
+
+
+### Features
+
+* add client side timeout to http-requests ([a33356c](https://github.com/ceramicnetwork/js-ceramic/commit/a33356c8a518252af9d81d1136411725c429cc3b))
+* Add PL-managed list of bootstrap nodes to embedded go-ipfs instance ([#2019](https://github.com/ceramicnetwork/js-ceramic/issues/2019)) ([f107615](https://github.com/ceramicnetwork/js-ceramic/commit/f107615e3391023311608ddf6f0f56f9ed9a6a81))
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+* **core:** Throw error if commit rejected by conflict resolution ([#2009](https://github.com/ceramicnetwork/js-ceramic/issues/2009)) ([998ac5e](https://github.com/ceramicnetwork/js-ceramic/commit/998ac5e2e7658bc523f803d99b80e65f8604dee3))
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.9.1-rc.10...@ceramicnetwork/cli@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.9.1-rc.10...@ceramicnetwork/cli@2.0.0-alpha.0) (2021-12-07)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
-
-
-
-
-
-# [1.11.0-rc.3](/compare/@ceramicnetwork/cli@1.11.0-rc.1...@ceramicnetwork/cli@1.11.0-rc.3) (2022-02-09)
-
-**Note:** Version bump only for package @ceramicnetwork/cli
-
-
-
-
-
-# [1.11.0-rc.1](/compare/@ceramicnetwork/cli@1.11.0-rc.0...@ceramicnetwork/cli@1.11.0-rc.1) (2022-02-09)
-
-
-### Reverts
-
-* Revert "Add Deprecation notice to all functions that have been moved to the Glaze CLI (#1985)" 20ada0a, closes #1985
 
 
 

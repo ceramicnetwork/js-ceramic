@@ -1,11 +1,12 @@
 import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction } from 'rxjs'
-import { deserialize, KeepaliveMessage, MsgType, PubsubMessage, serialize } from './pubsub-message'
-import { IpfsApi } from '@ceramicnetwork/common'
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
-import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel'
+import { IpfsApi } from '@ceramicnetwork/common'
+import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { TextDecoder } from 'util'
-import uint8ArrayToString from 'uint8arrays/to-string'
+import { toString as uint8ArrayToString } from 'uint8arrays'
+import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel.js'
+import { TaskQueue } from './task-queue.js';
 
 const textDecoder = new TextDecoder('utf-8')
 
@@ -54,10 +55,11 @@ export class Pubsub extends Observable<PubsubMessage> {
     private readonly topic: string,
     private readonly resubscribeEvery: number,
     private readonly pubsubLogger: ServiceLogger,
-    private readonly logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger)
+      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger, tasks)
 
       incoming$
         .pipe(filterExternal(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))

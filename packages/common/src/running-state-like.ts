@@ -1,5 +1,5 @@
 import type { Observable, OperatorFunction, Subscribable } from 'rxjs'
-import type { StreamState, StreamStateHolder } from './stream'
+import type { StreamState, StreamStateHolder } from './stream.js'
 
 /**
  * `pipe` aspect of rxjs Observable.

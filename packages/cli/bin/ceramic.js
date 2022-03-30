@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-require('../lib/bin/ceramic')
+await import('../lib/bin/ceramic.js')

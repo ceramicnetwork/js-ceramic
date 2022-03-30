@@ -12,7 +12,7 @@ const DID_JSON = 'application/did+json'
 const SECPK1_NAMESPACES = ['eip155', 'bip122']
 const TZ_NAMESPACE = 'tezos'
 
-function toDidDoc (did: string, accountId: string): any {
+function toDidDoc(did: string, accountId: string): any {
   const { namespace } = AccountId.parse(accountId).chainId as ChainIdParams
   const vmId = did + '#blockchainAccountId'
   const doc = {
@@ -20,18 +20,21 @@ function toDidDoc (did: string, accountId: string): any {
       'https://www.w3.org/ns/did/v1',
       {
         blockchainAccountId: 'https://w3id.org/security#blockchainAccountId',
-        EcdsaSecp256k1RecoveryMethod2020: 'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020'
-      }
+        EcdsaSecp256k1RecoveryMethod2020:
+          'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020',
+      },
     ],
     id: did,
-    verificationMethod: [{
-      id: vmId,
-      type: 'EcdsaSecp256k1RecoveryMethod2020',
-      controller: did,
-      blockchainAccountId: accountId
-    }],
-    authentication: [ vmId ],
-    assertionMethod: [ vmId ]
+    verificationMethod: [
+      {
+        id: vmId,
+        type: 'EcdsaSecp256k1RecoveryMethod2020',
+        controller: did,
+        blockchainAccountId: accountId,
+      },
+    ],
+    authentication: [vmId],
+    assertionMethod: [vmId],
   }
   if (SECPK1_NAMESPACES.includes(namespace)) {
     // nothing to do here
@@ -42,7 +45,7 @@ function toDidDoc (did: string, accountId: string): any {
       id: tzId,
       type: 'TezosMethod2021',
       controller: did,
-      blockchainAccountId: accountId
+      blockchainAccountId: accountId,
     })
     doc.authentication.push(tzId)
     doc.assertionMethod.push(tzId)
@@ -52,8 +55,8 @@ function toDidDoc (did: string, accountId: string): any {
   return doc
 }
 
-export default {
-  getResolver: (): ResolverRegistry => ({
+export function getResolver(): ResolverRegistry {
+  return {
     pkh: async (
       did: string,
       parsed: ParsedDID,
@@ -83,5 +86,5 @@ export default {
       }
       return response
     },
-  }),
+  }
 }
