@@ -19,7 +19,6 @@ export interface Configuration {
   ipfsEnableGateway: boolean
   ipfsDhtServerMode: boolean
   ipfsEnablePubsub: boolean
-  ipfsPubsubTtlSec: number
   ipfsPubsubTopics: string[]
   ipfsBootstrap: string[]
   ceramicNetwork: string
@@ -72,9 +71,6 @@ export class IpfsDaemon {
 
       ipfsEnablePubsub:
         props.ipfsEnablePubsub ?? fromBooleanInput(process.env.IPFS_ENABLE_PUBSUB, true),
-      // Set default gossipsub cache TTL to 2 minutes since the default 30 second TTL has been ineffective in preventing
-      // pubsub floods
-      ipfsPubsubTtlSec: props.ipfsPubsubTtlSec || Number(process.env.IPFS_PUBSUB_TTL_SEC) || 120,
       ipfsPubsubTopics:
         props.ipfsPubsubTopics ??
         (process.env.IPFS_PUBSUB_TOPICS ? process.env.IPFS_PUBSUB_TOPICS.split(' ') : []),
