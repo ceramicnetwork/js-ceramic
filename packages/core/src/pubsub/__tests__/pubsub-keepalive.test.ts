@@ -31,12 +31,17 @@ test('publish keepalive', async () => {
     pubsubLogger,
     diagnosticsLogger
   )
-  const pubsubWithKeepalive = new PubsubKeepalive(pubsub, keepaliveInterval)
+  const maxIntervalWithoutKeepalive = 50
+  const pubsubWithKeepalive = new PubsubKeepalive(
+    pubsub,
+    keepaliveInterval,
+    maxIntervalWithoutKeepalive
+  )
   const subscription = pubsubWithKeepalive.subscribe()
 
   await delay(keepaliveInterval * 5)
 
-  expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThan(4)
+  expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(8)
   for (const call of ipfs.pubsub.publish.mock.calls) {
     expect(call[0]).toEqual(TOPIC)
     const message = deserialize({ data: call[1] }) as KeepaliveMessage

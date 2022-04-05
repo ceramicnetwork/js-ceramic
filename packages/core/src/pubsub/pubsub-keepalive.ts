@@ -16,8 +16,6 @@ export class PubsubKeepalive
   // start at 0 so it always publishes once on startup
   private lastPublishedKeepAliveMessageDate = 0
 
-  private ONE_DAY_MS = 24 * 60 * 60 * 1000
-
   /**
    * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
    *   starts a background job that runs every maxPubsubPublishInterval/2 and publishes a keepalive
@@ -28,10 +26,13 @@ export class PubsubKeepalive
    * @param pubsub - Pubsub instances used to publish messages to the underlying libp2p pubsub topic.
    * @param maxPubsubPublishInterval - the max amount of time that is allowed to pass without
    *   generating a pubsub message.
+   * @param maxIntervalWithoutKeepalive - the max amount of time that is allowed to pass without
+   *   generating a keepalive message.
    */
   constructor(
     private readonly pubsub: ObservableWithNext<PubsubMessage>,
-    private readonly maxPubsubPublishInterval: number
+    private readonly maxPubsubPublishInterval: number,
+    private readonly maxIntervalWithoutKeepalive: number
   ) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
@@ -69,7 +70,7 @@ export class PubsubKeepalive
   publishPubsubKeepaliveIfNeeded(): void {
     const now = Date.now()
     const needToPublishKeepaliveOnceADay =
-      now - this.lastPublishedKeepAliveMessageDate > this.ONE_DAY_MS
+      now - this.lastPublishedKeepAliveMessageDate > this.maxIntervalWithoutKeepalive
     const needToPublishKeepaliveInactivity =
       now - this.lastPublishedMessageDate >= this.maxPubsubPublishInterval / 2
 
