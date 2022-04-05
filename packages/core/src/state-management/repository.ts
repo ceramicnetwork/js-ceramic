@@ -75,7 +75,12 @@ export class Repository {
   ) {
     this.loadingQ = new ExecutionQueue(concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue(concurrencyLimit, logger)
-    this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete())
+    this.inmemory = new StateCache(cacheLimit, (state$) => {
+      if (state$.subscriptionSet.size > 0) {
+        logger.warn(`Stream ${state$.id} evicted from cache while having subscriptions`)
+      }
+      state$.complete()
+    })
     this.updates$ = this.updates$.bind(this)
   }
 
