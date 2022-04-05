@@ -9,6 +9,7 @@ import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { fromString, toString } from 'uint8arrays'
+import type { Cacao } from 'ceramic-cacao'
 
 /**
  * Various utility functions
@@ -92,8 +93,7 @@ export class Utils {
       if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
       commitData.commit = linkedCommit
       commitData.envelope = commit
-      const cacao = await this.extractCapability(commit, dispatcher)
-      if (cacao) commitData.capability = cacao
+      commitData.capability = await this.extractCapability(commit, dispatcher)
     } else if (StreamUtils.isAnchorCommit(commit)) {
       commitData.type = CommitType.ANCHOR
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
@@ -129,7 +129,7 @@ export class Utils {
    * @param dispatcher instance of dispatcher to load from IPFS
    * @returns a Cacao capability object if found, else null
    */
-  static async extractCapability(commit: any, dispatcher: Dispatcher): Promise<any | null> {
+  static async extractCapability(commit: any, dispatcher: Dispatcher): Promise<Cacao | undefined> {
     if (commit.signatures && commit.signatures.length > 0) {
       const protectedHeader = commit.signatures[0].protected
       const decodedProtectedHeader = base64urlToJSON(protectedHeader)
@@ -139,7 +139,7 @@ export class Utils {
 
         try {
           const cacao = await dispatcher.retrieveFromIPFS(capCID)
-          return cacao
+          return cacao as Cacao
         } catch (error) {
           throw new Error(`Error while loading capability from IPFS with CID ${capCID.toString()}`)
         }
