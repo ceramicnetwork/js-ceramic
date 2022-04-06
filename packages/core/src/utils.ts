@@ -130,20 +130,22 @@ export class Utils {
    * @returns a Cacao capability object if found, else null
    */
   static async extractCapability(commit: any, dispatcher: Dispatcher): Promise<Cacao | undefined> {
-    if (commit.signatures && commit.signatures.length > 0) {
-      const protectedHeader = commit.signatures[0].protected
-      const decodedProtectedHeader = base64urlToJSON(protectedHeader)
-      if (decodedProtectedHeader.cap) {
-        const capIPFSUri = decodedProtectedHeader.cap
-        const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+    if (!commit.signatures || commit.signatures.length === 0) return
 
-        try {
-          const cacao = await dispatcher.retrieveFromIPFS(capCID)
-          return cacao as Cacao
-        } catch (error) {
-          throw new Error(`Error while loading capability from IPFS with CID ${capCID.toString()}`)
-        }
-      }
+    const protectedHeader = commit.signatures[0].protected
+    const decodedProtectedHeader = base64urlToJSON(protectedHeader)
+    if (!decodedProtectedHeader.cap) return
+
+    const capIPFSUri = decodedProtectedHeader.cap
+    const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+
+    try {
+      const cacao = await dispatcher.retrieveFromIPFS(capCID)
+      return cacao as Cacao
+    } catch (error) {
+      throw new Error(
+        `Error while loading capability from IPFS with CID ${capCID.toString()}: ${error}`
+      )
     }
   }
 }
