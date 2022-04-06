@@ -13,41 +13,106 @@ const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 
 const PEER_ID = 'PEER_ID'
 
-test('publish keepalive', async () => {
-  const ipfs = {
-    pubsub: {
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-      ls: jest.fn(() => []),
-      publish: jest.fn(),
-    },
-    id: jest.fn(async () => ({ id: PEER_ID })),
-  }
-  const keepaliveInterval = 100
-  const pubsub = new Pubsub(
-    ipfs as unknown as IpfsApi,
-    TOPIC,
-    3000,
-    pubsubLogger,
-    diagnosticsLogger
-  )
-  const maxIntervalWithoutKeepalive = 50
-  const pubsubWithKeepalive = new PubsubKeepalive(
-    pubsub,
-    keepaliveInterval,
-    maxIntervalWithoutKeepalive
-  )
-  const subscription = pubsubWithKeepalive.subscribe()
+describe('pubsub keepalive', () => {
+  test('sends keepalive if no messages over a period of time', async () => {
+    const ipfs = {
+      pubsub: {
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+        ls: jest.fn(() => []),
+        publish: jest.fn(),
+      },
+      id: jest.fn(async () => ({ id: PEER_ID })),
+    }
+    const pubsub = new Pubsub(
+      ipfs as unknown as IpfsApi,
+      TOPIC,
+      3000,
+      pubsubLogger,
+      diagnosticsLogger
+    )
+    const maxPubsubIntervalTime = 100
+    const maxKeepaliveIntervalTime = 500
+    const pubsubWithKeepalive = new PubsubKeepalive(
+      pubsub,
+      maxPubsubIntervalTime,
+      maxKeepaliveIntervalTime
+    )
+    const subscription = pubsubWithKeepalive.subscribe()
+    await delay(maxPubsubIntervalTime * 5)
+    expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(4)
+    for (const call of ipfs.pubsub.publish.mock.calls) {
+      expect(call[0]).toEqual(TOPIC)
+      const message = deserialize({ data: call[1] }) as KeepaliveMessage
+      expect(message.typ).toEqual(MsgType.KEEPALIVE)
+      expect(message.ver).toEqual(version)
+    }
 
-  await delay(keepaliveInterval * 5)
+    subscription.unsubscribe()
+  })
+  test('sends keepalive if no keepalive messages over a period of time', async () => {
+    const ipfs = {
+      pubsub: {
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+        ls: jest.fn(() => []),
+        publish: jest.fn(),
+      },
+      id: jest.fn(async () => ({ id: PEER_ID })),
+    }
+    const pubsub = new Pubsub(
+      ipfs as unknown as IpfsApi,
+      TOPIC,
+      3000,
+      pubsubLogger,
+      diagnosticsLogger
+    )
+    const maxPubsubIntervalTime = 1000
+    const maxKeepaliveIntervalTime = 50
+    const pubsubWithKeepalive = new PubsubKeepalive(
+      pubsub,
+      maxPubsubIntervalTime,
+      maxKeepaliveIntervalTime
+    )
+    const subscription = pubsubWithKeepalive.subscribe()
+    await delay(maxKeepaliveIntervalTime * 5)
+    expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(4)
+    for (const call of ipfs.pubsub.publish.mock.calls) {
+      expect(call[0]).toEqual(TOPIC)
+      const message = deserialize({ data: call[1] }) as KeepaliveMessage
+      expect(message.typ).toEqual(MsgType.KEEPALIVE)
+      expect(message.ver).toEqual(version)
+    }
 
-  expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(8)
-  for (const call of ipfs.pubsub.publish.mock.calls) {
-    expect(call[0]).toEqual(TOPIC)
-    const message = deserialize({ data: call[1] }) as KeepaliveMessage
-    expect(message.typ).toEqual(MsgType.KEEPALIVE)
-    expect(message.ver).toEqual(version)
-  }
-
-  subscription.unsubscribe()
+    subscription.unsubscribe()
+  })
+  test('does not send additional keepalives if had keepalive within a period of time', async () => {
+    const ipfs = {
+      pubsub: {
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+        ls: jest.fn(() => []),
+        publish: jest.fn(),
+      },
+      id: jest.fn(async () => ({ id: PEER_ID })),
+    }
+    const pubsub = new Pubsub(
+      ipfs as unknown as IpfsApi,
+      TOPIC,
+      3000,
+      pubsubLogger,
+      diagnosticsLogger
+    )
+    const maxPubsubIntervalTime = 1000
+    const maxKeepaliveIntervalTime = 1000
+    const pubsubWithKeepalive = new PubsubKeepalive(
+      pubsub,
+      maxPubsubIntervalTime,
+      maxKeepaliveIntervalTime
+    )
+    const subscription = pubsubWithKeepalive.subscribe()
+    await delay(250)
+    expect(ipfs.pubsub.publish.mock.calls.length).toEqual(0)
+    subscription.unsubscribe()
+  })
 })

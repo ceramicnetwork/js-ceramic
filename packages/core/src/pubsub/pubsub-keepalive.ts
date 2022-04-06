@@ -39,7 +39,10 @@ export class PubsubKeepalive
 
       // Start background job to periodically send pubsub messages if no other messages have been
       // sent recently.
-      const pubsubKeepaliveInterval = interval(this.maxPubsubPublishInterval / 2).subscribe(() => {
+      // Run it with the minimum required interval
+      const pubsubKeepaliveInterval = interval(
+        Math.min(this.maxPubsubPublishInterval / 2, this.maxIntervalWithoutKeepalive / 2)
+      ).subscribe(() => {
         this.publishPubsubKeepaliveIfNeeded()
       })
 
