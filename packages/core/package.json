@@ -64,6 +64,7 @@
     "@ceramicnetwork/3id-did-resolver": "^2.0.0-rc.0",
     "@ceramicnetwork/ipfs-daemon": "^2.0.0-rc.0",
     "@types/node": "^17.0.5",
+    "ceramic-cacao": "^0.0.17",
     "did-resolver": "^3.1.5",
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^2.0.0-rc.0",
