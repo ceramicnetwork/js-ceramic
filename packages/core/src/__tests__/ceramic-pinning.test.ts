@@ -125,6 +125,28 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
+  it('Node detects if ipfs data is lost', async () => {
+    const content0 = { foo: 'bar' }
+    const content1 = { foo: 'baz' }
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, content0, null, {
+      pin: true,
+      anchor: false,
+      publish: false,
+    })
+    await stream.update(content1)
+    expect(stream.content).toEqual(content1)
+    await ceramic.close()
+
+    // Re-create the ipfs node with a clean repo, losing all the pinned ipfs data, but preserving
+    // the state store data for the Ceramic node.
+    await ipfs1.stop()
+    ipfs1 = await createIPFS()
+
+    // Starting up the Ceramic node should fail as it detects that the IPFS commit data is missing.
+    await expect(createCeramic(ipfs1, tmpFolder.path)).rejects.toThrow(/IPFS data missing/)
+  })
+
   it('Stream is pinned by default', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {

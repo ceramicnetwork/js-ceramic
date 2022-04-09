@@ -67,10 +67,11 @@ export class S3StateStore implements StateStore {
   /**
    * List pinned streams
    * @param streamId - Stream ID
+   * @param limit - limit on number of results
    */
-  async list(streamId?: StreamID): Promise<string[]> {
+  async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     if (streamId == null) {
-      const bufArray = await toArray(this.#store.createKeyStream())
+      const bufArray = await toArray(this.#store.createKeyStream({ limit }))
       return bufArray.map((buf) => buf.toString())
     } else {
       const exists = Boolean(await this.load(streamId.baseID))

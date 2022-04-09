@@ -18,17 +18,13 @@ import path from 'path'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
-// Jest can barely mock modules when running in ESM mode. Some of our tests though rely on `level-ts` package
-// being mocked and spied on. Instead of making testing code incredibly ugly, we make dependency on `level-ts` explicit.
-// Now we can pass a carefully crafted mock object to spy on.
-const defaultLevelFactory = (path: string) => new LevelC(path)
 /**
  * Ceramic store for saving stream state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
   #store: Level
 
-  constructor(private storeRoot: string, private readonly levelFactory = defaultLevelFactory) {}
+  constructor(private storeRoot: string) {}
 
   /**
    * Gets internal db
@@ -46,7 +42,7 @@ export class LevelStateStore implements StateStore {
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#store = this.levelFactory(storePath)
+    this.#store = new LevelC(storePath)
   }
 
   /**
@@ -91,11 +87,12 @@ export class LevelStateStore implements StateStore {
   /**
    * List pinned stream
    * @param streamId - Stream ID
+   * @param limit - limit on number of results
    */
-  async list(streamId?: StreamID): Promise<string[]> {
+  async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     let streamIds: string[]
     if (streamId == null) {
-      return this.#store.stream({ keys: true, values: false })
+      return this.#store.stream({ keys: true, values: false, limit })
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       streamIds = exists ? [streamId.toString()] : []

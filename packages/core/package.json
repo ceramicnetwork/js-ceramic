@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-rc.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -23,7 +23,8 @@
   ],
   "sideEffects": false,
   "exports": {
-    ".": "./lib/index.js"
+    ".": "./lib/index.js",
+    "./pubsub/pubsub-message": "./lib/pubsub/pubsub-message.js"
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
@@ -34,15 +35,15 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.4",
-    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.4",
-    "@ceramicnetwork/pinning-aggregation": "^2.0.0-alpha.4",
-    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.0-alpha.4",
-    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.4",
-    "@ceramicnetwork/stream-caip10-link-handler": "^2.0.0-alpha.4",
-    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.4",
-    "@ceramicnetwork/stream-tile-handler": "^2.0.0-alpha.4",
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.3",
+    "@ceramicnetwork/common": "^2.0.0-rc.0",
+    "@ceramicnetwork/ipfs-topology": "^2.0.0-rc.0",
+    "@ceramicnetwork/pinning-aggregation": "^2.0.0-rc.0",
+    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.0-rc.0",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-rc.0",
+    "@ceramicnetwork/stream-caip10-link-handler": "^2.0.0-rc.0",
+    "@ceramicnetwork/stream-tile": "^2.0.0-rc.0",
+    "@ceramicnetwork/stream-tile-handler": "^2.0.0-rc.0",
+    "@ceramicnetwork/streamid": "^2.0.0-rc.0",
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
@@ -61,12 +62,13 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.4",
-    "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.4",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-rc.0",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.0-rc.0",
     "@types/node": "^17.0.5",
+    "ceramic-cacao": "^0.0.17",
     "did-resolver": "^3.1.5",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^2.0.0-alpha.4",
+    "key-did-resolver": "^2.0.0-rc.0",
     "mockdate": "^3.0.5",
     "tmp-promise": "^3.0.3"
   },

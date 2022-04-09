@@ -80,9 +80,7 @@ export class IpfsDaemon {
       useCentralizedPeerDiscovery: useCentralizedPeerDiscovery,
       healthcheckEnabled:
         props.healthcheckEnabled ?? fromBooleanInput(process.env.HEALTHCHECK_ENABLED, false),
-      healthcheckPort:
-        props.healthcheckPort ||
-        (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
+      healthcheckPort: props.healthcheckPort || Number(process.env.HEALTHCHECK_PORT) || 8011,
       logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
     }
 

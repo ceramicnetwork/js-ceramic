@@ -508,9 +508,48 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+
+      await this._startupChecks()
     } catch (err) {
       await this.close()
       throw err
+    }
+  }
+
+  /**
+   * Runs some checks at node startup to ensure that the node is healthy and properly configured.
+   * Throws an Error if any issues are detected
+   */
+  async _startupChecks(): Promise<void> {
+    return this._checkIPFSPersistence()
+  }
+
+  /**
+   * Used at startup to do a sanity check that the IPFS node has the commit data for pinned streams
+   * as expected.
+   */
+  async _checkIPFSPersistence(): Promise<void> {
+    const state = await this.repository.randomPinnedStreamState()
+    if (!state) {
+      this._logger.warn(
+        `No pinned streams detected. This is expected if this is the first time this node has been run, but may indicate a problem with the node's persistence setup if it should have pinned streams`
+      )
+      return
+    }
+
+    const commitCIDs = [state.log[0].cid]
+    if (state.log.length > 1) {
+      commitCIDs.push(state.log[state.log.length - 1].cid)
+    }
+
+    for (const cid of commitCIDs) {
+      const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
+      if (!cidFound) {
+        const streamID = StreamUtils.streamIdFromState(state).toString()
+        throw new Error(
+          `IPFS data missing! The CID ${cid} of pinned Stream ${streamID} is missing from the local IPFS node. This means that pinned content has gone missing from the IPFS node. Check your IPFS node configuration and make sure it is pointing to the proper repo`
+        )
+      }
     }
   }
 
