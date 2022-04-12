@@ -121,9 +121,6 @@ export class IpfsTopology {
   private async _dynamicBoostrapList(network: string): Promise<Multiaddr[]> {
     const url = PEER_FILE_URLS(network as Networks)
     if (!url) {
-      this.logger.warn(
-        `Peer discovery is not supported for ceramic network: ${network}. This node may fail to load documents from other nodes on the network.`
-      )
       return []
     }
     this.logger.imp(`Connecting to peers found in '${url}'`)
@@ -140,14 +137,6 @@ export class IpfsTopology {
     const filteredBootstrapList = bootstrapList.filter((addr) => {
       return !addr.getPeerId()?.endsWith(myPeerId)
     })
-
-    if (filteredBootstrapList.length === bootstrapList.length) {
-      this.logger.warn(
-        `This node with peerId ${myPeerId.toString()} is not included in the peer list for Ceramic network ${
-          this.ceramicNetwork
-        }. It will not be discoverable by other nodes in the network, and so data created against this node will not be available to the rest of the network.`
-      )
-    }
 
     await Promise.all(
       filteredBootstrapList.map(async (node) => {
