@@ -212,7 +212,7 @@ export class DaemonCeramicNodeConfig {
 
   /**
    * Max number of streams to keep in the node's in-memory cache.
-   * When specifying in a config file, use the name 'validate-streams'.
+   * When specifying in a config file, use the name 'stream-cache-limit'.
    */
   @jsonMember(Number, { name: 'stream-cache-limit' })
   streamCacheLimit?: number
