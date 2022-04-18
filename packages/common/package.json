@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "2.0.0-rc.0",
+  "version": "2.0.0-rc.1",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -39,6 +39,7 @@
     "@ceramicnetwork/streamid": "^2.0.0-rc.0",
     "abort-controller": "^3.0.0",
     "caip": "~1.0.0",
+    "ceramic-cacao": "^0.0.16",
     "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
     "jet-logger": "^1.1.5",
@@ -46,8 +47,7 @@
     "logfmt": "^1.3.2",
     "multiformats": "^9.5.8",
     "rxjs": "^7.5.2",
-    "uint8arrays": "^3.0.0",
-    "ceramic-cacao": "^0.0.16"
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.6",

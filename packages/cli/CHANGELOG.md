@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.0...@ceramicnetwork/cli@2.0.0-rc.1) (2022-04-18)
+
+
+### Features
+
+* **cli:** Add stream cache size to config file ([#2115](https://github.com/ceramicnetwork/js-ceramic/issues/2115)) ([fd138e0](https://github.com/ceramicnetwork/js-ceramic/commit/fd138e03e944f84ee78f2a5b3d84dd919a699d3e))
+
+
+
+
+
 # 2.0.0-rc.0 (2022-03-31)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

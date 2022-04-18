@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.0...@ceramicnetwork/core@2.0.0-rc.1) (2022-04-18)
+
+
+### Features
+
+* **core:** export pubsub message ([7e8e8e4](https://github.com/ceramicnetwork/js-ceramic/commit/7e8e8e40c8af80d9dc026beb1365e1790e53f4a1))
+* Log when stream with subscriptions is evicted ([#2107](https://github.com/ceramicnetwork/js-ceramic/issues/2107)) ([2ea85fa](https://github.com/ceramicnetwork/js-ceramic/commit/2ea85fa9d272f19286d84ba4ddcb76583c0dbf02))
+
+
+
+
+
 # 2.0.0-rc.0 (2022-03-31)
 
 **Note:** Version bump only for package @ceramicnetwork/core
