@@ -419,7 +419,9 @@ export class Ceramic implements CeramicApi {
 
     const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}
 
-    const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_CACHE_LIMIT
+    const streamCacheLimit = process.env.CERAMIC_STREAM_CACHE_LIMIT
+      ? parseInt(process.env.CERAMIC_STREAM_CACHE_LIMIT)
+      : config.streamCacheLimit ?? DEFAULT_CACHE_LIMIT
     const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
     const maxQueriesPerSecond = process.env.CERAMIC_PUBSUB_QPS_LIMIT
       ? parseInt(process.env.CERAMIC_PUBSUB_QPS_LIMIT)
