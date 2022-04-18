@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.1...@ceramicnetwork/core@2.0.0-rc.2) (2022-04-18)
+
+
+### Features
+
+* **core:** Add env variable for configuring stream cache size ([#2120](https://github.com/ceramicnetwork/js-ceramic/issues/2120)) ([e5d72c1](https://github.com/ceramicnetwork/js-ceramic/commit/e5d72c1e5cba05c4fc372aa31dfeb9ada31fa928))
+
+
+
+
+
 # [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.0...@ceramicnetwork/core@2.0.0-rc.1) (2022-04-18)
 
 
