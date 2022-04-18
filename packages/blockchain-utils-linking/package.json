@@ -32,7 +32,7 @@
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.0.0",
-    "ceramic-cacao": "^0.0.16",
+    "ceramic-cacao": "^1.0.0-rc.0",
     "near-api-js": "^0.44.2",
     "uint8arrays": "^3.0.0"
   },
