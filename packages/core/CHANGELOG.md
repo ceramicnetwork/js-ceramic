@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0...@ceramicnetwork/core@2.1.0-rc.0) (2022-04-19)
+
+
+### Features
+
+* **core:** Add env var to skip ipfs data persistence check at startup ([#2125](https://github.com/ceramicnetwork/js-ceramic/issues/2125)) ([a03bc30](https://github.com/ceramicnetwork/js-ceramic/commit/a03bc30199c9fadf94fc208d29c37c56041405ee))
+
+
+
+
+
 # [2.0.0](/compare/@ceramicnetwork/core@2.0.0-rc.5...@ceramicnetwork/core@2.0.0) (2022-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/core
