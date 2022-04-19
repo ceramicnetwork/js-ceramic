@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.2...@ceramicnetwork/cli@2.0.0-rc.3) (2022-04-19)
+
+
+### Features
+
+* Make IPFS instance on CLI non-disposable ([#2122](https://github.com/ceramicnetwork/js-ceramic/issues/2122)) ([cc4505f](https://github.com/ceramicnetwork/js-ceramic/commit/cc4505f6c9bb194650c9babcf3f6106c108b6041))
+
+
+
+
+
 # [2.0.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.1...@ceramicnetwork/cli@2.0.0-rc.2) (2022-04-18)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
