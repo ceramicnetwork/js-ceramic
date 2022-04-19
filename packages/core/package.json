@@ -23,8 +23,7 @@
   ],
   "sideEffects": false,
   "exports": {
-    ".": "./lib/index.js",
-    "./pubsub/pubsub-message": "./lib/pubsub/pubsub-message.js"
+    ".": "./lib/index.js"
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
