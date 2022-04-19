@@ -534,6 +534,7 @@ export class Ceramic implements CeramicApi {
    */
   async _checkIPFSPersistence(): Promise<void> {
     if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK) {
+      this._logger.warn(`Skipping IPFS persistence checks`)
       return
     }
 
