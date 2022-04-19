@@ -533,6 +533,10 @@ export class Ceramic implements CeramicApi {
    * as expected.
    */
   async _checkIPFSPersistence(): Promise<void> {
+    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK) {
+      return
+    }
+
     const state = await this.repository.randomPinnedStreamState()
     if (!state) {
       this._logger.warn(
