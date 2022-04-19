@@ -1,5 +1,5 @@
 import mergeOpts from 'merge-options'
-import dagJose from 'dag-jose'
+import * as dagJose from 'dag-jose'
 import * as ipfsClient from 'ipfs-http-client'
 import { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
 import { IpfsMode } from './daemon-config.js'
