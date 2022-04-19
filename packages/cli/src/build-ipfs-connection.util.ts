@@ -47,7 +47,7 @@ async function createGoIPFS(overrideConfig: Partial<ipfsClient.Options> = {}): P
   const gatewayPort = 9011
   const defaultConfig = {
     ipld: { codecs: [dagJose] },
-    repo: '~/.ipfs',
+    repo: '~/.goipfs',
     config: {
       Pubsub: {
         Enabled: true,
