@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.1](/compare/key-did-resolver@2.0.0-rc.0...key-did-resolver@2.0.0-rc.1) (2022-04-19)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
 # 2.0.0-rc.0 (2022-03-31)
 
 **Note:** Version bump only for package key-did-resolver
