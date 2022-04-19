@@ -48,7 +48,7 @@
   "devDependencies": {
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
-    "@polkadot/api": "^4.6.2",
+    "@polkadot/api": "^8.1.1",
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
     "@polkadot/util": "^7.1.1",

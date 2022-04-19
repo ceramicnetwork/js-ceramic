@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@crustio/type-definitions": "^1.2.0",
-    "@polkadot/api": "^4.6.2",
+    "@polkadot/api": "^8.1.1",
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
     "@stablelib/sha256": "^1.0.1",
