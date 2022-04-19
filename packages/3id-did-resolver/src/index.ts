@@ -10,20 +10,19 @@ import type {
 } from 'did-resolver'
 import type { StreamState, MultiQuery, CeramicApi, LogEntry } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import LegacyResolver from './legacyResolver'
+import { LegacyResolver } from './legacyResolver.js'
 import * as u8a from 'uint8arrays'
-import { StreamID } from '@ceramicnetwork/streamid'
-import CID from 'cids'
-import { errorRepresentation, withResolutionError } from './error-representation'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
+import { errorRepresentation, withResolutionError } from './error-representation.js'
 import { CommitType } from '@ceramicnetwork/common'
-//import dagCBOR from 'ipld-dag-cbor'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
 
 const isLegacyDid = (didId: string): boolean => {
   try {
-    new CID(didId)
+    CID.parse(didId)
     return true
   } catch (e) {
     return false
@@ -185,7 +184,7 @@ const resolve = async (
   let commitId
   const query: Array<MultiQuery> = [{ streamId }]
   if (verNfo.commit) {
-    commitId = streamId.atCommit(verNfo.commit)
+    commitId = CommitID.make(streamId, verNfo.commit)
     query.push({ streamId: commitId })
   } else if (verNfo.timestamp) {
     query.push({
@@ -254,5 +253,3 @@ export function getResolver(ceramic: CeramicApi): ResolverRegistry {
     },
   }
 }
-
-export default { getResolver }

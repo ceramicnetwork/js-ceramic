@@ -1,6 +1,6 @@
-import { StreamRef } from '../stream-ref'
-import { StreamID } from '../stream-id'
-import { CommitID } from '../commit-id'
+import { StreamRef } from '../stream-ref.js'
+import { StreamID } from '../stream-id.js'
+import { CommitID } from '../commit-id.js'
 
 describe('.build', () => {
   const STREAM_ID_STRING = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'

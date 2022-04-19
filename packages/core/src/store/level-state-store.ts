@@ -1,9 +1,22 @@
-import Level from 'level-ts'
+import levelTs from 'level-ts'
+import type Level from 'level-ts'
 import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common'
-import { StateStore } from './state-store'
-import StreamID from '@ceramicnetwork/streamid'
+import { StateStore } from './state-store.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import * as fs from 'fs'
 import path from 'path'
+
+// When Node.js imports a CJS module from ESM, it considers whole contents of `module.exports` as ESM default export.
+// 'level-ts' is a CommomJS module, which exports Level constructor as `exports.default`.
+// This `default` name has no special meaning from ESM perspective. It is just yet another name.
+// Types provided by level-ts though make it appear as ESM default.
+//
+// So, here we untangle this mess, even if ugly.
+// We import type information separately from code information, and then make sure we can access
+// a properly typed constructor of `Level` (thus `LevelC`) exported from level-ts package.
+//
+// See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
+const LevelC = (levelTs as any).default as unknown as typeof Level
 
 /**
  * Ceramic store for saving stream state to a local leveldb instance
@@ -29,7 +42,7 @@ export class LevelStateStore implements StateStore {
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#store = new Level(storePath)
+    this.#store = new LevelC(storePath)
   }
 
   /**
@@ -74,11 +87,12 @@ export class LevelStateStore implements StateStore {
   /**
    * List pinned stream
    * @param streamId - Stream ID
+   * @param limit - limit on number of results
    */
-  async list(streamId?: StreamID): Promise<string[]> {
+  async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     let streamIds: string[]
     if (streamId == null) {
-      return this.#store.stream({ keys: true, values: false })
+      return this.#store.stream({ keys: true, values: false, limit })
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       streamIds = exists ? [streamId.toString()] : []

@@ -1,5 +1,5 @@
-import type CID from 'cids'
-import type { IpfsApi } from './index'
+import type { CID } from 'multiformats/cid'
+import type { IpfsApi } from './index.js'
 
 export interface PinningBackend {
   id: string

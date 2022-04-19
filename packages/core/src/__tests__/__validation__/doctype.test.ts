@@ -1,11 +1,10 @@
-import { mock } from 'jest-mock-extended'
-
-import Utils from '../../utils'
-import { CeramicApi, Stream, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common'
-import CID from 'cids'
+import { jest } from '@jest/globals'
+import { Utils } from '../../utils.js'
+import { CeramicApi, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common'
+import { CID } from 'multiformats/cid'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 class BasicStreamWithContent extends TileDocument {
   makeReadOnly() {
@@ -14,7 +13,7 @@ class BasicStreamWithContent extends TileDocument {
 }
 
 describe('Stream', () => {
-  let ceramic: any
+  let ceramic: CeramicApi
   const schema = {
     $schema: 'http://json-schema.org/draft-07/schema#',
     title: 'StringMap',
@@ -42,12 +41,9 @@ describe('Stream', () => {
 
     const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
-    ceramic = mock<CeramicApi>()
-    ceramic.loadStream.mockReturnValue(
-      new Promise<Stream>((resolve) => {
-        resolve(schemaDoc)
-      })
-    )
+    ceramic = {
+      loadStream: jest.fn().mockReturnValue(Promise.resolve(schemaDoc)),
+    } as unknown as CeramicApi
   })
 
   it('should pass schema validation', async () => {

@@ -1,9 +1,9 @@
 import type { DID } from 'dids'
-import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream'
-import { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts'
+import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream.js'
+import { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import { LoggerProvider } from './logger-provider'
-import { GenesisCommit } from '.'
+import { LoggerProvider } from './logger-provider.js'
+import { GenesisCommit } from './index.js'
 
 /**
  * Describes Ceramic pinning functionality

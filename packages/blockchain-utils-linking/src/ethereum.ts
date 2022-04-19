@@ -1,9 +1,17 @@
-import { AuthProvider } from './auth-provider'
-import { AccountID } from 'caip'
-import { encodeRpcMessage, getConsentMessage, LinkProof, RpcMessage } from './util'
+import { AuthProvider } from './auth-provider.js'
+import { AccountId } from 'caip'
+import {
+  CapabilityOpts,
+  asOldCaipString,
+  encodeRpcMessage,
+  getConsentMessage,
+  LinkProof,
+} from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { randomString } from '@stablelib/random'
+import { Cacao, SiweMessage } from 'ceramic-cacao'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -16,11 +24,23 @@ type EthProviderOpts = {
 
 const CHAIN_NAMESPACE = 'eip155'
 
+const chainIdCache = new WeakMap<any, number>()
+async function requestChainId(provider: any): Promise<number> {
+  let chainId = chainIdCache.get(provider)
+  if (!chainId) {
+    const chainIdHex = await safeSend(provider, 'eth_chainId', [])
+    chainId = parseInt(chainIdHex, 16)
+    chainIdCache.set(provider, chainId)
+  }
+  return chainId
+}
+
 /**
  *  AuthProvider which can be used for Ethereum providers with standard interface
  */
 export class EthereumAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
+  private _accountId: AccountId | undefined
 
   constructor(
     private readonly provider: any,
@@ -28,13 +48,15 @@ export class EthereumAuthProvider implements AuthProvider {
     private readonly opts: EthProviderOpts = {}
   ) {}
 
-  async accountId(): Promise<AccountID> {
-    const chainIdHex = await safeSend(this.provider, 'eth_chainId', [])
-    const chainId = parseInt(chainIdHex, 16)
-    return new AccountID({
-      address: this.address,
-      chainId: `${CHAIN_NAMESPACE}:${chainId}`,
-    })
+  async accountId(): Promise<AccountId> {
+    if (!this._accountId) {
+      const chainId = await requestChainId(this.provider)
+      this._accountId = new AccountId({
+        address: this.address,
+        chainId: `${CHAIN_NAMESPACE}:${chainId}`,
+      })
+    }
+    return this._accountId
   }
 
   async authenticate(message: string): Promise<string> {
@@ -47,25 +69,48 @@ export class EthereumAuthProvider implements AuthProvider {
     return createLink(did, accountId, this.provider, this.opts)
   }
 
-  async requestCapability(params: OcapParams): Promise<Ocap> {
+  async requestCapability(
+    sessionDID: string,
+    streams: Array<StreamID | string>,
+    opts: CapabilityOpts = {}
+  ): Promise<Cacao> {
     console.warn(
       'WARN: requestCapability os an experimental API, that is subject to change any time.'
     )
-    const account = await this.accountId()
-    const requestMessage = buildOcapRequestMessage({
-      ...params,
+
+    const domain = typeof window !== 'undefined' ? window.location.hostname : opts.domain
+    if (!domain) throw new Error("Missing parameter 'domain'")
+
+    // NOTE: To allow proper customization of the expiry date, we need a solid library to represent
+    // time durations that includes edge cases. We should not try dealing with timestamps ourselves.
+    const now = new Date()
+    const oneDayLater = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+    const siweMessage = new SiweMessage({
+      domain: domain,
       address: this.address,
-      chainId: account.chainId.toString(),
-      type: OcapTypes.EIP4361,
+      statement: opts.statement ?? 'Give this application access to some of your data on Ceramic',
+      uri: sessionDID,
+      version: opts.version ?? '1',
+      nonce: opts.nonce ?? randomString(10),
+      issuedAt: now.toISOString(),
+      expirationTime: opts.expirationTime ?? oneDayLater.toISOString(),
+      chainId: (await this.accountId()).chainId.reference,
+      resources: (opts.resources ?? []).concat(
+        streams.map((s) => (typeof s === 'string' ? StreamID.fromString(s) : s).toUrl())
+      ),
     })
+
+    if (opts.requestId) siweMessage.requestId = opts.requestId
+
+    const account = await this.accountId()
     const signature = await safeSend(this.provider, 'personal_sign', [
-      requestMessage,
+      siweMessage.signMessage(),
       account.address,
     ])
-    return {
-      message: requestMessage,
-      signature: signature,
-    }
+    siweMessage.signature = signature
+    const cacao = Cacao.fromSiweMessage(siweMessage)
+    return cacao
   }
 
   withAddress(address: string): AuthProvider {
@@ -117,14 +162,16 @@ function safeSend(provider: any, method: string, params?: Array<any>): Promise<a
   }
 }
 
-export async function isERC1271(account: AccountID, provider: any): Promise<boolean> {
+export async function isERC1271(account: AccountId, provider: any): Promise<boolean> {
   const bytecode = await getCode(account.address, provider).catch(() => null)
   return Boolean(bytecode && bytecode !== '0x' && bytecode !== '0x0' && bytecode !== '0x00')
 }
 
-export function normalizeAccountId(account: AccountID): AccountID {
-  account.address = account.address.toLowerCase()
-  return account
+export function normalizeAccountId(input: AccountId): AccountId {
+  return new AccountId({
+    address: input.address.toLowerCase(),
+    chainId: input.chainId,
+  })
 }
 
 function utf8toHex(message: string): string {
@@ -135,7 +182,7 @@ function utf8toHex(message: string): string {
 
 async function createEthLink(
   did: string,
-  account: AccountID,
+  account: AccountId,
   provider: any,
   opts: any = {}
 ): Promise<LinkProof> {
@@ -148,25 +195,24 @@ async function createEthLink(
     type: ADDRESS_TYPES.ethereumEOA,
     message,
     signature,
-    account: account.toString(),
+    account: asOldCaipString(account),
   }
   if (!opts.skipTimestamp) proof.timestamp = timestamp
   return proof
 }
 
-async function validateChainId(account: AccountID, provider: any): Promise<void> {
-  const chainIdHex = await safeSend(provider, 'eth_chainId', [])
-  const chainId = parseInt(chainIdHex, 16)
+async function validateChainId(account: AccountId, provider: any): Promise<void> {
+  const chainId = await requestChainId(provider)
   if (chainId !== parseInt(account.chainId.reference)) {
     throw new Error(
-      `ChainId in provider (${chainId}) is different from AccountID (${account.chainId.reference})`
+      `ChainId in provider (${chainId}) is different from AccountId (${account.chainId.reference})`
     )
   }
 }
 
 async function createErc1271Link(
   did: string,
-  account: AccountID,
+  account: AccountId,
   provider: any,
   opts: any
 ): Promise<LinkProof> {
@@ -175,13 +221,13 @@ async function createErc1271Link(
   await validateChainId(account, provider)
   return Object.assign(res, {
     type: ADDRESS_TYPES.erc1271,
-    account: account.toString(),
+    account: asOldCaipString(account),
   })
 }
 
 export async function createLink(
   did: string,
-  account: AccountID,
+  account: AccountId,
   provider: any,
   opts: any
 ): Promise<LinkProof> {
@@ -195,7 +241,7 @@ export async function createLink(
 
 export async function authenticate(
   message: string,
-  account: AccountID,
+  account: AccountId,
   provider: any
 ): Promise<string> {
   if (account) account = normalizeAccountId(account)

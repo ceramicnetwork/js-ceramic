@@ -1,4 +1,8 @@
 # Ceramic topology
+![ceramicnetwork](https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+[![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
+[![Twitter](https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social)](https://twitter.com/ceramicnetwork)
 
 > Bootstrap IPFS topology for Ceramic network
 
@@ -10,6 +14,8 @@ $ npm install @ceramicnetwork/ipfs-topology
 ```
 
 ### Usage
+
+See the [ceramic developer site](https://developers.ceramic.network/) for more details about how to use this package.
 
 ```
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";

@@ -1,7 +1,7 @@
-import type CID from 'cids'
+import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
-import type { AnchorProof, AnchorStatus } from './stream'
-import type { CeramicApi } from './ceramic-api'
+import type { AnchorProof, AnchorStatus } from './stream.js'
+import type { CeramicApi } from './ceramic-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 
 export interface AnchorServicePending {

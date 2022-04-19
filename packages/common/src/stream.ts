@@ -1,13 +1,14 @@
-import type CID from 'cids'
+import type { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
-import type { Context } from './context'
+import type { Context } from './context.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { CommitID } from '@ceramicnetwork/streamid'
+import { CommitID } from '@ceramicnetwork/streamid'
 import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
-import type { RunningStateLike } from './running-state-like'
-import type { CeramicApi } from './ceramic-api'
-import { LoadOpts, SyncOptions } from './streamopts'
+import type { RunningStateLike } from './running-state-like.js'
+import type { CeramicApi } from './ceramic-api.js'
+import { LoadOpts, SyncOptions } from './streamopts.js'
+import type { Cacao } from 'ceramic-cacao'
 
 /**
  * Describes signature status
@@ -122,6 +123,7 @@ export interface CommitData extends LogEntry {
   commit: any
   envelope?: DagJWS
   proof?: AnchorProof
+  capability?: Cacao
   /**
    * Do not time-check a signature.
    */
@@ -191,14 +193,14 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
   }
 
   get commitId(): CommitID {
-    return this.id.atCommit(this.tip)
+    return CommitID.make(this.id, this.tip)
   }
 
   /**
    * Lists available commits
    */
   get allCommitIds(): Array<CommitID> {
-    return this.state$.value.log.map(({ cid }) => this.id.atCommit(cid))
+    return this.state$.value.log.map(({ cid }) => CommitID.make(this.id, cid))
   }
 
   /**
@@ -207,7 +209,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
   get anchorCommitIds(): Array<CommitID> {
     return this.state$.value.log
       .filter(({ type }) => type === CommitType.ANCHOR)
-      .map(({ cid }) => this.id.atCommit(cid))
+      .map(({ cid }) => CommitID.make(this.id, cid))
   }
 
   get state(): StreamState {

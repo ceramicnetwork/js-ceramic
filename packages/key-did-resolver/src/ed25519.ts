@@ -1,4 +1,4 @@
-import * as u8a from 'uint8arrays'
+import { toString } from 'uint8arrays/to-string'
 import { convertPublicKeyToX25519 } from '@stablelib/ed25519'
 
 function encodeKey(key: Uint8Array): string {
@@ -8,7 +8,7 @@ function encodeKey(key: Uint8Array): string {
   // See js-multicodec for a general implementation
   bytes[1] = 0x01
   bytes.set(key, 2)
-  return `z${u8a.toString(bytes, 'base58btc')}`
+  return `z${toString(bytes, 'base58btc')}`
 }
 
 /**
@@ -26,7 +26,7 @@ export function keyToDidDoc(pubKeyBytes: Uint8Array, fingerprint: string): any {
         id: keyId,
         type: 'Ed25519VerificationKey2018',
         controller: did,
-        publicKeyBase58: u8a.toString(pubKeyBytes, 'base58btc'),
+        publicKeyBase58: toString(pubKeyBytes, 'base58btc'),
       },
     ],
     authentication: [keyId],
@@ -38,7 +38,7 @@ export function keyToDidDoc(pubKeyBytes: Uint8Array, fingerprint: string): any {
         id: x25519KeyId,
         type: 'X25519KeyAgreementKey2019',
         controller: did,
-        publicKeyBase58: u8a.toString(x25519PubBytes, 'base58btc'),
+        publicKeyBase58: toString(x25519PubBytes, 'base58btc'),
       },
     ],
   }

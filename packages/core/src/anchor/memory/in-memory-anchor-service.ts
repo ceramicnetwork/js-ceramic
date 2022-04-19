@@ -1,4 +1,5 @@
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
+import * as Block from 'multiformats/block'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import {
@@ -11,13 +12,14 @@ import {
   AnchorCommit,
 } from '@ceramicnetwork/common'
 
-import type { Dispatcher } from '../../dispatcher'
-import Ceramic from '../../ceramic'
-import StreamID from '@ceramicnetwork/streamid'
+import type { Dispatcher } from '../../dispatcher.js'
+import { Ceramic } from '../../ceramic.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
-import Utils from '../../utils'
-import dagCBOR from 'ipld-dag-cbor'
+import { Utils } from '../../utils.js'
+import * as codec from '@ipld/dag-cbor'
+import { sha256 as hasher } from 'multiformats/hashes/sha2'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -42,7 +44,7 @@ const SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-class InMemoryAnchorService implements AnchorService, AnchorValidator {
+export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
   #logger: DiagnosticsLogger
@@ -291,7 +293,8 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param commit
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
-    const expectedCID = await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(commit)))
+    const block = await Block.encode({ value: commit, codec, hasher })
+    const expectedCID = block.cid
     const stream = await this.#ceramic.applyCommit(streamId, commit, {
       publish: true,
       anchor: false,
@@ -318,7 +321,7 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
       chainId: CHAIN_ID,
       blockNumber: timestamp,
       blockTimestamp: timestamp,
-      txHash: new CID(SAMPLE_ETH_TX_HASH),
+      txHash: CID.parse(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
     }
     const proof = await this.#dispatcher.storeCommit(proofData)
@@ -358,5 +361,3 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
     // always valid
   }
 }
-
-export default InMemoryAnchorService

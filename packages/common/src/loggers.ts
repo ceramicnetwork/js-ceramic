@@ -1,6 +1,6 @@
-import { Logger, LoggerModes } from '@overnightjs/logger'
-import * as logfmt from 'logfmt'
-import util from 'util'
+import { LoggerModes, JetLogger as Logger } from 'jet-logger'
+import logfmt from 'logfmt'
+import * as util from 'util'
 import flatten from 'flat'
 import {
   ServiceLoggerBase,
@@ -9,7 +9,7 @@ import {
   LogLevel,
   ServiceLog,
   WriteableStream,
-} from './logger-base'
+} from './logger-base.js'
 
 /**
  * Logs to the console based on log level
@@ -18,7 +18,7 @@ export class DiagnosticsLogger extends DiagnosticsLoggerBase {
   constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: WriteableStream) {
     super(logLevel, logToFiles, fileLogger)
     const removeTimestamp = true
-    this.logger = new Logger(LoggerModes.Console, '', removeTimestamp)
+    this.logger = Logger(LoggerModes.Console, '', removeTimestamp)
   }
 
   public log(style: LogStyle, content: string | Record<string, unknown> | Error): void {

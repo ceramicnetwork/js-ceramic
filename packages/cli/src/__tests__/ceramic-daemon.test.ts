@@ -1,17 +1,26 @@
-import Ceramic from '@ceramicnetwork/core'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { jest } from '@jest/globals'
+import { Ceramic } from '@ceramicnetwork/core'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
-import { CeramicDaemon } from '../ceramic-daemon'
-import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { CeramicDaemon } from '../ceramic-daemon.js'
+import {
+  AnchorStatus,
+  fetchJson,
+  Stream,
+  StreamUtils,
+  IpfsApi,
+  TimedAbortSignal,
+} from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { filter, take } from 'rxjs/operators'
+import { firstValueFrom } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
-import StreamID from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs'
-import { makeDID } from './make-did'
-import { DaemonConfig } from '../daemon-config'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { makeDID } from './make-did.js'
+import { DaemonConfig } from '../daemon-config.js'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -56,16 +65,15 @@ describe('Ceramic interop: core <> http-client', () => {
   let client: CeramicClient
 
   beforeAll(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs = await createIPFS(tmpFolder.path)
+    ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
-    await tmpFolder.cleanup()
   })
 
   beforeEach(async () => {
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
@@ -81,6 +89,7 @@ describe('Ceramic interop: core <> http-client', () => {
     await client.close()
     await daemon.close()
     await core.close()
+    await tmpFolder.cleanup()
   })
 
   /**
@@ -90,16 +99,15 @@ describe('Ceramic interop: core <> http-client', () => {
    * @param doc
    */
   const anchorDoc = async (doc: Stream): Promise<void> => {
-    const changeHandle = doc
-      .pipe(
+    const changeHandle = firstValueFrom(
+      doc.pipe(
         filter(
           (state) =>
             state.anchorStatus === AnchorStatus.ANCHORED ||
             state.anchorStatus === AnchorStatus.FAILED
-        ),
-        take(1)
+        )
       )
-      .toPromise()
+    )
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     await daemon.ceramic.context.anchorService.anchor()
@@ -249,6 +257,29 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
   })
 
+  it('Throw on rejected update', async () => {
+    const contentOg = { test: 123 }
+    const contentRejected = { test: 'rejected' }
+
+    const streamOg = await TileDocument.create<any>(client, contentOg)
+
+    // Create an anchor commit that the original stream handle won't know about
+    const streamCopy = await TileDocument.load(core, streamOg.id)
+    await anchorDoc(streamCopy)
+    expect(streamCopy.state.log.length).toEqual(2)
+
+    // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+    // should be rejected by conflict resolution
+    expect(streamOg.state.log.length).toEqual(1)
+    await expect(streamOg.update(contentRejected)).rejects.toThrow(
+      /Commit rejected by conflict resolution/
+    )
+    expect(streamOg.state.log.length).toEqual(1)
+
+    await streamOg.sync()
+    expect(streamOg.state.log.length).toEqual(2)
+  })
+
   it('loads commits correctly', async () => {
     // Create multiple commits of the same document
     const content1 = { test: 123 }
@@ -268,7 +299,7 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
     // Load genesis commit
-    const v0Id = doc.id.atCommit(doc.id.cid)
+    const v0Id = new CommitID(doc.id.type, doc.id.cid)
     const docV0Core = await core.loadStream(v0Id)
     const docV0Client = await client.loadStream(v0Id)
     expect(docV0Core.content).toEqual(content1)
@@ -278,7 +309,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v1 (anchor on top of genesis commit)
-    const v1Id = doc.id.atCommit(doc.state.log[1].cid)
+    const v1Id = CommitID.make(doc.id, doc.state.log[1].cid)
     const docV1Core = await core.loadStream(v1Id)
     const docV1Client = await client.loadStream(v1Id)
     expect(docV1Core.content).toEqual(content1)
@@ -288,7 +319,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v2
-    const v2Id = doc.id.atCommit(doc.state.log[2].cid)
+    const v2Id = CommitID.make(doc.id, doc.state.log[2].cid)
     const docV2Core = await core.loadStream(v2Id)
     const docV2Client = await client.loadStream(v2Id)
     expect(docV2Core.content).toEqual(content2)
@@ -298,7 +329,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v3 (anchor on top of v2)
-    const v3Id = doc.id.atCommit(doc.state.log[3].cid)
+    const v3Id = CommitID.make(doc.id, doc.state.log[3].cid)
     const docV3Core = await core.loadStream(v3Id)
     const docV3Client = await client.loadStream(v3Id)
     expect(docV3Core.content).toEqual(content2)
@@ -308,7 +339,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v4
-    const v4Id = doc.id.atCommit(doc.state.log[4].cid)
+    const v4Id = CommitID.make(doc.id, doc.state.log[4].cid)
     const docV4Core = await core.loadStream(v4Id)
     const docV4Client = await client.loadStream(v4Id)
     expect(docV4Core.content).toEqual(content3)
@@ -318,7 +349,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v5
-    const v5Id = doc.id.atCommit(doc.state.log[5].cid)
+    const v5Id = CommitID.make(doc.id, doc.state.log[5].cid)
     const docV5Core = await core.loadStream(v5Id)
     const docV5Client = await client.loadStream(v5Id)
     expect(docV5Core.content).toEqual(content3)
@@ -342,7 +373,7 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(json).toEqual(content3)
   })
 
-  it('times out if fetch is taking too long', async () => {
+  it('Aborts fetch if it is taking too long', async () => {
     const content1 = { test: 123 }
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
 
@@ -360,9 +391,75 @@ describe('Ceramic interop: core <> http-client', () => {
       fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
         timeout: 1000,
       })
-    ).rejects.toThrow(`Http request timed out after 1000 ms`)
+    ).rejects.toThrow(/aborted/)
 
     clearTimeout(id)
+  })
+
+  it('Aborts fetch through passed in AbortSignal', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const loadStreamMock = jest.spyOn(core, 'loadStream')
+    let id = null
+    loadStreamMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        id = setTimeout(() => {
+          resolve(doc)
+        }, 5000)
+      })
+    })
+
+    const timedAbortSignal = new TimedAbortSignal(1000)
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: timedAbortSignal.signal,
+      })
+    ).rejects.toThrow(/aborted/)
+
+    timedAbortSignal.clear()
+    clearTimeout(id)
+  })
+
+  it('Aborts fetch if taking too long even if given an AbortSignal that did not get aborted', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const loadStreamMock = jest.spyOn(core, 'loadStream')
+    let id = null
+    loadStreamMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        id = setTimeout(() => {
+          resolve(doc)
+        }, 4000)
+      })
+    })
+
+    const controller = new AbortController()
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: controller.signal,
+        timeout: 1000,
+      })
+    ).rejects.toThrow(/aborted/)
+
+    clearTimeout(id)
+  })
+
+  it('Aborts fetch if the AbortSignal given has already been aborted', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const controller = new AbortController()
+    controller.abort()
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        signal: controller.signal,
+      })
+    ).rejects.toThrow(/aborted/)
   })
 
   it('requestAnchor works via http api', async () => {
@@ -459,8 +556,8 @@ describe('Ceramic interop: core <> http-client', () => {
     let docA, docB
 
     beforeEach(async () => {
-      docB = await TileDocument.create(core, { foo: 'bar' })
-      docA = await TileDocument.create(core, { foo: 'baz' })
+      docB = await TileDocument.create(core, { foo: 'bar' }, null, { pin: false })
+      docA = await TileDocument.create(core, { foo: 'baz' }, null, { pin: false })
     })
 
     const pinLs = async (streamId?: StreamID): Promise<Array<any>> => {

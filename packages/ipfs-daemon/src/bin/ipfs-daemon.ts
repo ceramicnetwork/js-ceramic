@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { IpfsDaemon } from '../ipfs-daemon'
+import { IpfsDaemon } from '../ipfs-daemon.js'
 
 process.on('uncaughtException', (err) => {
   console.log(err) // just log for now

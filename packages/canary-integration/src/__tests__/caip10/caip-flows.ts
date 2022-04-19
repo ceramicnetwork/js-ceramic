@@ -1,7 +1,7 @@
 import { AuthProvider } from '@ceramicnetwork/blockchain-utils-linking'
-import { CeramicApi } from '@ceramicnetwork/common'
+import { CeramicApi, toLegacyAccountId } from '@ceramicnetwork/common'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import type { AccountID } from 'caip'
+import { AccountId } from 'caip'
 
 export async function happyPath(ceramic: CeramicApi, authProvider: AuthProvider) {
   const accountId = await authProvider.accountId()
@@ -11,12 +11,23 @@ export async function happyPath(ceramic: CeramicApi, authProvider: AuthProvider)
   expect(caip.did).toEqual(ceramic.did.id)
 }
 
-export async function wrongProof(ceramic: CeramicApi, authProvider: AuthProvider) {
-  const accountId = await authProvider.accountId()
-  accountId.address = 'wrong-test-user'
-  const caip = await Caip10Link.fromAccount(ceramic, accountId)
+export async function wrongProof(
+  ceramic: CeramicApi,
+  authProvider: AuthProvider,
+  wrongAccountId?: AccountId
+) {
+  const signingAccountId = await authProvider.accountId()
+  if (!wrongAccountId) {
+    wrongAccountId = await authProvider.accountId()
+    wrongAccountId.address = 'wrong-test-user'
+  }
+
+  const legacySigningAccountId = toLegacyAccountId(signingAccountId.toString()).toLowerCase()
+  const legacyLinkAccountId = toLegacyAccountId(wrongAccountId.toString()).toLowerCase()
+
+  const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
   await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
-    /Address doesn't match stream controller/
+    `Address '${legacySigningAccountId}' used to sign update to Caip10Link doesn't match stream controller '${legacyLinkAccountId}'`
   )
 }
 

@@ -1,4 +1,4 @@
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
 import {
   DiagnosticsLogger,
@@ -7,28 +7,31 @@ import {
   StreamUtils,
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
-import { Repository } from './state-management/repository'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { Repository } from './state-management/repository.js'
 import {
   MsgType,
   PubsubMessage,
   QueryMessage,
   ResponseMessage,
   UpdateMessage,
-} from './pubsub/pubsub-message'
-import { Pubsub } from './pubsub/pubsub'
+} from './pubsub/pubsub-message.js'
+import { Pubsub } from './pubsub/pubsub.js'
 import { Subscription } from 'rxjs'
-import { MessageBus } from './pubsub/message-bus'
-import { LRUMap } from 'lru_map'
-import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
-import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
+import { MessageBus } from './pubsub/message-bus.js'
+import lru from 'lru_map'
+import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
+import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
+import { TaskQueue } from './pubsub/task-queue.js'
+import { base64urlToJSON, Utils } from './utils.js'
 
 const IPFS_GET_RETRIES = 3
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
+const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -50,7 +53,7 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly dagNodeCache: LRUMap<string, any>
+  readonly dagNodeCache: lru.LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -59,9 +62,19 @@ export class Dispatcher {
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
-    maxQueriesPerSecond: number
+    private readonly _shutdownSignal: AbortSignal,
+    maxQueriesPerSecond: number,
+    readonly tasks: TaskQueue = new TaskQueue(),
+    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
   ) {
-    const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    const pubsub = new Pubsub(
+      _ipfs,
+      topic,
+      IPFS_RESUBSCRIBE_INTERVAL_DELAY,
+      _pubsubLogger,
+      _logger,
+      tasks
+    )
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
         new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
@@ -70,7 +83,7 @@ export class Dispatcher {
       )
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -82,16 +95,28 @@ export class Dispatcher {
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
-        const { jws, linkedBlock } = data
+        const { jws, linkedBlock, cacaoBlock } = data
+        // if cacao is present, put it into ipfs dag
+        if (cacaoBlock) {
+          const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
+          const capIPFSUri = decodedProtectedHeader.cap
+          await Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, this._shutdownSignal)
+        }
+
         // put the JWS into the ipfs dag
-        const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
+        const cid = await this._ipfs.dag.put(jws, {
+          storeCodec: 'dag-jose',
+          hashAlg: 'sha2-256',
+          signal: this._shutdownSignal,
+        })
         // put the payload into the ipfs dag
-        await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
+        const linkCid = jws.link
+        await Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, this._shutdownSignal)
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
       }
-      const cid = await this._ipfs.dag.put(data)
+      const cid = await this._ipfs.dag.put(data, { signal: this._shutdownSignal })
       await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
@@ -146,10 +171,36 @@ export class Dispatcher {
   }
 
   /**
+   * Checks if the local IPFS node has the data for the given CID, without needing to load it from
+   * the network.
+   * @param cid
+   */
+  async cidExistsInLocalIPFSStore(cid: CID | string): Promise<boolean> {
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
+    try {
+      // With the 'offline' flag set loading a CID from ipfs should be functionally instantaneous
+      // as there's no networking i/o happening. With go-ipfs this works as expected and trying
+      // to load a CID that doesn't exist fails instantly with an error that the given key wasn't
+      // found in the state store.  Unfortunately js-ipfs doesn't seem to respect the 'offline'
+      // flag, so we approximate the behavior by setting a low timeout instead.
+      const result = await this._ipfs.dag.get(asCid, {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        offline: true,
+        timeout: IPFS_OFFLINE_GET_TIMEOUT,
+      })
+      return result != null
+    } catch (err) {
+      console.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
+      return false
+    }
+  }
+
+  /**
    * Helper function for loading a CID from IPFS
    */
   private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {
-    const asCid = typeof cid === 'string' ? new CID(cid) : cid
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
 
     // Lookup CID in cache before looking it up IPFS
     const cidAndPath = path ? asCid.toString() + path : asCid.toString()
@@ -164,7 +215,11 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
+        dagResult = await this._ipfs.dag.get(asCid, {
+          timeout: this._ipfsTimeout,
+          path,
+          signal: this._shutdownSignal,
+        })
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
@@ -172,7 +227,7 @@ export class Dispatcher {
           err.message == 'Request timed out'
         ) {
           console.warn(
-            `Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`
+            `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           if (retries > 0) {
             continue
@@ -193,7 +248,11 @@ export class Dispatcher {
    * @private
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
-    const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
+    const stat = await this._ipfs.block.stat(asCid, {
+      timeout: this._ipfsTimeout,
+      signal: this._shutdownSignal,
+    })
     if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
         `${cid.toString()} commit size ${
@@ -309,6 +368,7 @@ export class Dispatcher {
    */
   async close(): Promise<void> {
     this.messageBus.unsubscribe()
+    await this.tasks.onIdle()
   }
 
   /**

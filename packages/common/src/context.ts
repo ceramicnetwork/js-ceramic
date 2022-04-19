@@ -1,7 +1,7 @@
-import type { CeramicApi } from './ceramic-api'
+import type { CeramicApi } from './ceramic-api.js'
 import type { DID } from 'dids'
-import type { AnchorService } from './anchor-service'
-import type { IpfsApi, LoggerProvider } from './index'
+import type { AnchorService } from './anchor-service.js'
+import type { IpfsApi, LoggerProvider } from './index.js'
 
 /**
  * Encapsulates Ceramic context

@@ -1,12 +1,7 @@
-import fetch from 'cross-fetch'
-jest.mock('cross-fetch', () => jest.fn()) // this gets hoisted to the top of the file
-const mockFetch = fetch as jest.Mock
-const { Response } = jest.requireActual('cross-fetch')
-
-import { createCeramic } from '../../create-ceramic'
-import { createIPFS } from '../../create-ipfs'
+import { jest } from '@jest/globals'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
-import { clearDid, happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
 
@@ -18,22 +13,25 @@ let publicKey: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
+jest.unstable_mockModule('cross-fetch', () => {
+  const originalModule = jest.requireActual('cross-fetch') as any
+  const fakeFetch = async () => {
+    return new originalModule.Response(JSON.stringify({ pubkey: publicKey }))
+  }
+  return {
+    default: fakeFetch,
+  }
+})
+
 beforeAll(async () => {
-  ipfs = await createIPFS()
-  ceramic = await createCeramic(ipfs)
   const signer = await InMemorySigner.fromSecretKey(privateKey)
   provider = {
     signer,
   }
   publicKey = await provider.signer.publicKey()
-  mockFetch.mockReset()
-  mockFetch.mockImplementation(async () => {
-    return new Response(
-      JSON.stringify({
-        pubkey: publicKey,
-      })
-    )
-  })
+  ipfs = await createIPFS()
+  const { createCeramic } = await import('../../create-ceramic.js')
+  ceramic = await createCeramic(ipfs)
 }, 120000)
 
 afterAll(async () => {

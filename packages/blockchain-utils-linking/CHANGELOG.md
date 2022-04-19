@@ -3,6 +3,86 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-rc.1...@ceramicnetwork/blockchain-utils-linking@2.0.0-rc.2) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# 2.0.0-rc.1 (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.3...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.4) (2022-03-24)
+
+
+### Bug Fixes
+
+* Quick fix: OMG Forgot to update a snapshot file, it seems. ([7673020](https://github.com/ceramicnetwork/js-ceramic/commit/7673020a0e0a329efefcdcaf94341cb84fa16657))
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.2...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.3) (2022-03-03)
+
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+* Use old caip format for proofs ([#2059](https://github.com/ceramicnetwork/js-ceramic/issues/2059)) ([429ddea](https://github.com/ceramicnetwork/js-ceramic/commit/429ddea11f9ebe7507b11812a064217c48a82be9))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.1...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* Cache chainId requests to providers ([#2003](https://github.com/ceramicnetwork/js-ceramic/issues/2003)) ([892d6af](https://github.com/ceramicnetwork/js-ceramic/commit/892d6af6708b32690e9eb0ae5dab6cfad3f822f6))
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@1.5.1-rc.2...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@1.5.1-rc.2...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.0) (2021-12-07)
+
+
+### Features
+
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
+
+
+
+
+
 ## [1.5.6-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@1.5.5...@ceramicnetwork/blockchain-utils-linking@1.5.6-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

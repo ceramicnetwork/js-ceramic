@@ -1,0 +1,9 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "testEnvironment": "node",
+  "extensionsToTreatAsEsm": [".ts"],
+  "testRegex": ".(spec|test).ts$",
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
+}

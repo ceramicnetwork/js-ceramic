@@ -2,17 +2,19 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
-import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
+import { CommitData, CommitType, IpfsApi, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
-import { Dispatcher } from './dispatcher'
+import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type CID from 'cids'
+import { CID } from 'multiformats/cid'
+import { fromString, toString } from 'uint8arrays'
+import type { Cacao } from 'ceramic-cacao'
 
 /**
  * Various utility functions
  */
-export default class Utils {
+export class Utils {
   @Memoize()
   static get validator() {
     const ajv = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
@@ -91,6 +93,7 @@ export default class Utils {
       if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
       commitData.commit = linkedCommit
       commitData.envelope = commit
+      commitData.capability = await this.extractCapability(commit, dispatcher)
     } else if (StreamUtils.isAnchorCommit(commit)) {
       commitData.type = CommitType.ANCHOR
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
@@ -98,6 +101,52 @@ export default class Utils {
     }
     if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
     return commitData
+  }
+
+  /**
+   * Puts a block on IPFS
+   * @param cid the CID of the block to put
+   * @param block bytes array of block to put
+   * @param ipfsApi the IPFS Api instance to use
+   * @param signal AbortSignal
+   */
+  static async putIPFSBlock(
+    cid: CID | string,
+    block: Uint8Array,
+    ipfsApi: IpfsApi,
+    signal: AbortSignal
+  ) {
+    if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
+    const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
+    const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
+    const version = cid.version
+    await ipfsApi.block.put(block, { format, mhtype, version, signal })
+  }
+
+  /**
+   * Attempts to load CACAO capability from IPFS if present in protected header of commit
+   * @param commit the commit to load the capability for
+   * @param dispatcher instance of dispatcher to load from IPFS
+   * @returns a Cacao capability object if found, else null
+   */
+  static async extractCapability(commit: any, dispatcher: Dispatcher): Promise<Cacao | undefined> {
+    if (!commit.signatures || commit.signatures.length === 0) return
+
+    const protectedHeader = commit.signatures[0].protected
+    const decodedProtectedHeader = base64urlToJSON(protectedHeader)
+    if (!decodedProtectedHeader.cap) return
+
+    const capIPFSUri = decodedProtectedHeader.cap
+    const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+
+    try {
+      const cacao = await dispatcher.retrieveFromIPFS(capCID)
+      return cacao as Cacao
+    } catch (error) {
+      throw new Error(
+        `Error while loading capability from IPFS with CID ${capCID.toString()}: ${error}`
+      )
+    }
   }
 }
 
@@ -137,4 +186,8 @@ export const promiseTimeout = (
     setTimeout(() => reject(new Error(timeoutErrorMsg)), ms)
   })
   return Promise.race([timeout, promise])
+}
+
+export function base64urlToJSON(s: string): Record<string, any> {
+  return JSON.parse(toString(fromString(s, 'base64url'))) as Record<string, any>
 }

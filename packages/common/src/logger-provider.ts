@@ -1,7 +1,7 @@
-import { DiagnosticsLogger, ServiceLogger } from './loggers'
-import { LoggerProviderBase } from './logger-base'
-import path from 'path'
-import os from 'os'
+import { DiagnosticsLogger, ServiceLogger } from './loggers.js'
+import { LoggerProviderBase } from './logger-base.js'
+import * as path from 'path'
+import * as os from 'os'
 
 /**
  * Global Logger factory

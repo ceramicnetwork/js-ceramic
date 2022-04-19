@@ -1,5 +1,5 @@
-import { LinkProof } from './util'
-import { AccountID } from 'caip'
+import { LinkProof } from './util.js'
+import { AccountId } from 'caip'
 
 /**
  *  AuthProvider defines the interface your custom authProvider must
@@ -51,7 +51,7 @@ export interface AuthProvider {
   /**
    * Return currently used address as CAIP AccountID.
    */
-  accountId(): Promise<AccountID>
+  accountId(): Promise<AccountId>
 
   /**
    * Instantiate a new AuthProvider using a new address.

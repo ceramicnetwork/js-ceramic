@@ -1,4 +1,4 @@
-import StreamID, { CommitID } from '@ceramicnetwork/streamid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
@@ -11,19 +11,19 @@ import {
   SyncOptions,
   UpdateOpts,
 } from '@ceramicnetwork/common'
-import { PinStore } from '../store/pin-store'
+import { PinStore } from '../store/pin-store.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { ExecutionQueue } from './execution-queue'
-import { RunningState } from './running-state'
-import { StateManager } from './state-manager'
-import type { Dispatcher } from '../dispatcher'
-import type { ConflictResolution } from '../conflict-resolution'
-import type { HandlersMap } from '../handlers-map'
-import type { StateValidation } from './state-validation'
+import { ExecutionQueue } from './execution-queue.js'
+import { RunningState } from './running-state.js'
+import { StateManager } from './state-manager.js'
+import type { Dispatcher } from '../dispatcher.js'
+import type { ConflictResolution } from '../conflict-resolution.js'
+import type { HandlersMap } from '../handlers-map.js'
+import type { StateValidation } from './state-validation.js'
 import { Observable } from 'rxjs'
-import { StateCache } from './state-cache'
-import { SnapshotState } from './snapshot-state'
-import Utils from '../utils'
+import { StateCache } from './state-cache.js'
+import { SnapshotState } from './snapshot-state.js'
+import { Utils } from '../utils.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -75,7 +75,12 @@ export class Repository {
   ) {
     this.loadingQ = new ExecutionQueue(concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue(concurrencyLimit, logger)
-    this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete())
+    this.inmemory = new StateCache(cacheLimit, (state$) => {
+      if (state$.subscriptionSet.size > 0) {
+        logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
+      }
+      state$.complete()
+    })
     this.updates$ = this.updates$.bind(this)
   }
 
@@ -180,7 +185,6 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
       return this.stateManager.verifyLoneGenesis(stream)
     })
-    await this.handlePinOpts(state$, opts)
 
     return state$
   }
@@ -308,6 +312,27 @@ export class Repository {
    */
   async listPinned(streamId?: StreamID): Promise<string[]> {
     return this.#deps.pinStore.ls(streamId)
+  }
+
+  /**
+   * Returns the StreamState of a random pinned stream from the state store
+   */
+  async randomPinnedStreamState(): Promise<StreamState | null> {
+    // First get a random streamID from the state store.
+    const res = await this.#deps.pinStore.stateStore.list(null, 1)
+    if (res.length == 0) {
+      return null
+    }
+    if (res.length > 1) {
+      // This should be impossible and indicates a programming error with how the state store
+      // list() call is enforcing the limit argument.
+      throw new Error(
+        `Expected a single streamID from the state store, but got ${res.length} streamIDs instead`
+      )
+    }
+
+    const [streamID] = res
+    return this.#deps.pinStore.stateStore.load(StreamID.fromString(streamID))
   }
 
   /**

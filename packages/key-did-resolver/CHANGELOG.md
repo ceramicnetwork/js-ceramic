@@ -3,6 +3,61 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0-alpha.3...key-did-resolver@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* Do not depend on bigint-mod-arith ([#2074](https://github.com/ceramicnetwork/js-ceramic/issues/2074)) ([ad731cd](https://github.com/ceramicnetwork/js-ceramic/commit/ad731cd875ba4c1d9f398e4dc8be843ee4810862))
+* polyfill AbortController, so that Ceramic node works on Node.js v14 ([#2090](https://github.com/ceramicnetwork/js-ceramic/issues/2090)) ([fff3e8a](https://github.com/ceramicnetwork/js-ceramic/commit/fff3e8a18ef7d2ba86c80743f61f0487dae3e129))
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0-alpha.2...key-did-resolver@2.0.0-alpha.3) (2022-03-03)
+
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0-alpha.1...key-did-resolver@2.0.0-alpha.2) (2022-02-10)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@2.0.0-alpha.1) (2022-01-14)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
 ## [1.4.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.4...key-did-resolver@1.4.5-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package key-did-resolver

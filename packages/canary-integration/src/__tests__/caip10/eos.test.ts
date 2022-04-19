@@ -1,9 +1,9 @@
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { createIPFS } from '../../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common'
-import { createCeramic } from '../../create-ceramic'
-import { clearDid, happyPath, wrongProof } from './caip-flows'
+import { createCeramic } from '../../create-ceramic.js'
+import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 
 const telosTestnetChainId = '1eaa0824707c8c16bd25145493bf062aecddfeb56c736f6ba6397f3195f33c9f'
 const telosTestnetAccount = 'testuser1111'

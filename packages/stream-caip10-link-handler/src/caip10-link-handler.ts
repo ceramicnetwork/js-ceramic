@@ -10,6 +10,7 @@ import {
   StreamHandler,
   StreamState,
   StreamUtils,
+  toLegacyAccountId,
 } from '@ceramicnetwork/common'
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
@@ -110,12 +111,18 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
-    const account = validProof.account || validProof.address
-    let [address, chainId] = account.split('@') // eslint-disable-line prefer-const
+    const account: string = validProof.account || validProof.address
 
-    const addressCaip10 = [address, chainId].join('@')
-    if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
-      throw new Error("Address doesn't match stream controller")
+    const legacyAccountCaip10 = toLegacyAccountId(account)
+
+    // We can assume that controllers will always follow the legacy CAIP-10 Link format
+    const legacyControllerCaip10 = state.metadata.controllers[0]
+    if (!legacyControllerCaip10.includes('@')) {
+      throw new Error('Controller is not following the legacy CAIP10 format. Unexpected error.')
+    }
+
+    if (legacyAccountCaip10.toLowerCase() !== legacyControllerCaip10.toLowerCase()) {
+      throw new Error(`Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`)
     }
     state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
     return {

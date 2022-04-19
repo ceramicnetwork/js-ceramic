@@ -1,3 +1,5 @@
+import type { AccountId } from "caip"
+
 export interface LinkProof {
   version: number
   message: string
@@ -22,6 +24,16 @@ export interface ConsentMessage {
   timestamp?: number
 }
 
+export interface CapabilityOpts {
+  domain?: string
+  statement?: string
+  version?: string
+  nonce?: string
+  requestId?: string
+  expirationTime?: string
+  resources?: Array<string>
+}
+
 export function getConsentMessage(did: string, addTimestamp = true): ConsentMessage {
   const res: any = {
     message: 'Link this account to your identity' + '\n\n' + did,
@@ -40,4 +52,8 @@ export function encodeRpcMessage(method: string, params?: any): any {
     method,
     params,
   }
+}
+
+export function asOldCaipString(input: AccountId): string {
+  return `${input.address}@${input.chainId.namespace}:${input.chainId.reference}`
 }

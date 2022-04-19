@@ -1,4 +1,5 @@
-import { TaskQueue } from '../task-queue'
+import { jest } from '@jest/globals'
+import { TaskQueue } from '../task-queue.js'
 
 async function delay(ms: number) {
   return new Promise<void>((resolve) => {
