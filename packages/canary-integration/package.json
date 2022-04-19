@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/canary-integration",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.4",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
@@ -14,14 +14,14 @@
     "lib": "lib"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0-rc.2",
-    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-rc.1",
-    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-rc.2",
-    "@ceramicnetwork/common": "^2.0.0-rc.2",
-    "@ceramicnetwork/core": "^2.0.0-rc.3",
-    "@ceramicnetwork/ipfs-daemon": "^2.0.0-rc.2",
-    "@ceramicnetwork/stream-caip10-link": "^2.0.0-rc.2",
-    "@ceramicnetwork/stream-tile": "^2.0.0-rc.2",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-rc.3",
+    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-rc.2",
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-rc.3",
+    "@ceramicnetwork/common": "^2.0.0-rc.3",
+    "@ceramicnetwork/core": "^2.0.0-rc.4",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.0-rc.3",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-rc.3",
+    "@ceramicnetwork/stream-tile": "^2.0.0-rc.3",
     "@stablelib/random": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
     "ceramic-cacao": "^1.0.0",
