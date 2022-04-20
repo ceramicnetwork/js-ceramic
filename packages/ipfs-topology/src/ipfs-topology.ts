@@ -29,13 +29,13 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null 
     case Networks.ELP:
       return [
         new Multiaddr(
-          '/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng'
+          '/dns4/go-ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4011/ws/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL'
+          '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8'
+          '/dns4/go-ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8'
         ),
       ]
     case Networks.TESTNET_CLAY:
