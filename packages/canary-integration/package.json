@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/canary-integration",
-  "version": "2.0.2-rc.0",
+  "version": "2.0.2",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
@@ -18,8 +18,8 @@
     "@ceramicnetwork/blockchain-utils-linking": "^2.0.0",
     "@ceramicnetwork/blockchain-utils-validation": "^2.0.0",
     "@ceramicnetwork/common": "^2.0.0",
-    "@ceramicnetwork/core": "^2.1.1-rc.0",
-    "@ceramicnetwork/ipfs-daemon": "^2.0.1-rc.0",
+    "@ceramicnetwork/core": "^2.1.1",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.1",
     "@ceramicnetwork/stream-caip10-link": "^2.0.0",
     "@ceramicnetwork/stream-tile": "^2.0.0",
     "@stablelib/random": "^1.0.1",
