@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2.0.1-rc.0 (2022-04-20)
+
+
+### Bug Fixes
+
+* **ipfs-topology:** Update hardcoded multiaddrs for mainnet ([#2129](https://github.com/ceramicnetwork/js-ceramic/issues/2129)) ([6bda925](https://github.com/ceramicnetwork/js-ceramic/commit/6bda9251c5d5c6c06f884d6f279a212de65441cc))
+
+
+
+
+
 # [2.0.0](/compare/@ceramicnetwork/ipfs-topology@2.0.0-rc.4...@ceramicnetwork/ipfs-topology@2.0.0) (2022-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology
