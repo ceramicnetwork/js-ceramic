@@ -65,13 +65,3 @@ To add a new blockchain:
 - add the newly created `BlockchainHandler` to the `handlers` list in [index.ts](https://github.com/ceramicnetwork/js-ceramic/blob/develop/packages/blockchain-utils-validation/src/index.ts)
 
 Make sure that `validateLink` can validate links created by `AuthProvider#createLink`.
-
-## Supported blockchains
-
-Below you can see a table which lists supported blockchains and their provider objects.
-
-| Blockchain | CAIP-2 namespace | Supported providers             |
-|------------|------------------|---------------------------------|
-| Ethereum   | [eip155](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-3.md)    | metamask-like ethereum provider |
-| Filecoin   | [fil](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-23.md)              | [Filecoin Wallet Provider](https://github.com/openworklabs/filecoin-wallet-provider) |
-| EOS        | [eosio](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-7.md)              | [@smontero/eosio-local-provider](https://github.com/sebastianmontero/eosio-local-provider#readme) |
