@@ -146,7 +146,7 @@ export class EthereumAnchorService implements AnchorService {
       concatMap(async () => {
         const now = new Date().getTime()
         if (now > maxTime) {
-          throw new Error('Exceeded max timeout')
+          throw new Error('Exceeded max anchor polling time limit')
         } else {
           const response = await fetchJson(requestUrl)
           return this.parseResponse(cidStream, response)
