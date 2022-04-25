@@ -246,13 +246,12 @@ describe('CACAO Integration test', () => {
       test('can not create new stream with wrong family', async () => {
         const family = 'testFamily1'
         const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+        ceramic.did = didKeyWithCapability
 
         await expect(
           TileDocument.create(ceramic, { foo: 'bar' }, {
             family: `${family}-wrong`,
-            controllers: [`did:pkh:eip155:1:${wallet.address}`],
           }, {
-            asDID: didKeyWithCapability,
             anchor: false,
             publish: false,
           })
@@ -264,12 +263,11 @@ describe('CACAO Integration test', () => {
       test('can create new stream with family resource', async () => {
         const family = 'testFamily1'
         const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+        ceramic.did = didKeyWithCapability
 
         const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
           family,
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
         }, {
-          asDID: didKeyWithCapability,
           anchor: false,
           publish: false,
         })

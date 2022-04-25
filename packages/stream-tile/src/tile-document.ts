@@ -376,7 +376,15 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
-        metadata.controllers = [signer.did.id]
+        // When did has capability, the did issuer of the capability is the stream controller 
+        let controller
+        try {
+          controller = signer.did.capability.p.iss
+        } catch(e) {
+          controller = signer.did.id
+        }
+
+        metadata.controllers = [controller]
       } else {
         throw new Error('No controllers specified')
       }
