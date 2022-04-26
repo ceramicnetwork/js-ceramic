@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.2...@ceramicnetwork/cli@2.0.3-rc.0) (2022-04-26)
+
+
+### Bug Fixes
+
+* **cli:** use IPFS_PATH env var ([#2127](https://github.com/ceramicnetwork/js-ceramic/issues/2127)) ([dd00301](https://github.com/ceramicnetwork/js-ceramic/commit/dd003019053a4db3325ad363a9ba4e4447414fdf))
+
+
+
+
+
 ## [2.0.2](/compare/@ceramicnetwork/cli@2.0.2-rc.0...@ceramicnetwork/cli@2.0.2) (2022-04-20)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

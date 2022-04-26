@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.1.1...@ceramicnetwork/core@2.1.2-rc.0) (2022-04-26)
+
+
+### Bug Fixes
+
+* **core:** Export pusub message in index ([#2128](https://github.com/ceramicnetwork/js-ceramic/issues/2128)) ([bf943dc](https://github.com/ceramicnetwork/js-ceramic/commit/bf943dc348ed3e1d5ce48b5032a44392858c85a6))
+
+
+
+
+
 ## [2.1.1](/compare/@ceramicnetwork/core@2.1.1-rc.0...@ceramicnetwork/core@2.1.1) (2022-04-20)
 
 **Note:** Version bump only for package @ceramicnetwork/core
