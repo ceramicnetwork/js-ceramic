@@ -34,7 +34,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0",
     "@ceramicnetwork/streamid": "^2.0.0",
-    "caip": "~1.0.0",
+    "caip": "~1.1.0",
     "did-resolver": "^3.1.5"
   },
   "devDependencies": {
