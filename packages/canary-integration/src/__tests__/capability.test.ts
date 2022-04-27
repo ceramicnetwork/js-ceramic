@@ -39,6 +39,7 @@ describe('CACAO Integration test', () => {
   let ceramic: CeramicApi
   let wallet: Wallet
   let didKey: DID
+  let didKeyWithParent: DID
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -51,6 +52,8 @@ describe('CACAO Integration test', () => {
     const didKeyProvider = new Ed25519Provider(randomBytes(32))
     didKey = new DID({ provider: didKeyProvider, resolver: KeyDidResolver.getResolver() })
     await didKey.authenticate()
+    didKeyWithParent = new DID({ provider: didKeyProvider, resolver: KeyDidResolver.getResolver(), parent: `did:pkh:eip155:1:${wallet.address}` })
+    await didKeyWithParent.authenticate()
   }, 120000)
 
   afterAll(async () => {
@@ -281,16 +284,16 @@ describe('CACAO Integration test', () => {
 
   describe('Resources using wildcard', () => {
     test('update using capability with wildcard * resource', async () => {
+      ceramic.did = didKeyWithParent
       // Create a determinstic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testfamily',
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
       })
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+      ceramic.did = didKeyWithCapability
 
       await deterministicDocument.update({ foo: 'bar' }, null, {
-        asDID: didKeyWithCapability,
         anchor: false,
         publish: false,
       })
@@ -300,11 +303,9 @@ describe('CACAO Integration test', () => {
 
     test('create using capability with wildcard * resource', async () => {
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+      ceramic.did = didKeyWithCapability
 
-      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
-      }, {
-        asDID: didKeyWithCapability,
+      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {}, {
         anchor: false,
         publish: false,
       })
