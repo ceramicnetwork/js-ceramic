@@ -259,14 +259,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const resources = cacao.p.resources as string[]
     const payloadCID = commitData.envelope.link.toString()
 
-    if (resources.includes(`ceramic://*`)) {
-      throw new Error(`Capability resource is not allowed`)
-    }
-
     if (
+      !resources.includes(`ceramic://*`) &&
       !resources.includes(`ceramic://${streamId.toString()}`) &&
       !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`) &&
-      !(family && resources.includes(`ceramic://*?family=${family}`))
+      !(family && resources.includes(`ceramic://*?family=${family}`)) 
     ) {
       throw new Error(
         `Capability does not have appropriate permissions to update this TileDocument`

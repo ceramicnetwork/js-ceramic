@@ -280,4 +280,39 @@ describe('CACAO Integration test', () => {
       }, 30000)
     })
   })
+
+  describe('Resources using wildcard', () => {
+    test('update using capability with wildcard * resource', async () => {
+      // Create a determinstic tiledocument owned by the user
+      const deterministicDocument = await TileDocument.deterministic(ceramic, {
+        deterministic: true,
+        family: 'testfamily',
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+      })
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+      await deterministicDocument.update({ foo: 'bar' }, null, {
+        asDID: didKeyWithCapability,
+        anchor: false,
+        publish: false,
+      })
+
+      expect(deterministicDocument.content).toEqual({ foo: 'bar' })
+    }, 30000)
+
+    test('create using capability with wildcard * resource', async () => {
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+      }, {
+        asDID: didKeyWithCapability,
+        anchor: false,
+        publish: false,
+      })
+
+      expect(doc.content).toEqual({ foo: 'bar' })
+      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+    }, 30000)
+  })
 })
