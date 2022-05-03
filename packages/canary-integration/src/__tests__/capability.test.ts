@@ -249,12 +249,13 @@ describe('CACAO Integration test', () => {
       test('can not create new stream with wrong family', async () => {
         const family = 'testFamily1'
         const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
-        ceramic.did = didKeyWithCapability
 
         await expect(
           TileDocument.create(ceramic, { foo: 'bar' }, {
             family: `${family}-wrong`,
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
           }, {
+            asDID: didKeyWithCapability,
             anchor: false,
             publish: false,
           })
@@ -266,11 +267,12 @@ describe('CACAO Integration test', () => {
       test('can create new stream with family resource', async () => {
         const family = 'testFamily1'
         const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
-        ceramic.did = didKeyWithCapability
 
         const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
           family,
+          controllers: [`did:pkh:eip155:1:${wallet.address}`],
         }, {
+          asDID: didKeyWithCapability,
           anchor: false,
           publish: false,
         })
@@ -284,16 +286,16 @@ describe('CACAO Integration test', () => {
 
   describe('Resources using wildcard', () => {
     test('update using capability with wildcard * resource', async () => {
-      ceramic.did = didKeyWithParent
       // Create a determinstic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testfamily',
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
       })
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
-      ceramic.did = didKeyWithCapability
 
       await deterministicDocument.update({ foo: 'bar' }, null, {
+        asDID: didKeyWithCapability,
         anchor: false,
         publish: false,
       })
@@ -303,9 +305,63 @@ describe('CACAO Integration test', () => {
 
     test('create using capability with wildcard * resource', async () => {
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+      }, {
+        asDID: didKeyWithCapability,
+        anchor: false,
+        publish: false,
+      })
+
+      expect(doc.content).toEqual({ foo: 'bar' })
+      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+    }, 30000)
+  })
+
+  describe('Ceramic dids instance with capability/parent', () => {
+    test('can update with streamId in capability', async () => {
+      ceramic.did = didKeyWithParent
+      // Create a determinstic tiledocument owned by the user
+      const deterministicDocument = await TileDocument.deterministic(ceramic, {
+        deterministic: true,
+        family: 'testCapabilities1',
+      })
+      const streamId = deterministicDocument.id
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://${streamId.toString()}`)
       ceramic.did = didKeyWithCapability
 
-      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {}, {
+      await deterministicDocument.update({ foo: 'bar' }, null, {
+        asDID: didKeyWithCapability,
+        anchor: false,
+        publish: false,
+      })
+
+      expect(deterministicDocument.content).toEqual({ foo: 'bar' })
+    }, 30000)
+
+    test('can create new stream with family resource', async () => {
+      const family = 'testFamily1'
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
+      ceramic.did = didKeyWithCapability
+
+      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
+        family,
+      }, {
+        anchor: false,
+        publish: false,
+      })
+
+      expect(doc.content).toEqual({ foo: 'bar' })
+      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+      expect(doc.metadata.family).toEqual(family)
+    }, 30000)
+
+    test('create with wildcard * resource', async () => {
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+      ceramic.did = didKeyWithCapability
+      const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
+      }, {
         anchor: false,
         publish: false,
       })
