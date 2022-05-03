@@ -1,8 +1,8 @@
 import { BehaviorSubject } from 'rxjs'
 import { StreamState } from './stream.js'
 import { StreamUtils } from './utils/stream-utils.js'
-//import { tracer } from './setup-instrumentation.js'
-//const { trace }  = require("@opentelemetry/api");
+import { tracer } from './instrumentation-setup.js'
+
 /**
  * BehaviourSubject<StreamState> that emits only distinct values.
  */

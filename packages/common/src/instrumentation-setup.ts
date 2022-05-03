@@ -1,9 +1,10 @@
-const {
+import {
   BasicTracerProvider,
   ConsoleSpanExporter,
   SimpleSpanProcessor,
-} = require('@opentelemetry/sdk-trace-base');
-const opentelemetry = require('@opentelemetry/api');
+} from '@opentelemetry/sdk-trace-base'
+
+import {trace} from '@opentelemetry/api'
 
 const provider = new BasicTracerProvider();
 
@@ -12,7 +13,7 @@ provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
 provider.register();
 
 // This is what we'll access in all instrumentation code
-export const tracer = opentelemetry.trace.getTracer(
+export const tracer = trace.getTracer(
   'example-basic-tracer-node'
   // TODO automate the naming convention of the metrics based on the caller
 );
