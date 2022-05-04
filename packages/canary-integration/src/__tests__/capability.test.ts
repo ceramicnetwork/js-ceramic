@@ -59,7 +59,7 @@ describe('CACAO Integration test', () => {
   afterAll(async () => {
     await ipfs.stop()
     await ceramic.close()
-  })
+  }, 30000)
 
   describe('Updates without CACAO should fail', () => {
 
