@@ -10,6 +10,8 @@ import {
   ServiceLog,
   WriteableStream,
 } from './logger-base.js'
+import { tracer } from './instrumentation-setup.js'
+import { SemanticAttributes } from '@opentelemetry/semantic-conventions'
 
 /**
  * Logs to the console based on log level
@@ -49,6 +51,19 @@ export class ServiceLogger extends ServiceLoggerBase {
         .format(message, '\n')
         .replace(/\n\s*\n$/, '\n')}`
       this.stream.write(message)
+    }
+
+    if (this.emitMetric) {
+      // for these kinds of logs, we don't have duration
+      const otSpan = tracer.startSpan(
+        this.service,
+        { attributes: {
+           [SemanticAttributes.CODE_FILEPATH]: __filename,
+           [SemanticAttributes.CODE_FUNCTION]: this.service,
+           'message': message.replace(/\n\s*\n$/, '\n')
+          }}
+      )
+      otSpan.end() // later for other functions we will want duration, not here
     }
   }
 

@@ -14,6 +14,7 @@ provider.register();
 
 // This is what we'll access in all instrumentation code
 export const tracer = trace.getTracer(
-  'example-basic-tracer-node'
+  'simple-console-tracer-node'
   // TODO automate the naming convention of the metrics based on the caller
+  // see loggers.ts for this ^^
 );
