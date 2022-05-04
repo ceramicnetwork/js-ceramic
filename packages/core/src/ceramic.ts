@@ -58,7 +58,7 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
   [Networks.ELP]: 'https://cas.3boxlabs.com',
   [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
-  [Networks.DEV_UNSTABLE]: 'https://cas-dev.3boxlabs.com',
+  [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
   [Networks.LOCAL]: 'http://localhost:8081',
 }
 
