@@ -303,7 +303,7 @@ describe('CACAO Integration test', () => {
       expect(deterministicDocument.content).toEqual({ foo: 'bar' })
     }, 30000)
 
-    test('create using capability with wildcard * resource', async () => {
+    test('create the c', async () => {
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
 
       const doc = await TileDocument.create(ceramic, { foo: 'bar' }, {
@@ -332,7 +332,6 @@ describe('CACAO Integration test', () => {
       ceramic.did = didKeyWithCapability
 
       await deterministicDocument.update({ foo: 'bar' }, null, {
-        asDID: didKeyWithCapability,
         anchor: false,
         publish: false,
       })
