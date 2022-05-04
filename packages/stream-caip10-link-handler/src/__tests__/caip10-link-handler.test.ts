@@ -201,7 +201,7 @@ describe('Caip10LinkHandler', () => {
     const state = await handler.applyCommit(badAddressGenesisData, context)
     const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: COMMITS.r1.commit }
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /Address doesn't match/i
+      `Address '${COMMITS.r1.commit.data.account.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${badAddressGenesis.header.controllers[0].toLowerCase()}'`
     )
   })
 

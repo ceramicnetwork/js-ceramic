@@ -3,6 +3,92 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2.0.2-rc.0 (2022-04-27)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [2.0.1](/compare/@ceramicnetwork/ipfs-daemon@2.0.1-rc.0...@ceramicnetwork/ipfs-daemon@2.0.1) (2022-04-20)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## 2.0.1-rc.0 (2022-04-20)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [2.0.0](/compare/@ceramicnetwork/ipfs-daemon@2.0.0-rc.4...@ceramicnetwork/ipfs-daemon@2.0.0) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [2.0.0-rc.4](/compare/@ceramicnetwork/ipfs-daemon@2.0.0-rc.3...@ceramicnetwork/ipfs-daemon@2.0.0-rc.4) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [2.0.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.0.0-rc.2...@ceramicnetwork/ipfs-daemon@2.0.0-rc.3) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# 2.0.0-rc.2 (2022-04-19)
+
+
+### Features
+
+* Make IPFS instance on CLI non-disposable ([#2122](https://github.com/ceramicnetwork/js-ceramic/issues/2122)) ([cc4505f](https://github.com/ceramicnetwork/js-ceramic/commit/cc4505f6c9bb194650c9babcf3f6106c108b6041))
+
+
+
+
+
+# [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.0.0-rc.0...@ceramicnetwork/ipfs-daemon@2.0.0-rc.1) (2022-04-18)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.0.0-alpha.3...@ceramicnetwork/ipfs-daemon@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* polyfill AbortController, so that Ceramic node works on Node.js v14 ([#2090](https://github.com/ceramicnetwork/js-ceramic/issues/2090)) ([fff3e8a](https://github.com/ceramicnetwork/js-ceramic/commit/fff3e8a18ef7d2ba86c80743f61f0487dae3e129))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.0.0-alpha.2...@ceramicnetwork/ipfs-daemon@2.0.0-alpha.3) (2022-03-03)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

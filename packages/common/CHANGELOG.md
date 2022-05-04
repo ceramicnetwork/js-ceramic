@@ -3,6 +3,82 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2.0.1-rc.0 (2022-04-27)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.0.0](/compare/@ceramicnetwork/common@2.0.0-rc.4...@ceramicnetwork/common@2.0.0) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.0.0-rc.4](/compare/@ceramicnetwork/common@2.0.0-rc.3...@ceramicnetwork/common@2.0.0-rc.4) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.0.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.0.0-rc.2...@ceramicnetwork/common@2.0.0-rc.3) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# 2.0.0-rc.2 (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.0.0-rc.0...@ceramicnetwork/common@2.0.0-rc.1) (2022-04-18)
+
+
+### Features
+
+* Log when stream with subscriptions is evicted ([#2107](https://github.com/ceramicnetwork/js-ceramic/issues/2107)) ([2ea85fa](https://github.com/ceramicnetwork/js-ceramic/commit/2ea85fa9d272f19286d84ba4ddcb76583c0dbf02))
+
+
+
+
+
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.0.0-alpha.3...@ceramicnetwork/common@2.0.0-alpha.4) (2022-03-24)
+
+
+### Bug Fixes
+
+* **common:** add file extension to local dependency ([#2076](https://github.com/ceramicnetwork/js-ceramic/issues/2076)) ([5f3945e](https://github.com/ceramicnetwork/js-ceramic/commit/5f3945ec096d5f4337f16962bbaa423c0216217a))
+
+
+### Features
+
+* **common, cli:** Add optional abort signal to fetch json and merge with timeout ([#2068](https://github.com/ceramicnetwork/js-ceramic/issues/2068)) ([ca05c7c](https://github.com/ceramicnetwork/js-ceramic/commit/ca05c7c503b31f770f9d25878300a65affdb0e78))
+* polyfill AbortController, so that Ceramic node works on Node.js v14 ([#2090](https://github.com/ceramicnetwork/js-ceramic/issues/2090)) ([fff3e8a](https://github.com/ceramicnetwork/js-ceramic/commit/fff3e8a18ef7d2ba86c80743f61f0487dae3e129))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.0.0-alpha.2...@ceramicnetwork/common@2.0.0-alpha.3) (2022-03-03)
 
 

@@ -7,7 +7,7 @@ import * as providers from '@ethersproject/providers'
 import type { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { happyPath, clearDid } from './caip-flows.js'
+import { happyPath, clearDid, wrongProof } from './caip-flows.js'
 import { AccountId } from 'caip'
 
 const CONTRACT_WALLET_ABI = [
@@ -125,10 +125,7 @@ describe('externally-owned account', () => {
       address: addresses[1],
       chainId: accountId.chainId,
     })
-    const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
-    await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
-      /Address doesn't match stream controller/
-    )
+    await wrongProof(ceramic, authProvider, wrongAccountId)
   }, 120000)
   test('clear did', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
@@ -173,9 +170,6 @@ describe('contract account', () => {
       address: addresses[1],
       chainId: accountId.chainId,
     })
-    const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
-    await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
-      /Address doesn't match stream controller/
-    )
+    await wrongProof(ceramic, authProvider, wrongAccountId)
   }, 120000)
 })

@@ -3,6 +3,130 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.3-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.0...@ceramicnetwork/cli@2.0.3-rc.1) (2022-04-27)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.2...@ceramicnetwork/cli@2.0.3-rc.0) (2022-04-26)
+
+
+### Bug Fixes
+
+* **cli:** use IPFS_PATH env var ([#2127](https://github.com/ceramicnetwork/js-ceramic/issues/2127)) ([dd00301](https://github.com/ceramicnetwork/js-ceramic/commit/dd003019053a4db3325ad363a9ba4e4447414fdf))
+
+
+
+
+
+## [2.0.2](/compare/@ceramicnetwork/cli@2.0.2-rc.0...@ceramicnetwork/cli@2.0.2) (2022-04-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.1...@ceramicnetwork/cli@2.0.2-rc.0) (2022-04-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.1](/compare/@ceramicnetwork/cli@2.0.1-rc.0...@ceramicnetwork/cli@2.0.1) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0...@ceramicnetwork/cli@2.0.1-rc.0) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.0.0](/compare/@ceramicnetwork/cli@2.0.0-rc.5...@ceramicnetwork/cli@2.0.0) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.0.0-rc.5](/compare/@ceramicnetwork/cli@2.0.0-rc.4...@ceramicnetwork/cli@2.0.0-rc.5) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.0.0-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.3...@ceramicnetwork/cli@2.0.0-rc.4) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.0.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.2...@ceramicnetwork/cli@2.0.0-rc.3) (2022-04-19)
+
+
+### Features
+
+* Make IPFS instance on CLI non-disposable ([#2122](https://github.com/ceramicnetwork/js-ceramic/issues/2122)) ([cc4505f](https://github.com/ceramicnetwork/js-ceramic/commit/cc4505f6c9bb194650c9babcf3f6106c108b6041))
+
+
+
+
+
+# [2.0.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.1...@ceramicnetwork/cli@2.0.0-rc.2) (2022-04-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-rc.0...@ceramicnetwork/cli@2.0.0-rc.1) (2022-04-18)
+
+
+### Features
+
+* **cli:** Add stream cache size to config file ([#2115](https://github.com/ceramicnetwork/js-ceramic/issues/2115)) ([fd138e0](https://github.com/ceramicnetwork/js-ceramic/commit/fd138e03e944f84ee78f2a5b3d84dd919a699d3e))
+
+
+
+
+
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.3...@ceramicnetwork/cli@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* **common, cli:** Add optional abort signal to fetch json and merge with timeout ([#2068](https://github.com/ceramicnetwork/js-ceramic/issues/2068)) ([ca05c7c](https://github.com/ceramicnetwork/js-ceramic/commit/ca05c7c503b31f770f9d25878300a65affdb0e78))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.0-alpha.2...@ceramicnetwork/cli@2.0.0-alpha.3) (2022-03-03)
 
 

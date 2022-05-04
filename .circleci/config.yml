@@ -7,7 +7,7 @@ commands:
     steps:
       - checkout
       - node/install:
-          node-version: '16.13'
+          node-version: "16"
       - node/install-packages
       - run: npm run lint
       - run: npm run build

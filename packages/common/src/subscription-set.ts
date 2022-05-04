@@ -8,6 +8,10 @@ import { Subscription } from 'rxjs'
 export class SubscriptionSet {
   constructor(readonly subscriptions: Set<Subscription> = new Set()) {}
 
+  get size(): number {
+    return this.subscriptions.size
+  }
+
   /**
    * Start tracking a subscription, so that it is closed with others on +close+.
    */

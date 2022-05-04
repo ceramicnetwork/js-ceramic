@@ -70,6 +70,9 @@ jobs:
           EXTRA_TAGS=""
           if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
             EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+          elif [[ "${{ env.ENV_TAG }}" == "dev" ]]; then
+            IMAGE_ID_3="${{ steps.login-ecr.outputs.registry }}/ceramic-qa"
+            EXTRA_TAGS="--tag $IMAGE_ID_3:qa --tag $IMAGE_ID_3:${{ env.SHA_TAG }} --tag $IMAGE_ID_3:${{ github.sha }} --tag $IMAGE_ID_3:${{ env.BRANCH }}"
           fi
 
           docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' \

@@ -1,8 +1,8 @@
-import { createController } from './create-ipfs'
+import { createController } from './create-ipfs.js'
 import * as dagJose from 'dag-jose'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/common'
-import { HealthcheckServer } from './healthcheck-server'
+import { HealthcheckServer } from './healthcheck-server.js'
 import path from 'path'
 import os from 'os'
 import * as Ctl from 'ipfsd-ctl'
@@ -80,9 +80,7 @@ export class IpfsDaemon {
       useCentralizedPeerDiscovery: useCentralizedPeerDiscovery,
       healthcheckEnabled:
         props.healthcheckEnabled ?? fromBooleanInput(process.env.HEALTHCHECK_ENABLED, false),
-      healthcheckPort:
-        props.healthcheckPort ||
-        (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
+      healthcheckPort: props.healthcheckPort || Number(process.env.HEALTHCHECK_PORT) || 8011,
       logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
     }
 

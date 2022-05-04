@@ -29,28 +29,28 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null 
     case Networks.ELP:
       return [
         new Multiaddr(
-          '/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng'
+          '/dns4/go-ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4011/ws/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL'
+          '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8'
+          '/dns4/go-ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8'
         ),
       ]
     case Networks.TESTNET_CLAY:
       return [
         new Multiaddr(
-          '/dns4/ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3'
+          '/dns4/go-ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-public-clay-external.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk'
+          '/dns4/go-ipfs-ceramic-public-clay-external.ceramic.network/tcp/4011/ws/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi'
+          '/dns4/go-ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi'
         ),
         new Multiaddr(
-          '/dns4/ipfs-ceramic-private-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd'
+          '/dns4/go-ipfs-ceramic-private-cas-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd'
         ),
       ]
     case Networks.DEV_UNSTABLE:
@@ -121,9 +121,6 @@ export class IpfsTopology {
   private async _dynamicBoostrapList(network: string): Promise<Multiaddr[]> {
     const url = PEER_FILE_URLS(network as Networks)
     if (!url) {
-      this.logger.warn(
-        `Peer discovery is not supported for ceramic network: ${network}. This node may fail to load documents from other nodes on the network.`
-      )
       return []
     }
     this.logger.imp(`Connecting to peers found in '${url}'`)
@@ -140,14 +137,6 @@ export class IpfsTopology {
     const filteredBootstrapList = bootstrapList.filter((addr) => {
       return !addr.getPeerId()?.endsWith(myPeerId)
     })
-
-    if (filteredBootstrapList.length === bootstrapList.length) {
-      this.logger.warn(
-        `This node with peerId ${myPeerId.toString()} is not included in the peer list for Ceramic network ${
-          this.ceramicNetwork
-        }. It will not be discoverable by other nodes in the network, and so data created against this node will not be available to the rest of the network.`
-      )
-    }
 
     await Promise.all(
       filteredBootstrapList.map(async (node) => {

@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { AnchorStatus, CommitType, LogEntry, StreamState } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, LogEntry, StreamState, TestUtils } from '@ceramicnetwork/common'
 import { fetchLog, HistoryLog, pickLogToAccept } from '../conflict-resolution.js'
 import * as random from '@stablelib/random'
 import { Dispatcher } from '../dispatcher.js'
@@ -206,14 +206,6 @@ describe('fetchLog', () => {
     },
   } as unknown as Dispatcher
 
-  function randomCID() {
-    const body = uint8arrays.concat([
-      uint8arrays.fromString('1220', 'base16'),
-      random.randomBytes(32),
-    ])
-    return CID.create(1, SHA256_CODE, decodeMultiHash(body))
-  }
-
   function logEntry(type: CommitType, prev?: CID): LogEntry {
     const body = uint8arrays.concat([
       uint8arrays.fromString('1220', 'base16'),
@@ -222,7 +214,7 @@ describe('fetchLog', () => {
     const cid = CID.create(1, SHA256_CODE, decodeMultiHash(body))
     if (type == CommitType.ANCHOR) {
       const timestamp = Math.floor(Math.random() * 100000)
-      const proofCID = randomCID()
+      const proofCID = TestUtils.randomCID()
       cidCommits[proofCID.toString()] = {
         blockTimestamp: timestamp,
       }
@@ -238,7 +230,7 @@ describe('fetchLog', () => {
     } else {
       if (prev) {
         // signed
-        const link = randomCID()
+        const link = TestUtils.randomCID()
         cidCommits[link.toString()] = { prev: prev }
         cidCommits[cid.toString()] = {
           link: link,
@@ -286,7 +278,7 @@ describe('fetchLog', () => {
   })
   test('not in log', async () => {
     const a = logEntry(CommitType.GENESIS)
-    const b = randomCID()
+    const b = TestUtils.randomCID()
     cidCommits[b.toString()] = {}
     const history = new HistoryLog(fauxDispatcher, [a])
 

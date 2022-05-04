@@ -65,6 +65,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     pubsubTopic: opts.network.pubsubTopic,
     validateStreams: opts.node.validateStreams,
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
+    streamCacheLimit: opts.node.streamCacheLimit,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory

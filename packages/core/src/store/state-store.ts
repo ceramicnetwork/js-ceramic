@@ -6,6 +6,6 @@ export interface StateStore {
   close(): Promise<void>
   save(streamStateHolder: StreamStateHolder): Promise<void>
   load(streamId: StreamID): Promise<StreamState | null>
-  list(streamId?: StreamID): Promise<string[]>
+  list(streamId?: StreamID | null, limit?: number): Promise<string[]>
   remove(streamId: StreamID): Promise<void>
 }

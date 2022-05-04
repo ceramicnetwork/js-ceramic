@@ -3,6 +3,134 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.2-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.1.2-rc.0...@ceramicnetwork/core@2.1.2-rc.1) (2022-04-27)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+## [2.1.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.1.1...@ceramicnetwork/core@2.1.2-rc.0) (2022-04-26)
+
+
+### Bug Fixes
+
+* **core:** Export pusub message in index ([#2128](https://github.com/ceramicnetwork/js-ceramic/issues/2128)) ([bf943dc](https://github.com/ceramicnetwork/js-ceramic/commit/bf943dc348ed3e1d5ce48b5032a44392858c85a6))
+
+
+
+
+
+## [2.1.1](/compare/@ceramicnetwork/core@2.1.1-rc.0...@ceramicnetwork/core@2.1.1) (2022-04-20)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+## [2.1.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.1.0...@ceramicnetwork/core@2.1.1-rc.0) (2022-04-20)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.1.0](/compare/@ceramicnetwork/core@2.1.0-rc.0...@ceramicnetwork/core@2.1.0) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0...@ceramicnetwork/core@2.1.0-rc.0) (2022-04-19)
+
+
+### Features
+
+* **core:** Add env var to skip ipfs data persistence check at startup ([#2125](https://github.com/ceramicnetwork/js-ceramic/issues/2125)) ([a03bc30](https://github.com/ceramicnetwork/js-ceramic/commit/a03bc30199c9fadf94fc208d29c37c56041405ee))
+
+
+
+
+
+# [2.0.0](/compare/@ceramicnetwork/core@2.0.0-rc.5...@ceramicnetwork/core@2.0.0) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.0.0-rc.5](/compare/@ceramicnetwork/core@2.0.0-rc.4...@ceramicnetwork/core@2.0.0-rc.5) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.0.0-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.3...@ceramicnetwork/core@2.0.0-rc.4) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.0.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.2...@ceramicnetwork/core@2.0.0-rc.3) (2022-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.0.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.1...@ceramicnetwork/core@2.0.0-rc.2) (2022-04-18)
+
+
+### Features
+
+* **core:** Add env variable for configuring stream cache size ([#2120](https://github.com/ceramicnetwork/js-ceramic/issues/2120)) ([e5d72c1](https://github.com/ceramicnetwork/js-ceramic/commit/e5d72c1e5cba05c4fc372aa31dfeb9ada31fa928))
+
+
+
+
+
+# [2.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-rc.0...@ceramicnetwork/core@2.0.0-rc.1) (2022-04-18)
+
+
+### Features
+
+* **core:** export pubsub message ([7e8e8e4](https://github.com/ceramicnetwork/js-ceramic/commit/7e8e8e40c8af80d9dc026beb1365e1790e53f4a1))
+* Log when stream with subscriptions is evicted ([#2107](https://github.com/ceramicnetwork/js-ceramic/issues/2107)) ([2ea85fa](https://github.com/ceramicnetwork/js-ceramic/commit/2ea85fa9d272f19286d84ba4ddcb76583c0dbf02))
+
+
+
+
+
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.3...@ceramicnetwork/core@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* polyfill AbortController, so that Ceramic node works on Node.js v14 ([#2090](https://github.com/ceramicnetwork/js-ceramic/issues/2090)) ([fff3e8a](https://github.com/ceramicnetwork/js-ceramic/commit/fff3e8a18ef7d2ba86c80743f61f0487dae3e129))
+
+
+
+
+
 # [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.2...@ceramicnetwork/core@2.0.0-alpha.3) (2022-03-03)
 
 

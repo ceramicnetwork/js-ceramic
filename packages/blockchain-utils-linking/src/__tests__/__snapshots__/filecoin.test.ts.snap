@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId handle bls mainnet 1`] = `
-AccountId {
+Object {
   "address": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka",
-  "chainId": ChainId {
+  "chainId": Object {
     "namespace": "fil",
     "reference": "f",
   },
@@ -11,9 +11,9 @@ AccountId {
 `;
 
 exports[`accountId handle mainnet 1`] = `
-AccountId {
+Object {
   "address": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy",
-  "chainId": ChainId {
+  "chainId": Object {
     "namespace": "fil",
     "reference": "f",
   },
@@ -21,9 +21,9 @@ AccountId {
 `;
 
 exports[`accountId handle testnet 1`] = `
-AccountId {
+Object {
   "address": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
-  "chainId": ChainId {
+  "chainId": Object {
     "namespace": "fil",
     "reference": "t",
   },
@@ -79,9 +79,9 @@ Timestamp: 0",
 `;
 
 exports[`withAddress 1`] = `
-AccountId {
+Object {
   "address": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
-  "chainId": ChainId {
+  "chainId": Object {
     "namespace": "fil",
     "reference": "t",
   },
@@ -89,9 +89,9 @@ AccountId {
 `;
 
 exports[`withAddress 2`] = `
-AccountId {
+Object {
   "address": "f123",
-  "chainId": ChainId {
+  "chainId": Object {
     "namespace": "fil",
     "reference": "f",
   },

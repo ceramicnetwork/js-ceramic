@@ -32,6 +32,7 @@ const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
+const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -167,6 +168,32 @@ export class Dispatcher {
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
+    }
+  }
+
+  /**
+   * Checks if the local IPFS node has the data for the given CID, without needing to load it from
+   * the network.
+   * @param cid
+   */
+  async cidExistsInLocalIPFSStore(cid: CID | string): Promise<boolean> {
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
+    try {
+      // With the 'offline' flag set loading a CID from ipfs should be functionally instantaneous
+      // as there's no networking i/o happening. With go-ipfs this works as expected and trying
+      // to load a CID that doesn't exist fails instantly with an error that the given key wasn't
+      // found in the state store.  Unfortunately js-ipfs doesn't seem to respect the 'offline'
+      // flag, so we approximate the behavior by setting a low timeout instead.
+      const result = await this._ipfs.dag.get(asCid, {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        offline: true,
+        timeout: IPFS_OFFLINE_GET_TIMEOUT,
+      })
+      return result != null
+    } catch (err) {
+      console.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
+      return false
     }
   }
 
