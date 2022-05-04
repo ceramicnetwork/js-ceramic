@@ -72,7 +72,7 @@ export class DiagnosticsLoggerBase {
   }
 
   public log(style: LogStyle, content: string | Record<string, unknown> | Error): void {
-    throw new Error('Not implmented in base class')
+    throw new Error('Not implemented in base class')
   }
 }
 
@@ -88,14 +88,17 @@ export class ServiceLoggerBase {
   public readonly logToFiles: boolean
   public readonly logToConsole: boolean
   public readonly logLevel: LogLevel
+  public readonly emitMetric: boolean
 
   protected readonly stream: WriteableStream
 
-  constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream?: WriteableStream) {
+
+  constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream?: WriteableStream, emitMetric?: boolean) {
     this.service = service
     this.logLevel = logLevel
     this.logToFiles = logToFiles
     this.stream = stream
+    this.emitMetric = emitMetric
 
     this.logToConsole = this.logLevel <= LogLevel.debug
   }
@@ -127,7 +130,7 @@ export class ServiceLoggerBase {
    * @param serviceLog Service log object
    */
   public format(serviceLog: ServiceLog): string {
-    throw new Error('Not implmented in base class')
+    throw new Error('Not implemented in base class')
   }
 }
 
@@ -154,6 +157,11 @@ export interface LoggerConfig {
    * Controls whether logs get persisted to the file system.
    */
   logToFiles?: boolean
+
+  /**
+   * Controls whether metrics are emitted during logging.
+   */
+  emitMetric?: boolean
 }
 
 // Can't have a default log directory as that would require using the `path` module before we know
@@ -162,6 +170,7 @@ export interface LoggerConfig {
 const DEFAULT_LOG_CONFIG = {
   logLevel: LogLevel.important,
   logToFiles: false,
+  emitMetric: true, // TODO set to false; this for quick testing
 }
 
 /**
@@ -188,7 +197,7 @@ export class LoggerProviderBase {
   }
 
   protected _makeDiagnosticLogger(): DiagnosticsLoggerBase {
-    throw new Error('Not implmented in base class')
+    throw new Error('Not implemented in base class')
   }
 
   public getDiagnosticsLogger(): DiagnosticsLoggerBase {
@@ -196,6 +205,6 @@ export class LoggerProviderBase {
   }
 
   public makeServiceLogger(serviceName: string): ServiceLoggerBase {
-    throw new Error('Not implmented in base class')
+    throw new Error('Not implemented in base class')
   }
 }
