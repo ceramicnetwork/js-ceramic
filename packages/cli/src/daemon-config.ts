@@ -215,13 +215,6 @@ export class DaemonCeramicNodeConfig {
   syncOverride?: string
 
   /**
-   * If set to false, disables stream validation. Most users should never set this.
-   * When specifying in a config file, use the name 'validate-streams'.
-   */
-  @jsonMember(Boolean, { name: 'validate-streams' })
-  validateStreams?: boolean
-
-  /**
    * Max number of streams to keep in the node's in-memory cache.
    * When specifying in a config file, use the name 'stream-cache-limit'.
    */
