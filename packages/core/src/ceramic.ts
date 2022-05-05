@@ -39,11 +39,6 @@ import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
-import {
-  FauxStateValidation,
-  RealStateValidation,
-  StateValidation,
-} from './state-management/state-validation.js'
 import { streamFromState } from './state-management/stream-from-state.js'
 import { ConflictResolution } from './conflict-resolution.js'
 import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-validator.js'
@@ -186,7 +181,6 @@ export class Ceramic implements CeramicApi {
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _validateStreams: boolean
-  private readonly stateValidation: StateValidation
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownController: AbortController
 
@@ -219,12 +213,8 @@ export class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    this.stateValidation = this._validateStreams
-      ? new RealStateValidation(this.loadStream.bind(this))
-      : new FauxStateValidation()
     const conflictResolution = new ConflictResolution(
       modules.anchorValidator,
-      this.stateValidation,
       this.dispatcher,
       this.context,
       this._streamHandlers
@@ -237,7 +227,6 @@ export class Ceramic implements CeramicApi {
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
-      stateValidation: this.stateValidation,
     })
   }
 
