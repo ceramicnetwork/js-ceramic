@@ -1,7 +1,7 @@
 import { program } from 'commander'
 import pc from 'picocolors'
 
-import { CeramicCliUtils } from '../ceramic-cli-utils.js'
+import { CeramicCliUtils, parsePort } from '../ceramic-cli-utils.js'
 
 program
   .command('daemon')
@@ -22,7 +22,7 @@ program
     `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3. Deprecated.`
   )
   .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
-  .option('--port <int>', 'Port daemon is available on. Default is 7007')
+  .option('--port <int>', 'Port daemon is available on. Default is 7007', parsePort)
   .option('--hostname <string>', 'Host daemon is available on. Default is 0.0.0.0')
   .option('--debug', 'Enable debug logging level. Default is false')
   .option('--verbose', 'Enable verbose logging level. Default is false')
