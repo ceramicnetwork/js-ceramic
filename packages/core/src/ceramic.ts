@@ -1,6 +1,6 @@
 import { polyfillAbortController } from '@ceramicnetwork/common'
 
-import { tracer } from '@ceramicnetwork/common/src/instrumentation-setup'
+import { tracer } from '@ceramicnetwork/common'
 import { SemanticAttributes } from '@opentelemetry/semantic-conventions'
 
 polyfillAbortController()
