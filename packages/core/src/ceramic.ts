@@ -1,5 +1,8 @@
 import { polyfillAbortController } from '@ceramicnetwork/common'
 
+import { tracer } from '@ceramicnetwork/common/src/instrumentation-setup'
+import { SemanticAttributes } from '@opentelemetry/semantic-conventions'
+
 polyfillAbortController()
 
 import { Dispatcher } from './dispatcher.js'
@@ -478,7 +481,7 @@ export class Ceramic implements CeramicApi {
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
 
     await ceramic._init(doPeerDiscovery)
-
+    console.log("I am Ceramic I am here")
     return ceramic
   }
 
@@ -632,9 +635,15 @@ export class Ceramic implements CeramicApi {
     opts: CreateOpts = {}
   ): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride }
+    console.log("IN createStreamFromGenesis ")
+    const otSpan = tracer.startSpan("createStreamFromGenesis",
+      { attributes: {
+        'did':this.context.did.id,
+        }})
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.repository.applyCreateOpts(streamId, opts)
+    otSpan.end()
     return streamFromState<T>(
       this.context,
       this._streamHandlers,

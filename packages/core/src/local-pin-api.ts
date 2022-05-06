@@ -30,6 +30,7 @@ export class LocalPinApi implements PinApi {
 
   async ls(streamId?: StreamID): Promise<AsyncIterable<string>> {
     const streamIds = await this.repository.listPinned(streamId ? streamId.baseID : null)
+    console.log("IN local pin ls ")
     return {
       [Symbol.asyncIterator](): any {
         let index = 0
