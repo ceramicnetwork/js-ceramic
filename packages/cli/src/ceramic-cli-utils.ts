@@ -604,17 +604,3 @@ Please test with the new CLI before reporting any problems.
 ${pc.green('npm i -g @glazed/cli')}`
   )
 }
-
-/**
- * Helper function to parse and validate port passed
- * by CLI switch --port for custom daemon startup
- * @param inPort
- */
-export function parsePort(inPort: string) {
-  const validPort = Number(inPort)
-  if (isNaN(validPort) || validPort > 65535) {
-    console.error('Invalid port number passed.')
-    process.exit(1)
-  }
-  return validPort
-}
