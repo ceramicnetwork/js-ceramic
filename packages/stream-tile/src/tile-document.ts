@@ -344,7 +344,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       newContent = this.content
     }
 
-    if (header.controllers && header.controllers?.length !== 1) {
+    if (!header.controllers || header.controllers.length === 0) {
+      throw new Error('Controller cannot be updated to an undefined value.')
+    } else if (header.controllers && header.controllers?.length !== 1) {
       throw new Error('Exactly one controller must be specified')
     }
 
@@ -376,7 +378,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
-        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller 
+        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
         metadata.controllers = [signer.did.hasParent ? signer.did.parent : signer.did.id]
       } else {
         throw new Error('No controllers specified')
