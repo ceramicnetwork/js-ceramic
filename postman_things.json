@@ -1,0 +1,411 @@
+{
+	"info": {
+
+		"name": "3Box Labs TESTTEST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Network",
+			"item": [
+				{
+					"name": "Create Stream",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/streams",
+							"protocol": "https",
+							"host": [
+								"ceramic-dev",
+								"3boxlabs",
+								"com"
+							],
+							"path": [
+								"api",
+								"v0",
+								"streams"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Stream",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"streamId\": \"{{streamId}}\",\r\n  \"commit\": {\r\n    \"value\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\",\r\n            \"bar\": \"foo\"\r\n        }\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/commits",
+							"protocol": "https",
+							"host": [
+								"ceramic-dev",
+								"3boxlabs",
+								"com"
+							],
+							"path": [
+								"api",
+								"v0",
+								"commits"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch Stream Commit (Dev)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/commits/{{streamId}}",
+							"protocol": "https",
+							"host": [
+								"ceramic-dev",
+								"3boxlabs",
+								"com"
+							],
+							"path": [
+								"api",
+								"v0",
+								"commits",
+								"{{streamId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch Stream (Gateway)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://gateway-dev.ceramic.network/api/v0/streams/k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64",
+							"protocol": "https",
+							"host": [
+								"gateway-dev",
+								"ceramic",
+								"network"
+							],
+							"path": [
+								"api",
+								"v0",
+								"streams",
+								"k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch Stream (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/streams/k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64",
+							"protocol": "https",
+							"host": [
+								"ceramic-dev",
+								"3boxlabs",
+								"com"
+							],
+							"path": [
+								"api",
+								"v0",
+								"streams",
+								"k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch Stream (Private)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://ceramic-private-dev.3boxlabs.com/api/v0/streams/k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64",
+							"protocol": "https",
+							"host": [
+								"ceramic-private-dev",
+								"3boxlabs",
+								"com"
+							],
+							"path": [
+								"api",
+								"v0",
+								"streams",
+								"k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "IPFS",
+			"item": [
+				{
+					"name": "IPFS Version",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5002/api/v0/version",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5002",
+							"path": [
+								"api",
+								"v0",
+								"version"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IPFS Block Put",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"type": "file",
+									"src": "/C:/Users/mohsi/Documents/3Box/GitHub/tmp/ipfs-staging/jws.json"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5001/api/v0/dag/put?store-codec=dag-jose&version=1&mhtype=sha2-256",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5001",
+							"path": [
+								"api",
+								"v0",
+								"dag",
+								"put"
+							],
+							"query": [
+								{
+									"key": "store-codec",
+									"value": "dag-jose"
+								},
+								{
+									"key": "version",
+									"value": "1"
+								},
+								{
+									"key": "mhtype",
+									"value": "sha2-256"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IPFS Block Get",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5001/api/v0/block/get?arg=bagcqcerauben4l6ee2wjf2fnkj7vaels4p7lnytenk35j3gl2lzcbtbgyoea",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5001",
+							"path": [
+								"api",
+								"v0",
+								"block",
+								"get"
+							],
+							"query": [
+								{
+									"key": "arg",
+									"value": "bagcqcerauben4l6ee2wjf2fnkj7vaels4p7lnytenk35j3gl2lzcbtbgyoea"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IPFS Block Pin",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5001/api/v0/pin/add?arg=bagcqcerauben4l6ee2wjf2fnkj7vaels4p7lnytenk35j3gl2lzcbtbgyoea&recursive=false",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5001",
+							"path": [
+								"api",
+								"v0",
+								"pin",
+								"add"
+							],
+							"query": [
+								{
+									"key": "arg",
+									"value": "bagcqcerauben4l6ee2wjf2fnkj7vaels4p7lnytenk35j3gl2lzcbtbgyoea"
+								},
+								{
+									"key": "recursive",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IPFS Swarm (Dis)connect",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5001/api/v0/swarm/connect?arg=/dns4/0.0.0.0/tcp/4012/wss/p2p/QmP3twDJ1ymTLEFfWcZVcrppszxJPq5yeViRbozUtviHQE",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5001",
+							"path": [
+								"api",
+								"v0",
+								"swarm",
+								"connect"
+							],
+							"query": [
+								{
+									"key": "arg",
+									"value": "/dns4/0.0.0.0/tcp/4012/wss/p2p/QmP3twDJ1ymTLEFfWcZVcrppszxJPq5yeViRbozUtviHQE"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IPFS Swarm Peers",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5011/api/v0/swarm/peers",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5011",
+							"path": [
+								"api",
+								"v0",
+								"swarm",
+								"peers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IPFS Pin Ls",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5001/api/v0/pin/ls",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5001",
+							"path": [
+								"api",
+								"v0",
+								"pin",
+								"ls"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "streamId",
+			"value": "k2t6wyfsu4pfybi34c7112h7wfyq0br2oi279f0rl1zqzdfouew3h6h5jro81e"
+		}
+	]
+}
