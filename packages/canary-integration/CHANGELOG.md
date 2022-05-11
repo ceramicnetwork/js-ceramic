@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.0.3-rc.1...@ceramicnetwork/canary-integration@2.1.0-rc.0) (2022-05-11)
+
+
+### Bug Fixes
+
+* **canary-integration:** Increase test fixture cleanup timeout ([#2145](https://github.com/ceramicnetwork/js-ceramic/issues/2145)) ([e48ddef](https://github.com/ceramicnetwork/js-ceramic/commit/e48ddef765e68e01b79d33e83ca77364643b3bcc))
+
+
+### Features
+
+* **stream-tile-handler:** add cacao wildcard resource support ([#2137](https://github.com/ceramicnetwork/js-ceramic/issues/2137)) ([5ffb298](https://github.com/ceramicnetwork/js-ceramic/commit/5ffb2984340e298c72388bbbb88cdf251bf38aec))
+* **stream-tile:** use dids capability iss as controller when capabil… ([#2138](https://github.com/ceramicnetwork/js-ceramic/issues/2138)) ([a924fec](https://github.com/ceramicnetwork/js-ceramic/commit/a924fec1bf660d68d713f28ef41ee1229c7c754f))
+
+
+
+
+
 ## [2.0.3-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.0.3-rc.0...@ceramicnetwork/canary-integration@2.0.3-rc.1) (2022-04-27)
 
 **Note:** Version bump only for package @ceramicnetwork/canary-integration
