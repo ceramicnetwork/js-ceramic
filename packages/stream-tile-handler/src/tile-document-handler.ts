@@ -14,8 +14,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { base64urlToJSON } from './utils.js'
-import { CID } from 'multiformats/cid'
+import { SchemaValidation } from './schema-utils'
 
 const DEFAULT_REVOCATION_PHASE_OUT = 24 * 60 * 60
 
@@ -35,6 +34,12 @@ function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
  * TileDocument stream handler implementation
  */
 export class TileDocumentHandler implements StreamHandler<TileDocument> {
+  private readonly _schemaValidator: SchemaValidation
+
+  constructor() {
+    this._schemaValidator = new SchemaValidation()
+  }
+
   get type(): number {
     return TileDocument.STREAM_TYPE_ID
   }
@@ -91,7 +96,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error('Exactly one controller must be specified')
     }
 
-    return {
+    const state = {
       type: TileDocument.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata: payload.header,
@@ -99,6 +104,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
+
+    if (state.metadata.schema) {
+      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
+    }
+
+    return state
   }
 
   /**
@@ -159,12 +170,24 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
-    const content = state.next?.content ?? state.content
-    const metadata = state.next?.metadata ?? state.metadata
-    nextState.next = {
-      content: jsonpatch.applyPatch(content, payload.data).newDocument,
-      metadata: { ...metadata, ...payload.header },
+    const oldContent = state.next?.content ?? state.content
+    const oldMetadata = state.next?.metadata ?? state.metadata
+
+    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
+    const newMetadata = { ...oldMetadata, ...payload.header }
+
+    if (newMetadata.schema) {
+      // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load
+      // the schema into the CommitData so that commit application can be a simple state
+      // transformation with no i/o.
+      await this._schemaValidator.validateSchema(context.api, newContent, newMetadata.schema)
     }
+
+    nextState.next = {
+      content: newContent,
+      metadata: newMetadata,
+    }
+
     return nextState
   }
 
@@ -263,7 +286,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       !resources.includes(`ceramic://*`) &&
       !resources.includes(`ceramic://${streamId.toString()}`) &&
       !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`) &&
-      !(family && resources.includes(`ceramic://*?family=${family}`)) 
+      !(family && resources.includes(`ceramic://*?family=${family}`))
     ) {
       throw new Error(
         `Capability does not have appropriate permissions to update this TileDocument`
