@@ -14,7 +14,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils'
+import { SchemaValidation } from './schema-utils.js'
 
 const DEFAULT_REVOCATION_PHASE_OUT = 24 * 60 * 60
 
