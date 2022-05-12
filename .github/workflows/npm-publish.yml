@@ -71,7 +71,6 @@ jobs:
           npm set unsafe-perm true
           npm ci && npm run build
           git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
-          git push
       - name: Publish packages to NPM
         if: ${{ steps.set-env.outputs.main == 'true' }}
         env:
@@ -161,7 +160,6 @@ jobs:
           npm set unsafe-perm true
           npm ci && npm run build
           git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
-          git push
       - name: Publish packages to NPM
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         env:
