@@ -345,7 +345,11 @@ export class Dispatcher {
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
+    /*
+      @active-branch
+    */
     const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
+    
     if (expectedStreamID) {
       const newTip = tips.get(expectedStreamID.toString())
       if (!newTip) {

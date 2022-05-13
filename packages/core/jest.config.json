@@ -1,4 +1,12 @@
 {
+  "roots": [
+    "<rootDir>",
+    "node_modules"
+  ],
+  "modulePaths": [
+    "<rootDir>",
+    "node_modules"
+  ],
   "resolver": "jest-resolver-enhanced",
   "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
   "extensionsToTreatAsEsm": [".ts"],
@@ -7,5 +15,9 @@
   },
   "transform": {
     "^.+\\.tsx?$": "babel-jest"
-  }
+  },
+  "moduleDirectories": [
+    "node_modules",
+    "src"
+  ]
 }
