@@ -75,6 +75,7 @@ export class DaemonStateStoreConfig {
 /**
  * Ceramic Daemon options for configuring behavior related to the HTTP API.
  */
+
 @jsonObject
 @toJson
 export class DaemonHTTPApiConfig {
@@ -87,7 +88,17 @@ export class DaemonHTTPApiConfig {
   /**
    * Port to listen on.
    */
-  @jsonMember(Number)
+  @jsonMember(AnyT, {serializer: inPort => {
+      const validPort = Number(inPort)
+      if (inPort == undefined || inPort == null) {
+        return inPort
+      } else if (isNaN(validPort) || validPort > 65535) {
+        console.error('Invalid port number passed.')
+        process.exit(1)
+      }
+      return validPort
+    }
+  })
   port?: number
 
   /**

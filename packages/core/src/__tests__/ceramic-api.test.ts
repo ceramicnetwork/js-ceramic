@@ -182,14 +182,6 @@ describe('Ceramic API', () => {
       ).rejects.toThrow('Schema must be a CommitID')
     })
 
-    it('can create stream with invalid schema if validation is not set', async () => {
-      await ceramic.close()
-      ceramic = await createCeramic({ validateStreams: false })
-
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-      await TileDocument.create(ceramic, { a: 1 }, { schema: schemaDoc.commitId })
-    })
-
     it('can assign schema if content is valid', async () => {
       const stream = await TileDocument.create(ceramic, { a: 'x' })
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)

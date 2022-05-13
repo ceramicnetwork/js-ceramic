@@ -1,6 +1,7 @@
 import { Observable, Subscription, interval } from 'rxjs'
 import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message.js'
 import { ObservableWithNext } from './observable-with-next.js'
+import { version } from '../version.js'
 
 /**
  * Wraps an instance of Pubsub and ensures that a pubsub message is generated with some minimum
@@ -12,6 +13,9 @@ export class PubsubKeepalive
 {
   private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
+  // start at 0 so it always publishes once on startup
+  private lastPublishedKeepAliveMessageDate = 0
+
   /**
    * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
    *   starts a background job that runs every maxPubsubPublishInterval/2 and publishes a keepalive
@@ -22,17 +26,23 @@ export class PubsubKeepalive
    * @param pubsub - Pubsub instances used to publish messages to the underlying libp2p pubsub topic.
    * @param maxPubsubPublishInterval - the max amount of time that is allowed to pass without
    *   generating a pubsub message.
+   * @param maxIntervalWithoutKeepalive - the max amount of time that is allowed to pass without
+   *   generating a keepalive message.
    */
   constructor(
     private readonly pubsub: ObservableWithNext<PubsubMessage>,
-    private readonly maxPubsubPublishInterval: number
+    private readonly maxPubsubPublishInterval: number,
+    private readonly maxIntervalWithoutKeepalive: number
   ) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
 
       // Start background job to periodically send pubsub messages if no other messages have been
       // sent recently.
-      const pubsubKeepaliveInterval = interval(this.maxPubsubPublishInterval / 2).subscribe(() => {
+      // Run it with the minimum required interval
+      const pubsubKeepaliveInterval = interval(
+        Math.min(this.maxPubsubPublishInterval / 2, this.maxIntervalWithoutKeepalive / 2)
+      ).subscribe(() => {
         this.publishPubsubKeepaliveIfNeeded()
       })
 
@@ -48,7 +58,9 @@ export class PubsubKeepalive
    * message needs to be sent.
    */
   next(message: PubsubMessage): Subscription {
-    this.lastPublishedMessageDate = Date.now()
+    const now = Date.now()
+    this.lastPublishedMessageDate = now
+    if (message.typ === MsgType.KEEPALIVE) this.lastPublishedKeepAliveMessageDate = now
     return this.pubsub.next(message)
   }
 
@@ -60,12 +72,18 @@ export class PubsubKeepalive
    */
   publishPubsubKeepaliveIfNeeded(): void {
     const now = Date.now()
-    if (now - this.lastPublishedMessageDate < this.maxPubsubPublishInterval / 2) {
-      // We've published a message recently enough, no need to publish another
+    const needToPublishKeepaliveOnceADay =
+      now - this.lastPublishedKeepAliveMessageDate > this.maxIntervalWithoutKeepalive
+    const needToPublishKeepaliveInactivity =
+      now - this.lastPublishedMessageDate >= this.maxPubsubPublishInterval / 2
+
+    if (!needToPublishKeepaliveInactivity && !needToPublishKeepaliveOnceADay) {
+      // We've published a message recently enough and sent a KeepAlive in the last 24 hours
+      // no need to publish another
       return
     }
 
-    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now }
+    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now, ver: version }
     this.next(message)
   }
 }

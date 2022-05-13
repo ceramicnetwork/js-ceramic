@@ -41,15 +41,6 @@ export class Utils {
 
   /**
    * Validates model against JSON-Schema
-   * @param schema - Stream schema
-   */
-  static isSchemaValid(schema: Record<string, unknown>): boolean {
-    Utils.validator.compile(schema) // throws an error on invalid schema
-    return Utils.validator.validateSchema(schema) as boolean // call validate schema just in case
-  }
-
-  /**
-   * Validates model against JSON-Schema
    * @param content - Stream content
    * @param schema - Stream schema
    */

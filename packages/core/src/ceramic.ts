@@ -39,14 +39,12 @@ import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
-import {
-  FauxStateValidation,
-  RealStateValidation,
-  StateValidation,
-} from './state-management/state-validation.js'
 import { streamFromState } from './state-management/stream-from-state.js'
 import { ConflictResolution } from './conflict-resolution.js'
 import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-validator.js'
+import * as fs from 'fs'
+import os from 'os'
+import * as path from 'path'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -186,7 +184,6 @@ export class Ceramic implements CeramicApi {
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _validateStreams: boolean
-  private readonly stateValidation: StateValidation
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownController: AbortController
 
@@ -219,12 +216,8 @@ export class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    this.stateValidation = this._validateStreams
-      ? new RealStateValidation(this.loadStream.bind(this))
-      : new FauxStateValidation()
     const conflictResolution = new ConflictResolution(
       modules.anchorValidator,
-      this.stateValidation,
       this.dispatcher,
       this.context,
       this._streamHandlers
@@ -237,7 +230,6 @@ export class Ceramic implements CeramicApi {
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
-      stateValidation: this.stateValidation,
     })
   }
 
@@ -555,6 +547,13 @@ export class Ceramic implements CeramicApi {
       const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
+
+        if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
+          throw new Error(
+            `IPFS data missing! The CID ${cid} of pinned Stream ${streamID} is missing from the local IPFS node. This means that pinned content has gone missing from the IPFS node. A ~/.jsipfs directory has been detected which may mean you have not completed the steps needed to upgrade to js-ceramic v2. Please follow the upgrade guide found here: https://threebox.notion.site/Upgrading-to-js-ceramic-v2-Filesystem-b6b3cbb989a34e05893761fd914965b7. If that does not work check your IPFS node configuration and make sure it is pointing to the proper repo`
+          )
+        }
+
         throw new Error(
           `IPFS data missing! The CID ${cid} of pinned Stream ${streamID} is missing from the local IPFS node. This means that pinned content has gone missing from the IPFS node. Check your IPFS node configuration and make sure it is pointing to the proper repo`
         )

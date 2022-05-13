@@ -19,7 +19,6 @@ import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { ConflictResolution } from '../conflict-resolution.js'
 import type { HandlersMap } from '../handlers-map.js'
-import type { StateValidation } from './state-validation.js'
 import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
@@ -32,7 +31,6 @@ export type RepositoryDependencies = {
   handlers: HandlersMap
   anchorService: AnchorService
   conflictResolution: ConflictResolution
-  stateValidation: StateValidation
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
@@ -134,7 +132,6 @@ export class Repository {
     // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
-    await this.#deps.stateValidation.validate(state, state.content)
     const state$ = new RunningState(state, false)
     this.add(state$)
     this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
