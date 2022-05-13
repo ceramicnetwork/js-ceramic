@@ -68,7 +68,7 @@ describe('pubsub keepalive', () => {
       diagnosticsLogger
     )
     const maxPubsubIntervalTime = 1000
-    const maxKeepaliveIntervalTime = 50
+    const maxKeepaliveIntervalTime = 100
     const pubsubWithKeepalive = new PubsubKeepalive(
       pubsub,
       maxPubsubIntervalTime,
