@@ -75,8 +75,9 @@ describe('pubsub keepalive', () => {
       maxKeepaliveIntervalTime
     )
     const subscription = pubsubWithKeepalive.subscribe()
-    await delay(maxKeepaliveIntervalTime * 5)
-    expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(4)
+    await delay(maxKeepaliveIntervalTime * 10)
+    expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(5)
+    expect(ipfs.pubsub.publish.mock.calls.length).toBeLessThanOrEqual(10)
     for (const call of ipfs.pubsub.publish.mock.calls) {
       expect(call[0]).toEqual(TOPIC)
       const message = deserialize({ data: call[1] }) as KeepaliveMessage
