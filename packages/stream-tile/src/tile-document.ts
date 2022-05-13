@@ -348,7 +348,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       if (header.controllers?.length !== 1) {
         throw new Error('Exactly one controller must be specified')
       }
-      if (!Boolean(header.controllers[0])) {
+      if (!header.controllers[0]) {
         throw new Error('Controller cannot be updated to an undefined value.')
       }
     }
