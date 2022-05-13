@@ -3,7 +3,7 @@ import {
   ConsoleSpanExporter,
   SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base'
-import { MeterProvider } from '@opentelemetry/sdk-metrics-base'
+import { MeterProvider, InstrumentType } from '@opentelemetry/sdk-metrics-base'
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
 import {trace} from '@opentelemetry/api'
 
@@ -33,39 +33,61 @@ const tracer = trace.getTracer(
   'js-ceramic'
 )
 
-export const enum MetricType {
-  COUNTER,
-  GAUGE,
-  HISTOGRAM
-}
 
 // see https://opentelemetry.io/docs/reference/specification/metrics/semantic_conventions/#general-metric-semantic-conventions
+class MetricBase {
+  private readonly name: string
+  private readonly params: any
+  public metric_type: string
+  public metric: any
+  public span: any
 
-// probably this should be a class with inheritance instead
-export function MetricMaker(name:string, metric_type:MetricType, params: any) {
-  const caller = MetricMaker.caller
-  let metric = null
-  let metric_name = `${caller}.${name}`
-  switch (metric_type) {
-    case MetricType.COUNTER: {
-      metric_name = `${metric_name}.counter`
-      metric = meter.createCounter(metric_name, params)
-      break
-    }
-    case MetricType.GAUGE: {
-      metric_name = `${metric_name}.gauge`
-      metric = meter.createObservableGauge(metric_name, params)
-      break
-    }
-
+ // public readonly metricName: string
+  // put stuff here to configure where the exporters go - to the agent, or to the console
+  //public readonly config: MetricConfig
+  constructor(name:string, params: any ) {
+    this.name = name
+    this.params = params
   }
-
-//  ctr = meter.createUpDownCounter('test')
+  public metricName() {
+    //const caller=metricName.caller.caller
+    return `${this.name}.${this.metric_type}`
+  }
 }
 
-export function SpanMaker(params: any) {
-  const caller = SpanMaker.caller
+export class Counter extends MetricBase {
 
+  constructor(name:string, params: any ) {
+     super(name, params)
+     this.metric_type = InstrumentType.COUNTER
+     this.metric = meter.createCounter(this.metricName()) // todo add params
+  }
+  public add(value:number) {
+    this.metric.add(value)
+  }
+}
+
+export class Histogram extends MetricBase {
+
+  constructor(name:string, params: any ) {
+    super(name, params)
+    this.metric_type = InstrumentType.HISTOGRAM
+    this.metric = meter.createHistogram(this.metricName()) // todo add params
+  }
+  public record(value:number) {
+    this.metric.record(value)
+  }
+}
+
+export class Span extends MetricBase {
+  constructor(name:string, params: any ) {
+    super(name, params)
+    this.metric_type = 'span'
+    this.span = tracer.startSpan(this.metricName()) // todo add params
+  }
+  public end() {
+    this.span.end()
+  }
 //  ctr = meter.createUpDownCounter('test')
 }
 
