@@ -386,12 +386,17 @@ export class Dispatcher {
         @active-branch
       */
       //this.messageBus.outstandingQueries.delete(queryId)
-      
 
     }
 
     //either way, cleanup outstanding queries
-    this.messageBus.outstandingQueries.cleanUpExpiredQueries();
+    try{
+      this.messageBus.outstandingQueries.cleanUpExpiredQueries();
+    }catch(e){
+      const errorMessage: string = `Error in _handle while trying ot clean up outstanding queries, ${e.message}`
+      console.error(errorMessage)
+      //consider throwing
+    }
 
   }
 

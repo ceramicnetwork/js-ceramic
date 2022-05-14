@@ -84,16 +84,20 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
     const timeNow: number = Date.now();
     const query = new Query(timeNow, streamId, queryMessage.id);
     console.log("about to add query: "+queryMessage.id)
-    /*
-      @active-branch
-      insert
-    */
-    // this.outstandingQueries.queries.set(queryMessage.id, query)
-    // add to map
-    this.outstandingQueries.queryMap.set(queryMessage.id, query);
-    // add to queue
-    this.outstandingQueries.queryQueue.enqueue(query);
     
+    try{
+      /*
+        @active-branch
+        insert
+      */
+      // this.outstandingQueries.queries.set(queryMessage.id, query)
+      
+      //add query to outstanding query set
+      const queryAdded: Boolean = this.outstandingQueries.add(queryMessage.id, query)
+    }catch(e){
+      console.error(e)
+    }
+
     return this.pipe(
       filter<PubsubMessage, ResponseMessage>(
         (message): message is ResponseMessage =>

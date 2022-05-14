@@ -2,6 +2,7 @@ import { jest } from '@jest/globals'
 import { OutstandingQueries, Query } from '../outstanding-queries.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { assert } from 'console'
+import { hasUncaughtExceptionCaptureCallback } from 'process'
 
 
 const FAKE_STREAM_ID = StreamID.fromString(
@@ -121,6 +122,45 @@ describe('priority queue construction', () => {
     console.log(outstandingQueries.queryQueue)
     console.log(outstandingQueries.queryMap);
     expect( outstandingQueries.queryMap.size).toEqual(0);
+
+  })
+
+  test('Oustanding Queries, Add Query', async () => {
+    
+    let t1 = new Date('2022-05-12T10:20:30Z').getTime();
+    let q1 = new Query(t1, FAKE_STREAM_ID, "a");
+    const testQueryID: string = "testID";
+    outstandingQueries.add(testQueryID, q1);
+    expect(outstandingQueries.queryMap.size).toEqual(1)
+    expect(outstandingQueries.queryQueue.size()).toEqual(1)
+
+  })
+
+  test('Oustanding Queries, Remove Query', async () => {
+    
+    let t1 = new Date('2022-05-12T10:20:30Z').getTime();
+    const testQueryID: string = "testID";
+    let q1 = new Query(t1, FAKE_STREAM_ID, testQueryID);
+    outstandingQueries.add(testQueryID, q1);
+    assert(outstandingQueries.queryMap.size === 1)
+    assert(outstandingQueries.queryQueue.size() === 1)
+    outstandingQueries.remove(q1);
+    expect(outstandingQueries.queryMap.size).toEqual(0)
+    expect(outstandingQueries.queryQueue.size()).toEqual(0)
+
+  })
+
+  test('Oustanding Queries, cleanUpExpiredQueries', async () => {
+    
+    let t1 = new Date('2022-05-12T10:20:30Z').getTime();
+    const testQueryID: string = "testID";
+    let q1 = new Query(t1, FAKE_STREAM_ID, testQueryID);
+    outstandingQueries.add(testQueryID, q1);
+    assert(outstandingQueries.queryMap.size === 1)
+    assert(outstandingQueries.queryQueue.size() === 1)
+    outstandingQueries.cleanUpExpiredQueries();
+    expect(outstandingQueries.queryMap.size).toEqual(0)
+    expect(outstandingQueries.queryQueue.size()).toEqual(0)
 
   })
 
