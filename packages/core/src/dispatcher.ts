@@ -347,7 +347,7 @@ export class Dispatcher {
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     if(outstandingQuery == undefined){
-      console.warn("Response to query with ID '" + queryId + "' is not a valid outstanding query '")
+      console.warn(`Response to query with ID ${queryId} is not a valid outstanding query`)
     }else{
       const expectedStreamID = outstandingQuery.streamID
       if (expectedStreamID) {
