@@ -1,6 +1,3 @@
-/*
-  @active-branch
-*/
 import { StreamID } from '@ceramicnetwork/streamid'
 
 import {
@@ -11,24 +8,30 @@ import {
     IGetCompareValue,
 } from '@datastructures-js/priority-queue';
   
+
+/**
+ * Query Interface
+ */
 interface IQuery {
     timestamp: number;
     streamID: StreamID;
-    queryId: string;
+    queryID: string;
 }
 
+/**
+ * Query abstraction with a timestamp, streamID, and queryID
+ */
 export class Query implements IQuery {
     timestamp: number;
     streamID: StreamID;
-    queryId: string;
+    queryID: string;
     constructor(t: number, sid: StreamID, qid: string){
       this.timestamp = t;
       this.streamID = sid;
-      this.queryId = qid;
+      this.queryID = qid;
     }
 }
 
-  
 /**
  * Comparator for Query Set
  * @param a: implements IQuery (LHS)
@@ -53,16 +56,18 @@ const compareQueryTimestamps: ICompare<IQuery> = (a: IQuery, b: IQuery) => {
 };
 
 /**
- * Outstanding Queries Abstraction
+ * Outstanding Queries Abstraction holding the query map, and queue
  */
 export class OutstandingQueries {
     readonly queryQueue: PriorityQueue<IQuery> = new PriorityQueue<IQuery>(compareQueryTimestamps);
     readonly queryMap: Map<string, Query> = new Map()
     
     //set the time in minutes we want to allow outstanding requests to be considered
-    private _minutesThreshold: number = 3; 
+    private _minutesThreshold: number = 1; 
 
     add(id: string, query: Query) : Boolean {
+      //enforce no duplicate outstanding queries
+      if(this.queryMap.get(id) != undefined){ throw new Error("Error: Duplicate Outstanding Query Cannot be added") }
       try{
         // add to map
         this.queryMap.set(id, query);
@@ -79,7 +84,7 @@ export class OutstandingQueries {
     remove(topQuery: Query) : Boolean {
       try{
         //remove queryId key for top query
-        this.queryMap.delete(topQuery.queryId);
+        this.queryMap.delete(topQuery.queryID);
         //dequeue top query
         const dequeuedQuery: Query = this.queryQueue.dequeue();
         return true;

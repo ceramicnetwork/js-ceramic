@@ -345,26 +345,11 @@ export class Dispatcher {
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
-    /*
-      @active-branch
-    */
-    // const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
-    
     if(outstandingQuery == undefined){
-      console.log(this.messageBus.outstandingQueries.queryMap)
-      console.log(this.messageBus.outstandingQueries.queryQueue)
       console.warn("Response to query with ID '" + queryId + "' is not a valid outstanding query '")
-      
-      // throw new Error(
-      //   "Response to query with ID '" +
-      //     queryId +
-      //     "' is not a valid outstanding query '"
-      // )
     }else{
-
       const expectedStreamID = outstandingQuery.streamID
-
       if (expectedStreamID) {
         const newTip = tips.get(expectedStreamID.toString())
         if (!newTip) {
@@ -376,17 +361,9 @@ export class Dispatcher {
               "'"
           )
         }
-
         this.repository.stateManager.update(expectedStreamID, newTip)
-        
         // TODO Iterate over all streams in 'tips' object and process the new tip for each
       }
-      
-      /*
-        @active-branch
-      */
-      //this.messageBus.outstandingQueries.delete(queryId)
-
     }
 
     //either way, cleanup outstanding queries
@@ -397,7 +374,6 @@ export class Dispatcher {
       console.error(errorMessage)
       //consider throwing
     }
-
   }
 
   /**

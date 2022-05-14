@@ -35,12 +35,7 @@ function betweenTimeout<T>(betweenMs: number): UnaryFunction<Observable<T>, Obse
  */
 export class MessageBus extends Observable<PubsubMessage> implements SubscriptionLike {
   
-  /*
-    @active-branch
-  */
-  // readonly outstandingQueries: Map<string, StreamID> = new Map()
   readonly outstandingQueries: OutstandingQueries = new OutstandingQueries()
-
   private readonly pubsubSubscription: Subscription
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>()
 
@@ -78,20 +73,10 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   queryNetwork(streamId: StreamID): Observable<CID> {
     const queryMessage = buildQueryMessage(streamId)
     this.next(queryMessage)
-
-    // this.outstandingQueries.set(queryMessage.id, streamId)
-    
     const timeNow: number = Date.now();
     const query = new Query(timeNow, streamId, queryMessage.id);
-    console.log("about to add query: "+queryMessage.id)
     
     try{
-      /*
-        @active-branch
-        insert
-      */
-      // this.outstandingQueries.queries.set(queryMessage.id, query)
-      
       //add query to outstanding query set
       const queryAdded: Boolean = this.outstandingQueries.add(queryMessage.id, query)
     }catch(e){
