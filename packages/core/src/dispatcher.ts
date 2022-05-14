@@ -348,23 +348,51 @@ export class Dispatcher {
     /*
       @active-branch
     */
-    const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
+    // const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
+    const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     
-    if (expectedStreamID) {
-      const newTip = tips.get(expectedStreamID.toString())
-      if (!newTip) {
-        throw new Error(
-          "Response to query with ID '" +
-            queryId +
-            "' is missing expected new tip for StreamID '" +
-            expectedStreamID +
-            "'"
-        )
+    if(outstandingQuery == undefined){
+      console.log(this.messageBus.outstandingQueries.queryMap)
+      console.log(this.messageBus.outstandingQueries.queryQueue)
+      console.warn("Response to query with ID '" + queryId + "' is not a valid outstanding query '")
+      
+      // throw new Error(
+      //   "Response to query with ID '" +
+      //     queryId +
+      //     "' is not a valid outstanding query '"
+      // )
+    }else{
+
+      const expectedStreamID = outstandingQuery.streamID
+
+      if (expectedStreamID) {
+        const newTip = tips.get(expectedStreamID.toString())
+        if (!newTip) {
+          throw new Error(
+            "Response to query with ID '" +
+              queryId +
+              "' is missing expected new tip for StreamID '" +
+              expectedStreamID +
+              "'"
+          )
+        }
+
+        this.repository.stateManager.update(expectedStreamID, newTip)
+        
+        // TODO Iterate over all streams in 'tips' object and process the new tip for each
       }
-      this.repository.stateManager.update(expectedStreamID, newTip)
-      this.messageBus.outstandingQueries.delete(queryId)
-      // TODO Iterate over all streams in 'tips' object and process the new tip for each
+      
+      /*
+        @active-branch
+      */
+      //this.messageBus.outstandingQueries.delete(queryId)
+      
+
     }
+
+    //either way, cleanup outstanding queries
+    this.messageBus.outstandingQueries.cleanUpExpiredQueries();
+
   }
 
   /**

@@ -4,7 +4,7 @@ import { filter, map, takeUntil, tap } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import { ObservableWithNext } from './observable-with-next.js'
-import { OutstandingQueries, Query } from './priority-queue'
+import { OutstandingQueries, Query } from './outstanding-queries.js'
 export const MAX_RESPONSE_INTERVAL = 300 // milliseconds
 
 /**
@@ -82,14 +82,17 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
     // this.outstandingQueries.set(queryMessage.id, streamId)
     
     const timeNow: number = Date.now();
-    const query = new Query(timeNow, streamId);
-    
+    const query = new Query(timeNow, streamId, queryMessage.id);
+    console.log("about to add query: "+queryMessage.id)
     /*
       @active-branch
       insert
     */
     // this.outstandingQueries.queries.set(queryMessage.id, query)
-    this.outstandingQueries.queries.set(queryMessage.id, query)
+    // add to map
+    this.outstandingQueries.queryMap.set(queryMessage.id, query);
+    // add to queue
+    this.outstandingQueries.queryQueue.enqueue(query);
     
     return this.pipe(
       filter<PubsubMessage, ResponseMessage>(
