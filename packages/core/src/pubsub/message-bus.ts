@@ -78,7 +78,7 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
     
     try{
       //add query to outstanding query set
-      const queryAdded: Boolean = this.outstandingQueries.add(queryMessage.id, query)
+      this.outstandingQueries.add(queryMessage.id, query)
     }catch(e){
       console.error(e)
     }

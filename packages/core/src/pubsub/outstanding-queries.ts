@@ -2,10 +2,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 
 import {
     PriorityQueue,
-    MinPriorityQueue,
-    MaxPriorityQueue,
     ICompare,
-    IGetCompareValue,
 } from '@datastructures-js/priority-queue';
   
 
@@ -63,7 +60,7 @@ export class OutstandingQueries {
     readonly queryMap: Map<string, Query> = new Map()
     
     //set the time in minutes we want to allow outstanding requests to be considered
-    private _minutesThreshold: number = 1; 
+    private _minutesThreshold = 1; 
 
     add(id: string, query: Query) : Boolean {
       //enforce no duplicate outstanding queries
@@ -75,7 +72,7 @@ export class OutstandingQueries {
         this.queryQueue.enqueue(query);
         return true;
       }catch(e){
-        const errorMessage: string = `Error in OutstandingQueries.add(), ${e.message}`
+        const errorMessage = `Error in OutstandingQueries.add(), ${e.message}`
         console.error(errorMessage)
         throw new Error(errorMessage)
       }
@@ -86,10 +83,10 @@ export class OutstandingQueries {
         //remove queryId key for top query
         this.queryMap.delete(topQuery.queryID);
         //dequeue top query
-        const dequeuedQuery: Query = this.queryQueue.dequeue();
+        this.queryQueue.dequeue();
         return true;
       }catch(e){
-        const errorMessage: string = `Error in OutstandingQueries.remove(), ${e.message}`
+        const errorMessage = `Error in OutstandingQueries.remove(), ${e.message}`
         console.error(errorMessage)
         throw new Error(errorMessage)
       }
@@ -107,9 +104,9 @@ export class OutstandingQueries {
           const topQuery: Query = this.queryQueue.front()
 
           //var diffMs = (topQuery.timestamp - Date.now()); // milliseconds 
-          var diffMs = (Date.now() - topQuery.timestamp); // milliseconds
+          const diffMs = (Date.now() - topQuery.timestamp); // milliseconds
           
-          var differenceInMinutes = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
+          const differenceInMinutes = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
           
           if(differenceInMinutes > this._minutesThreshold){
               try{
@@ -117,7 +114,7 @@ export class OutstandingQueries {
                 //recursively check if the most prioritized query can be cleaned
                 this.cleanUpExpiredQueries()
               }catch(e){
-                const errorMessage: string = `Error in OutstandingQueries.cleanUpExpiredQueries(), ${e.message}`
+                const errorMessage = `Error in OutstandingQueries.cleanUpExpiredQueries(), ${e.message}`
                 console.error(errorMessage)
                 throw new Error(errorMessage)
               }
