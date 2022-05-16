@@ -1,0 +1,92 @@
+name: Test and publish Docker images
+
+on:
+  push:
+    branches: [ develop, release-candidate, main ]
+  pull_request: # pull requests
+  workflow_dispatch: # manually triggered
+
+env:
+  # Dagger
+  DAGGER_LOG_FORMAT: plain
+  DAGGER_LOG_LEVEL: info
+  DAGGER_CACHE_BASE: js-ceramic-ci
+  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ceramic/ci.cue
+  # General
+  BRANCH: ${{ github.ref_name }}
+  GITHUB_SHA: ${{ github.sha }}
+  # Secrets
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+jobs:
+  push:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
+      -
+        name: Set main branch tag
+        if: ${{ env.BRANCH == 'main' }}
+        run: |
+          echo "ENV_TAG=prod" >> $GITHUB_ENV
+      -
+        name: Set rc branch tag
+        if: ${{ env.BRANCH == 'release-candidate' }}
+        run: |
+          echo "ENV_TAG=tnet" >> $GITHUB_ENV
+      -
+        name: Set develop branch tag
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+      -
+        name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v1
+      -
+        name: Set up cache for mainline branches
+        run: |
+          echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }}" >> $GITHUB_ENV
+          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }}" >> $GITHUB_ENV
+      -
+        name: Set env vars on pull request
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
+          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }} type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          version: "v0.2.11"
+          install-only: true
+      -
+        name: Run unit tests
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update github.com/3box/pipelinetools@main
+
+          REPO_META=$(dagger do --output-format json build -p ${{ env.DAGGER_CI }})
+          echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
+          echo "SHA_TAG=$(echo "${REPO_META}" | jq -r '.shaTag')" >> $GITHUB_ENV
+          echo "BRANCH=$(echo "${REPO_META}" | jq -r '.branch')" >> $GITHUB_ENV
+      -
+        name: Build and test image
+        run: |
+          dagger do verify -p ${{ env.DAGGER_CI }})
+      -
+        name: Push images for mainline branches
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          dagger do -l error push -w "actions:push:tags:[\"${{ env.SHA }}\",\"${{ env.SHA_TAG }}\",\"${{ env.BRANCH }}\",\"${{ env.ENV_TAG }}\"]" -p ${{ env.DAGGER_CI }})
+      -
+        name: Print Buildkitd Logs
+        if: ${{ failure() }}
+        run: docker logs dagger-buildkitd
