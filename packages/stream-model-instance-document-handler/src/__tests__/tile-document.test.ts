@@ -5,11 +5,11 @@ import * as dagCBOR from '@ipld/dag-cbor'
 import type { DID } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
-import { TileDocumentHandler } from '../tile-document-handler.js'
+import { ModelInstanceDocumentHandler } from '../tile-document-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-tile'
 import {
   CeramicApi,
   CommitType,
@@ -234,9 +234,9 @@ const rotateKey = (did: DID, rotateDate: string) => {
   did.createJWS = async () => jwsForVersion1
 }
 
-describe('TileDocumentHandler', () => {
+describe('ModelInstanceDocumentHandler', () => {
   let did: DID
-  let tileDocumentHandler: TileDocumentHandler
+  let tileDocumentHandler: ModelInstanceDocumentHandler
   let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
@@ -294,7 +294,7 @@ describe('TileDocumentHandler', () => {
   })
 
   beforeEach(() => {
-    tileDocumentHandler = new TileDocumentHandler()
+    tileDocumentHandler = new ModelInstanceDocumentHandler()
 
     setDidToNotRotatedState(did)
   })
@@ -304,7 +304,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await TileDocument.makeGenesis(context.api, COMMITS.genesis.data)
+    const commit = await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data)
     expect(commit).toBeDefined()
 
     const { jws, linkedBlock } = commit as SignedCommitContainer
@@ -331,17 +331,17 @@ describe('TileDocumentHandler', () => {
 
   it('throws error for deterministic genesis commit with data', async () => {
     await expect(
-      TileDocument.makeGenesis(context.api, COMMITS.genesis.data, { deterministic: true })
+      ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, { deterministic: true })
     ).rejects.toThrow(/Initial content must be null/)
   })
 
   it('Does not sign commit if no content', async () => {
-    const commit = (await TileDocument.makeGenesis(context.api, null)) as GenesisCommit
+    const commit = (await ModelInstanceDocument.makeGenesis(context.api, null)) as GenesisCommit
     expect(commit.header.controllers[0]).toEqual(did.id)
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
-    const signedCommitWithContent = await TileDocument.makeGenesis(
+    const signedCommitWithContent = await ModelInstanceDocument.makeGenesis(
       context.api,
       COMMITS.genesis.data
     )
@@ -353,7 +353,7 @@ describe('TileDocumentHandler', () => {
     expect(payload.data).toEqual(COMMITS.genesis.data)
     expect(payload.header.controllers[0]).toEqual(did.id)
 
-    const commitWithoutContent = (await TileDocument.makeGenesis(
+    const commitWithoutContent = (await ModelInstanceDocument.makeGenesis(
       context.api,
       null
     )) as GenesisCommit
@@ -362,7 +362,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('throws if more than one controller', async () => {
-    const commit1Promised = TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+    const commit1Promised = ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: [did.id, 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'],
       deterministic: true,
     })
@@ -370,25 +370,25 @@ describe('TileDocumentHandler', () => {
   })
 
   it('creates genesis commits uniquely by default', async () => {
-    const commit1 = await TileDocument.makeGenesis(context.api, COMMITS.genesis.data)
-    const commit2 = await TileDocument.makeGenesis(context.api, COMMITS.genesis.data)
+    const commit1 = await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data)
+    const commit2 = await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data)
 
     expect(commit1).not.toEqual(commit2)
   })
 
   it('creates genesis commits deterministically if deterministic:true is specified', async () => {
     const metadata = { deterministic: true, controllers: ['a'], family: 'family', tags: ['x', 'y'] }
-    const commit1 = await TileDocument.makeGenesis(context.api, null, metadata)
-    const commit2 = await TileDocument.makeGenesis(context.api, null, metadata)
+    const commit1 = await ModelInstanceDocument.makeGenesis(context.api, null, metadata)
+    const commit2 = await ModelInstanceDocument.makeGenesis(context.api, null, metadata)
 
     expect(commit1).toEqual(commit2)
   })
 
   it('creates genesis commits without DID if content is undefined', async () => {
     await expect(
-      TileDocument.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })
+      ModelInstanceDocument.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })
     ).rejects.toThrow('No DID provided')
-    const commit1 = await TileDocument.makeGenesis({} as CeramicApi, null, {
+    const commit1 = await ModelInstanceDocument.makeGenesis({} as CeramicApi, null, {
       controllers: [did.id],
     })
 
@@ -396,9 +396,9 @@ describe('TileDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const tileHandler = new TileDocumentHandler()
+    const tileHandler = new ModelInstanceDocumentHandler()
 
-    const commit = (await TileDocument.makeGenesis(
+    const commit = (await ModelInstanceDocument.makeGenesis(
       context.api,
       COMMITS.genesis.data
     )) as SignedCommitContainer
@@ -419,7 +419,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('makes signed commit correctly', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
     await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
 
@@ -436,7 +436,7 @@ describe('TileDocumentHandler', () => {
     }
     const state = await tileDocumentHandler.applyCommit(commitData, context)
     const state$ = TestUtils.runningState(state)
-    const doc = new TileDocument(state$, context)
+    const doc = new ModelInstanceDocument(state$, context)
 
     await expect(doc.makeCommit({} as CeramicApi, COMMITS.r1.desiredContent)).rejects.toThrow(
       /No DID/
@@ -452,9 +452,9 @@ describe('TileDocumentHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await TileDocument.makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.api,
       COMMITS.genesis.data
     )) as SignedCommitContainer
@@ -473,7 +473,7 @@ describe('TileDocumentHandler', () => {
     let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
-    const doc = new TileDocument(state$, context)
+    const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await doc.makeCommit(
       context.api,
       COMMITS.r1.desiredContent
@@ -499,9 +499,9 @@ describe('TileDocumentHandler', () => {
 
   it('multiple consecutive updates', async () => {
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await TileDocument.makeGenesis(context.api, {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, {
       test: 'data',
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -518,7 +518,7 @@ describe('TileDocumentHandler', () => {
 
     // make a first update
     const state$ = TestUtils.runningState(genesisState)
-    let doc = new TileDocument(state$, context)
+    let doc = new ModelInstanceDocument(state$, context)
     const signedCommit1 = (await doc.makeCommit(context.api, {
       other: { obj: 'content' },
     })) as SignedCommitContainer
@@ -541,7 +541,7 @@ describe('TileDocumentHandler', () => {
 
     // make a second update on top of the first
     const state1$ = TestUtils.runningState(state1)
-    doc = new TileDocument(state1$, context)
+    doc = new ModelInstanceDocument(state1$, context)
     const signedCommit2 = (await doc.makeCommit(context.api, {
       other: { obj2: 'fefe' },
     })) as SignedCommitContainer
@@ -568,9 +568,9 @@ describe('TileDocumentHandler', () => {
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: ['did:3:fake'],
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -591,9 +591,9 @@ describe('TileDocumentHandler', () => {
   })
 
   it('throws error if changes to more than one controller', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: [did.id],
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -608,7 +608,7 @@ describe('TileDocumentHandler', () => {
       envelope: genesisCommit.jws,
     }
     const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
-    const doc = new TileDocument(state, context)
+    const doc = new ModelInstanceDocument(state, context)
     const makeCommit = doc.makeCommit(context.api, COMMITS.r1.desiredContent, {
       controllers: [did.id, did.id],
     })
@@ -616,9 +616,9 @@ describe('TileDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await TileDocument.makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.api,
       COMMITS.genesis.data
     )) as SignedCommitContainer
@@ -637,7 +637,7 @@ describe('TileDocumentHandler', () => {
     let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
-    const doc = new TileDocument(state$, context)
+    const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await doc.makeCommit(
       context.api,
       COMMITS.r1.desiredContent
@@ -673,10 +673,10 @@ describe('TileDocumentHandler', () => {
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
     // make and apply genesis with old key
-    const genesisCommit = (await TileDocument.makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       signerUsingOldKey,
       COMMITS.genesis.data
     )) as SignedCommitContainer
@@ -700,7 +700,7 @@ describe('TileDocumentHandler', () => {
 
     // make update with old key
     const state$ = TestUtils.runningState(state)
-    const doc = new TileDocument(state$, context)
+    const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await doc.makeCommit(
       signerUsingOldKey,
       COMMITS.r1.desiredContent
@@ -729,10 +729,10 @@ describe('TileDocumentHandler', () => {
   it('fails to apply commit if new key used before rotation', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
     // make genesis with new key
-    const genesisCommit = (await TileDocument.makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       signerUsingNewKey,
       COMMITS.genesis.data
     )) as SignedCommitContainer
@@ -761,10 +761,10 @@ describe('TileDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
     rotateKey(did, rotateDate.toISOString())
 
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelInstanceDocumentHandler()
 
     // make genesis commit using old key
-    const genesisCommit = (await TileDocument.makeGenesis(
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       signerUsingOldKey,
       COMMITS.genesis.data
     )) as SignedCommitContainer
@@ -792,7 +792,7 @@ describe('TileHandler', () => {
   test('can not create invalid deterministic tile document', async () => {
     const fauxCeramic = {} as unknown as CeramicApi
     await expect(
-      TileDocument.makeGenesis(fauxCeramic, undefined, {
+      ModelInstanceDocument.makeGenesis(fauxCeramic, undefined, {
         controllers: ['did:foo:blah'],
         family: 'test123',
         tags: ['foo', undefined, 'blah'],
