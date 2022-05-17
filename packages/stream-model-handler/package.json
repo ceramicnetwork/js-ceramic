@@ -1,7 +1,7 @@
 {
   "name": "@ceramicnetwork/stream-model-handler",
   "version": "0.0.1",
-  "description": "Ceramic Tile Document stream handler",
+  "description": "Ceramic Model stream handler",
   "keywords": [
     "ceramic",
     "model",
