@@ -88,7 +88,6 @@ export interface CeramicConfig {
   anchorServiceUrl?: string
   stateStoreDirectory?: string
 
-  validateStreams?: boolean
   ipfsPinningEndpoints?: string[]
   pinningBackends?: PinningBackendStatic[]
 
@@ -132,7 +131,6 @@ export interface CeramicModules {
 export interface CeramicParameters {
   gateway: boolean
   networkOptions: CeramicNetworkOptions
-  validateStreams: boolean
   loadOptsOverride: LoadOpts
 }
 
@@ -183,7 +181,6 @@ export class Ceramic implements CeramicApi {
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
-  private readonly _validateStreams: boolean
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownController: AbortController
 
@@ -199,7 +196,6 @@ export class Ceramic implements CeramicApi {
 
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
-    this._validateStreams = params.validateStreams
     this._loadOptsOverride = params.loadOptsOverride
 
     this.context = {
@@ -438,7 +434,6 @@ export class Ceramic implements CeramicApi {
     const params: CeramicParameters = {
       gateway: config.gateway,
       networkOptions,
-      validateStreams: config.validateStreams ?? true,
       loadOptsOverride,
     }
 
