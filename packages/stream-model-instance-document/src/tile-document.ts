@@ -163,7 +163,7 @@ async function throwReadOnlyError(): Promise<void> {
  */
 @StreamStatic<StreamConstructor<ModelInstanceDocument>>()
 export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
-  static STREAM_TYPE_NAME = 'tile'
+  static STREAM_TYPE_NAME = 'MID'
   static STREAM_TYPE_ID = 0
 
   private _isReadOnly = false
@@ -240,7 +240,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     metadata = { ...metadata, deterministic: true }
 
     if (metadata.family == null && metadata.tags == null) {
-      throw new Error('Family and/or tags are required when creating a deterministic tile document')
+      throw new Error('Family and/or tags are required when creating a deterministic model instance document')
     }
     const commit = await ModelInstanceDocument.makeGenesis(ceramic, null, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
