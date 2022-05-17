@@ -25,6 +25,7 @@ import cors from 'cors'
 import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests.js'
+import { instrumentRequests } from './daemon/instrument-requests.js'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
@@ -184,6 +185,8 @@ export class CeramicDaemon {
     )
 
     this.app.use(logRequests(ceramic.loggerProvider))
+
+    this.app.use(instrumentRequests(ceramic.metricsProvider))
 
     this.registerAPIPaths(this.app, opts.node?.gateway)
 
