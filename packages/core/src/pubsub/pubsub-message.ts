@@ -72,6 +72,8 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 }
 
 export function serialize(message: PubsubMessage): Uint8Array {
+  const counter = new Counter('msg_published', {'type': message.typ})
+  counter.add(1)
   switch (message.typ) {
     case MsgType.QUERY: {
       return textEncoder.encode(
@@ -120,7 +122,7 @@ export function deserialize(message: any): PubsubMessage {
 
   const typ = parsed.typ as MsgType
 
-  const counter = new Counter('deserialize_message', parsed)
+  const counter = new Counter('msg_received', {'type': typ})
   counter.add(1)
   switch (typ) {
     case MsgType.UPDATE: {
