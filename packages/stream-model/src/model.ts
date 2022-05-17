@@ -24,9 +24,9 @@ import {
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 
 /**
- * Arguments used to generate the metadata for Tile documents
+ * Arguments used to generate the metadata for Model streams.
  */
-export interface TileMetadataArgs {
+export interface ModelMetadataArgs {
   /**
    * The DID(s) that are allowed to author updates to this Model
    */
@@ -82,7 +82,7 @@ const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit:
  * @param genesis - True if this is for a genesis header, false if it's for a signed commit header
  */
 function headerFromMetadata(
-  metadata: TileMetadataArgs | StreamMetadata | undefined,
+  metadata: ModelMetadataArgs | StreamMetadata | undefined,
   genesis: boolean
 ): CommitHeader {
   if (typeof metadata?.schema === 'string') {
@@ -139,7 +139,7 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
 }
 
 /**
- * Sign a Tile commit with the currently authenticated DID.
+ * Sign a Model commit with the currently authenticated DID.
  * @param signer - Object containing the DID to use to sign the commit
  * @param commit - Commit to be signed
  * @private
@@ -163,7 +163,7 @@ async function throwReadOnlyError(): Promise<void> {
  */
 @StreamStatic<StreamConstructor<Model>>()
 export class Model<T = Record<string, any>> extends Stream {
-  static STREAM_TYPE_NAME = 'tile'
+  static STREAM_TYPE_NAME = 'model'
   static STREAM_TYPE_ID = 0
 
   private _isReadOnly = false
@@ -173,7 +173,7 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Creates a Tile document.
+   * Creates a Model.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param content - Genesis contents. If 'null', then no signature is required to make the genesis commit
    * @param metadata - Genesis metadata
@@ -182,7 +182,7 @@ export class Model<T = Record<string, any>> extends Stream {
   static async create<T>(
     ceramic: CeramicApi,
     content: T | null | undefined,
-    metadata?: TileMetadataArgs,
+    metadata?: ModelMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<Model<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
@@ -201,7 +201,7 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Create Tile document from genesis commit
+   * Create Model from genesis commit
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param genesisCommit - Genesis commit (first commit in document log)
    * @param opts - Additional options
@@ -226,21 +226,21 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Creates a deterministic Tile document.
+   * Creates a deterministic Model.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
   static async deterministic<T>(
     ceramic: CeramicApi,
-    metadata: TileMetadataArgs,
+    metadata: ModelMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<Model<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     metadata = { ...metadata, deterministic: true }
 
     if (metadata.family == null && metadata.tags == null) {
-      throw new Error('Family and/or tags are required when creating a deterministic tile document')
+      throw new Error('Family and/or tags are required when creating a deterministic model document')
     }
     const commit = await Model.makeGenesis(ceramic, null, metadata)
     return ceramic.createStreamFromGenesis<Model<T>>(
@@ -251,7 +251,7 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Loads a Tile document from a given StreamID
+   * Loads a Model from a given StreamID
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param streamId - StreamID to load.  Must correspond to a Model
    * @param opts - Additional options
@@ -275,14 +275,14 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Update an existing Tile document.
+   * Update an existing Model.
    * @param content - New content to replace old content
    * @param metadata - Changes to make to the metadata.  Only fields that are specified will be changed.
    * @param opts - Additional options
    */
   async update(
     content: T | null | undefined,
-    metadata?: TileMetadataArgs,
+    metadata?: ModelMetadataArgs,
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
@@ -293,7 +293,7 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Update the contents of an existing Tile document based on a JSON-patch diff from the existing
+   * Update the contents of an existing Model based on a JSON-patch diff from the existing
    * contents to the desired new contents
    * @param jsonPatch - JSON patch diff of document contents
    * @param opts - Additional options
@@ -336,7 +336,7 @@ export class Model<T = Record<string, any>> extends Stream {
   async makeCommit(
     signer: CeramicSigner,
     newContent: T | null | undefined,
-    newMetadata?: TileMetadataArgs
+    newMetadata?: ModelMetadataArgs
   ): Promise<CeramicCommit> {
     const header = headerFromMetadata(newMetadata, false)
 
@@ -367,7 +367,7 @@ export class Model<T = Record<string, any>> extends Stream {
   static async makeGenesis<T>(
     signer: CeramicSigner,
     content: T | null | undefined,
-    metadata?: TileMetadataArgs
+    metadata?: ModelMetadataArgs
   ): Promise<CeramicCommit> {
     if (!metadata) {
       metadata = {}
@@ -388,7 +388,7 @@ export class Model<T = Record<string, any>> extends Stream {
 
     const header: GenesisHeader = headerFromMetadata(metadata, true)
     if (metadata?.deterministic && content) {
-      throw new Error('Initial content must be null when creating a deterministic Tile document')
+      throw new Error('Initial content must be null when creating a deterministic Model')
     }
 
     if (content == null) {
