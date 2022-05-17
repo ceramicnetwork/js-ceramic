@@ -28,7 +28,7 @@ import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
  */
 export interface TileMetadataArgs {
   /**
-   * The DID(s) that are allowed to author updates to this TileDocument
+   * The DID(s) that are allowed to author updates to this ModelInstanceDocument
    */
   controllers?: Array<string>
 
@@ -43,13 +43,13 @@ export interface TileMetadataArgs {
   tags?: Array<string>
 
   /**
-   * If specified, must refer to another TileDocument whose contents are a JSON-schema specification.
+   * If specified, must refer to another ModelInstanceDocument whose contents are a JSON-schema specification.
    * The content of this document will then be enforced to conform to the linked schema.
    */
   schema?: CommitID | string
 
   /**
-   * If true, then two calls to TileDocument.create() with the same content and the same metadata
+   * If true, then two calls to ModelInstanceDocument.create() with the same content and the same metadata
    * will only create a single document with the same StreamID. If false, then otherwise
    * identical documents will generate unique StreamIDs and be able to be updated independently.
    * @deprecated use deterministic function instead
@@ -159,10 +159,10 @@ async function throwReadOnlyError(): Promise<void> {
 }
 
 /**
- * TileDocument stream implementation
+ * ModelInstanceDocument stream implementation
  */
-@StreamStatic<StreamConstructor<TileDocument>>()
-export class TileDocument<T = Record<string, any>> extends Stream {
+@StreamStatic<StreamConstructor<ModelInstanceDocument>>()
+export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'tile'
   static STREAM_TYPE_ID = 0
 
@@ -184,7 +184,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     content: T | null | undefined,
     metadata?: TileMetadataArgs,
     opts: CreateOpts = {}
-  ): Promise<TileDocument<T>> {
+  ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     if (!metadata?.deterministic && opts.syncTimeoutSeconds == undefined) {
       // By default you don't want to wait to sync doc state from pubsub when creating a unique
@@ -192,9 +192,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       opts.syncTimeoutSeconds = 0
     }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
-    const commit = await TileDocument.makeGenesis(signer, content, metadata)
-    return ceramic.createStreamFromGenesis<TileDocument<T>>(
-      TileDocument.STREAM_TYPE_ID,
+    const commit = await ModelInstanceDocument.makeGenesis(signer, content, metadata)
+    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
+      ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
       opts
     )
@@ -210,7 +210,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     ceramic: CeramicApi,
     genesisCommit: GenesisCommit,
     opts: CreateOpts = {}
-  ): Promise<TileDocument<T>> {
+  ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     if (genesisCommit.header?.unique && opts.syncTimeoutSeconds == undefined) {
       // By default you don't want to wait to sync doc state from pubsub when creating a unique
@@ -218,8 +218,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       opts.syncTimeoutSeconds = 0
     }
     const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
-    return ceramic.createStreamFromGenesis<TileDocument<T>>(
-      TileDocument.STREAM_TYPE_ID,
+    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
+      ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
       opts
     )
@@ -235,16 +235,16 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     ceramic: CeramicApi,
     metadata: TileMetadataArgs,
     opts: CreateOpts = {}
-  ): Promise<TileDocument<T>> {
+  ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     metadata = { ...metadata, deterministic: true }
 
     if (metadata.family == null && metadata.tags == null) {
       throw new Error('Family and/or tags are required when creating a deterministic tile document')
     }
-    const commit = await TileDocument.makeGenesis(ceramic, null, metadata)
-    return ceramic.createStreamFromGenesis<TileDocument<T>>(
-      TileDocument.STREAM_TYPE_ID,
+    const commit = await ModelInstanceDocument.makeGenesis(ceramic, null, metadata)
+    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
+      ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
       opts
     )
@@ -253,25 +253,25 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   /**
    * Loads a Tile document from a given StreamID
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-   * @param streamId - StreamID to load.  Must correspond to a TileDocument
+   * @param streamId - StreamID to load.  Must correspond to a ModelInstanceDocument
    * @param opts - Additional options
    */
   static async load<T>(
     ceramic: CeramicApi,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
-  ): Promise<TileDocument<T>> {
+  ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
     const streamRef = StreamRef.from(streamId)
-    if (streamRef.type != TileDocument.STREAM_TYPE_ID) {
+    if (streamRef.type != ModelInstanceDocument.STREAM_TYPE_ID) {
       throw new Error(
         `StreamID ${streamRef.toString()} does not refer to a '${
-          TileDocument.STREAM_TYPE_NAME
+          ModelInstanceDocument.STREAM_TYPE_NAME
         }' stream, but to a ${streamRef.typeName}`
       )
     }
 
-    return ceramic.loadStream<TileDocument<T>>(streamRef, opts)
+    return ceramic.loadStream<ModelInstanceDocument<T>>(streamRef, opts)
   }
 
   /**
