@@ -42,6 +42,8 @@
     "@ceramicnetwork/stream-caip10-link-handler": "^2.0.1-rc.2",
     "@ceramicnetwork/stream-model": "^0.0.1",
     "@ceramicnetwork/stream-model-handler": "^0.0.1",
+    "@ceramicnetwork/stream-model-instance-document": "^0.0.1",
+    "@ceramicnetwork/stream-model-instance-document-handler": "^0.0.1",
     "@ceramicnetwork/stream-tile": "^2.1.0-rc.3",
     "@ceramicnetwork/stream-tile-handler": "^2.1.0-rc.3",
     "@ceramicnetwork/streamid": "^2.0.1-rc.1",
