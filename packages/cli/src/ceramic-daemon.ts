@@ -186,7 +186,7 @@ export class CeramicDaemon {
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
-    this.app.use(instrumentRequests(ceramic.metricsProvider))
+    this.app.use(instrumentRequests)
 
     this.registerAPIPaths(this.app, opts.node?.gateway)
 
