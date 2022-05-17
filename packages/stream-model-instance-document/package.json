@@ -1,12 +1,12 @@
 {
-  "name": "@ceramicnetwork/stream-tile",
-  "version": "2.1.0-rc.3",
-  "description": "Ceramic Tile Document stream type",
+  "name": "@ceramicnetwork/stream-model-instance-document",
+  "version": "0.0.1",
+  "description": "Ceramic Model Instance Document stream type",
   "keywords": [
     "ceramic",
-    "tile"
+    "mid",
+    "model",
   ],
-  "author": "Janko Simonovic <simonovic86@gmail.com>",
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
