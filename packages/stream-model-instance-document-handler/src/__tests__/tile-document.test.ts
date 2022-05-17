@@ -788,7 +788,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 })
 
-describe('TileHandler', () => {
+describe('ModelInstanceDocumentHandler', () => {
   test('can not create invalid deterministic tile document', async () => {
     const fauxCeramic = {} as unknown as CeramicApi
     await expect(
