@@ -1,4 +1,4 @@
-import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Model } from '@ceramicnetwork/stream-tile'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'
@@ -32,7 +32,7 @@ export class SchemaValidation {
     } catch {
       throw new Error('Commit missing when loading schema document')
     }
-    return ceramic.loadStream<TileDocument<T>>(commitId).then((doc) => doc.content)
+    return ceramic.loadStream<Model<T>>(commitId).then((doc) => doc.content)
   }
 
   private _validate(content: Record<string, any>, schema: Record<string, any>): void {

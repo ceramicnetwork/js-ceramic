@@ -15,7 +15,7 @@ import {
   TestUtils,
 } from '@ceramicnetwork/common'
 import { ModelHandler } from '../tile-document-handler.js'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Model } from '@ceramicnetwork/stream-tile'
 import cloneDeep from 'lodash.clonedeep'
 import * as sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
@@ -228,7 +228,7 @@ it('is constructed correctly', async () => {
 })
 
 it('makes genesis commit correctly', async () => {
-  const commit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+  const commit = (await Model.makeGenesis(context.api, COMMITS.genesis.data, {
     ...COMMITS.genesis.header,
   })) as SignedCommitContainer
   const { jws, linkedBlock } = commit
@@ -251,7 +251,7 @@ it('makes genesis commit correctly', async () => {
 })
 
 it('applies genesis commit correctly', async () => {
-  const commit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+  const commit = (await Model.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
   })) as SignedCommitContainer
@@ -286,7 +286,7 @@ it('makes signed commit correctly', async () => {
   }
   const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
   const state$ = TestUtils.runningState(state)
-  const doc = new TileDocument(state$, context)
+  const doc = new Model(state$, context)
 
   await expect(doc.makeCommit({} as CeramicApi, COMMITS.r1.desiredContent)).rejects.toThrow(
     /No DID/
@@ -302,7 +302,7 @@ it('makes signed commit correctly', async () => {
 })
 
 it('applies signed commit correctly', async () => {
-  const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+  const genesisCommit = (await Model.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
   })) as SignedCommitContainer
@@ -321,7 +321,7 @@ it('applies signed commit correctly', async () => {
   let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
   const state$ = TestUtils.runningState(state)
-  const doc = new TileDocument(state$, context)
+  const doc = new Model(state$, context)
   const signedCommit = (await doc.makeCommit(
     context.api,
     COMMITS.r1.desiredContent
@@ -346,7 +346,7 @@ it('applies signed commit correctly', async () => {
 })
 
 it('throws error if commit signed by wrong DID', async () => {
-  const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+  const genesisCommit = (await Model.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: ['did:3:fake'],
     tags: ['3id'],
   })) as SignedCommitContainer
@@ -367,7 +367,7 @@ it('throws error if commit signed by wrong DID', async () => {
 })
 
 it('applies anchor commit correctly', async () => {
-  const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+  const genesisCommit = (await Model.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
   })) as SignedCommitContainer
@@ -386,7 +386,7 @@ it('applies anchor commit correctly', async () => {
   let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
   const state$ = TestUtils.runningState(state)
-  const doc = new TileDocument(state$, context)
+  const doc = new Model(state$, context)
   const signedCommit = (await doc.makeCommit(
     context.api,
     COMMITS.r1.desiredContent

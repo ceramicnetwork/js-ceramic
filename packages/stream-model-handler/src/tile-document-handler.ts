@@ -1,7 +1,7 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 import type { Cacao } from 'ceramic-cacao'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Model } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
   CommitData,
@@ -31,9 +31,9 @@ function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
 }
 
 /**
- * TileDocument stream handler implementation
+ * Model stream handler implementation
  */
-export class ModelHandler implements StreamHandler<TileDocument> {
+export class ModelHandler implements StreamHandler<Model> {
   private readonly _schemaValidator: SchemaValidation
 
   constructor() {
@@ -41,15 +41,15 @@ export class ModelHandler implements StreamHandler<TileDocument> {
   }
 
   get type(): number {
-    return TileDocument.STREAM_TYPE_ID
+    return Model.STREAM_TYPE_ID
   }
 
   get name(): string {
-    return TileDocument.STREAM_TYPE_NAME
+    return Model.STREAM_TYPE_NAME
   }
 
-  get stream_constructor(): StreamConstructor<TileDocument> {
-    return TileDocument
+  get stream_constructor(): StreamConstructor<Model> {
+    return Model
   }
 
   /**
@@ -97,7 +97,7 @@ export class ModelHandler implements StreamHandler<TileDocument> {
     }
 
     const state = {
-      type: TileDocument.STREAM_TYPE_ID,
+      type: Model.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
@@ -148,7 +148,7 @@ export class ModelHandler implements StreamHandler<TileDocument> {
       payload.header.controllers &&
       !stringArraysEqual(payload.header.controllers, state.metadata.controllers)
     ) {
-      const streamId = new StreamID(TileDocument.STREAM_TYPE_ID, state.log[0].cid)
+      const streamId = new StreamID(Model.STREAM_TYPE_ID, state.log[0].cid)
       throw new Error(
         `Cannot change controllers since 'forbidControllerChange' is set. Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
           state.metadata.controllers
@@ -289,7 +289,7 @@ export class ModelHandler implements StreamHandler<TileDocument> {
       !(family && resources.includes(`ceramic://*?family=${family}`))
     ) {
       throw new Error(
-        `Capability does not have appropriate permissions to update this TileDocument`
+        `Capability does not have appropriate permissions to update this Model`
       )
     }
 
