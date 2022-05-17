@@ -236,7 +236,7 @@ const rotateKey = (did: DID, rotateDate: string) => {
 
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
-  let tileDocumentHandler: ModelInstanceDocumentHandler
+  let modelInstanceDocumentHandler: ModelInstanceDocumentHandler
   let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
@@ -294,13 +294,13 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   beforeEach(() => {
-    tileDocumentHandler = new ModelInstanceDocumentHandler()
+    modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     setDidToNotRotatedState(did)
   })
 
   it('is constructed correctly', async () => {
-    expect(tileDocumentHandler.name).toEqual('tile')
+    expect(modelInstanceDocumentHandler.name).toEqual('tile')
   })
 
   it('makes genesis commits correctly', async () => {
@@ -396,7 +396,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const tileHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     const commit = (await ModelInstanceDocument.makeGenesis(
       context.api,
@@ -413,13 +413,13 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: commit.jws,
     }
-    const streamState = await tileHandler.applyCommit(commitData, context)
+    const streamState = await modelInstanceDocumentHandler.applyCommit(commitData, context)
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
 
   it('makes signed commit correctly', async () => {
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
 
@@ -434,7 +434,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: COMMITS.genesisGenerated.linkedBlock,
       envelope: COMMITS.genesisGenerated.jws,
     }
-    const state = await tileDocumentHandler.applyCommit(commitData, context)
+    const state = await modelInstanceDocumentHandler.applyCommit(commitData, context)
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
 
@@ -452,7 +452,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.api,
@@ -470,7 +470,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+    let state = await modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
@@ -491,7 +491,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    state = await tileDocumentHandler.applyCommit(signedCommitData, context, state)
+    state = await modelInstanceDocumentHandler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
     delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
@@ -499,7 +499,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
   it('multiple consecutive updates', async () => {
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, {
       test: 'data',
@@ -514,7 +514,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    const genesisState = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+    const genesisState = await modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
 
     // make a first update
     const state$ = TestUtils.runningState(genesisState)
@@ -533,7 +533,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: sPayload1,
       envelope: signedCommit1.jws,
     }
-    const state1 = await tileDocumentHandler.applyCommit(
+    const state1 = await modelInstanceDocumentHandler.applyCommit(
       signedCommitData_1,
       context,
       deepCopy(genesisState)
@@ -557,7 +557,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: sPayload2,
       envelope: signedCommit2.jws,
     }
-    const state2 = await tileDocumentHandler.applyCommit(
+    const state2 = await modelInstanceDocumentHandler.applyCommit(
       signedCommitData_2,
       context,
       deepCopy(state1)
@@ -568,7 +568,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: ['did:3:fake'],
@@ -585,13 +585,13 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
     }
-    await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
+    await expect(modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: not a valid verificationMethod for issuer/
     )
   })
 
   it('throws error if changes to more than one controller', async () => {
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: [did.id],
@@ -607,7 +607,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+    const state = await modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
     const doc = new ModelInstanceDocument(state, context)
     const makeCommit = doc.makeCommit(context.api, COMMITS.r1.desiredContent, {
       controllers: [did.id, did.id],
@@ -616,7 +616,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
       context.api,
@@ -634,7 +634,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+    let state = await modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
@@ -655,7 +655,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    state = await tileDocumentHandler.applyCommit(signedCommitData, context, state)
+    state = await modelInstanceDocumentHandler.applyCommit(signedCommitData, context, state)
 
     await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
     // apply anchor
@@ -665,7 +665,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: COMMITS.r2.commit,
       proof: COMMITS.proof,
     }
-    state = await tileDocumentHandler.applyCommit(anchorCommitData, context, state)
+    state = await modelInstanceDocumentHandler.applyCommit(anchorCommitData, context, state)
     delete state.metadata.unique
     expect(state).toMatchSnapshot()
   })
@@ -673,7 +673,7 @@ describe('ModelInstanceDocumentHandler', () => {
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     // make and apply genesis with old key
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
@@ -694,7 +694,7 @@ describe('ModelInstanceDocumentHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+    const state = await modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
 
     rotateKey(did, rotateDate.toISOString())
 
@@ -721,7 +721,7 @@ describe('ModelInstanceDocumentHandler', () => {
     }
 
     // applying a commit made with the old key after rotation
-    await expect(tileDocumentHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+    await expect(modelInstanceDocumentHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /invalid_jws: signature authored with a revoked DID version/
     )
   })
@@ -729,7 +729,7 @@ describe('ModelInstanceDocumentHandler', () => {
   it('fails to apply commit if new key used before rotation', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     // make genesis with new key
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
@@ -752,7 +752,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     rotateKey(did, rotateDate.toISOString())
 
-    await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
+    await expect(modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
     )
   })
@@ -761,7 +761,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
     rotateKey(did, rotateDate.toISOString())
 
-    const tileDocumentHandler = new ModelInstanceDocumentHandler()
+    const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
     // make genesis commit using old key
     const genesisCommit = (await ModelInstanceDocument.makeGenesis(
@@ -781,7 +781,7 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 + 60 * 60,
     }
-    const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+    const state = await modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
     delete state.metadata.unique
 
     expect(state).toMatchSnapshot()
