@@ -341,10 +341,7 @@ describe('ModelHandler', () => {
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
-    const signedCommitWithContent = await Model.makeGenesis(
-      context.api,
-      COMMITS.genesis.data
-    )
+    const signedCommitWithContent = await Model.makeGenesis(context.api, COMMITS.genesis.data)
     const { jws, linkedBlock } = signedCommitWithContent as SignedCommitContainer
     expect(jws).toBeDefined()
     expect(linkedBlock).toBeDefined()
@@ -353,10 +350,7 @@ describe('ModelHandler', () => {
     expect(payload.data).toEqual(COMMITS.genesis.data)
     expect(payload.header.controllers[0]).toEqual(did.id)
 
-    const commitWithoutContent = (await Model.makeGenesis(
-      context.api,
-      null
-    )) as GenesisCommit
+    const commitWithoutContent = (await Model.makeGenesis(context.api, null)) as GenesisCommit
     expect(commitWithoutContent.data).toBeUndefined
     expect(commitWithoutContent.header.controllers[0]).toEqual(did.id)
   })
@@ -557,11 +551,7 @@ describe('ModelHandler', () => {
       commit: sPayload2,
       envelope: signedCommit2.jws,
     }
-    const state2 = await modelHandler.applyCommit(
-      signedCommitData_2,
-      context,
-      deepCopy(state1)
-    )
+    const state2 = await modelHandler.applyCommit(signedCommitData_2, context, deepCopy(state1))
     delete state2.metadata.unique
     delete state2.next.metadata.unique
     expect(state2).toMatchSnapshot()
