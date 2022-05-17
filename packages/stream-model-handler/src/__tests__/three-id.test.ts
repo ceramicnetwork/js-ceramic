@@ -14,7 +14,7 @@ import {
   SignedCommitContainer,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { TileDocumentHandler } from '../tile-document-handler.js'
+import { ModelHandler } from '../tile-document-handler.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import cloneDeep from 'lodash.clonedeep'
 import * as sha256 from '@stablelib/sha256'
@@ -142,7 +142,7 @@ const serialize = (data: any): any => {
 }
 
 let did: DID
-let tileDocumentHandler: TileDocumentHandler
+let tileDocumentHandler: ModelHandler
 let context: Context
 
 beforeAll(async () => {
@@ -220,7 +220,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-  tileDocumentHandler = new TileDocumentHandler()
+  tileDocumentHandler = new ModelHandler()
 })
 
 it('is constructed correctly', async () => {

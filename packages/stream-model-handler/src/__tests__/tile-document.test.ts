@@ -5,7 +5,7 @@ import * as dagCBOR from '@ipld/dag-cbor'
 import type { DID } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
-import { TileDocumentHandler } from '../tile-document-handler.js'
+import { ModelHandler } from '../tile-document-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
@@ -234,9 +234,9 @@ const rotateKey = (did: DID, rotateDate: string) => {
   did.createJWS = async () => jwsForVersion1
 }
 
-describe('TileDocumentHandler', () => {
+describe('ModelHandler', () => {
   let did: DID
-  let tileDocumentHandler: TileDocumentHandler
+  let tileDocumentHandler: ModelHandler
   let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
@@ -294,7 +294,7 @@ describe('TileDocumentHandler', () => {
   })
 
   beforeEach(() => {
-    tileDocumentHandler = new TileDocumentHandler()
+    tileDocumentHandler = new ModelHandler()
 
     setDidToNotRotatedState(did)
   })
@@ -396,7 +396,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const tileHandler = new TileDocumentHandler()
+    const tileHandler = new ModelHandler()
 
     const commit = (await TileDocument.makeGenesis(
       context.api,
@@ -419,7 +419,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('makes signed commit correctly', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
 
@@ -452,7 +452,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     const genesisCommit = (await TileDocument.makeGenesis(
       context.api,
@@ -499,7 +499,7 @@ describe('TileDocumentHandler', () => {
 
   it('multiple consecutive updates', async () => {
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     const genesisCommit = (await TileDocument.makeGenesis(context.api, {
       test: 'data',
@@ -568,7 +568,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: ['did:3:fake'],
@@ -591,7 +591,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('throws error if changes to more than one controller', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: [did.id],
@@ -616,7 +616,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     const genesisCommit = (await TileDocument.makeGenesis(
       context.api,
@@ -673,7 +673,7 @@ describe('TileDocumentHandler', () => {
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     // make and apply genesis with old key
     const genesisCommit = (await TileDocument.makeGenesis(
@@ -729,7 +729,7 @@ describe('TileDocumentHandler', () => {
   it('fails to apply commit if new key used before rotation', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     // make genesis with new key
     const genesisCommit = (await TileDocument.makeGenesis(
@@ -761,7 +761,7 @@ describe('TileDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
     rotateKey(did, rotateDate.toISOString())
 
-    const tileDocumentHandler = new TileDocumentHandler()
+    const tileDocumentHandler = new ModelHandler()
 
     // make genesis commit using old key
     const genesisCommit = (await TileDocument.makeGenesis(

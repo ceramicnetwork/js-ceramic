@@ -33,7 +33,7 @@ function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
 /**
  * TileDocument stream handler implementation
  */
-export class TileDocumentHandler implements StreamHandler<TileDocument> {
+export class ModelHandler implements StreamHandler<TileDocument> {
   private readonly _schemaValidator: SchemaValidation
 
   constructor() {
