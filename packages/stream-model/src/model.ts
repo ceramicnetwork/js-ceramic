@@ -164,7 +164,7 @@ async function throwReadOnlyError(): Promise<void> {
 @StreamStatic<StreamConstructor<Model>>()
 export class Model<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'model'
-  static STREAM_TYPE_ID = 0
+  static STREAM_TYPE_ID = 2
 
   private _isReadOnly = false
 
@@ -193,11 +193,7 @@ export class Model<T = Record<string, any>> extends Stream {
     }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await Model.makeGenesis(signer, content, metadata)
-    return ceramic.createStreamFromGenesis<Model<T>>(
-      Model.STREAM_TYPE_ID,
-      commit,
-      opts
-    )
+    return ceramic.createStreamFromGenesis<Model<T>>(Model.STREAM_TYPE_ID, commit, opts)
   }
 
   /**
@@ -218,11 +214,7 @@ export class Model<T = Record<string, any>> extends Stream {
       opts.syncTimeoutSeconds = 0
     }
     const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
-    return ceramic.createStreamFromGenesis<Model<T>>(
-      Model.STREAM_TYPE_ID,
-      commit,
-      opts
-    )
+    return ceramic.createStreamFromGenesis<Model<T>>(Model.STREAM_TYPE_ID, commit, opts)
   }
 
   /**
@@ -240,14 +232,12 @@ export class Model<T = Record<string, any>> extends Stream {
     metadata = { ...metadata, deterministic: true }
 
     if (metadata.family == null && metadata.tags == null) {
-      throw new Error('Family and/or tags are required when creating a deterministic model document')
+      throw new Error(
+        'Family and/or tags are required when creating a deterministic model document'
+      )
     }
     const commit = await Model.makeGenesis(ceramic, null, metadata)
-    return ceramic.createStreamFromGenesis<Model<T>>(
-      Model.STREAM_TYPE_ID,
-      commit,
-      opts
-    )
+    return ceramic.createStreamFromGenesis<Model<T>>(Model.STREAM_TYPE_ID, commit, opts)
   }
 
   /**
@@ -376,7 +366,7 @@ export class Model<T = Record<string, any>> extends Stream {
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
-        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller 
+        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
         metadata.controllers = [signer.did.hasParent ? signer.did.parent : signer.did.id]
       } else {
         throw new Error('No controllers specified')

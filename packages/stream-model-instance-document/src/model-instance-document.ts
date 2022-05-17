@@ -164,7 +164,7 @@ async function throwReadOnlyError(): Promise<void> {
 @StreamStatic<StreamConstructor<ModelInstanceDocument>>()
 export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'instance'
-  static STREAM_TYPE_ID = 0
+  static STREAM_TYPE_ID = 3
 
   private _isReadOnly = false
 
@@ -240,7 +240,9 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     metadata = { ...metadata, deterministic: true }
 
     if (metadata.family == null && metadata.tags == null) {
-      throw new Error('Family and/or tags are required when creating a deterministic model instance document')
+      throw new Error(
+        'Family and/or tags are required when creating a deterministic model instance document'
+      )
     }
     const commit = await ModelInstanceDocument.makeGenesis(ceramic, null, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
@@ -376,7 +378,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
-        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller 
+        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
         metadata.controllers = [signer.did.hasParent ? signer.did.parent : signer.did.id]
       } else {
         throw new Error('No controllers specified')
@@ -388,7 +390,9 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
     const header: GenesisHeader = headerFromMetadata(metadata, true)
     if (metadata?.deterministic && content) {
-      throw new Error('Initial content must be null when creating a deterministic Model Instance Document')
+      throw new Error(
+        'Initial content must be null when creating a deterministic Model Instance Document'
+      )
     }
 
     if (content == null) {
