@@ -150,7 +150,7 @@ Object {
     ],
   },
   "signature": 2,
-  "type": 0,
+  "type": 2,
 }
 `;
 
@@ -211,7 +211,7 @@ Object {
     ],
   },
   "signature": 2,
-  "type": 0,
+  "type": 2,
 }
 `;
 
@@ -272,7 +272,7 @@ Object {
     ],
   },
   "signature": 2,
-  "type": 0,
+  "type": 2,
 }
 `;
 
@@ -387,7 +387,7 @@ Object {
     },
   },
   "signature": 2,
-  "type": 0,
+  "type": 2,
 }
 `;
 
@@ -546,6 +546,6 @@ Object {
     },
   },
   "signature": 2,
-  "type": 0,
+  "type": 2,
 }
 `;
