@@ -1,5 +1,6 @@
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler'
+import { ModelHandler } from '@ceramicnetwork/stream-model-handler'
 import { Stream, StreamHandler } from '@ceramicnetwork/common'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamType } from '@ceramicnetwork/streamid'
@@ -9,9 +10,11 @@ type Registry = Map<number, StreamHandler<Stream>>
 function defaultHandlers(): Registry {
   const tile = new TileDocumentHandler()
   const caip10Link = new Caip10LinkHandler()
+  const model = new ModelHandler()
   const handlers = new Map<number, StreamHandler<Stream>>()
   handlers.set(tile.type, tile)
   handlers.set(caip10Link.type, caip10Link)
+  handlers.set(model.type, model)
   return handlers
 }
 
