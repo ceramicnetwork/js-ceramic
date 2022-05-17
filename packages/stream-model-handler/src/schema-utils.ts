@@ -1,4 +1,4 @@
-import { Model } from '@ceramicnetwork/stream-tile'
+import { Model } from '@ceramicnetwork/stream-model'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'

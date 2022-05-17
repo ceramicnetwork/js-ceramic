@@ -1,7 +1,7 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 import type { Cacao } from 'ceramic-cacao'
-import { Model } from '@ceramicnetwork/stream-tile'
+import { Model } from '@ceramicnetwork/stream-model'
 import {
   AnchorStatus,
   CommitData,
@@ -85,7 +85,7 @@ export class ModelHandler implements StreamHandler<Model> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      const streamId = await StreamID.fromGenesis('tile', commitData.commit)
+      const streamId = await StreamID.fromGenesis('model', commitData.commit)
       const { controllers, family } = payload.header
       await this._verifySignature(commitData, context, controllers[0], family, streamId)
     } else if (payload.data) {
