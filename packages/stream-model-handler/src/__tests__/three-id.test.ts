@@ -14,7 +14,7 @@ import {
   SignedCommitContainer,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { ModelHandler } from '../tile-document-handler.js'
+import { ModelHandler } from '../model-handler.js'
 import { Model } from '@ceramicnetwork/stream-tile'
 import cloneDeep from 'lodash.clonedeep'
 import * as sha256 from '@stablelib/sha256'
