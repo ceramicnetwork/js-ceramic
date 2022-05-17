@@ -5,11 +5,11 @@ import * as dagCBOR from '@ipld/dag-cbor'
 import type { DID } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
-import { ModelInstanceDocumentHandler } from '../tile-document-handler.js'
+import { ModelInstanceDocumentHandler } from '../model-instance-document-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-tile'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance-document'
 import {
   CeramicApi,
   CommitType,
@@ -300,7 +300,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('is constructed correctly', async () => {
-    expect(modelInstanceDocumentHandler.name).toEqual('tile')
+    expect(modelInstanceDocumentHandler.name).toEqual('MID')
   })
 
   it('makes genesis commits correctly', async () => {
@@ -789,7 +789,7 @@ describe('ModelInstanceDocumentHandler', () => {
 })
 
 describe('ModelInstanceDocumentHandler', () => {
-  test('can not create invalid deterministic tile document', async () => {
+  test('can not create invalid deterministic model instance document', async () => {
     const fauxCeramic = {} as unknown as CeramicApi
     await expect(
       ModelInstanceDocument.makeGenesis(fauxCeramic, undefined, {
