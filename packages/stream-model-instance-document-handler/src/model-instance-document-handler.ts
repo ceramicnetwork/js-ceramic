@@ -85,7 +85,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      const streamId = await StreamID.fromGenesis('MID', commitData.commit)
+      const streamId = await StreamID.fromGenesis('instance', commitData.commit)
       const { controllers, family } = payload.header
       await this._verifySignature(commitData, context, controllers[0], family, streamId)
     } else if (payload.data) {

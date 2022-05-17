@@ -300,7 +300,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('is constructed correctly', async () => {
-    expect(modelInstanceDocumentHandler.name).toEqual('MID')
+    expect(modelInstanceDocumentHandler.name).toEqual('instance')
   })
 
   it('makes genesis commits correctly', async () => {
@@ -386,7 +386,11 @@ describe('ModelInstanceDocumentHandler', () => {
 
   it('creates genesis commits without DID if content is undefined', async () => {
     await expect(
-      ModelInstanceDocument.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })
+      ModelInstanceDocument.makeGenesis(
+        {} as CeramicApi,
+        { foo: 'asdf' },
+        { controllers: [did.id] }
+      )
     ).rejects.toThrow('No DID provided')
     const commit1 = await ModelInstanceDocument.makeGenesis({} as CeramicApi, null, {
       controllers: [did.id],
@@ -570,9 +574,13 @@ describe('ModelInstanceDocumentHandler', () => {
   it('throws error if commit signed by wrong DID', async () => {
     const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
-      controllers: ['did:3:fake'],
-    })) as SignedCommitContainer
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
+      context.api,
+      COMMITS.genesis.data,
+      {
+        controllers: ['did:3:fake'],
+      }
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
@@ -585,17 +593,21 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
     }
-    await expect(modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
-      /invalid_jws: not a valid verificationMethod for issuer/
-    )
+    await expect(
+      modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
+    ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
   })
 
   it('throws error if changes to more than one controller', async () => {
     const modelInstanceDocumentHandler = new ModelInstanceDocumentHandler()
 
-    const genesisCommit = (await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
-      controllers: [did.id],
-    })) as SignedCommitContainer
+    const genesisCommit = (await ModelInstanceDocument.makeGenesis(
+      context.api,
+      COMMITS.genesis.data,
+      {
+        controllers: [did.id],
+      }
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
@@ -721,9 +733,9 @@ describe('ModelInstanceDocumentHandler', () => {
     }
 
     // applying a commit made with the old key after rotation
-    await expect(modelInstanceDocumentHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /invalid_jws: signature authored with a revoked DID version/
-    )
+    await expect(
+      modelInstanceDocumentHandler.applyCommit(signedCommitData, context, state)
+    ).rejects.toThrow(/invalid_jws: signature authored with a revoked DID version/)
   })
 
   it('fails to apply commit if new key used before rotation', async () => {
@@ -752,9 +764,9 @@ describe('ModelInstanceDocumentHandler', () => {
 
     rotateKey(did, rotateDate.toISOString())
 
-    await expect(modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
-      /invalid_jws: signature authored before creation of DID version/
-    )
+    await expect(
+      modelInstanceDocumentHandler.applyCommit(genesisCommitData, context)
+    ).rejects.toThrow(/invalid_jws: signature authored before creation of DID version/)
   })
 
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
