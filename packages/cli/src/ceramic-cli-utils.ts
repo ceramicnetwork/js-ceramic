@@ -26,6 +26,7 @@ const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH
 const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
+const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
@@ -37,6 +38,9 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   'state-store': {
     mode: StateStoreMode.FS,
     'local-directory': DEFAULT_STATE_STORE_DIRECTORY.pathname,
+  },
+  indexing: {
+    db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
   },
 })
 
