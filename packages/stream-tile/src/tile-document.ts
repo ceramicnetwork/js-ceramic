@@ -138,20 +138,6 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
   }
 }
 
-/**
- * Sign a Tile commit with the currently authenticated DID.
- * @param signer - Object containing the DID to use to sign the commit
- * @param commit - Commit to be signed
- * @private
- */
-async function _signDagJWS(
-  signer: CeramicSigner,
-  commit: CeramicCommit
-): Promise<SignedCommitContainer> {
-  await _ensureAuthenticated(signer)
-  return signer.did.createDagJWS(commit)
-}
-
 async function throwReadOnlyError(): Promise<void> {
   throw new Error(
     'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
@@ -217,7 +203,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
+    const commit = genesisCommit.data ? await TileDocument._signDagJWS(ceramic, genesisCommit) : genesisCommit
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
@@ -307,7 +293,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.state$.id.cid,
     }
-    const commit = await _signDagJWS(this.api, rawCommit)
+    const commit = await TileDocument._signDagJWS(this.api, rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
   }
@@ -338,6 +324,21 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     newContent: T | null | undefined,
     newMetadata?: TileMetadataArgs
   ): Promise<CeramicCommit> {
+    const commit = await this._makeRawCommit(signer, newContent, newMetadata)
+    return TileDocument._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Helper function for makeCommit() to check and
+   * @param signer - Object containing the DID making (and signing) the commit
+   * @param newContent
+   * @param newMetadata
+   */
+  private async _makeRawCommit(
+    signer: CeramicSigner,
+    newContent: T | null | undefined,
+    newMetadata?: TileMetadataArgs
+  ): Promise<RawCommit> {
     const header = headerFromMetadata(newMetadata, false)
 
     if (newContent == null) {
@@ -360,7 +361,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.state.log[0].cid,
     }
-    return _signDagJWS(signer, commit)
+    return commit
   }
 
   /**
@@ -404,6 +405,20 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       return result
     }
     const commit: GenesisCommit = { data: content, header }
-    return _signDagJWS(signer, commit)
+    return TileDocument._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Sign a Tile commit with the currently authenticated DID.
+   * @param signer - Object containing the DID to use to sign the commit
+   * @param commit - Commit to be signed
+   * @private
+   */
+  private static async _signDagJWS(
+    signer: CeramicSigner,
+    commit: CeramicCommit
+  ): Promise<SignedCommitContainer> {
+    await _ensureAuthenticated(signer)
+    return signer.did.createDagJWS(commit)
   }
 }
