@@ -60,6 +60,8 @@
     "multiformats": "^9.5.8",
     "p-queue": "^7.1.0",
     "rxjs": "^7.5.2",
+    "sqlite3": "^5.0.8",
+    "typeorm": "^0.3.6",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {

@@ -47,12 +47,20 @@ export type PageInfo = {
 
 // Per database
 export interface DatabaseIndexAPI {
-  // This method inserts the stream if it is not present in the index, or updates
-  // the 'content' if the stream already exists in the index.
-  // 'relationFields' won't be included in the MVP, but will be added later
-  // as part of adding support for relations to data models.
+  /**
+   * This method inserts the stream if it is not present in the index, or updates
+   * the 'content' if the stream already exists in the index.
+   * @param args
+   */
   indexStream(args: IndexStreamArgs): Promise<void>
 
-  // Regardless of the database, we are going to do pagination.
+  /**
+   * Query the index
+   */
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>>
+
+  /**
+   * Initialize connection to a database.
+   */
+  init(): Promise<void>
 }
