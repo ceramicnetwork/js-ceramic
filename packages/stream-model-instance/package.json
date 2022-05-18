@@ -1,5 +1,5 @@
 {
-  "name": "@ceramicnetwork/stream-model-instance-document",
+  "name": "@ceramicnetwork/stream-model-instance",
   "version": "0.0.1",
   "description": "Ceramic Model Instance Document stream type",
   "keywords": [

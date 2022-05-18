@@ -3,7 +3,7 @@ import { HandlersMap } from '../handlers-map.js'
 import { Stream, StreamHandler, LoggerProvider } from '@ceramicnetwork/common'
 import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler'
 import { ModelHandler } from '@ceramicnetwork/stream-model-handler'
-import { ModelInstanceDocumentHandler } from '@ceramicnetwork/stream-model-instance-document-handler'
+import { ModelInstanceDocumentHandler } from '@ceramicnetwork/stream-model-instance-handler'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 
 const loggerProvider = new LoggerProvider()

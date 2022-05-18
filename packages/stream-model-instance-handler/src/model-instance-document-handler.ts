@@ -1,7 +1,7 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 import type { Cacao } from 'ceramic-cacao'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance-document'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
   CommitData,

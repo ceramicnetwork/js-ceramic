@@ -1,7 +1,7 @@
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler'
 import { ModelHandler } from '@ceramicnetwork/stream-model-handler'
-import { ModelInstanceDocumentHandler } from '@ceramicnetwork/stream-model-instance-document-handler'
+import { ModelInstanceDocumentHandler } from '@ceramicnetwork/stream-model-instance-handler'
 import { Stream, StreamHandler } from '@ceramicnetwork/common'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamType } from '@ceramicnetwork/streamid'

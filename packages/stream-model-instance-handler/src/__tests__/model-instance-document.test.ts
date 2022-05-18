@@ -9,7 +9,7 @@ import { ModelInstanceDocumentHandler } from '../model-instance-document-handler
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance-document'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import {
   CeramicApi,
   CommitType,

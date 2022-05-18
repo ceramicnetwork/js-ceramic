@@ -8,7 +8,7 @@
 
 ## Installation
 ```shell
-npm install @ceramicnetwork/stream-model-instance-document
+npm install @ceramicnetwork/stream-model-instance
 ```
 
 ## Usage
