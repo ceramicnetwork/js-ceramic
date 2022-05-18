@@ -3,13 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [2.2.0-rc.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.2.0-rc.3...@ceramicnetwork/core@2.2.0-rc.5) (2022-05-18)
+## [2.2.1](/compare/@ceramicnetwork/core@2.2.0-rc.4...@ceramicnetwork/core@2.2.1) (2022-05-18)
 
-
-### Features
-
-* **core,cli:** Remove unused 'validate-streams' config option ([#2147](https://github.com/ceramicnetwork/js-ceramic/issues/2147)) ([90c6470](https://github.com/ceramicnetwork/js-ceramic/commit/90c647060c9db26f6b060fbcfe48ec46161cb810))
-* **core:** replace cas-dev for dev-unstable with cas-qa ([#2144](https://github.com/ceramicnetwork/js-ceramic/issues/2144)) ([e8ef8c0](https://github.com/ceramicnetwork/js-ceramic/commit/e8ef8c00041c9dc6239e338d9be78f7ee9da2474))
+**Note:** Version bump only for package @ceramicnetwork/core
 
 
 

@@ -3,17 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.5...@ceramicnetwork/cli@2.1.0-rc.0) (2022-05-18)
+## [2.0.4](/compare/@ceramicnetwork/cli@2.0.3-rc.6...@ceramicnetwork/cli@2.0.4) (2022-05-18)
 
-
-### Bug Fixes
-
-* **cli:** added daemon-config port number coercion and validation ([#2149](https://github.com/ceramicnetwork/js-ceramic/issues/2149)) ([942a7c1](https://github.com/ceramicnetwork/js-ceramic/commit/942a7c1cd1985ebc3d36070aa5dee8e25211fcc9))
-
-
-### Features
-
-* **core,cli:** Remove unused 'validate-streams' config option ([#2147](https://github.com/ceramicnetwork/js-ceramic/issues/2147)) ([90c6470](https://github.com/ceramicnetwork/js-ceramic/commit/90c647060c9db26f6b060fbcfe48ec46161cb810))
+**Note:** Version bump only for package @ceramicnetwork/cli
 
 
 
