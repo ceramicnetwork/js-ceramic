@@ -163,7 +163,7 @@ async function throwReadOnlyError(): Promise<void> {
  */
 @StreamStatic<StreamConstructor<ModelInstanceDocument>>()
 export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
-  static STREAM_TYPE_NAME = 'instance'
+  static STREAM_TYPE_NAME = 'MID'
   static STREAM_TYPE_ID = 3
 
   private _isReadOnly = false

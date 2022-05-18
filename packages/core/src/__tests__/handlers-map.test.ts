@@ -15,7 +15,7 @@ describe('constructor', () => {
     expect(handlers.get('tile')).toBeInstanceOf(TileDocumentHandler)
     expect(handlers.get('caip10-link')).toBeInstanceOf(Caip10LinkHandler)
     expect(handlers.get('model')).toBeInstanceOf(ModelHandler)
-    expect(handlers.get('instance')).toBeInstanceOf(ModelInstanceDocumentHandler)
+    expect(handlers.get('MID')).toBeInstanceOf(ModelInstanceDocumentHandler)
   })
   test('custom handlers', () => {
     const customHandler = jest.fn() as unknown as StreamHandler<Stream>

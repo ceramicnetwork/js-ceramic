@@ -300,7 +300,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('is constructed correctly', async () => {
-    expect(modelInstanceDocumentHandler.name).toEqual('instance')
+    expect(modelInstanceDocumentHandler.name).toEqual('MID')
   })
 
   it('makes genesis commits correctly', async () => {
