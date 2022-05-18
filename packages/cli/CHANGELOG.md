@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.3-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.5...@ceramicnetwork/cli@2.0.3-rc.6) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 ## [2.0.3-rc.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.3...@ceramicnetwork/cli@2.0.3-rc.5) (2022-05-12)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
