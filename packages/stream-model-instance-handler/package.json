@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance-handler",
-  "version": "0.0.2-rc.2",
+  "version": "0.0.2-rc.3",
   "description": "Ceramic Model Instance Document stream handler",
   "keywords": [
     "ceramic",
@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.2",
-    "@ceramicnetwork/stream-model-instance": "^0.0.2-rc.0",
+    "@ceramicnetwork/stream-model-instance": "^0.0.2-rc.3",
     "@ceramicnetwork/streamid": "^2.0.2",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
