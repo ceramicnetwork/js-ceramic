@@ -35,7 +35,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.0.2",
+    "@ceramicnetwork/common": "^2.0.4-rc.1",
     "ipfs-core-types": "~0.9.0",
     "multiformats": "^9.5.8"
   },

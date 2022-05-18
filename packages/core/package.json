@@ -34,7 +34,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.2",
+    "@ceramicnetwork/common": "^2.0.4-rc.1",
     "@ceramicnetwork/ipfs-topology": "^2.0.3",
     "@ceramicnetwork/pinning-aggregation": "^2.0.2",
     "@ceramicnetwork/pinning-ipfs-backend": "^2.0.2",
@@ -46,7 +46,7 @@
     "@ceramicnetwork/stream-model-instance-handler": "^0.0.2-rc.3",
     "@ceramicnetwork/stream-tile": "^2.1.1",
     "@ceramicnetwork/stream-tile-handler": "^2.1.1",
-    "@ceramicnetwork/streamid": "^2.0.2",
+    "@ceramicnetwork/streamid": "^2.0.4-rc.1",
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
