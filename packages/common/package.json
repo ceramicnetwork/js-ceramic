@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "2.0.3",
+  "version": "2.0.4-rc.0",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -36,7 +36,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.0.3",
+    "@ceramicnetwork/streamid": "^2.0.2",
     "abort-controller": "^3.0.0",
     "caip": "~1.1.0",
     "ceramic-cacao": "^1.0.0",
