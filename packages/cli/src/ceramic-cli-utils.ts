@@ -20,6 +20,7 @@ import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
+const CWD = new URL(`file://${process.cwd()}/`)
 const DEFAULT_CONFIG_PATH = new URL('.ceramic/', HOMEDIR)
 const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH)
 const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
@@ -55,7 +56,7 @@ interface CliConfig {
 export class CeramicCliUtils {
   /**
    * Create CeramicDaemon instance
-   * @param configFilePath - Path to daemon config file
+   * @param configFilename - Path to daemon config file
    * @param ipfsApi - IPFS api
    * @param ethereumRpc - Ethereum RPC URL. Deprecated, use config file if you want to configure this.
    * @param anchorServiceApi - Anchor service API URL. Deprecated, use config file if you want to configure this.
@@ -75,7 +76,7 @@ export class CeramicCliUtils {
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
    */
   static async createDaemon(
-    configFilePath: string,
+    configFilename: string | undefined,
     ipfsApi: string,
     ethereumRpc: string,
     anchorServiceApi: string,
@@ -94,7 +95,10 @@ export class CeramicCliUtils {
     corsAllowedOrigins: string,
     syncOverride: string
   ): Promise<CeramicDaemon> {
-    const config = await this._loadDaemonConfig()
+    const configFilepath = configFilename
+      ? new URL(configFilename, CWD)
+      : DEFAULT_DAEMON_CONFIG_FILENAME
+    const config = await this._loadDaemonConfig(configFilepath)
 
     {
       // CLI flags override values from config file
@@ -546,15 +550,15 @@ export class CeramicCliUtils {
    * Load configuration file for the Ceramic Daemon.
    * @private
    */
-  static async _loadDaemonConfig(): Promise<DaemonConfig> {
+  static async _loadDaemonConfig(filepath: URL): Promise<DaemonConfig> {
     try {
-      await fs.access(DEFAULT_DAEMON_CONFIG_FILENAME)
+      await fs.access(filepath)
     } catch (err) {
-      await this._saveConfig(DEFAULT_DAEMON_CONFIG, DEFAULT_DAEMON_CONFIG_FILENAME)
+      await this._saveConfig(DEFAULT_DAEMON_CONFIG, filepath)
       return DEFAULT_DAEMON_CONFIG
     }
 
-    const fileContents = await fs.readFile(DEFAULT_DAEMON_CONFIG_FILENAME, { encoding: 'utf8' })
+    const fileContents = await fs.readFile(filepath, { encoding: 'utf8' })
     return DaemonConfig.fromString(fileContents)
   }
 
