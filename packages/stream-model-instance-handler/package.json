@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance-handler",
-  "version": "0.0.2-rc.4",
+  "version": "0.0.2",
   "description": "Ceramic Model Instance Document stream handler",
   "keywords": [
     "ceramic",
@@ -31,9 +31,9 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.4-rc.2",
-    "@ceramicnetwork/stream-model-instance": "^0.0.2-rc.4",
-    "@ceramicnetwork/streamid": "^2.0.4-rc.1",
+    "@ceramicnetwork/common": "^2.0.4",
+    "@ceramicnetwork/stream-model-instance": "^0.0.2",
+    "@ceramicnetwork/streamid": "^2.0.4",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "fast-json-patch": "^3.1.0",

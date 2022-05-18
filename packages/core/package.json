@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.3.1-rc.2",
+  "version": "2.3.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -34,19 +34,19 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.4-rc.2",
+    "@ceramicnetwork/common": "^2.0.4",
     "@ceramicnetwork/ipfs-topology": "^2.0.3",
     "@ceramicnetwork/pinning-aggregation": "^2.0.2",
     "@ceramicnetwork/pinning-ipfs-backend": "^2.0.2",
     "@ceramicnetwork/stream-caip10-link": "^2.0.2",
     "@ceramicnetwork/stream-caip10-link-handler": "^2.0.2",
-    "@ceramicnetwork/stream-model": "^0.0.2-rc.4",
-    "@ceramicnetwork/stream-model-handler": "^0.0.2-rc.4",
-    "@ceramicnetwork/stream-model-instance": "^0.0.2-rc.4",
-    "@ceramicnetwork/stream-model-instance-handler": "^0.0.2-rc.4",
+    "@ceramicnetwork/stream-model": "^0.0.2",
+    "@ceramicnetwork/stream-model-handler": "^0.0.2",
+    "@ceramicnetwork/stream-model-instance": "^0.0.2",
+    "@ceramicnetwork/stream-model-instance-handler": "^0.0.2",
     "@ceramicnetwork/stream-tile": "^2.1.1",
     "@ceramicnetwork/stream-tile-handler": "^2.1.1",
-    "@ceramicnetwork/streamid": "^2.0.4-rc.1",
+    "@ceramicnetwork/streamid": "^2.0.4",
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
