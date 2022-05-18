@@ -1,6 +1,6 @@
 {
   "name": "pkh-did-resolver",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "did:pkh method resolver",
   "keywords": [
     "ceramic",

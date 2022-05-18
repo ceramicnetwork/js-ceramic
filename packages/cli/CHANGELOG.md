@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](/compare/@ceramicnetwork/cli@2.0.4...@ceramicnetwork/cli@2.1.0) (2022-05-18)
+
+
+### Bug Fixes
+
+* **cli:** added daemon-config port number coercion and validation (#2149) 942a7c1, closes #2149
+
+
+### Features
+
+* **core,cli:** Remove unused 'validate-streams' config option (#2147) 90c6470, closes #2147
+
+
+
+
+
 ## [2.0.4](/compare/@ceramicnetwork/cli@2.0.3-rc.6...@ceramicnetwork/cli@2.0.4) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

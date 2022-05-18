@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0](/compare/@ceramicnetwork/core@2.2.1...@ceramicnetwork/core@2.3.0) (2022-05-18)
+
+
+### Features
+
+* **core,cli:** Remove unused 'validate-streams' config option (#2147) 90c6470, closes #2147
+* **core:** replace cas-dev for dev-unstable with cas-qa (#2144) e8ef8c0, closes #2144
+
+
+
+
+
 ## [2.2.1](/compare/@ceramicnetwork/core@2.2.0-rc.4...@ceramicnetwork/core@2.2.1) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/core
