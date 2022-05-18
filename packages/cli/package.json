@@ -44,7 +44,7 @@
     "@ceramicnetwork/streamid": "^2.0.4",
     "@stablelib/random": "^1.0.1",
     "aws-sdk": "^2.1049.0",
-    "commander": "^8.3.0",
+    "commander": "^9.2.0",
     "cors": "^2.8.5",
     "dag-jose": "^2.0.0",
     "did-resolver": "^3.1.5",
