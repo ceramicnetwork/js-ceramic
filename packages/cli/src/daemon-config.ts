@@ -185,7 +185,7 @@ export class IndexingConfig {
       return arr.map((s) => s.toString())
     },
   })
-  models: string[]
+  models: StreamID[]
 }
 
 @jsonObject
