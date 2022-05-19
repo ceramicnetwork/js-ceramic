@@ -14,7 +14,6 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
@@ -32,12 +31,6 @@ function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
  * Model stream handler implementation
  */
 export class ModelHandler implements StreamHandler<Model> {
-  private readonly _schemaValidator: SchemaValidation
-
-  constructor() {
-    this._schemaValidator = new SchemaValidation()
-  }
-
   get type(): number {
     return Model.STREAM_TYPE_ID
   }
@@ -107,10 +100,6 @@ export class ModelHandler implements StreamHandler<Model> {
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
-    }
-
-    if (state.metadata.schema) {
-      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
     }
 
     return state
@@ -185,13 +174,6 @@ export class ModelHandler implements StreamHandler<Model> {
 
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const newMetadata = { ...oldMetadata, ...payload.header }
-
-    if (newMetadata.schema) {
-      // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load
-      // the schema into the CommitData so that commit application can be a simple state
-      // transformation with no i/o.
-      await this._schemaValidator.validateSchema(context.api, newContent, newMetadata.schema)
-    }
 
     nextState.next = {
       content: newContent,

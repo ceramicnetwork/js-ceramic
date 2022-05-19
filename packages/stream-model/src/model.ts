@@ -218,29 +218,6 @@ export class Model<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Creates a deterministic Model.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-   * @param metadata - Genesis metadata
-   * @param opts - Additional options
-   */
-  static async deterministic<T>(
-    ceramic: CeramicApi,
-    metadata: ModelMetadataArgs,
-    opts: CreateOpts = {}
-  ): Promise<Model<T>> {
-    opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    metadata = { ...metadata, deterministic: true }
-
-    if (metadata.family == null && metadata.tags == null) {
-      throw new Error(
-        'Family and/or tags are required when creating a deterministic model document'
-      )
-    }
-    const commit = await Model.makeGenesis(ceramic, null, metadata)
-    return ceramic.createStreamFromGenesis<Model<T>>(Model.STREAM_TYPE_ID, commit, opts)
-  }
-
-  /**
    * Loads a Model from a given StreamID
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param streamId - StreamID to load.  Must correspond to a Model
