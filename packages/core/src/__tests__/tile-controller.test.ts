@@ -72,6 +72,15 @@ test('change after controller changed', async () => {
   await expect(tile.update({ foo: 'baz' })).rejects.toThrow(/invalid_jws/)
 })
 
+test('prohibit controllers updated to invalid values', async () => {
+  ceramic.did = alice
+  const tile = await TileDocument.create(ceramic, { foo: 'blah' })
+  await tile.update(tile.content, { controllers: [bob.id] })
+  await expect(tile.update({ foo: 'bar' }, {"controllers": [null]})).rejects.toThrow(/Controller cannot be updated to an undefined value./)
+  await expect(tile.update({ foo: 'bar' }, {"controllers": [undefined]})).rejects.toThrow(/Controller cannot be updated to an undefined value./)
+  await expect(tile.update({ foo: 'bar' }, {"controllers": ['']})).rejects.toThrow(/Controller cannot be updated to an undefined value./)
+})
+
 test("cannot change controller if 'forbidControllerChange' is set", async () => {
   ceramic.did = alice
   const tile = await TileDocument.create(ceramic, { foo: 'blah' }, { forbidControllerChange: true })
