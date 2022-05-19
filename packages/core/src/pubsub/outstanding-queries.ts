@@ -85,10 +85,8 @@ export class OutstandingQueries {
       const topQuery: Query = this.queryQueue.front()
       const diffMs = Date.now() - topQuery.timestamp // milliseconds
       const differenceInMinutes = Math.round(((diffMs % 86400000) % 3600000) / 60000) // minutes
-      console.log(differenceInMinutes)
       if (differenceInMinutes > this._minutesThreshold) {
         try {
-          console.log('HERE')
           this.remove(topQuery)
           //recursively check if the most prioritized query can be cleaned
           this.cleanUpExpiredQueries()
