@@ -310,7 +310,11 @@ export class Dispatcher {
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { stream: streamId, tip, model: string } = message
+    /*
+      @active-branch
+    */
+    console.log("_handleUpdateMessage")
+    const { stream: streamId, tip, model } = message
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
     this.repository.stateManager.update(streamId, tip, model)

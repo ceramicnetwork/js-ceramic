@@ -20,7 +20,8 @@ export enum MsgType {
 export type UpdateMessage = {
   typ: MsgType.UPDATE
   stream: StreamID
-  tip: CID
+  tip: CID,
+  model?: string
 }
 
 export type QueryMessage = {
@@ -96,6 +97,11 @@ export function serialize(message: PubsubMessage): Uint8Array {
         doc: message.stream.toString(),
         stream: message.stream.toString(),
         tip: message.tip.toString(),
+        /*
+          @active-branch
+          placeholder, optional type
+        */
+        model: message.model?.toString()
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
@@ -124,6 +130,11 @@ export function deserialize(message: any): PubsubMessage {
         typ: MsgType.UPDATE,
         stream,
         tip: toCID(parsed.tip),
+        /*
+          @active-branch
+          placeholder, optional type
+        */
+        model: parsed.model
       }
     }
     case MsgType.RESPONSE: {

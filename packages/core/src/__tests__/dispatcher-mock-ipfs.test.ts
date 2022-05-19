@@ -26,6 +26,11 @@ const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adn
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
+/*
+  @active-branch
+  placeholder type
+*/
+const FAKE_MODEL = "modelTest"
 
 const mock_ipfs = {
   pubsub: {
@@ -225,10 +230,17 @@ describe('Dispatcher with mock ipfs', () => {
     )
     const queryID = queryMessageSent.id
 
-    // Handle UPDATE message
+    // Handle UPDATE message without model
     dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID })
-    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
+
+    // Handle UPDATE message with model (to ensure optional use of model parameter)
+    dispatcher.repository.stateManager.update = jest.fn()
+    await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID, model: FAKE_MODEL })
+    /*
+      @active-branch
+    */
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID, FAKE_MODEL)
 
     const continuationState = {
       ...initialState,

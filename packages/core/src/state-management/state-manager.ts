@@ -202,7 +202,12 @@ export class StateManager {
    * @param tip - Stream Tip CID
    * @private
    */
-  update(streamId: StreamID, tip: CID, model: string): void {
+  update(streamId: StreamID, tip: CID, model?: string): void {
+    console.log("INSIDE UPDATE: "+model)
+    /*
+      @active-branch
+      should we implement any checking for model here?
+    */ 
     this.executionQ.forStream(streamId).add(async () => {
       const state$ = await this.fromMemoryOrStore(streamId)
       if (state$) await this._handleTip(state$, tip)
