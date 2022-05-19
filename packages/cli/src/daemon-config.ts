@@ -174,7 +174,7 @@ export class IndexingConfig {
   @jsonMember(String)
   db?: string
 
-  @jsonArrayMember(String, {
+  @jsonArrayMember(StreamID, {
     emitDefaultValue: true,
     deserializer: (arr?: Array<string>) => {
       if (!arr) return arr
