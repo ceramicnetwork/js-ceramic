@@ -26,15 +26,10 @@ function betweenTimeout<T>(betweenMs: number): UnaryFunction<Observable<T>, Obse
   )
 }
 
-/*
-  @active-branch
-*/
-
 /**
  * Multiplexing IPFS Pubsub.
  */
 export class MessageBus extends Observable<PubsubMessage> implements SubscriptionLike {
-  
   readonly outstandingQueries: OutstandingQueries = new OutstandingQueries()
   private readonly pubsubSubscription: Subscription
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>()
@@ -73,15 +68,11 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   queryNetwork(streamId: StreamID): Observable<CID> {
     const queryMessage = buildQueryMessage(streamId)
     this.next(queryMessage)
-    const timeNow: number = Date.now();
-    const query = new Query(timeNow, streamId, queryMessage.id);
-    
-    try{
-      //add query to outstanding query set
-      this.outstandingQueries.add(queryMessage.id, query)
-    }catch(e){
-      console.error(e)
-    }
+    const timeNow: number = Date.now()
+    const query = new Query(timeNow, streamId, queryMessage.id)
+
+    //add query to outstanding query set
+    this.outstandingQueries.add(queryMessage.id, query)
 
     return this.pipe(
       filter<PubsubMessage, ResponseMessage>(

@@ -37,7 +37,6 @@
   },
   "prettier": "eslint-config-3box/prettier.config",
   "dependencies": {
-    "@types/js-priority-queue": "^0.0.6",
     "node-fetch": "npm:@achingbrain/node-fetch@^2.6.6"
   }
 }

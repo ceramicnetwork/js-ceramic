@@ -346,33 +346,26 @@ export class Dispatcher {
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
-    if(outstandingQuery == undefined){
-      console.warn(`Response to query with ID ${queryId} is not a valid outstanding query`)
-    }else{
-      const expectedStreamID = outstandingQuery.streamID
-      if (expectedStreamID) {
-        const newTip = tips.get(expectedStreamID.toString())
-        if (!newTip) {
-          throw new Error(
-            "Response to query with ID '" +
-              queryId +
-              "' is missing expected new tip for StreamID '" +
-              expectedStreamID +
-              "'"
-          )
-        }
-        this.repository.stateManager.update(expectedStreamID, newTip)
-        // TODO Iterate over all streams in 'tips' object and process the new tip for each
-      }
+    const expectedStreamID = outstandingQuery?.streamID
+    const newTip = tips.get(expectedStreamID.toString())
+    if (!newTip) {
+      throw new Error(
+        "Response to query with ID '" +
+          queryId +
+          "' is missing expected new tip for StreamID '" +
+          expectedStreamID +
+          "'"
+      )
     }
+    this.repository.stateManager.update(expectedStreamID, newTip)
+    // TODO Iterate over all streams in 'tips' object and process the new tip for each
 
     //either way, cleanup outstanding queries
-    try{
-      this.messageBus.outstandingQueries.cleanUpExpiredQueries();
-    }catch(e){
+    try {
+      this.messageBus.outstandingQueries.cleanUpExpiredQueries()
+    } catch (e) {
       const errorMessage = `Error in _handle while trying ot clean up outstanding queries, ${e.message}`
-      console.error(errorMessage)
-      //consider throwing
+      this._logger.err(errorMessage)
     }
   }
 
@@ -391,6 +384,6 @@ export class Dispatcher {
    * Feel free to disregard it though.
    */
   private publish(message: PubsubMessage): Subscription {
-    return this.messageBus.next(message)
+    /**/ 'return this.messageBus.next(message)'
   }
 }
