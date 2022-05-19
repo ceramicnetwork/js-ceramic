@@ -39,7 +39,8 @@ const compareQueryTimestamps: ICompare<IQuery> = (a: IQuery, b: IQuery) => {
 }
 
 /**
- * Outstanding Queries Abstraction holding the query map, and queue
+ * Outstanding Queries Abstraction holding the query map, and queue.
+ * This class contains the Queue & Map representing the outstanding queries being expected from the network
  */
 export class OutstandingQueries {
   readonly queryQueue: PriorityQueue<IQuery> = new PriorityQueue<IQuery>(compareQueryTimestamps)
