@@ -1,10 +1,9 @@
 import os from 'os'
-import path from 'path'
 import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
-import { promises as fs } from 'fs'
+import * as fs from 'fs/promises'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { CeramicClient } from '@ceramicnetwork/http-client'
@@ -20,11 +19,14 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
-const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
-const DEFAULT_DAEMON_CONFIG_FILENAME = 'daemon.config.json'
-const DEFAULT_CLI_CONFIG_FILENAME = 'client.config.json'
-const LEGACY_CLI_CONFIG_FILENAME = 'config.json' // todo(1615): Remove this backwards compatibility support
-const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
+const HOMEDIR = new URL(`file://${os.homedir()}/`)
+const CWD = new URL(`file://${process.cwd()}/`)
+const DEFAULT_CONFIG_PATH = new URL('.ceramic/', HOMEDIR)
+const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH)
+const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
+const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
+const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
+const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
@@ -35,7 +37,11 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   node: {},
   'state-store': {
     mode: StateStoreMode.FS,
-    'local-directory': DEFAULT_STATE_STORE_DIRECTORY,
+    'local-directory': DEFAULT_STATE_STORE_DIRECTORY.pathname,
+  },
+  indexing: {
+    db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
+    models: [],
   },
 })
 
@@ -55,7 +61,7 @@ interface CliConfig {
 export class CeramicCliUtils {
   /**
    * Create CeramicDaemon instance
-   * @param configFilePath - Path to daemon config file
+   * @param configFilename - Path to daemon config file
    * @param ipfsApi - IPFS api
    * @param ethereumRpc - Ethereum RPC URL. Deprecated, use config file if you want to configure this.
    * @param anchorServiceApi - Anchor service API URL. Deprecated, use config file if you want to configure this.
@@ -75,7 +81,7 @@ export class CeramicCliUtils {
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
    */
   static async createDaemon(
-    configFilePath: string,
+    configFilename: string | undefined,
     ipfsApi: string,
     ethereumRpc: string,
     anchorServiceApi: string,
@@ -94,7 +100,10 @@ export class CeramicCliUtils {
     corsAllowedOrigins: string,
     syncOverride: string
   ): Promise<CeramicDaemon> {
-    const config = await this._loadDaemonConfig()
+    const configFilepath = configFilename
+      ? new URL(configFilename, CWD)
+      : DEFAULT_DAEMON_CONFIG_FILENAME
+    const config = await this._loadDaemonConfig(configFilepath)
 
     {
       // CLI flags override values from config file
@@ -513,26 +522,24 @@ export class CeramicCliUtils {
    * @private
    */
   private static async _loadCliConfigFileContents(): Promise<string> {
-    const fullCliConfigPath = path.join(DEFAULT_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILENAME)
     try {
-      await fs.access(fullCliConfigPath)
-      return await fs.readFile(fullCliConfigPath, { encoding: 'utf8' })
+      await fs.access(DEFAULT_CLI_CONFIG_FILENAME)
+      return await fs.readFile(DEFAULT_CLI_CONFIG_FILENAME, { encoding: 'utf8' })
     } catch (e) {
       // Swallow error
     }
 
     // If nothing found in default config file path, check legacy path too
     // TODO(1615): Remove this backwards compatibility code
-    const legacyCliConfigPath = path.join(DEFAULT_CONFIG_PATH, LEGACY_CLI_CONFIG_FILENAME)
     try {
-      await fs.access(legacyCliConfigPath)
-      const fileContents = await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' })
+      await fs.access(LEGACY_CLI_CONFIG_FILENAME)
+      const fileContents = await fs.readFile(LEGACY_CLI_CONFIG_FILENAME, { encoding: 'utf8' })
 
       console.warn(
-        `Legacy client config file detected at '${legacyCliConfigPath}', renaming to ${fullCliConfigPath}`
+        `Legacy client config file detected at '${LEGACY_CLI_CONFIG_FILENAME}', renaming to ${DEFAULT_CLI_CONFIG_FILENAME}`
       )
       try {
-        await fs.rename(legacyCliConfigPath, fullCliConfigPath)
+        await fs.rename(LEGACY_CLI_CONFIG_FILENAME, DEFAULT_CLI_CONFIG_FILENAME)
       } catch (err) {
         console.error(`Rename failed: ${err}`)
         throw err
@@ -548,30 +555,28 @@ export class CeramicCliUtils {
    * Load configuration file for the Ceramic Daemon.
    * @private
    */
-  static async _loadDaemonConfig(): Promise<DaemonConfig> {
-    const fullDaemonConfigPath = path.join(DEFAULT_CONFIG_PATH, DEFAULT_DAEMON_CONFIG_FILENAME)
+  static async _loadDaemonConfig(filepath: URL): Promise<DaemonConfig> {
     try {
-      await fs.access(fullDaemonConfigPath)
+      await fs.access(filepath)
     } catch (err) {
-      await this._saveConfig(DEFAULT_DAEMON_CONFIG, DEFAULT_DAEMON_CONFIG_FILENAME)
+      await this._saveConfig(DEFAULT_DAEMON_CONFIG, filepath)
       return DEFAULT_DAEMON_CONFIG
     }
 
-    const fileContents = await fs.readFile(fullDaemonConfigPath, { encoding: 'utf8' })
+    const fileContents = await fs.readFile(filepath, { encoding: 'utf8' })
     return DaemonConfig.fromString(fileContents)
   }
 
   /**
    * Save configuration file
    * @param config - CLI configuration
-   * @param filename - name of the config file
+   * @param filename - full path to the config file
    * @private
    */
-  static async _saveConfig(config: Record<string, any>, filename: string): Promise<void> {
-    await fs.mkdir(DEFAULT_CONFIG_PATH, { recursive: true }) // create dirs if there are no
-    const fullCliConfigPath = path.join(DEFAULT_CONFIG_PATH, filename)
-
-    await fs.writeFile(fullCliConfigPath, JSON.stringify(config, null, 2))
+  static async _saveConfig(config: Record<string, any>, filename: URL): Promise<void> {
+    const parentFolder = new URL('./', filename)
+    await fs.mkdir(parentFolder, { recursive: true }) // create dirs if there are no
+    await fs.writeFile(filename, JSON.stringify(config, null, 2))
   }
 
   /**

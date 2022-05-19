@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -88,7 +89,8 @@ export class DaemonHTTPApiConfig {
   /**
    * Port to listen on.
    */
-  @jsonMember(AnyT, {serializer: inPort => {
+  @jsonMember(AnyT, {
+    serializer: (inPort) => {
       const validPort = Number(inPort)
       if (inPort == undefined || inPort == null) {
         return inPort
@@ -97,7 +99,7 @@ export class DaemonHTTPApiConfig {
         process.exit(1)
       }
       return validPort
-    }
+    },
   })
   port?: number
 
@@ -164,6 +166,26 @@ export class DaemonAnchorConfig {
    */
   @jsonMember(String, { name: 'ethereum-rpc-url' })
   ethereumRpcUrl?: string
+}
+
+@jsonObject
+@toJson
+export class IndexingConfig {
+  @jsonMember(String)
+  db?: string
+
+  @jsonArrayMember(StreamID, {
+    emitDefaultValue: true,
+    deserializer: (arr?: Array<string>) => {
+      if (!arr) return arr
+      return arr.map(StreamID.fromString)
+    },
+    serializer: (arr?: Array<StreamID>) => {
+      if (!arr) return arr
+      return arr.map((s) => s.toString())
+    },
+  })
+  models: StreamID[]
 }
 
 @jsonObject
@@ -306,6 +328,12 @@ export class DaemonConfig {
    */
   @jsonMember(DaemonDidResolversConfig, { name: 'did-resolvers' })
   didResolvers?: DaemonDidResolversConfig
+
+  /**
+   * Options related to indexing
+   */
+  @jsonMember(IndexingConfig)
+  indexing?: IndexingConfig
 
   /**
    * Parses the given json string containing the contents of the config file and returns
