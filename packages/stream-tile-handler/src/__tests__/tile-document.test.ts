@@ -634,61 +634,35 @@ describe('TileDocumentHandler', () => {
     }
     const genesisState = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
-    // make a first update
-    const state$ = TestUtils.runningState(genesisState)
-    let doc = new TileDocument(state$, context)
-    const signedCommit1 = (await doc.makeCommit(context.api, {
-      other: { obj: 'content' }
-    })) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit1, FAKE_CID_2)
-    const sPayload1 = dagCBOR.decode(signedCommit1.linkedBlock)
-    await context.ipfs.dag.put(sPayload1, signedCommit1.jws.link)
-    // apply signed
-    const signedCommitData_1 = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload1,
-      envelope: signedCommit1.jws,
-    }
-    const state1 = await tileDocumentHandler.applyCommit(
-      signedCommitData_1,
-      context,
-      deepCopy(genesisState)
-    )
-
-    // make an invalid controller updates
+    // try invalid controller updates
     const invalidControllerValues = [null, '']
     for (let i=0; i<invalidControllerValues.length; i++) {
-
-      const state1$ = TestUtils.runningState(state1)
-      doc = new TileDocument(state1$, context)
-      const rawCommit2 = (await doc._makeRawCommit(context.api, {
+      const state$ = TestUtils.runningState(genesisState)
+      const doc = new TileDocument(state$, context)
+      const rawCommit = (await doc._makeRawCommit(context.api, {
         other: {obj2: 'fefe'}
       }))
 
       // update unsigned metadata
-      rawCommit2.header.controllers = [invalidControllerValues[i]]
-      const signedCommit2 = await TileDocument._signDagJWS(context.api, rawCommit2)
-
-      await context.ipfs.dag.put(signedCommit2, FAKE_CID_3)
-      const sPayload2 = dagCBOR.decode(signedCommit2.linkedBlock)
-      await context.ipfs.dag.put(sPayload2, signedCommit2.jws.link)
+      rawCommit.header.controllers = [invalidControllerValues[i]]
+      const signedCommit = await TileDocument._signDagJWS(context.api, rawCommit)
+      await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
       // apply signed
-      const signedCommitData_2 = {
-        cid: FAKE_CID_3,
+      const signedCommitData_1 = {
+        cid: FAKE_CID_2,
         type: CommitType.SIGNED,
-        commit: sPayload2,
-        envelope: signedCommit2.jws,
+        commit: sPayload,
+        envelope: signedCommit.jws,
       }
       await expect(tileDocumentHandler.applyCommit(
-        signedCommitData_2,
+        signedCommitData_1,
         context,
-        deepCopy(state1)
-      )).rejects.toThrow(/undefined/)
+        deepCopy(genesisState)
+      )).rejects.toThrow(/Controller cannot be updated to an undefined value./)
     }
-
   })
 
   it('applies anchor commit correctly', async () => {

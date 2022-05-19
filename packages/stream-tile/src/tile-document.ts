@@ -329,7 +329,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Helper function for makeCommit() to check and
+   * Helper function for makeCommit() to sanity check input values and
+   * allow unit tests to update newMetadata before signing.
    * @param signer - Object containing the DID making (and signing) the commit
    * @param newContent
    * @param newMetadata
