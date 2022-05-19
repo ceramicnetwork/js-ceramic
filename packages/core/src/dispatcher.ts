@@ -384,6 +384,6 @@ export class Dispatcher {
    * Feel free to disregard it though.
    */
   private publish(message: PubsubMessage): Subscription {
-    /**/ 'return this.messageBus.next(message)'
+    return this.messageBus.next(message)
   }
 }
