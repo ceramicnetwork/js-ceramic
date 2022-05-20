@@ -6,8 +6,6 @@ export interface IndexStreamArgs {
   model: StreamID
   controller: DID
   lastAnchor: Date | null
-  content: Record<string, any>
-  relationFields?: Map<string, StreamID | DID>
 }
 
 export enum Ordering {
