@@ -20,4 +20,4 @@ This configuration will allow running the ceramic daemon from the debugger and s
 
 ## Postman queries
 
-Import this [Postman Queries](postman_queries.json) collection to see a sample of API calls that can be used to exercise and explore common endpoints.
+Import this [Postman Collection](postman_collection.json) of queries to see a sample of API calls that can be used to exercise and explore common endpoints.
