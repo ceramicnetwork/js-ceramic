@@ -1,7 +1,7 @@
 {
 	"info": {
-
-		"name": "3Box Labs TESTTEST",
+		"_postman_id": "2e31eca7-764a-40bc-8845-2c1deef4196b",
+		"name": "3Box Labs (Community)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -15,7 +15,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
+							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"test123\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -23,12 +23,9 @@
 							}
 						},
 						"url": {
-							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/streams",
-							"protocol": "https",
+							"raw": "{{ceramic_hostname}}/api/v0/streams",
 							"host": [
-								"ceramic-dev",
-								"3boxlabs",
-								"com"
+								"{{ceramic_hostname}}"
 							],
 							"path": [
 								"api",
@@ -46,7 +43,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"streamId\": \"{{streamId}}\",\r\n  \"commit\": {\r\n    \"value\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\",\r\n            \"bar\": \"foo\"\r\n        }\r\n    }\r\n  }\r\n}",
+							"raw": "{\r\n  \"streamId\": \"{{streamId}}\",\r\n  \"commit\": {\r\n    \"value\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"test123\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\",\r\n            \"bar\": \"foo\"\r\n        }\r\n    }\r\n  },\r\n  \"opts\": {}\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -54,12 +51,9 @@
 							}
 						},
 						"url": {
-							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/commits",
-							"protocol": "https",
+							"raw": "{{ceramic_hostname}}/api/v0/commits",
 							"host": [
-								"ceramic-dev",
-								"3boxlabs",
-								"com"
+								"{{ceramic_hostname}}"
 							],
 							"path": [
 								"api",
@@ -71,7 +65,7 @@
 					"response": []
 				},
 				{
-					"name": "Fetch Stream Commit (Dev)",
+					"name": "Fetch All Stream Commits (Dev)",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -88,12 +82,9 @@
 							}
 						},
 						"url": {
-							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/commits/{{streamId}}",
-							"protocol": "https",
+							"raw": "{{ceramic_hostname}}/api/v0/commits/{{streamId}}",
 							"host": [
-								"ceramic-dev",
-								"3boxlabs",
-								"com"
+								"{{ceramic_hostname}}"
 							],
 							"path": [
 								"api",
@@ -106,23 +97,138 @@
 					"response": []
 				},
 				{
+					"name": "Fetch Multiquery (Dev)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"queries\": [{\r\n    \"streamId\": \"{{streamId}}\",\r\n    \"paths\": [\"link\"]\r\n  }, {\r\n    \"streamId\": \"{{streamId2}}\",\r\n    \"paths\": []\r\n  }]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ceramic_hostname}}/api/v0/multiqueries",
+							"host": [
+								"{{ceramic_hostname}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"multiqueries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch Pin (Dev)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ceramic_hostname}}/api/v0/pins/{{streamId}}",
+							"host": [
+								"{{ceramic_hostname}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"pins",
+								"{{streamId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Pin (Dev)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ceramic_hostname}}/api/v0/pins/{{streamId}}",
+							"host": [
+								"{{ceramic_hostname}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"pins",
+								"{{streamId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Pin (Dev)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": 0,\r\n    \"genesis\": {\r\n        \"header\": {\r\n            \"controllers\": [\r\n                \"blah\"\r\n            ]\r\n        },\r\n        \"content\": {\r\n            \"foo\": \"bar\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ceramic_hostname}}/api/v0/pins/{{streamId}}",
+							"host": [
+								"{{ceramic_hostname}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"pins",
+								"{{streamId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Fetch Stream (Gateway)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://gateway-dev.ceramic.network/api/v0/streams/k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64",
-							"protocol": "https",
+							"raw": "{{gateway_hostname}}/api/v0/streams/{{streamId}}",
 							"host": [
-								"gateway-dev",
-								"ceramic",
-								"network"
+								"{{gateway_hostname}}"
 							],
 							"path": [
 								"api",
 								"v0",
 								"streams",
-								"k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64"
+								"{{streamId}}"
 							]
 						}
 					},
@@ -134,18 +240,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://ceramic-dev.3boxlabs.com/api/v0/streams/k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64",
-							"protocol": "https",
+							"raw": "{{ceramic_hostname}}/api/v0/streams/{{streamId}}",
 							"host": [
-								"ceramic-dev",
-								"3boxlabs",
-								"com"
+								"{{ceramic_hostname}}"
 							],
 							"path": [
 								"api",
 								"v0",
 								"streams",
-								"k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64"
+								"{{streamId}}"
 							]
 						}
 					},
@@ -157,18 +260,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://ceramic-private-dev.3boxlabs.com/api/v0/streams/k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64",
-							"protocol": "https",
+							"raw": "{{ceramic_hostname}}/api/v0/streams/{{streamId}}",
 							"host": [
-								"ceramic-private-dev",
-								"3boxlabs",
-								"com"
+								"{{ceramic_hostname}}"
 							],
 							"path": [
 								"api",
 								"v0",
 								"streams",
-								"k2t6wyfsu4pg0k24qy6ryrsr4l5a286eouzg0pessjwci63ssvbz2ljbns6h64"
+								"{{streamId}}"
 							]
 						}
 					},
@@ -400,12 +500,84 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Health / Info",
+			"item": [
+				{
+					"name": "Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{ceramic_hostname}}/api/v0/node/healthcheck",
+							"protocol": "https",
+							"host": [
+								"{{ceramic_hostname}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"node",
+								"healthcheck"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Supported Blockchains",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{ceramic_hostname}}/api/v0/node/chains",
+							"protocol": "https",
+							"host": [
+								"{{ceramic_hostname}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"node",
+								"chains"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
 		{
 			"key": "streamId",
 			"value": "k2t6wyfsu4pfybi34c7112h7wfyq0br2oi279f0rl1zqzdfouew3h6h5jro81e"
+		},
+		{
+			"key": "streamId2",
+			"value": "k2t6wyfsu4pfwvi8ce9g2ljh3j2vc4p6q26jabyhfg392kzzm7jtx2bjosu3aq",
+			"type": "string"
 		}
 	]
 }
