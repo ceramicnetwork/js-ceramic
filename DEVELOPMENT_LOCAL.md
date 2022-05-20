@@ -6,7 +6,7 @@ This document is a collection of resources that may be helpful to new ceramic de
 
 ### WebStorm
 
-Open the js-ceramic project.  Set the Run/Debug configuration (under Run..Edit Configuration) as follows:
+Open the js-ceramic project.  Set the Run/Debug configuration template (under Run..Edit Configuration..Edit Configuration Templates) as follows:
 
 ![edit configuration templates](https://user-images.githubusercontent.com/798887/169563176-f6e15e71-8bf3-4f7f-a5d4-ce90732067e1.png)
 
