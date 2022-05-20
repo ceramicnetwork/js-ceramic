@@ -149,8 +149,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
     }
 
-    if (payload.header.controllers && payload.header.controllers.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
+    if (payload.header.controllers) {
+      if (payload.header.controllers.length !== 1) {
+        throw new Error('Exactly one controller must be specified')
+      }
+      if (!payload.header.controllers[0]) {
+        throw new Error('Controller cannot be updated to an undefined value.')
+      }
     }
 
     if (
