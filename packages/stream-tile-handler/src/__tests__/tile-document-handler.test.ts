@@ -615,6 +615,56 @@ describe('TileDocumentHandler', () => {
     await expect(makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
   })
 
+  it('prohibit controllers updated to invalid values', async () => {
+    const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
+    const tileDocumentHandler = new TileDocumentHandler()
+
+    const genesisCommit = (await TileDocument.makeGenesis(context.api, {
+      test: 'data',
+    })) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const genesisState = await tileDocumentHandler.applyCommit(genesisCommitData, context)
+
+    // try invalid controller updates
+    const invalidControllerValues = [null, '']
+    for (let i=0; i<invalidControllerValues.length; i++) {
+      const state$ = TestUtils.runningState(genesisState)
+      const doc = new TileDocument(state$, context)
+      const rawCommit = (await doc._makeRawCommit(context.api, {
+        other: {obj2: 'fefe'}
+      }))
+
+      // update unsigned metadata
+      rawCommit.header.controllers = [invalidControllerValues[i]]
+      const signedCommit = await TileDocument._signDagJWS(context.api, rawCommit)
+      await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+      // apply signed
+      const signedCommitData_1 = {
+        cid: FAKE_CID_2,
+        type: CommitType.SIGNED,
+        commit: sPayload,
+        envelope: signedCommit.jws,
+      }
+      await expect(tileDocumentHandler.applyCommit(
+        signedCommitData_1,
+        context,
+        deepCopy(genesisState)
+      )).rejects.toThrow(/Controller cannot be updated to an undefined value./)
+    }
+  })
+
   it('applies anchor commit correctly', async () => {
     const tileDocumentHandler = new TileDocumentHandler()
 
