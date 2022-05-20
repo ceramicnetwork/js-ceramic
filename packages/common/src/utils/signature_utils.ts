@@ -1,7 +1,7 @@
 import type { Cacao } from 'ceramic-cacao'
 import type { DID } from 'dids'
-import { CommitData } from '../index.js'
-import { StreamID } from '@ceramicnetwork/streamid'
+import type { CommitData } from '../index.js'
+import type { StreamID } from '@ceramicnetwork/streamid'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
 
