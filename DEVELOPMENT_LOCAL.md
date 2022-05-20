@@ -8,7 +8,8 @@ This document is a collection of resources that may be helpful to new ceramic de
 
 Open the js-ceramic project.  Set the Run/Debug configuration (under Run..Edit Configuration) as follows:
 
-![](https://i.imgur.com/pZomhx0.png)
+![edit configuration templates](https://user-images.githubusercontent.com/798887/169563176-f6e15e71-8bf3-4f7f-a5d4-ce90732067e1.png)
+
 
 Note this uses the dev-unstable network, it is also possible to configure for clay testnet.  The Application parameters used in this example are
 
