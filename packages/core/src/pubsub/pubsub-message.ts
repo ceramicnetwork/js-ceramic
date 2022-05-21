@@ -73,6 +73,7 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 
 export function serialize(message: PubsubMessage): Uint8Array {
 
+  Count(PUBLISHED_METRIC, 1, {"typ": message.typ}) // really attempted to publish...
   switch (message.typ) {
     case MsgType.QUERY: {
       return textEncoder.encode(
@@ -120,12 +121,12 @@ export function deserialize(message: any): PubsubMessage {
   const parsed = JSON.parse(asString)
 
   const typ = parsed.typ as MsgType
-
+  Count(RECEIVED_METRIC, 1, {"typ": typ})
   switch (typ) {
     case MsgType.UPDATE: {
       // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
       const stream = StreamID.fromString(parsed.stream || parsed.doc)
-      Count(RECEIVED_METRIC, 1, {"typ": typ})
+
       return {
         typ: MsgType.UPDATE,
         stream,
