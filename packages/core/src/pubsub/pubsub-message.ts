@@ -21,7 +21,7 @@ export type UpdateMessage = {
   typ: MsgType.UPDATE
   stream: StreamID
   tip: CID,
-  model?: string
+  model?: StreamID
 }
 
 export type QueryMessage = {
@@ -97,11 +97,7 @@ export function serialize(message: PubsubMessage): Uint8Array {
         doc: message.stream.toString(),
         stream: message.stream.toString(),
         tip: message.tip.toString(),
-        /*
-          @active-branch
-          placeholder, optional type
-        */
-        model: message.model?.toString()
+        ...(message.model) && {model: message.model}, // note: conditionally add the model key if message.model is not undefined
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
@@ -130,11 +126,7 @@ export function deserialize(message: any): PubsubMessage {
         typ: MsgType.UPDATE,
         stream,
         tip: toCID(parsed.tip),
-        /*
-          @active-branch
-          placeholder, optional type
-        */
-        model: parsed.model
+        model: StreamID.fromString(parsed.model)
       }
     }
     case MsgType.RESPONSE: {

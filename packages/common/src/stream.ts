@@ -91,7 +91,7 @@ export interface StreamMetadata {
   schema?: string
   tags?: Array<string>
   forbidControllerChange?: boolean
-
+  model?: StreamID
   [index: string]: any // allow arbitrary properties
 }
 
