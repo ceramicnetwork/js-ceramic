@@ -118,7 +118,7 @@ export class ServiceLoggerBase {
     message = `[${now.toUTCString()}] service=${this.service} ${message}`
 
     if (this.logToConsole) {
-      console.log(message)
+      //console.log(message)
     }
   }
 
