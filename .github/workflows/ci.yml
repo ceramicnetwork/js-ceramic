@@ -80,12 +80,12 @@ jobs:
       -
         name: Build and test image
         run: |
-          dagger do verify -p ${{ env.DAGGER_CI }})
+          dagger do verify -p ${{ env.DAGGER_CI }}
       -
         name: Push images for mainline branches
         if: ${{ github.event_name != 'pull_request' }}
         run: |
-          dagger do -l error push -w "actions:push:tags:[\"${{ env.SHA }}\",\"${{ env.SHA_TAG }}\",\"${{ env.BRANCH }}\",\"${{ env.ENV_TAG }}\"]" -p ${{ env.DAGGER_CI }})
+          dagger do -l error push -w "actions:push:tags:[\"${{ env.SHA }}\",\"${{ env.SHA_TAG }}\",\"${{ env.BRANCH }}\",\"${{ env.ENV_TAG }}\"]" -p ${{ env.DAGGER_CI }}
       -
         name: Print Buildkitd Logs
         if: ${{ failure() }}
