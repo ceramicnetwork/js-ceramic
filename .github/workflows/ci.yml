@@ -11,7 +11,7 @@ env:
   DAGGER_LOG_FORMAT: plain
   DAGGER_LOG_LEVEL: info
   DAGGER_CACHE_BASE: js-ceramic-ci
-  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ceramic/ci.cue
+  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/js-ceramic.cue
   # General
   BRANCH: ${{ github.ref_name }}
   GITHUB_SHA: ${{ github.sha }}
