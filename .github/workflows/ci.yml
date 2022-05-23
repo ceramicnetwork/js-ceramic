@@ -56,7 +56,7 @@ jobs:
         run: |
           dagger project init
           dagger project update
-          dagger project update github.com/3box/pipelinetools@main
+          dagger project update github.com/3box/pipelinetools@develop
 
           REPO_META=$(dagger do --output-format json build -p ${{ env.DAGGER_CI }})
           echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
