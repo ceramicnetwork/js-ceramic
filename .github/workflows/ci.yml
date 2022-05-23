@@ -32,21 +32,6 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Set main branch tag
-        if: ${{ env.BRANCH == 'main' }}
-        run: |
-          echo "ENV_TAG=prod" >> $GITHUB_ENV
-      -
-        name: Set rc branch tag
-        if: ${{ env.BRANCH == 'release-candidate' }}
-        run: |
-          echo "ENV_TAG=tnet" >> $GITHUB_ENV
-      -
-        name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
-        run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-      -
         name: Expose GitHub Runtime
         uses: crazy-max/ghaction-github-runtime@v1
       -
@@ -77,6 +62,7 @@ jobs:
           echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
           echo "SHA_TAG=$(echo "${REPO_META}" | jq -r '.shaTag')" >> $GITHUB_ENV
           echo "BRANCH=$(echo "${REPO_META}" | jq -r '.branch')" >> $GITHUB_ENV
+          echo "ENV_TAG=$(echo "${REPO_META}" | jq -r '.envTag')" >> $GITHUB_ENV
       -
         name: Build and test image
         run: |
@@ -85,7 +71,7 @@ jobs:
         name: Push images for mainline branches
         if: ${{ github.event_name != 'pull_request' }}
         run: |
-          dagger do -l error push -w "actions:push:tags:[\"${{ env.SHA }}\",\"${{ env.SHA_TAG }}\",\"${{ env.BRANCH }}\",\"${{ env.ENV_TAG }}\"]" -p ${{ env.DAGGER_CI }}
+          dagger do -l error push -w "actions:push:\"${{ env.ENV_TAG }}\":tags:[\"${{ env.SHA }}\",\"${{ env.SHA_TAG }}\",\"${{ env.BRANCH }}\",\"${{ env.ENV_TAG }}\"]" -p ${{ env.DAGGER_CI }}
       -
         name: Print Buildkitd Logs
         if: ${{ failure() }}
