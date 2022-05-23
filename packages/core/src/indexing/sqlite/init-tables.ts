@@ -1,6 +1,7 @@
 import type { DataSource } from 'typeorm'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { createModelTable } from './migrations/1-create-model-table.js'
+import { asTableName } from '../as-table-name.util.js'
 
 /**
  * List existing `mid_%` tables.
@@ -17,7 +18,7 @@ export async function listMidTables(dataSource: DataSource): Promise<Array<strin
  */
 export async function initTables(dataSource: DataSource, modelsToIndex: Array<StreamID>) {
   const existingTables = await listMidTables(dataSource)
-  const expectedTables = modelsToIndex.map((streamId) => `mid_${streamId.toString()}`)
+  const expectedTables = modelsToIndex.map(asTableName)
   const tablesToCreate = expectedTables.filter((tableName) => !existingTables.includes(tableName))
   for (const tableName of tablesToCreate) {
     await createModelTable(dataSource, tableName)

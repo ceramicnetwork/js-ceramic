@@ -4,7 +4,7 @@ import type { DID } from 'dids'
 export interface IndexStreamArgs {
   streamID: StreamID
   model: StreamID
-  controller: DID
+  controller: DID | string
   lastAnchor: Date | null
 }
 
