@@ -140,7 +140,7 @@ export class ModelHandler implements StreamHandler<Model> {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
     }
 
-    if (payload.header.controllers) {
+    if (payload.header?.controllers) {
       throw new Error(
         `Updating controllers for Model Streams is not allowed.  Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
           state.metadata.controllers
@@ -156,12 +156,10 @@ export class ModelHandler implements StreamHandler<Model> {
     nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
     const oldContent: ModelDefinition = state.next?.content ?? state.content
-    const newContent: ModelDefinition = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-
-    // Cannot update a finalized Model
     if (oldContent.name && oldContent.schema && oldContent.accountRelation) {
       throw new Error('Cannot update a finalized Model')
     }
+    const newContent: ModelDefinition = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     // Cannot update a placeholder Model other than to finalize it.
     Model.assertComplete(newContent, streamId)
 
