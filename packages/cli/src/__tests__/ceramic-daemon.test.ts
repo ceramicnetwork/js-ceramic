@@ -30,6 +30,10 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
     pubsubTopic: TOPIC,
     stateStoreDirectory,
     anchorOnRequest: false,
+    indexing: {
+      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+      models: []
+    }
   })
 
   const handler = new TileDocumentHandler()

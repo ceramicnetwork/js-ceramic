@@ -548,7 +548,7 @@ describe('sync', () => {
         log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
       },
     } as unknown as RunningState
-    await stateManager.sync(state$, 1000, false)
+    await stateManager.sync(state$, 1000)
     expect(fakeHandleTip).toHaveBeenCalledWith(state$, response[0])
   })
   test('handle all received', async () => {
@@ -564,7 +564,7 @@ describe('sync', () => {
         log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
       },
     } as unknown as RunningState
-    await stateManager.sync(state$, 1000, false)
+    await stateManager.sync(state$, 1000)
     response.forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r)
     })
@@ -591,7 +591,7 @@ describe('sync', () => {
       },
     } as unknown as RunningState
     stateManager.conflictResolution.verifyLoneGenesis = jest.fn()
-    await stateManager.sync(state$, 1000, false)
+    await stateManager.sync(state$, 1000)
     expect(fakeHandleTip).toBeCalledTimes(5)
     response.slice(0, 5).forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r)
@@ -613,7 +613,7 @@ describe('sync', () => {
       },
     } as unknown as RunningState
     stateManager.conflictResolution.verifyLoneGenesis = jest.fn()
-    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10, false)
+    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10)
     expect(fakeHandleTip).toBeCalledTimes(20)
   })
 })

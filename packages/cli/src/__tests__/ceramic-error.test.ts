@@ -48,6 +48,10 @@ beforeAll(async () => {
       'log-directory': `${stateStoreDirectory}`,
       'log-level': LogLevel.debug,
     },
+    indexing: {
+      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+      models: [],
+    },
   })
 
   const ceramicConfig = makeCeramicConfig(daemonConfig)
