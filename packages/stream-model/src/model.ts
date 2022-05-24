@@ -78,7 +78,7 @@ enum ModelAccountRelation {
 /**
  * Contents of a Model Stream.
  */
-interface ModelDefinition {
+export interface ModelDefinition {
   name: string
   description?: string
   schema: JSONSchema.Object
@@ -110,6 +110,8 @@ export class Model extends Stream {
     content: ModelDefinition,
     metadata?: ModelMetadata
   ): Promise<Model> {
+    Model.assertComplete(content)
+
     const opts: CreateOpts = {
       publish: true,
       anchor: true,
@@ -118,7 +120,8 @@ export class Model extends Stream {
       throwOnInvalidCommit: true,
     }
     const commit = await Model._makeGenesis(ceramic, content, metadata)
-    return ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
+    const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
+    return model
   }
 
   /**
@@ -151,11 +154,46 @@ export class Model extends Stream {
    * @param content - Final content for the Model
    */
   async replacePlaceholder(content: ModelDefinition): Promise<void> {
+    Model.assertComplete(content, this.id)
     const opts: UpdateOpts = { publish: true, anchor: true, pin: true, throwOnInvalidCommit: true }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
-    const updateCommit = await this._makeCommit(signer, content)
+    const updateCommit = await this._makeCommit(this.api, content)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
+  }
+
+  /**
+   * Asserts that all the required fields for the Model are set, and throws an error if not.
+   * @param streamId
+   * @param content
+   */
+  static assertComplete(content: ModelDefinition, streamId?: StreamID | CommitID | string): void {
+    if (!content.name) {
+      if (streamId) {
+        throw new Error(`Model with StreamID ${streamId.toString()} is missing a 'name' field`)
+      } else {
+        throw new Error(`Model is missing a 'name' field`)
+      }
+    }
+
+    if (!content.schema) {
+      if (streamId) {
+        throw new Error(
+          `Model ${content.name} (${streamId.toString()}) is missing a 'schema' field`
+        )
+      } else {
+        throw new Error(`Model ${content.name} is missing a 'schema' field`)
+      }
+    }
+
+    if (!content.accountRelation) {
+      if (streamId) {
+        throw new Error(
+          `Model ${content.name} (${streamId.toString()}) is missing a 'accountRelation' field`
+        )
+      } else {
+        throw new Error(`Model ${content.name} is missing a 'accountRelation' field`)
+      }
+    }
   }
 
   /**
@@ -164,7 +202,7 @@ export class Model extends Stream {
    * @param streamId - StreamID to load.  Must correspond to a Model
    * @param opts - Additional options
    */
-  static async load<T>(
+  static async load(
     ceramic: CeramicApi,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
@@ -181,23 +219,7 @@ export class Model extends Stream {
     }
 
     const model = await ceramic.loadStream<Model>(streamRef, opts)
-
-    if (!model.content.name) {
-      throw new Error(`Model with StreamID ${streamId.toString()} is missing a 'name' field`)
-    }
-
-    if (!model.content.schema) {
-      throw new Error(
-        `Model ${model.content.name} (${streamId.toString()}) is missing a 'schema' field`
-      )
-    }
-
-    if (!model.content.accountRelation) {
-      throw new Error(
-        `Model ${model.content.name} (${streamId.toString()}) is missing a 'accountRelation' field`
-      )
-    }
-
+    Model.assertComplete(model.content, streamId)
     return model
   }
 
@@ -253,6 +275,7 @@ export class Model extends Stream {
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       unique: uint8arrays.toString(randomBytes(12), 'base64'),
+      model: null, // TODO add fixed model model
     }
     const commit: GenesisCommit = { data: content, header }
     return _signDagJWS(signer, commit)

@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   AnchorStatus,
   CommitData,
@@ -77,6 +77,7 @@ export class ModelHandler implements StreamHandler<Model> {
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('model', commitData.commit)
+      // TODO(NET-1437): replace family with model
       const { controllers, family } = payload.header
       await SignatureUtils.verifyCommitSignature(
         commitData,
@@ -85,8 +86,8 @@ export class ModelHandler implements StreamHandler<Model> {
         family,
         streamId
       )
-    } else if (payload.data) {
-      throw Error('Genesis commit with contents should always be signed')
+    } else {
+      throw Error('Model genesis commit must be signed')
     }
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
@@ -118,8 +119,9 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-    const family = state.next?.metadata?.family || state.metadata.family
+    const metadata = state.next?.metadata ?? state.metadata
+    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const family = metadata.family
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
@@ -138,28 +140,12 @@ export class ModelHandler implements StreamHandler<Model> {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
     }
 
-    if (payload.header.controllers && payload.header.controllers.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
-    }
-
-    if (
-      state.metadata.forbidControllerChange &&
-      payload.header.controllers &&
-      !stringArraysEqual(payload.header.controllers, state.metadata.controllers)
-    ) {
-      const streamId = new StreamID(Model.STREAM_TYPE_ID, state.log[0].cid)
+    if (payload.header.controllers) {
       throw new Error(
-        `Cannot change controllers since 'forbidControllerChange' is set. Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
+        `Updating controllers for Model Streams is not allowed.  Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
           state.metadata.controllers
-        )} to ${payload.header.controllers}`
+        )} to ${payload.header.controllers}\``
       )
-    }
-
-    if (
-      payload.header.forbidControllerChange !== undefined &&
-      payload.header.forbidControllerChange !== state.metadata.forbidControllerChange
-    ) {
-      throw new Error("Changing 'forbidControllerChange' metadata property is not allowed")
     }
 
     const nextState = cloneDeep(state)
@@ -169,15 +155,19 @@ export class ModelHandler implements StreamHandler<Model> {
 
     nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
-    const oldContent = state.next?.content ?? state.content
-    const oldMetadata = state.next?.metadata ?? state.metadata
+    const oldContent: ModelDefinition = state.next?.content ?? state.content
+    const newContent: ModelDefinition = jsonpatch.applyPatch(oldContent, payload.data).newDocument
 
-    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    const newMetadata = { ...oldMetadata, ...payload.header }
+    // Cannot update a finalized Model
+    if (oldContent.name && oldContent.schema && oldContent.accountRelation) {
+      throw new Error('Cannot update a finalized Model')
+    }
+    // Cannot update a placeholder Model other than to finalize it.
+    Model.assertComplete(newContent, streamId)
 
     nextState.next = {
       content: newContent,
-      metadata: newMetadata,
+      metadata, // No way to update metadata for Model streams
     }
 
     return nextState
