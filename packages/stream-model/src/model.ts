@@ -20,14 +20,21 @@ import {
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import type { JSONSchema } from 'json-schema-typed/draft-07'
 import { CID } from 'multiformats/cid'
-import { encode } from '@ipld/dag-cbor'
+import { create } from 'multiformats/hashes/digest'
+import { code, encode } from '@ipld/dag-cbor'
+import multihashes from 'multihashes'
 
 const MODEL_STREAM_TYPE_ID = 2
 
 // The hardcoded "model" StreamID that all Model streams have in their metadata. This provides
 // a "model" StreamID that can be indexed to query the set of all published Models.
-const MODEL_MODEL_STREAMID_BYTES = new StreamID(MODEL_STREAM_TYPE_ID, CID.asCID(encode('model-v1')))
-  .bytes
+const MODEL_MODEL_STREAMID_BYTES: Uint8Array = (function () {
+  const data = encode('model-v1')
+  const multihash = multihashes.encode(data, 'identity')
+  const digest = create(code, multihash)
+  const cid = CID.createV1(code, digest)
+  return new StreamID(MODEL_STREAM_TYPE_ID, cid).bytes
+})()
 
 /**
  * Arguments used to generate the metadata for Model streams.
@@ -79,7 +86,7 @@ async function throwReadOnlyError(): Promise<void> {
  * there can be only one instance of this model per account (if a new instance is created it
  * overrides the old one).
  */
-enum ModelAccountRelation {
+export enum ModelAccountRelation {
   LIST = 'list',
   LINK = 'link',
 }
