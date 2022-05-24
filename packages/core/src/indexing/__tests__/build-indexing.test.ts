@@ -1,6 +1,6 @@
 import tmp from 'tmp-promise'
 import { buildIndexing, UnsupportedDatabaseProtocolError } from '../build-indexing.js'
-import { SqliteIndexApi } from '../sqlite-index-api.js'
+import { SqliteIndexApi } from '../sqlite/sqlite-index-api.js'
 
 describe('sqlite', () => {
   let databaseFolder: tmp.DirectoryResult

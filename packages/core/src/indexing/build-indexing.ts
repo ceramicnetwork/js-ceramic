@@ -1,6 +1,6 @@
 import type { DatabaseIndexAPI } from './types.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { SqliteIndexApi } from './sqlite-index-api.js'
+import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { DataSource } from 'typeorm'
 
 export type IndexingConfig = {
@@ -34,7 +34,7 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI 
         type: 'sqlite',
         database: connectionString.pathname,
       })
-      return new SqliteIndexApi(dataSource)
+      return new SqliteIndexApi(dataSource, indexingConfig.models)
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)
