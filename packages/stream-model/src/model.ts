@@ -19,6 +19,15 @@ import {
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import type { JSONSchema } from 'json-schema-typed/draft-07'
+import { CID } from 'multiformats/cid'
+import { encode } from '@ipld/dag-cbor'
+
+const MODEL_STREAM_TYPE_ID = 2
+
+// The hardcoded "model" StreamID that all Model streams have in their metadata. This provides
+// a "model" StreamID that can be indexed to query the set of all published Models.
+const MODEL_MODEL_STREAMID_BYTES = new StreamID(MODEL_STREAM_TYPE_ID, CID.asCID(encode('model-v1')))
+  .bytes
 
 /**
  * Arguments used to generate the metadata for Model streams.
@@ -91,7 +100,7 @@ export interface ModelDefinition {
 @StreamStatic<StreamConstructor<Model>>()
 export class Model extends Stream {
   static STREAM_TYPE_NAME = 'model'
-  static STREAM_TYPE_ID = 2
+  static STREAM_TYPE_ID = MODEL_STREAM_TYPE_ID
 
   private _isReadOnly = false
 
@@ -275,7 +284,7 @@ export class Model extends Stream {
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       unique: uint8arrays.toString(randomBytes(12), 'base64'),
-      model: null, // TODO add fixed model model
+      model: MODEL_MODEL_STREAMID_BYTES,
     }
     const commit: GenesisCommit = { data: content, header }
     return _signDagJWS(signer, commit)
