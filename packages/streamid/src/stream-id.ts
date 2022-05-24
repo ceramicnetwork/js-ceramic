@@ -92,8 +92,8 @@ const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID')
 export class StreamID implements StreamRef {
   protected readonly _tag = TAG
 
-  readonly #type: number
-  readonly #cid: CID
+  private readonly _type: number
+  private readonly _cid: CID
 
   static fromBytes = fromBytes
   static fromBytesNoThrow = fromBytesNoThrow
@@ -123,8 +123,8 @@ export class StreamID implements StreamRef {
   constructor(type: string | number, cid: CID | string) {
     if (!(type || type === 0)) throw new Error('constructor: type required')
     if (!cid) throw new Error('constructor: cid required')
-    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
-    this.#cid = typeof cid === 'string' ? CID.parse(cid) : cid
+    this._type = typeof type === 'string' ? StreamType.codeByName(type) : type
+    this._cid = typeof cid === 'string' ? CID.parse(cid) : cid
   }
 
   /**
@@ -153,7 +153,7 @@ export class StreamID implements StreamRef {
    * Stream type code
    */
   get type(): number {
-    return this.#type
+    return this._type
   }
 
   /**
@@ -161,14 +161,14 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return StreamType.nameByCode(this.#type)
+    return StreamType.nameByCode(this._type)
   }
 
   /**
    * Genesis commits CID
    */
   get cid(): CID {
-    return this.#cid
+    return this._cid
   }
 
   /**
@@ -188,7 +188,7 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get baseID(): StreamID {
-    return new StreamID(this.#type, this.#cid)
+    return new StreamID(this._type, this._cid)
   }
 
   /**
