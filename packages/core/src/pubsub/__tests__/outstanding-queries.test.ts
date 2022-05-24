@@ -6,6 +6,10 @@ const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
 
+const FAKE_STREAM_ID2 = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60f'
+)
+
 const outstandingQueries: OutstandingQueries = new OutstandingQueries()
 
 describe('Prioritized Queue', () => {
@@ -99,8 +103,21 @@ describe('Outstanding Queries', () => {
     outstandingQueries.queryQueue.clear()
   })
 
-  test('Oustanding Queries, Add Query', async () => {
-    const t1 = new Date('2022-05-12T10:20:30Z').getTime()
+  test('Oustanding Queries, Add Query, verify add cleans upon add', async () => {
+    const tOld = new Date('2022-05-12T10:20:30Z').getTime()
+    const qOld = new Query(tOld, FAKE_STREAM_ID, 'a')
+    const testQueryIDOld = 'testIDOld'
+    outstandingQueries.add(testQueryIDOld, qOld)
+    expect(outstandingQueries.queryMap.size).toEqual(1)
+    const tNew = Date.now()
+    const qNew = new Query(tNew, FAKE_STREAM_ID2, 'b')
+    const testQueryIDNew = 'testIDNew'
+    outstandingQueries.add(testQueryIDNew, qNew)
+    expect(outstandingQueries.queryQueue.size()).toEqual(1)
+  })
+  
+  test('Oustanding Queries, Add Query now', async () => {
+    const t1 = Date.now()
     const q1 = new Query(t1, FAKE_STREAM_ID, 'a')
     const testQueryID = 'testID'
     outstandingQueries.add(testQueryID, q1)

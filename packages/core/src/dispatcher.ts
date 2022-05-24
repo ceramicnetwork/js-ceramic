@@ -359,14 +359,6 @@ export class Dispatcher {
     }
     this.repository.stateManager.update(expectedStreamID, newTip)
     // TODO Iterate over all streams in 'tips' object and process the new tip for each
-
-    //either way, cleanup outstanding queries
-    try {
-      this.messageBus.outstandingQueries.cleanUpExpiredQueries()
-    } catch (e) {
-      const errorMessage = `Error in _handle while trying ot clean up outstanding queries, ${e.message}`
-      this._logger.err(errorMessage)
-    }
   }
 
   /**

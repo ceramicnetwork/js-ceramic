@@ -1,6 +1,5 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { PriorityQueue, ICompare } from '@datastructures-js/priority-queue'
-import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/common'
 /**
  * Query Interface
  */
@@ -39,41 +38,33 @@ const compareQueryTimestamps: ICompare<IQuery> = (a: IQuery, b: IQuery) => {
 }
 
 /**
- * Outstanding Queries Abstraction holding the query map, and queue.
- * This class contains the Queue & Map representing the outstanding queries being expected from the network
+ * OutstandingQueries tracks a set of all query messages that have been 
+ * sent to pubsub, for which we are still waiting on a response pubsub 
+ * message. It also takes care of garbage collecting old queries that 
+ * have been outstanding for more than 1 minute.
  */
 export class OutstandingQueries {
   readonly queryQueue: PriorityQueue<IQuery> = new PriorityQueue<IQuery>(compareQueryTimestamps)
   readonly queryMap: Map<string, Query> = new Map()
-  readonly _logger: DiagnosticsLogger = new DiagnosticsLogger(LogLevel.important, false)
   //set the time in minutes we want to allow outstanding requests to be considered
   private _minutesThreshold = 1
 
-  add(id: string, query: Query): boolean {
+  add(id: string, query: Query) : void {
     //enforce no duplicate outstanding queries
-    if (this.queryMap.get(id) != undefined) {
-      return false
-    } else {
+    this.cleanUpExpiredQueries()
+    if (this.queryMap.get(id) == undefined) {
       // add to map
       this.queryMap.set(id, query)
       // add to queue
       this.queryQueue.enqueue(query)
-      return true
     }
   }
 
-  remove(topQuery: Query): boolean {
-    try {
+  remove(topQuery: Query) : void {
       //remove queryId key for top query
       this.queryMap.delete(topQuery.queryID)
       //dequeue top query
       this.queryQueue.dequeue()
-      return true
-    } catch (e) {
-      const errorMessage = `Error in OutstandingQueries.remove(), ${e.message}`
-      console.error(errorMessage)
-      throw new Error(errorMessage)
-    }
   }
 
   /**
@@ -81,8 +72,11 @@ export class OutstandingQueries {
    * @param
    * @public
    */
-  cleanUpExpiredQueries() {
-    if (this.queryQueue.size() > 0) {
+   cleanUpExpiredQueries() {
+    // const front_node: IQuery = this.queryQueue.front()
+    if (!this.queryQueue.size()) {
+      return
+    }else{
       const topQuery: Query = this.queryQueue.front()
       const diffMs = Date.now() - topQuery.timestamp // milliseconds
       const differenceInMinutes = Math.round(((diffMs % 86400000) % 3600000) / 60000) // minutes
@@ -93,7 +87,6 @@ export class OutstandingQueries {
           this.cleanUpExpiredQueries()
         } catch (e) {
           const errorMessage = `Error in OutstandingQueries.cleanUpExpiredQueries(), ${e.message}`
-          this._logger.err(errorMessage)
           throw new Error(errorMessage)
         }
       }
