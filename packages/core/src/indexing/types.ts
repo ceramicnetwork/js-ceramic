@@ -1,5 +1,4 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type { DID } from 'dids'
 
 export interface IndexStreamArgs {
   streamID: StreamID
