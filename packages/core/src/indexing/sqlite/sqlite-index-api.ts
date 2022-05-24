@@ -4,6 +4,7 @@ import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } f
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { PaginationKind, parsePagination } from '../parse-pagination'
+import * as uint8arrays from 'uint8arrays'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -28,9 +29,11 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     private readonly modelsToIndex: Array<StreamID>
   ) {}
 
-  async indexStream(args: IndexStreamArgs): Promise<void> {
+  async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
+    const createdAt = asTimestamp(args.createdAt) || now
+    const updatedAt = asTimestamp(args.updatedAt) || now
     const lastAnchoredAt = asTimestamp(args.lastAnchor)
     await this.dataSource.query(
       `INSERT INTO ${tableName}
@@ -41,10 +44,10 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
         String(args.streamID),
         String(args.controller),
         lastAnchoredAt,
-        now,
-        now,
+        createdAt,
+        updatedAt,
         lastAnchoredAt,
-        now,
+        updatedAt,
       ]
     )
   }
@@ -52,17 +55,53 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const pagination = parsePagination(query)
     const limit = pagination.kind == PaginationKind.FORWARD ? pagination.first : pagination.last
-    const response = await this.dataSource.query(
-      `SELECT stream_id FROM ${asTableName(query.model)} LIMIT ?`,
-      [limit]
-    )
-    const streamIds = response.map((row) => StreamID.fromString(row.stream_id))
+    const now = new Date()
+    const future = new Date(now.getFullYear(), now.getMonth())
+    let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
+    if (pagination.kind === PaginationKind.FORWARD && !pagination.after) {
+      response = await this.dataSource.query(
+        `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
+          query.model
+        )} ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?`,
+        [future.valueOf(), limit + 1]
+      )
+    }
+    if (pagination.kind === PaginationKind.FORWARD && pagination.after) {
+      const after = JSON.parse(
+        uint8arrays.toString(uint8arrays.fromString(pagination.after, 'base64url'))
+      )
+      if (after.last_anchored_at) {
+        response = await this.dataSource.query(
+          `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
+           WHERE last_anchored_at < ?
+           ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?
+          `,
+          [after.last_anchored_at, future.valueOf(), limit + 1]
+        )
+      } else {
+        response = await this.dataSource.query(
+          `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
+           WHERE (last_anchored_at IS NULL AND created_at < ?) OR (last_anchored_at IS NOT NULL)
+           ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?
+          `,
+          [after.created_at, future.valueOf(), limit + 1]
+        )
+      }
+    }
+    const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
+    const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
+    const lastEntry = init[init.length - 1]
+    const endCursor = lastEntry
+      ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
+      : undefined
     return {
       entries: streamIds,
       pageInfo: {
-        hasNextPage: false,
+        hasNextPage: last.length > 0,
         hasPreviousPage: false,
-        endCursor: '',
+        endCursor: endCursor
+          ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
+          : undefined,
         startCursor: '',
       },
     }

@@ -4,17 +4,15 @@ import { DataSource } from 'typeorm'
 import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
-import { delay } from '../../../__tests__/delay'
-import { CID } from 'multiformats/cid'
-import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
-import * as sha256 from '@stablelib/sha256'
-import * as uint8arrays from 'uint8arrays'
-import { randomBytes } from 'crypto'
+import { IndexStreamArgs } from '../../types.js'
+import csv from 'csv-parser'
+import * as fs from 'fs'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna'
 const CONTROLLER = 'did:key:foo'
-const SHA256_CODE = 0x12
+const MODELS_TO_INDEX = [StreamID.fromString(STREAM_ID_A)]
+const MODEL = MODELS_TO_INDEX[0]
 
 let tmpFolder: tmp.DirectoryResult
 let dataSource: DataSource
@@ -30,7 +28,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await dataSource.close()
-  await tmpFolder.cleanup()
+  // await tmpFolder.cleanup()
 })
 
 describe('init', () => {
@@ -116,10 +114,10 @@ describe('indexStream', () => {
   test('override stream', async () => {
     const createTime = new Date()
     await indexApi.indexStream(STREAM_CONTENT)
-    await delay(2000) // 2 seconds, because of 1 second precision
-    const updateTime = new Date()
+    const updateTime = new Date(createTime.valueOf() + 5000)
     const updatedStreamContent = {
       ...STREAM_CONTENT,
+      updatedAt: updateTime,
       lastAnchor: updateTime,
     }
     // It updates the fields if a stream is present.
@@ -138,36 +136,133 @@ describe('indexStream', () => {
   })
 })
 
-function randomCID(): CID {
-  const data = randomBytes(32)
-  const body = uint8arrays.concat([uint8arrays.fromString('1220', 'base16'), sha256.hash(data)])
-  return CID.create(1, SHA256_CODE, decodeMultiHash(body))
+function readFixture() {
+  type CsvFixture = IndexStreamArgs & { createdAt?: Date }
+  return new Promise<Array<CsvFixture>>((resolve, reject) => {
+    const result = new Array<CsvFixture>()
+    const csvReader = csv({
+      separator: ';',
+      mapHeaders: ({ header }) => (header ? header.replace(/\s+/g, '') : null),
+    })
+    fs.createReadStream(new URL('./index.fixture.csv', import.meta.url))
+      .pipe(csvReader)
+      .on('data', (row) => {
+        result.push({
+          model: MODEL,
+          streamID: StreamID.fromString(row.stream_id),
+          controller: row.controller,
+          lastAnchor: row.last_anchored_at
+            ? new Date(Number(row.last_anchored_at) * 1000)
+            : undefined,
+          createdAt: row.created_at ? new Date(Number(row.created_at) * 1000) : undefined,
+        })
+      })
+      .on('error', (error) => reject(error))
+      .on('end', () => {
+        resolve(result)
+      })
+  })
 }
 
 describe('page', () => {
-  const MODELS_TO_INDEX = [StreamID.fromString(STREAM_ID_A)]
-  const MODEL = MODELS_TO_INDEX[0]
+  let indexAPI: SqliteIndexApi
+  beforeEach(async () => {
+    indexAPI = new SqliteIndexApi(dataSource, MODELS_TO_INDEX)
+    await indexAPI.init()
+    const rows = await readFixture()
+    for (const row of rows) {
+      await indexAPI.indexStream(row)
+    }
+  })
+
   describe('default order', () => {
+    const ALL_ENTRIES = [
+      'k2t6wysde758e731xife7twg5dwpz8jg42vshm79ax6w7s0yu75kiaj8k2w6dt',
+      'k2t6wysde758akkonpg6flj8fitylax3fk40xrb9ud4hmivd29jdc097ad6nwz',
+      'k2t6wysde758et54lsbq54efgt73xqfg6s5sp72v9ervbn11z7w9rgb2r1fcu3',
+      'k2t6wysde7589n4wvaiuhbokdvhtm71lxii24u8f12rlntsqakblz5u69vxgbu',
+      'k2t6wysde7589wo4k3reakai9t5z52jgwfxdx8w0ug7px0s66o0h4qkkz134lb',
+      'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna',
+      'k2t6wysde758d3muw7okc3zspjlcpcjqzrchrdk5augruhpdha2od8tw46r0qh',
+      'k2t6wysde758cpnjmqwp3zcsrcthn116vq6ayeivfsivilr02pj6pybbuzgkbt',
+      'k2t6wysde758c9utjgo3caetaezu2cluj2p3gjttfqz111neyncd6z7ekxjfv9',
+      'k2t6wysde7589pfiw4q6rm96t2yzjiheopr56gx7jsqatip8qk9ebesdft1w14',
+      'k2t6wysde758cx9qi61w2001a5l5hx8f5no9yue3ewv0ftky5mbvalmuf3gchb',
+      'k2t6wysde758aef79049queu07hgygp52a6i6an7of9y31vjf2bmyk2k0jwuod',
+      'k2t6wysde7589p6n2wl0yrh0mi0g6vyzrfd8xmo6wj8f5xbjjs3flxc8z7rzhm',
+      'k2t6wysde758a5g0poyqkp0ni2zfzw27j4fb2lkv5mkby35ss44kepa71axkk9',
+      'k2t6wysde758c8jmww7tcvcprvs6i7uxl30cz17jwssf4i1q5f96bmx2xkk65b',
+      'k2t6wysde758a7cnbum8auockii5f626vbi18keqegi52mob9z3kulecyvr04c',
+      'k2t6wysde7589xsdd2tgrnedgm76fgk59cuo92pjibn6k9ichcxepmys19lluj',
+      'k2t6wysde758d3tvke5zmqgq85s6m6dm593y5xl0desja6s1t6ub02osbsb8jv',
+      'k2t6wysde758cgke6n0sr3yaor6shv5czq9d3dgmvb09jo8vy0gnlegbyowgs8',
+      'k2t6wysde758b3nriettrnxt5eg39ylwo2o7sbvie1ny5tprdmvwnx9xoqwy67',
+      'k2t6wysde7589fze9445oe7y578f7csh4uexfqe9r9qziqyz8koegst94ryoat',
+    ]
+
     test('return first N', async () => {
-      const indexAPI = new SqliteIndexApi(dataSource, MODELS_TO_INDEX)
-      await indexAPI.init()
-      const insertP = Array.from({ length: 100 }).map(async () => {
-        return indexAPI.indexStream({
-          model: MODEL,
-          streamID: new StreamID(1, randomCID()),
-          controller: CONTROLLER,
-          lastAnchor: null,
-        })
-      })
-      await Promise.all(insertP)
       const result = await indexAPI.page({
         model: MODEL,
         first: 10,
       })
       expect(result.entries.length).toEqual(10)
+      const expected = ALL_ENTRIES.slice(0, 10)
+      const actual = result.entries.map(String)
+      expect(actual).toEqual(expected)
     })
-    test.todo('return first N after M')
-    test.todo('return first N after M')
+    test('return first N after M', async () => {
+      const resultA = await indexAPI.page({
+        model: MODEL,
+        first: 10,
+      })
+      expect(resultA.entries.length).toEqual(10)
+      expect(resultA.pageInfo.hasNextPage).toEqual(true)
+      expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
+      expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(0, 10))
+
+      const resultB = await indexAPI.page({
+        model: MODEL,
+        first: 10,
+        after: resultA.pageInfo.endCursor,
+      })
+      expect(resultB.entries.length).toEqual(10)
+      expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(10, 20))
+      expect(resultA.pageInfo.hasNextPage).toEqual(true)
+      expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
+
+      const resultC = await indexAPI.page({
+        model: MODEL,
+        first: 10,
+        after: resultB.pageInfo.endCursor,
+      })
+      const expectedC = ALL_ENTRIES.slice(20, 30)
+      expect(resultC.entries.length).toEqual(1)
+      expect(resultC.entries.map(String)).toEqual(expectedC)
+      expect(resultC.pageInfo.hasNextPage).toEqual(false)
+      expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
+    })
+    test('return first N after M, null anchor time', async () => {
+      const resultA = await indexAPI.page({
+        model: MODEL,
+        first: 5,
+      })
+      expect(resultA.entries.length).toEqual(5)
+      expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(0, 5))
+      expect(resultA.pageInfo.hasNextPage).toEqual(true)
+      const resultB = await indexAPI.page({
+        model: MODEL,
+        first: 5,
+        after: resultA.pageInfo.endCursor,
+      })
+      expect(resultB.entries.length).toEqual(5)
+      expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(5, 10))
+      const resultC = await indexAPI.page({
+        model: MODEL,
+        first: 5,
+        after: resultB.pageInfo.endCursor,
+      })
+      expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(10, 15))
+    })
     test.todo('return last')
     test.todo('return last N')
     test.todo('return last N before M')
