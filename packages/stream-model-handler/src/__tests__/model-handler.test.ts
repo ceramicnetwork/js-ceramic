@@ -9,7 +9,8 @@ import { ModelHandler } from '../model-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
+import jsonpatch from 'fast-json-patch'
+import { Model, MODEL_MODEL_STREAMID, ModelAccountRelation } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -176,6 +177,34 @@ const rotateKey = (did: DID, rotateDate: string) => {
   did.createJWS = async () => jwsForVersion1
 }
 
+async function checkSignedCommitMatchesExpectations(
+  did: DID,
+  commit: SignedCommitContainer,
+  expectedCommit: Record<string, any>
+) {
+  const { jws, linkedBlock } = commit
+  expect(jws).toBeDefined()
+  expect(linkedBlock).toBeDefined()
+
+  const payload = dagCBOR.decode(linkedBlock)
+
+  const serialized = { jws: serialize(jws), linkedBlock: serialize(payload) }
+
+  // Add the 'unique' header field to the data used to generate the expected genesis commit
+  if (serialized.linkedBlock.header?.unique) {
+    expectedCommit.header['unique'] = serialized.linkedBlock.header.unique
+  }
+
+  const expected = await did.createDagJWS(expectedCommit)
+  expect(expected).toBeDefined()
+
+  const { jws: eJws, linkedBlock: eLinkedBlock } = expected
+  const ePayload = dagCBOR.decode(eLinkedBlock)
+  const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
+
+  expect(serialized).toEqual(signed)
+}
+
 describe('ModelHandler', () => {
   let did: DID
   let modelHandler: ModelHandler
@@ -249,170 +278,125 @@ describe('ModelHandler', () => {
     const commit = await Model._makeGenesis(context.api, CONTENT)
     expect(commit).toBeDefined()
 
-    const { jws, linkedBlock } = commit as SignedCommitContainer
-    expect(jws).toBeDefined()
-    expect(linkedBlock).toBeDefined()
+    const expectedGenesis = {
+      data: CONTENT,
+      header: { controllers: [context.api.did.id], model: Model._MODEL.bytes },
+    }
 
-    const payload = dagCBOR.decode(linkedBlock)
-
-    const serialized = { jws: serialize(jws), linkedBlock: serialize(payload) }
-
-    // Add the 'unique' header field to the data used to generate the expected genesis commit
-    const genesis = { data: CONTENT, header: { controllers: [context.api.did.id] } }
-    genesis.header['unique'] = serialized.linkedBlock.header.unique
-
-    const expected = await did.createDagJWS(genesis)
-    expect(expected).toBeDefined()
-
-    const { jws: eJws, linkedBlock: eLinkedBlock } = expected
-    const ePayload = dagCBOR.decode(eLinkedBlock)
-    const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
-
-    expect(serialized).toEqual(signed)
+    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
-  // it('Takes controller from authenticated DID if controller not specified', async () => {
-  //   const signedCommitWithContent = await Model.makeGenesis(context.api, COMMITS.genesis.data)
-  //   const { jws, linkedBlock } = signedCommitWithContent as SignedCommitContainer
-  //   expect(jws).toBeDefined()
-  //   expect(linkedBlock).toBeDefined()
-  //
-  //   const payload = dagCBOR.decode<any>(linkedBlock)
-  //   expect(payload.data).toEqual(COMMITS.genesis.data)
-  //   expect(payload.header.controllers[0]).toEqual(did.id)
-  //
-  //   const commitWithoutContent = (await Model.makeGenesis(context.api, null)) as GenesisCommit
-  //   expect(commitWithoutContent.data).toBeUndefined
-  //   expect(commitWithoutContent.header.controllers[0]).toEqual(did.id)
-  // })
-  //
-  // it('throws if more than one controller', async () => {
-  //   const commit1Promised = Model.makeGenesis(context.api, COMMITS.genesis.data, {
-  //     controllers: [did.id, 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'],
-  //     deterministic: true,
-  //   })
-  //   await expect(commit1Promised).rejects.toThrow(/Exactly one controller must be specified/)
-  // })
-  //
-  // it('creates genesis commits uniquely', async () => {
-  //   const commit1 = await Model.makeGenesis(context.api, COMMITS.genesis.data)
-  //   const commit2 = await Model.makeGenesis(context.api, COMMITS.genesis.data)
-  //
-  //   expect(commit1).not.toEqual(commit2)
-  // })
-  //
-  // it('creates genesis commits without DID if content is undefined', async () => {
-  //   await expect(
-  //     Model.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })
-  //   ).rejects.toThrow('No DID provided')
-  //   const commit1 = await Model.makeGenesis({} as CeramicApi, null, {
-  //     controllers: [did.id],
-  //   })
-  //
-  //   expect(commit1).toBeDefined()
-  // })
-  //
-  // it('applies genesis commit correctly', async () => {
-  //   const modelHandler = new ModelHandler()
-  //
-  //   const commit = (await Model.makeGenesis(
-  //     context.api,
-  //     COMMITS.genesis.data
-  //   )) as SignedCommitContainer
-  //   await context.ipfs.dag.put(commit, FAKE_CID_1)
-  //
-  //   const payload = dagCBOR.decode(commit.linkedBlock)
-  //   await context.ipfs.dag.put(payload, commit.jws.link)
-  //
-  //   const commitData = {
-  //     cid: FAKE_CID_1,
-  //     type: CommitType.GENESIS,
-  //     commit: payload,
-  //     envelope: commit.jws,
-  //   }
-  //   const streamState = await modelHandler.applyCommit(commitData, context)
-  //   delete streamState.metadata.unique
-  //   expect(streamState).toMatchSnapshot()
-  // })
-  //
-  // it('makes signed commit correctly', async () => {
-  //   const modelHandler = new ModelHandler()
-  //
-  //   await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
-  //
-  //   await context.ipfs.dag.put(
-  //     COMMITS.genesisGenerated.linkedBlock,
-  //     COMMITS.genesisGenerated.jws.link
-  //   )
-  //
-  //   const commitData = {
-  //     cid: FAKE_CID_1,
-  //     type: CommitType.GENESIS,
-  //     commit: COMMITS.genesisGenerated.linkedBlock,
-  //     envelope: COMMITS.genesisGenerated.jws,
-  //   }
-  //   const state = await modelHandler.applyCommit(commitData, context)
-  //   const state$ = TestUtils.runningState(state)
-  //   const doc = new Model(state$, context)
-  //
-  //   await expect(doc.makeCommit({} as CeramicApi, COMMITS.r1.desiredContent)).rejects.toThrow(
-  //     /No DID/
-  //   )
-  //
-  //   const commit = (await doc.makeCommit(
-  //     context.api,
-  //     COMMITS.r1.desiredContent
-  //   )) as SignedCommitContainer
-  //   const { jws: rJws, linkedBlock: rLinkedBlock } = commit
-  //   const rPayload = dagCBOR.decode(rLinkedBlock)
-  //   expect({ jws: serialize(rJws), linkedPayload: serialize(rPayload) }).toEqual(COMMITS.r1.commit)
-  // })
-  //
-  // it('applies signed commit correctly', async () => {
-  //   const modelHandler = new ModelHandler()
-  //
-  //   const genesisCommit = (await Model.makeGenesis(
-  //     context.api,
-  //     COMMITS.genesis.data
-  //   )) as SignedCommitContainer
-  //   await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-  //
-  //   const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-  //   await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-  //
-  //   // apply genesis
-  //   const genesisCommitData = {
-  //     cid: FAKE_CID_1,
-  //     type: CommitType.GENESIS,
-  //     commit: payload,
-  //     envelope: genesisCommit.jws,
-  //   }
-  //   let state = await modelHandler.applyCommit(genesisCommitData, context)
-  //
-  //   const state$ = TestUtils.runningState(state)
-  //   const doc = new Model(state$, context)
-  //   const signedCommit = (await doc.makeCommit(
-  //     context.api,
-  //     COMMITS.r1.desiredContent
-  //   )) as SignedCommitContainer
-  //
-  //   await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-  //
-  //   const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-  //   await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-  //
-  //   // apply signed
-  //   const signedCommitData = {
-  //     cid: FAKE_CID_2,
-  //     type: CommitType.SIGNED,
-  //     commit: sPayload,
-  //     envelope: signedCommit.jws,
-  //   }
-  //   state = await modelHandler.applyCommit(signedCommitData, context, state)
-  //   delete state.metadata.unique
-  //   delete state.next.metadata.unique
-  //   expect(state).toMatchSnapshot()
-  // })
+  it('Content is required', async () => {
+    await expect(Model._makeGenesis(context.api, null)).rejects.toThrow(
+      /Genesis content cannot be null/
+    )
+  })
+
+  it('creates genesis commits uniquely', async () => {
+    const commit1 = await Model._makeGenesis(context.api, CONTENT)
+    const commit2 = await Model._makeGenesis(context.api, CONTENT)
+
+    expect(commit1).not.toEqual(commit2)
+  })
+
+  it('applies genesis commit correctly', async () => {
+    const modelHandler = new ModelHandler()
+
+    const commit = (await Model._makeGenesis(context.api, CONTENT)) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    const streamState = await modelHandler.applyCommit(commitData, context)
+    delete streamState.metadata.unique
+    expect(streamState).toMatchSnapshot()
+  })
+
+  it('makes signed commit correctly', async () => {
+    const modelHandler = new ModelHandler()
+
+    const genesisContent = { name: 'myModel' }
+    const finalContent = CONTENT
+
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      genesisContent
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+
+    await expect(doc._makeCommit({} as CeramicApi, finalContent)).rejects.toThrow(/No DID/)
+
+    const commit = (await doc._makeCommit(context.api, finalContent)) as SignedCommitContainer
+    const patch = jsonpatch.compare(genesisContent, finalContent)
+    const expectedCommit = { data: patch, prev: FAKE_CID_1, id: FAKE_CID_1 }
+    await checkSignedCommitMatchesExpectations(did, commit, expectedCommit)
+  })
+
+  it('applies signed commit correctly', async () => {
+    const modelHandler = new ModelHandler()
+
+    const genesisContent = { name: 'myModel' }
+    const finalContent = CONTENT
+
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      genesisContent
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await modelHandler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const signedCommit = (await doc._makeCommit(context.api, finalContent)) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    state = await modelHandler.applyCommit(signedCommitData, context, state)
+    delete state.metadata.unique
+    delete state.next.metadata.unique
+    expect(state).toMatchSnapshot()
+  })
   //
   // it('multiple consecutive updates', async () => {
   //   const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))

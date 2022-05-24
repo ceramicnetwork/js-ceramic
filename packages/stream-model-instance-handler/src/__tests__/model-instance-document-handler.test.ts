@@ -335,12 +335,12 @@ describe('ModelInstanceDocumentHandler', () => {
     ).rejects.toThrow(/Initial content must be null/)
   })
 
-  it('Does not sign commit if no content', async () => {
+  it('Takes controller from authenticated DID if controller not specified', async () => {
     const commit = (await ModelInstanceDocument.makeGenesis(context.api, null)) as GenesisCommit
     expect(commit.header.controllers[0]).toEqual(did.id)
   })
 
-  it('Takes controller from authenticated DID if controller not specified', async () => {
+  it('Does not sign commit if no content', async () => {
     const signedCommitWithContent = await ModelInstanceDocument.makeGenesis(
       context.api,
       COMMITS.genesis.data

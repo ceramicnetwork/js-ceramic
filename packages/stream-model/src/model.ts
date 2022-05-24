@@ -24,18 +24,6 @@ import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
 import multihashes from 'multihashes'
 
-const MODEL_STREAM_TYPE_ID = 2
-
-// The hardcoded "model" StreamID that all Model streams have in their metadata. This provides
-// a "model" StreamID that can be indexed to query the set of all published Models.
-const MODEL_MODEL_STREAMID_BYTES: Uint8Array = (function () {
-  const data = encode('model-v1')
-  const multihash = multihashes.encode(data, 'identity')
-  const digest = create(code, multihash)
-  const cid = CID.createV1(code, digest)
-  return new StreamID(MODEL_STREAM_TYPE_ID, cid).bytes
-})()
-
 /**
  * Arguments used to generate the metadata for Model streams.
  */
@@ -107,7 +95,17 @@ export interface ModelDefinition {
 @StreamStatic<StreamConstructor<Model>>()
 export class Model extends Stream {
   static STREAM_TYPE_NAME = 'model'
-  static STREAM_TYPE_ID = MODEL_STREAM_TYPE_ID
+  static STREAM_TYPE_ID = 2
+
+  // The hardcoded "model" StreamID that all Model streams have in their metadata. This provides
+  // a "model" StreamID that can be indexed to query the set of all published Models.
+  private static readonly _MODEL: StreamID = (function () {
+    const data = encode('model-v1')
+    const multihash = multihashes.encode(data, 'identity')
+    const digest = create(code, multihash)
+    const cid = CID.createV1(code, digest)
+    return new StreamID(Model.STREAM_TYPE_ID, cid)
+  })()
 
   private _isReadOnly = false
 
@@ -255,6 +253,7 @@ export class Model extends Stream {
     const patch = jsonpatch.compare(this.content, newContent)
     const commit: RawCommit = {
       data: patch,
+      header: {},
       prev: this.tip,
       id: this.state.log[0].cid,
     }
@@ -291,7 +290,7 @@ export class Model extends Stream {
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       unique: uint8arrays.toString(randomBytes(12), 'base64'),
-      model: MODEL_MODEL_STREAMID_BYTES,
+      model: Model._MODEL.bytes,
     }
     const commit: GenesisCommit = { data: content, header }
     return _signDagJWS(signer, commit)
