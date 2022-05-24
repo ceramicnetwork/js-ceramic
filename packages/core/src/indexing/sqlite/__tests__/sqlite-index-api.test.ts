@@ -5,9 +5,16 @@ import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
 import { delay } from '../../../__tests__/delay'
+import { CID } from 'multiformats/cid'
+import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
+import * as sha256 from '@stablelib/sha256'
+import * as uint8arrays from 'uint8arrays'
+import { randomBytes } from 'crypto'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna'
+const CONTROLLER = 'did:key:foo'
+const SHA256_CODE = 0x12
 
 let tmpFolder: tmp.DirectoryResult
 let dataSource: DataSource
@@ -18,6 +25,7 @@ beforeEach(async () => {
     type: 'sqlite',
     database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
   })
+  await dataSource.initialize()
 })
 
 afterEach(async () => {
@@ -27,6 +35,10 @@ afterEach(async () => {
 
 describe('init', () => {
   test('initialize DataSource', async () => {
+    const dataSource = new DataSource({
+      type: 'sqlite',
+      database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
+    })
     const initializeSpy = jest.spyOn(dataSource, 'initialize')
     const indexApi = new SqliteIndexApi(dataSource, [])
     await indexApi.init()
@@ -73,7 +85,6 @@ function closeDates(a: Date, b: Date, deltaS = 1) {
 
 describe('indexStream', () => {
   const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
-  const CONTROLLER = 'did:key:foo'
   const STREAM_CONTENT = {
     model: MODELS_TO_INDEX[0],
     streamID: StreamID.fromString(STREAM_ID_B),
@@ -124,5 +135,42 @@ describe('indexStream', () => {
     expect(closeDates(updatedAt, updateTime)).toBeTruthy()
     const createdAt = new Date(raw.created_at * 1000)
     expect(closeDates(createdAt, createTime)).toBeTruthy()
+  })
+})
+
+function randomCID(): CID {
+  const data = randomBytes(32)
+  const body = uint8arrays.concat([uint8arrays.fromString('1220', 'base16'), sha256.hash(data)])
+  return CID.create(1, SHA256_CODE, decodeMultiHash(body))
+}
+
+describe('page', () => {
+  const MODELS_TO_INDEX = [StreamID.fromString(STREAM_ID_A)]
+  const MODEL = MODELS_TO_INDEX[0]
+  describe('default order', () => {
+    test('return first N', async () => {
+      const indexAPI = new SqliteIndexApi(dataSource, MODELS_TO_INDEX)
+      await indexAPI.init()
+      const insertP = Array.from({ length: 100 }).map(async () => {
+        return indexAPI.indexStream({
+          model: MODEL,
+          streamID: new StreamID(1, randomCID()),
+          controller: CONTROLLER,
+          lastAnchor: null,
+        })
+      })
+      await Promise.all(insertP)
+      const result = await indexAPI.page({
+        model: MODEL,
+        first: 10,
+      })
+      expect(result.entries.length).toEqual(10)
+    })
+    test.todo('return first N after M')
+    test.todo('return first N after M')
+    test.todo('return last')
+    test.todo('return last N')
+    test.todo('return last N before M')
+    test.todo('return last N before M')
   })
 })

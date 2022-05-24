@@ -1,9 +1,9 @@
 import { DataSource } from 'typeorm'
-import type { StreamID } from '@ceramicnetwork/streamid'
-import { NotImplementedError } from '../not-implemented-error.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } from '../types.js'
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
+import { PaginationKind, parsePagination } from '../parse-pagination'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -13,6 +13,12 @@ export function asTimestamp(input: Date | null | undefined): number | null {
     return Math.floor(input.valueOf() / 1000)
   } else {
     return undefined
+  }
+}
+
+export class UnsupportedOrderingError extends Error {
+  constructor(ordering: never) {
+    super(`Unsupported ordering: ${ordering}`)
   }
 }
 
@@ -43,8 +49,33 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     )
   }
 
-  page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
-    throw new NotImplementedError(`SqliteIndexApi::page`)
+  async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+    const pagination = parsePagination(query)
+    const limit = pagination.kind == PaginationKind.FORWARD ? pagination.first : pagination.last
+    const response = await this.dataSource.query(
+      `SELECT stream_id FROM ${asTableName(query.model)} LIMIT ?`,
+      [limit]
+    )
+    const streamIds = response.map((row) => StreamID.fromString(row.stream_id))
+    return {
+      entries: streamIds,
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        endCursor: '',
+        startCursor: '',
+      },
+    }
+    // const pagination = parsePagination(query)
+    // const order = query.order || Ordering.CHRONOLOGICAL
+    // switch (order) {
+    //   case Ordering.CHRONOLOGICAL:
+    //     return
+    //   case Ordering.INSERTION:
+    //     return
+    //   default:
+    //     throw new UnsupportedOrderingError(order)
+    // }
   }
 
   async init(): Promise<void> {
