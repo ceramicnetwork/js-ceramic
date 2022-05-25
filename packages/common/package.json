@@ -50,7 +50,6 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.4",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/logfmt": "^1.2.2",
     "@types/node": "^17.0.5",
