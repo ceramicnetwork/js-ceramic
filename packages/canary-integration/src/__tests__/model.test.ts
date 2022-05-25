@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals'
-import cloneDeep from 'lodash.clonedeep'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -7,7 +6,6 @@ import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
 import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
 import { Ceramic } from '@ceramicnetwork/core'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 
@@ -39,20 +37,6 @@ describe('Model API http-client tests', () => {
     await daemon.close()
     await core.close()
     await ipfs.stop()
-  })
-
-  test('temp', async () => {
-    const modelStreamID = Model.MODEL
-    console.log(modelStreamID.toString())
-    const parsed = StreamID.fromString(modelStreamID.toString())
-    expect(parsed.type).toEqual(modelStreamID.type)
-    expect(parsed.cid.toString()).toEqual(modelStreamID.cid.toString())
-
-    const clonedCID = cloneDeep(modelStreamID.cid)
-    console.log(clonedCID.toString())
-
-    const clonedStreamID = cloneDeep(modelStreamID)
-    console.log(clonedStreamID.toString())
   })
 
   test('Create valid model', async () => {
