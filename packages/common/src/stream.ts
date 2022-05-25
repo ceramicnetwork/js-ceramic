@@ -178,13 +178,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
 
   get metadata(): StreamMetadata {
     const { next, metadata } = this.state$.value
-    const selectedMetadata = next?.metadata ?? metadata
-    const cloned = cloneDeep(selectedMetadata)
-    if (cloned.model) {
-      // cloneDeep doesn't properly copy class instances.
-      cloned.model = new StreamID(selectedMetadata.model.type, selectedMetadata.model.cid)
-    }
-    return cloned
+    return cloneDeep(next?.metadata ?? metadata)
   }
 
   get content(): any {

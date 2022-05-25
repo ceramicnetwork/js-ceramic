@@ -14,8 +14,18 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { str } from 'ajv'
-import * as stream from 'stream'
+
+function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
+  if (arr1.length != arr2.length) {
+    return false
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false
+    }
+  }
+  return true
+}
 
 /**
  * Model stream handler implementation
@@ -65,36 +75,29 @@ export class ModelHandler implements StreamHandler<Model> {
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
-    if (!isSigned) {
+    if (isSigned) {
+      const streamId = await StreamID.fromGenesis('model', commitData.commit)
+      // TODO(NET-1437): replace family with model
+      const { controllers, family } = payload.header
+      await SignatureUtils.verifyCommitSignature(
+        commitData,
+        context.did,
+        controllers[0],
+        family,
+        streamId
+      )
+    } else {
       throw Error('Model genesis commit must be signed')
     }
-
-    const streamId = await StreamID.fromGenesis('model', commitData.commit)
-    // TODO(NET-1437): replace family with model
-    const { controllers, family } = payload.header
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controllers[0],
-      family,
-      streamId
-    )
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
-    if (!metadata.model.equals(Model.MODEL)) {
-      throw new Error(
-        `Invalid 'model' field ${metadata.model.toString()} for Model Stream ${streamId.toString()}`
-      )
-    }
-
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data || {},
-      metadata,
+      metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
@@ -116,7 +119,7 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const metadata = state.metadata
+    const metadata = state.next?.metadata ?? state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
     const family = metadata.family
 
@@ -146,9 +149,6 @@ export class ModelHandler implements StreamHandler<Model> {
     }
 
     const nextState = cloneDeep(state)
-
-    // cloneDeep doesn't properly copy class instances
-    nextState.metadata.model = new StreamID(state.metadata.model.type, state.metadata.model.cid)
 
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED

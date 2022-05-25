@@ -324,13 +324,6 @@ export class ConflictResolution {
     const commitData = unappliedCommits[0]
     if (commitData.commit.prev.equals(tip)) {
       // the new log starts where the previous one ended
-      const cloned = cloneDeep(initialState)
-      if (cloned.metadata.model) {
-        cloned.metadata.model = initialState.metadata.model
-      }
-      if (cloned.next?.metadata.model) {
-        cloned.metadata.model = initialState.metadata.model
-      }
       return this.applyLogToState(handler, unappliedCommits, cloneDeep(initialState), false, opts)
     }
 
