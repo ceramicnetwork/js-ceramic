@@ -63,20 +63,20 @@ export class ModelHandler implements StreamHandler<Model> {
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
-    if (isSigned) {
-      const streamId = await StreamID.fromGenesis('model', commitData.commit)
-      // TODO(NET-1437): replace family with model
-      const { controllers, family } = payload.header
-      await SignatureUtils.verifyCommitSignature(
-        commitData,
-        context.did,
-        controllers[0],
-        family,
-        streamId
-      )
-    } else {
+    if (!isSigned) {
       throw Error('Model genesis commit must be signed')
     }
+
+    const streamId = await StreamID.fromGenesis('model', commitData.commit)
+    // TODO(NET-1437): replace family with model
+    const { controllers, family } = payload.header
+    await SignatureUtils.verifyCommitSignature(
+      commitData,
+      context.did,
+      controllers[0],
+      family,
+      streamId
+    )
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
@@ -85,9 +85,9 @@ export class ModelHandler implements StreamHandler<Model> {
     const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
     const state = {
       type: Model.STREAM_TYPE_ID,
-      content: payload.data || {},
+      content: payload.data,
       metadata,
-      signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
+      signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
@@ -107,7 +107,6 @@ export class ModelHandler implements StreamHandler<Model> {
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const metadata = state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
     const family = metadata.family
@@ -127,6 +126,12 @@ export class ModelHandler implements StreamHandler<Model> {
 
     if (!payload.id.equals(state.log[0].cid)) {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
+    }
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!payload.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${payload.prev}`
+      )
     }
 
     if (payload.header?.controllers) {
