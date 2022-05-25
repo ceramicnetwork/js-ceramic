@@ -59,7 +59,7 @@ export class StreamUtils {
     }
 
     if (commit.header?.model) {
-      cloned.header.model = commit.header.model.toString() // todo serialize as bytes
+      cloned.header.model = commit.header.model.toString()
     }
 
     return cloned
@@ -123,7 +123,7 @@ export class StreamUtils {
       cloned.anchorProof.root = cloned.anchorProof.root.toString()
     }
     if (state.metadata?.model) {
-      cloned.metadata.model = state.metadata.model.toString() // todo serialize as bytes
+      cloned.metadata.model = state.metadata.model.toString()
     }
     if (state.next?.metadata?.model) {
       cloned.next.metadata.model = state.next.metadata.model.toString()
