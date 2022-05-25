@@ -6,6 +6,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
 import { Ceramic } from '@ceramicnetwork/core'
 import { StreamID } from '@ceramicnetwork/streamid'
+import cloneDeep from 'lodash.clonedeep'
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
 const FINAL_CONTENT = { name: 'myModel', schema: {}, accountRelation: ModelAccountRelation.LIST }
@@ -54,6 +55,12 @@ describe('Model core API tests', () => {
     const parsed = StreamID.fromString(modelStreamID.toString())
     expect(parsed.type).toEqual(modelStreamID.type)
     expect(parsed.cid.toString()).toEqual(modelStreamID.cid.toString())
+
+    const clonedCID = cloneDeep(modelStreamID.cid)
+    console.log(clonedCID.toString())
+
+    const clonedStreamID = cloneDeep(modelStreamID)
+    console.log(clonedStreamID.toString())
   })
 
   test('Anchor genesis', async () => {

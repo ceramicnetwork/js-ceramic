@@ -94,10 +94,11 @@ export class ModelHandler implements StreamHandler<Model> {
       throw new Error('Exactly one controller must be specified')
     }
 
+    const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data || {},
-      metadata: payload.header,
+      metadata,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
@@ -119,7 +120,7 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const metadata = state.next?.metadata ?? state.metadata
+    const metadata = state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
     const family = metadata.family
 
