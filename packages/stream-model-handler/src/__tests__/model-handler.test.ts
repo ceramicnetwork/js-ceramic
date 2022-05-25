@@ -131,6 +131,7 @@ const setDidToNotRotatedState = (did: DID) => {
   did.createJWS = async () => jwsForVersion0
 }
 
+// TODO: De-dupe this with similar code from tile-document-handler.test.ts and model-instance-document.test.ts
 const rotateKey = (did: DID, rotateDate: string) => {
   did.resolve = async (didUrl) => {
     const { did } = parseDidUrl(didUrl)
