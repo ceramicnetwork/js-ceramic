@@ -412,7 +412,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await modelHandler.applyCommit(genesisCommitData, context)
 
     const incompleteFinalConent = { name: 'myModel', schema: {} }
     const state$ = TestUtils.runningState(state)
@@ -458,7 +458,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await modelHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
