@@ -7,6 +7,10 @@ import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import * as random from '@stablelib/random'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
+import type { DID } from 'dids'
+import { parse as parseDidUrl } from 'did-resolver'
+import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 
 const SHA256_CODE = 0x12
 
@@ -19,6 +23,44 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
     this.state = this.value
     this.id = new StreamID(this.state.type, this.state.log[0].cid)
   }
+}
+
+const jwsForVersion0 = {
+  payload: 'bbbb',
+  signatures: [
+    {
+      protected:
+        'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9',
+      signature: 'cccc',
+    },
+  ],
+}
+
+const jwsForVersion1 = {
+  payload: 'bbbb',
+  signatures: [
+    {
+      protected:
+        'ewogICAgImtpZCI6ImRpZDozOmsydDZ3eWZzdTRwZzB0Mm40ajhtczNzMzN4c2dxamh0dG8wNG12cTh3NWEydjV4bzQ4aWR5ejM4bDd5ZGtpP3ZlcnNpb249MSNzaWduaW5nIgp9',
+      signature: 'cccc',
+    },
+  ],
+}
+
+const ThreeIdResolver = {
+  '3': async (did) => ({
+    didResolutionMetadata: { contentType: 'application/did+json' },
+    didDocument: wrapDocument(
+      {
+        publicKeys: {
+          signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+          encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
+        },
+      },
+      did
+    ),
+    didDocumentMetadata: {},
+  }),
 }
 
 export class TestUtils {
@@ -64,5 +106,67 @@ export class TestUtils {
       random.randomBytes(32),
     ])
     return CID.create(1, SHA256_CODE, decodeMultiHash(body))
+  }
+
+  /**
+   * Modifies the given DID instance to simulate a key rotation
+   * @param did
+   * @param rotateDate
+   */
+  static rotateKey(did: DID, rotateDate: string) {
+    did.resolve = async (didUrl) => {
+      const { did } = parseDidUrl(didUrl)
+      const isVersion0 = /version=0/.exec(didUrl)
+
+      if (isVersion0) {
+        return {
+          didResolutionMetadata: { contentType: 'application/did+json' },
+          didDocument: wrapDocument(
+            {
+              publicKeys: {
+                signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+                encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
+              },
+            },
+            did
+          ),
+          didDocumentMetadata: {
+            nextUpdate: rotateDate,
+          },
+        }
+      }
+
+      return {
+        didResolutionMetadata: { contentType: 'application/did+json' },
+        didDocument: wrapDocument(
+          {
+            publicKeys: {
+              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+              encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
+            },
+          },
+          did
+        ),
+        didDocumentMetadata: {
+          updated: rotateDate,
+        },
+      }
+    }
+
+    did.createJWS = async () => jwsForVersion1
+  }
+
+  /**
+   * Undoes the effect of 'rotateKey' to the given DID instance
+   * @param did
+   */
+  static resetDidToNotRotatedState(did: DID) {
+    const keyDidResolver = KeyDidResolver.getResolver()
+    did.setResolver({
+      ...keyDidResolver,
+      ...ThreeIdResolver,
+    })
+
+    did.createJWS = async () => jwsForVersion0
   }
 }

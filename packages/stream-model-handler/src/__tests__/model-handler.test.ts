@@ -3,7 +3,6 @@ import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
 import type { DID } from 'dids'
-import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { ModelHandler } from '../model-handler.js'
 import * as uint8arrays from 'uint8arrays'
@@ -20,7 +19,6 @@ import {
   IpfsApi,
   CeramicSigner,
 } from '@ceramicnetwork/common'
-import { parse as parseDidUrl } from 'did-resolver'
 
 jest.unstable_mockModule('did-jwt', () => {
   return {
@@ -53,28 +51,6 @@ const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54ad
 const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 
-const jwsForVersion0 = {
-  payload: 'bbbb',
-  signatures: [
-    {
-      protected:
-        'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9',
-      signature: 'cccc',
-    },
-  ],
-}
-
-const jwsForVersion1 = {
-  payload: 'bbbb',
-  signatures: [
-    {
-      protected:
-        'ewogICAgImtpZCI6ImRpZDozOmsydDZ3eWZzdTRwZzB0Mm40ajhtczNzMzN4c2dxamh0dG8wNG12cTh3NWEydjV4bzQ4aWR5ejM4bDd5ZGtpP3ZlcnNpb249MSNzaWduaW5nIgp9',
-      signature: 'cccc',
-    },
-  ],
-}
-
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
 const FINAL_CONTENT = {
@@ -103,75 +79,6 @@ const serialize = (data: any): any => {
     return data.toString()
   }
   return data
-}
-
-const ThreeIdResolver = {
-  '3': async (did) => ({
-    didResolutionMetadata: { contentType: 'application/did+json' },
-    didDocument: wrapDocument(
-      {
-        publicKeys: {
-          signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-          encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-        },
-      },
-      did
-    ),
-    didDocumentMetadata: {},
-  }),
-}
-
-const setDidToNotRotatedState = (did: DID) => {
-  const keyDidResolver = KeyDidResolver.getResolver()
-  did.setResolver({
-    ...keyDidResolver,
-    ...ThreeIdResolver,
-  })
-
-  did.createJWS = async () => jwsForVersion0
-}
-
-const rotateKey = (did: DID, rotateDate: string) => {
-  did.resolve = async (didUrl) => {
-    const { did } = parseDidUrl(didUrl)
-    const isVersion0 = /version=0/.exec(didUrl)
-
-    if (isVersion0) {
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {
-          nextUpdate: rotateDate,
-        },
-      }
-    }
-
-    return {
-      didResolutionMetadata: { contentType: 'application/did+json' },
-      didDocument: wrapDocument(
-        {
-          publicKeys: {
-            signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-            encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
-          },
-        },
-        did
-      ),
-      didDocumentMetadata: {
-        updated: rotateDate,
-      },
-    }
-  }
-
-  did.createJWS = async () => jwsForVersion1
 }
 
 async function checkSignedCommitMatchesExpectations(
@@ -264,7 +171,7 @@ describe('ModelHandler', () => {
   beforeEach(() => {
     modelHandler = new ModelHandler()
 
-    setDidToNotRotatedState(did)
+    TestUtils.resetDidToNotRotatedState(did)
   })
 
   it('is constructed correctly', async () => {
@@ -596,7 +503,7 @@ describe('ModelHandler', () => {
 
     const state = await modelHandler.applyCommit(genesisCommitData, context)
 
-    rotateKey(did, rotateDate.toISOString())
+    TestUtils.rotateKey(did, rotateDate.toISOString())
 
     // make update with old key
     const state$ = TestUtils.runningState(state)
@@ -650,7 +557,7 @@ describe('ModelHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    rotateKey(did, rotateDate.toISOString())
+    TestUtils.rotateKey(did, rotateDate.toISOString())
 
     await expect(modelHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
@@ -659,7 +566,7 @@ describe('ModelHandler', () => {
 
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-    rotateKey(did, rotateDate.toISOString())
+    TestUtils.rotateKey(did, rotateDate.toISOString())
 
     const modelHandler = new ModelHandler()
 
