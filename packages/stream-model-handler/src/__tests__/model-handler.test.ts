@@ -278,7 +278,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: { controllers: [context.api.did.id], model: Model._MODEL.bytes },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
