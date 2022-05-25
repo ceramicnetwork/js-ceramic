@@ -36,7 +36,6 @@
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
-    "lodash.clonedeep": "^4.5.0",
     "multihashes": "^4.0.3",
     "uint8arrays": "^3.0.0"
   },

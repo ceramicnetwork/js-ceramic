@@ -15,6 +15,18 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 
+function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
+  if (arr1.length != arr2.length) {
+    return false
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false
+    }
+  }
+  return true
+}
+
 /**
  * Model stream handler implementation
  */

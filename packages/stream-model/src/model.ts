@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import cloneDeep from 'lodash.clonedeep'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 import {
@@ -17,8 +16,6 @@ import {
   SignedCommitContainer,
   CeramicSigner,
   GenesisHeader,
-  CommitType,
-  StreamUtils,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import type { JSONSchema } from 'json-schema-typed/draft-07'
@@ -301,26 +298,6 @@ export class Model extends Stream {
     }
     const commit: GenesisCommit = { data: content, header }
     return _signDagJWS(signer, commit)
-  }
-
-  /**
-   * Returns a list of the contents of the (non-anchor) commits.  Can be used with `fromCommits()`
-   * to publish Models to new nodes/networks.
-   */
-  async exportCommits(): Promise<Array<SignedCommitContainer>> {
-    const filteredLog = this.state.log.filter((logEntry) => logEntry.type != CommitType.ANCHOR)
-    const commits = []
-    for (const logEntry of filteredLog) {
-      const cid = logEntry.cid
-      const commit = await this.api.context.dispatcher.retrieveCommit(cid)
-      const commitContainer = await StreamUtils.convertCommitToSignedCommitContainer(
-        commit,
-        this.api.context.ipfs
-      )
-      commits.push(commitContainer)
-    }
-
-    return commits
   }
 
   /**
