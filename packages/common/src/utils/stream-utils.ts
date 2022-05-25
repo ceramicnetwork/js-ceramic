@@ -59,7 +59,7 @@ export class StreamUtils {
     }
 
     if (commit.header?.model) {
-      cloned.header.model = commit.header.model.bytes
+      cloned.header.model = commit.header.model.toString() // todo serialize as bytes
     }
 
     return cloned
@@ -98,7 +98,7 @@ export class StreamUtils {
     }
 
     if (cloned.header?.model) {
-      cloned.header.model = StreamID.fromBytes(cloned.header.model)
+      cloned.header.model = StreamID.fromString(cloned.header.model)
     }
 
     return cloned
@@ -123,10 +123,10 @@ export class StreamUtils {
       cloned.anchorProof.root = cloned.anchorProof.root.toString()
     }
     if (state.metadata?.model) {
-      cloned.metadata.model = state.metadata.model.bytes
+      cloned.metadata.model = state.metadata.model.toString() // todo serialize as bytes
     }
     if (state.next?.metadata?.model) {
-      cloned.next.metadata.model = state.next.metadata.model.bytes
+      cloned.next.metadata.model = state.next.metadata.model.toString()
     }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
@@ -166,10 +166,10 @@ export class StreamUtils {
       }
     }
     if (state.metadata?.model) {
-      cloned.metadata.model = StreamID.fromBytes(state.metadata.model)
+      cloned.metadata.model = StreamID.fromString(state.metadata.model)
     }
     if (state.next?.metadata?.model) {
-      cloned.next.metadata.model = StreamID.fromBytes(state.next.metadata.model)
+      cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
     }
 
     return cloned
