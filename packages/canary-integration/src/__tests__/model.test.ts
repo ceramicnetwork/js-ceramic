@@ -135,6 +135,18 @@ describe('Model core API tests', () => {
       /Incomplete placeholder Models cannot be loaded/
     )
   })
+
+  test('Can load a complete stream', async () => {
+    const model = await Model.createPlaceholder(ceramic, PLACEHOLDER_CONTENT)
+    await model.replacePlaceholder(FINAL_CONTENT)
+    await anchorUpdate(ceramic, model)
+
+    const loaded = await Model.load(ceramic, model.id)
+
+    expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(loaded.state.log.length).toEqual(3)
+    expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
+  })
 })
 
 describe('Model API multi-node tests', () => {
