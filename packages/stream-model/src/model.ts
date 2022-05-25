@@ -99,7 +99,7 @@ export class Model extends Stream {
 
   // The hardcoded "model" StreamID that all Model streams have in their metadata. This provides
   // a "model" StreamID that can be indexed to query the set of all published Models.
-  private static readonly _MODEL: StreamID = (function () {
+  static readonly MODEL: StreamID = (function () {
     const data = encode('model-v1')
     const multihash = multihashes.encode(data, 'identity')
     const digest = create(code, multihash)
@@ -289,7 +289,7 @@ export class Model extends Stream {
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       unique: uint8arrays.toString(randomBytes(12), 'base64'),
-      model: Model._MODEL.bytes,
+      model: Model.MODEL.bytes,
     }
     const commit: GenesisCommit = { data: content, header }
     return _signDagJWS(signer, commit)

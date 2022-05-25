@@ -278,7 +278,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: { controllers: [context.api.did.id], model: Model._MODEL.bytes },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -314,6 +314,7 @@ describe('ModelHandler', () => {
     }
     const streamState = await modelHandler.applyCommit(commitData, context)
     delete streamState.metadata.unique
+    streamState.metadata.model = streamState.metadata.model.toString()
     expect(streamState).toMatchSnapshot()
   })
 
@@ -390,6 +391,8 @@ describe('ModelHandler', () => {
     state = await modelHandler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
     delete state.next.metadata.unique
+    state.metadata.model = state.metadata.model.toString()
+    state.next.metadata.model = state.next.metadata.model.toString()
     expect(state).toMatchSnapshot()
   })
 
@@ -568,6 +571,7 @@ describe('ModelHandler', () => {
     }
     state = await modelHandler.applyCommit(anchorCommitData, context, state)
     delete state.metadata.unique
+    state.metadata.model = state.metadata.model.toString()
     expect(state).toMatchSnapshot()
   })
 
@@ -684,6 +688,7 @@ describe('ModelHandler', () => {
     }
     const state = await modelHandler.applyCommit(genesisCommitData, context)
     delete state.metadata.unique
+    state.metadata.model = state.metadata.model.toString()
 
     expect(state).toMatchSnapshot()
   })
