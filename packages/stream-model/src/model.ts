@@ -253,7 +253,6 @@ export class Model extends Stream {
     const patch = jsonpatch.compare(this.content, newContent)
     const commit: RawCommit = {
       data: patch,
-      header: {},
       prev: this.tip,
       id: this.state.log[0].cid,
     }
