@@ -55,11 +55,11 @@ jobs:
           echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }}" >> $GITHUB_ENV
           echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }}" >> $GITHUB_ENV
       -
-        name: Set env vars on pull request
+        name: Set up cache for for pull requests
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
-          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }} type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
+          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
       -
         name: Install Dagger
         uses: dagger/dagger-for-github@v3
@@ -69,26 +69,36 @@ jobs:
       -
         name: Run unit tests
         run: |
+          # TODO: Pull the latest pipelinetools. Once the code is stable, use a tagged version.
           dagger project update github.com/3box/pipelinetools@develop
 
-          REPO_META=$(dagger do --output-format json build -p ${{ env.DAGGER_CI }})
+          # TODO: Report bug to Dagger. Script doesn't get automatically copied during `dagger update` and also doesn't
+          # have executable permissions.
+          chmod +x cue.mod/pkg/universe.dagger.io/aws/_scripts/install.sh
+
+          # The JSON output of the `build` action provides additional repository metadata to be used subsequently.
+          REPO_META=$(dagger do --output-format json build -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-build" --cache-from "${{ env.DAGGER_CACHE_FROM }}-build")
           echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
           echo "SHA_TAG=$(echo "${REPO_META}" | jq -r '.shaTag')" >> $GITHUB_ENV
-          echo "BRANCH=develop" >> $GITHUB_ENV
+          echo "BRANCH=$(echo "${REPO_META}" | jq -r '.branch')" >> $GITHUB_ENV
       -
         name: Build and test image
         run: |
-          dagger do verify -p ${{ env.DAGGER_CI }}
+          dagger do verify -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-verify" --cache-from "${{ env.DAGGER_CACHE_FROM }}-verify"
       -
         name: Push images for mainline branches
-#        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
-          dagger do -l error push -w "actions:push:\"${{ env.ENV_TAG }}\":tags:[\"${{ env.SHA }}\",\"${{ env.SHA_TAG }}\",\"${{ env.BRANCH }}\",\"${{ env.ENV_TAG }}\"]" -p ${{ env.DAGGER_CI }}
+          # Dagger uses CUE, which is declarative. Since the tags to apply to the Docker image cannot be interpolated,
+          # we must extract them from the `build` action then pass them along to the `push` action.
+          dagger do push -w "actions:push:\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-push" --cache-from "${{ env.DAGGER_CACHE_FROM }}-push"
       -
         name: Post deploy event
-#        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
-          dagger do -l error queue -w "actions:queue:\"${{ env.AWS_DEFAULT_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }}
+          # As above, since CUE is declarative, invoke the `queue` action with explicit values for the parameters to
+          # pass along to the job queue.
+          dagger do queue -w "actions:queue:\"${{ env.AWS_DEFAULT_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-queue" --cache-from "${{ env.DAGGER_CACHE_FROM }}-queue"
       -
         name: Print Buildkitd Logs
         if: ${{ failure() }}
