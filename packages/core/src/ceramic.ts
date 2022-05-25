@@ -45,6 +45,8 @@ import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-valid
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
+import { buildIndexing } from './indexing/build-indexing.js'
+import type { DatabaseIndexAPI } from './indexing/types.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -121,6 +123,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
+  indexing: DatabaseIndexAPI
 }
 
 /**
@@ -176,6 +179,7 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
+  private readonly _indexing: DatabaseIndexAPI
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -197,6 +201,7 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+    this._indexing = modules.indexing
 
     this.context = {
       api: this,
@@ -364,6 +369,7 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
+    const indexingApi = buildIndexing(config.indexing)
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
@@ -447,6 +453,7 @@ export class Ceramic implements CeramicApi {
       pinStoreFactory,
       repository,
       shutdownController,
+      indexing: indexingApi,
     }
 
     return [modules, params]
@@ -499,6 +506,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+      await this._indexing.init()
 
       await this._startupChecks()
     } catch (err) {
