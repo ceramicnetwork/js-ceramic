@@ -92,6 +92,13 @@ describe('Model API http-client tests', () => {
     expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
   })
 
+  test('Models are created uniquely', async () => {
+    const model1 = await Model.create(ceramic, FINAL_CONTENT)
+    const model2 = await Model.create(ceramic, FINAL_CONTENT)
+
+    expect(model1.id.toString()).not.toEqual(model2.id.toString())
+  })
+
   test('Cannot create incomplete model with create()', async () => {
     await expect(Model.create(ceramic, PLACEHOLDER_CONTENT)).rejects.toThrow(
       /missing a 'schema' field/
