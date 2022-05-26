@@ -11,6 +11,7 @@ import {trace} from '@opentelemetry/api'
 
 const collectorOptions = {
 //  url: '<opentelemetry-collector-url>', // url is optional and can be omitted - default is http://localhost:4318/v1/metrics
+  url: 'http://localhost:53717/v1/metrics',
   headers: {}, // an optional object containing custom headers to be sent with each request
   concurrencyLimit: 1, // an optional limit on pending requests
 };
