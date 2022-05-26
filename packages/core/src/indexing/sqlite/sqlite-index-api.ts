@@ -5,6 +5,7 @@ import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { PaginationKind, parsePagination } from '../parse-pagination'
 import * as uint8arrays from 'uint8arrays'
+import { NotImplementedError } from '../not-implemented-error'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -58,58 +59,115 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     const now = new Date()
     const future = new Date(now.getFullYear(), now.getMonth())
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
-    if (pagination.kind === PaginationKind.FORWARD && !pagination.after) {
-      response = await this.dataSource.query(
-        `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
-          query.model
-        )} ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?`,
-        [future.valueOf(), limit + 1]
-      )
-    }
-    if (pagination.kind === PaginationKind.FORWARD && pagination.after) {
-      const after = JSON.parse(
-        uint8arrays.toString(uint8arrays.fromString(pagination.after, 'base64url'))
-      )
-      if (after.last_anchored_at) {
+    if (pagination.kind === PaginationKind.FORWARD) {
+      if (!pagination.after) {
         response = await this.dataSource.query(
-          `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
+          `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
+            query.model
+          )} ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?`,
+          [future.valueOf(), limit + 1]
+        )
+      } else {
+        const after = JSON.parse(
+          uint8arrays.toString(uint8arrays.fromString(pagination.after, 'base64url'))
+        )
+        if (after.last_anchored_at) {
+          response = await this.dataSource.query(
+            `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
            WHERE last_anchored_at < ?
            ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?
           `,
-          [after.last_anchored_at, future.valueOf(), limit + 1]
-        )
-      } else {
-        response = await this.dataSource.query(
-          `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
+            [after.last_anchored_at, future.valueOf(), limit + 1]
+          )
+        } else {
+          response = await this.dataSource.query(
+            `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
            WHERE (last_anchored_at IS NULL AND created_at < ?) OR (last_anchored_at IS NOT NULL)
            ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?
           `,
-          [after.created_at, future.valueOf(), limit + 1]
-        )
+            [after.created_at, future.valueOf(), limit + 1]
+          )
+        }
+      }
+      const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
+      const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
+      const lastEntry = init[init.length - 1]
+      const endCursor = lastEntry
+        ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
+        : undefined
+      const startEntry = init[0]
+      const startCursor = startEntry
+        ? { created_at: startEntry.created_at, last_anchored_at: startEntry.last_anchored_at }
+        : undefined
+      return {
+        entries: streamIds,
+        pageInfo: {
+          hasNextPage: last.length > 0,
+          hasPreviousPage: false,
+          endCursor: endCursor
+            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
+            : undefined,
+          startCursor: startCursor
+            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(startCursor)), 'base64url')
+            : undefined,
+        },
       }
     }
-    const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
-    const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
-    const lastEntry = init[init.length - 1]
-    const endCursor = lastEntry
-      ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
-      : undefined
-    const startEntry = init[0]
-    const startCursor = startEntry
-      ? { created_at: startEntry.created_at, last_anchored_at: startEntry.last_anchored_at }
-      : undefined
-    return {
-      entries: streamIds,
-      pageInfo: {
-        hasNextPage: last.length > 0,
-        hasPreviousPage: false,
-        endCursor: endCursor
-          ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
-          : undefined,
-        startCursor: startCursor
-          ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(startCursor)), 'base64url')
-          : undefined,
-      },
+    if (pagination.kind === PaginationKind.BACKWARD) {
+      if (pagination.before) {
+        const before = JSON.parse(
+          uint8arrays.toString(uint8arrays.fromString(pagination.before, 'base64url'))
+        )
+        if (before.last_anchored_at) {
+          response = await this.dataSource.query(
+            `SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
+              query.model
+            )}
+            WHERE IFNULL(last_anchored_at, ?) > ?
+            ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
+            [future.valueOf(), before.last_anchored_at, future.valueOf(), limit + 1, future.valueOf()]
+          )
+        } else {
+          response = await this.dataSource.query(
+            `SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
+              query.model
+            )}
+            WHERE last_anchored_at IS NULL and created_at > ?
+            ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
+            [before.created_at, future.valueOf(), limit + 1, future.valueOf()]
+          )
+        }
+      } else {
+        response = await this.dataSource.query(
+          `SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
+            query.model
+          )} ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
+          [future.valueOf(), limit + 1, future.valueOf()]
+        )
+      }
+      const [first, tail] = [response.slice(-limit - 1, -limit), response.slice(-limit)]
+      const streamIds = tail.map((row) => StreamID.fromString(row.stream_id))
+      const lastEntry = tail[tail.length - 1]
+      const endCursor = lastEntry
+        ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
+        : undefined
+      const startEntry = tail[0]
+      const startCursor = startEntry
+        ? { created_at: startEntry.created_at, last_anchored_at: startEntry.last_anchored_at }
+        : undefined
+      return {
+        entries: streamIds,
+        pageInfo: {
+          hasPreviousPage: first.length > 0,
+          hasNextPage: false,
+          endCursor: endCursor
+            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
+            : undefined,
+          startCursor: startCursor
+            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(startCursor)), 'base64url')
+            : undefined,
+        },
+      }
     }
     // const pagination = parsePagination(query)
     // const order = query.order || Ordering.CHRONOLOGICAL

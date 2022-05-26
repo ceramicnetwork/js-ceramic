@@ -200,58 +200,7 @@ describe('page', () => {
       'k2t6wysde7589fze9445oe7y578f7csh4uexfqe9r9qziqyz8koegst94ryoat',
     ]
 
-    test('return first N', async () => {
-      const result = await indexAPI.page({
-        model: MODEL,
-        first: 10,
-      })
-      expect(result.entries.length).toEqual(10)
-      const expected = ALL_ENTRIES.slice(0, 10)
-      const actual = result.entries.map(String)
-      expect(actual).toEqual(expected)
-      expect(result.pageInfo.hasNextPage).toEqual(true)
-      expect(result.pageInfo.hasPreviousPage).toEqual(false)
-      expect(result.pageInfo.endCursor).toBeTruthy()
-      expect(result.pageInfo.startCursor).toBeTruthy()
-    })
-    test('return first N after M', async () => {
-      const resultA = await indexAPI.page({
-        model: MODEL,
-        first: 10,
-      })
-      expect(resultA.entries.length).toEqual(10)
-      expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(0, 10))
-      expect(resultA.pageInfo.hasNextPage).toEqual(true)
-      expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultA.pageInfo.endCursor).toBeTruthy()
-      expect(resultA.pageInfo.startCursor).toBeTruthy()
-
-      const resultB = await indexAPI.page({
-        model: MODEL,
-        first: 10,
-        after: resultA.pageInfo.endCursor,
-      })
-      expect(resultB.entries.length).toEqual(10)
-      expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(10, 20))
-      expect(resultB.pageInfo.hasNextPage).toEqual(true)
-      expect(resultB.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultB.pageInfo.endCursor).toBeTruthy()
-      expect(resultB.pageInfo.startCursor).toBeTruthy()
-
-      const resultC = await indexAPI.page({
-        model: MODEL,
-        first: 10,
-        after: resultB.pageInfo.endCursor,
-      })
-      const expectedC = ALL_ENTRIES.slice(20, 30)
-      expect(resultC.entries.length).toEqual(1)
-      expect(resultC.entries.map(String)).toEqual(expectedC)
-      expect(resultC.pageInfo.hasNextPage).toEqual(false)
-      expect(resultC.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultC.pageInfo.endCursor).toBeTruthy()
-      expect(resultC.pageInfo.startCursor).toBeTruthy()
-    })
-    test('return first N after M, null anchor time', async () => {
+    test('forward pagination', async () => {
       const resultA = await indexAPI.page({
         model: MODEL,
         first: 5,
@@ -283,10 +232,82 @@ describe('page', () => {
       expect(resultC.pageInfo.hasPreviousPage).toEqual(false)
       expect(resultC.pageInfo.endCursor).toBeTruthy()
       expect(resultC.pageInfo.startCursor).toBeTruthy()
+      const resultD = await indexAPI.page({
+        model: MODEL,
+        first: 5,
+        after: resultC.pageInfo.endCursor,
+      })
+      expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(15, 20))
+      expect(resultD.pageInfo.hasNextPage).toEqual(true)
+      expect(resultD.pageInfo.hasPreviousPage).toEqual(false)
+      expect(resultD.pageInfo.endCursor).toBeTruthy()
+      expect(resultD.pageInfo.startCursor).toBeTruthy()
+      const resultE = await indexAPI.page({
+        model: MODEL,
+        first: 5,
+        after: resultD.pageInfo.endCursor,
+      })
+      expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(20, 21))
+      expect(resultE.pageInfo.hasNextPage).toEqual(false)
+      expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
+      expect(resultE.pageInfo.endCursor).toBeTruthy()
+      expect(resultE.pageInfo.startCursor).toBeTruthy()
     })
-    test.todo('return last')
-    test.todo('return last N')
-    test.todo('return last N before M')
-    test.todo('return last N before M')
+    test('backward pagination', async () => {
+      const resultA = await indexAPI.page({
+        model: MODEL,
+        last: 5,
+      })
+      expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(-5))
+      expect(resultA.entries.length).toEqual(5)
+      expect(resultA.pageInfo.hasNextPage).toEqual(false)
+      expect(resultA.pageInfo.hasPreviousPage).toEqual(true)
+      expect(resultA.pageInfo.endCursor).toBeTruthy()
+      expect(resultA.pageInfo.startCursor).toBeTruthy()
+      const resultB = await indexAPI.page({
+        model: MODEL,
+        last: 5,
+        before: resultA.pageInfo.startCursor,
+      })
+      expect(resultB.entries.length).toEqual(5)
+      expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(-10, -5))
+      expect(resultB.pageInfo.hasNextPage).toEqual(false)
+      expect(resultB.pageInfo.hasPreviousPage).toEqual(true)
+      expect(resultB.pageInfo.endCursor).toBeTruthy()
+      expect(resultB.pageInfo.startCursor).toBeTruthy()
+      const resultC = await indexAPI.page({
+        model: MODEL,
+        last: 5,
+        before: resultB.pageInfo.startCursor,
+      })
+      expect(resultC.entries.length).toEqual(5)
+      expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(-15, -10))
+      expect(resultC.pageInfo.hasNextPage).toEqual(false)
+      expect(resultC.pageInfo.hasPreviousPage).toEqual(true)
+      expect(resultC.pageInfo.endCursor).toBeTruthy()
+      expect(resultC.pageInfo.startCursor).toBeTruthy()
+      const resultD = await indexAPI.page({
+        model: MODEL,
+        last: 5,
+        before: resultC.pageInfo.startCursor,
+      })
+      expect(resultD.entries.length).toEqual(5)
+      expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(-20, -15))
+      expect(resultD.pageInfo.hasNextPage).toEqual(false)
+      expect(resultD.pageInfo.hasPreviousPage).toEqual(true)
+      expect(resultD.pageInfo.endCursor).toBeTruthy()
+      expect(resultD.pageInfo.startCursor).toBeTruthy()
+      const resultE = await indexAPI.page({
+        model: MODEL,
+        last: 5,
+        before: resultD.pageInfo.startCursor,
+      })
+      expect(resultE.entries.length).toEqual(1)
+      expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(-21, -20))
+      expect(resultE.pageInfo.hasNextPage).toEqual(false)
+      expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
+      expect(resultE.pageInfo.endCursor).toBeTruthy()
+      expect(resultE.pageInfo.startCursor).toBeTruthy()
+    })
   })
 })
