@@ -21,6 +21,21 @@ This configuration will allow running the ceramic daemon from the debugger and s
 
 ## Local Development
 
+*macOS pre-requisits (11.x+):*
+
+* Install XCode & Command Line tools: `xcode-select --install`
+
+* Install Brew: https://brew.sh
+
+`brew install pyenv`
+
+Add pyenv to your PATH so that you can reference python (not python3):
+
+`$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.zshrc`
+
+`reset` - OR - restart Terminal window
+
+
 CLI helpers commands on how to start up environment and debug local code base.  
 
 *Compile full library:*
