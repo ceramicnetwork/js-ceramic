@@ -25,7 +25,7 @@ If you only want to test a specific package just `cd` into the specific package 
 
 ## Debugging and Local Development
 
-See [DEVELOPMENT_LOCAL.md](dev_docs/DEVELOPMENT_LOCAL.md)
+See [DEVELOPMENT_LOCAL.md](docs-dev/DEVELOPMENT_LOCAL.md)
 
 
 ## Repo structure
