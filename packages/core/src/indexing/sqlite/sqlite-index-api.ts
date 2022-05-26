@@ -94,6 +94,10 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     const endCursor = lastEntry
       ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
       : undefined
+    const startEntry = init[0]
+    const startCursor = startEntry
+      ? { created_at: startEntry.created_at, last_anchored_at: startEntry.last_anchored_at }
+      : undefined
     return {
       entries: streamIds,
       pageInfo: {
@@ -102,7 +106,9 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
         endCursor: endCursor
           ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
           : undefined,
-        startCursor: '',
+        startCursor: startCursor
+          ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(startCursor)), 'base64url')
+          : undefined,
       },
     }
     // const pagination = parsePagination(query)
