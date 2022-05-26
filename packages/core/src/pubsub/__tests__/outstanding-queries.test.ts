@@ -69,13 +69,7 @@ describe('Prioritized Queue', () => {
     outstandingQueries.queryMap.set('a', q1)
     assert(outstandingQueries.queryQueue.front() == q1)
     assert(outstandingQueries.queryMap.get('a') == q1)
-    console.log('outstandingQueries.queryQueue - before')
-    console.log(outstandingQueries.queryQueue)
-    console.log(outstandingQueries.queryMap)
     outstandingQueries.cleanUpExpiredQueries()
-    console.log('outstandingQueries.queryQueue - after')
-    console.log(outstandingQueries.queryQueue)
-    console.log(outstandingQueries.queryMap)
     expect(outstandingQueries.queryQueue.isEmpty()).toEqual(true)
   })
 
@@ -86,13 +80,7 @@ describe('Prioritized Queue', () => {
     outstandingQueries.queryMap.set('a', q1)
     assert(outstandingQueries.queryQueue.front() == q1)
     assert(outstandingQueries.queryMap.get('a') == q1)
-    console.log('outstandingQueries.queryMap - before')
-    console.log(outstandingQueries.queryQueue)
-    console.log(outstandingQueries.queryMap)
     outstandingQueries.cleanUpExpiredQueries()
-    console.log('outstandingQueries.queryMap - after')
-    console.log(outstandingQueries.queryQueue)
-    console.log(outstandingQueries.queryMap)
     expect(outstandingQueries.queryMap.size).toEqual(0)
   })
 })
@@ -123,6 +111,19 @@ describe('Outstanding Queries', () => {
     outstandingQueries.add(testQueryID, q1)
     expect(outstandingQueries.queryMap.size).toEqual(1)
     expect(outstandingQueries.queryQueue.size()).toEqual(1)
+  })
+
+  test('Oustanding Queries, Ensure Non-expired timestamp is not deleted', async () => {
+    const t1 = Date.now()
+    const q1 = new Query(t1, FAKE_STREAM_ID, 'a')
+    const testQueryID = 'testID'
+    outstandingQueries.add(testQueryID, q1)
+    const t2 = Date.now()
+    const q2 = new Query(t2, FAKE_STREAM_ID2, 'b')
+    const testQueryID2 = 'testIDNew'
+    outstandingQueries.add(testQueryID2, q2)
+    expect(outstandingQueries.queryMap.size).toEqual(2)
+    expect(outstandingQueries.queryQueue.size()).toEqual(2)
   })
 
   test('Oustanding Queries, Remove Query', async () => {

@@ -72,23 +72,21 @@ export class OutstandingQueries {
    * @param
    * @public
    */
-   cleanUpExpiredQueries() {
-    // const front_node: IQuery = this.queryQueue.front()
-    if (!this.queryQueue.size()) {
-      return
-    }else{
+   cleanUpExpiredQueries() : void {
+    for (let query of this.queryQueue.toArray()) {
       const topQuery: Query = this.queryQueue.front()
       const diffMs = Date.now() - topQuery.timestamp // milliseconds
-      const differenceInMinutes = Math.round(((diffMs % 86400000) % 3600000) / 60000) // minutes
+      const differenceInMinutes = Math.floor((diffMs/1000)/60);
       if (differenceInMinutes > this._minutesThreshold) {
         try {
           this.remove(topQuery)
-          //recursively check if the most prioritized query can be cleaned
-          this.cleanUpExpiredQueries()
         } catch (e) {
           const errorMessage = `Error in OutstandingQueries.cleanUpExpiredQueries(), ${e.message}`
           throw new Error(errorMessage)
         }
+      }else{
+         // front queue is not expired, stop iteration over queue
+         break
       }
     }
   }
