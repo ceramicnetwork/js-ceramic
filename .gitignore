@@ -6,6 +6,8 @@ lerna-debug.log
 *.iml
 docs/
 .run/
+.yarn.lock
+.DS_Store
 
 packages/*/lib/
 packages/*/node_modules/
