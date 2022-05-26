@@ -80,19 +80,7 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     const future = new Date(now.getFullYear(), now.getMonth())
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
-      if (!pagination.after) {
-        response = await this.query(
-          `
-        SELECT stream_id, last_anchored_at, created_at
-        FROM ${tableName}
-        ORDER BY IFNULL(last_anchored_at, :last_anchored_at) DESC, created_at DESC
-        LIMIT :limit`,
-          {
-            last_anchored_at: future.valueOf(),
-            limit: limit + 1,
-          }
-        )
-      } else {
+      if (pagination.after) {
         const after = JSON.parse(
           uint8arrays.toString(uint8arrays.fromString(pagination.after, 'base64url'))
         )
@@ -101,7 +89,8 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
             `
             SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
             WHERE last_anchored_at < :last_anchored_at
-            ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC LIMIT :limit
+            ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC
+            LIMIT :limit
            `,
             {
               last_anchored_at: after.last_anchored_at,
@@ -114,7 +103,8 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
             `
           SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
           WHERE (last_anchored_at IS NULL AND created_at < :created_at) OR (last_anchored_at IS NOT NULL)
-          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC LIMIT :limit
+          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC
+          LIMIT :limit
           `,
             {
               created_at: after.created_at,
@@ -123,6 +113,18 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
             }
           )
         }
+      } else {
+        response = await this.query(
+          `
+        SELECT stream_id, last_anchored_at, created_at
+        FROM ${tableName}
+        ORDER BY IFNULL(last_anchored_at, :last_anchored_at) DESC, created_at DESC
+        LIMIT :limit`,
+          {
+            last_anchored_at: future.valueOf(),
+            limit: limit + 1,
+          }
+        )
       }
       const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
       const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
