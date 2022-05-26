@@ -56,27 +56,24 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
-    const createdAt = asTimestamp(args.createdAt) || now
-    const updatedAt = asTimestamp(args.updatedAt) || now
-    const lastAnchoredAt = asTimestamp(args.lastAnchor)
-    await this.dataSource.query(
-      `INSERT INTO ${tableName}
+    await this.query(
+      `
+      INSERT INTO ${tableName}
       (stream_id, controller_did, last_anchored_at, created_at, updated_at) VALUES
-      (?, ?, ?, ?, ?)
-      ON CONFLICT(stream_id) DO UPDATE SET last_anchored_at = ?, updated_at = ?`,
-      [
-        String(args.streamID),
-        String(args.controller),
-        lastAnchoredAt,
-        createdAt,
-        updatedAt,
-        lastAnchoredAt,
-        updatedAt,
-      ]
+      (:stream_id, :controller_did, :last_anchored_at, :created_at, :updated_at)
+      ON CONFLICT(stream_id) DO UPDATE SET last_anchored_at = :last_anchored_at, updated_at = :updated_at`,
+      {
+        stream_id: String(args.streamID),
+        controller_did: String(args.controller),
+        last_anchored_at: asTimestamp(args.lastAnchor),
+        created_at: asTimestamp(args.createdAt) || now,
+        updated_at: asTimestamp(args.updatedAt) || now,
+      }
     )
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+    const tableName = asTableName(query.model)
     const pagination = parsePagination(query)
     const limit = pagination.kind == PaginationKind.FORWARD ? pagination.first : pagination.last
     const now = new Date()
@@ -84,31 +81,46 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
       if (!pagination.after) {
-        response = await this.dataSource.query(
-          `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
-            query.model
-          )} ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?`,
-          [future.valueOf(), limit + 1]
+        response = await this.query(
+          `
+        SELECT stream_id, last_anchored_at, created_at
+        FROM ${tableName}
+        ORDER BY IFNULL(last_anchored_at, :last_anchored_at) DESC, created_at DESC
+        LIMIT :limit`,
+          {
+            last_anchored_at: future.valueOf(),
+            limit: limit + 1,
+          }
         )
       } else {
         const after = JSON.parse(
           uint8arrays.toString(uint8arrays.fromString(pagination.after, 'base64url'))
         )
         if (after.last_anchored_at) {
-          response = await this.dataSource.query(
-            `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
-           WHERE last_anchored_at < ?
-           ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?
-          `,
-            [after.last_anchored_at, future.valueOf(), limit + 1]
+          response = await this.query(
+            `
+            SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
+            WHERE last_anchored_at < :last_anchored_at
+            ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC LIMIT :limit
+           `,
+            {
+              last_anchored_at: after.last_anchored_at,
+              last_anchored_at_max: future.valueOf(),
+              limit: limit + 1,
+            }
           )
         } else {
-          response = await this.dataSource.query(
-            `SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(query.model)}
-           WHERE (last_anchored_at IS NULL AND created_at < ?) OR (last_anchored_at IS NOT NULL)
-           ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC LIMIT ?
+          response = await this.query(
+            `
+          SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
+          WHERE (last_anchored_at IS NULL AND created_at < :created_at) OR (last_anchored_at IS NOT NULL)
+          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC LIMIT :limit
           `,
-            [after.created_at, future.valueOf(), limit + 1]
+            {
+              created_at: after.created_at,
+              last_anchored_at_max: future.valueOf(),
+              limit: limit + 1,
+            }
           )
         }
       }
@@ -142,36 +154,45 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
           uint8arrays.toString(uint8arrays.fromString(pagination.before, 'base64url'))
         )
         if (before.last_anchored_at) {
-          response = await this.dataSource.query(
-            `SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
-              query.model
-            )}
-            WHERE IFNULL(last_anchored_at, ?) > ?
-            ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
-            [
-              future.valueOf(),
-              before.last_anchored_at,
-              future.valueOf(),
-              limit + 1,
-              future.valueOf(),
-            ]
+          response = await this.query(
+            `
+          SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
+          WHERE IFNULL(last_anchored_at, :last_anchored_at_max) > :last_anchored_at
+          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) ASC, created_at ASC LIMIT :limit) ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC`,
+            {
+              last_anchored_at_max: future.valueOf(),
+              last_anchored_at: before.last_anchored_at,
+              limit: limit + 1,
+            }
           )
         } else {
-          response = await this.dataSource.query(
-            `SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
-              query.model
-            )}
-            WHERE last_anchored_at IS NULL and created_at > ?
-            ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
-            [before.created_at, future.valueOf(), limit + 1, future.valueOf()]
+          response = await this.query(
+            `
+          SELECT * FROM
+            (SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
+            WHERE last_anchored_at IS NULL and created_at > :created_at
+            ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) ASC, created_at ASC
+            LIMIT :limit)
+          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC`,
+            {
+              created_at: before.created_at,
+              last_anchored_at_max: future.valueOf(),
+              limit: limit + 1,
+            }
           )
         }
       } else {
-        response = await this.dataSource.query(
-          `SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${asTableName(
-            query.model
-          )} ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
-          [future.valueOf(), limit + 1, future.valueOf()]
+        response = await this.query(
+          `
+        SELECT * FROM
+          (SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
+          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) ASC, created_at ASC
+          LIMIT :limit)
+        ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC`,
+          {
+            last_anchored_at_max: future.valueOf(),
+            limit: limit + 1,
+          }
         )
       }
       const [first, tail] = [response.slice(-limit - 1, -limit), response.slice(-limit)]
@@ -198,16 +219,6 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
         },
       }
     }
-    // const pagination = parsePagination(query)
-    // const order = query.order || Ordering.CHRONOLOGICAL
-    // switch (order) {
-    //   case Ordering.CHRONOLOGICAL:
-    //     return
-    //   case Ordering.INSERTION:
-    //     return
-    //   default:
-    //     throw new UnsupportedOrderingError(order)
-    // }
   }
 
   async init(): Promise<void> {
@@ -215,5 +226,9 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
       await this.dataSource.initialize()
     }
     await initTables(this.dataSource, this.modelsToIndex)
+  }
+
+  private query<T = any>(query: string, variables: Record<string, any>): Promise<T> {
+    return this.dataSource.query(...withPlaceholder(query, variables)) as Promise<T>
   }
 }
