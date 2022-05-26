@@ -1,7 +1,12 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { DataSource } from 'typeorm'
-import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
+import {
+  asTimestamp,
+  SqliteIndexApi,
+  UnavailablePlaceholderError,
+  withPlaceholder,
+} from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
 import { IndexStreamArgs } from '../../types.js'
@@ -166,6 +171,7 @@ function readFixture() {
 
 describe('page', () => {
   let indexAPI: SqliteIndexApi
+
   beforeEach(async () => {
     indexAPI = new SqliteIndexApi(dataSource, MODELS_TO_INDEX)
     await indexAPI.init()
@@ -200,114 +206,199 @@ describe('page', () => {
       'k2t6wysde7589fze9445oe7y578f7csh4uexfqe9r9qziqyz8koegst94ryoat',
     ]
 
+    function chunks<T>(array: Array<T>, chunkSize: number): Array<Array<T>> {
+      const result = new Array<Array<T>>()
+      for (let i = 0; i < array.length; i += chunkSize) {
+        result.push(array.slice(i, i + chunkSize))
+      }
+      return result
+    }
+
     test('forward pagination', async () => {
-      const resultA = await indexAPI.page({
-        model: MODEL,
-        first: 5,
-      })
-      expect(resultA.entries.length).toEqual(5)
-      expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(0, 5))
-      expect(resultA.pageInfo.hasNextPage).toEqual(true)
-      expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultA.pageInfo.endCursor).toBeTruthy()
-      expect(resultA.pageInfo.startCursor).toBeTruthy()
-      const resultB = await indexAPI.page({
-        model: MODEL,
-        first: 5,
-        after: resultA.pageInfo.endCursor,
-      })
-      expect(resultB.entries.length).toEqual(5)
-      expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(5, 10))
-      expect(resultB.pageInfo.hasNextPage).toEqual(true)
-      expect(resultB.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultB.pageInfo.endCursor).toBeTruthy()
-      expect(resultB.pageInfo.startCursor).toBeTruthy()
-      const resultC = await indexAPI.page({
-        model: MODEL,
-        first: 5,
-        after: resultB.pageInfo.endCursor,
-      })
-      expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(10, 15))
-      expect(resultC.pageInfo.hasNextPage).toEqual(true)
-      expect(resultC.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultC.pageInfo.endCursor).toBeTruthy()
-      expect(resultC.pageInfo.startCursor).toBeTruthy()
-      const resultD = await indexAPI.page({
-        model: MODEL,
-        first: 5,
-        after: resultC.pageInfo.endCursor,
-      })
-      expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(15, 20))
-      expect(resultD.pageInfo.hasNextPage).toEqual(true)
-      expect(resultD.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultD.pageInfo.endCursor).toBeTruthy()
-      expect(resultD.pageInfo.startCursor).toBeTruthy()
-      const resultE = await indexAPI.page({
-        model: MODEL,
-        first: 5,
-        after: resultD.pageInfo.endCursor,
-      })
-      expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(20, 21))
-      expect(resultE.pageInfo.hasNextPage).toEqual(false)
-      expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultE.pageInfo.endCursor).toBeTruthy()
-      expect(resultE.pageInfo.startCursor).toBeTruthy()
+      const pageSize = 5
+      const pages = chunks(ALL_ENTRIES, pageSize)
+      let afterCursor: string | undefined = undefined
+      for (let i = 0; i < pages.length; i++) {
+        const result = await indexAPI.page({
+          model: MODEL,
+          first: pageSize,
+          after: afterCursor,
+        })
+        afterCursor = result.pageInfo.endCursor
+        const expected = pages[i]
+        expect(result.entries.length).toEqual(expected.length)
+        expect(result.entries.map(String)).toEqual(expected)
+        const hasNextPage = Boolean(pages[i + 1])
+        expect(result.pageInfo.hasNextPage).toEqual(hasNextPage)
+        expect(result.pageInfo.hasPreviousPage).toEqual(false)
+        expect(result.pageInfo.endCursor).toBeTruthy()
+        expect(result.pageInfo.startCursor).toBeTruthy()
+      }
+
+      // const resultA = await indexAPI.page({
+      //   model: MODEL,
+      //   first: 5,
+      // })
+      // expect(resultA.entries.length).toEqual(5)
+      // expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(0, 5))
+      // expect(resultA.pageInfo.hasNextPage).toEqual(true)
+      // expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
+      // expect(resultA.pageInfo.endCursor).toBeTruthy()
+      // expect(resultA.pageInfo.startCursor).toBeTruthy()
+      // const resultB = await indexAPI.page({
+      //   model: MODEL,
+      //   first: 5,
+      //   after: resultA.pageInfo.endCursor,
+      // })
+      // expect(resultB.entries.length).toEqual(5)
+      // expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(5, 10))
+      // expect(resultB.pageInfo.hasNextPage).toEqual(true)
+      // expect(resultB.pageInfo.hasPreviousPage).toEqual(false)
+      // expect(resultB.pageInfo.endCursor).toBeTruthy()
+      // expect(resultB.pageInfo.startCursor).toBeTruthy()
+      // const resultC = await indexAPI.page({
+      //   model: MODEL,
+      //   first: 5,
+      //   after: resultB.pageInfo.endCursor,
+      // })
+      // expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(10, 15))
+      // expect(resultC.pageInfo.hasNextPage).toEqual(true)
+      // expect(resultC.pageInfo.hasPreviousPage).toEqual(false)
+      // expect(resultC.pageInfo.endCursor).toBeTruthy()
+      // expect(resultC.pageInfo.startCursor).toBeTruthy()
+      // const resultD = await indexAPI.page({
+      //   model: MODEL,
+      //   first: 5,
+      //   after: resultC.pageInfo.endCursor,
+      // })
+      // expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(15, 20))
+      // expect(resultD.pageInfo.hasNextPage).toEqual(true)
+      // expect(resultD.pageInfo.hasPreviousPage).toEqual(false)
+      // expect(resultD.pageInfo.endCursor).toBeTruthy()
+      // expect(resultD.pageInfo.startCursor).toBeTruthy()
+      // const resultE = await indexAPI.page({
+      //   model: MODEL,
+      //   first: 5,
+      //   after: resultD.pageInfo.endCursor,
+      // })
+      // expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(20, 21))
+      // expect(resultE.pageInfo.hasNextPage).toEqual(false)
+      // expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
+      // expect(resultE.pageInfo.endCursor).toBeTruthy()
+      // expect(resultE.pageInfo.startCursor).toBeTruthy()
     })
     test('backward pagination', async () => {
-      const resultA = await indexAPI.page({
-        model: MODEL,
-        last: 5,
-      })
-      expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(-5))
-      expect(resultA.entries.length).toEqual(5)
-      expect(resultA.pageInfo.hasNextPage).toEqual(false)
-      expect(resultA.pageInfo.hasPreviousPage).toEqual(true)
-      expect(resultA.pageInfo.endCursor).toBeTruthy()
-      expect(resultA.pageInfo.startCursor).toBeTruthy()
-      const resultB = await indexAPI.page({
-        model: MODEL,
-        last: 5,
-        before: resultA.pageInfo.startCursor,
-      })
-      expect(resultB.entries.length).toEqual(5)
-      expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(-10, -5))
-      expect(resultB.pageInfo.hasNextPage).toEqual(false)
-      expect(resultB.pageInfo.hasPreviousPage).toEqual(true)
-      expect(resultB.pageInfo.endCursor).toBeTruthy()
-      expect(resultB.pageInfo.startCursor).toBeTruthy()
-      const resultC = await indexAPI.page({
-        model: MODEL,
-        last: 5,
-        before: resultB.pageInfo.startCursor,
-      })
-      expect(resultC.entries.length).toEqual(5)
-      expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(-15, -10))
-      expect(resultC.pageInfo.hasNextPage).toEqual(false)
-      expect(resultC.pageInfo.hasPreviousPage).toEqual(true)
-      expect(resultC.pageInfo.endCursor).toBeTruthy()
-      expect(resultC.pageInfo.startCursor).toBeTruthy()
-      const resultD = await indexAPI.page({
-        model: MODEL,
-        last: 5,
-        before: resultC.pageInfo.startCursor,
-      })
-      expect(resultD.entries.length).toEqual(5)
-      expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(-20, -15))
-      expect(resultD.pageInfo.hasNextPage).toEqual(false)
-      expect(resultD.pageInfo.hasPreviousPage).toEqual(true)
-      expect(resultD.pageInfo.endCursor).toBeTruthy()
-      expect(resultD.pageInfo.startCursor).toBeTruthy()
-      const resultE = await indexAPI.page({
-        model: MODEL,
-        last: 5,
-        before: resultD.pageInfo.startCursor,
-      })
-      expect(resultE.entries.length).toEqual(1)
-      expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(-21, -20))
-      expect(resultE.pageInfo.hasNextPage).toEqual(false)
-      expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
-      expect(resultE.pageInfo.endCursor).toBeTruthy()
-      expect(resultE.pageInfo.startCursor).toBeTruthy()
+      const pageSize = 5
+      const pages = chunks(ALL_ENTRIES.reverse(), pageSize).map((arr) => arr.reverse())
+      let beforeCursor: string | undefined = undefined
+      for (let i = 0; i < pages.length; i++) {
+        const result = await indexAPI.page({
+          model: MODEL,
+          last: pageSize,
+          before: beforeCursor,
+        })
+        beforeCursor = result.pageInfo.startCursor
+        const expected = pages[i]
+        expect(result.entries.length).toEqual(expected.length)
+        expect(result.entries.map(String)).toEqual(expected)
+        const hasPreviousPage = Boolean(pages[i + 1])
+        expect(result.pageInfo.hasNextPage).toEqual(false)
+        expect(result.pageInfo.hasPreviousPage).toEqual(hasPreviousPage)
+        expect(result.pageInfo.endCursor).toBeTruthy()
+        expect(result.pageInfo.startCursor).toBeTruthy()
+      }
+
+      // const resultA = await indexAPI.page({
+      //   model: MODEL,
+      //   last: 5,
+      // })
+      // expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(-5))
+      // expect(resultA.entries.length).toEqual(5)
+      // expect(resultA.pageInfo.hasNextPage).toEqual(false)
+      // expect(resultA.pageInfo.hasPreviousPage).toEqual(true)
+      // expect(resultA.pageInfo.endCursor).toBeTruthy()
+      // expect(resultA.pageInfo.startCursor).toBeTruthy()
+      // const resultB = await indexAPI.page({
+      //   model: MODEL,
+      //   last: 5,
+      //   before: resultA.pageInfo.startCursor,
+      // })
+      // expect(resultB.entries.length).toEqual(5)
+      // expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(-10, -5))
+      // expect(resultB.pageInfo.hasNextPage).toEqual(false)
+      // expect(resultB.pageInfo.hasPreviousPage).toEqual(true)
+      // expect(resultB.pageInfo.endCursor).toBeTruthy()
+      // expect(resultB.pageInfo.startCursor).toBeTruthy()
+      // const resultC = await indexAPI.page({
+      //   model: MODEL,
+      //   last: 5,
+      //   before: resultB.pageInfo.startCursor,
+      // })
+      // expect(resultC.entries.length).toEqual(5)
+      // expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(-15, -10))
+      // expect(resultC.pageInfo.hasNextPage).toEqual(false)
+      // expect(resultC.pageInfo.hasPreviousPage).toEqual(true)
+      // expect(resultC.pageInfo.endCursor).toBeTruthy()
+      // expect(resultC.pageInfo.startCursor).toBeTruthy()
+      // const resultD = await indexAPI.page({
+      //   model: MODEL,
+      //   last: 5,
+      //   before: resultC.pageInfo.startCursor,
+      // })
+      // expect(resultD.entries.length).toEqual(5)
+      // expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(-20, -15))
+      // expect(resultD.pageInfo.hasNextPage).toEqual(false)
+      // expect(resultD.pageInfo.hasPreviousPage).toEqual(true)
+      // expect(resultD.pageInfo.endCursor).toBeTruthy()
+      // expect(resultD.pageInfo.startCursor).toBeTruthy()
+      // const resultE = await indexAPI.page({
+      //   model: MODEL,
+      //   last: 5,
+      //   before: resultD.pageInfo.startCursor,
+      // })
+      // expect(resultE.entries.length).toEqual(1)
+      // expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(-21, -20))
+      // expect(resultE.pageInfo.hasNextPage).toEqual(false)
+      // expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
+      // expect(resultE.pageInfo.endCursor).toBeTruthy()
+      // expect(resultE.pageInfo.startCursor).toBeTruthy()
     })
+  })
+})
+
+describe('withPlaceholder', () => {
+  test('single placeholder', () => {
+    const original = `SELECT * FROM HELLO WHERE created_at > :created_at`
+    const variables = { created_at: 333 }
+    const [query, placeholders] = withPlaceholder(original, variables)
+    expect(query).toEqual('SELECT * FROM HELLO WHERE created_at > ?')
+    expect(placeholders).toEqual([variables.created_at])
+  })
+  test('multiple placeholders', () => {
+    const original = `SELECT * FROM HELLO WHERE created_at > :created_at AND last_anchored_at = :last_anchored_at`
+    const variables = { created_at: 333, last_anchored_at: 444 }
+    const [query, placeholders] = withPlaceholder(original, variables)
+    expect(query).toEqual('SELECT * FROM HELLO WHERE created_at > ? AND last_anchored_at = ?')
+    expect(placeholders).toEqual([variables.created_at, variables.last_anchored_at])
+  })
+  test('duplicate placeholders', () => {
+    const original = `SELECT * FROM HELLO WHERE (created_at > :created_at AND last_anchored_at = :last_anchored_at) OR (created_at < :created_at)`
+    const variables = { created_at: 333, last_anchored_at: 444 }
+    const [query, placeholders] = withPlaceholder(original, variables)
+    expect(query).toEqual(
+      'SELECT * FROM HELLO WHERE (created_at > ? AND last_anchored_at = ?) OR (created_at < ?)'
+    )
+    expect(placeholders).toEqual([
+      variables.created_at,
+      variables.last_anchored_at,
+      variables.created_at,
+    ])
+  })
+  test('unavailable placeholder', () => {
+    const original = `SELECT * FROM HELLO WHERE created_at > :created_at AND last_anchored_at = :last_anchored_at`
+    const variables = { created_at: 333 }
+    expect(() => {
+      withPlaceholder(original, variables)
+    }).toThrow(UnavailablePlaceholderError)
   })
 })

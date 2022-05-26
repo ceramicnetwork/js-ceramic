@@ -5,7 +5,30 @@ import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { PaginationKind, parsePagination } from '../parse-pagination'
 import * as uint8arrays from 'uint8arrays'
-import { NotImplementedError } from '../not-implemented-error'
+
+export class UnavailablePlaceholderError extends Error {
+  constructor(variableName: string) {
+    super(`Can not find variable ${variableName} for a placeholder`)
+  }
+}
+export function withPlaceholder(
+  query: string,
+  variables: Record<string, any>
+): [string, Array<any>] {
+  const entries = query.match(/:\w+/g)
+  const placeholders: Array<any> = []
+  let resultQuery = query
+  for (const entry of entries) {
+    resultQuery = resultQuery.replace(entry, '?')
+    const variableName = entry.replace(/^:/, '')
+    if (!(variableName in variables)) {
+      throw new UnavailablePlaceholderError(variableName)
+    }
+    const variableValue = variables[variableName]
+    placeholders.push(variableValue)
+  }
+  return [resultQuery, placeholders]
+}
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -125,7 +148,13 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
             )}
             WHERE IFNULL(last_anchored_at, ?) > ?
             ORDER BY IFNULL(last_anchored_at, ?) ASC, created_at ASC LIMIT ?) ORDER BY IFNULL(last_anchored_at, ?) DESC, created_at DESC`,
-            [future.valueOf(), before.last_anchored_at, future.valueOf(), limit + 1, future.valueOf()]
+            [
+              future.valueOf(),
+              before.last_anchored_at,
+              future.valueOf(),
+              limit + 1,
+              future.valueOf(),
+            ]
           )
         } else {
           response = await this.dataSource.query(
