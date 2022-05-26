@@ -17,7 +17,6 @@ import {
 import { Dispatcher } from './dispatcher.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CommitID } from '@ceramicnetwork/streamid'
-import { StateValidation } from './state-management/state-validation.js'
 import { HandlersMap } from './handlers-map.js'
 import { Utils } from './utils.js'
 
@@ -232,7 +231,6 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
 export class ConflictResolution {
   constructor(
     public anchorValidator: AnchorValidator,
-    private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,
     private readonly handlers: HandlersMap
@@ -255,15 +253,9 @@ export class ConflictResolution {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
       await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commitData)
-      return await handler.applyCommit(commitData, this.context, state)
-    } else {
-      const tmpState = await handler.applyCommit(commitData, this.context, state)
-      const isGenesis = !commitData.commit.prev
-      const effectiveState = isGenesis ? tmpState : tmpState.next
-      // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
-      await this.stateValidation.validate(effectiveState, effectiveState.content)
-      return tmpState // if validation is successful
     }
+
+    return handler.applyCommit(commitData, this.context, state)
   }
 
   /**

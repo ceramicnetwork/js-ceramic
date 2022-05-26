@@ -18,6 +18,15 @@ const seed = u8a.fromString(
   'base16'
 )
 
+const mockExistsSync = jest.fn()
+jest.unstable_mockModule('fs', () => {
+  const originalModule = jest.requireActual('fs') as any
+  return {
+    ...originalModule,
+    existsSync: mockExistsSync,
+  }
+})
+
 const makeDID = function (seed: Uint8Array, ceramic: Ceramic): DID {
   const provider = new Ed25519Provider(seed)
 
@@ -35,12 +44,20 @@ const createCeramic = async (
   stateStoreDirectory,
   anchorOnRequest = false
 ): Promise<Ceramic> => {
+  const { Ceramic } = await import('../ceramic.js')
+
+  const databaseFolder = await tmp.dir({ unsafeCleanup: true })
+  const connectionString = new URL(`sqlite://${databaseFolder.path}/ceramic.sqlite`)
   const ceramic = await Ceramic.create(ipfs, {
     stateStoreDirectory,
     anchorOnRequest,
+    indexing: {
+      db: connectionString.href,
+      models: [],
+    },
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
-  await ceramic.setDID(makeDID(seed, ceramic))
+  ceramic.did = makeDID(seed, ceramic)
   await ceramic.did.authenticate()
 
   return ceramic
@@ -138,6 +155,9 @@ describe('Ceramic stream pinning', () => {
     expect(stream.content).toEqual(content1)
     await ceramic.close()
 
+    //.jsipfs repo does not exist
+    mockExistsSync.mockReturnValue(false)
+
     // Re-create the ipfs node with a clean repo, losing all the pinned ipfs data, but preserving
     // the state store data for the Ceramic node.
     await ipfs1.stop()
@@ -145,6 +165,33 @@ describe('Ceramic stream pinning', () => {
 
     // Starting up the Ceramic node should fail as it detects that the IPFS commit data is missing.
     await expect(createCeramic(ipfs1, tmpFolder.path)).rejects.toThrow(/IPFS data missing/)
+  })
+
+  it('Node detects if ipfs data is lost and ~/.jsipfs directory exists', async () => {
+    const content0 = { foo: 'bar' }
+    const content1 = { foo: 'baz' }
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, content0, null, {
+      pin: true,
+      anchor: false,
+      publish: false,
+    })
+    await stream.update(content1)
+    expect(stream.content).toEqual(content1)
+    await ceramic.close()
+
+    //.jsipfs repo exists
+    mockExistsSync.mockReturnValue(true)
+
+    // Re-create the ipfs node with a clean repo, losing all the pinned ipfs data, but preserving
+    // the state store data for the Ceramic node.
+    await ipfs1.stop()
+    ipfs1 = await createIPFS()
+
+    // Starting up the Ceramic node should fail as it detects that the IPFS commit data is missing.
+    await expect(createCeramic(ipfs1, tmpFolder.path)).rejects.toThrow(
+      /.jsipfs directory has been detected/
+    )
   })
 
   it('Stream is pinned by default', async () => {

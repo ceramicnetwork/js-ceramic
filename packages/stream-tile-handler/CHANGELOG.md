@@ -3,6 +3,81 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.3](/compare/@ceramicnetwork/stream-tile-handler@2.1.3-rc.2...@ceramicnetwork/stream-tile-handler@2.1.3) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.1.3-rc.2](/compare/@ceramicnetwork/stream-tile-handler@2.1.3-rc.1...@ceramicnetwork/stream-tile-handler@2.1.3-rc.2) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.1.3-rc.1](/compare/@ceramicnetwork/stream-tile-handler@2.1.2...@ceramicnetwork/stream-tile-handler@2.1.3-rc.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.1.2](/compare/@ceramicnetwork/stream-tile-handler@2.1.1...@ceramicnetwork/stream-tile-handler@2.1.2) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.1.1](/compare/@ceramicnetwork/stream-tile-handler@2.1.0-rc.3...@ceramicnetwork/stream-tile-handler@2.1.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.1.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.1.0-rc.1...@ceramicnetwork/stream-tile-handler@2.1.0-rc.3) (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# 2.1.0-rc.2 (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.1.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.1.0-rc.0...@ceramicnetwork/stream-tile-handler@2.1.0-rc.1) (2022-05-11)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.0.1-rc.0...@ceramicnetwork/stream-tile-handler@2.1.0-rc.0) (2022-05-11)
+
+
+### Features
+
+* **stream-tile-handler:** add cacao wildcard resource support ([#2137](https://github.com/ceramicnetwork/js-ceramic/issues/2137)) ([5ffb298](https://github.com/ceramicnetwork/js-ceramic/commit/5ffb2984340e298c72388bbbb88cdf251bf38aec))
+
+
+
+
+
 ## 2.0.1-rc.0 (2022-04-27)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

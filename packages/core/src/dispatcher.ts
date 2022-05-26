@@ -30,6 +30,7 @@ const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 s
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
+const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 
@@ -77,7 +78,7 @@ export class Dispatcher {
     )
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
-        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
+        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL, MAX_INTERVAL_WITHOUT_KEEPALIVE),
         _logger,
         maxQueriesPerSecond
       )

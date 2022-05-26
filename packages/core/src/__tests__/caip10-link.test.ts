@@ -3,9 +3,10 @@ import tmp from 'tmp-promise'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import MockDate from 'mockdate'
-import { Ceramic, CeramicConfig } from '../ceramic.js'
+import type { Ceramic } from '../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
+import { createCeramic } from './create-ceramic.js'
 
 const DID_USED = 'did:3:bafysdfwefwe'
 const LEGACY_ACCOUNT = '0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337'
@@ -25,7 +26,7 @@ const PROOF = {
 }
 const LEGACY_PROOF = {
   ...PROOF,
-  account: LEGACY_ACCOUNT
+  account: LEGACY_ACCOUNT,
 }
 const EMPTY_DID_PROOF = {
   version: 2,
@@ -37,16 +38,9 @@ const EMPTY_DID_PROOF = {
   timestamp: 1641462800,
 }
 
-
 describe('Ceramic API', () => {
   jest.setTimeout(60000)
   let ipfs: IpfsApi
-
-  const createCeramic = (c: CeramicConfig = {}): Promise<Ceramic> => {
-    c.anchorOnRequest = false // Config option for InMemoryAnchorService
-    c.verifySignatures = false // Config option for InMemoryAnchorService
-    return Ceramic.create(ipfs, c)
-  }
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -65,7 +59,11 @@ describe('Ceramic API', () => {
 
     beforeEach(async () => {
       tmpFolder = await tmp.dir({ unsafeCleanup: true })
-      ceramic = await createCeramic({ stateStoreDirectory: tmpFolder.path })
+      ceramic = await createCeramic(ipfs, {
+        stateStoreDirectory: tmpFolder.path,
+        anchorOnRequest: false,
+        verifySignatures: false,
+      })
       authProvider = { createLink: jest.fn() }
     })
 

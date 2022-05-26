@@ -3,6 +3,94 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.1](/compare/@ceramicnetwork/cli@2.1.1-rc.2...@ceramicnetwork/cli@2.1.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.1.1-rc.2](/compare/@ceramicnetwork/cli@2.1.1-rc.1...@ceramicnetwork/cli@2.1.1-rc.2) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.1.1-rc.1](/compare/@ceramicnetwork/cli@2.1.0...@ceramicnetwork/cli@2.1.1-rc.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.1.0](/compare/@ceramicnetwork/cli@2.0.4...@ceramicnetwork/cli@2.1.0) (2022-05-18)
+
+
+### Bug Fixes
+
+* **cli:** added daemon-config port number coercion and validation (#2149) 942a7c1, closes #2149
+
+
+### Features
+
+* **core,cli:** Remove unused 'validate-streams' config option (#2147) 90c6470, closes #2147
+
+
+
+
+
+## [2.0.4](/compare/@ceramicnetwork/cli@2.0.3-rc.6...@ceramicnetwork/cli@2.0.4) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.3-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.5...@ceramicnetwork/cli@2.0.3-rc.6) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.3-rc.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.3...@ceramicnetwork/cli@2.0.3-rc.5) (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## 2.0.3-rc.4 (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.3-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.2...@ceramicnetwork/cli@2.0.3-rc.3) (2022-05-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.0.3-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.1...@ceramicnetwork/cli@2.0.3-rc.2) (2022-05-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 ## [2.0.3-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.0.3-rc.0...@ceramicnetwork/cli@2.0.3-rc.1) (2022-04-27)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

@@ -7,6 +7,7 @@ import { Repository } from '../repository.js'
 import { anchorUpdate } from './anchor-update.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { delay } from '../../__tests__/delay.js'
+import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
@@ -94,7 +95,13 @@ describe('validation', () => {
     await anchorUpdate(ceramic, schema)
     // Create invalid stream
     const ipfs2 = await createIPFS()
-    const permissiveCeramic = await createCeramic(ipfs2, { validateStreams: false })
+    const permissiveCeramic = await createCeramic(ipfs2)
+    const validateSchemaSpy = jest.spyOn(
+      (permissiveCeramic._streamHandlers.get('tile') as TileDocumentHandler)._schemaValidator,
+      'validateSchema'
+    )
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    validateSchemaSpy.mockImplementation(() => {})
     const invalidDoc = await TileDocument.create(
       permissiveCeramic,
       { stuff: 1 },
