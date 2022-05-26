@@ -347,18 +347,20 @@ export class Dispatcher {
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID
-    const newTip = tips.get(expectedStreamID.toString())
-    if (!newTip) {
-      throw new Error(
-        "Response to query with ID '" +
-          queryId +
-          "' is missing expected new tip for StreamID '" +
-          expectedStreamID +
-          "'"
-      )
+    if (expectedStreamID) {
+      const newTip = tips.get(expectedStreamID.toString())
+      if (!newTip) {
+        throw new Error(
+          "Response to query with ID '" +
+            queryId +
+            "' is missing expected new tip for StreamID '" +
+            expectedStreamID +
+            "'"
+        )
+      }
+      this.repository.stateManager.update(expectedStreamID, newTip)
+      // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
-    this.repository.stateManager.update(expectedStreamID, newTip)
-    // TODO Iterate over all streams in 'tips' object and process the new tip for each
   }
 
   /**
