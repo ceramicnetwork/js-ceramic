@@ -38,9 +38,9 @@ const compareQueryTimestamps: ICompare<IQuery> = (a: IQuery, b: IQuery) => {
 }
 
 /**
- * OutstandingQueries tracks a set of all query messages that have been 
- * sent to pubsub, for which we are still waiting on a response pubsub 
- * message. It also takes care of garbage collecting old queries that 
+ * OutstandingQueries tracks a set of all query messages that have been
+ * sent to pubsub, for which we are still waiting on a response pubsub
+ * message. It also takes care of garbage collecting old queries that
  * have been outstanding for more than 1 minute.
  */
 export class OutstandingQueries {
@@ -49,7 +49,7 @@ export class OutstandingQueries {
   //set the time in minutes we want to allow outstanding requests to be considered
   private _minutesThreshold = 1
 
-  add(id: string, query: Query) : void {
+  add(id: string, query: Query): void {
     //enforce no duplicate outstanding queries
     this.cleanUpExpiredQueries()
     if (this.queryMap.get(id) == undefined) {
@@ -60,11 +60,11 @@ export class OutstandingQueries {
     }
   }
 
-  remove(topQuery: Query) : void {
-      //remove queryId key for top query
-      this.queryMap.delete(topQuery.queryID)
-      //dequeue top query
-      this.queryQueue.dequeue()
+  remove(topQuery: Query): void {
+    //remove queryId key for top query
+    this.queryMap.delete(topQuery.queryID)
+    //dequeue top query
+    this.queryQueue.dequeue()
   }
 
   /**
@@ -72,11 +72,11 @@ export class OutstandingQueries {
    * @param
    * @public
    */
-   cleanUpExpiredQueries() : void {
-    for (let query of this.queryQueue.toArray()) {
+  cleanUpExpiredQueries(): void {
+    for (const _ of this.queryQueue.toArray()) {
       const topQuery: Query = this.queryQueue.front()
       const diffMs = Date.now() - topQuery.timestamp // milliseconds
-      const differenceInMinutes = Math.floor((diffMs/1000)/60);
+      const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
       if (differenceInMinutes > this._minutesThreshold) {
         try {
           this.remove(topQuery)
@@ -84,9 +84,9 @@ export class OutstandingQueries {
           const errorMessage = `Error in OutstandingQueries.cleanUpExpiredQueries(), ${e.message}`
           throw new Error(errorMessage)
         }
-      }else{
-         // front queue is not expired, stop iteration over queue
-         break
+      } else {
+        // front queue is not expired, stop iteration over queue
+        break
       }
     }
   }

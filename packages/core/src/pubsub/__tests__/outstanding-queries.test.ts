@@ -103,7 +103,7 @@ describe('Outstanding Queries', () => {
     outstandingQueries.add(testQueryIDNew, qNew)
     expect(outstandingQueries.queryQueue.size()).toEqual(1)
   })
-  
+
   test('Oustanding Queries, Add Query now', async () => {
     const t1 = Date.now()
     const q1 = new Query(t1, FAKE_STREAM_ID, 'a')
