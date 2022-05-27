@@ -183,7 +183,7 @@ describe('page', () => {
   })
 
   describe('default order', () => {
-    const ALL_ENTRIES = [
+    const ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER = [
       'k2t6wysde758e731xife7twg5dwpz8jg42vshm79ax6w7s0yu75kiaj8k2w6dt',
       'k2t6wysde758akkonpg6flj8fitylax3fk40xrb9ud4hmivd29jdc097ad6nwz',
       'k2t6wysde758et54lsbq54efgt73xqfg6s5sp72v9ervbn11z7w9rgb2r1fcu3',
@@ -217,7 +217,7 @@ describe('page', () => {
 
     test('forward pagination', async () => {
       const pageSize = 5
-      const pages = chunks(ALL_ENTRIES, pageSize)
+      const pages = chunks(ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER, pageSize)
       let afterCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
         const result = await indexAPI.page({
@@ -238,7 +238,7 @@ describe('page', () => {
     })
     test('backward pagination', async () => {
       const pageSize = 5
-      const pages = chunks(ALL_ENTRIES.reverse(), pageSize).map((arr) => arr.reverse())
+      const pages = chunks(ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER.reverse(), pageSize).map((arr) => arr.reverse())
       let beforeCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
         const result = await indexAPI.page({
