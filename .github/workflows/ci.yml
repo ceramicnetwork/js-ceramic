@@ -77,7 +77,7 @@ jobs:
         run: |
           # Pull the latest pipelinetools.
           # TODO: Once the code is stable, use a tagged version.
-          dagger project update github.com/3box/pipelinetools@develop
+          dagger project update github.com/3box/pipelinetools@develop || true
 
           # TODO: Report bug to Dagger. Script doesn't get automatically copied during `dagger update` and also doesn't
           # have executable permissions.
