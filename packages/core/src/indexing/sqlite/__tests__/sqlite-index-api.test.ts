@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { DataSource } from 'typeorm'
-import { asTimestamp, SqliteIndexApi, UnavailablePlaceholderError } from '../sqlite-index-api.js'
+import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
 import { IndexStreamArgs } from '../../types.js'
@@ -17,7 +17,7 @@ const MODEL = MODELS_TO_INDEX[0]
 
 let tmpFolder: tmp.DirectoryResult
 let dataSource: DataSource
-let konnection: Knex
+let knexConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
@@ -26,12 +26,9 @@ beforeEach(async () => {
     database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
   })
   await dataSource.initialize()
-  konnection = knex({
+  knexConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
-    connection: {
-      filename: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-    },
   })
 })
 
@@ -47,14 +44,14 @@ describe('init', () => {
       database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
     })
     const initializeSpy = jest.spyOn(dataSource, 'initialize')
-    const indexApi = new SqliteIndexApi(dataSource, konnection, [])
+    const indexApi = new SqliteIndexApi(dataSource, knexConnection, [])
     await indexApi.init()
     expect(initializeSpy).toBeCalledTimes(1)
   })
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new SqliteIndexApi(dataSource, konnection, modelsToIndex)
+      const indexApi = new SqliteIndexApi(dataSource, knexConnection, modelsToIndex)
       await indexApi.init()
       const created = await listMidTables(dataSource)
       const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
@@ -64,7 +61,7 @@ describe('init', () => {
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new SqliteIndexApi(dataSource, konnection, modelsA)
+      const indexApiA = new SqliteIndexApi(dataSource, knexConnection, modelsA)
       await indexApiA.init()
       const createdA = await listMidTables(dataSource)
       const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
@@ -72,7 +69,7 @@ describe('init', () => {
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dataSource, konnection, modelsB)
+      const indexApiB = new SqliteIndexApi(dataSource, knexConnection, modelsB)
       await indexApiB.init()
       const createdB = await listMidTables(dataSource)
       const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
@@ -101,7 +98,7 @@ describe('indexStream', () => {
 
   let indexApi: SqliteIndexApi
   beforeEach(async () => {
-    indexApi = new SqliteIndexApi(dataSource, konnection, MODELS_TO_INDEX)
+    indexApi = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
     await indexApi.init()
   })
 
@@ -177,7 +174,7 @@ describe('page', () => {
   let indexAPI: SqliteIndexApi
 
   beforeEach(async () => {
-    indexAPI = new SqliteIndexApi(dataSource, konnection, MODELS_TO_INDEX)
+    indexAPI = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
     await indexAPI.init()
     const rows = await readFixture()
     for (const row of rows) {
@@ -238,58 +235,6 @@ describe('page', () => {
         expect(result.pageInfo.endCursor).toBeTruthy()
         expect(result.pageInfo.startCursor).toBeTruthy()
       }
-
-      // const resultA = await indexAPI.page({
-      //   model: MODEL,
-      //   first: 5,
-      // })
-      // expect(resultA.entries.length).toEqual(5)
-      // expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(0, 5))
-      // expect(resultA.pageInfo.hasNextPage).toEqual(true)
-      // expect(resultA.pageInfo.hasPreviousPage).toEqual(false)
-      // expect(resultA.pageInfo.endCursor).toBeTruthy()
-      // expect(resultA.pageInfo.startCursor).toBeTruthy()
-      // const resultB = await indexAPI.page({
-      //   model: MODEL,
-      //   first: 5,
-      //   after: resultA.pageInfo.endCursor,
-      // })
-      // expect(resultB.entries.length).toEqual(5)
-      // expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(5, 10))
-      // expect(resultB.pageInfo.hasNextPage).toEqual(true)
-      // expect(resultB.pageInfo.hasPreviousPage).toEqual(false)
-      // expect(resultB.pageInfo.endCursor).toBeTruthy()
-      // expect(resultB.pageInfo.startCursor).toBeTruthy()
-      // const resultC = await indexAPI.page({
-      //   model: MODEL,
-      //   first: 5,
-      //   after: resultB.pageInfo.endCursor,
-      // })
-      // expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(10, 15))
-      // expect(resultC.pageInfo.hasNextPage).toEqual(true)
-      // expect(resultC.pageInfo.hasPreviousPage).toEqual(false)
-      // expect(resultC.pageInfo.endCursor).toBeTruthy()
-      // expect(resultC.pageInfo.startCursor).toBeTruthy()
-      // const resultD = await indexAPI.page({
-      //   model: MODEL,
-      //   first: 5,
-      //   after: resultC.pageInfo.endCursor,
-      // })
-      // expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(15, 20))
-      // expect(resultD.pageInfo.hasNextPage).toEqual(true)
-      // expect(resultD.pageInfo.hasPreviousPage).toEqual(false)
-      // expect(resultD.pageInfo.endCursor).toBeTruthy()
-      // expect(resultD.pageInfo.startCursor).toBeTruthy()
-      // const resultE = await indexAPI.page({
-      //   model: MODEL,
-      //   first: 5,
-      //   after: resultD.pageInfo.endCursor,
-      // })
-      // expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(20, 21))
-      // expect(resultE.pageInfo.hasNextPage).toEqual(false)
-      // expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
-      // expect(resultE.pageInfo.endCursor).toBeTruthy()
-      // expect(resultE.pageInfo.startCursor).toBeTruthy()
     })
     test('backward pagination', async () => {
       const pageSize = 5
@@ -311,61 +256,6 @@ describe('page', () => {
         expect(result.pageInfo.endCursor).toBeTruthy()
         expect(result.pageInfo.startCursor).toBeTruthy()
       }
-
-      // const resultA = await indexAPI.page({
-      //   model: MODEL,
-      //   last: 5,
-      // })
-      // expect(resultA.entries.map(String)).toEqual(ALL_ENTRIES.slice(-5))
-      // expect(resultA.entries.length).toEqual(5)
-      // expect(resultA.pageInfo.hasNextPage).toEqual(false)
-      // expect(resultA.pageInfo.hasPreviousPage).toEqual(true)
-      // expect(resultA.pageInfo.endCursor).toBeTruthy()
-      // expect(resultA.pageInfo.startCursor).toBeTruthy()
-      // const resultB = await indexAPI.page({
-      //   model: MODEL,
-      //   last: 5,
-      //   before: resultA.pageInfo.startCursor,
-      // })
-      // expect(resultB.entries.length).toEqual(5)
-      // expect(resultB.entries.map(String)).toEqual(ALL_ENTRIES.slice(-10, -5))
-      // expect(resultB.pageInfo.hasNextPage).toEqual(false)
-      // expect(resultB.pageInfo.hasPreviousPage).toEqual(true)
-      // expect(resultB.pageInfo.endCursor).toBeTruthy()
-      // expect(resultB.pageInfo.startCursor).toBeTruthy()
-      // const resultC = await indexAPI.page({
-      //   model: MODEL,
-      //   last: 5,
-      //   before: resultB.pageInfo.startCursor,
-      // })
-      // expect(resultC.entries.length).toEqual(5)
-      // expect(resultC.entries.map(String)).toEqual(ALL_ENTRIES.slice(-15, -10))
-      // expect(resultC.pageInfo.hasNextPage).toEqual(false)
-      // expect(resultC.pageInfo.hasPreviousPage).toEqual(true)
-      // expect(resultC.pageInfo.endCursor).toBeTruthy()
-      // expect(resultC.pageInfo.startCursor).toBeTruthy()
-      // const resultD = await indexAPI.page({
-      //   model: MODEL,
-      //   last: 5,
-      //   before: resultC.pageInfo.startCursor,
-      // })
-      // expect(resultD.entries.length).toEqual(5)
-      // expect(resultD.entries.map(String)).toEqual(ALL_ENTRIES.slice(-20, -15))
-      // expect(resultD.pageInfo.hasNextPage).toEqual(false)
-      // expect(resultD.pageInfo.hasPreviousPage).toEqual(true)
-      // expect(resultD.pageInfo.endCursor).toBeTruthy()
-      // expect(resultD.pageInfo.startCursor).toBeTruthy()
-      // const resultE = await indexAPI.page({
-      //   model: MODEL,
-      //   last: 5,
-      //   before: resultD.pageInfo.startCursor,
-      // })
-      // expect(resultE.entries.length).toEqual(1)
-      // expect(resultE.entries.map(String)).toEqual(ALL_ENTRIES.slice(-21, -20))
-      // expect(resultE.pageInfo.hasNextPage).toEqual(false)
-      // expect(resultE.pageInfo.hasPreviousPage).toEqual(false)
-      // expect(resultE.pageInfo.endCursor).toBeTruthy()
-      // expect(resultE.pageInfo.startCursor).toBeTruthy()
     })
   })
 })

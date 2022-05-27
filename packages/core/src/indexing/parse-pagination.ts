@@ -1,4 +1,4 @@
-import type { Pagination } from './types'
+import type { Pagination } from './types.js'
 
 export enum PaginationKind {
   FORWARD,

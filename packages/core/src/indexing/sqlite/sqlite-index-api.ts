@@ -1,5 +1,7 @@
 import { DataSource } from 'typeorm'
 import { StreamID } from '@ceramicnetwork/streamid'
+import type { Knex } from 'knex'
+import * as uint8arrays from 'uint8arrays'
 import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } from '../types.js'
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
@@ -8,15 +10,7 @@ import {
   ForwardPaginationQuery,
   PaginationKind,
   parsePagination,
-} from '../parse-pagination'
-import * as uint8arrays from 'uint8arrays'
-import type { Knex } from 'knex'
-
-export class UnavailablePlaceholderError extends Error {
-  constructor(variableName: string) {
-    super(`Can not find variable ${variableName} for a placeholder`)
-  }
-}
+} from '../parse-pagination.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
