@@ -5,6 +5,7 @@ import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { PaginationKind, parsePagination } from '../parse-pagination'
 import * as uint8arrays from 'uint8arrays'
+import type { Knex } from 'knex'
 
 export class UnavailablePlaceholderError extends Error {
   constructor(variableName: string) {
@@ -64,26 +65,28 @@ class Cursor {
 export class SqliteIndexApi implements DatabaseIndexAPI {
   constructor(
     private readonly dataSource: DataSource,
+    private readonly knexConnection: Knex,
     private readonly modelsToIndex: Array<StreamID>
   ) {}
 
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
-    await this.query(
-      `
-      INSERT INTO ${tableName}
-      (stream_id, controller_did, last_anchored_at, created_at, updated_at) VALUES
-      (:stream_id, :controller_did, :last_anchored_at, :created_at, :updated_at)
-      ON CONFLICT(stream_id) DO UPDATE SET last_anchored_at = :last_anchored_at, updated_at = :updated_at`,
-      {
+    const knexQuery = this.knexConnection(tableName)
+      .insert({
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
         last_anchored_at: asTimestamp(args.lastAnchor),
         created_at: asTimestamp(args.createdAt) || now,
         updated_at: asTimestamp(args.updatedAt) || now,
-      }
-    )
+      })
+      .onConflict('stream_id')
+      .merge({
+        last_anchored_at: asTimestamp(args.lastAnchor),
+        updated_at: asTimestamp(args.updatedAt) || now,
+      })
+      .toSQL()
+    await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
@@ -94,49 +97,34 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     const future = new Date(now.getFullYear(), now.getMonth())
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
+      const baseKnexQuery = this.knexConnection
+        .from(tableName)
+        .select(['stream_id', 'last_anchored_at', 'created_at'])
+        .orderBy([
+          { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC
+          { column: 'last_anchored_at', order: 'DESC' },
+          { column: 'created_at', order: 'DESC' },
+        ])
+        .limit(limit + 1)
       if (pagination.after) {
         const after = Cursor.parse(pagination.after)
         if (after.last_anchored_at) {
-          response = await this.query(
-            `
-            SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
-            WHERE last_anchored_at < :last_anchored_at
-            ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC
-            LIMIT :limit
-           `,
-            {
-              last_anchored_at: after.last_anchored_at,
-              last_anchored_at_max: future.valueOf(),
-              limit: limit + 1,
-            }
-          )
+          const knexQuery = baseKnexQuery
+            .where('last_anchored_at', '<', after.last_anchored_at)
+            .toSQL()
+          response = await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
         } else {
-          response = await this.query(
-            `
-          SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
-          WHERE (last_anchored_at IS NULL AND created_at < :created_at) OR (last_anchored_at IS NOT NULL)
-          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC
-          LIMIT :limit
-          `,
-            {
-              created_at: after.created_at,
-              last_anchored_at_max: future.valueOf(),
-              limit: limit + 1,
-            }
-          )
+          const knexQuery = baseKnexQuery
+            .where((builder) =>
+              builder.whereNull('last_anchored_at').andWhere('created_at', '<', after.created_at)
+            )
+            .orWhereNotNull('last_anchored_at')
+            .toSQL()
+          response = await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
         }
       } else {
-        response = await this.query(
-          `
-        SELECT stream_id, last_anchored_at, created_at
-        FROM ${tableName}
-        ORDER BY IFNULL(last_anchored_at, :last_anchored_at) DESC, created_at DESC
-        LIMIT :limit`,
-          {
-            last_anchored_at: future.valueOf(),
-            limit: limit + 1,
-          }
-        )
+        const knexQuery = baseKnexQuery.toSQL()
+        response = await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
       }
       const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
       const streamIds = init.map((row) => StreamID.fromString(row.stream_id))

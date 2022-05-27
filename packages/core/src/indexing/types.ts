@@ -1,10 +1,10 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 
 export interface IndexStreamArgs {
-  streamID: StreamID
-  model: StreamID
-  controller: string
-  lastAnchor: Date | null
+  readonly streamID: StreamID
+  readonly model: StreamID
+  readonly controller: string
+  readonly lastAnchor: Date | null
 }
 
 export enum Ordering {
@@ -13,33 +13,33 @@ export enum Ordering {
 }
 
 export interface BaseQuery {
-  model: StreamID | string
-  account?: string
-  order?: Ordering // default: CHRONOLOGICAL_DESC
+  readonly model: StreamID | string
+  readonly account?: string
+  readonly order?: Ordering // default: CHRONOLOGICAL_DESC
 }
 
 export interface ForwardPagination {
-  first: number
-  after?: string
+  readonly first: number
+  readonly after?: string
 }
 
 export interface BackwardPagination {
-  last: number
-  before?: string
+  readonly last: number
+  readonly before?: string
 }
 
 export type Pagination = ForwardPagination | BackwardPagination
 
 export interface Page<T> {
-  entries: Array<T>
-  pageInfo: PageInfo
+  readonly entries: Array<T>
+  readonly pageInfo: PageInfo
 }
 
 export type PageInfo = {
-  hasNextPage: boolean
-  hasPreviousPage: boolean
-  startCursor?: string
-  endCursor?: string
+  readonly hasNextPage: boolean
+  readonly hasPreviousPage: boolean
+  readonly startCursor?: string
+  readonly endCursor?: string
 }
 
 // Per database

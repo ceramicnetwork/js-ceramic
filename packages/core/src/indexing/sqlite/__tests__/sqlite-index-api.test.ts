@@ -12,6 +12,7 @@ import { listMidTables } from '../init-tables.js'
 import { IndexStreamArgs } from '../../types.js'
 import csv from 'csv-parser'
 import * as fs from 'fs'
+import knex, { Knex } from 'knex'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna'
@@ -21,6 +22,7 @@ const MODEL = MODELS_TO_INDEX[0]
 
 let tmpFolder: tmp.DirectoryResult
 let dataSource: DataSource
+let konnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
@@ -29,6 +31,13 @@ beforeEach(async () => {
     database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
   })
   await dataSource.initialize()
+  konnection = knex({
+    client: 'sqlite3',
+    useNullAsDefault: true,
+    connection: {
+      filename: `${tmpFolder.path}/tmp-ceramic.sqlite`,
+    },
+  })
 })
 
 afterEach(async () => {
@@ -43,14 +52,14 @@ describe('init', () => {
       database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
     })
     const initializeSpy = jest.spyOn(dataSource, 'initialize')
-    const indexApi = new SqliteIndexApi(dataSource, [])
+    const indexApi = new SqliteIndexApi(dataSource, konnection, [])
     await indexApi.init()
     expect(initializeSpy).toBeCalledTimes(1)
   })
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new SqliteIndexApi(dataSource, modelsToIndex)
+      const indexApi = new SqliteIndexApi(dataSource, konnection, modelsToIndex)
       await indexApi.init()
       const created = await listMidTables(dataSource)
       const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
@@ -60,7 +69,7 @@ describe('init', () => {
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new SqliteIndexApi(dataSource, modelsA)
+      const indexApiA = new SqliteIndexApi(dataSource, konnection, modelsA)
       await indexApiA.init()
       const createdA = await listMidTables(dataSource)
       const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
@@ -68,7 +77,7 @@ describe('init', () => {
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dataSource, modelsB)
+      const indexApiB = new SqliteIndexApi(dataSource, konnection, modelsB)
       await indexApiB.init()
       const createdB = await listMidTables(dataSource)
       const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
@@ -97,7 +106,7 @@ describe('indexStream', () => {
 
   let indexApi: SqliteIndexApi
   beforeEach(async () => {
-    indexApi = new SqliteIndexApi(dataSource, MODELS_TO_INDEX)
+    indexApi = new SqliteIndexApi(dataSource, konnection, MODELS_TO_INDEX)
     await indexApi.init()
   })
 
@@ -173,7 +182,7 @@ describe('page', () => {
   let indexAPI: SqliteIndexApi
 
   beforeEach(async () => {
-    indexAPI = new SqliteIndexApi(dataSource, MODELS_TO_INDEX)
+    indexAPI = new SqliteIndexApi(dataSource, konnection, MODELS_TO_INDEX)
     await indexAPI.init()
     const rows = await readFixture()
     for (const row of rows) {
