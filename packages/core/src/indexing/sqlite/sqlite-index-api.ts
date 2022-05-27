@@ -105,37 +105,42 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const pagination = parsePagination(query)
-    if (pagination.kind === PaginationKind.FORWARD) {
-      const limit = pagination.first
-      const response = await this.query<Array<Selected>>(this.forwardQuery(query, pagination))
-      const entries = response.slice(0, limit)
-      const firstEntry = entries[0]
-      const lastEntry = entries[entries.length - 1]
-      return {
-        entries: entries.map((row) => StreamID.fromString(row.stream_id)),
-        pageInfo: {
-          hasNextPage: response.length > limit,
-          hasPreviousPage: false,
-          endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
-          startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
-        },
+    const paginationKind = pagination.kind
+    switch (paginationKind) {
+      case PaginationKind.FORWARD: {
+        const limit = pagination.first
+        const response = await this.query<Array<Selected>>(this.forwardQuery(query, pagination))
+        const entries = response.slice(0, limit)
+        const firstEntry = entries[0]
+        const lastEntry = entries[entries.length - 1]
+        return {
+          entries: entries.map((row) => StreamID.fromString(row.stream_id)),
+          pageInfo: {
+            hasNextPage: response.length > limit,
+            hasPreviousPage: false,
+            endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
+            startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
+          },
+        }
       }
-    }
-    if (pagination.kind === PaginationKind.BACKWARD) {
-      const limit = pagination.last
-      const response = await this.query<Array<Selected>>(this.backwardQuery(query, pagination))
-      const entries = response.slice(-limit)
-      const firstEntry = entries[0]
-      const lastEntry = entries[entries.length - 1]
-      return {
-        entries: entries.map((row) => StreamID.fromString(row.stream_id)),
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: response.length > limit,
-          endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
-          startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
-        },
+      case PaginationKind.BACKWARD: {
+        const limit = pagination.last
+        const response = await this.query<Array<Selected>>(this.backwardQuery(query, pagination))
+        const entries = response.slice(-limit)
+        const firstEntry = entries[0]
+        const lastEntry = entries[entries.length - 1]
+        return {
+          entries: entries.map((row) => StreamID.fromString(row.stream_id)),
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: response.length > limit,
+            endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
+            startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
+          },
+        }
       }
+      default:
+        throw new UnsupportedOrderingError(paginationKind)
     }
   }
 

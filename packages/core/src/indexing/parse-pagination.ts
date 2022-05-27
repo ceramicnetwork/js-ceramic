@@ -26,7 +26,7 @@ export function parsePagination(query: Pagination): PaginationQuery {
       first: query.first,
       after: query.after,
     }
-  } else {
+  } else if ('last' in query) {
     return {
       kind: PaginationKind.BACKWARD,
       last: query.last,
