@@ -142,7 +142,7 @@ describe('indexStream', () => {
   })
 })
 
-function readFixture() {
+function readFixture(filepath: URL) {
   type CsvFixture = IndexStreamArgs & { createdAt?: Date }
   return new Promise<Array<CsvFixture>>((resolve, reject) => {
     const result = new Array<CsvFixture>()
@@ -150,7 +150,7 @@ function readFixture() {
       separator: ';',
       mapHeaders: ({ header }) => (header ? header.replace(/\s+/g, '') : null),
     })
-    fs.createReadStream(new URL('./index.fixture.csv', import.meta.url))
+    fs.createReadStream(filepath)
       .pipe(csvReader)
       .on('data', (row) => {
         result.push({
@@ -172,41 +172,19 @@ function readFixture() {
 
 describe('page', () => {
   let indexAPI: SqliteIndexApi
+  let ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER: Array<string>
 
   beforeEach(async () => {
     indexAPI = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
     await indexAPI.init()
-    const rows = await readFixture()
+    const rows = await readFixture(new URL('./chronological-order.fixture.csv', import.meta.url))
     for (const row of rows) {
       await indexAPI.indexStream(row)
     }
+    ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER = rows.map((r) => r.streamID.toString())
   })
 
-  describe('default order', () => {
-    const ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER = [
-      'k2t6wysde758e731xife7twg5dwpz8jg42vshm79ax6w7s0yu75kiaj8k2w6dt',
-      'k2t6wysde758akkonpg6flj8fitylax3fk40xrb9ud4hmivd29jdc097ad6nwz',
-      'k2t6wysde758et54lsbq54efgt73xqfg6s5sp72v9ervbn11z7w9rgb2r1fcu3',
-      'k2t6wysde7589n4wvaiuhbokdvhtm71lxii24u8f12rlntsqakblz5u69vxgbu',
-      'k2t6wysde7589wo4k3reakai9t5z52jgwfxdx8w0ug7px0s66o0h4qkkz134lb',
-      'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna',
-      'k2t6wysde758d3muw7okc3zspjlcpcjqzrchrdk5augruhpdha2od8tw46r0qh',
-      'k2t6wysde758cpnjmqwp3zcsrcthn116vq6ayeivfsivilr02pj6pybbuzgkbt',
-      'k2t6wysde758c9utjgo3caetaezu2cluj2p3gjttfqz111neyncd6z7ekxjfv9',
-      'k2t6wysde7589pfiw4q6rm96t2yzjiheopr56gx7jsqatip8qk9ebesdft1w14',
-      'k2t6wysde758cx9qi61w2001a5l5hx8f5no9yue3ewv0ftky5mbvalmuf3gchb',
-      'k2t6wysde758aef79049queu07hgygp52a6i6an7of9y31vjf2bmyk2k0jwuod',
-      'k2t6wysde7589p6n2wl0yrh0mi0g6vyzrfd8xmo6wj8f5xbjjs3flxc8z7rzhm',
-      'k2t6wysde758a5g0poyqkp0ni2zfzw27j4fb2lkv5mkby35ss44kepa71axkk9',
-      'k2t6wysde758c8jmww7tcvcprvs6i7uxl30cz17jwssf4i1q5f96bmx2xkk65b',
-      'k2t6wysde758a7cnbum8auockii5f626vbi18keqegi52mob9z3kulecyvr04c',
-      'k2t6wysde7589xsdd2tgrnedgm76fgk59cuo92pjibn6k9ichcxepmys19lluj',
-      'k2t6wysde758d3tvke5zmqgq85s6m6dm593y5xl0desja6s1t6ub02osbsb8jv',
-      'k2t6wysde758cgke6n0sr3yaor6shv5czq9d3dgmvb09jo8vy0gnlegbyowgs8',
-      'k2t6wysde758b3nriettrnxt5eg39ylwo2o7sbvie1ny5tprdmvwnx9xoqwy67',
-      'k2t6wysde7589fze9445oe7y578f7csh4uexfqe9r9qziqyz8koegst94ryoat',
-    ]
-
+  describe('chronological order', () => {
     function chunks<T>(array: Array<T>, chunkSize: number): Array<Array<T>> {
       const result = new Array<Array<T>>()
       for (let i = 0; i < array.length; i += chunkSize) {
@@ -238,7 +216,9 @@ describe('page', () => {
     })
     test('backward pagination', async () => {
       const pageSize = 5
-      const pages = chunks(ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER.reverse(), pageSize).map((arr) => arr.reverse())
+      const pages = chunks(ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER.reverse(), pageSize).map((arr) =>
+        arr.reverse()
+      )
       let beforeCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
         const result = await indexAPI.page({
