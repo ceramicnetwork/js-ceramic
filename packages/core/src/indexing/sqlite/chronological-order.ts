@@ -1,8 +1,8 @@
 import type { Knex } from 'knex'
-import { DataSource } from 'typeorm'
+import type { DataSource } from 'typeorm'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { BaseQuery, Page, Pagination } from '../types.js'
+import type { BaseQuery, Page, Pagination } from '../types.js'
 import {
   BackwardPaginationQuery,
   ForwardPaginationQuery,

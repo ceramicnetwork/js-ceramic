@@ -1,5 +1,5 @@
-import { DataSource } from 'typeorm'
-import { StreamID } from '@ceramicnetwork/streamid'
+import type { DataSource } from 'typeorm'
+import type { StreamID } from '@ceramicnetwork/streamid'
 import type { Knex } from 'knex'
 import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } from '../types.js'
 import { initTables } from './init-tables.js'
