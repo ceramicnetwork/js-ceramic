@@ -74,6 +74,8 @@ function asChronologicalCursor(
   return { created_at: input.created_at, last_anchored_at: input.last_anchored_at }
 }
 
+type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
+
 export class SqliteIndexApi implements DatabaseIndexAPI {
   constructor(
     private readonly dataSource: DataSource,
@@ -103,38 +105,35 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const pagination = parsePagination(query)
-    let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
       const limit = pagination.first
-      response = await this.query(this.forwardQuery(query, pagination))
-      const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
-      const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
-      const lastEntry = init[init.length - 1]
-      const startEntry = init[0]
+      const response = await this.query<Array<Selected>>(this.forwardQuery(query, pagination))
+      const entries = response.slice(0, limit)
+      const firstEntry = entries[0]
+      const lastEntry = entries[entries.length - 1]
       return {
-        entries: streamIds,
+        entries: entries.map((row) => StreamID.fromString(row.stream_id)),
         pageInfo: {
-          hasNextPage: last.length > 0,
+          hasNextPage: response.length > limit,
           hasPreviousPage: false,
           endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
-          startCursor: Cursor.stringify(asChronologicalCursor(startEntry)),
+          startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
         },
       }
     }
     if (pagination.kind === PaginationKind.BACKWARD) {
       const limit = pagination.last
-      response = await this.query(this.backwardQuery(query, pagination))
-      const [head, tail] = [response.slice(-limit - 1, -limit), response.slice(-limit)]
-      const streamIds = tail.map((row) => StreamID.fromString(row.stream_id))
-      const lastEntry = tail[tail.length - 1]
-      const startEntry = tail[0]
+      const response = await this.query<Array<Selected>>(this.backwardQuery(query, pagination))
+      const entries = response.slice(-limit)
+      const firstEntry = entries[0]
+      const lastEntry = entries[entries.length - 1]
       return {
-        entries: streamIds,
+        entries: entries.map((row) => StreamID.fromString(row.stream_id)),
         pageInfo: {
-          hasPreviousPage: head.length > 0,
           hasNextPage: false,
+          hasPreviousPage: response.length > limit,
           endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
-          startCursor: Cursor.stringify(asChronologicalCursor(startEntry)),
+          startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
         },
       }
     }
