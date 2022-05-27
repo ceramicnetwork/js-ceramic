@@ -1,12 +1,7 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { DataSource } from 'typeorm'
-import {
-  asTimestamp,
-  SqliteIndexApi,
-  UnavailablePlaceholderError,
-  withPlaceholder,
-} from '../sqlite-index-api.js'
+import { asTimestamp, SqliteIndexApi, UnavailablePlaceholderError } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
 import { IndexStreamArgs } from '../../types.js'
@@ -372,42 +367,5 @@ describe('page', () => {
       // expect(resultE.pageInfo.endCursor).toBeTruthy()
       // expect(resultE.pageInfo.startCursor).toBeTruthy()
     })
-  })
-})
-
-describe('withPlaceholder', () => {
-  test('single placeholder', () => {
-    const original = `SELECT * FROM HELLO WHERE created_at > :created_at`
-    const variables = { created_at: 333 }
-    const [query, placeholders] = withPlaceholder(original, variables)
-    expect(query).toEqual('SELECT * FROM HELLO WHERE created_at > ?')
-    expect(placeholders).toEqual([variables.created_at])
-  })
-  test('multiple placeholders', () => {
-    const original = `SELECT * FROM HELLO WHERE created_at > :created_at AND last_anchored_at = :last_anchored_at`
-    const variables = { created_at: 333, last_anchored_at: 444 }
-    const [query, placeholders] = withPlaceholder(original, variables)
-    expect(query).toEqual('SELECT * FROM HELLO WHERE created_at > ? AND last_anchored_at = ?')
-    expect(placeholders).toEqual([variables.created_at, variables.last_anchored_at])
-  })
-  test('duplicate placeholders', () => {
-    const original = `SELECT * FROM HELLO WHERE (created_at > :created_at AND last_anchored_at = :last_anchored_at) OR (created_at < :created_at)`
-    const variables = { created_at: 333, last_anchored_at: 444 }
-    const [query, placeholders] = withPlaceholder(original, variables)
-    expect(query).toEqual(
-      'SELECT * FROM HELLO WHERE (created_at > ? AND last_anchored_at = ?) OR (created_at < ?)'
-    )
-    expect(placeholders).toEqual([
-      variables.created_at,
-      variables.last_anchored_at,
-      variables.created_at,
-    ])
-  })
-  test('unavailable placeholder', () => {
-    const original = `SELECT * FROM HELLO WHERE created_at > :created_at AND last_anchored_at = :last_anchored_at`
-    const variables = { created_at: 333 }
-    expect(() => {
-      withPlaceholder(original, variables)
-    }).toThrow(UnavailablePlaceholderError)
   })
 })

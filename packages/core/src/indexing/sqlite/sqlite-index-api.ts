@@ -17,24 +17,6 @@ export class UnavailablePlaceholderError extends Error {
     super(`Can not find variable ${variableName} for a placeholder`)
   }
 }
-export function withPlaceholder(
-  query: string,
-  variables: Record<string, any>
-): [string, Array<any>] {
-  const entries = query.match(/:\w+/g)
-  const placeholders: Array<any> = []
-  let resultQuery = query
-  for (const entry of entries) {
-    resultQuery = resultQuery.replace(entry, '?')
-    const variableName = entry.replace(/^:/, '')
-    if (!(variableName in variables)) {
-      throw new UnavailablePlaceholderError(variableName)
-    }
-    const variableValue = variables[variableName]
-    placeholders.push(variableValue)
-  }
-  return [resultQuery, placeholders]
-}
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
