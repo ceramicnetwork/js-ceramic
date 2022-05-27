@@ -34,7 +34,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await dataSource.close()
-  // await tmpFolder.cleanup()
+  await tmpFolder.cleanup()
 })
 
 describe('init', () => {
