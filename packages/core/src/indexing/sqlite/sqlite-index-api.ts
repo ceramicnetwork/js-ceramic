@@ -47,6 +47,20 @@ export class UnsupportedOrderingError extends Error {
   }
 }
 
+class Cursor {
+  static parse(cursor: string): any {
+    return JSON.parse(uint8arrays.toString(uint8arrays.fromString(cursor, 'base64url')))
+  }
+
+  static stringify(input: any): string | undefined {
+    if (input) {
+      return uint8arrays.toString(uint8arrays.fromString(JSON.stringify(input)), 'base64url')
+    } else {
+      return undefined
+    }
+  }
+}
+
 export class SqliteIndexApi implements DatabaseIndexAPI {
   constructor(
     private readonly dataSource: DataSource,
@@ -81,9 +95,7 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
       if (pagination.after) {
-        const after = JSON.parse(
-          uint8arrays.toString(uint8arrays.fromString(pagination.after, 'base64url'))
-        )
+        const after = Cursor.parse(pagination.after)
         if (after.last_anchored_at) {
           response = await this.query(
             `
@@ -141,20 +153,14 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
         pageInfo: {
           hasNextPage: last.length > 0,
           hasPreviousPage: false,
-          endCursor: endCursor
-            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
-            : undefined,
-          startCursor: startCursor
-            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(startCursor)), 'base64url')
-            : undefined,
+          endCursor: Cursor.stringify(endCursor),
+          startCursor: Cursor.stringify(startCursor),
         },
       }
     }
     if (pagination.kind === PaginationKind.BACKWARD) {
       if (pagination.before) {
-        const before = JSON.parse(
-          uint8arrays.toString(uint8arrays.fromString(pagination.before, 'base64url'))
-        )
+        const before = Cursor.parse(pagination.before)
         if (before.last_anchored_at) {
           response = await this.query(
             `
@@ -212,12 +218,8 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
         pageInfo: {
           hasPreviousPage: first.length > 0,
           hasNextPage: false,
-          endCursor: endCursor
-            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(endCursor)), 'base64url')
-            : undefined,
-          startCursor: startCursor
-            ? uint8arrays.toString(uint8arrays.fromString(JSON.stringify(startCursor)), 'base64url')
-            : undefined,
+          endCursor: Cursor.stringify(endCursor),
+          startCursor: Cursor.stringify(startCursor),
         },
       }
     }
