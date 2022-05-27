@@ -3,7 +3,12 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } from '../types.js'
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
-import { PaginationKind, parsePagination } from '../parse-pagination'
+import {
+  ForwardPaginationQuery,
+  PaginationKind,
+  PaginationQuery,
+  parsePagination,
+} from '../parse-pagination'
 import * as uint8arrays from 'uint8arrays'
 import type { Knex } from 'knex'
 
@@ -92,40 +97,12 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const tableName = asTableName(query.model)
     const pagination = parsePagination(query)
-    const limit = pagination.kind == PaginationKind.FORWARD ? pagination.first : pagination.last
     const now = new Date()
     const future = new Date(now.getFullYear(), now.getMonth())
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
-      const baseKnexQuery = this.knexConnection
-        .from(tableName)
-        .select(['stream_id', 'last_anchored_at', 'created_at'])
-        .orderBy([
-          { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC
-          { column: 'last_anchored_at', order: 'DESC' },
-          { column: 'created_at', order: 'DESC' },
-        ])
-        .limit(limit + 1)
-      if (pagination.after) {
-        const after = Cursor.parse(pagination.after)
-        if (after.last_anchored_at) {
-          const knexQuery = baseKnexQuery
-            .where('last_anchored_at', '<', after.last_anchored_at)
-            .toSQL()
-          response = await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
-        } else {
-          const knexQuery = baseKnexQuery
-            .where((builder) =>
-              builder.whereNull('last_anchored_at').andWhere('created_at', '<', after.created_at)
-            )
-            .orWhereNotNull('last_anchored_at')
-            .toSQL()
-          response = await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
-        }
-      } else {
-        const knexQuery = baseKnexQuery.toSQL()
-        response = await this.dataSource.query(knexQuery.sql, knexQuery.bindings as any[])
-      }
+      const limit = pagination.first
+      response = await this.knexQuery(this.forwardQuery(query, pagination))
       const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
       const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
       const lastEntry = init[init.length - 1]
@@ -147,6 +124,7 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
       }
     }
     if (pagination.kind === PaginationKind.BACKWARD) {
+      const limit = pagination.last
       if (pagination.before) {
         const before = Cursor.parse(pagination.before)
         if (before.last_anchored_at) {
@@ -218,6 +196,38 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
       await this.dataSource.initialize()
     }
     await initTables(this.dataSource, this.modelsToIndex)
+  }
+
+  private forwardQuery(query: BaseQuery, pagination: ForwardPaginationQuery): Knex.QueryBuilder {
+    const tableName = asTableName(query.model)
+    const base = this.knexConnection
+      .from(tableName)
+      .select(['stream_id', 'last_anchored_at', 'created_at'])
+      .orderBy([
+        { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC
+        { column: 'last_anchored_at', order: 'DESC' },
+        { column: 'created_at', order: 'DESC' },
+      ])
+      .limit(pagination.first + 1)
+    if (pagination.after) {
+      const after = Cursor.parse(pagination.after)
+      if (after.last_anchored_at) {
+        return base.where('last_anchored_at', '<', after.last_anchored_at)
+      } else {
+        return base
+          .where((builder) =>
+            builder.whereNull('last_anchored_at').andWhere('created_at', '<', after.created_at)
+          )
+          .orWhereNotNull('last_anchored_at')
+      }
+    } else {
+      return base
+    }
+  }
+
+  private knexQuery<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
+    const asSQL = queryBuilder.toSQL()
+    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
   }
 
   private query<T = any>(query: string, variables: Record<string, any>): Promise<T> {
