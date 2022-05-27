@@ -1,15 +1,11 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { Ordering } from './ordering.js'
 
 export interface IndexStreamArgs {
   readonly streamID: StreamID
   readonly model: StreamID
   readonly controller: string
   readonly lastAnchor: Date | null
-}
-
-export enum Ordering {
-  CHRONOLOGICAL = 'chronological', // last_anchored_at DESC NULLS FIRST, created_at DESC
-  INSERTION = 'insertion', // created_at DESC = when an entry was added to the index
 }
 
 export interface BaseQuery {
