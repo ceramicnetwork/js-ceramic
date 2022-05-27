@@ -4,9 +4,9 @@ import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } f
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import {
+  BackwardPaginationQuery,
   ForwardPaginationQuery,
   PaginationKind,
-  PaginationQuery,
   parsePagination,
 } from '../parse-pagination'
 import * as uint8arrays from 'uint8arrays'
@@ -53,7 +53,7 @@ export class UnsupportedOrderingError extends Error {
   }
 }
 
-class Cursor {
+abstract class Cursor {
   static parse(cursor: string): any {
     return JSON.parse(uint8arrays.toString(uint8arrays.fromString(cursor, 'base64url')))
   }
@@ -65,6 +65,13 @@ class Cursor {
       return undefined
     }
   }
+}
+
+function asChronologicalCursor(
+  input: { created_at: number; last_anchored_at: number } | undefined
+) {
+  if (!input) return undefined
+  return { created_at: input.created_at, last_anchored_at: input.last_anchored_at }
 }
 
 export class SqliteIndexApi implements DatabaseIndexAPI {
@@ -95,97 +102,39 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
-    const tableName = asTableName(query.model)
     const pagination = parsePagination(query)
-    const now = new Date()
-    const future = new Date(now.getFullYear(), now.getMonth())
     let response: Array<{ stream_id: string; last_anchored_at: number; created_at: number }> = []
     if (pagination.kind === PaginationKind.FORWARD) {
       const limit = pagination.first
-      response = await this.knexQuery(this.forwardQuery(query, pagination))
+      response = await this.query(this.forwardQuery(query, pagination))
       const [init, last] = [response.slice(0, limit), response.slice(limit, limit + 1)]
       const streamIds = init.map((row) => StreamID.fromString(row.stream_id))
       const lastEntry = init[init.length - 1]
-      const endCursor = lastEntry
-        ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
-        : undefined
       const startEntry = init[0]
-      const startCursor = startEntry
-        ? { created_at: startEntry.created_at, last_anchored_at: startEntry.last_anchored_at }
-        : undefined
       return {
         entries: streamIds,
         pageInfo: {
           hasNextPage: last.length > 0,
           hasPreviousPage: false,
-          endCursor: Cursor.stringify(endCursor),
-          startCursor: Cursor.stringify(startCursor),
+          endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
+          startCursor: Cursor.stringify(asChronologicalCursor(startEntry)),
         },
       }
     }
     if (pagination.kind === PaginationKind.BACKWARD) {
       const limit = pagination.last
-      if (pagination.before) {
-        const before = Cursor.parse(pagination.before)
-        if (before.last_anchored_at) {
-          response = await this.query(
-            `
-          SELECT * FROM (SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
-          WHERE IFNULL(last_anchored_at, :last_anchored_at_max) > :last_anchored_at
-          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) ASC, created_at ASC LIMIT :limit) ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC`,
-            {
-              last_anchored_at_max: future.valueOf(),
-              last_anchored_at: before.last_anchored_at,
-              limit: limit + 1,
-            }
-          )
-        } else {
-          response = await this.query(
-            `
-          SELECT * FROM
-            (SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
-            WHERE last_anchored_at IS NULL and created_at > :created_at
-            ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) ASC, created_at ASC
-            LIMIT :limit)
-          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC`,
-            {
-              created_at: before.created_at,
-              last_anchored_at_max: future.valueOf(),
-              limit: limit + 1,
-            }
-          )
-        }
-      } else {
-        response = await this.query(
-          `
-        SELECT * FROM
-          (SELECT stream_id, last_anchored_at, created_at FROM ${tableName}
-          ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) ASC, created_at ASC
-          LIMIT :limit)
-        ORDER BY IFNULL(last_anchored_at, :last_anchored_at_max) DESC, created_at DESC`,
-          {
-            last_anchored_at_max: future.valueOf(),
-            limit: limit + 1,
-          }
-        )
-      }
-      const [first, tail] = [response.slice(-limit - 1, -limit), response.slice(-limit)]
+      response = await this.query(this.backwardQuery(query, pagination))
+      const [head, tail] = [response.slice(-limit - 1, -limit), response.slice(-limit)]
       const streamIds = tail.map((row) => StreamID.fromString(row.stream_id))
       const lastEntry = tail[tail.length - 1]
-      const endCursor = lastEntry
-        ? { created_at: lastEntry.created_at, last_anchored_at: lastEntry.last_anchored_at }
-        : undefined
       const startEntry = tail[0]
-      const startCursor = startEntry
-        ? { created_at: startEntry.created_at, last_anchored_at: startEntry.last_anchored_at }
-        : undefined
       return {
         entries: streamIds,
         pageInfo: {
-          hasPreviousPage: first.length > 0,
+          hasPreviousPage: head.length > 0,
           hasNextPage: false,
-          endCursor: Cursor.stringify(endCursor),
-          startCursor: Cursor.stringify(startCursor),
+          endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
+          startCursor: Cursor.stringify(asChronologicalCursor(startEntry)),
         },
       }
     }
@@ -202,7 +151,7 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     const tableName = asTableName(query.model)
     const base = this.knexConnection
       .from(tableName)
-      .select(['stream_id', 'last_anchored_at', 'created_at'])
+      .select('stream_id', 'last_anchored_at', 'created_at')
       .orderBy([
         { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC
         { column: 'last_anchored_at', order: 'DESC' },
@@ -225,12 +174,54 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     }
   }
 
-  private knexQuery<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
-    const asSQL = queryBuilder.toSQL()
-    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
+  private backwardQuery(query: BaseQuery, pagination: BackwardPaginationQuery): Knex.QueryBuilder {
+    const tableName = asTableName(query.model)
+    const limit = pagination.last
+    const identity = <T>(a: T) => a
+    const base = (
+      withWhereCallback: (builder: Knex.QueryBuilder) => Knex.QueryBuilder = identity
+    ) => {
+      return this.knexConnection
+        .select('*')
+        .from((builder) =>
+          withWhereCallback(
+            builder
+              .from(tableName)
+              .select('stream_id', 'last_anchored_at', 'created_at')
+              .orderBy([
+                { column: 'last_anchored_at', order: 'ASC', nulls: 'last' }, // (`last_anchored_at` is null) ASC
+                { column: 'last_anchored_at', order: 'ASC' },
+                { column: 'created_at', order: 'ASC' },
+              ])
+              .limit(limit + 1)
+          )
+        )
+        .orderBy([
+          { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC
+          { column: 'last_anchored_at', order: 'DESC' },
+          { column: 'created_at', order: 'DESC' },
+        ])
+    }
+    if (pagination.before) {
+      const before = Cursor.parse(pagination.before)
+      if (before.last_anchored_at) {
+        return base((builder) =>
+          builder
+            .whereNull('last_anchored_at')
+            .orWhere('last_anchored_at', '>', before.last_anchored_at)
+        )
+      } else {
+        return base((builder) =>
+          builder.where({ last_anchored_at: null }).andWhere('created_at', '>', before.created_at)
+        )
+      }
+    } else {
+      return base()
+    }
   }
 
-  private query<T = any>(query: string, variables: Record<string, any>): Promise<T> {
-    return this.dataSource.query(...withPlaceholder(query, variables)) as Promise<T>
+  private query<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
+    const asSQL = queryBuilder.toSQL()
+    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
   }
 }
