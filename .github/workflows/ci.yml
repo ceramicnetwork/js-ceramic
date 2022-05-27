@@ -77,17 +77,19 @@ jobs:
         run: |
           # Pull the latest pipelinetools.
           # TODO: Once the code is stable, use a tagged version.
-          dagger project update github.com/3box/pipelinetools@develop || true
+          dagger project update github.com/3box/pipelinetools@develop
 
           # TODO: Report bug to Dagger. Script doesn't get automatically copied during `dagger update` and also doesn't
           # have executable permissions.
           chmod +x cue.mod/pkg/universe.dagger.io/aws/_scripts/install.sh
 
           # The JSON output of the `build` action provides additional repository metadata to be used subsequently.
-          REPO_META=$(dagger do --output-format json build -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-build" --cache-from "${{ env.DAGGER_CACHE_FROM }}-build")
+          REPO_META=$(dagger do --output-format json version -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-build" --cache-from "${{ env.DAGGER_CACHE_FROM }}-build")
           echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
           echo "SHA_TAG=$(echo "${REPO_META}" | jq -r '.shaTag')" >> $GITHUB_ENV
           echo "BRANCH=$(echo "${REPO_META}" | jq -r '.branch')" >> $GITHUB_ENV
+
+          dagger do test -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-test" --cache-from "${{ env.DAGGER_CACHE_FROM }}-test"
       -
         name: Build and test image
         run: |
