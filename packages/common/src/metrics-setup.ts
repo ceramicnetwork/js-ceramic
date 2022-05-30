@@ -7,9 +7,9 @@ import { Resource } from '@opentelemetry/resources'
 const { endpoint, port } = PrometheusExporter.DEFAULT_OPTIONS;
 
 const metricExporter = new PrometheusExporter({}, () => {
-  console.log(
-    `prometheus scrape endpoint: http://localhost:${port}${endpoint}`,
-  );
+//  console.log(
+//    `prometheus scrape endpoint: http://localhost:${port}${endpoint}`,
+//  );
 });
 
 const meterProvider = new MeterProvider({
