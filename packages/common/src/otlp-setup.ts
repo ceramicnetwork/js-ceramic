@@ -1,32 +1,16 @@
-import {
-  BasicTracerProvider,
-  ConsoleSpanExporter,
-  SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base'
-import { MeterProvider, InstrumentType, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics-base'
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
+
+import { MeterProvider } from '@opentelemetry/sdk-metrics-base'
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { Resource } from '@opentelemetry/resources'
-import {trace} from '@opentelemetry/api'
 
-const collectorOptions = {
-//  url: '<opentelemetry-collector-url>', // url is optional and can be omitted - default is http://localhost:4318/v1/metrics
-  url: 'http://localhost:53717/v1/metrics',
-  headers: {}, // an optional object containing custom headers to be sent with each request
-  concurrencyLimit: 1, // an optional limit on pending requests
-};
-const metricExporter = new OTLPMetricExporter(collectorOptions);
+const { endpoint, port } = PrometheusExporter.DEFAULT_OPTIONS;
 
-// register the exporter with a meter provider
-// syntax is from https://www.npmjs.com/package/@opentelemetry/exporter-metrics-otlp-http but looks wrong
-// asked in the otlp slack
-// this is more likely correct: https://github.com/open-telemetry/opentelemetry-js/blob/main/examples/otlp-exporter-node/metrics.js
-/*
-const meter = new MeterProvider({
-  exporter,  // this doesn't even make sense, but its in the docs
-  interval: 60000,
-}).getMeter('js-ceramic-meter');
-*/
+const metricExporter = new PrometheusExporter({}, () => {
+  console.log(
+    `prometheus scrape endpoint: http://localhost:${port}${endpoint}`,
+  );
+});
 
 const meterProvider = new MeterProvider({
   resource: new Resource({
@@ -34,25 +18,11 @@ const meterProvider = new MeterProvider({
   }),
 });
 
-meterProvider.addMetricReader(new PeriodicExportingMetricReader({
-  exporter: metricExporter,
-  exportIntervalMillis: 1000,
-}));
+// Creates MeterProvider and installs the exporter as a MetricReader
+meterProvider.addMetricReader(metricExporter);
 
-const meter = meterProvider.getMeter('ceramic-exporter-collector');
-
-
-
-// Creates a global tracer provider that will automatically export traces
-const provider = new BasicTracerProvider();
-// Configure span processor to send spans to the exporter
-provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-provider.register();
-
-// Tracer for js-ceramic
-const tracer = trace.getTracer(
-  'js-ceramic'
-)
+// Meter for js-ceramic
+const meter = meterProvider.getMeter('js-ceramic');
 
 // Metric names
 // the parameters will be used to distinguish the endpoint, type of call etc
@@ -82,16 +52,3 @@ export function Record(name:string, value:number, params?:any) {
   }
   meter.createHistogram(name, params).record(value)
 }
-
-
-export class Span {
-  public span: any
-  constructor(name:string, params?: any ) {
-    this.span = tracer.startSpan(name, params)
-  }
-  public end() {
-    this.span.end()
-  }
-  // TODO make sure span.end() gets called on garbage collection
-}
-
