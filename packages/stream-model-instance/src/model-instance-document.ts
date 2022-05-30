@@ -31,16 +31,6 @@ export interface ModelInstanceDocumentMetadataArgs {
    * The DID(s) that are allowed to author updates to this ModelInstanceDocument
    */
   controllers?: Array<string>
-
-  /**
-   * If true, all changes to the 'controllers' array are disallowed.  This guarantees that the
-   * Stream will always have the same controller. Especially useful for Streams controlled by
-   * DIDs that can have ownership changes within the DID itself, such as did:nft, as setting this
-   * would prevent the current holder of the NFT from changing the Stream's controller to that
-   * user's personal DID, which would prevent the ownership of the Stream from changing the next
-   * time the NFT is traded.
-   */
-  forbidControllerChange?: boolean
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -64,20 +54,6 @@ function headerFromMetadata(
 
   const header: CommitHeader = {
     controllers: metadata?.controllers,
-  }
-
-  // Handle properties that can only be set on the genesis commit.
-  if (genesis) {
-    if (metadata?.forbidControllerChange) {
-      header.forbidControllerChange = true
-    }
-  } else {
-    // These throws aren't strictly necessary as we can just leave these fields out of the header
-    // object we return, but throwing here gives more useful feedback to users.
-
-    if (metadata?.forbidControllerChange !== undefined) {
-      throw new Error("Cannot change 'forbidControllerChange' property on existing Streams")
-    }
   }
 
   // Delete undefined keys from header
