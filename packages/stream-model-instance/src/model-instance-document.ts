@@ -56,7 +56,11 @@ function headerFromMetadata(
     controllers: metadata?.controllers,
   }
 
-  header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+  // Handle properties that can only be set on the genesis commit.
+  if (genesis) {
+    header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+  }
+
   // Delete undefined keys from header
   Object.keys(header).forEach((key) => header[key] === undefined && delete header[key])
   return header
@@ -122,7 +126,11 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-
+    if (opts.syncTimeoutSeconds == undefined) {
+      // By default you don't want to wait to sync doc state from pubsub when creating a unique
+      // document as there shouldn't be any existing state for this doc on the network.
+      opts.syncTimeoutSeconds = 0
+    }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await ModelInstanceDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
