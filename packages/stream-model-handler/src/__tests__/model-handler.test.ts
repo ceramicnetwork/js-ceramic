@@ -319,7 +319,7 @@ describe('ModelHandler', () => {
     .toThrow(`Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`)
   })
 
-  it('fails to make signed commit with invalid schema', async () => {
+  it('fails to apply signed commit with invalid schema', async () => {
     const modelHandler = new ModelHandler()
 
     const genesisCommit = (await Model._makeGenesis(
