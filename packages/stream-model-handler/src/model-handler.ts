@@ -14,14 +14,11 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils'
 
 /**
  * Model stream handler implementation
  */
 export class ModelHandler implements StreamHandler<Model> {
-  private readonly _schemaValidator: SchemaValidation
-
   get type(): number {
     return Model.STREAM_TYPE_ID
   }
@@ -32,10 +29,6 @@ export class ModelHandler implements StreamHandler<Model> {
 
   get stream_constructor(): StreamConstructor<Model> {
     return Model
-  }
-
-  constructor() {
-    this._schemaValidator = new SchemaValidation()
   }
 
   /**
@@ -106,10 +99,6 @@ export class ModelHandler implements StreamHandler<Model> {
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
-    if (state.content.schema !== undefined) {
-      await this._schemaValidator.validateSchema(state.content.schema)
-    }
-    
     return state
   }
 
@@ -178,10 +167,6 @@ export class ModelHandler implements StreamHandler<Model> {
     nextState.next = {
       content: newContent,
       metadata, // No way to update metadata for Model streams
-    }
-
-    if (newContent.schema !== undefined) {
-      await this._schemaValidator.validateSchema(newContent.schema)
     }
 
     return nextState

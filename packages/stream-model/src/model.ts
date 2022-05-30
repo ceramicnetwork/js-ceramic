@@ -18,7 +18,7 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
+import type { JSONSchema } from 'json-schema-typed/draft-07'
 import { CID } from 'multiformats/cid'
 import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'

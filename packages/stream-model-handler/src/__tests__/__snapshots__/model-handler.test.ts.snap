@@ -10,21 +10,8 @@ Object {
   "anchorStatus": 3,
   "content": Object {
     "accountRelation": "list",
-    "name": "MyModel",
-    "schema": Object {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
-          "maxLength": 80,
-          "type": "string",
-        },
-      },
-      "required": Array [
-        "stringPropName",
-      ],
-      "type": "object",
-    },
+    "name": "myModel",
+    "schema": Object {},
   },
   "log": Array [
     Object {
@@ -196,21 +183,8 @@ Object {
   "anchorStatus": 0,
   "content": Object {
     "accountRelation": "list",
-    "name": "MyModel",
-    "schema": Object {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
-          "maxLength": 80,
-          "type": "string",
-        },
-      },
-      "required": Array [
-        "stringPropName",
-      ],
-      "type": "object",
-    },
+    "name": "myModel",
+    "schema": Object {},
   },
   "log": Array [
     Object {
@@ -295,21 +269,8 @@ Object {
   "anchorStatus": 0,
   "content": Object {
     "accountRelation": "list",
-    "name": "MyModel",
-    "schema": Object {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
-          "maxLength": 80,
-          "type": "string",
-        },
-      },
-      "required": Array [
-        "stringPropName",
-      ],
-      "type": "object",
-    },
+    "name": "myModel",
+    "schema": Object {},
   },
   "log": Array [
     Object {
@@ -514,21 +475,8 @@ Object {
   "next": Object {
     "content": Object {
       "accountRelation": "list",
-      "name": "MyModel",
-      "schema": Object {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "additionalProperties": false,
-        "properties": Object {
-          "stringPropName": Object {
-            "maxLength": 80,
-            "type": "string",
-          },
-        },
-        "required": Array [
-          "stringPropName",
-        ],
-        "type": "object",
-      },
+      "name": "myModel",
+      "schema": Object {},
     },
     "metadata": Object {
       "controllers": Array [
