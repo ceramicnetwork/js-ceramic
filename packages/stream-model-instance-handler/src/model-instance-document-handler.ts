@@ -89,6 +89,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         commitData,
         context.did,
         controllers[0],
+        null,
         streamId
       )
     } else if (payload.data) {
@@ -132,6 +133,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       commitData,
       context.did,
       controller,
+      null,
       streamId
     )
 
