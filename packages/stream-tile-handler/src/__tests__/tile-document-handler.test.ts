@@ -335,12 +335,12 @@ describe('TileDocumentHandler', () => {
     ).rejects.toThrow(/Initial content must be null/)
   })
 
-  it('Does not sign commit if no content', async () => {
+  it('Takes controller from authenticated DID if controller not specified', async () => {
     const commit = (await TileDocument.makeGenesis(context.api, null)) as GenesisCommit
     expect(commit.header.controllers[0]).toEqual(did.id)
   })
 
-  it('Takes controller from authenticated DID if controller not specified', async () => {
+  it('Does not sign commit if no content', async () => {
     const signedCommitWithContent = await TileDocument.makeGenesis(
       context.api,
       COMMITS.genesis.data
@@ -636,12 +636,12 @@ describe('TileDocumentHandler', () => {
 
     // try invalid controller updates
     const invalidControllerValues = [null, '']
-    for (let i=0; i<invalidControllerValues.length; i++) {
+    for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = (await doc._makeRawCommit(context.api, {
-        other: {obj2: 'fefe'}
-      }))
+      const rawCommit = await doc._makeRawCommit(context.api, {
+        other: { obj2: 'fefe' },
+      })
 
       // update unsigned metadata
       rawCommit.header.controllers = [invalidControllerValues[i]]
@@ -657,11 +657,9 @@ describe('TileDocumentHandler', () => {
         commit: sPayload,
         envelope: signedCommit.jws,
       }
-      await expect(tileDocumentHandler.applyCommit(
-        signedCommitData_1,
-        context,
-        deepCopy(genesisState)
-      )).rejects.toThrow(/Controller cannot be updated to an undefined value./)
+      await expect(
+        tileDocumentHandler.applyCommit(signedCommitData_1, context, deepCopy(genesisState))
+      ).rejects.toThrow(/Controller cannot be updated to an undefined value./)
     }
   })
 

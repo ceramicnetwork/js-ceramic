@@ -35,6 +35,8 @@
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
+    "json-schema-typed": "^8.0.1",
+    "multihashes": "^4.0.3",
     "uint8arrays": "^3.0.0"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
