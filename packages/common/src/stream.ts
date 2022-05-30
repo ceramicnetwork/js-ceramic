@@ -33,7 +33,7 @@ export enum AnchorStatus {
 export interface CommitHeader {
   controllers: Array<string>
   family?: string
-  model?: StreamID
+  model?: Uint8Array // StreamID encoded as byte array
   schema?: string
   tags?: Array<string>
 

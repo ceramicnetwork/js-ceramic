@@ -130,7 +130,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
     // Verify the signature first
@@ -149,6 +148,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     if (!payload.id.equals(state.log[0].cid)) {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
+    }
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!payload.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${payload.prev}`
+      )
     }
 
     if (payload.header.controllers && payload.header.controllers.length !== 1) {

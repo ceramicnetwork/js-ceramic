@@ -203,7 +203,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const commit = genesisCommit.data ? await TileDocument._signDagJWS(ceramic, genesisCommit) : genesisCommit
+    const commit = genesisCommit.data
+      ? await TileDocument._signDagJWS(ceramic, genesisCommit)
+      : genesisCommit
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
