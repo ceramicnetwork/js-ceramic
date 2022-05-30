@@ -56,6 +56,7 @@ function headerFromMetadata(
     controllers: metadata?.controllers,
   }
 
+  header.unique = uint8arrays.toString(randomBytes(12), 'base64')
   // Delete undefined keys from header
   Object.keys(header).forEach((key) => header[key] === undefined && delete header[key])
   return header

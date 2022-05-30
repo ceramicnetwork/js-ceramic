@@ -85,6 +85,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('MID', commitData.commit)
       const { controllers } = payload.header
+      // TODO(NET-1437): replace family with model
       await SignatureUtils.verifyCommitSignature(
         commitData,
         context.did,
@@ -109,6 +110,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
+    // TODO: re-enable once model schema validation was added
+    /*if (state.metadata.schema) {
+      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
+    }*/
+
     return state
   }
 
@@ -129,6 +135,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
+    // TODO(NET-1437): replace family with model
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
