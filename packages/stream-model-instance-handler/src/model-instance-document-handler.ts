@@ -84,12 +84,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-      const { controllers, family } = payload.header
+      const { controllers } = payload.header
       await SignatureUtils.verifyCommitSignature(
         commitData,
         context.did,
         controllers[0],
-        family,
         streamId
       )
     } else if (payload.data) {
@@ -109,10 +108,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
-    if (state.metadata.schema) {
-      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
-    }
-
     return state
   }
 
@@ -130,7 +125,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-    const family = state.next?.metadata?.family || state.metadata.family
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
@@ -138,7 +132,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       commitData,
       context.did,
       controller,
-      family,
       streamId
     )
 
@@ -185,13 +178,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const newMetadata = { ...oldMetadata, ...payload.header }
-
-    if (newMetadata.schema) {
-      // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load
-      // the schema into the CommitData so that commit application can be a simple state
-      // transformation with no i/o.
-      await this._schemaValidator.validateSchema(context.api, newContent, newMetadata.schema)
-    }
 
     nextState.next = {
       content: newContent,

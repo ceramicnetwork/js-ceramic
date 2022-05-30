@@ -329,12 +329,6 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(serialized).toEqual(signed)
   })
 
-  it('throws error for deterministic genesis commit with data', async () => {
-    await expect(
-      ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, { deterministic: true })
-    ).rejects.toThrow(/Initial content must be null/)
-  })
-
   it('Does not sign commit if no content', async () => {
     const commit = (await ModelInstanceDocument.makeGenesis(context.api, null)) as GenesisCommit
     expect(commit.header.controllers[0]).toEqual(did.id)
@@ -364,7 +358,6 @@ describe('ModelInstanceDocumentHandler', () => {
   it('throws if more than one controller', async () => {
     const commit1Promised = ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data, {
       controllers: [did.id, 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'],
-      deterministic: true,
     })
     await expect(commit1Promised).rejects.toThrow(/Exactly one controller must be specified/)
   })
@@ -374,14 +367,6 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit2 = await ModelInstanceDocument.makeGenesis(context.api, COMMITS.genesis.data)
 
     expect(commit1).not.toEqual(commit2)
-  })
-
-  it('creates genesis commits deterministically if deterministic:true is specified', async () => {
-    const metadata = { deterministic: true, controllers: ['a'], family: 'family', tags: ['x', 'y'] }
-    const commit1 = await ModelInstanceDocument.makeGenesis(context.api, null, metadata)
-    const commit2 = await ModelInstanceDocument.makeGenesis(context.api, null, metadata)
-
-    expect(commit1).toEqual(commit2)
   })
 
   it('creates genesis commits without DID if content is undefined', async () => {
@@ -797,18 +782,5 @@ describe('ModelInstanceDocumentHandler', () => {
     delete state.metadata.unique
 
     expect(state).toMatchSnapshot()
-  })
-})
-
-describe('ModelInstanceDocumentHandler', () => {
-  test('can not create invalid deterministic model instance document', async () => {
-    const fauxCeramic = {} as unknown as CeramicApi
-    await expect(
-      ModelInstanceDocument.makeGenesis(fauxCeramic, undefined, {
-        controllers: ['did:foo:blah'],
-        family: 'test123',
-        tags: ['foo', undefined, 'blah'],
-      })
-    ).rejects.toThrow(/`undefined` is not supported by the IPLD Data Model and cannot be encoded/)
   })
 })

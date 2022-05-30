@@ -33,30 +33,6 @@ export interface ModelInstanceDocumentMetadataArgs {
   controllers?: Array<string>
 
   /**
-   * Allows grouping similar documents into "families". Primarily used by indexing services.
-   */
-  family?: string
-
-  /**
-   * Allows tagging documents with additional information. Primarily used by indexing services.
-   */
-  tags?: Array<string>
-
-  /**
-   * If specified, must refer to another ModelInstanceDocument whose contents are a JSON-schema specification.
-   * The content of this document will then be enforced to conform to the linked schema.
-   */
-  schema?: CommitID | string
-
-  /**
-   * If true, then two calls to ModelInstanceDocument.create() with the same content and the same metadata
-   * will only create a single document with the same StreamID. If false, then otherwise
-   * identical documents will generate unique StreamIDs and be able to be updated independently.
-   * @deprecated use deterministic function instead
-   */
-  deterministic?: boolean
-
-  /**
    * If true, all changes to the 'controllers' array are disallowed.  This guarantees that the
    * Stream will always have the same controller. Especially useful for Streams controlled by
    * DIDs that can have ownership changes within the DID itself, such as did:nft, as setting this
@@ -85,36 +61,19 @@ function headerFromMetadata(
   metadata: ModelInstanceDocumentMetadataArgs | StreamMetadata | undefined,
   genesis: boolean
 ): CommitHeader {
-  if (typeof metadata?.schema === 'string') {
-    try {
-      CommitID.fromString(metadata.schema)
-    } catch {
-      throw new Error('Schema must be a CommitID')
-    }
-  }
 
   const header: CommitHeader = {
     controllers: metadata?.controllers,
-    family: metadata?.family,
-    schema: metadata?.schema?.toString(),
-    tags: metadata?.tags,
   }
 
   // Handle properties that can only be set on the genesis commit.
   if (genesis) {
-    if (!metadata?.deterministic) {
-      header.unique = uint8arrays.toString(randomBytes(12), 'base64')
-    }
     if (metadata?.forbidControllerChange) {
       header.forbidControllerChange = true
     }
   } else {
     // These throws aren't strictly necessary as we can just leave these fields out of the header
     // object we return, but throwing here gives more useful feedback to users.
-
-    if (metadata?.deterministic !== undefined || (metadata as any)?.unique !== undefined) {
-      throw new Error("Cannot change 'deterministic' or 'unique' properties on existing Streams")
-    }
 
     if (metadata?.forbidControllerChange !== undefined) {
       throw new Error("Cannot change 'forbidControllerChange' property on existing Streams")
@@ -186,11 +145,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    if (!metadata?.deterministic && opts.syncTimeoutSeconds == undefined) {
-      // By default you don't want to wait to sync doc state from pubsub when creating a unique
-      // document as there shouldn't be any existing state for this doc on the network.
-      opts.syncTimeoutSeconds = 0
-    }
+
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await ModelInstanceDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
@@ -218,33 +173,6 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       opts.syncTimeoutSeconds = 0
     }
     const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
-    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
-      ModelInstanceDocument.STREAM_TYPE_ID,
-      commit,
-      opts
-    )
-  }
-
-  /**
-   * Creates a deterministic Model Instance Document.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-   * @param metadata - Genesis metadata
-   * @param opts - Additional options
-   */
-  static async deterministic<T>(
-    ceramic: CeramicApi,
-    metadata: ModelInstanceDocumentMetadataArgs,
-    opts: CreateOpts = {}
-  ): Promise<ModelInstanceDocument<T>> {
-    opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    metadata = { ...metadata, deterministic: true }
-
-    if (metadata.family == null && metadata.tags == null) {
-      throw new Error(
-        'Family and/or tags are required when creating a deterministic model instance document'
-      )
-    }
-    const commit = await ModelInstanceDocument.makeGenesis(ceramic, null, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
@@ -389,11 +317,6 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     }
 
     const header: GenesisHeader = headerFromMetadata(metadata, true)
-    if (metadata?.deterministic && content) {
-      throw new Error(
-        'Initial content must be null when creating a deterministic Model Instance Document'
-      )
-    }
 
     if (content == null) {
       const result = { header }
