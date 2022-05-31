@@ -21,17 +21,17 @@ export async function createModelTable(dataSource: DataSource, tableName: string
       },
       {
         name: 'last_anchored_at',
-        type: 'INTEGER', // SQLite way to handle timestamps
+        type: 'TIMESTAMP with TIME ZONE',
         isNullable: true,
       },
       {
         name: 'created_at',
-        type: 'INTEGER', // SQLite way to handle timestamps
+        type: 'TIMESTAMP with TIME ZONE',
         isNullable: false,
       },
       {
         name: 'updated_at',
-        type: 'INTEGER', // SQLite way to handle timestamps
+        type: 'TIMESTAMP with TIME ZONE',
         isNullable: false,
       },
     ],

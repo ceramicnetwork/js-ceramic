@@ -53,4 +53,8 @@ export class SqliteIndexApi implements DatabaseIndexAPI {
     }
     await initTables(this.dataSource, this.modelsToIndex)
   }
+
+  async close(): Promise<void> {
+    await this.dataSource.destroy()   
+  }
 }

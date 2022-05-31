@@ -38,9 +38,17 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI 
       return new SqliteIndexApi(dataSource, indexingConfig.models)
     }
     case 'postgres': {
+      console.log("indexingConfig", JSON.stringify(indexingConfig))
+      // FIXME: Take conn params from input params
       const dataSource = new DataSource({
-        type: protocol,
-        database: connectionString.pathname,
+        type: "postgres",
+        host: "localhost",
+        port: 5432,
+        username: "ceramic",
+        password: "password",
+        database: "ceramic",
+        synchronize: true,
+        logging: true,
       })
       return new PostgresIndexApi(dataSource, indexingConfig.models)
     }

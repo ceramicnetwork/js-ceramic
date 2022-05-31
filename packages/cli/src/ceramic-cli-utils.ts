@@ -176,11 +176,11 @@ export class CeramicCliUtils {
     return CeramicDaemon.create(config)
   }
 
-  static syncIndexDB(
+  static async syncIndexDB(
     dbConnection: string,
     indexedModelIdStrings: Array<string>
   ) {
-    buildIndexing(
+    const indexAPI = buildIndexing(
       {
         db: dbConnection,
         models: indexedModelIdStrings.map((idString) => { 
@@ -188,6 +188,8 @@ export class CeramicCliUtils {
         })
       }
     )
+    await indexAPI.init()
+    await indexAPI.close()
   }
 
   /**

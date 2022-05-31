@@ -60,4 +60,9 @@ export interface DatabaseIndexAPI {
    * Initialize connection to a database.
    */
   init(): Promise<void>
+
+  /**
+   * Close connection to database
+   */
+  close(): Promise<void>
 }

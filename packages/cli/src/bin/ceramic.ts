@@ -19,7 +19,6 @@ program
       dbConnection,
       indexedModels
     }) => {
-      console.log("INDEXED MODELS LIST", indexedModels)
       CeramicCliUtils.syncIndexDB(
         dbConnection, 
         indexedModels.split(',')
