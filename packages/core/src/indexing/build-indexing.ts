@@ -21,11 +21,25 @@ export class UnsupportedDatabaseProtocolError extends Error {
   }
 }
 
+class InvalidConnectionStringError extends Error {
+  constructor(connectionString: string) {
+    super(`Invalid database connection string: ${connectionString}`)
+  }
+}
+
+function parseURL(input: string) {
+  try {
+    return new URL(input)
+  } catch {
+    throw new InvalidConnectionStringError(input)
+  }
+}
+
 /**
  * Build DatabaseIndexAPI instance based on passed indexing configuration.
  */
 export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI {
-  const connectionString = new URL(indexingConfig.db)
+  const connectionString = parseURL(indexingConfig.db)
   const protocol = connectionString.protocol.replace(/:$/, '')
   switch (protocol) {
     case 'sqlite':

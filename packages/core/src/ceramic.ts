@@ -123,7 +123,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
-  indexing: DatabaseIndexAPI
+  indexing: DatabaseIndexAPI | undefined
 }
 
 /**
@@ -179,7 +179,7 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _indexing: DatabaseIndexAPI
+  private readonly _indexing: DatabaseIndexAPI | undefined
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -369,7 +369,14 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const indexingApi = buildIndexing(config.indexing)
+    let indexingApi: DatabaseIndexAPI | undefined = undefined
+    if (config.indexing) {
+      indexingApi = buildIndexing(config.indexing)
+    } else {
+      logger.warn(
+        `Indexing is not configured. Please, add the indexing settings to your config file`
+      )
+    }
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
@@ -506,7 +513,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this._indexing.init()
+      await this._indexing?.init()
 
       await this._startupChecks()
     } catch (err) {
