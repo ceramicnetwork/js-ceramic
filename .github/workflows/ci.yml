@@ -59,6 +59,7 @@ jobs:
           version: "v0.2.12"
           cmds: |
             project init
+            project update
             project update github.com/3box/pipelinetools@develop
             do build -p ${{ env.DAGGER_CI }}
       -
