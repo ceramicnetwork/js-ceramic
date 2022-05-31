@@ -15,8 +15,10 @@ import { asTableName } from '../as-table-name.util.js'
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
 /**
- * Contains functions to handle GraphQL cursors
+ * Contains functions to transform (parse and stringify) GraphQL cursors
  * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
+ *
+ * A cursor for chronological order is a JSON having `last_anchored_at` (nullable) and `created_at` fields.
  */
 abstract class Cursor {
   /**
