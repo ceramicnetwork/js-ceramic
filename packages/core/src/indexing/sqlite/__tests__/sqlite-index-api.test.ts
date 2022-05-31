@@ -177,6 +177,8 @@ describe('page', () => {
   beforeEach(async () => {
     indexAPI = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
     await indexAPI.init()
+    // Rows in chronological-order.fixture.csv are in chronological order.
+    // The responses in the tests below are ok if they are in the same order as in the CSV.
     const rows = await readFixture(new URL('./chronological-order.fixture.csv', import.meta.url))
     for (const row of rows) {
       await indexAPI.indexStream(row)
