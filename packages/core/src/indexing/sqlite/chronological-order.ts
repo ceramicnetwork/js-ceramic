@@ -14,6 +14,10 @@ import { asTableName } from '../as-table-name.util.js'
 
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
+/**
+ * Contains functions to handle GraphQL cursors
+ * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
+ */
 abstract class Cursor {
   /**
    * Decode cursor from base64url as JSON.
@@ -46,7 +50,7 @@ function asChronologicalCursor(
 }
 
 const CHRONOLOGICAL_ORDER = [
-  { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC
+  { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC, sorts nulls first
   { column: 'last_anchored_at', order: 'DESC' },
   { column: 'created_at', order: 'DESC' },
 ]
@@ -62,6 +66,9 @@ function reverseOrder<T extends { order: string }>(entries: Array<T>): Array<T> 
   return entries.map((entry) => ({ ...entry, order: reverse[entry.order] }))
 }
 
+/**
+ * Chronological order: last_anchored_at NULLS FIRST DESC, created_at DESC.
+ */
 export class ChronologicalOrder {
   constructor(private readonly dataSource: DataSource, private readonly knexConnection: Knex) {}
 
@@ -71,9 +78,7 @@ export class ChronologicalOrder {
     switch (paginationKind) {
       case PaginationKind.FORWARD: {
         const limit = pagination.first
-        const response = await this.query<Array<Selected>>(
-          this.chronologicalForwardQuery(query, pagination)
-        )
+        const response = await this.query<Array<Selected>>(this.forwardQuery(query, pagination))
         const entries = response.slice(0, limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -89,9 +94,7 @@ export class ChronologicalOrder {
       }
       case PaginationKind.BACKWARD: {
         const limit = pagination.last
-        const response = await this.query<Array<Selected>>(
-          this.chronologicalBackwardQuery(query, pagination)
-        )
+        const response = await this.query<Array<Selected>>(this.backwardQuery(query, pagination))
         const entries = response.slice(-limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -110,10 +113,10 @@ export class ChronologicalOrder {
     }
   }
 
-  private chronologicalForwardQuery(
-    query: BaseQuery,
-    pagination: ForwardPaginationQuery
-  ): Knex.QueryBuilder {
+  /**
+   * Forward query: traverse from the most recent to the last.
+   */
+  private forwardQuery(query: BaseQuery, pagination: ForwardPaginationQuery): Knex.QueryBuilder {
     const tableName = asTableName(query.model)
     const base = this.knexConnection
       .from(tableName)
@@ -136,10 +139,11 @@ export class ChronologicalOrder {
     }
   }
 
-  private chronologicalBackwardQuery(
-    query: BaseQuery,
-    pagination: BackwardPaginationQuery
-  ): Knex.QueryBuilder {
+  /**
+   * Backward query: traverse from the last to the most recent.
+   * Gets the oldest entries but the results get newer as you iterate.
+   */
+  private backwardQuery(query: BaseQuery, pagination: BackwardPaginationQuery): Knex.QueryBuilder {
     const tableName = asTableName(query.model)
     const limit = pagination.last
     const identity = <T>(a: T) => a
@@ -154,7 +158,7 @@ export class ChronologicalOrder {
               .from(tableName)
               .select('stream_id', 'last_anchored_at', 'created_at')
               .orderBy(reverseOrder(CHRONOLOGICAL_ORDER))
-              .limit(limit + 1)
+              .limit(limit + 1) // To know if we have more entries to query
           )
         )
         .orderBy(CHRONOLOGICAL_ORDER)
@@ -177,6 +181,9 @@ export class ChronologicalOrder {
     }
   }
 
+  /**
+   * Execute a query against a database.
+   */
   private query<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
     const asSQL = queryBuilder.toSQL()
     return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
