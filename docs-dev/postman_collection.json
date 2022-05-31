@@ -2,7 +2,8 @@
 	"info": {
 		"_postman_id": "2e31eca7-764a-40bc-8845-2c1deef4196b",
 		"name": "3Box Labs (Community)",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20911438"
 	},
 	"item": [
 		{
@@ -577,6 +578,16 @@
 		{
 			"key": "streamId2",
 			"value": "k2t6wyfsu4pfwvi8ce9g2ljh3j2vc4p6q26jabyhfg392kzzm7jtx2bjosu3aq",
+			"type": "string"
+		},
+		{
+			"key": "ceramic_hostname",
+			"value": "https://ceramic-dev.3boxlabs.com",
+			"type": "string"
+		},
+		{
+			"key": "gateway_hostname",
+			"value": "https://gateway-dev.3boxlabs.com",
 			"type": "string"
 		}
 	]
