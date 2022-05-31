@@ -1,4 +1,4 @@
-import { SchemaValidation } from "../schema-utils"
+import { SchemaValidation } from "../schema-utils.js"
 
 describe('SchemaValidation', () => {  
   let schemaValidator: SchemaValidation

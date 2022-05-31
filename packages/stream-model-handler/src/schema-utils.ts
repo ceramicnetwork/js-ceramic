@@ -1,5 +1,5 @@
 
-import ajv, { AnySchema } from 'ajv/dist/2020'
+import ajv, { AnySchema } from 'ajv/dist/2020.js'
 
 export class SchemaValidation {
   STANDARD_VERSION = '2020-12'

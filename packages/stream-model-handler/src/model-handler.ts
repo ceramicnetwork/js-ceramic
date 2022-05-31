@@ -14,7 +14,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils'
+import { SchemaValidation } from './schema-utils.js'
 
 /**
  * Model stream handler implementation
