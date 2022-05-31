@@ -11,7 +11,7 @@ env:
   DAGGER_LOG_FORMAT: plain
   DAGGER_LOG_LEVEL: info
   DAGGER_CACHE_BASE: js-ceramic-ci
-  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/ceramic.cue
+  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/main.cue
   # General
   BRANCH: ${{ github.ref_name }}
   GITHUB_SHA: ${{ github.sha }}
@@ -38,79 +38,28 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Set main branch tag
-        if: ${{ env.BRANCH == 'main' }}
-        run: |
-          echo "ENV_TAG=prod" >> $GITHUB_ENV
-      -
-        name: Set rc branch tag
-        if: ${{ env.BRANCH == 'release-candidate' }}
-        run: |
-          echo "ENV_TAG=tnet" >> $GITHUB_ENV
-      -
-        name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
-        run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-      -
         name: Expose GitHub Runtime
         uses: crazy-max/ghaction-github-runtime@v1
       -
         name: Set up cache for mainline branches
         run: |
-          echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }}" >> $GITHUB_ENV
-          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }}" >> $GITHUB_ENV
+          echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-main" >> $GITHUB_ENV
+          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-main" >> $GITHUB_ENV
       -
         name: Set up cache for for pull requests
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
-          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ env.ENV_TAG }} type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
+          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-main type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
       -
         name: Install Dagger
         uses: dagger/dagger-for-github@v3
         with:
           version: "v0.2.12"
-          install-only: true
-      -
-        name: Read repository metadata
-        run: |
-          # Pull the latest pipelinetools.
-          # TODO: Once the code is stable, use a tagged version.
-          dagger project update github.com/3box/pipelinetools@develop
-
-          # TODO: Report bug to Dagger. Script doesn't get automatically copied during `dagger update` and also doesn't
-          # have executable permissions.
-          chmod +x cue.mod/pkg/universe.dagger.io/aws/_scripts/install.sh
-
-          # The JSON output of the `build` action provides additional repository metadata to be used subsequently.
-          REPO_META=$(dagger do --output-format json version -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-build" --cache-from "${{ env.DAGGER_CACHE_FROM }}-build")
-          echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
-          echo "SHA_TAG=$(echo "${REPO_META}" | jq -r '.shaTag')" >> $GITHUB_ENV
-          # Temp
-          echo "BRANCH=develop" >> $GITHUB_ENV
-      -
-        name: Run unit tests
-        run: |
-          dagger do test -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-test" --cache-from "${{ env.DAGGER_CACHE_FROM }}-test"
-      -
-        name: Build and test image
-        run: |
-          dagger do verify -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-verify" --cache-from "${{ env.DAGGER_CACHE_FROM }}-verify"
-      -
-        name: Push images for mainline branches
-#        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          # Dagger uses CUE, which is declarative. Since the tags to apply to the Docker image cannot be interpolated,
-          # we must extract them from the `version` action then pass them along to the `push` action.
-          dagger do push -w "actions:push:\"${{ env.AWS_DEFAULT_REGION }}\":\"${{ env.ENV_TAG }}\":"js-ceramic":"ceramic":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-push" --cache-from "${{ env.DAGGER_CACHE_FROM }}-push"
-      -
-        name: Post deploy event
-#        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          # As above, since CUE is declarative, invoke the `queue` action with explicit values for the parameters to
-          # pass along to the job queue.
-          dagger do queue -w "actions:queue:\"${{ env.AWS_DEFAULT_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-queue" --cache-from "${{ env.DAGGER_CACHE_FROM }}-queue"
+          cmds: |
+            dagger project init
+            dagger project update github.com/3box/pipelinetools@develop
+            dagger do build -p ${{ env.DAGGER_CI }}
       -
         name: Print Buildkitd Logs
         if: ${{ failure() }}
