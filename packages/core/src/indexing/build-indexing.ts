@@ -1,6 +1,7 @@
 import type { DatabaseIndexAPI } from './types.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
+import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import { DataSource } from 'typeorm'
 
 export type IndexingConfig = {
@@ -35,6 +36,13 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI 
         database: connectionString.pathname,
       })
       return new SqliteIndexApi(dataSource, indexingConfig.models)
+    }
+    case 'postgres': {
+      const dataSource = new DataSource({
+        type: protocol,
+        database: connectionString.pathname,
+      })
+      return new PostgresIndexApi(dataSource, indexingConfig.models)
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)
