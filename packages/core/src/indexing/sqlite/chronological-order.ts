@@ -18,7 +18,7 @@ type Selected = { stream_id: string; last_anchored_at: number; created_at: numbe
  * Contains functions to transform (parse and stringify) GraphQL cursors
  * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
  *
- * A cursor for chronological order is a JSON having `last_anchored_at` (nullable) and `created_at` fields.
+ * A cursor for SQLite chronological order is a JSON having `last_anchored_at` (nullable) and `created_at` fields as numbers.
  */
 abstract class Cursor {
   /**
