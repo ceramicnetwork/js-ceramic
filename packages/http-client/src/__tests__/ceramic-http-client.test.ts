@@ -37,10 +37,6 @@ const second = {
 const streamId = new StreamID(0, FAKE_CID_1)
 
 describe('applyCommit', () => {
-  afterEach(() => {
-    delete process.env.OTEL_EXPORTER_PROMETHEUS_HOST;
-    delete process.env.OTEL_EXPORTER_PROMETHEUS_PORT;
-  });
   describe('document not in cache', () => {
     test('add to cache', async () => {
       const document = new Document(initial, API_URL, 1000)
