@@ -329,7 +329,7 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(serialized).toEqual(signed)
   })
 
-  it('Does not sign commit if no content', async () => {
+  it('Takes controller from authenticated DID if controller not specified', async () => {
     const commit = (await ModelInstanceDocument.makeGenesis(context.api, null)) as GenesisCommit
     expect(commit.header.controllers[0]).toEqual(did.id)
   })
