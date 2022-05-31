@@ -11,7 +11,7 @@ env:
   DAGGER_LOG_FORMAT: plain
   DAGGER_LOG_LEVEL: info
   DAGGER_CACHE_BASE: js-ceramic-ci
-  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/js-ceramic.cue
+  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/ceramic.cue
   # General
   BRANCH: ${{ github.ref_name }}
   GITHUB_SHA: ${{ github.sha }}
@@ -73,7 +73,7 @@ jobs:
           version: "v0.2.12"
           install-only: true
       -
-        name: Run unit tests
+        name: Read repository metadata
         run: |
           # Pull the latest pipelinetools.
           # TODO: Once the code is stable, use a tagged version.
@@ -87,8 +87,11 @@ jobs:
           REPO_META=$(dagger do --output-format json version -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-build" --cache-from "${{ env.DAGGER_CACHE_FROM }}-build")
           echo "SHA=$(echo "${REPO_META}" | jq -r '.sha')" >> $GITHUB_ENV
           echo "SHA_TAG=$(echo "${REPO_META}" | jq -r '.shaTag')" >> $GITHUB_ENV
-          echo "BRANCH=$(echo "${REPO_META}" | jq -r '.branch')" >> $GITHUB_ENV
-
+          # Temp
+          echo "BRANCH=develop" >> $GITHUB_ENV
+      -
+        name: Run unit tests
+        run: |
           dagger do test -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-test" --cache-from "${{ env.DAGGER_CACHE_FROM }}-test"
       -
         name: Build and test image
@@ -96,14 +99,14 @@ jobs:
           dagger do verify -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-verify" --cache-from "${{ env.DAGGER_CACHE_FROM }}-verify"
       -
         name: Push images for mainline branches
-        if: ${{ github.event_name != 'pull_request' }}
+#        if: ${{ github.event_name != 'pull_request' }}
         run: |
           # Dagger uses CUE, which is declarative. Since the tags to apply to the Docker image cannot be interpolated,
-          # we must extract them from the `build` action then pass them along to the `push` action.
-          dagger do push -w "actions:push:\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-push" --cache-from "${{ env.DAGGER_CACHE_FROM }}-push"
+          # we must extract them from the `version` action then pass them along to the `push` action.
+          dagger do push -w "actions:push:\"${{ env.AWS_DEFAULT_REGION }}\":\"${{ env.ENV_TAG }}\":"js-ceramic":"ceramic":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_CI }} --cache-to "${{ env.DAGGER_CACHE_TO }}-push" --cache-from "${{ env.DAGGER_CACHE_FROM }}-push"
       -
         name: Post deploy event
-        if: ${{ github.event_name != 'pull_request' }}
+#        if: ${{ github.event_name != 'pull_request' }}
         run: |
           # As above, since CUE is declarative, invoke the `queue` action with explicit values for the parameters to
           # pass along to the job queue.
