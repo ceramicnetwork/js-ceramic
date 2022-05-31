@@ -9,6 +9,8 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CeramicApi, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
+import { buildIndexing } from '@ceramicnetwork/core'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
 import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
@@ -172,6 +174,20 @@ export class CeramicCliUtils {
     }
 
     return CeramicDaemon.create(config)
+  }
+
+  static syncIndexDB(
+    dbConnection: string,
+    indexedModelIdStrings: Array<string>
+  ) {
+    buildIndexing(
+      {
+        db: dbConnection,
+        models: indexedModelIdStrings.map((idString) => { 
+          return StreamID.fromString(idString)
+        })
+      }
+    )
   }
 
   /**

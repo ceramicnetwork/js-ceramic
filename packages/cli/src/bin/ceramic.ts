@@ -4,6 +4,29 @@ import pc from 'picocolors'
 import { CeramicCliUtils } from '../ceramic-cli-utils.js'
 
 program
+  .command('build-index-db')
+  .requiredOption(
+    '--db-connection <string>',
+    'db connection url'
+  )
+  .requiredOption(
+    '--indexed-models <list>',
+    'comma-separated (no spaces) list of StreamIDs of models that should be indexed'
+  )
+  .description('Create or sync the Index db with given connection')
+  .action(
+    ({
+      dbConnection,
+      indexedModels
+    }) => {
+      console.log("INDEXED MODELS LIST", indexedModels)
+      CeramicCliUtils.syncIndexDB(
+        dbConnection, 
+        indexedModels.split(',')
+      )
+    }
+  )
+program
   .command('daemon')
   .option('--config <path>', 'Path to the Ceramic Daemon config file')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
