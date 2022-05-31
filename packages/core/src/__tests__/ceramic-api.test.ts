@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -24,6 +25,8 @@ const generateStringOfSize = (size): string => {
 }
 
 describe('Ceramic API', () => {
+  jest.setTimeout(1000 * 30)
+
   let ipfs: IpfsApi
 
   const stringMapSchema = {

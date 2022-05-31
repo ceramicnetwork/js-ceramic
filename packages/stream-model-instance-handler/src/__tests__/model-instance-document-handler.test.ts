@@ -19,7 +19,6 @@ import {
   SignedCommitContainer,
   TestUtils,
   IpfsApi,
-  GenesisCommit,
   CeramicSigner,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'

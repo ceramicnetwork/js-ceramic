@@ -201,7 +201,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     content: T | null,
     metadata: ModelInstanceDocumentMetadata
   ): Promise<CeramicCommit> {
-    if (!metadata?.model) {
+    if (!metadata.model) {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
 
