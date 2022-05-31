@@ -4,13 +4,13 @@ import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { Resource } from '@opentelemetry/resources'
 
-const { endpoint, port } = PrometheusExporter.DEFAULT_OPTIONS;
+const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
-const metricExporter = new PrometheusExporter({}, () => {
-//  console.log(
-//    `prometheus scrape endpoint: http://localhost:${port}${endpoint}`,
-//  );
-});
+if (process.env.NODE_ENV == 'test') {
+  exporterConfig['preventServerStart'] = true
+}
+
+const metricExporter = new PrometheusExporter(exporterConfig)
 
 const meterProvider = new MeterProvider({
   resource: new Resource({
