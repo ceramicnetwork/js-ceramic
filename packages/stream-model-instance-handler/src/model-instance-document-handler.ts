@@ -16,18 +16,6 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 
-function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
-  if (arr1.length != arr2.length) {
-    return false
-  }
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i] !== arr2[i]) {
-      return false
-    }
-  }
-  return true
-}
-
 /**
  * ModelInstanceDocument stream handler implementation
  */
@@ -82,38 +70,39 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
-    if (isSigned) {
-      const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-      const { controllers } = payload.header
-      // TODO(NET-1437): replace family with model
-      await SignatureUtils.verifyCommitSignature(
-        commitData,
-        context.did,
-        controllers[0],
-        null,
-        streamId
-      )
-    } else if (payload.data) {
-      throw Error('Genesis commit with contents should always be signed')
+    if (!isSigned) {
+      throw Error('ModelInstanceDocument genesis commit must be signed')
     }
+
+    const streamId = await StreamID.fromGenesis('MID', commitData.commit)
+    const { controllers } = payload.header
+    // TODO(NET-1437): replace family with model
+    await SignatureUtils.verifyCommitSignature(
+      commitData,
+      context.did,
+      controllers[0],
+      null,
+      streamId
+    )
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const state = {
-      type: ModelInstanceDocument.STREAM_TYPE_ID,
-      content: payload.data || {},
-      metadata: payload.header,
-      signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
-      anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
-    }
-
-    // TODO: re-enable once model schema validation was added
+    // TODO(NET-1447): re-enable once model schema validation is added
     /*if (state.metadata.schema) {
       await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
     }*/
+
+    const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
+    const state = {
+      type: ModelInstanceDocument.STREAM_TYPE_ID,
+      content: payload.data || {},
+      metadata,
+      signature: SignatureStatus.SIGNED,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
+      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+    }
 
     return state
   }
@@ -130,24 +119,21 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
-    const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
+    const metadata = state.metadata
+    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
     // TODO(NET-1437): replace family with model
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      null,
-      streamId
-    )
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
 
     if (!payload.id.equals(state.log[0].cid)) {
-      throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
+      throw new Error(
+        `Invalid genesis CID in commit. Found: ${payload.id}, expected ${state.log[0].cid}`
+      )
     }
     const expectedPrev = state.log[state.log.length - 1].cid
     if (!payload.prev.equals(expectedPrev)) {
@@ -156,28 +142,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       )
     }
 
-    if (payload.header.controllers && payload.header.controllers.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
-    }
-
-    if (
-      state.metadata.forbidControllerChange &&
-      payload.header.controllers &&
-      !stringArraysEqual(payload.header.controllers, state.metadata.controllers)
-    ) {
-      const streamId = new StreamID(ModelInstanceDocument.STREAM_TYPE_ID, state.log[0].cid)
+    if (payload.header) {
       throw new Error(
-        `Cannot change controllers since 'forbidControllerChange' is set. Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
-          state.metadata.controllers
-        )} to ${payload.header.controllers}`
+        `Updating metadata for ModelInstanceDocument Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
+          state.metadata
+        )} to ${JSON.stringify(payload.header)}\``
       )
-    }
-
-    if (
-      payload.header.forbidControllerChange !== undefined &&
-      payload.header.forbidControllerChange !== state.metadata.forbidControllerChange
-    ) {
-      throw new Error("Changing 'forbidControllerChange' metadata property is not allowed")
     }
 
     const nextState = cloneDeep(state)
@@ -188,14 +158,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
     const oldContent = state.next?.content ?? state.content
-    const oldMetadata = state.next?.metadata ?? state.metadata
-
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    const newMetadata = { ...oldMetadata, ...payload.header }
+
+    // TODO(NET-1447): Add schema validation based on the 'model'
 
     nextState.next = {
       content: newContent,
-      metadata: newMetadata,
+      metadata, // No way to update metadata for ModelInstanceDocument streams
     }
 
     return nextState
@@ -213,7 +182,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!commitData.commit.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${commitData.commit.prev}`
+      )
+    }
+
     const proof = commitData.proof
     state.log.push({
       cid: commitData.cid,
@@ -221,16 +196,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       timestamp: proof.blockTimestamp,
     })
     let content = state.content
-    let metadata = state.metadata
 
     if (state.next?.content) {
       content = state.next.content
       delete state.next.content
-    }
-
-    if (state.next?.metadata) {
-      metadata = state.next.metadata
-      delete state.next.metadata
     }
 
     delete state.next
@@ -239,7 +208,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     return {
       ...state,
       content,
-      metadata,
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof,
     }
