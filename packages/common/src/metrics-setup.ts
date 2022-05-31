@@ -9,6 +9,9 @@ const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 if (! process.env.METRICS_ENABLED || process.env.NODE_ENV == 'test') {
   exporterConfig['preventServerStart'] = true
 }
+if (process.env.METRICS_EXPORTER_PORT) {
+  exporterConfig['port'] = Number(process.env.METRICS_EXPORTER_PORT)
+}
 
 const metricExporter = new PrometheusExporter(exporterConfig)
 
