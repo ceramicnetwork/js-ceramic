@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "2.0.1-rc.0",
+  "version": "2.0.4",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -37,7 +37,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/streamid": "^2.0.0",
+    "@ceramicnetwork/streamid": "^2.0.4",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",

@@ -45,6 +45,8 @@ import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-valid
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
+import { buildIndexing } from './indexing/build-indexing.js'
+import type { DatabaseIndexAPI } from './indexing/types.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -56,7 +58,7 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
   [Networks.ELP]: 'https://cas.3boxlabs.com',
   [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
-  [Networks.DEV_UNSTABLE]: 'https://cas-dev.3boxlabs.com',
+  [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
   [Networks.LOCAL]: 'http://localhost:8081',
 }
 
@@ -88,7 +90,6 @@ export interface CeramicConfig {
   anchorServiceUrl?: string
   stateStoreDirectory?: string
 
-  validateStreams?: boolean
   ipfsPinningEndpoints?: string[]
   pinningBackends?: PinningBackendStatic[]
 
@@ -122,6 +123,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
+  indexing: DatabaseIndexAPI | undefined
 }
 
 /**
@@ -132,7 +134,6 @@ export interface CeramicModules {
 export interface CeramicParameters {
   gateway: boolean
   networkOptions: CeramicNetworkOptions
-  validateStreams: boolean
   loadOptsOverride: LoadOpts
 }
 
@@ -178,12 +179,12 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
+  private readonly _indexing: DatabaseIndexAPI | undefined
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
-  private readonly _validateStreams: boolean
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownController: AbortController
 
@@ -199,8 +200,8 @@ export class Ceramic implements CeramicApi {
 
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
-    this._validateStreams = params.validateStreams
     this._loadOptsOverride = params.loadOptsOverride
+    this._indexing = modules.indexing
 
     this.context = {
       api: this,
@@ -368,6 +369,14 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
+    let indexingApi: DatabaseIndexAPI | undefined = undefined
+    if (config.indexing) {
+      indexingApi = buildIndexing(config.indexing)
+    } else {
+      logger.warn(
+        `Indexing is not configured. Please, add the indexing settings to your config file`
+      )
+    }
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
@@ -438,7 +447,6 @@ export class Ceramic implements CeramicApi {
     const params: CeramicParameters = {
       gateway: config.gateway,
       networkOptions,
-      validateStreams: config.validateStreams ?? true,
       loadOptsOverride,
     }
 
@@ -452,6 +460,7 @@ export class Ceramic implements CeramicApi {
       pinStoreFactory,
       repository,
       shutdownController,
+      indexing: indexingApi,
     }
 
     return [modules, params]
@@ -504,6 +513,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+      await this._indexing?.init()
 
       await this._startupChecks()
     } catch (err) {

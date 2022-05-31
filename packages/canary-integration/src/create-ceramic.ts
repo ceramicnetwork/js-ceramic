@@ -14,11 +14,16 @@ export async function createCeramic(
   ipfs: IpfsApi,
   config?: CeramicConfig & { seed?: string }
 ): Promise<Ceramic> {
+  const stateStoreDirectory = await tmp.tmpName()
   const appliedConfig = {
-    stateStoreDirectory: await tmp.tmpName(),
+    stateStoreDirectory: stateStoreDirectory,
     anchorOnRequest: false,
     streamCacheLimit: 100,
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
+    indexing: {
+      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+      models: []
+    },
     ...config,
   }
   const ceramic = await Ceramic.create(ipfs, appliedConfig)

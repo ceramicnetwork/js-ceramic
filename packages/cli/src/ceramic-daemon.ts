@@ -63,9 +63,9 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     ipfsPinningEndpoints: opts.ipfs.pinningEndpoints,
     networkName: opts.network.name,
     pubsubTopic: opts.network.pubsubTopic,
-    validateStreams: opts.node.validateStreams,
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
+    indexing: opts.indexing
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory

@@ -3,6 +3,98 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1](/compare/@ceramicnetwork/core@2.3.1-rc.2...@ceramicnetwork/core@2.3.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+## [2.3.1-rc.2](/compare/@ceramicnetwork/core@2.3.1-rc.1...@ceramicnetwork/core@2.3.1-rc.2) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+## [2.3.1-rc.1](/compare/@ceramicnetwork/core@2.3.0...@ceramicnetwork/core@2.3.1-rc.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.3.0](/compare/@ceramicnetwork/core@2.2.1...@ceramicnetwork/core@2.3.0) (2022-05-18)
+
+
+### Features
+
+* **core,cli:** Remove unused 'validate-streams' config option (#2147) 90c6470, closes #2147
+* **core:** replace cas-dev for dev-unstable with cas-qa (#2144) e8ef8c0, closes #2144
+
+
+
+
+
+## [2.2.1](/compare/@ceramicnetwork/core@2.2.0-rc.4...@ceramicnetwork/core@2.2.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.2.0-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.2.0-rc.3...@ceramicnetwork/core@2.2.0-rc.4) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.2.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.2.0-rc.1...@ceramicnetwork/core@2.2.0-rc.3) (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# 2.2.0-rc.2 (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.2.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.2.0-rc.0...@ceramicnetwork/core@2.2.0-rc.1) (2022-05-11)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.1.2-rc.1...@ceramicnetwork/core@2.2.0-rc.0) (2022-05-11)
+
+
+### Bug Fixes
+
+* **core:** add .jsipfs detection to startup check ([#2148](https://github.com/ceramicnetwork/js-ceramic/issues/2148)) ([c236173](https://github.com/ceramicnetwork/js-ceramic/commit/c236173802990f0d60e01fadfa483fbb64d2e96d))
+
+
+### Features
+
+* **stream-tile:** use dids capability iss as controller when capabil… ([#2138](https://github.com/ceramicnetwork/js-ceramic/issues/2138)) ([a924fec](https://github.com/ceramicnetwork/js-ceramic/commit/a924fec1bf660d68d713f28ef41ee1229c7c754f))
+
+
+
+
+
 ## [2.1.2-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.1.2-rc.0...@ceramicnetwork/core@2.1.2-rc.1) (2022-04-27)
 
 **Note:** Version bump only for package @ceramicnetwork/core

@@ -57,6 +57,11 @@ export class StreamUtils {
     if (cloned.prev) {
       cloned.prev = cloned.prev.toString()
     }
+
+    if (commit.header?.model) {
+      cloned.header.model = commit.header.model.toString()
+    }
+
     return cloned
   }
 
@@ -91,6 +96,11 @@ export class StreamUtils {
     if (cloned.prev) {
       cloned.prev = toCID(cloned.prev)
     }
+
+    if (cloned.header?.model) {
+      cloned.header.model = StreamID.fromString(cloned.header.model)
+    }
+
     return cloned
   }
 
@@ -112,8 +122,11 @@ export class StreamUtils {
       cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString()
       cloned.anchorProof.root = cloned.anchorProof.root.toString()
     }
-    if (cloned.lastAnchored != null) {
-      cloned.lastAnchored = cloned.lastAnchored.toString()
+    if (state.metadata?.model) {
+      cloned.metadata.model = state.metadata.model.toString()
+    }
+    if (state.next?.metadata?.model) {
+      cloned.next.metadata.model = state.next.metadata.model.toString()
     }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
@@ -152,9 +165,13 @@ export class StreamUtils {
         delete cloned.anchorScheduledFor
       }
     }
-    if (cloned.lastAnchored) {
-      cloned.lastAnchored = toCID(cloned.lastAnchored)
+    if (state.metadata?.model) {
+      cloned.metadata.model = StreamID.fromString(state.metadata.model)
     }
+    if (state.next?.metadata?.model) {
+      cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
+    }
+
     return cloned
   }
 

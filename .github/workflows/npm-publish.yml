@@ -70,6 +70,7 @@ jobs:
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
+          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
       - name: Publish packages to NPM
         if: ${{ steps.set-env.outputs.main == 'true' }}
         env:
@@ -79,6 +80,8 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:latest $PUBLISH_ARGS
+          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
+          git push
       - name: Update and push code to `release-candidate` and `develop`
         if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
@@ -156,6 +159,7 @@ jobs:
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
+          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
       - name: Publish packages to NPM
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         env:
@@ -165,6 +169,8 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate $PUBLISH_ARGS
+          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
+          git push
       - name: Update and push code to `develop`
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |

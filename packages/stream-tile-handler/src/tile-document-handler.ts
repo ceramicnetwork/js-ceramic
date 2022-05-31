@@ -1,6 +1,5 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-import type { Cacao } from 'ceramic-cacao'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
@@ -8,15 +7,14 @@ import {
   CommitType,
   Context,
   SignatureStatus,
+  SignatureUtils,
   StreamConstructor,
   StreamHandler,
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils'
-
-const DEFAULT_REVOCATION_PHASE_OUT = 24 * 60 * 60
+import { SchemaValidation } from './schema-utils.js'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
@@ -87,7 +85,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('tile', commitData.commit)
       const { controllers, family } = payload.header
-      await this._verifySignature(commitData, context, controllers[0], family, streamId)
+      await SignatureUtils.verifyCommitSignature(
+        commitData,
+        context.did,
+        controllers[0],
+        family,
+        streamId
+      )
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -130,7 +134,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
-    await this._verifySignature(commitData, context, controller, family, streamId)
+    await SignatureUtils.verifyCommitSignature(
+      commitData,
+      context.did,
+      controller,
+      family,
+      streamId
+    )
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -139,8 +149,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
     }
 
-    if (payload.header.controllers && payload.header.controllers.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
+    if (payload.header.controllers) {
+      if (payload.header.controllers.length !== 1) {
+        throw new Error('Exactly one controller must be specified')
+      }
+      if (!payload.header.controllers[0]) {
+        throw new Error('Controller cannot be updated to an undefined value.')
+      }
     }
 
     if (
@@ -233,66 +248,5 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof,
     }
-  }
-
-  /**
-   * Verifies commit signature. If a revoked key is used to create the signature, the signature is valid for 24h after the revocation. This is so that if an update made before the key revocation winds up getting anchored after the revocation does, we don't fail the write unnecessarily.
-   * TODO: Remove or significantly shorten this grace period once anchors happen far more frequently on the network.
-   * @param commitData - Commit to be verified
-   * @param context - Ceramic context
-   * @param controller - DID value
-   * @param streamId - Stream ID for the commit
-   * @private
-   */
-  async _verifySignature(
-    commitData: CommitData,
-    context: Context,
-    controller: string,
-    family: string,
-    streamId: StreamID
-  ): Promise<void> {
-    const cacao = await this._verifyCapabilityAuthz(commitData, streamId, family)
-
-    const atTime = commitData.timestamp ? new Date(commitData.timestamp * 1000) : undefined
-    await context.did.verifyJWS(commitData.envelope, {
-      atTime: atTime,
-      issuer: controller,
-      disableTimecheck: commitData.disableTimecheck,
-      capability: cacao,
-      revocationPhaseOutSecs: DEFAULT_REVOCATION_PHASE_OUT,
-    })
-  }
-
-  /**
-   * Verifies capability attached to a signed commit
-   * @param commitData - Commit to be verified
-   * @param context - Ceramic context
-   * @param streamId - Stream ID for the commit
-   * @returns Cacao is capability was found and verified, null otherwise
-   */
-  async _verifyCapabilityAuthz(
-    commitData: CommitData,
-    streamId: StreamID,
-    family: string
-  ): Promise<Cacao | null> {
-    const cacao = commitData.capability
-
-    if (!cacao) return null
-
-    const resources = cacao.p.resources as string[]
-    const payloadCID = commitData.envelope.link.toString()
-
-    if (
-      !resources.includes(`ceramic://*`) &&
-      !resources.includes(`ceramic://${streamId.toString()}`) &&
-      !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`) &&
-      !(family && resources.includes(`ceramic://*?family=${family}`))
-    ) {
-      throw new Error(
-        `Capability does not have appropriate permissions to update this TileDocument`
-      )
-    }
-
-    return cacao
   }
 }

@@ -46,12 +46,18 @@ const createCeramic = async (
 ): Promise<Ceramic> => {
   const { Ceramic } = await import('../ceramic.js')
 
+  const databaseFolder = await tmp.dir({ unsafeCleanup: true })
+  const connectionString = new URL(`sqlite://${databaseFolder.path}/ceramic.sqlite`)
   const ceramic = await Ceramic.create(ipfs, {
     stateStoreDirectory,
     anchorOnRequest,
+    indexing: {
+      db: connectionString.href,
+      models: [],
+    },
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
-  await ceramic.setDID(makeDID(seed, ceramic))
+  ceramic.did = makeDID(seed, ceramic)
   await ceramic.did.authenticate()
 
   return ceramic
