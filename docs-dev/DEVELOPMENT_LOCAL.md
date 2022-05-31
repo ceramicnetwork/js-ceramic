@@ -23,7 +23,7 @@ This configuration will allow running the ceramic daemon from the debugger and s
 
 To get you up and running quickly, the following steps should address all major "gotchas" to get a vanilla dev machine up and running as quickly as possible.
 
-### PRE-REQUISITS
+### PRE-REQUISITES
 
 * Node `v16`
 * npm `v8`
@@ -57,7 +57,7 @@ To ensure that both `python` & `python3` commands work properly, add `pyenv` to 
 
 CLI helpers commands on how to start up environment and debug [local code base](https://github.com/ceramicnetwork/js-ceramic).  
 
-*Compile all packages/full library:*
+*How to compile all packages/full library:*
 
 `npm run clean && npm install && npm run build`
 
@@ -69,11 +69,11 @@ CLI helpers commands on how to start up environment and debug [local code base](
 
 *__*INFO*__: this will invoke the daemon with the default configuration values found in `~/.ceramic/ceramic.daemon.json`* 
 
-*Run docker with local code base:*
+*How to run docker with local code base:*
 
 `docker build -t js-ceramic-debug::latest -f Dockerfile.daemon .`
 
-*[Clayground](https://github.com/ceramicnetwork/clayground) (full environment containerized)*
+*How to run on [Clayground](https://github.com/ceramicnetwork/clayground) (full environment containerized)*
 
 `docker run --rm --name ceramic -p 7007:7007 ceramicnetwork/js-ceramic:dev daemon --port "7007" --hostname 0.0.0.0 --network dev-unstable --anchor-service-api https://cas-dev.3boxlabs.com --debug true --ethereum-rpc https://rinkeby.infura.io/v3/b6685df41e1647c4be0046dfa62a020b`
 
@@ -95,8 +95,7 @@ By default the collection connects to the public dev network, but you can easily
 
 * `validation` - contract part - eth accounts, against blockchain
 
-responsible for creation and validation. Once we link an account you have to request the signature from your blockchain.
-Responsible
+Responsible for creation and validation. Once we link an account you have to request the signature from your blockchain.
 
 etherum.ts/createLink(did) -> sign
 
@@ -137,3 +136,11 @@ etherum.ts/createLink(did) -> sign
 `streamid` -  pure reference to host stream
 
 `commitid` - references particular state / IPFS record in the stream evolution
+
+## MISCELLANY
+
+*optionally add additional useful aliases for grepping in the project directory:*
+```
+alias ggrep='grep -r --exclude-dir node_modules --exclude package.json --exclude package-lock.json'
+alias tgrep='grep -r --exclude-dir node_modules --include=\*.ts --exclude package.json --exclude package-lock.json'
+```
