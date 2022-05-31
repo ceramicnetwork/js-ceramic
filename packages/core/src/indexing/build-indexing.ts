@@ -40,6 +40,7 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI 
     case 'postgres': {
       console.log("indexingConfig", JSON.stringify(indexingConfig))
       // FIXME: Take conn params from input params
+      
       const dataSource = new DataSource({
         type: "postgres",
         host: "localhost",

@@ -20,6 +20,8 @@ import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
+import { DataSource } from 'typeorm'
+import { PostgresIndexApi } from '@ceramicnetwork/core'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -215,6 +217,25 @@ export class CeramicCliUtils {
       const doc = await TileDocument.create(ceramic, parsedContent, metadata, {
         anchor: !onlyGenesis,
         publish: !onlyGenesis,
+      })
+
+      // FIXME: Don't hard-code
+      const dataSource = new DataSource({
+        type: "postgres",
+        host: "localhost",
+        port: 5432,
+        username: "ceramic",
+        password: "password",
+        database: "ceramic",
+        synchronize: true,
+        logging: true,
+      })
+      const indexAPI = new PostgresIndexApi(dataSource, [])
+      indexAPI.indexStream({
+        streamID: doc.id,
+        model: StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'),
+        controller: doc.controllers[0],
+        lastAnchor: null
       })
 
       console.log(doc.id)
@@ -455,10 +476,12 @@ export class CeramicCliUtils {
 
     let ceramic
     const { ceramicHost } = cliConfig
+    const configFilepath = DEFAULT_DAEMON_CONFIG_FILENAME
+    const config = await this._loadDaemonConfig(configFilepath)
     if (ceramicHost !== undefined) {
-      ceramic = new CeramicClient(ceramicHost)
+      ceramic = new CeramicClient(ceramicHost, undefined, config.indexing?.db)
     } else {
-      ceramic = new CeramicClient()
+      ceramic = new CeramicClient(undefined, undefined, config.indexing?.db)
     }
 
     const seed = u8a.fromString(cliConfig.seed, 'base16')

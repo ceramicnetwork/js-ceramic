@@ -71,11 +71,13 @@ export class CeramicClient implements CeramicApi {
 
   public readonly pin: PinApi
   public readonly context: Context
+  public readonly indexDb: string | undefined
 
   private readonly _config: CeramicClientConfig
   public readonly _streamConstructors: Record<number, StreamConstructor<Stream>>
 
-  constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
+  constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}, indexDb: string | undefined) {
+    this.indexDb = indexDb
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
