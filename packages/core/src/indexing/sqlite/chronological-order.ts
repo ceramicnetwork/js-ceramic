@@ -52,7 +52,7 @@ function asChronologicalCursor(
 }
 
 const CHRONOLOGICAL_ORDER = [
-  { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC, sorts nulls first
+  { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // (`last_anchored_at` is null) DESC, sorts nulls first on **SQLite only**
   { column: 'last_anchored_at', order: 'DESC' },
   { column: 'created_at', order: 'DESC' },
 ]
