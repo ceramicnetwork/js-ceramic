@@ -6,12 +6,11 @@ type JSONSchemaObjectType = {
   additionalProperties?: boolean
 }
 
-function traverseSchemaRecursivelyAndApplyFunction(o: SchemaObject, fn: (o: object) => void) {
-  fn(o)
-  Object.getOwnPropertyNames(o).forEach( (name) => {
-    fn.apply(this,[o[name]]);  
-    if (o[name] !== null && typeof(o[name])=="object") {
-      traverseSchemaRecursivelyAndApplyFunction(o[name], fn);
+function applyFuntionToSchemaAndItsObjectPropsRecursively(schema: SchemaObject, fn: (schemaProperty: object) => void) {
+  fn(schema)
+  Object.getOwnPropertyNames(schema).forEach((schemaPropertyName) => {
+    if (schema[schemaPropertyName] !== null && typeof(schema[schemaPropertyName]) == "object") {
+      applyFuntionToSchemaAndItsObjectPropsRecursively(schema[schemaPropertyName], fn);
     }
   })
 }
@@ -47,6 +46,6 @@ export class SchemaValidation {
       const errorMessages = this._validator.errorsText()
       throw new Error(`Validation Error: ${errorMessages}`)
     }
-    traverseSchemaRecursivelyAndApplyFunction(schema, validateObjectHaveAdditionalPropertiesForbidden)
+    applyFuntionToSchemaAndItsObjectPropsRecursively(schema, validateObjectHaveAdditionalPropertiesForbidden)
   }
 }
