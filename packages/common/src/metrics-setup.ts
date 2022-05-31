@@ -6,7 +6,7 @@ import { Resource } from '@opentelemetry/resources'
 
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
-if (process.env.NODE_ENV == 'test') {
+if (! process.env.METRICS_ENABLED || process.env.NODE_ENV == 'test') {
   exporterConfig['preventServerStart'] = true
 }
 
