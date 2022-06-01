@@ -8,11 +8,8 @@ on:
 
 env:
   # Dagger
-  DAGGER_LOG_FORMAT: plain
-  DAGGER_LOG_LEVEL: info
-  DAGGER_CACHE_BASE: js-ceramic-ci
   DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/main.cue
-  REPO_TYPE: "ceramic"
+  COMPONENT: "ceramic"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -36,20 +33,6 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v1
-      -
-        name: Set up cache for mainline branches
-        run: |
-          echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-main" >> $GITHUB_ENV
-          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-main" >> $GITHUB_ENV
-      -
-        name: Set up cache for for pull requests
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          echo "DAGGER_CACHE_TO=type=gha,mode=max,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
-          echo "DAGGER_CACHE_FROM=type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-main type=gha,scope=${{ env.DAGGER_CACHE_BASE }}-${{ github.event.number }}" >> $GITHUB_ENV
-      -
         # Pull the latest pipelinetools.
         # TODO: Once the code is stable, use a tagged version.
         name: Run CI pipeline
@@ -61,7 +44,3 @@ jobs:
             project update
             project update github.com/3box/pipelinetools@develop
             do build -p ${{ env.DAGGER_CI }}
-      -
-        name: Print Buildkitd Logs
-        if: ${{ failure() }}
-        run: docker logs dagger-buildkitd
