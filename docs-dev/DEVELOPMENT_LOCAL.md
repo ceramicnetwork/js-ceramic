@@ -1,6 +1,7 @@
 # Local Development and Debug Environments
 
-This document is a collection of resources that may be helpful to new ceramic developers.
+This document is a collection of resources that may be helpful to new ceramic developers.  To get you up and running quickly, the following steps should address all major "gotchas" to get a vanilla dev machine up and running as quickly as possible.
+
 
 ## IDE configuration
 
@@ -19,11 +20,7 @@ daemon --port 7007 --hostname 0.0.0.0 --network dev-unstable --anchor-service-ap
 This configuration will allow running the ceramic daemon from the debugger and setting breakpoints in the daemon.
 
 
-## Local Development
-
-To get you up and running quickly, the following steps should address all major "gotchas" to get a vanilla dev machine up and running as quickly as possible.
-
-### PRE-REQUISITES
+## PRE-REQUISITES
 
 * Node `v16`
 * npm `v8`
@@ -38,9 +35,13 @@ To get you up and running quickly, the following steps should address all major 
 
 INFO: For switching between node versions one could use [n](https://github.com/tj/n), [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm)
 
-### [INSTALLING](https://developers.ceramic.network/build/javascript/http/) JS HTTP CLIENT
+## TROUBLESHOOTING
 
-*__ATTENTION__: By default macOS does not ship with an alias for `python` which breaks the standard ceramic npm
+### Python not found
+
+`Error: Can't find Python executable "python", you can set the PYTHON env variable.` when installing [JS HTTP CLIENT](https://developers.ceramic.network/build/javascript/http/)
+
+*By default macOS does not ship with an alias for `python` which breaks the standard ceramic npm
 package install. Install `pyenv` and add it to your local `PATH` prior to installation. You can skip this step if you are only working with the local codebase.*
 
 `$ brew install pyenv`
@@ -53,7 +54,7 @@ To ensure that both `python` & `python3` commands work properly, add `pyenv` to 
 
 `reset` - OR - restart Terminal window
 
-### BUILDING & DEBUGGING
+## BUILDING & DEBUGGING
 
 CLI helpers commands on how to start up environment and debug [local code base](https://github.com/ceramicnetwork/js-ceramic).  
 
