@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.1.3...@ceramicnetwork/canary-integration@2.2.0) (2022-06-01)
+
+
+### Features
+
+* **core:** Setup database connection for indexing, SQLite only ([#2167](https://github.com/ceramicnetwork/js-ceramic/issues/2167)) ([3d63ccc](https://github.com/ceramicnetwork/js-ceramic/commit/3d63ccca02bee96ac5775ada38686c6065307b57))
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype ([#2182](https://github.com/ceramicnetwork/js-ceramic/issues/2182)) ([65383af](https://github.com/ceramicnetwork/js-ceramic/commit/65383af69f69b730b0c54fe9d19569bfcace4f0c))
+
+
+
+
+
 ## [2.1.3](/compare/@ceramicnetwork/canary-integration@2.1.3-rc.2...@ceramicnetwork/canary-integration@2.1.3) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/canary-integration

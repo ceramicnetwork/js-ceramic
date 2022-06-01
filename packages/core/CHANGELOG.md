@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.3.1...@ceramicnetwork/core@2.4.0) (2022-06-01)
+
+
+### Bug Fixes
+
+* **stream-tile, stream-tile-handler:** don't allow updating controllers to invalid values ([#2159](https://github.com/ceramicnetwork/js-ceramic/issues/2159)) ([cd195c9](https://github.com/ceramicnetwork/js-ceramic/commit/cd195c924b3316ded5d33f708c6781e1b6f49543))
+
+
+### Features
+
+* Chronological order for indexing, SQLite-only ([#2184](https://github.com/ceramicnetwork/js-ceramic/issues/2184)) ([e202ea7](https://github.com/ceramicnetwork/js-ceramic/commit/e202ea7e4ce82225452118e0dce50d6b1957f62c))
+* **core:** Setup database connection for indexing, SQLite only ([#2167](https://github.com/ceramicnetwork/js-ceramic/issues/2167)) ([3d63ccc](https://github.com/ceramicnetwork/js-ceramic/commit/3d63ccca02bee96ac5775ada38686c6065307b57))
+* Create table per indexed model ([#2179](https://github.com/ceramicnetwork/js-ceramic/issues/2179)) ([f917846](https://github.com/ceramicnetwork/js-ceramic/commit/f917846cd3f23357ebb089c09578e11288ee58a9))
+* warn if indexing is not configured ([#2194](https://github.com/ceramicnetwork/js-ceramic/issues/2194)) ([6985549](https://github.com/ceramicnetwork/js-ceramic/commit/69855496e98b610bd62abfe42c013f127754f6f8))
+
+
+
+
+
 ## [2.3.1](/compare/@ceramicnetwork/core@2.3.1-rc.2...@ceramicnetwork/core@2.3.1) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/core

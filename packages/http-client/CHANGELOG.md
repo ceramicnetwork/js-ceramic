@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.0.4...@ceramicnetwork/http-client@2.1.0) (2022-06-01)
+
+
+### Features
+
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype ([#2182](https://github.com/ceramicnetwork/js-ceramic/issues/2182)) ([65383af](https://github.com/ceramicnetwork/js-ceramic/commit/65383af69f69b730b0c54fe9d19569bfcace4f0c))
+
+
+
+
+
 ## [2.0.4](/compare/@ceramicnetwork/http-client@2.0.4-rc.2...@ceramicnetwork/http-client@2.0.4) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client
