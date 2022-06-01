@@ -26,6 +26,7 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
+  IndexClientApi,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -46,7 +47,8 @@ import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
 import { buildIndexing } from './indexing/build-indexing.js'
-import type { DatabaseIndexAPI } from './indexing/types.js'
+import type { DatabaseIndexApi } from './indexing/database-index-api.js'
+import { IndexApi } from './indexing/index-api.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -123,7 +125,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
-  indexing: DatabaseIndexAPI | undefined
+  indexing: DatabaseIndexApi | undefined
 }
 
 /**
@@ -175,11 +177,12 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly pin: PinApi
+  public readonly index: IndexClientApi
   readonly repository: Repository
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _indexing: DatabaseIndexAPI | undefined
+  private readonly _indexing: DatabaseIndexApi | undefined
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -202,6 +205,7 @@ export class Ceramic implements CeramicApi {
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
     this._indexing = modules.indexing
+    this.index = new IndexApi(modules.indexing)
 
     this.context = {
       api: this,
@@ -369,7 +373,7 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    let indexingApi: DatabaseIndexAPI | undefined = undefined
+    let indexingApi: DatabaseIndexApi | undefined = undefined
     if (config.indexing) {
       indexingApi = buildIndexing(config.indexing)
     } else {
@@ -450,7 +454,7 @@ export class Ceramic implements CeramicApi {
       loadOptsOverride,
     }
 
-    const modules = {
+    const modules: CeramicModules = {
       anchorService,
       anchorValidator,
       dispatcher,

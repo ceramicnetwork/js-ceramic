@@ -1,4 +1,4 @@
-import type { Pagination } from './types.js'
+import type { Pagination } from '@ceramicnetwork/common'
 
 export enum PaginationKind {
   FORWARD,

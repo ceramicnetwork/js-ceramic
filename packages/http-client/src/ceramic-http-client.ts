@@ -18,6 +18,7 @@ import {
   UpdateOpts,
   SyncOptions,
   AnchorStatus,
+  IndexClientApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -25,6 +26,7 @@ import { Model } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { RemotePinApi } from './remote-pin-api.js'
+import { RemoteIndexApi } from './remote-index-api.js'
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -70,6 +72,7 @@ export class CeramicClient implements CeramicApi {
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
+  public readonly index: IndexClientApi
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig
@@ -85,6 +88,7 @@ export class CeramicClient implements CeramicApi {
     this.context = { api: this }
 
     this.pin = new RemotePinApi(this._apiUrl)
+    this.index = new RemoteIndexApi()
 
     this._streamConstructors = {
       [Caip10Link.STREAM_TYPE_ID]: Caip10Link,

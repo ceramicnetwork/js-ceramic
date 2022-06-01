@@ -20,6 +20,7 @@ export * from './running-state-like.js'
 export * from './stream-state-subject.js'
 export * from './subscription-set.js'
 export * from './polyfill-abort-controller.js'
+export * from './index-client-api.js'
 
 import type { IPFS } from 'ipfs-core-types'
 export type IpfsApi = IPFS

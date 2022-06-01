@@ -2,15 +2,15 @@ import type { Knex } from 'knex'
 import type { DataSource } from 'typeorm'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { BaseQuery, Page, Pagination } from '../types.js'
+import type { BaseQuery, Page, Pagination } from '@ceramicnetwork/common'
 import {
   BackwardPaginationQuery,
   ForwardPaginationQuery,
   PaginationKind,
   parsePagination,
 } from '../parse-pagination.js'
-import { UnsupportedOrderingError } from '../ordering.js'
 import { asTableName } from '../as-table-name.util.js'
+import { UnsupportedOrderingError } from '../unsupported-ordering-error.js'
 
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
