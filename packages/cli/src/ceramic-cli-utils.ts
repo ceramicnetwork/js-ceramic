@@ -130,7 +130,8 @@ export class CeramicCliUtils {
         config.httpApi.hostname = hostname
       }
       if (port) {
-        config.httpApi.port = port
+        console.log('ceramic-cli-utils', port)
+        config.httpApi.port = _validatePort(port)
       }
       if (ipfsApi) {
         config.ipfs.mode = IpfsMode.REMOTE
@@ -608,4 +609,15 @@ Please use the upgraded Glaze CLI instead.
 Please test with the new CLI before reporting any problems.
 ${pc.green('npm i -g @glazed/cli')}`
   )
+}
+
+export function _validatePort(inPort) {
+  const validPort = Number(inPort)
+  if (inPort == null) {
+    return inPort
+  } else if (isNaN(validPort) || validPort > 65535) {
+    console.error('Invalid port number passed.')
+    process.exit(1)
+  }
+  return validPort
 }

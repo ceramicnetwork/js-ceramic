@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { _validatePort } from './ceramic-cli-utils'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -90,14 +91,12 @@ export class DaemonHTTPApiConfig {
    */
   @jsonMember(AnyT, {
     serializer: (inPort) => {
-      const validPort = Number(inPort)
-      if (inPort == null) {
-        return inPort
-      } else if (isNaN(validPort) || validPort > 65535) {
-        console.error('Invalid port number passed.')
-        process.exit(1)
-      }
-      return validPort
+      console.log('serializer', inPort)
+      return _validatePort(inPort)
+    },
+    deserializer: (inPort) => {
+      console.log('deserializer', inPort)
+      return _validatePort(inPort)
     },
   })
   port?: number
