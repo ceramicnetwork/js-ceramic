@@ -120,11 +120,14 @@ export class ChronologicalOrder {
    */
   private forwardQuery(query: BaseQuery, pagination: ForwardPaginationQuery): Knex.QueryBuilder {
     const tableName = asTableName(query.model)
-    const base = this.knexConnection
+    let base = this.knexConnection
       .from(tableName)
       .select('stream_id', 'last_anchored_at', 'created_at')
       .orderBy(CHRONOLOGICAL_ORDER)
       .limit(pagination.first + 1)
+    if (query.account) {
+      base = base.where({ controller_did: query.account })
+    }
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
       if (after.last_anchored_at) {
@@ -154,15 +157,17 @@ export class ChronologicalOrder {
     ) => {
       return this.knexConnection
         .select('*')
-        .from((builder) =>
-          withWhereCallback(
-            builder
-              .from(tableName)
-              .select('stream_id', 'last_anchored_at', 'created_at')
-              .orderBy(reverseOrder(CHRONOLOGICAL_ORDER))
-              .limit(limit + 1) // To know if we have more entries to query
-          )
-        )
+        .from((builder) => {
+          let subquery = builder
+            .from(tableName)
+            .select('stream_id', 'last_anchored_at', 'created_at')
+            .orderBy(reverseOrder(CHRONOLOGICAL_ORDER))
+            .limit(limit + 1) // To know if we have more entries to query
+          if (query.account) {
+            subquery = subquery.where({ controller_did: query.account })
+          }
+          return withWhereCallback(subquery)
+        })
         .orderBy(CHRONOLOGICAL_ORDER)
     }
     if (pagination.before) {

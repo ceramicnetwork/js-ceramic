@@ -240,4 +240,28 @@ describe('page', () => {
       }
     })
   })
+
+  test('chronological order, filtered by account', async () => {
+    const presentAccount = 'did:key:foo' // We have that in the populated table
+    const absentAccount = 'did:key:blah' // We do not have that in the populated table
+    const withPresentAccount = await indexAPI.page({
+      model: MODEL,
+      account: presentAccount,
+      first: 5,
+    })
+    expect(withPresentAccount.entries.map(String)).toEqual(
+      ALL_ENTRIES_IN_CHRONOLOGICAL_ORDER.slice(0, 5)
+    )
+    // Should return an empty page
+    const withAbsentAccount = await indexAPI.page({
+      model: MODEL,
+      account: absentAccount,
+      first: 5,
+    })
+    expect(withAbsentAccount.entries).toEqual([])
+    expect(withAbsentAccount.pageInfo.hasNextPage).toEqual(false)
+    expect(withAbsentAccount.pageInfo.hasPreviousPage).toEqual(false)
+    expect(withAbsentAccount.pageInfo.endCursor).toBeUndefined()
+    expect(withAbsentAccount.pageInfo.startCursor).toBeUndefined()
+  })
 })
