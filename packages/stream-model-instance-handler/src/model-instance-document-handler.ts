@@ -199,7 +199,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     if (state.next?.content) {
       content = state.next.content
-      delete state.next.content
     }
 
     delete state.next
