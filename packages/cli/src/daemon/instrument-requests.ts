@@ -1,4 +1,4 @@
-import {Count, REQUEST_METRIC} from '@ceramicnetwork/common'
+import {Metrics, REQUEST_METRIC} from '@ceramicnetwork/core'
 
 export function instrumentRequest(req, res, next) {
 
@@ -6,7 +6,7 @@ export function instrumentRequest(req, res, next) {
   const agent = req.header("user-agent")
   // do some metrics
   // maybe endpoint = req.url or req.originalUrl ?
-  Count(REQUEST_METRIC, 1, {'method': req.method, 'endpoint':req.url, 'agent':agent})
+  Metrics.count(REQUEST_METRIC, 1, {'method': req.method, 'endpoint':req.url, 'agent':agent})
   next()
 }
 

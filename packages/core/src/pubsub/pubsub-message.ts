@@ -1,7 +1,7 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { UnreachableCaseError, toCID } from '@ceramicnetwork/common'
-import {Count, Record, RECEIVED_METRIC, PUBLISHED_METRIC} from '@ceramicnetwork/common'
+import {Metrics, RECEIVED_METRIC, PUBLISHED_METRIC} from '@ceramicnetwork/core'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'
@@ -73,7 +73,7 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 
 export function serialize(message: PubsubMessage): Uint8Array {
 
-  Count(PUBLISHED_METRIC, 1, {"typ": message.typ}) // really attempted to publish...
+  Metrics.count(PUBLISHED_METRIC, 1, {"typ": message.typ}) // really attempted to publish...
   switch (message.typ) {
     case MsgType.QUERY: {
       return textEncoder.encode(
@@ -121,7 +121,7 @@ export function deserialize(message: any): PubsubMessage {
   const parsed = JSON.parse(asString)
 
   const typ = parsed.typ as MsgType
-  Count(RECEIVED_METRIC, 1, {"typ": typ})
+  Metrics.count(RECEIVED_METRIC, 1, {"typ": typ})
   switch (typ) {
     case MsgType.UPDATE: {
       // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
