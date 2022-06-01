@@ -43,25 +43,15 @@ INFO: For switching between node versions one could use [n](https://github.com/t
 
 CLI helpers commands on how to start up environment and debug [local code base](https://github.com/ceramicnetwork/js-ceramic).  
 
-*How to compile all packages/full library:*
+Compile all packages/full library:  `npm run clean && npm install && npm run build`
 
-`npm run clean && npm install && npm run build`
-
-*How to run locally compiled ceramic code:*
-
-`cd ~/js-ceramic/packages/cli/bin`
-
-`node ceramic.js daemon`*
+Run locally compiled ceramic code: `cd ~/js-ceramic/packages/cli/bin; node ceramic.js daemon`
 
 *__*INFO*__: this will invoke the daemon with the default configuration values found in `~/.ceramic/ceramic.daemon.json`* 
 
-*How to run docker with local code base:*
+Run docker with local code base: `docker build -t js-ceramic-debug::latest -f Dockerfile.daemon .`
 
-`docker build -t js-ceramic-debug::latest -f Dockerfile.daemon .`
-
-*How to run on [Clayground](https://github.com/ceramicnetwork/clayground) (full environment containerized)*
-
-`docker run --rm --name ceramic -p 7007:7007 ceramicnetwork/js-ceramic:dev daemon --port "7007" --hostname 0.0.0.0 --network dev-unstable --anchor-service-api https://cas-dev.3boxlabs.com --debug true --ethereum-rpc https://rinkeby.infura.io/v3/b6685df41e1647c4be0046dfa62a020b`
+Run on [Clayground](https://github.com/ceramicnetwork/clayground) (full environment containerized): `docker run --rm --name ceramic -p 7007:7007 ceramicnetwork/js-ceramic:dev daemon --port "7007" --hostname 0.0.0.0 --network dev-unstable --anchor-service-api https://cas-dev.3boxlabs.com --debug true --ethereum-rpc https://rinkeby.infura.io/v3/b6685df41e1647c4be0046dfa62a020b`
 
 ### Postman Collection
 
@@ -142,7 +132,7 @@ To ensure that both `python` & `python3` commands work properly, add `pyenv` to 
 
 **BASH:** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.bashrc`
 
-`reset` - OR - restart Terminal window
+`$ reset` - OR - restart Terminal window
 
 ## MISCELLANY
 
