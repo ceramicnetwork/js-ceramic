@@ -35,26 +35,11 @@ This configuration will allow running the ceramic daemon from the debugger and s
 
 INFO: For switching between node versions one could use [n](https://github.com/tj/n), [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm)
 
-## TROUBLESHOOTING
 
-### Python not found
-
-`Error: Can't find Python executable "python", you can set the PYTHON env variable.` when installing [JS HTTP CLIENT](https://developers.ceramic.network/build/javascript/http/)
-
-*By default macOS does not ship with an alias for `python` which breaks the standard ceramic npm
-package install. Install `pyenv` and add it to your local `PATH` prior to installation. You can skip this step if you are only working with the local codebase.*
-
-`$ brew install pyenv`
-
-To ensure that both `python` & `python3` commands work properly, add `pyenv` to your PATH:
-
-**ZSHR (MacOS Default):** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.zshrc`
-
-**BASH:** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.bashrc`
-
-`reset` - OR - restart Terminal window
 
 ## BUILDING & DEBUGGING
+
+### Running the Daemon
 
 CLI helpers commands on how to start up environment and debug [local code base](https://github.com/ceramicnetwork/js-ceramic).  
 
@@ -78,14 +63,14 @@ CLI helpers commands on how to start up environment and debug [local code base](
 
 `docker run --rm --name ceramic -p 7007:7007 ceramicnetwork/js-ceramic:dev daemon --port "7007" --hostname 0.0.0.0 --network dev-unstable --anchor-service-api https://cas-dev.3boxlabs.com --debug true --ethereum-rpc https://rinkeby.infura.io/v3/b6685df41e1647c4be0046dfa62a020b`
 
-
-## Postman Collection
+### Postman Collection
 
 Import this [Postman Collection](postman_collection.json) of queries to see a sample of API calls that can be used to exercise and explore common endpoints.
 
 By default the collection connects to the public dev network, but you can easily overwrite the local variables to point to your locally running deamon by updating `ceramic_hostname` to `http://localhost:7007`.
 
-## Packages Overview
+
+## PACKAGES OVERVIEW
 
 `3id-did-resolver` - 3Box ID
 `key-did-resolver` - blockchain public keys
@@ -137,6 +122,27 @@ etherum.ts/createLink(did) -> sign
 `streamid` -  pure reference to host stream
 
 `commitid` - references particular state / IPFS record in the stream evolution
+
+
+
+## TROUBLESHOOTING
+
+### Python not found
+
+`Error: Can't find Python executable "python", you can set the PYTHON env variable.` when installing [JS HTTP CLIENT](https://developers.ceramic.network/build/javascript/http/)
+
+*By default macOS does not ship with an alias for `python` which breaks the standard ceramic npm
+package install. Install `pyenv` and add it to your local `PATH` prior to installation. You can skip this step if you are only working with the local codebase.*
+
+`$ brew install pyenv`
+
+To ensure that both `python` & `python3` commands work properly, add `pyenv` to your PATH:
+
+**ZSHR (MacOS Default):** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.zshrc`
+
+**BASH:** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.bashrc`
+
+`reset` - OR - restart Terminal window
 
 ## MISCELLANY
 
