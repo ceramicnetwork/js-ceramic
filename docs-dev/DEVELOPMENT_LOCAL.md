@@ -27,11 +27,11 @@ This configuration will allow running the ceramic daemon from the debugger and s
 
 ### macOS specific (11.x+)
 
-* Install XCode & Command Line tools: `$ xcode-select --install`
+* Install XCode & Command Line tools: `xcode-select --install`
 
 * Install [Brew](https://brew.sh)
 
-`$ brew install npm`
+`brew install npm`
 
 INFO: For switching between node versions one could use [n](https://github.com/tj/n), [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm)
 
