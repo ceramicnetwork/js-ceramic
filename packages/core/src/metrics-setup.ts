@@ -22,6 +22,8 @@ const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 class _Metrics {
     constructor() {
         this.config = exporterConfig
+        this.counters = {}
+        this.histograms = {}
     }
 
     /* Set up the exporter at run time, after we have read the configuration */ 
@@ -51,13 +53,19 @@ class _Metrics {
         if (! VALID_METRIC_NAMES.includes(name)) {
             throw("Error: metric names must be defined in VALID_METRIC_NAMES")
         }
-        meter.createCounter(name, params).add(value)
+        if ( name not in this.counters) {
+            this.counters[name] = meter.createCounter(name)
+        }
+        this.counters[name].add(value, params)
     }
     record(name:string, value:number, params?:any) {
         if (! VALID_METRIC_NAMES.includes(name)) {
             throw("Error: metric names must be defined in VALID_METRIC_NAMES")
         }
-        meter.createHistogram(name, params).record(value)
+        if (name not in this.histograms) {
+            this.histograms[name] = meter.createHistogram(name)
+        }
+        this.histograms[name].record(value, params)
     }
 }
 
