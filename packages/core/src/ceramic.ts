@@ -105,6 +105,9 @@ export interface CeramicConfig {
   useCentralizedPeerDiscovery?: boolean
   syncOverride?: SyncOptions
 
+  metricsEnabled?: boolean
+  metricsPort?: number
+
   [index: string]: any // allow arbitrary properties
 }
 
@@ -409,6 +412,11 @@ export class Ceramic implements CeramicApi {
       stateStoreDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
+    }
+
+    const metricsOptions = {
+      enabled: config.metricsEnabled,
+      port: config.metricsPort,
     }
 
     const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}

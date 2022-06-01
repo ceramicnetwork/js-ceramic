@@ -6,12 +6,8 @@ import { Resource } from '@opentelemetry/resources'
 
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
-if (! process.env.METRICS_ENABLED || process.env.NODE_ENV == 'test') {
-  exporterConfig['preventServerStart'] = true
-}
-if (process.env.METRICS_EXPORTER_PORT) {
-  exporterConfig['port'] = Number(process.env.METRICS_EXPORTER_PORT)
-}
+exporterConfig['preventServerStart'] = ! this.config.metricsEnabled
+exporterConfig['port'] = this.config.metricsPort
 
 const metricExporter = new PrometheusExporter(exporterConfig)
 
