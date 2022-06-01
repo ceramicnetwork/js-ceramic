@@ -1,9 +1,8 @@
 import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
 import type { Repository } from '../../state-management/repository.js'
-import type { DiagnosticsLogger, Page, StreamState } from '@ceramicnetwork/common'
+import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
 import { IndexApi } from '../index-api.js'
-import { CommitType, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
@@ -21,16 +20,14 @@ describe('with database backend', () => {
       },
     }
     const pageFn = jest.fn(async () => backendPage)
-    const loadFn = jest.fn(async (streamId: any) => {
-      const fauxStreamState = {
+    const streamStateFn = jest.fn(async (streamId: any) => {
+      return {
         type: 1,
         content: streamId,
-        log: [{ cid: TestUtils.randomCID(), type: CommitType.GENESIS }],
-      } as unknown as StreamState
-      return TestUtils.runningState(fauxStreamState)
+      }
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
-    const fauxRepository = { load: loadFn } as unknown as Repository
+    const fauxRepository = { streamState: streamStateFn } as unknown as Repository
     const fauxLogger = {} as DiagnosticsLogger
     const indexApi = new IndexApi(fauxBackend, fauxRepository, fauxLogger)
     const response = await indexApi.queryIndex(query)
@@ -39,10 +36,10 @@ describe('with database backend', () => {
     expect(pageFn).toBeCalledWith(query)
     // We pass pageInfo through
     expect(response.pageInfo).toEqual(backendPage.pageInfo)
-    // Transform from StreamId to StreamState via repository.load
-    expect(loadFn).toBeCalledTimes(query.first)
+    // Transform from StreamId to StreamState via Repository::streamState
+    expect(streamStateFn).toBeCalledTimes(query.first)
     backendPage.entries.forEach((fauxStreamId) => {
-      expect(loadFn).toBeCalledWith(fauxStreamId, { sync: SyncOptions.NEVER_SYNC })
+      expect(streamStateFn).toBeCalledWith(fauxStreamId)
     })
     expect(response.entries.map((e) => e.content)).toEqual(backendPage.entries)
   })

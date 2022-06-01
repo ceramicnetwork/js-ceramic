@@ -22,16 +22,15 @@ export class LocalIndexApi implements IndexApi {
 
   /**
    * Query the index. Ask an indexing database for a list of StreamIDs,
-   * and convert them to corresponding StreamState instances via `Repository::load`.
+   * and convert them to corresponding StreamState instances via `Repository::streamState`.
+   *
+   * We assume that a state store always contains StreamState for an indexed stream.
    */
   async queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>> {
     if (this.databaseIndexApi) {
       const page = await this.databaseIndexApi.page(query)
       const streamStates = await Promise.all(
-        page.entries.map(async (streamId) => {
-          const running = await this.repository.load(streamId, { sync: SyncOptions.NEVER_SYNC })
-          return running.state
-        })
+        page.entries.map((streamId) => this.repository.streamState(streamId))
       )
       return {
         ...page,
