@@ -33,8 +33,8 @@ export class LocalIndexApi implements IndexApi {
         page.entries.map((streamId) => this.repository.streamState(streamId))
       )
       return {
-        ...page,
         entries: streamStates,
+        pageInfo: page.pageInfo,
       }
     } else {
       this.logger.warn(`Indexing is not configured. Unable to serve query ${JSON.stringify(query)}`)
