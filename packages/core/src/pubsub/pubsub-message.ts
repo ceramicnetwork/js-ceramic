@@ -1,7 +1,7 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { UnreachableCaseError, toCID } from '@ceramicnetwork/common'
-import {Metrics, RECEIVED_METRIC, PUBLISHED_METRIC} from '@ceramicnetwork/core'
+import {Metrics, RECEIVED_METRIC, PUBLISHED_METRIC} from '../metrics-setup'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'

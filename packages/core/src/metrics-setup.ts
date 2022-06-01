@@ -20,14 +20,20 @@ const VALID_METRIC_NAMES = [REQUEST_METRIC, RESPONSE_METRIC, RECEIVED_METRIC, PU
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
 class _Metrics {
+    protected readonly config
+    protected readonly counters
+    protected readonly histograms
+    protected meterProvider: MeterProvider
+    protected metricExporter: PrometheusExporter
+    protected meter
     constructor() {
         this.config = exporterConfig
         this.counters = {}
         this.histograms = {}
     }
 
-    /* Set up the exporter at run time, after we have read the configuration */ 
-    instantiate(enableExporter: boolean, port: Number) {
+    /* Set up the exporter at run time, after we have read the configuration */
+    start(enableExporter: boolean, port: Number) {
         this.config['preventServerStart'] = ! enableExporter
         this.config['port'] = this.config.metricsPort
 
@@ -40,10 +46,10 @@ class _Metrics {
         });
 
         // Creates MeterProvider and installs the exporter as a MetricReader
-        this.meterProvider.addMetricReader(metricExporter);
+        this.meterProvider.addMetricReader(this.metricExporter);
 
        // Meter for js-ceramic
-       this.meter = meterProvider.getMeter('js-ceramic');
+       this.meter = this.meterProvider.getMeter('js-ceramic')
     }
 
     // could have subclasses or specific functions with set params, but we want to
@@ -53,8 +59,8 @@ class _Metrics {
         if (! VALID_METRIC_NAMES.includes(name)) {
             throw("Error: metric names must be defined in VALID_METRIC_NAMES")
         }
-        if ( name not in this.counters) {
-            this.counters[name] = meter.createCounter(name)
+        if ( name ! in this.counters) {
+            this.counters[name] = this.meter.createCounter(name)
         }
         this.counters[name].add(value, params)
     }
@@ -62,10 +68,11 @@ class _Metrics {
         if (! VALID_METRIC_NAMES.includes(name)) {
             throw("Error: metric names must be defined in VALID_METRIC_NAMES")
         }
-        if (name not in this.histograms) {
-            this.histograms[name] = meter.createHistogram(name)
+        if (name ! in this.histograms) {
+            this.histograms[name] = this.meter.createHistogram(name)
         }
         this.histograms[name].record(value, params)
     }
 }
 
+export const Metrics = new _Metrics()

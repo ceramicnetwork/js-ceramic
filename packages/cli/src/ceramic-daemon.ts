@@ -55,7 +55,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     return new RotatingFileStream(logPath, true)
   })
 
-  Metrics.instantiate(opts.metrics.metricsEnabled, opts.metrics.metricsPort)
+  Metrics.start(opts.metrics.metricsEnabled, opts.metrics.metricsPort)
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
