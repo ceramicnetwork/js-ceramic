@@ -143,7 +143,9 @@ export class ModelHandler implements StreamHandler<Model> {
     const payload = commitData.commit
 
     if (!payload.id.equals(state.log[0].cid)) {
-      throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
+      throw new Error(
+        `Invalid genesis CID in commit. Found: ${payload.id}, expected ${state.log[0].cid}`
+      )
     }
     const expectedPrev = state.log[state.log.length - 1].cid
     if (!payload.prev.equals(expectedPrev)) {
@@ -152,11 +154,11 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    if (payload.header?.controllers) {
+    if (payload.header) {
       throw new Error(
-        `Updating controllers for Model Streams is not allowed.  Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
-          state.metadata.controllers
-        )} to ${payload.header.controllers}\``
+        `Updating metadata for Model Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
+          state.metadata
+        )} to ${JSON.stringify(payload.header)}\``
       )
     }
 
@@ -199,7 +201,13 @@ export class ModelHandler implements StreamHandler<Model> {
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!commitData.commit.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${commitData.commit.prev}`
+      )
+    }
+
     const proof = commitData.proof
     state.log.push({
       cid: commitData.cid,
@@ -207,16 +215,10 @@ export class ModelHandler implements StreamHandler<Model> {
       timestamp: proof.blockTimestamp,
     })
     let content = state.content
-    let metadata = state.metadata
 
     if (state.next?.content) {
       content = state.next.content
       delete state.next.content
-    }
-
-    if (state.next?.metadata) {
-      metadata = state.next.metadata
-      delete state.next.metadata
     }
 
     delete state.next
@@ -225,7 +227,6 @@ export class ModelHandler implements StreamHandler<Model> {
     return {
       ...state,
       content,
-      metadata,
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof,
     }

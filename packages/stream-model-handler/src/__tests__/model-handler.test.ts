@@ -233,7 +233,7 @@ async function checkSignedCommitMatchesExpectations(
 
 describe('ModelHandler', () => {
   let did: DID
-  let modelHandler: ModelHandler
+  let handler: ModelHandler
   let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
@@ -291,13 +291,13 @@ describe('ModelHandler', () => {
   })
 
   beforeEach(() => {
-    modelHandler = new ModelHandler()
+    handler = new ModelHandler()
 
     setDidToNotRotatedState(did)
   })
 
   it('is constructed correctly', async () => {
-    expect(modelHandler.name).toEqual('model')
+    expect(handler.name).toEqual('model')
   })
 
   it('fails to apply genesis commits with invalid schema', async () => {
@@ -390,8 +390,6 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const modelHandler = new ModelHandler()
-
     const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT)) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
@@ -404,14 +402,12 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: commit.jws,
     }
-    const streamState = await modelHandler.applyCommit(commitData, context)
+    const streamState = await handler.applyCommit(commitData, context)
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
 
   it('makes signed commit correctly', async () => {
-    const modelHandler = new ModelHandler()
-
     const genesisCommit = (await Model._makeGenesis(
       context.api,
       PLACEHOLDER_CONTENT
@@ -427,7 +423,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    const state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
 
@@ -440,8 +436,6 @@ describe('ModelHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const modelHandler = new ModelHandler()
-
     const genesisCommit = (await Model._makeGenesis(
       context.api,
       PLACEHOLDER_CONTENT
@@ -458,7 +452,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await modelHandler.applyCommit(genesisCommitData, context)
+    let state = await handler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
@@ -479,15 +473,13 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    state = await modelHandler.applyCommit(signedCommitData, context, state)
+    state = await handler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
     delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
   })
 
   it('incomplete update rejected', async () => {
-    const modelHandler = new ModelHandler()
-
     const genesisCommit = (await Model._makeGenesis(
       context.api,
       PLACEHOLDER_CONTENT
@@ -504,7 +496,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    const state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
 
     const incompleteFinalConent = { name: 'myModel', schema: {} }
     const state$ = TestUtils.runningState(state)
@@ -526,14 +518,12 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    await expect(modelHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /missing a 'accountRelation' field/
     )
   })
 
   it('updating existing model fails', async () => {
-    const modelHandler = new ModelHandler()
-
     const genesisCommit = (await Model._makeGenesis(
       context.api,
       FINAL_CONTENT
@@ -550,7 +540,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    const state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
@@ -575,14 +565,12 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    await expect(modelHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /Cannot update a finalized Model/
     )
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const modelHandler = new ModelHandler()
-
     const genesisCommit = (await Model._makeGenesis(context.api, FINAL_CONTENT, {
       controller: 'did:3:fake',
     })) as SignedCommitContainer
@@ -598,14 +586,12 @@ describe('ModelHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
     }
-    await expect(modelHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
+    await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: not a valid verificationMethod for issuer/
     )
   })
 
-  it('applies anchor commit correctly', async () => {
-    const modelHandler = new ModelHandler()
-
+  it('throws error if changes metadata', async () => {
     const genesisCommit = (await Model._makeGenesis(
       context.api,
       PLACEHOLDER_CONTENT
@@ -622,7 +608,49 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
+    rawCommit.header = { controllers: [did.id, did.id] }
+    const signedCommit = await Model._signDagJWS(context.api, rawCommit)
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Updating metadata for Model Streams is not allowed/
+    )
+  })
+
+  it('applies anchor commit correctly', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await handler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
@@ -643,30 +671,28 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    state = await modelHandler.applyCommit(signedCommitData, context, state)
+    state = await handler.applyCommit(signedCommitData, context, state)
 
+    // apply anchor
     const anchorProof = {
       blockNumber: 123456,
       blockTimestamp: 1615799679,
       chainId: 'fakechain:123',
     }
     await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
-    // apply anchor
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
-      commit: { proof: FAKE_CID_3 },
+      commit: { proof: FAKE_CID_3, prev: FAKE_CID_2 },
       proof: anchorProof,
     }
-    state = await modelHandler.applyCommit(anchorCommitData, context, state)
+    state = await handler.applyCommit(anchorCommitData, context, state)
     delete state.metadata.unique
     expect(state).toMatchSnapshot()
   })
 
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-
-    const modelHandler = new ModelHandler()
 
     // make and apply genesis with old key
     const genesisCommit = (await Model._makeGenesis(
@@ -687,7 +713,7 @@ describe('ModelHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    const state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
 
     rotateKey(did, rotateDate.toISOString())
 
@@ -714,15 +740,13 @@ describe('ModelHandler', () => {
     }
 
     // applying a commit made with the old key after rotation
-    await expect(modelHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /invalid_jws: signature authored with a revoked DID version/
     )
   })
 
   it('fails to apply commit if new key used before rotation', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-
-    const modelHandler = new ModelHandler()
 
     // make genesis with new key
     const genesisCommit = (await Model._makeGenesis(
@@ -745,7 +769,7 @@ describe('ModelHandler', () => {
 
     rotateKey(did, rotateDate.toISOString())
 
-    await expect(modelHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
+    await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
     )
   })
@@ -753,8 +777,6 @@ describe('ModelHandler', () => {
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
     rotateKey(did, rotateDate.toISOString())
-
-    const modelHandler = new ModelHandler()
 
     // make genesis commit using old key
     const genesisCommit = (await Model._makeGenesis(
@@ -774,7 +796,7 @@ describe('ModelHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 + 60 * 60,
     }
-    const state = await modelHandler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
     delete state.metadata.unique
 
     expect(state).toMatchSnapshot()
