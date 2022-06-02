@@ -56,19 +56,19 @@ class _Metrics {
     // easily and quickly change what is recorded, there are no code dependencies on it
 
     count(name:string, value:number, params?:any) {
-        if ( name ! in METRIC_NAMES ) {
-            throw("Error: metric names must be defined in VALID_METRIC_NAMES")
+        if ( ! (name in METRIC_NAMES) ) {
+            throw(`Error: ${name} must be defined in METRIC_NAMES`)
         }
-        if ( name ! in this.counters) {
+        if ( ! (name in this.counters)) {
             this.counters[name] = this.meter.createCounter(name)
         }
         this.counters[name].add(value, params)
     }
     record(name:string, value:number, params?:any) {
-        if (name ! in METRIC_NAMES) {
-            throw("Error: metric names must be defined in VALID_METRIC_NAMES")
+        if (! (name in METRIC_NAMES)) {
+            throw(`Error: ${name} must be defined in METRIC_NAMES`)
         }
-        if (name ! in this.histograms) {
+        if (! (name in this.histograms)) {
             this.histograms[name] = this.meter.createHistogram(name)
         }
         this.histograms[name].record(value, params)
