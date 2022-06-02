@@ -1,8 +1,9 @@
 import * as fs from 'fs'
 import express, { Request, Response } from 'express'
 import type { CeramicConfig } from '@ceramicnetwork/core'
-import { Ceramic, Metrics } from '@ceramicnetwork/core'
+import { Ceramic } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
+import { Metrics } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {

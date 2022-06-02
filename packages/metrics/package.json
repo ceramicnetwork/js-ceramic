@@ -1,14 +1,13 @@
 {
-  "name": "@ceramicnetwork/logger",
+  "name": "@ceramicnetwork/metrics",
   "version": "2.0.4",
-  "description": "Ceramic file logging utilities",
+  "description": "Ceramic metrics instrumentation and exporters",
   "keywords": [
     "ceramic",
-    "logging",
-    "types",
+    "metrics",
     "utilities"
   ],
-  "author": "Val Mack <val@3box.io>",
+  "author": "Golda Velez <golda@3box.io>",
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
@@ -33,7 +32,10 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "rotating-file-stream": "^3.0.2"
+    "@opentelemetry/exporter-prometheus": "^0.28.0",
+    "@opentelemetry/resources": "^1.3.0",
+    "@opentelemetry/sdk-metrics-base": "^0.28.0",
+    "@opentelemetry/semantic-conventions": "^1.3.0"
   },
   "devDependencies": {
     "@types/node": "^17.0.5"
