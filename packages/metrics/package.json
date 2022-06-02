@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/metrics",
-  "version": "2.0.4",
+  "version": "1.0.0",
   "description": "Ceramic metrics instrumentation and exporters",
   "keywords": [
     "ceramic",
