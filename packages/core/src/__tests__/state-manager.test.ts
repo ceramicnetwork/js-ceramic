@@ -501,7 +501,6 @@ test('should announce change to network', async () => {
   expect(publishTip).toHaveBeenCalledTimes(1)
   expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
   await publishTip.mockClear()
-
   const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
   await ceramic.repository.applyCommit(streamState1.id, updateRec, {
     anchor: false,
