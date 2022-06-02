@@ -199,7 +199,7 @@ describe('Dispatcher with mock ipfs', () => {
     await expect(dispatcher.handleMessage(message)).rejects.toThrow(/Unsupported message type/)
   })
 
-  it('handle message correctly', async () => {
+  it('handle message correctly without model', async () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
     async function register(state: StreamState) {
@@ -256,4 +256,63 @@ describe('Dispatcher with mock ipfs', () => {
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(stream2.id, FAKE_CID2)
   })
+
+  it('handle message correctly with model', async () => {
+    dispatcher.repository.stateManager = {} as unknown as StateManager
+
+    async function register(state: StreamState) {
+      const runningState = new RunningState(state, false)
+      repository.add(runningState)
+      dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
+      return runningState
+    }
+
+    const initialState = {
+      type: 0,
+      log: [
+        {
+          cid: FAKE_STREAM_ID.cid,
+          type: CommitType.GENESIS,
+        },
+      ],
+    } as unknown as StreamState
+    const state$ = await register(initialState)
+
+    // Store the query ID sent when the stream is registered so we can use it as the response ID later
+    const publishArgs = ipfs.pubsub.publish.mock.calls[0]
+    expect(publishArgs[0]).toEqual(TOPIC)
+    const queryMessageSent = JSON.parse(
+      new TextDecoder().decode(publishArgs[1] as unknown as Uint8Array)
+    )
+    const queryID = queryMessageSent.id
+
+    // Handle UPDATE message without model
+    dispatcher.repository.stateManager.update = jest.fn()
+    await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID, model: FAKE_MODEL })
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
+
+    const continuationState = {
+      ...initialState,
+      log: initialState.log.concat({
+        cid: FAKE_CID,
+        type: CommitType.SIGNED,
+      }),
+    } as unknown as StreamState
+    const stream2 = await register(continuationState)
+    await dispatcher.handleMessage({ typ: MsgType.QUERY, stream: FAKE_STREAM_ID, id: '1' })
+    expect(ipfs.pubsub.publish).lastCalledWith(
+      TOPIC,
+      serialize({
+        typ: MsgType.RESPONSE,
+        id: '1',
+        tips: new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID),
+      })
+    )
+
+    // Handle RESPONSE message
+    const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2)
+    await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(stream2.id, FAKE_CID2)
+  })
+
 })
