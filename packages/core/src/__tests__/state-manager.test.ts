@@ -499,7 +499,7 @@ test('should announce change to network', async () => {
   stream1.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
   expect(publishTip).toHaveBeenCalledTimes(1)
-  expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip)
+  expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
   await publishTip.mockClear()
 
   const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
@@ -507,7 +507,7 @@ test('should announce change to network', async () => {
     anchor: false,
     publish: true,
   })
-  expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip)
+  expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
 })
 
 describe('sync', () => {

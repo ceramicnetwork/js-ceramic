@@ -97,7 +97,7 @@ export function serialize(message: PubsubMessage): Uint8Array {
         doc: message.stream.toString(),
         stream: message.stream.toString(),
         tip: message.tip.toString(),
-        ...(message.model && { model: message.model }), // note: conditionally add the model key if message.model is not undefined
+        ...(message.model && { model: message.model.toString() }), // note: conditionally add the model key if message.model is not undefined        
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
