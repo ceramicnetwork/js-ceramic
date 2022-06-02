@@ -26,7 +26,7 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
-  IndexClientApi,
+  IndexApi,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -48,7 +48,7 @@ import os from 'os'
 import * as path from 'path'
 import { buildIndexing } from './indexing/build-indexing.js'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
-import { IndexApi } from './indexing/index-api.js'
+import { LocalIndexApi } from './indexing/local-index-api.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -177,7 +177,7 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly pin: PinApi
-  public readonly index: IndexClientApi
+  public readonly index: IndexApi
   readonly repository: Repository
 
   readonly _streamHandlers: HandlersMap
@@ -205,7 +205,7 @@ export class Ceramic implements CeramicApi {
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
     this._indexing = modules.indexing
-    this.index = new IndexApi(modules.indexing)
+    this.index = new LocalIndexApi(modules.indexing)
 
     this.context = {
       api: this,

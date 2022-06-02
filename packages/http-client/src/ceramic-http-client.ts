@@ -18,7 +18,7 @@ import {
   UpdateOpts,
   SyncOptions,
   AnchorStatus,
-  IndexClientApi,
+  IndexApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -72,7 +72,7 @@ export class CeramicClient implements CeramicApi {
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
-  public readonly index: IndexClientApi
+  public readonly index: IndexApi
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig

@@ -50,7 +50,7 @@ export interface BaseQuery {
 /**
  * API to query an index.
  */
-export interface IndexClientApi {
+export interface IndexApi {
   queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>>
 }
 

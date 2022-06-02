@@ -1,12 +1,6 @@
-import type {
-  BaseQuery,
-  IndexClientApi,
-  Page,
-  Pagination,
-  StreamState,
-} from '@ceramicnetwork/common'
+import type { BaseQuery, IndexApi, Page, Pagination, StreamState } from '@ceramicnetwork/common'
 
-export class RemoteIndexApi implements IndexClientApi {
+export class RemoteIndexApi implements IndexApi {
   queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>> {
     throw new Error(`NotImplemented: RemoteIndexApi::queryIndex`)
   }

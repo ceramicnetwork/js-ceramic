@@ -4,7 +4,7 @@ import type { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
-import type { IndexClientApi } from './index-client-api.js'
+import type { IndexApi } from './index-api.js'
 
 /**
  * Describes Ceramic pinning functionality
@@ -61,7 +61,7 @@ export interface CeramicApi extends CeramicSigner {
   readonly pin: PinApi
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
-  readonly index: IndexClientApi
+  readonly index: IndexApi
 
   /**
    * Register Stream handler
