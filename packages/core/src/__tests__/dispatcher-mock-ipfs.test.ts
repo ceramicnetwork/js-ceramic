@@ -288,7 +288,12 @@ describe('Dispatcher with mock ipfs', () => {
 
     // Handle UPDATE message without model
     dispatcher.repository.stateManager.update = jest.fn()
-    await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID, model: FAKE_MODEL })
+    await dispatcher.handleMessage({
+      typ: MsgType.UPDATE,
+      stream: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      model: FAKE_MODEL,
+    })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
 
     const continuationState = {
@@ -314,5 +319,4 @@ describe('Dispatcher with mock ipfs', () => {
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(stream2.id, FAKE_CID2)
   })
-
 })
