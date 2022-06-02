@@ -8,14 +8,13 @@ import { Resource } from '@opentelemetry/resources'
 // the parameters will be used to distinguish the endpoint, type of call etc
 // be flexible about what we record, as the dependency in the grafana does not see this code
 
-export const REQUEST_METRIC = 'request'
-export const RESPONSE_METRIC = 'response'  // unused for now
-export const RECEIVED_METRIC = 'received'
-export const PUBLISHED_METRIC = 'published'
-export const PINNED_METRIC = 'pinned'
-
-const VALID_METRIC_NAMES = [REQUEST_METRIC, RESPONSE_METRIC, RECEIVED_METRIC, PUBLISHED_METRIC, PINNED_METRIC]
-
+export const METRIC_NAMES = {
+    HTTP_REQUEST     : 'http_request',
+    HTTP_RESPONSE    : 'http_response',
+    PUBSUB_RECEIVED  : 'pubsub_received',
+    PUBSUB_PUBLISHED : 'pubsub_published',
+    STREAM_PINNED    : 'stream_pinned',
+}
 
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
@@ -33,9 +32,10 @@ class _Metrics {
     }
 
     /* Set up the exporter at run time, after we have read the configuration */
-    start(enableExporter: boolean, port: Number) {
-        this.config['preventServerStart'] = ! enableExporter
-        this.config['port'] = this.config.metricsPort
+    start(metrics_config: any = exporterConfig) {  // do not import type so as to be usable as a package anywhere
+
+        this.config['preventServerStart'] = ! metrics_config.enableMetrics
+        this.config['port'] = metrics_config.metricsPort
 
         this.metricExporter = new PrometheusExporter(this.config)
 
@@ -56,7 +56,7 @@ class _Metrics {
     // easily and quickly change what is recorded, there are no code dependencies on it
 
     count(name:string, value:number, params?:any) {
-        if (! VALID_METRIC_NAMES.includes(name)) {
+        if ( name ! in METRIC_NAMES ) {
             throw("Error: metric names must be defined in VALID_METRIC_NAMES")
         }
         if ( name ! in this.counters) {
@@ -65,7 +65,7 @@ class _Metrics {
         this.counters[name].add(value, params)
     }
     record(name:string, value:number, params?:any) {
-        if (! VALID_METRIC_NAMES.includes(name)) {
+        if (name ! in METRIC_NAMES) {
             throw("Error: metric names must be defined in VALID_METRIC_NAMES")
         }
         if (name ! in this.histograms) {

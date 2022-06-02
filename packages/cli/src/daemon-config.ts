@@ -287,7 +287,7 @@ export class DaemonMetricsConfig {
   /**
    * If 'enabled' is true, this contains the port on which the metrics exporter will listen
    */
-  @jsonMember(String, { name: 'metrics-port' })
+  @jsonMember(Number, { name: 'metrics-port' })
   metricsPort?: number
 }
 

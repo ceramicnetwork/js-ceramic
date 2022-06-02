@@ -3,7 +3,8 @@ import express, { Request, Response } from 'express'
 import type { CeramicConfig } from '@ceramicnetwork/core'
 import { Ceramic } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
-import { Metrics } from '@ceramicnetwork/metrics'
+// TODO: change this when package is registered
+import { Metrics } from '../../metrics/lib/metrics-setup.js'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {
@@ -56,7 +57,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     return new RotatingFileStream(logPath, true)
   })
 
-  Metrics.start(opts.metrics.metricsEnabled, opts.metrics.metricsPort)
+  Metrics.start(opts.metrics)
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,

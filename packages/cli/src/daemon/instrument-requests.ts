@@ -1,4 +1,5 @@
-import {Metrics, REQUEST_METRIC} from '@ceramicnetwork/metrics'
+// TODO: change this when we have the metrics package registered
+import {Metrics, METRIC_NAMES} from '../../../metrics/lib/metrics-setup.js'
 
 export function instrumentRequest(req, res, next) {
 
@@ -6,7 +7,8 @@ export function instrumentRequest(req, res, next) {
   const agent = req.header("user-agent")
   // do some metrics
   // maybe endpoint = req.url or req.originalUrl ?
-  Metrics.count(REQUEST_METRIC, 1, {'method': req.method, 'endpoint':req.url, 'agent':agent})
+  Metrics.count(METRIC_NAMES.HTTP_REQUEST, 1,
+       {'method': req.method, 'endpoint':req.url, 'agent':agent, 'package':'cli.daemon'})
   next()
 }
 
