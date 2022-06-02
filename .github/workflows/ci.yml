@@ -32,7 +32,7 @@ jobs:
         name: Run CI pipeline
         uses: dagger/dagger-for-github@v3
         with:
-          version: "v${{ env.DAGGER_VERSION }}"
+          version: ${{ env.DAGGER_VERSION }}
           cmds: |
             project init
             project update
