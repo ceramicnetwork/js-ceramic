@@ -1,0 +1,41 @@
+{
+  "name": "@ceramicnetwork/logger",
+  "version": "2.0.4",
+  "description": "Ceramic file logging utilities",
+  "keywords": [
+    "ceramic",
+    "logging",
+    "types",
+    "utilities"
+  ],
+  "author": "Val Mack <val@3box.io>",
+  "homepage": "",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "./lib"
+  },
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "files": [
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests --forceExit",
+    "build": "npx tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
+  },
+  "dependencies": {
+    "rotating-file-stream": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.5"
+  }
+}
