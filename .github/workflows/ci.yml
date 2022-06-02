@@ -8,7 +8,7 @@ on:
 
 env:
   # Dagger
-  DAGGER_CI: cue.mod/pkg/github.com/3box/pipelinetools/ci/main.cue
+  DAGGER_CI: cue.mod/pkg/github.com/3box/pipeline-tools/ci/main.cue
   COMPONENT: "ceramic"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -24,23 +24,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Dump github context
-        run: echo "$GITHUB_CONTEXT"
-        shell: bash
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-      -
         name: Checkout code
         uses: actions/checkout@v3
       -
-        # Pull the latest pipelinetools.
+        # Pull the latest pipeline-tools.
         # TODO: Once the code is stable, use a tagged version.
         name: Run CI pipeline
         uses: dagger/dagger-for-github@v3
         with:
-          version: "v0.2.12"
+          version: "v0.2.13"
           cmds: |
             project init
             project update
-            project update github.com/3box/pipelinetools@develop
+            project update github.com/3box/pipeline-tools@develop
             do build -p ${{ env.DAGGER_CI }}
