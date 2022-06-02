@@ -47,6 +47,7 @@
     "@ceramicnetwork/stream-tile": "^2.1.1",
     "@ceramicnetwork/stream-tile-handler": "^2.1.1",
     "@ceramicnetwork/streamid": "^2.0.4",
+    "@datastructures-js/priority-queue": "^6.1.0",
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
@@ -78,4 +79,3 @@
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
-
