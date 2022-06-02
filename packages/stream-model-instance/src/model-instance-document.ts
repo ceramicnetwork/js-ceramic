@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import * as dagCbor from '@ipld/dag-cbor'
 import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
@@ -12,12 +11,10 @@ import {
   StreamStatic,
   SyncOptions,
   CeramicCommit,
-  CommitHeader,
   GenesisCommit,
   RawCommit,
   CeramicApi,
   SignedCommitContainer,
-  StreamMetadata,
   CeramicSigner,
   GenesisHeader,
 } from '@ceramicnetwork/common'
@@ -26,105 +23,24 @@ import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 /**
  * Arguments used to generate the metadata for Model Instance Documents
  */
-export interface ModelInstanceDocumentMetadataArgs {
+export interface ModelInstanceDocumentMetadata {
   /**
-   * The DID(s) that are allowed to author updates to this ModelInstanceDocument
+   * The DID that is allowed to author updates to this ModelInstanceDocument
    */
-  controllers?: Array<string>
+  controller?: string
 
-  /**
-   * Allows grouping similar documents into "families". Primarily used by indexing services.
-   */
-  family?: string
-
-  /**
-   * Allows tagging documents with additional information. Primarily used by indexing services.
-   */
-  tags?: Array<string>
-
-  /**
-   * If specified, must refer to another ModelInstanceDocument whose contents are a JSON-schema specification.
-   * The content of this document will then be enforced to conform to the linked schema.
-   */
-  schema?: CommitID | string
-
-  /**
-   * If true, then two calls to ModelInstanceDocument.create() with the same content and the same metadata
-   * will only create a single document with the same StreamID. If false, then otherwise
-   * identical documents will generate unique StreamIDs and be able to be updated independently.
-   * @deprecated use deterministic function instead
-   */
-  deterministic?: boolean
-
-  /**
-   * If true, all changes to the 'controllers' array are disallowed.  This guarantees that the
-   * Stream will always have the same controller. Especially useful for Streams controlled by
-   * DIDs that can have ownership changes within the DID itself, such as did:nft, as setting this
-   * would prevent the current holder of the NFT from changing the Stream's controller to that
-   * user's personal DID, which would prevent the ownership of the Stream from changing the next
-   * time the NFT is traded.
-   */
-  forbidControllerChange?: boolean
+  model: StreamID
 }
 
 const DEFAULT_CREATE_OPTS = {
   anchor: true,
   publish: true,
   pin: true,
-  sync: SyncOptions.PREFER_CACHE,
+  sync: SyncOptions.NEVER_SYNC,
+  syncTimeoutSeconds: 0,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
-
-/**
- * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
- * @param metadata
- * @param genesis - True if this is for a genesis header, false if it's for a signed commit header
- */
-function headerFromMetadata(
-  metadata: ModelInstanceDocumentMetadataArgs | StreamMetadata | undefined,
-  genesis: boolean
-): CommitHeader {
-  if (typeof metadata?.schema === 'string') {
-    try {
-      CommitID.fromString(metadata.schema)
-    } catch {
-      throw new Error('Schema must be a CommitID')
-    }
-  }
-
-  const header: CommitHeader = {
-    controllers: metadata?.controllers,
-    family: metadata?.family,
-    schema: metadata?.schema?.toString(),
-    tags: metadata?.tags,
-  }
-
-  // Handle properties that can only be set on the genesis commit.
-  if (genesis) {
-    if (!metadata?.deterministic) {
-      header.unique = uint8arrays.toString(randomBytes(12), 'base64')
-    }
-    if (metadata?.forbidControllerChange) {
-      header.forbidControllerChange = true
-    }
-  } else {
-    // These throws aren't strictly necessary as we can just leave these fields out of the header
-    // object we return, but throwing here gives more useful feedback to users.
-
-    if (metadata?.deterministic !== undefined || (metadata as any)?.unique !== undefined) {
-      throw new Error("Cannot change 'deterministic' or 'unique' properties on existing Streams")
-    }
-
-    if (metadata?.forbidControllerChange !== undefined) {
-      throw new Error("Cannot change 'forbidControllerChange' property on existing Streams")
-    }
-  }
-
-  // Delete undefined keys from header
-  Object.keys(header).forEach((key) => header[key] === undefined && delete header[key])
-  return header
-}
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
   if (signer.did == null) {
@@ -136,20 +52,6 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
       signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
     }
   }
-}
-
-/**
- * Sign a ModelInstanceDocument commit with the currently authenticated DID.
- * @param signer - Object containing the DID to use to sign the commit
- * @param commit - Commit to be signed
- * @private
- */
-async function _signDagJWS(
-  signer: CeramicSigner,
-  commit: CeramicCommit
-): Promise<SignedCommitContainer> {
-  await _ensureAuthenticated(signer)
-  return signer.did.createDagJWS(commit)
 }
 
 async function throwReadOnlyError(): Promise<void> {
@@ -176,75 +78,18 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * Creates a Model Instance Document.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param content - Genesis contents. If 'null', then no signature is required to make the genesis commit
-   * @param metadata - Genesis metadata
+   * @param metadata - Genesis metadata, including the model that this document belongs to
    * @param opts - Additional options
    */
   static async create<T>(
     ceramic: CeramicApi,
-    content: T | null | undefined,
-    metadata?: ModelInstanceDocumentMetadataArgs,
+    content: T | null,
+    metadata: ModelInstanceDocumentMetadata,
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    if (!metadata?.deterministic && opts.syncTimeoutSeconds == undefined) {
-      // By default you don't want to wait to sync doc state from pubsub when creating a unique
-      // document as there shouldn't be any existing state for this doc on the network.
-      opts.syncTimeoutSeconds = 0
-    }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
-    const commit = await ModelInstanceDocument.makeGenesis(signer, content, metadata)
-    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
-      ModelInstanceDocument.STREAM_TYPE_ID,
-      commit,
-      opts
-    )
-  }
-
-  /**
-   * Create Model Instance Document from genesis commit
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-   * @param genesisCommit - Genesis commit (first commit in document log)
-   * @param opts - Additional options
-   */
-  static async createFromGenesis<T>(
-    ceramic: CeramicApi,
-    genesisCommit: GenesisCommit,
-    opts: CreateOpts = {}
-  ): Promise<ModelInstanceDocument<T>> {
-    opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    if (genesisCommit.header?.unique && opts.syncTimeoutSeconds == undefined) {
-      // By default you don't want to wait to sync doc state from pubsub when creating a unique
-      // document as there shouldn't be any existing state for this doc on the network.
-      opts.syncTimeoutSeconds = 0
-    }
-    const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
-    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
-      ModelInstanceDocument.STREAM_TYPE_ID,
-      commit,
-      opts
-    )
-  }
-
-  /**
-   * Creates a deterministic Model Instance Document.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-   * @param metadata - Genesis metadata
-   * @param opts - Additional options
-   */
-  static async deterministic<T>(
-    ceramic: CeramicApi,
-    metadata: ModelInstanceDocumentMetadataArgs,
-    opts: CreateOpts = {}
-  ): Promise<ModelInstanceDocument<T>> {
-    opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    metadata = { ...metadata, deterministic: true }
-
-    if (metadata.family == null && metadata.tags == null) {
-      throw new Error(
-        'Family and/or tags are required when creating a deterministic model instance document'
-      )
-    }
-    const commit = await ModelInstanceDocument.makeGenesis(ceramic, null, metadata)
+    const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
@@ -277,19 +122,14 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Update an existing Model Instance Document.
+   * Update an existing Model Instance Document by replacing its content
    * @param content - New content to replace old content
-   * @param metadata - Changes to make to the metadata.  Only fields that are specified will be changed.
    * @param opts - Additional options
    */
-  async update(
-    content: T | null | undefined,
-    metadata?: ModelInstanceDocumentMetadataArgs,
-    opts: UpdateOpts = {}
-  ): Promise<void> {
+  async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
-    const updateCommit = await this.makeCommit(signer, content, metadata)
+    const updateCommit = await this._makeCommit(signer, content)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
   }
@@ -302,14 +142,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
-    const header = headerFromMetadata(this.metadata, false)
     const rawCommit: RawCommit = {
-      header,
       data: jsonPatch,
       prev: this.tip,
       id: this.state$.id.cid,
     }
-    const commit = await _signDagJWS(this.api, rawCommit)
+    const commit = await ModelInstanceDocument._signDagJWS(this.api, rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
   }
@@ -319,7 +157,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * mutation methods on the instance will throw.
    */
   makeReadOnly() {
-    this.update = throwReadOnlyError
+    this.replace = throwReadOnlyError
     this.patch = throwReadOnlyError
     this.sync = throwReadOnlyError
     this._isReadOnly = true
@@ -333,31 +171,23 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * Make a commit to update the document
    * @param signer - Object containing the DID making (and signing) the commit
    * @param newContent
-   * @param newMetadata
    */
-  async makeCommit(
-    signer: CeramicSigner,
-    newContent: T | null | undefined,
-    newMetadata?: ModelInstanceDocumentMetadataArgs
-  ): Promise<CeramicCommit> {
-    const header = headerFromMetadata(newMetadata, false)
+  private _makeCommit(signer: CeramicSigner, newContent: T | null): Promise<CeramicCommit> {
+    const commit = this._makeRawCommit(newContent)
+    return ModelInstanceDocument._signDagJWS(signer, commit)
+  }
 
-    if (newContent == null) {
-      newContent = this.content
-    }
-
-    if (header.controllers && header.controllers?.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
-    }
-
-    const patch = jsonpatch.compare(this.content, newContent)
-    const commit: RawCommit = {
-      header,
+  /**
+   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
+   * @param newContent
+   */
+  private _makeRawCommit(newContent: T | null): RawCommit {
+    const patch = jsonpatch.compare(this.content, newContent || {})
+    return {
       data: patch,
       prev: this.tip,
       id: this.state.log[0].cid,
     }
-    return _signDagJWS(signer, commit)
   }
 
   /**
@@ -366,43 +196,48 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param content - genesis content
    * @param metadata - genesis metadata
    */
-  static async makeGenesis<T>(
+  private static async _makeGenesis<T>(
     signer: CeramicSigner,
-    content: T | null | undefined,
-    metadata?: ModelInstanceDocumentMetadataArgs
+    content: T | null,
+    metadata: ModelInstanceDocumentMetadata
   ): Promise<CeramicCommit> {
-    if (!metadata) {
-      metadata = {}
+    if (!metadata.model) {
+      throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
 
-    if (!metadata.controllers || metadata.controllers.length === 0) {
+    if (!metadata.controller) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
-        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
-        metadata.controllers = [signer.did.hasParent ? signer.did.parent : signer.did.id]
+        // When did has a parent, it has a capability, and the did issuer (parent) of the capability
+        // is the stream controller
+        metadata.controller = signer.did.hasParent ? signer.did.parent : signer.did.id
       } else {
-        throw new Error('No controllers specified')
+        throw new Error('No controller specified')
       }
     }
-    if (metadata.controllers?.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
+
+    // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
+    const header: GenesisHeader = {
+      controllers: [metadata.controller],
+      unique: uint8arrays.toString(randomBytes(12), 'base64'),
+      model: metadata.model.bytes,
     }
 
-    const header: GenesisHeader = headerFromMetadata(metadata, true)
-    if (metadata?.deterministic && content) {
-      throw new Error(
-        'Initial content must be null when creating a deterministic Model Instance Document'
-      )
-    }
-
-    if (content == null) {
-      const result = { header }
-      // Check if we can encode it in cbor. Should throw an error when invalid payload.
-      dagCbor.encode(result)
-      // No signature needed if no genesis content
-      return result
-    }
     const commit: GenesisCommit = { data: content, header }
-    return _signDagJWS(signer, commit)
+    return ModelInstanceDocument._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Sign a ModelInstanceDocument commit with the currently authenticated DID.
+   * @param signer - Object containing the DID to use to sign the commit
+   * @param commit - Commit to be signed
+   * @private
+   */
+  private static async _signDagJWS(
+    signer: CeramicSigner,
+    commit: CeramicCommit
+  ): Promise<SignedCommitContainer> {
+    await _ensureAuthenticated(signer)
+    return signer.did.createDagJWS(commit)
   }
 }
