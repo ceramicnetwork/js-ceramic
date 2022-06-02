@@ -1,4 +1,4 @@
-import {Metrics, REQUEST_METRIC} from '@ceramicnetwork/core'
+import {Metrics, REQUEST_METRIC} from '@ceramicnetwork/metrics'
 
 export function instrumentRequest(req, res, next) {
 
