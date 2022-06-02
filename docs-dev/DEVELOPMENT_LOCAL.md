@@ -47,7 +47,7 @@ Compile all packages/full library:  `npm run clean && npm install && npm run bui
 
 Run locally compiled ceramic code: `cd ~/js-ceramic/packages/cli/bin; node ceramic.js daemon`
 
-*__*INFO*__: this will invoke the daemon with the default configuration values found in `~/.ceramic/ceramic.daemon.json`* 
+*__*INFO*__: this will invoke the daemon with the default configuration values found in `~/.ceramic/daemon.config.json`* 
 
 Run docker with local code base: `docker build -t js-ceramic-debug::latest -f Dockerfile.daemon .`
 
