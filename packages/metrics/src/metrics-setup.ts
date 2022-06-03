@@ -57,7 +57,7 @@ class _Metrics {
 
   count(name: string, value: number, params?: any) {
     // If not initialized, just return
-    if (!this.meter)) {
+    if (!this.meter) {
       return
     }
     // Create this counter if we have not already
@@ -70,7 +70,7 @@ class _Metrics {
 
   record(name: string, value: number, params?: any) {
     // If not initialized, just return
-    if (! this.meter)) {
+    if (! this.meter) {
        return
     }
     // Create this Histogram if we have not already
