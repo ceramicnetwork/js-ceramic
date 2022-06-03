@@ -57,7 +57,10 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     return new RotatingFileStream(logPath, true)
   })
 
-  Metrics.start(opts.metrics)
+  // If desired, enable metrics
+  if (opts.metrics) {
+    Metrics.start(opts.metrics)
+  }
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,

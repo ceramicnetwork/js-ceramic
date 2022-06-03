@@ -28,14 +28,14 @@ const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 const DEFAULT_METRICS_EXPORTER_PORT = Number(process.env.METRICS_PORT)  || 9090
-const DEFAULT_METRICS_ENABLED = process.env.METRICS_ENABLED || false
+const DEFAULT_METRICS_EXPORTER_ENABLED = process.env.METRICS_EXPORTER_ENABLED || false
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
   'http-api': { 'cors-allowed-origins': [new RegExp('.*')] },
   ipfs: { mode: IpfsMode.BUNDLED },
   logger: { 'log-level': LogLevel.important, 'log-to-files': false },
-  metrics: { 'metrics-enabled': DEFAULT_METRICS_ENABLED, 'metrics-port': DEFAULT_METRICS_EXPORTER_PORT },
+  metrics: { 'metrics-exporter-enabled': DEFAULT_METRICS_EXPORTER_ENABLED, 'metrics-port': DEFAULT_METRICS_EXPORTER_PORT },
   network: { name: Networks.TESTNET_CLAY },
   node: {},
   'state-store': {
@@ -78,7 +78,7 @@ export class CeramicCliUtils {
    * @param verbose - Enable verbose logging
    * @param logToFiles - Enable writing logs to files. Deprecated, use config file if you want to configure this.
    * @param logDirectory - Store log files in this directory. Deprecated, use config file if you want to configure this.
-   * @param metricsEnabled - Enable metrics exporter.
+   * @param metricsExporterEnabled - Enable metrics exporter.
    * @param metricsPort - The port to scrape metrics from, if enabled.
    * @param network - The Ceramic network to connect to
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
@@ -100,7 +100,7 @@ export class CeramicCliUtils {
     verbose: boolean,
     logToFiles: boolean,
     logDirectory: string,
-    metricsEnabled: boolean,
+    metricsExporterEnabled: boolean,
     metricsPort: number,
     network: string,
     pubsubTopic: string,
@@ -156,8 +156,8 @@ export class CeramicCliUtils {
       if (logToFiles) {
         config.logger.logToFiles = logToFiles
       }
-      if (metricsEnabled) {
-        config.metrics.metricsEnabled = metricsEnabled
+      if (metricsExporterEnabled) {
+        config.metrics.metricsExporterEnabled = metricsExporterEnabled
       }
       if (metricsPort) {
         config.metrics.metricsPort = metricsPort

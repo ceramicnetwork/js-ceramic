@@ -37,7 +37,7 @@ class _Metrics {
   start(metrics_config: any = exporterConfig) {
     // do not import type so as to be usable as a package anywhere
 
-    this.config['preventServerStart'] = !metrics_config.enableMetrics
+    this.config['preventServerStart'] = !metrics_config.metricsExporterEnabled
     this.config['port'] = metrics_config.metricsPort
 
     this.metricExporter = new PrometheusExporter(this.config)
