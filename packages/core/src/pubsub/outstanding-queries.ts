@@ -51,7 +51,7 @@ export class OutstandingQueries {
 
   add(id: string, query: Query): void {
     //enforce no duplicate outstanding queries
-    this.cleanUpExpiredQueries()
+    this._cleanUpExpiredQueries()
     if (this.queryMap.get(id) == undefined) {
       // add to map
       this.queryMap.set(id, query)
@@ -87,7 +87,7 @@ export class OutstandingQueries {
    * @param
    * @public
    */
-  private cleanUpExpiredQueries(): void {
+  private _cleanUpExpiredQueries(): void {
     while (this.isExpired(this.queryQueue.front())) {
       this.remove(this.queryQueue.front())
     }

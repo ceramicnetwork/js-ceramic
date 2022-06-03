@@ -69,7 +69,7 @@ describe('Prioritized Queue', () => {
     outstandingQueries.queryMap.set('a', q1)
     assert(outstandingQueries.queryQueue.front() == q1)
     assert(outstandingQueries.queryMap.get('a') == q1)
-    outstandingQueries.cleanUpExpiredQueries()
+    outstandingQueries._cleanUpExpiredQueries()
     expect(outstandingQueries.queryQueue.isEmpty()).toEqual(true)
   })
 
@@ -80,7 +80,7 @@ describe('Prioritized Queue', () => {
     outstandingQueries.queryMap.set('a', q1)
     assert(outstandingQueries.queryQueue.front() == q1)
     assert(outstandingQueries.queryMap.get('a') == q1)
-    outstandingQueries.cleanUpExpiredQueries()
+    outstandingQueries._cleanUpExpiredQueries()
     expect(outstandingQueries.queryMap.size).toEqual(0)
   })
 })
@@ -139,14 +139,14 @@ describe('Outstanding Queries', () => {
     expect(outstandingQueries.queryQueue.size()).toEqual(0)
   })
 
-  test('Oustanding Queries, cleanUpExpiredQueries', async () => {
+  test('Oustanding Queries, _cleanUpExpiredQueries', async () => {
     const t1 = new Date('2022-05-12T10:20:30Z').getTime()
     const testQueryID = 'testID'
     const q1 = new Query(t1, FAKE_STREAM_ID, testQueryID)
     outstandingQueries.add(testQueryID, q1)
     assert(outstandingQueries.queryMap.size === 1)
     assert(outstandingQueries.queryQueue.size() === 1)
-    outstandingQueries.cleanUpExpiredQueries()
+    outstandingQueries._cleanUpExpiredQueries()
     expect(outstandingQueries.queryMap.size).toEqual(0)
     expect(outstandingQueries.queryQueue.size()).toEqual(0)
   })
