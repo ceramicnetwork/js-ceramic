@@ -122,11 +122,12 @@ export function deserialize(message: any): PubsubMessage {
     case MsgType.UPDATE: {
       // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
       const stream = StreamID.fromString(parsed.stream || parsed.doc)
+      console.log((message.model && { model: StreamID.fromString(parsed) }))
       return {
         typ: MsgType.UPDATE,
         stream,
         tip: toCID(parsed.tip),
-        ...(message.model && { model: StreamID.fromString(parsed) })
+        ...(message.model && { model: StreamID.fromString(parsed.model) })
       }
     }
     case MsgType.RESPONSE: {
