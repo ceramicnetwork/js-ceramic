@@ -36,5 +36,5 @@ jobs:
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools@$v{{ env.PIPELINE_TOOLS_VER }}"
+            project update "github.com/3box/pipeline-tools@v{{ env.PIPELINE_TOOLS_VER }}"
             do build -p ${{ env.DAGGER_CI }}
