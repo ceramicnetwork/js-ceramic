@@ -57,11 +57,11 @@ export class OutstandingQueries {
       this.queryMap.set(id, query)
       // add to queue
       this.queryQueue.enqueue(query)
-    }else{
+    } else {
       //replace query
-      this.remove(query);
-      this.queryMap.set(id, query);
-      this.queryQueue.enqueue(query);
+      this.remove(query)
+      this.queryMap.set(id, query)
+      this.queryQueue.enqueue(query)
     }
   }
 
@@ -74,12 +74,12 @@ export class OutstandingQueries {
 
   private isExpired(query: Query): boolean {
     const diffMs = Date.now() - query?.timestamp // milliseconds
-      const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
-      if (differenceInMinutes > this._minutesThreshold) {
-        return true;
-      } else {
-        return false;
-      }
+    const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
+    if (differenceInMinutes > this._minutesThreshold) {
+      return true
+    } else {
+      return false
+    }
   }
 
   /**
@@ -88,7 +88,7 @@ export class OutstandingQueries {
    * @public
    */
   private cleanUpExpiredQueries(): void {
-    while (this.isExpired(this.queryQueue.front())){
+    while (this.isExpired(this.queryQueue.front())) {
       this.remove(this.queryQueue.front())
     }
   }
