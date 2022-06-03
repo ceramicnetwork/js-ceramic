@@ -56,15 +56,28 @@ class _Metrics {
   // easily and quickly change what is recorded, there are no code dependencies on it
 
   count(name: string, value: number, params?: any) {
+    // If not initialized, just return
+    if (!this.meter)) {
+      return
+    }
+    // Create this counter if we have not already
     if (!(name in this.counters)) {
       this.counters[name] = this.meter.createCounter(name)
     }
+    // Add to the count
     this.counters[name].add(value, params)
   }
+
   record(name: string, value: number, params?: any) {
+    // If not initialized, just return
+    if (! this.meter)) {
+       return
+    }
+    // Create this Histogram if we have not already
     if (!(name in this.histograms)) {
       this.histograms[name] = this.meter.createHistogram(name)
     }
+    // Record the observed value
     this.histograms[name].record(value, params)
   }
 }
