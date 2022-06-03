@@ -177,12 +177,11 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly pin: PinApi
-  public readonly index: IndexApi
   readonly repository: Repository
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _indexing: DatabaseIndexApi | undefined
+  private readonly _index: LocalIndexApi
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -204,8 +203,7 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
-    this._indexing = modules.indexing
-    this.index = new LocalIndexApi(modules.indexing)
+    this._index = new LocalIndexApi(modules.indexing)
 
     this.context = {
       api: this,
@@ -236,6 +234,10 @@ export class Ceramic implements CeramicApi {
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
     })
+  }
+
+  get index(): IndexApi {
+    return this._index
   }
 
   /**
@@ -517,7 +519,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this._indexing?.init()
+      await this._index.init()
 
       await this._startupChecks()
     } catch (err) {
