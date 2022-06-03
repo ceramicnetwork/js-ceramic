@@ -6,6 +6,7 @@ lerna-debug.log
 *.iml
 docs/
 .run/
+cue.mod/
 
 packages/*/lib/
 packages/*/node_modules/
