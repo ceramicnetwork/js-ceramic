@@ -282,7 +282,7 @@ export class DaemonMetricsConfig {
    * Controls whether the metrics exporter is started
    */
   @jsonMember(Boolean, { name: 'metrics-exporter-enabled' })
-  metricExporterEnabled?: boolean
+  metricsExporterEnabled?: boolean
 
   /**
    * If 'enabled' is true, this contains the port on which the metrics exporter will listen
