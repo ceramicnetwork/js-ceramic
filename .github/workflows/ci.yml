@@ -10,7 +10,7 @@ env:
   # Dagger
   DAGGER_CI: cue.mod/pkg/github.com/3box/pipeline-tools/ci/main.cue
   DAGGER_VERSION: "0.2.15"
-  PIPELINE_TOOLS_VER: "0.1.0"
+  PIPELINE_TOOLS_VER: "0.1.1"
   COMPONENT: "ceramic"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -22,7 +22,7 @@ env:
 
 jobs:
   push:
-    name: Build and push
+    name: Test and push image
     runs-on: ubuntu-latest
     steps:
       -
@@ -36,5 +36,5 @@ jobs:
           cmds: |
             project init
             project update
-            project update github.com/3box/pipeline-tools@${{ env.PIPELINE_TOOLS_VER }}
+            project update github.com/3box/pipeline-tools@$v{{ env.PIPELINE_TOOLS_VER }}
             do build -p ${{ env.DAGGER_CI }}
