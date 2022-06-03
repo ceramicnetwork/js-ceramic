@@ -28,6 +28,9 @@ class _Metrics {
     this.config = exporterConfig
     this.counters = {}
     this.histograms = {}
+    this.meter = null
+    this.meterProvider = null
+    this.metricExporter = null
   }
 
   /* Set up the exporter at run time, after we have read the configuration */
@@ -57,6 +60,7 @@ class _Metrics {
 
   count(name: string, value: number, params?: any) {
     // If not initialized, just return
+
     if (!this.meter) {
       return
     }
@@ -70,8 +74,8 @@ class _Metrics {
 
   record(name: string, value: number, params?: any) {
     // If not initialized, just return
-    if (! this.meter) {
-       return
+    if (!this.meter) {
+      return
     }
     // Create this Histogram if we have not already
     if (!(name in this.histograms)) {
