@@ -126,7 +126,7 @@ export function deserialize(message: any): PubsubMessage {
         typ: MsgType.UPDATE,
         stream,
         tip: toCID(parsed.tip),
-        model: StreamID.fromString(parsed.model),
+        ...(message.model && { model: StreamID.fromString(parsed) })
       }
     }
     case MsgType.RESPONSE: {

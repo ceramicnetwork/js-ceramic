@@ -192,7 +192,6 @@ export class StateManager {
   }
 
   publishTip(state$: RunningState): void {
-    // NOTE: pass model to publishTip
     this.dispatcher.publishTip(state$.id, state$.tip, state$.state.metadata.model)
   }
 
