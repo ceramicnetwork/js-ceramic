@@ -30,6 +30,7 @@ export class LocalIndexApi implements IndexApi {
     if (this.databaseIndexApi) {
       const page = await this.databaseIndexApi.page(query)
       const streamStates = await Promise.all(
+        // For database queries we bypass the stream cache and repository loading queue
         page.entries.map((streamId) => this.repository.streamState(streamId))
       )
       return {
