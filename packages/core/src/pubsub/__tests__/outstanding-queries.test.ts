@@ -151,11 +151,15 @@ describe('Outstanding Queries', () => {
     expect(outstandingQueries.queryQueue.size()).toEqual(0)
   })
 
-  test('Oustanding Queries, restrict duplicate outstanding queries', async () => {
+  test('Oustanding Queries, enforce duplicate outstanding queries overwrites original timestamp', async () => {
     const t1 = new Date('2022-05-12T10:20:30Z').getTime()
     const testQueryID = 'testID'
     const q1 = new Query(t1, FAKE_STREAM_ID, testQueryID)
     outstandingQueries.add(testQueryID, q1)
-    expect(!outstandingQueries.add(testQueryID, q1))
+    const t2 = new Date('2022-05-13T10:20:30Z').getTime()
+    const q2 = new Query(t2, FAKE_STREAM_ID, testQueryID)
+    outstandingQueries.add(testQueryID, q2)
+    expect(outstandingQueries.queryMap.size == 1)
+    expect(outstandingQueries.queryQueue.size() == 1)
   })
 })

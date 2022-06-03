@@ -57,6 +57,11 @@ export class OutstandingQueries {
       this.queryMap.set(id, query)
       // add to queue
       this.queryQueue.enqueue(query)
+    }else{
+      //replace query
+      this.remove(query);
+      this.queryMap.set(id, query);
+      this.queryQueue.enqueue(query);
     }
   }
 
@@ -67,27 +72,24 @@ export class OutstandingQueries {
     this.queryQueue.dequeue()
   }
 
+  private isExpired(query: Query): boolean {
+    const diffMs = Date.now() - query?.timestamp // milliseconds
+      const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
+      if (differenceInMinutes > this._minutesThreshold) {
+        return true;
+      } else {
+        return false;
+      }
+  }
+
   /**
-   * Event-driven method to clean up outdates outstanding queries
+   * Event-driven method to clean up outdated outstanding queries
    * @param
    * @public
    */
-  cleanUpExpiredQueries(): void {
-    for (const _ of this.queryQueue.toArray()) {
-      const topQuery: Query = this.queryQueue.front()
-      const diffMs = Date.now() - topQuery.timestamp // milliseconds
-      const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
-      if (differenceInMinutes > this._minutesThreshold) {
-        try {
-          this.remove(topQuery)
-        } catch (e) {
-          const errorMessage = `Error in OutstandingQueries.cleanUpExpiredQueries(), ${e.message}`
-          throw new Error(errorMessage)
-        }
-      } else {
-        // front queue is not expired, stop iteration over queue
-        break
-      }
+  private cleanUpExpiredQueries(): void {
+    while (this.isExpired(this.queryQueue.front())){
+      this.remove(this.queryQueue.front())
     }
   }
 }
