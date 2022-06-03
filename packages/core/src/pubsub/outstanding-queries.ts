@@ -72,7 +72,7 @@ export class OutstandingQueries {
     this.queryQueue.dequeue()
   }
 
-  private isExpired(query: Query): boolean {
+  private _isExpired(query: Query): boolean {
     const diffMs = Date.now() - query?.timestamp // milliseconds
     const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
     if (differenceInMinutes > this._minutesThreshold) {
@@ -88,7 +88,7 @@ export class OutstandingQueries {
    * @public
    */
   private _cleanUpExpiredQueries(): void {
-    while (this.isExpired(this.queryQueue.front())) {
+    while (this._isExpired(this.queryQueue.front())) {
       this.remove(this.queryQueue.front())
     }
   }
