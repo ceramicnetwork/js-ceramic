@@ -26,6 +26,7 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
+  IndexApi,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -39,14 +40,15 @@ import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
-import {
-  FauxStateValidation,
-  RealStateValidation,
-  StateValidation,
-} from './state-management/state-validation.js'
 import { streamFromState } from './state-management/stream-from-state.js'
 import { ConflictResolution } from './conflict-resolution.js'
 import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-validator.js'
+import * as fs from 'fs'
+import os from 'os'
+import * as path from 'path'
+import { buildIndexing } from './indexing/build-indexing.js'
+import type { DatabaseIndexApi } from './indexing/database-index-api.js'
+import { LocalIndexApi } from './indexing/local-index-api.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -58,7 +60,7 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
   [Networks.ELP]: 'https://cas.3boxlabs.com',
   [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
-  [Networks.DEV_UNSTABLE]: 'https://cas-dev.3boxlabs.com',
+  [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
   [Networks.LOCAL]: 'http://localhost:8081',
 }
 
@@ -90,7 +92,6 @@ export interface CeramicConfig {
   anchorServiceUrl?: string
   stateStoreDirectory?: string
 
-  validateStreams?: boolean
   ipfsPinningEndpoints?: string[]
   pinningBackends?: PinningBackendStatic[]
 
@@ -124,6 +125,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
+  indexing: DatabaseIndexApi | undefined
 }
 
 /**
@@ -134,7 +136,6 @@ export interface CeramicModules {
 export interface CeramicParameters {
   gateway: boolean
   networkOptions: CeramicNetworkOptions
-  validateStreams: boolean
   loadOptsOverride: LoadOpts
 }
 
@@ -180,13 +181,12 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
+  private readonly _index: LocalIndexApi
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
-  private readonly _validateStreams: boolean
-  private readonly stateValidation: StateValidation
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownController: AbortController
 
@@ -202,7 +202,6 @@ export class Ceramic implements CeramicApi {
 
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
-    this._validateStreams = params.validateStreams
     this._loadOptsOverride = params.loadOptsOverride
 
     this.context = {
@@ -219,12 +218,8 @@ export class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    this.stateValidation = this._validateStreams
-      ? new RealStateValidation(this.loadStream.bind(this))
-      : new FauxStateValidation()
     const conflictResolution = new ConflictResolution(
       modules.anchorValidator,
-      this.stateValidation,
       this.dispatcher,
       this.context,
       this._streamHandlers
@@ -237,8 +232,12 @@ export class Ceramic implements CeramicApi {
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
-      stateValidation: this.stateValidation,
     })
+    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+  }
+
+  get index(): IndexApi {
+    return this._index
   }
 
   /**
@@ -376,6 +375,14 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
+    let indexingApi: DatabaseIndexApi | undefined = undefined
+    if (config.indexing) {
+      indexingApi = buildIndexing(config.indexing)
+    } else {
+      logger.warn(
+        `Indexing is not configured. Please, add the indexing settings to your config file`
+      )
+    }
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
@@ -446,11 +453,10 @@ export class Ceramic implements CeramicApi {
     const params: CeramicParameters = {
       gateway: config.gateway,
       networkOptions,
-      validateStreams: config.validateStreams ?? true,
       loadOptsOverride,
     }
 
-    const modules = {
+    const modules: CeramicModules = {
       anchorService,
       anchorValidator,
       dispatcher,
@@ -460,6 +466,7 @@ export class Ceramic implements CeramicApi {
       pinStoreFactory,
       repository,
       shutdownController,
+      indexing: indexingApi,
     }
 
     return [modules, params]
@@ -512,6 +519,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+      await this._index.init()
 
       await this._startupChecks()
     } catch (err) {
@@ -555,6 +563,13 @@ export class Ceramic implements CeramicApi {
       const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
+
+        if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
+          throw new Error(
+            `IPFS data missing! The CID ${cid} of pinned Stream ${streamID} is missing from the local IPFS node. This means that pinned content has gone missing from the IPFS node. A ~/.jsipfs directory has been detected which may mean you have not completed the steps needed to upgrade to js-ceramic v2. Please follow the upgrade guide found here: https://threebox.notion.site/Upgrading-to-js-ceramic-v2-Filesystem-b6b3cbb989a34e05893761fd914965b7. If that does not work check your IPFS node configuration and make sure it is pointing to the proper repo`
+          )
+        }
+
         throw new Error(
           `IPFS data missing! The CID ${cid} of pinned Stream ${streamID} is missing from the local IPFS node. This means that pinned content has gone missing from the IPFS node. Check your IPFS node configuration and make sure it is pointing to the proper repo`
         )

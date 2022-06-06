@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -87,7 +88,18 @@ export class DaemonHTTPApiConfig {
   /**
    * Port to listen on.
    */
-  @jsonMember(Number)
+  @jsonMember(AnyT, {
+    serializer: (inPort) => {
+      const validPort = Number(inPort)
+      if (inPort == null) {
+        return inPort
+      } else if (isNaN(validPort) || validPort > 65535) {
+        console.error('Invalid port number passed.')
+        process.exit(1)
+      }
+      return validPort
+    },
+  })
   port?: number
 
   /**
@@ -157,6 +169,26 @@ export class DaemonAnchorConfig {
 
 @jsonObject
 @toJson
+export class IndexingConfig {
+  @jsonMember(String)
+  db?: string
+
+  @jsonArrayMember(StreamID, {
+    emitDefaultValue: true,
+    deserializer: (arr?: Array<string>) => {
+      if (!arr) return arr
+      return arr.map(StreamID.fromString)
+    },
+    serializer: (arr?: Array<StreamID>) => {
+      if (!arr) return arr
+      return arr.map((s) => s.toString())
+    },
+  })
+  models: StreamID[]
+}
+
+@jsonObject
+@toJson
 export class DaemonDidResolversConfig {
   /**
    * Configuration for nft-did-resolver. Its README contains appropriate documentation.
@@ -202,13 +234,6 @@ export class DaemonCeramicNodeConfig {
    */
   @jsonMember(String, { name: 'sync-override' })
   syncOverride?: string
-
-  /**
-   * If set to false, disables stream validation. Most users should never set this.
-   * When specifying in a config file, use the name 'validate-streams'.
-   */
-  @jsonMember(Boolean, { name: 'validate-streams' })
-  validateStreams?: boolean
 
   /**
    * Max number of streams to keep in the node's in-memory cache.
@@ -302,6 +327,12 @@ export class DaemonConfig {
    */
   @jsonMember(DaemonDidResolversConfig, { name: 'did-resolvers' })
   didResolvers?: DaemonDidResolversConfig
+
+  /**
+   * Options related to indexing
+   */
+  @jsonMember(IndexingConfig)
+  indexing?: IndexingConfig
 
   /**
    * Parses the given json string containing the contents of the config file and returns

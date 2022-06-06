@@ -20,7 +20,11 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance on default network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, { stateStoreDirectory })
+    const databaseConnectionString = new URL(`sqlite://${stateStoreDirectory}/ceramic.sqlite`)
+    const ceramic = await Ceramic.create(ipfs1, {
+      stateStoreDirectory,
+      indexing: { db: databaseConnectionString.href, models: [] },
+    })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -29,9 +33,11 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance explicitly on inmemory network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
+    const databaseConnectionString = new URL(`sqlite://${stateStoreDirectory}/ceramic.sqlite`)
     const ceramic = await Ceramic.create(ipfs1, {
       networkName: 'inmemory',
       stateStoreDirectory,
+      indexing: { db: databaseConnectionString.href, models: [] },
     })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
@@ -40,7 +46,12 @@ describe('Ceramic integration', () => {
   })
 
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
-    const [modules, params] = await Ceramic._processConfig(ipfs1, { networkName: 'local' })
+    const tmpDirectory = await tmp.tmpName()
+    const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
+    const [modules, params] = await Ceramic._processConfig(ipfs1, {
+      networkName: 'local',
+      indexing: { db: databaseConnectionString.href, models: [] },
+    })
     modules.anchorService = new InMemoryAnchorService({})
     const ceramic = new Ceramic(modules, params)
     await expect(ceramic._init(false)).rejects.toThrow(
@@ -51,10 +62,12 @@ describe('Ceramic integration', () => {
 
   it('cannot create Ceramic instance on invalid network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
+    const databaseConnectionString = new URL(`sqlite://${stateStoreDirectory}/ceramic.sqlite`)
     await expect(
       Ceramic.create(ipfs1, {
         networkName: 'fakenetwork',
         stateStoreDirectory,
+        indexing: { db: databaseConnectionString.href, models: [] },
       })
     ).rejects.toThrow(
       "Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"

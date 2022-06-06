@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment name (one of: dev, tnet)'
+        description: 'Environment name (one of: dev, qa, tnet)'
         required: true
-        default: 'dev'
+        default: 'qa'
       debug:
         description: 'Enable debugging'
         required: false

@@ -33,6 +33,7 @@ export enum AnchorStatus {
 export interface CommitHeader {
   controllers: Array<string>
   family?: string
+  model?: Uint8Array // StreamID encoded as byte array
   schema?: string
   tags?: Array<string>
 
@@ -87,9 +88,10 @@ export type CeramicCommit =
  */
 export interface StreamMetadata {
   controllers: Array<string>
-  family?: string
-  schema?: string
-  tags?: Array<string>
+  family?: string // deprecated
+  model?: StreamID
+  schema?: string // deprecated
+  tags?: Array<string> // deprecated
   forbidControllerChange?: boolean
   model?: StreamID
   [index: string]: any // allow arbitrary properties

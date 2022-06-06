@@ -3,6 +3,90 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](/compare/@ceramicnetwork/http-client@2.0.4...@ceramicnetwork/http-client@2.1.0) (2022-06-06)
+
+
+### Features
+
+* add dummy implementation of IndexClientApi to core and http-client (#2200) aaf6fe3, closes #2200 #2201
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype (#2182) 65383af, closes #2182
+
+
+
+
+
+## [2.0.4](/compare/@ceramicnetwork/http-client@2.0.4-rc.2...@ceramicnetwork/http-client@2.0.4) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.4-rc.2](/compare/@ceramicnetwork/http-client@2.0.4-rc.1...@ceramicnetwork/http-client@2.0.4-rc.2) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.4-rc.1](/compare/@ceramicnetwork/http-client@2.0.3...@ceramicnetwork/http-client@2.0.4-rc.1) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.3](/compare/@ceramicnetwork/http-client@2.0.2...@ceramicnetwork/http-client@2.0.3) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.2](/compare/@ceramicnetwork/http-client@2.0.1-rc.4...@ceramicnetwork/http-client@2.0.2) (2022-05-18)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.1-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.0.1-rc.2...@ceramicnetwork/http-client@2.0.1-rc.4) (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## 2.0.1-rc.3 (2022-05-12)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.0.1-rc.1...@ceramicnetwork/http-client@2.0.1-rc.2) (2022-05-11)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [2.0.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.0.1-rc.0...@ceramicnetwork/http-client@2.0.1-rc.1) (2022-05-11)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 ## 2.0.1-rc.0 (2022-04-27)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

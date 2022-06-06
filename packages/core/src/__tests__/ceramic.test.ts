@@ -1,6 +1,4 @@
 import { jest } from '@jest/globals'
-import { Ed25519Provider } from 'key-did-provider-ed25519'
-import tmp from 'tmp-promise'
 import {
   StreamUtils,
   IpfsApi,
@@ -11,49 +9,21 @@ import {
   MultiQuery,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import * as u8a from 'uint8arrays'
-import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import * as KeyDidResolver from 'key-did-resolver'
-import { Resolver } from 'did-resolver'
-import { DID } from 'dids'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { Ceramic } from '../ceramic.js'
+import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 
-const seed = u8a.fromString(
-  '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
-  'base16'
-)
-
-const makeDID = function (seed: Uint8Array, ceramic: Ceramic): DID {
-  const provider = new Ed25519Provider(seed)
-
-  const keyDidResolver = KeyDidResolver.getResolver()
-  const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
-  const resolver = new Resolver({
-    ...threeIdResolver,
-    ...keyDidResolver,
-  })
-  return new DID({ provider, resolver })
-}
-
-const createCeramic = async (
+function createCeramic(
   ipfs: IpfsApi,
   anchorOnRequest = false,
   streamCacheLimit = 100
-): Promise<Ceramic> => {
-  const ceramic = await Ceramic.create(ipfs, {
-    stateStoreDirectory: await tmp.tmpName(),
+): Promise<Ceramic> {
+  return vanillaCreateCeramic(ipfs, {
     anchorOnRequest,
     streamCacheLimit,
-    pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
-  const did = makeDID(seed, ceramic)
-  ceramic.did = did
-  await did.authenticate()
-
-  return ceramic
 }
 
 function expectEqualStates(a: StreamState, b: StreamState) {
