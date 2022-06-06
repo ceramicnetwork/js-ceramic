@@ -2,8 +2,8 @@ import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
 import type { Repository } from '../../state-management/repository.js'
 import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
-import { IndexApi } from '../index-api.js'
 import { randomString } from '@stablelib/random'
+import { LocalIndexApi } from '../local-index-api.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
@@ -29,7 +29,7 @@ describe('with database backend', () => {
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
     const fauxLogger = {} as DiagnosticsLogger
-    const indexApi = new IndexApi(fauxBackend, fauxRepository, fauxLogger)
+    const indexApi = new LocalIndexApi(fauxBackend, fauxRepository, fauxLogger)
     const response = await indexApi.queryIndex(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
@@ -50,7 +50,7 @@ describe('without database backend', () => {
     const fauxRepository = {} as unknown as Repository
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new IndexApi(undefined, fauxRepository, fauxLogger)
+    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger)
     const response = await indexApi.queryIndex({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
