@@ -42,7 +42,7 @@ test('model, account in query', async () => {
   )
 })
 
-test('serialize stream stte', async () => {
+test('serialize stream state', async () => {
   const response = { ...EMPTY_RESPONSE, entries: [FAUX_STREAM_STATE] }
   const fauxFetch = jest.fn(async () => response) as typeof fetchJson
   const indexApi = new RemoteIndexApi(FAUX_ENDPOINT, fauxFetch)
