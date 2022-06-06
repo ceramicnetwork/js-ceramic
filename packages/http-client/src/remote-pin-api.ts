@@ -6,30 +6,32 @@ import { PublishOpts } from '@ceramicnetwork/common'
  * PinApi for Ceramic HTTP client
  */
 export class RemotePinApi implements PinApi {
-  constructor(private readonly _apiUrl: string) {}
+  constructor(private readonly _apiUrl: URL) {}
 
   async add(streamId: StreamID, force?: boolean): Promise<void> {
     const args: any = {}
     if (force) {
       args.force = true
     }
-    await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, {
+    const url = new URL(`./pins/${streamId}`, this._apiUrl)
+    await fetchJson(url, {
       method: 'post',
       body: args,
     })
   }
 
   async rm(streamId: StreamID, opts?: PublishOpts): Promise<void> {
-    await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, {
+    const url = new URL(`./pins/${streamId}`, this._apiUrl)
+    await fetchJson(url, {
       method: 'delete',
       body: { opts },
     })
   }
 
   async ls(streamId?: StreamID): Promise<AsyncIterable<string>> {
-    let url = this._apiUrl + '/pins'
+    let url = new URL('./pins', this._apiUrl)
     if (streamId) {
-      url += `/${streamId.toString()}`
+      url = new URL(`./pins/${streamId.toString()}`, this._apiUrl)
     }
     const result = await fetchJson(url)
     const { pinnedStreamIds } = result
