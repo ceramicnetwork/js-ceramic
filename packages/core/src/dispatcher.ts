@@ -346,7 +346,8 @@ export class Dispatcher {
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
-    const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
+    const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
+    const expectedStreamID = outstandingQuery?.streamID
     if (expectedStreamID) {
       const newTip = tips.get(expectedStreamID.toString())
       if (!newTip) {
@@ -359,7 +360,6 @@ export class Dispatcher {
         )
       }
       this.repository.stateManager.update(expectedStreamID, newTip)
-      this.messageBus.outstandingQueries.delete(queryId)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }
