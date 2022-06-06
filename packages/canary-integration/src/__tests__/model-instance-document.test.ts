@@ -61,6 +61,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(FAKE_STREAM_ID.toString())
+    expect(ArrayBuffer.isView(doc.metadata.unique)).toBeTruthy()
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
@@ -136,6 +137,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT0, METADATA)
 
     expect(doc1.id.toString()).not.toEqual(doc2.id.toString())
+    expect(doc1.metadata.unique.toString()).not.toEqual(doc2.metadata.unique.toString())
   })
 
   test('Can load a stream', async () => {

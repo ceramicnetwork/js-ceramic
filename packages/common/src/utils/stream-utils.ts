@@ -128,6 +128,9 @@ export class StreamUtils {
     if (state.next?.metadata?.model) {
       cloned.next.metadata.model = state.next.metadata.model.toString()
     }
+    if (state.metadata?.unique) {
+      cloned.metadata.unique = Array.from(state.metadata.unique)
+    }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
 
@@ -170,6 +173,9 @@ export class StreamUtils {
     }
     if (state.next?.metadata?.model) {
       cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
+    }
+    if (state.metadata?.unique) {
+      cloned.metadata.unique = Uint8Array.from(state.metadata.unique)
     }
 
     return cloned

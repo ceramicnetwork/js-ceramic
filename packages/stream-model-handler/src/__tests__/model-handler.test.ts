@@ -81,7 +81,7 @@ const FINAL_CONTENT = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
     properties: {
       stringPropName: {
@@ -98,7 +98,7 @@ const CONTENT_WITH_INVALID_SCHEMA = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
     properties: {
       stringPropName: {
@@ -109,28 +109,6 @@ const CONTENT_WITH_INVALID_SCHEMA = {
     additionalProperties: false,
     required: 'THIS_SHOULD_BE_AN_ARRAY_OF_STRINGS',
   },
-}
-
-const serialize = (data: any): any => {
-  if (Array.isArray(data)) {
-    const serialized = []
-    for (const item of data) {
-      serialized.push(serialize(item))
-    }
-    return serialized
-  }
-  const cid = CID.asCID(data)
-  if (!cid && typeof data === 'object') {
-    const serialized: Record<string, any> = {}
-    for (const prop in data) {
-      serialized[prop] = serialize(data[prop])
-    }
-    return serialized
-  }
-  if (cid) {
-    return data.toString()
-  }
-  return data
 }
 
 const ThreeIdResolver = {
@@ -214,11 +192,11 @@ async function checkSignedCommitMatchesExpectations(
 
   const payload = dagCBOR.decode(linkedBlock)
 
-  const serialized = { jws: serialize(jws), linkedBlock: serialize(payload) }
+  const unpacked = { jws, linkedBlock: payload }
 
   // Add the 'unique' header field to the data used to generate the expected genesis commit
-  if (serialized.linkedBlock.header?.unique) {
-    expectedCommit.header['unique'] = serialized.linkedBlock.header.unique
+  if (unpacked.linkedBlock.header?.unique) {
+    expectedCommit.header['unique'] = unpacked.linkedBlock.header.unique
   }
 
   const expected = await did.createDagJWS(expectedCommit)
@@ -226,9 +204,9 @@ async function checkSignedCommitMatchesExpectations(
 
   const { jws: eJws, linkedBlock: eLinkedBlock } = expected
   const ePayload = dagCBOR.decode(eLinkedBlock)
-  const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
+  const signed = { jws: eJws, linkedBlock: ePayload }
 
-  expect(serialized).toEqual(signed)
+  expect(unpacked).toEqual(signed)
 }
 
 describe('ModelHandler', () => {
@@ -302,7 +280,10 @@ describe('ModelHandler', () => {
 
   it('fails to apply genesis commits with invalid schema', async () => {
     const modelHandler = new ModelHandler()
-    const commit = (await Model._makeGenesis(context.api, CONTENT_WITH_INVALID_SCHEMA)) as SignedCommitContainer
+    const commit = (await Model._makeGenesis(
+      context.api,
+      CONTENT_WITH_INVALID_SCHEMA
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
@@ -314,9 +295,9 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: commit.jws,
     }
-    expect(modelHandler.applyCommit(commitData, context))
-    .rejects
-    .toThrow(`Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`)
+    expect(modelHandler.applyCommit(commitData, context)).rejects.toThrow(
+      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
+    )
   })
 
   it('fails to apply signed commit with invalid schema', async () => {
@@ -359,9 +340,9 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    expect(modelHandler.applyCommit(signedCommitData, context, state))
-    .rejects
-    .toThrow(`Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`)
+    expect(modelHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
+    )
   })
 
   it('makes genesis commits correctly', async () => {
@@ -403,6 +384,7 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
+    expect(ArrayBuffer.isView(streamState.metadata.unique)).toBeTruthy()
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })

@@ -32,17 +32,17 @@ export enum AnchorStatus {
 
 export interface CommitHeader {
   controllers: Array<string>
-  family?: string
+  family?: string // deprecated
   model?: Uint8Array // StreamID encoded as byte array
-  schema?: string
-  tags?: Array<string>
+  schema?: string // deprecated
+  tags?: Array<string> // deprecated
 
   [index: string]: any // allow support for future changes
 }
 
 export interface GenesisHeader extends CommitHeader {
-  unique?: string
-  forbidControllerChange?: boolean
+  unique?: string | Uint8Array // Caip10Link and TileDocument use 'string', Model and ModelInstanceDocument use Uint8Array
+  forbidControllerChange?: boolean // deprecated, only used by TileDocument
 }
 
 export type GenesisCommit = {
