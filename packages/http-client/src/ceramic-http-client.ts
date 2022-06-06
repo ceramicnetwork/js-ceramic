@@ -1,4 +1,4 @@
-import { combineURLs, typeStreamID } from './utils.js'
+import { typeStreamID } from './utils.js'
 import { Document } from './document.js'
 
 import type { DID } from 'dids'
