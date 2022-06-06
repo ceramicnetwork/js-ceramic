@@ -203,7 +203,6 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
-    this._index = new LocalIndexApi(modules.indexing)
 
     this.context = {
       api: this,
@@ -234,6 +233,7 @@ export class Ceramic implements CeramicApi {
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
     })
+    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
   }
 
   get index(): IndexApi {

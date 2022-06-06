@@ -20,7 +20,7 @@ export interface DatabaseIndexApi {
   indexStream(args: IndexStreamArgs): Promise<void>
 
   /**
-   * Query the index
+   * Query the index.
    */
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>>
 
