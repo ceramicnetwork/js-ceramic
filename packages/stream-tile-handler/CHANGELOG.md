@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](/compare/@ceramicnetwork/stream-tile-handler@2.1.3...@ceramicnetwork/stream-tile-handler@2.2.0) (2022-06-06)
+
+
+### Bug Fixes
+
+* **stream-tile, stream-tile-handler:** don't allow updating controllers to invalid values (#2159) cd195c9, closes #2159
+
+
+### Features
+
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype (#2182) 65383af, closes #2182
+
+
+
+
+
 ## [2.1.3](/compare/@ceramicnetwork/stream-tile-handler@2.1.3-rc.2...@ceramicnetwork/stream-tile-handler@2.1.3) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

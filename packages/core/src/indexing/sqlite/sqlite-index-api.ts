@@ -1,12 +1,14 @@
 import type { DataSource } from 'typeorm'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { Ordering } from '@ceramicnetwork/common'
+import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { Knex } from 'knex'
-import type { BaseQuery, DatabaseIndexAPI, IndexStreamArgs, Page, Pagination } from '../types.js'
+import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js'
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
-import { UnsupportedOrderingError, Ordering } from '../ordering.js'
 import { NotImplementedError } from '../not-implemented-error.js'
 import { ChronologicalOrder } from './chronological-order.js'
+import { UnsupportedOrderingError } from '../unsupported-ordering-error.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -19,7 +21,7 @@ export function asTimestamp(input: Date | null | undefined): number | null {
   }
 }
 
-export class SqliteIndexApi implements DatabaseIndexAPI {
+export class SqliteIndexApi implements DatabaseIndexApi {
   private readonly chronologicalOrder: ChronologicalOrder
   constructor(
     private readonly dataSource: DataSource,

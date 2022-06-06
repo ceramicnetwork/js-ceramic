@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](/compare/@ceramicnetwork/cli@2.1.1...@ceramicnetwork/cli@2.2.0) (2022-06-06)
+
+
+### Bug Fixes
+
+* **stream-tile, stream-tile-handler:** don't allow updating controllers to invalid values (#2159) cd195c9, closes #2159
+
+
+### Features
+
+* **core:** Setup database connection for indexing, SQLite only (#2167) 3d63ccc, closes #2167
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype (#2182) 65383af, closes #2182
+
+
+
+
+
 ## [2.1.1](/compare/@ceramicnetwork/cli@2.1.1-rc.2...@ceramicnetwork/cli@2.1.1) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
