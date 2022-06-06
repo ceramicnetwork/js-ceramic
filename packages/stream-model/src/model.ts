@@ -18,7 +18,7 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import type { JSONSchema } from 'json-schema-typed/draft-07'
+import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
 import { CID } from 'multiformats/cid'
 import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
@@ -46,20 +46,6 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
       signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
     }
   }
-}
-
-/**
- * Sign a Model commit with the currently authenticated DID.
- * @param signer - Object containing the DID to use to sign the commit
- * @param commit - Commit to be signed
- * @private
- */
-async function _signDagJWS(
-  signer: CeramicSigner,
-  commit: CeramicCommit
-): Promise<SignedCommitContainer> {
-  await _ensureAuthenticated(signer)
-  return signer.did.createDagJWS(commit)
 }
 
 async function throwReadOnlyError(): Promise<void> {
@@ -251,17 +237,25 @@ export class Model extends Stream {
     signer: CeramicSigner,
     newContent: ModelDefinition
   ): Promise<CeramicCommit> {
+    const commit = this._makeRawCommit(newContent)
+    return Model._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
+   * @param newContent
+   */
+  private _makeRawCommit(newContent: ModelDefinition): RawCommit {
     if (newContent == null) {
       throw new Error(`Cannot set Model content to null`)
     }
 
     const patch = jsonpatch.compare(this.content, newContent)
-    const commit: RawCommit = {
+    return {
       data: patch,
       prev: this.tip,
       id: this.state.log[0].cid,
     }
-    return _signDagJWS(signer, commit)
   }
 
   /**
@@ -297,7 +291,7 @@ export class Model extends Stream {
       model: Model.MODEL.bytes,
     }
     const commit: GenesisCommit = { data: content, header }
-    return _signDagJWS(signer, commit)
+    return Model._signDagJWS(signer, commit)
   }
 
   /**
@@ -312,5 +306,19 @@ export class Model extends Stream {
 
   get isReadOnly(): boolean {
     return this._isReadOnly
+  }
+
+  /**
+   * Sign a Model commit with the currently authenticated DID.
+   * @param signer - Object containing the DID to use to sign the commit
+   * @param commit - Commit to be signed
+   * @private
+   */
+  private static async _signDagJWS(
+    signer: CeramicSigner,
+    commit: CeramicCommit
+  ): Promise<SignedCommitContainer> {
+    await _ensureAuthenticated(signer)
+    return signer.did.createDagJWS(commit)
   }
 }
