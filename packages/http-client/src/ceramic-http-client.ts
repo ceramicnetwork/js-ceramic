@@ -88,7 +88,7 @@ export class CeramicClient implements CeramicApi {
     this.context = { api: this }
 
     this.pin = new RemotePinApi(this._apiUrl)
-    this.index = new RemoteIndexApi()
+    this.index = new RemoteIndexApi(this._apiUrl)
 
     this._streamConstructors = {
       [Caip10Link.STREAM_TYPE_ID]: Caip10Link,
