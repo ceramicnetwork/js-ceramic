@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](/compare/@ceramicnetwork/streamid@2.0.4...@ceramicnetwork/streamid@2.1.0) (2022-06-06)
+
+
+### Features
+
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype (#2182) 65383af, closes #2182
+
+
+
+
+
 ## [2.0.4](/compare/@ceramicnetwork/streamid@2.0.4-rc.1...@ceramicnetwork/streamid@2.0.4) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid

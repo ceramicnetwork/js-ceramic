@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](/compare/@ceramicnetwork/canary-integration@2.1.3...@ceramicnetwork/canary-integration@2.2.0) (2022-06-06)
+
+
+### Features
+
+* **core:** Setup database connection for indexing, SQLite only (#2167) 3d63ccc, closes #2167
+* **stream-model-instance, stream-model-instance-handler:** ModelInstanceDocument API (#2196) 3ecf9fd, closes #2196
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype (#2182) 65383af, closes #2182
+
+
+
+
+
 ## [2.1.3](/compare/@ceramicnetwork/canary-integration@2.1.3-rc.2...@ceramicnetwork/canary-integration@2.1.3) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/canary-integration
