@@ -135,7 +135,6 @@ describe('Outstanding Queries', () => {
     assert(outstandingQueries.queryQueue.size() === 1)
     outstandingQueries.remove(q1)
     expect(outstandingQueries.queryMap.size).toEqual(0)
-
     expect(outstandingQueries.queryQueue.size()).toEqual(0)
   })
 
@@ -159,7 +158,9 @@ describe('Outstanding Queries', () => {
     const t2 = new Date('2022-05-13T10:20:30Z').getTime()
     const q2 = new Query(t2, FAKE_STREAM_ID, testQueryID)
     outstandingQueries.add(testQueryID, q2)
-    expect(outstandingQueries.queryMap.size == 1)
-    expect(outstandingQueries.queryQueue.size() == 1)
+    expect(outstandingQueries.queryMap.size).toEqual(1)
+    expect(outstandingQueries.queryQueue.size()).toEqual(1)
+    //check if map has new timestamp
+    expect( outstandingQueries.queryMap.get(testQueryID).timestamp ).toEqual(t2)
   })
 })

@@ -65,7 +65,7 @@ export class OutstandingQueries {
     }
   }
 
-  remove(topQuery: Query): void {
+  private remove(topQuery: Query): void {
     //remove queryId key for top query
     this.queryMap.delete(topQuery.queryID)
     //dequeue top query
@@ -75,17 +75,13 @@ export class OutstandingQueries {
   private _isExpired(query: Query): boolean {
     const diffMs = Date.now() - query?.timestamp // milliseconds
     const differenceInMinutes = Math.floor(diffMs / 1000 / 60)
-    if (differenceInMinutes > this._minutesThreshold) {
-      return true
-    } else {
-      return false
-    }
+    return differenceInMinutes > this._minutesThreshold
   }
 
   /**
    * Event-driven method to clean up outdated outstanding queries
    * @param
-   * @public
+   * @private
    */
   private _cleanUpExpiredQueries(): void {
     while (this._isExpired(this.queryQueue.front())) {
