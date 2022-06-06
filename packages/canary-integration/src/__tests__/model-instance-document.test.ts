@@ -61,7 +61,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(FAKE_STREAM_ID.toString())
-    expect(ArrayBuffer.isView(doc.metadata.unique)).toBeTruthy()
+    expect(doc.metadata.unique instanceof Uint8Array).toBeTruthy()
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 

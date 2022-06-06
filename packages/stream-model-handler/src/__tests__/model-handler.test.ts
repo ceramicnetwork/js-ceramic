@@ -384,7 +384,7 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
-    expect(ArrayBuffer.isView(streamState.metadata.unique)).toBeTruthy()
+    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
