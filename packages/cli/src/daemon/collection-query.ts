@@ -49,6 +49,6 @@ export function collectionQuery(
       ...pagination,
     }
   } catch (e) {
-    throw new Error(`Invalid request to collection input`)
+    throw new Error(`Invalid input in collection request: ${e.message}`)
   }
 }
