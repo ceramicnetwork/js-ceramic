@@ -1,4 +1,4 @@
-import type { DatabaseIndexAPI } from './types.js'
+import type { DatabaseIndexApi } from './database-index-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { DataSource } from 'typeorm'
@@ -39,7 +39,7 @@ function parseURL(input: string) {
 /**
  * Build DatabaseIndexAPI instance based on passed indexing configuration.
  */
-export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI {
+export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi {
   const connectionString = parseURL(indexingConfig.db)
   const protocol = connectionString.protocol.replace(/:$/, '')
   switch (protocol) {
