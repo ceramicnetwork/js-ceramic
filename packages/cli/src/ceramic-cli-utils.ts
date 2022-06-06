@@ -130,7 +130,6 @@ export class CeramicCliUtils {
         config.httpApi.hostname = hostname
       }
       if (port) {
-        console.log('ceramic-cli-utils', port)
         config.httpApi.port = _validatePort(port)
       }
       if (ipfsApi) {
@@ -602,15 +601,10 @@ export class CeramicCliUtils {
   }
 }
 
-const depreciationNotice = () => {
-  console.log(
-    `${pc.red(pc.bold('This command has been deprecated.'))}
-Please use the upgraded Glaze CLI instead.
-Please test with the new CLI before reporting any problems.
-${pc.green('npm i -g @glazed/cli')}`
-  )
-}
-
+/**
+ * Helper function: Parse provided port and verify validity
+ * @param inPort
+ */
 export function _validatePort(inPort) {
   const validPort = Number(inPort)
   if (inPort == null) {
@@ -620,4 +614,13 @@ export function _validatePort(inPort) {
     process.exit(1)
   }
   return validPort
+}
+
+const depreciationNotice = () => {
+  console.log(
+    `${pc.red(pc.bold('This command has been deprecated.'))}
+Please use the upgraded Glaze CLI instead.
+Please test with the new CLI before reporting any problems.
+${pc.green('npm i -g @glazed/cli')}`
+  )
 }

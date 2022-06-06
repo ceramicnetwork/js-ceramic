@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { _validatePort } from './ceramic-cli-utils'
+import { _validatePort } from './ceramic-cli-utils.js'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -90,12 +90,7 @@ export class DaemonHTTPApiConfig {
    * Port to listen on.
    */
   @jsonMember(AnyT, {
-    serializer: (inPort) => {
-      console.log('serializer', inPort)
-      return _validatePort(inPort)
-    },
     deserializer: (inPort) => {
-      console.log('deserializer', inPort)
       return _validatePort(inPort)
     },
   })
