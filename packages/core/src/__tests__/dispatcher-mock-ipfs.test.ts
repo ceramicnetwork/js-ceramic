@@ -286,7 +286,7 @@ describe('Dispatcher with mock ipfs', () => {
     )
     const queryID = queryMessageSent.id
 
-    // Handle UPDATE message without model
+    // Handle UPDATE message with model
     dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
