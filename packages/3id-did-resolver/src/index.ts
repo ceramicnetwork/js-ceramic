@@ -194,6 +194,7 @@ const resolve = async (
   }
   const resp = await ceramic.multiQuery(query)
 
+  if (!resp[didId]) throw new Error(`Failed to properly resolve 3ID, stream ${didId} not found in response.`)
   const latestVersionState = resp[didId].state
   const commitIdStr = commitId?.toString() || Object.keys(resp).find((k) => k !== didId)
   const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
