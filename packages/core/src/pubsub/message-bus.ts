@@ -4,7 +4,7 @@ import { filter, map, takeUntil, tap } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import { ObservableWithNext } from './observable-with-next.js'
-
+import { OutstandingQueries, Query } from './outstanding-queries.js'
 export const MAX_RESPONSE_INTERVAL = 300 // milliseconds
 
 /**
@@ -30,7 +30,7 @@ function betweenTimeout<T>(betweenMs: number): UnaryFunction<Observable<T>, Obse
  * Multiplexing IPFS Pubsub.
  */
 export class MessageBus extends Observable<PubsubMessage> implements SubscriptionLike {
-  readonly outstandingQueries: Map<string, StreamID> = new Map()
+  readonly outstandingQueries: OutstandingQueries = new OutstandingQueries()
   private readonly pubsubSubscription: Subscription
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>()
 
@@ -68,7 +68,12 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   queryNetwork(streamId: StreamID): Observable<CID> {
     const queryMessage = buildQueryMessage(streamId)
     this.next(queryMessage)
-    this.outstandingQueries.set(queryMessage.id, streamId)
+    const timeNow: number = Date.now()
+    const query = new Query(timeNow, streamId, queryMessage.id)
+
+    //add query to outstanding query set
+    this.outstandingQueries.add(queryMessage.id, query)
+
     return this.pipe(
       filter<PubsubMessage, ResponseMessage>(
         (message): message is ResponseMessage =>
