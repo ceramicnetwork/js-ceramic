@@ -122,9 +122,6 @@ export class StreamUtils {
       cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString()
       cloned.anchorProof.root = cloned.anchorProof.root.toString()
     }
-    if (cloned.lastAnchored != null) {
-      cloned.lastAnchored = cloned.lastAnchored.toString()
-    }
     if (state.metadata?.model) {
       cloned.metadata.model = state.metadata.model.toString()
     }
@@ -167,9 +164,6 @@ export class StreamUtils {
       } else {
         delete cloned.anchorScheduledFor
       }
-    }
-    if (cloned.lastAnchored) {
-      cloned.lastAnchored = toCID(cloned.lastAnchored)
     }
     if (state.metadata?.model) {
       cloned.metadata.model = StreamID.fromString(state.metadata.model)

@@ -26,6 +26,7 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
+  IndexApi,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -46,7 +47,8 @@ import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
 import { buildIndexing } from './indexing/build-indexing.js'
-import type { DatabaseIndexAPI } from './indexing/types.js'
+import type { DatabaseIndexApi } from './indexing/database-index-api.js'
+import { LocalIndexApi } from './indexing/local-index-api.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -123,7 +125,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownController: AbortController
-  indexing: DatabaseIndexAPI
+  indexing: DatabaseIndexApi | undefined
 }
 
 /**
@@ -179,7 +181,7 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _indexing: DatabaseIndexAPI
+  private readonly _index: LocalIndexApi
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -201,7 +203,6 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
-    this._indexing = modules.indexing
 
     this.context = {
       api: this,
@@ -232,6 +233,11 @@ export class Ceramic implements CeramicApi {
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
     })
+    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+  }
+
+  get index(): IndexApi {
+    return this._index
   }
 
   /**
@@ -369,7 +375,14 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const indexingApi = buildIndexing(config.indexing)
+    let indexingApi: DatabaseIndexApi | undefined = undefined
+    if (config.indexing) {
+      indexingApi = buildIndexing(config.indexing)
+    } else {
+      logger.warn(
+        `Indexing is not configured. Please, add the indexing settings to your config file`
+      )
+    }
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
@@ -443,7 +456,7 @@ export class Ceramic implements CeramicApi {
       loadOptsOverride,
     }
 
-    const modules = {
+    const modules: CeramicModules = {
       anchorService,
       anchorValidator,
       dispatcher,
@@ -506,7 +519,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this._indexing.init()
+      await this._index.init()
 
       await this._startupChecks()
     } catch (err) {

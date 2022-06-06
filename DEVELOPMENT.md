@@ -23,6 +23,10 @@ $ npm test
 ```
 If you only want to test a specific package just `cd` into the specific package folder and run the same command as above.
 
+## Debugging and Local Development
+
+See [DEVELOPMENT_LOCAL.md](docs-dev/DEVELOPMENT_LOCAL.md)
+
 
 ## Repo structure
 

@@ -1,9 +1,10 @@
 import type { DID } from 'dids'
-import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream.js'
-import { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
-import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import { LoggerProvider } from './logger-provider.js'
-import { GenesisCommit } from './index.js'
+import type { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream.js'
+import type { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
+import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import type { LoggerProvider } from './logger-provider.js'
+import type { GenesisCommit } from './index.js'
+import type { IndexApi } from './index-api.js'
 
 /**
  * Describes Ceramic pinning functionality
@@ -57,8 +58,10 @@ export interface CeramicSigner extends CeramicCommon {
  * Describes Ceramic node API
  */
 export interface CeramicApi extends CeramicSigner {
-  pin: PinApi
+  readonly pin: PinApi
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
+
+  readonly index: IndexApi
 
   /**
    * Register Stream handler

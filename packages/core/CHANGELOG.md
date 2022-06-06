@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0](/compare/@ceramicnetwork/core@2.3.1...@ceramicnetwork/core@2.4.0) (2022-06-06)
+
+
+### Bug Fixes
+
+* Filter by account (#2202) d50e3ac, closes #2202
+* **stream-tile, stream-tile-handler:** don't allow updating controllers to invalid values (#2159) cd195c9, closes #2159
+
+
+### Features
+
+* add dummy implementation of IndexClientApi to core and http-client (#2200) aaf6fe3, closes #2200 #2201
+* Chronological order for indexing, SQLite-only (#2184) e202ea7, closes #2184
+* **core:** Setup database connection for indexing, SQLite only (#2167) 3d63ccc, closes #2167
+* Create table per indexed model (#2179) f917846, closes #2179
+* gitgnore generated version.ts file (#2205) 395509c, closes #2205
+* **stream-model-instance, stream-model-instance-handler:** ModelInstanceDocument API (#2196) 3ecf9fd, closes #2196
+* warn if indexing is not configured (#2194) 6985549, closes #2194
+
+
+
+
+
 ## [2.3.1](/compare/@ceramicnetwork/core@2.3.1-rc.2...@ceramicnetwork/core@2.3.1) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/core

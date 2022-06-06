@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   AnchorStatus,
   CommitData,
@@ -14,23 +14,14 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-
-function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
-  if (arr1.length != arr2.length) {
-    return false
-  }
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i] !== arr2[i]) {
-      return false
-    }
-  }
-  return true
-}
+import { SchemaValidation } from './schema-utils.js'
 
 /**
  * Model stream handler implementation
  */
 export class ModelHandler implements StreamHandler<Model> {
+  private readonly _schemaValidator: SchemaValidation
+
   get type(): number {
     return Model.STREAM_TYPE_ID
   }
@@ -41,6 +32,10 @@ export class ModelHandler implements StreamHandler<Model> {
 
   get stream_constructor(): StreamConstructor<Model> {
     return Model
+  }
+
+  constructor() {
+    this._schemaValidator = new SchemaValidation()
   }
 
   /**
@@ -75,33 +70,46 @@ export class ModelHandler implements StreamHandler<Model> {
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
-    if (isSigned) {
-      const streamId = await StreamID.fromGenesis('model', commitData.commit)
-      const { controllers, family } = payload.header
-      await SignatureUtils.verifyCommitSignature(
-        commitData,
-        context.did,
-        controllers[0],
-        family,
-        streamId
-      )
-    } else if (payload.data) {
-      throw Error('Genesis commit with contents should always be signed')
+    if (!isSigned) {
+      throw Error('Model genesis commit must be signed')
     }
+
+    const streamId = await StreamID.fromGenesis('model', commitData.commit)
+    // TODO(NET-1437): replace family with model
+    const { controllers, family } = payload.header
+    await SignatureUtils.verifyCommitSignature(
+      commitData,
+      context.did,
+      controllers[0],
+      family,
+      streamId
+    )
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
 
+    const modelStreamId = StreamID.fromBytes(payload.header.model)
+    if (!modelStreamId.equals(Model.MODEL)) {
+      throw new Error(
+        `Invalid 'model' metadata property in Model stream: ${payload.header.model.toString()}`
+      )
+    }
+
+    const metadata = { ...payload.header, model: modelStreamId }
     const state = {
       type: Model.STREAM_TYPE_ID,
-      content: payload.data || {},
-      metadata: payload.header,
-      signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
+      content: payload.data,
+      metadata,
+      signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
+    if (state.content.schema !== undefined) {
+      await this._schemaValidator.validateSchema(state.content.schema)
+    }
+    
     return state
   }
 
@@ -117,9 +125,9 @@ export class ModelHandler implements StreamHandler<Model> {
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-    const family = state.next?.metadata?.family || state.metadata.family
+    const metadata = state.metadata
+    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const family = metadata.family
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
@@ -135,31 +143,23 @@ export class ModelHandler implements StreamHandler<Model> {
     const payload = commitData.commit
 
     if (!payload.id.equals(state.log[0].cid)) {
-      throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
-    }
-
-    if (payload.header.controllers && payload.header.controllers.length !== 1) {
-      throw new Error('Exactly one controller must be specified')
-    }
-
-    if (
-      state.metadata.forbidControllerChange &&
-      payload.header.controllers &&
-      !stringArraysEqual(payload.header.controllers, state.metadata.controllers)
-    ) {
-      const streamId = new StreamID(Model.STREAM_TYPE_ID, state.log[0].cid)
       throw new Error(
-        `Cannot change controllers since 'forbidControllerChange' is set. Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
-          state.metadata.controllers
-        )} to ${payload.header.controllers}`
+        `Invalid genesis CID in commit. Found: ${payload.id}, expected ${state.log[0].cid}`
+      )
+    }
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!payload.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${payload.prev}`
       )
     }
 
-    if (
-      payload.header.forbidControllerChange !== undefined &&
-      payload.header.forbidControllerChange !== state.metadata.forbidControllerChange
-    ) {
-      throw new Error("Changing 'forbidControllerChange' metadata property is not allowed")
+    if (payload.header) {
+      throw new Error(
+        `Updating metadata for Model Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
+          state.metadata
+        )} to ${JSON.stringify(payload.header)}\``
+      )
     }
 
     const nextState = cloneDeep(state)
@@ -169,15 +169,21 @@ export class ModelHandler implements StreamHandler<Model> {
 
     nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
-    const oldContent = state.next?.content ?? state.content
-    const oldMetadata = state.next?.metadata ?? state.metadata
-
-    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    const newMetadata = { ...oldMetadata, ...payload.header }
+    const oldContent: ModelDefinition = state.next?.content ?? state.content
+    if (oldContent.name && oldContent.schema && oldContent.accountRelation) {
+      throw new Error('Cannot update a finalized Model')
+    }
+    const newContent: ModelDefinition = jsonpatch.applyPatch(oldContent, payload.data).newDocument
+    // Cannot update a placeholder Model other than to finalize it.
+    Model.assertComplete(newContent, streamId)
 
     nextState.next = {
       content: newContent,
-      metadata: newMetadata,
+      metadata, // No way to update metadata for Model streams
+    }
+
+    if (newContent.schema !== undefined) {
+      await this._schemaValidator.validateSchema(newContent.schema)
     }
 
     return nextState
@@ -195,7 +201,13 @@ export class ModelHandler implements StreamHandler<Model> {
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!commitData.commit.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${commitData.commit.prev}`
+      )
+    }
+
     const proof = commitData.proof
     state.log.push({
       cid: commitData.cid,
@@ -203,16 +215,10 @@ export class ModelHandler implements StreamHandler<Model> {
       timestamp: proof.blockTimestamp,
     })
     let content = state.content
-    let metadata = state.metadata
 
     if (state.next?.content) {
       content = state.next.content
       delete state.next.content
-    }
-
-    if (state.next?.metadata) {
-      metadata = state.next.metadata
-      delete state.next.metadata
     }
 
     delete state.next
@@ -221,7 +227,6 @@ export class ModelHandler implements StreamHandler<Model> {
     return {
       ...state,
       content,
-      metadata,
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof,
     }
