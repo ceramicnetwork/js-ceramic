@@ -13,3 +13,4 @@ packages/*/node_modules/
 packages/*/coverage/
 packages/*/logs/
 packages/*/package-lock.json
+packages/core/src/version.ts
