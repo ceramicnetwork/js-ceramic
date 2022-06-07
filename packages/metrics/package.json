@@ -1,0 +1,42 @@
+{
+  "name": "@ceramicnetwork/metrics",
+  "version": "1.0.0",
+  "description": "Ceramic metrics instrumentation and exporters",
+  "keywords": [
+    "ceramic",
+    "metrics",
+    "utilities"
+  ],
+  "author": "Golda Velez <golda@3box.io>",
+  "homepage": "",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "./lib"
+  },
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "files": [
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests --forceExit",
+    "build": "npx tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
+  },
+  "dependencies": {
+    "@opentelemetry/exporter-prometheus": "^0.28.0",
+    "@opentelemetry/sdk-metrics-base": "^0.28.0",
+    "@opentelemetry/semantic-conventions": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.5"
+  }
+}

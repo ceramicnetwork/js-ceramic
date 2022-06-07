@@ -3,6 +3,8 @@ import express, { Request, Response } from 'express'
 import type { CeramicConfig } from '@ceramicnetwork/core'
 import { Ceramic } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
+// TODO: change this when package is registered
+import { Metrics } from '../../metrics/lib/metrics-setup.js'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {
@@ -55,6 +57,11 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     return new RotatingFileStream(logPath, true)
   })
 
+  // If desired, enable metrics
+  if (opts.metrics) {
+    Metrics.start(opts.metrics)
+  }
+
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     gateway: opts.node.gateway || false,
@@ -65,7 +72,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     pubsubTopic: opts.network.pubsubTopic,
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
-    indexing: opts.indexing
+    indexing: opts.indexing,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
