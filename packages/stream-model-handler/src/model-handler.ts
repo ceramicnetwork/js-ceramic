@@ -16,6 +16,21 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 
+// Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
+// these programmatically.
+const ALLOWED_CONTENT_KEYS = new Set(['name', 'description', 'schema', 'accountRelation'])
+
+/**
+ * Helper function for asserting that the content of a Model Stream only contains the expected fields
+ */
+const assertNoExtraKeys = function (content: Record<string, any>) {
+  for (const key of Object.keys(content)) {
+    if (!ALLOWED_CONTENT_KEYS.has(key)) {
+      throw new Error(`Unexpected key '${key}' found in content for Model Stream`)
+    }
+  }
+}
+
 /**
  * Model stream handler implementation
  */
@@ -85,6 +100,8 @@ export class ModelHandler implements StreamHandler<Model> {
       streamId
     )
 
+    assertNoExtraKeys(payload.data)
+
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
@@ -109,7 +126,7 @@ export class ModelHandler implements StreamHandler<Model> {
     if (state.content.schema !== undefined) {
       await this._schemaValidator.validateSchema(state.content.schema)
     }
-    
+
     return state
   }
 
@@ -176,6 +193,7 @@ export class ModelHandler implements StreamHandler<Model> {
     const newContent: ModelDefinition = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     // Cannot update a placeholder Model other than to finalize it.
     Model.assertComplete(newContent, streamId)
+    assertNoExtraKeys(newContent)
 
     nextState.next = {
       content: newContent,
