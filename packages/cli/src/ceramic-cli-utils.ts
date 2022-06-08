@@ -602,7 +602,7 @@ export class CeramicCliUtils {
 }
 
 /**
- * Helper function: Parse provided port and verify validity
+ * Helper function: Parse provided port and verify validity or exit process
  * @param inPort
  */
 export function _validatePort(inPort) {
