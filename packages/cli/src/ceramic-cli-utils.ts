@@ -21,6 +21,7 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { DataSource } from 'typeorm'
+import { knex } from 'knex'
 import { PostgresIndexApi } from '@ceramicnetwork/core'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
@@ -185,7 +186,7 @@ export class CeramicCliUtils {
     const indexAPI = buildIndexing(
       {
         db: dbConnection,
-        models: indexedModelIdStrings.map((idString) => { 
+        models: indexedModelIdStrings.map((idString) => {
           return StreamID.fromString(idString)
         })
       }
@@ -220,7 +221,7 @@ export class CeramicCliUtils {
       })
 
       // FIXME: Don't hard-code
-      const dataSource = new DataSource({
+      /*const dataSource = new DataSource({
         type: "postgres",
         host: "localhost",
         port: 5432,
@@ -229,7 +230,12 @@ export class CeramicCliUtils {
         database: "ceramic",
         synchronize: true,
         logging: true,
-      })
+      })*/
+      const dataSource = knex({
+        client: 'pg',
+        connection: 'postgres://ceramic:password@127.0.0.1:5432/ceramic', //process.env.PG_CONNECTION_STRING,
+        searchPath: ['ceramic', 'public'],
+      });
       const indexAPI = new PostgresIndexApi(dataSource, [])
       indexAPI.indexStream({
         streamID: doc.id,
@@ -628,6 +634,7 @@ export class CeramicCliUtils {
   static _parseContent(content: string): any {
     return content == null ? null : JSON.parse(content)
   }
+
 
   /**
    * Parse input controllers

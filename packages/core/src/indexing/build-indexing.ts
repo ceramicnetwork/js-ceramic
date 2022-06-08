@@ -3,6 +3,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import { DataSource } from 'typeorm'
+import { knex } from 'knex'
 
 export type IndexingConfig = {
   /**
@@ -40,8 +41,8 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI 
     case 'postgres': {
       console.log("indexingConfig", JSON.stringify(indexingConfig))
       // FIXME: Take conn params from input params
-      
-      const dataSource = new DataSource({
+
+      /*const dataSource = new DataSource({
         type: "postgres",
         host: "localhost",
         port: 5432,
@@ -50,7 +51,12 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexAPI 
         database: "ceramic",
         synchronize: true,
         logging: true,
-      })
+      })*/
+      const dataSource = knex({
+        client: 'pg',
+        connection: 'postgres://ceramic:password@127.0.0.1:5432/ceramic', //process.env.PG_CONNECTION_STRING,
+        searchPath: ['ceramic', 'public'],
+      });
       return new PostgresIndexApi(dataSource, indexingConfig.models)
     }
     default:
