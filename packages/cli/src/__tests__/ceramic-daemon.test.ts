@@ -10,12 +10,16 @@ import {
   StreamUtils,
   IpfsApi,
   TimedAbortSignal,
+  GenesisCommit,
+  TestUtils,
+  CommitType,
+  StreamState,
 } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
-
+import { randomString } from '@stablelib/random'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -24,6 +28,7 @@ import { DaemonConfig } from '../daemon-config.js'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
+const MODEL_STREAM_ID = new StreamID(1, TestUtils.randomCID())
 
 const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
   const core = await Ceramic.create(ipfs, {
@@ -32,32 +37,17 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
+      models: [MODEL_STREAM_ID.toString()],
     },
   })
 
   const handler = new TileDocumentHandler()
-  handler.verifyJWS = (): Promise<void> => {
+  ;(handler as any).verifyJWS = (): Promise<void> => {
     return
   }
   // @ts-ignore
   core._streamHandlers.add(handler)
   return core
-}
-
-/**
- * Generates string of particular size in bytes
- * @param size - Size in bytes
- */
-const generateStringOfSize = (size): string => {
-  const chars = 'abcdefghijklmnopqrstuvwxyz'.split('')
-  const len = chars.length
-  const random_data = []
-
-  while (size--) {
-    random_data.push(chars[(Math.random() * len) | 0])
-  }
-  return random_data.join('')
 }
 
 describe('Ceramic interop: core <> http-client', () => {
@@ -119,14 +109,14 @@ describe('Ceramic interop: core <> http-client', () => {
   }
 
   it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
-    const streamtype = await TileDocument.create(client, { test: generateStringOfSize(200000) })
+    const streamtype = await TileDocument.create(client, { test: randomString(200000) })
     expect(streamtype).not.toBeNull()
   })
 
   it('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
-    await expect(
-      TileDocument.create(client, { test: generateStringOfSize(300000) })
-    ).rejects.toThrow(/exceeds the maximum block size of/)
+    await expect(TileDocument.create(client, { test: randomString(300000) })).rejects.toThrow(
+      /exceeds the maximum block size of/
+    )
   })
 
   it('properly creates document', async () => {
@@ -368,7 +358,7 @@ describe('Ceramic interop: core <> http-client', () => {
     const content2 = { test: 456, test2: 'abc' }
     const content3 = { test2: 'def' }
 
-    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+    const doc = await TileDocument.create<any>(core, content1, null, { anchor: false })
     await doc.update(content2, null, { anchor: false })
     await doc.update(content3, null, { anchor: false })
 
@@ -536,7 +526,7 @@ describe('Ceramic interop: core <> http-client', () => {
         controllers: ['did:test'],
         family: 'test',
       }
-      const genesis = await TileDocument.makeGenesis(
+      const genesis = (await TileDocument.makeGenesis(
         {
           did: core.did,
         },
@@ -545,7 +535,7 @@ describe('Ceramic interop: core <> http-client', () => {
           ...metadata,
           deterministic: true,
         }
-      )
+      )) as GenesisCommit
 
       const streamId = await StreamID.fromGenesis('tile', genesis)
       const resCore = await core.multiQuery([{ genesis, streamId }])
@@ -636,6 +626,64 @@ describe('Ceramic interop: core <> http-client', () => {
       // Now force re-pin and make sure underlying state and ipfs records get re-pinned
       await client.pin.add(docA.id, true)
       expect(pinSpy).toBeCalledTimes(4)
+    })
+  })
+
+  describe('index api', () => {
+    describe('getCollection calls IndexAPI', () => {
+      test('model in query', async () => {
+        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+        query.searchParams.set('model', MODEL_STREAM_ID.toString())
+        const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
+        await fetchJson(query.toString())
+        expect(indexSpy).toBeCalledWith({
+          first: 100,
+          model: MODEL_STREAM_ID,
+        })
+      })
+      test('model, account in query', async () => {
+        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+        query.searchParams.set('model', MODEL_STREAM_ID.toString())
+        query.searchParams.set('account', randomString(10))
+        const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
+        await fetchJson(query.toString())
+        expect(indexSpy).toBeCalledWith({
+          first: 100,
+          model: MODEL_STREAM_ID,
+          account: query.searchParams.get('account'),
+        })
+      })
+      test('serialize StreamState', async () => {
+        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+        query.searchParams.set('model', MODEL_STREAM_ID.toString())
+        const original = daemon.ceramic.index.queryIndex.bind(daemon.ceramic.index)
+        const fauxStreamState = {
+          type: 0,
+          log: [
+            {
+              type: CommitType.GENESIS,
+              cid: TestUtils.randomCID(),
+            },
+          ],
+        } as unknown as StreamState
+        // Return faux but serializable StreamState
+        daemon.ceramic.index.queryIndex = async () => {
+          return {
+            entries: [fauxStreamState],
+            pageInfo: {
+              hasNextPage: false,
+              hasPreviousPage: false,
+            },
+          }
+        }
+        // It gets serialized
+        const response = await fetchJson(query.toString())
+        expect(response.entries.length).toEqual(1)
+        // Check if it is indeed the same serialized state
+        expect(response.entries[0]).toEqual(StreamUtils.serializeState(fauxStreamState))
+        // Get the original queryIndex method back
+        daemon.ceramic.index.queryIndex = original
+      })
     })
   })
 })

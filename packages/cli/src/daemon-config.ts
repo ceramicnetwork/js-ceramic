@@ -273,6 +273,25 @@ export class DaemonLoggerConfig {
 }
 
 /**
+ * Metrics exporter config indicating whether the metrics exporter should start and on what port
+ */
+@jsonObject
+@toJson
+export class DaemonMetricsConfig {
+  /**
+   * Controls whether the metrics exporter is started
+   */
+  @jsonMember(Boolean, { name: 'metrics-exporter-enabled' })
+  metricsExporterEnabled?: boolean
+
+  /**
+   * If 'enabled' is true, this contains the port on which the metrics exporter will listen
+   */
+  @jsonMember(Number, { name: 'metrics-port' })
+  metricsPort?: number
+}
+
+/**
  * Daemon create options
  */
 @jsonObject
@@ -302,6 +321,12 @@ export class DaemonConfig {
    */
   @jsonMember(DaemonLoggerConfig)
   logger: DaemonLoggerConfig
+
+  /**
+   * Options related to metrics export.
+   */
+  @jsonMember(DaemonMetricsConfig)
+  metrics: DaemonMetricsConfig
 
   /**
    * Options related to the Ceramic network to connect to.

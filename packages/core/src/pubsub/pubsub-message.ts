@@ -1,6 +1,8 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { UnreachableCaseError, toCID } from '@ceramicnetwork/common'
+// use ugly paths until we register the npm package
+import {Metrics, METRIC_NAMES} from '../../../metrics/lib/metrics-setup.js'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'
@@ -21,6 +23,7 @@ export type UpdateMessage = {
   typ: MsgType.UPDATE
   stream: StreamID
   tip: CID
+  model?: StreamID
 }
 
 export type QueryMessage = {
@@ -71,6 +74,8 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 }
 
 export function serialize(message: PubsubMessage): Uint8Array {
+
+  Metrics.count(METRIC_NAMES.PUBSUB_PUBLISHED, 1, {"typ": message.typ}) // really attempted to publish...
   switch (message.typ) {
     case MsgType.QUERY: {
       return textEncoder.encode(
@@ -97,6 +102,7 @@ export function serialize(message: PubsubMessage): Uint8Array {
         doc: message.stream.toString(),
         stream: message.stream.toString(),
         tip: message.tip.toString(),
+        ...(message.model && { model: message.model.toString() })
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
@@ -118,14 +124,17 @@ export function deserialize(message: any): PubsubMessage {
   const parsed = JSON.parse(asString)
 
   const typ = parsed.typ as MsgType
+  Metrics.count(METRIC_NAMES.PUBSUB_RECEIVED, 1, {"typ": typ})
   switch (typ) {
     case MsgType.UPDATE: {
       // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
       const stream = StreamID.fromString(parsed.stream || parsed.doc)
+
       return {
         typ: MsgType.UPDATE,
         stream,
         tip: toCID(parsed.tip),
+        ...(parsed.model && { model: StreamID.fromString(parsed.model) })
       }
     }
     case MsgType.RESPONSE: {

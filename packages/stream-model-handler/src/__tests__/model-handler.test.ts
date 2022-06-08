@@ -278,73 +278,6 @@ describe('ModelHandler', () => {
     expect(handler.name).toEqual('model')
   })
 
-  it('fails to apply genesis commits with invalid schema', async () => {
-    const modelHandler = new ModelHandler()
-    const commit = (await Model._makeGenesis(
-      context.api,
-      CONTENT_WITH_INVALID_SCHEMA
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
-
-    const commitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: commit.jws,
-    }
-    expect(modelHandler.applyCommit(commitData, context)).rejects.toThrow(
-      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
-    )
-  })
-
-  it('fails to apply signed commit with invalid schema', async () => {
-    const modelHandler = new ModelHandler()
-
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await modelHandler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      CONTENT_WITH_INVALID_SCHEMA
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    expect(modelHandler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
-    )
-  })
-
   it('makes genesis commits correctly', async () => {
     const commit = await Model._makeGenesis(context.api, FINAL_CONTENT)
     expect(commit).toBeDefined()
@@ -387,6 +320,92 @@ describe('ModelHandler', () => {
     expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
+  })
+
+  it('fails to apply genesis commits with invalid schema', async () => {
+    const commit = (await Model._makeGenesis(
+      context.api,
+      CONTENT_WITH_INVALID_SCHEMA
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
+    )
+  })
+
+  it('fails to apply signed commit with invalid schema', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const signedCommit = (await doc._makeCommit(
+      context.api,
+      CONTENT_WITH_INVALID_SCHEMA
+    )) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
+    )
+  })
+
+  it('fails to apply genesis commits with extra fields', async () => {
+    const commit = (await Model._makeGenesis(context.api, {
+      ...PLACEHOLDER_CONTENT,
+      foo: 'bar',
+    })) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      `Unexpected key 'foo' found in content for Model Stream`
+    )
   })
 
   it('makes signed commit correctly', async () => {
@@ -549,6 +568,49 @@ describe('ModelHandler', () => {
     }
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /Cannot update a finalized Model/
+    )
+  })
+
+  it('update rejected that adds unexpected field', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const signedCommit = (await doc._makeCommit(context.api, {
+      ...FINAL_CONTENT,
+      foo: 'bar',
+    })) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      `Unexpected key 'foo' found in content for Model Stream`
     )
   })
 
