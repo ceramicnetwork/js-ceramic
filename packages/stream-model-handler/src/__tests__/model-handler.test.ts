@@ -381,7 +381,6 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
     )
