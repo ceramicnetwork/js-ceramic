@@ -63,7 +63,7 @@ export class SignatureUtils {
       !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`) &&
       !(model && resources.includes(`ceramic://*?model=${model.toString()}`))
     ) {
-      throw new Error(`Capability does not have appropriate permissions to update this Stream}`)
+      throw new Error(`Capability does not have appropriate permissions to update this Stream`)
     }
 
     return cacao

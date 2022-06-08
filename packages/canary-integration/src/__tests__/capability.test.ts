@@ -8,6 +8,20 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 import { SiweMessage, Cacao } from 'ceramic-cacao'
 import { createCeramic } from '../create-ceramic.js'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { StreamID } from '@ceramicnetwork/streamid'
+
+const FAKE_STREAM_ID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+)
+
+const FAKE_STREAM_ID_2 = StreamID.fromString(
+  'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
+)
+
+const CONTENT0 = { myData: 0 }
+const CONTENT1 = { myData: 1 }
+const METADATA = { model: FAKE_STREAM_ID }
 
 const addCapToDid = async (wallet, didKey, resource) => {
   // Create CACAO with did:key as aud
@@ -38,6 +52,8 @@ describe('CACAO Integration test', () => {
   let wallet: Wallet
   let didKey: DID
   let didKeyWithParent: DID
+  let didKey2: DID
+  let wallet2: Wallet
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -45,6 +61,9 @@ describe('CACAO Integration test', () => {
     // Create a did:pkh for the user
     wallet = Wallet.fromMnemonic(
       'despair voyage estate pizza main slice acquire mesh polar short desk lyrics'
+    )
+    wallet2 = Wallet.fromMnemonic(
+      'gap heavy cliff slab victory despair wage tiny physical tray situate primary'
     )
     // Create did:key for the dApp
     const didKeyProvider = new Ed25519Provider(randomBytes(32))
@@ -56,6 +75,10 @@ describe('CACAO Integration test', () => {
       parent: `did:pkh:eip155:1:${wallet.address}`,
     })
     await didKeyWithParent.authenticate()
+
+    const didKeyProvider2 = new Ed25519Provider(randomBytes(32))
+    didKey2 = new DID({ provider: didKeyProvider2, resolver: KeyDidResolver.getResolver() })
+    await didKey2.authenticate()
   }, 120000)
 
   afterAll(async () => {
@@ -71,7 +94,6 @@ describe('CACAO Integration test', () => {
         family: 'testCapabilities1',
         controllers: [`did:pkh:eip155:1:${wallet.address}`],
       })
-      const streamId = deterministicDocument.id
 
       await expect(
         deterministicDocument.update({ foo: 'bar' }, null, {
@@ -169,159 +191,160 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describe('Resources using family', () => {
-    describe('Update stream', () => {
-      test('fails to update using capability with wrong family resource', async () => {
-        const family = 'testFamily2'
-        // Create a determinstic tiledocument owned by the user
-        const deterministicDocument = await TileDocument.deterministic(ceramic, {
-          deterministic: true,
-          family,
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+  describe('Model instance stream with resources using model', () => {
+
+    test('fails to create using capability with wrong model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${FAKE_STREAM_ID_2.toString()}`
+      )
+
+      ceramic.did = didKeyWithCapability
+
+      await expect(
+        ModelInstanceDocument.create(ceramic, CONTENT0, {
+          model: FAKE_STREAM_ID,
+          controller: `did:pkh:eip155:1:${wallet.address}`,
         })
-        const streamId = deterministicDocument.id
-        const didKeyWithCapability = await addCapToDid(
-          wallet,
-          didKey,
-          `ceramic://*?family=${family}-wrong`
-        )
+      ).rejects.toThrowError(
+        'Capability does not have appropriate permissions to update this Stream'
+      )
+    }, 30000)
 
-        await expect(
-          deterministicDocument.update({ foo: 'baz' }, null, {
-            asDID: didKeyWithCapability,
-            anchor: false,
-            publish: false,
-          })
-        ).rejects.toThrowError(
-          'Capability does not have appropriate permissions to update this Stream'
-        )
-      }, 30000)
 
-      test('fails to update using capability with empty family resource', async () => {
-        const family = 'testFamily3'
-        // Create a determinstic tiledocument owned by the user
-        const deterministicDocument = await TileDocument.deterministic(ceramic, {
-          deterministic: true,
-          family,
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
-        })
-        const streamId = deterministicDocument.id
-        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=`)
+    test('fails to update using capability with wrong model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${FAKE_STREAM_ID.toString()}`
+      )
 
-        await expect(
-          deterministicDocument.update({ foo: 'baz' }, null, {
-            asDID: didKeyWithCapability,
-            anchor: false,
-            publish: false,
-          })
-        ).rejects.toThrowError(
-          'Capability does not have appropriate permissions to update this Stream'
-        )
-      }, 30000)
+      ceramic.did = didKeyWithCapability
 
-      test('fails to update if cacao issuer is not document controller using family resource', async () => {
-        const family = 'testFamily4'
-        // Create a determinstic tiledocument owned by the user
-        const deterministicDocument = await TileDocument.deterministic(ceramic, {
-          deterministic: true,
-          family,
-        })
-        const streamId = deterministicDocument.id
-        const didKeyWithCapability = await addCapToDid(
-          wallet,
-          didKey,
-          `ceramic://*?family=${family}`
-        )
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+        model: FAKE_STREAM_ID,
+        controller: `did:pkh:eip155:1:${wallet.address}`,
+      })
 
-        await expect(
-          deterministicDocument.update({ foo: 'baz' }, null, {
-            asDID: didKeyWithCapability,
-            anchor: false,
-            publish: false,
-          })
-        ).rejects.toThrow(/invalid_jws/)
-      }, 30000)
+      const didKeyWithBadCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${FAKE_STREAM_ID_2.toString()}`
+      )
 
-      test('can update stream with family resource', async () => {
-        const family = 'testFamily1'
-        // Create a determinstic tiledocument owned by the user
-        const deterministicDocument = await TileDocument.deterministic(ceramic, {
-          deterministic: true,
-          family,
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
-        })
-        const streamId = deterministicDocument.id
-        const didKeyWithCapability = await addCapToDid(
-          wallet,
-          didKey,
-          `ceramic://*?family=${family}`
-        )
+      ceramic.did = didKeyWithBadCapability
 
-        await deterministicDocument.update({ foo: 'bar' }, null, {
-          asDID: didKeyWithCapability,
+      await expect(
+        doc.replace(CONTENT1, {
+          asDID: didKeyWithBadCapability,
           anchor: false,
           publish: false,
         })
+      ).rejects.toThrowError(
+        'Capability does not have appropriate permissions to update this Stream'
+      )
+    }, 30000)
 
-        expect(deterministicDocument.content).toEqual({ foo: 'bar' })
-      }, 30000)
-    })
+    test('fails to create using capability with empty model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?model=`)
+      ceramic.did = didKeyWithCapability
 
-    describe('Create stream', () => {
-      test('can not create new stream with wrong family', async () => {
-        const family = 'testFamily1'
-        const didKeyWithCapability = await addCapToDid(
-          wallet,
-          didKey,
-          `ceramic://*?family=${family}`
-        )
+      await expect(
+        ModelInstanceDocument.create(ceramic, CONTENT0, {
+          model: FAKE_STREAM_ID,
+          controller: `did:pkh:eip155:1:${wallet.address}`,
+        })
+      ).rejects.toThrowError(
+        'Capability does not have appropriate permissions to update this Stream'
+      )
+    }, 30000)
 
-        await expect(
-          TileDocument.create(
-            ceramic,
-            { foo: 'bar' },
-            {
-              family: `${family}-wrong`,
-              controllers: [`did:pkh:eip155:1:${wallet.address}`],
-            },
-            {
-              asDID: didKeyWithCapability,
-              anchor: false,
-              publish: false,
-            }
-          )
-        ).rejects.toThrowError(
-          'Capability does not have appropriate permissions to update this Stream'
-        )
-      }, 30000)
+    test('fails to create if cacao issuer is not document controller using model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey2,
+        `ceramic://*?model=${METADATA.model.toString()}`
+      )
+      ceramic.did = didKeyWithCapability
 
-      test('can create new stream with family resource', async () => {
-        const family = 'testFamily1'
-        const didKeyWithCapability = await addCapToDid(
-          wallet,
-          didKey,
-          `ceramic://*?family=${family}`
-        )
+      await expect(
+        ModelInstanceDocument.create(ceramic, CONTENT0, {
+          model: FAKE_STREAM_ID,
+          controller: `did:key:z6MkwDAbu8iqPb2BbMs7jnGGErEu4U5zFYkVxWPb4zSAcg39#z6MkwDAbu8iqPb2BbMs7jnGGErEu4U5zFYkVxWPb4zSAcg39`,
+        })
+      ).rejects.toThrow(/invalid_jws/)
+    }, 30000)
 
-        const doc = await TileDocument.create(
-          ceramic,
-          { foo: 'bar' },
-          {
-            family,
-            controllers: [`did:pkh:eip155:1:${wallet.address}`],
-          },
-          {
-            asDID: didKeyWithCapability,
-            anchor: false,
-            publish: false,
-          }
-        )
+    test('fails to update if cacao issuer is not document controller using model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${METADATA.model.toString()}`
+      )
 
-        expect(doc.content).toEqual({ foo: 'bar' })
-        expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
-        expect(doc.metadata.family).toEqual(family)
-      }, 30000)
-    })
+      ceramic.did = didKeyWithCapability
+
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+        model: FAKE_STREAM_ID,
+        controller: `did:pkh:eip155:1:${wallet.address}`,
+      })
+
+      const didKeyWithBadCapability = await addCapToDid(
+        wallet2,
+        didKey2,
+        `ceramic://*?model=${METADATA.model.toString()}`
+      )
+
+      await expect(
+        doc.replace(CONTENT1, {
+          asDID: didKeyWithBadCapability,
+          anchor: false,
+          publish: false,
+        })
+      ).rejects.toThrow(/Failed/)
+    }, 30000)
+
+
+    test('can create stream with model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${METADATA.model.toString()}`
+      )
+      ceramic.did = didKeyWithCapability
+
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+        model: FAKE_STREAM_ID,
+        controller: `did:pkh:eip155:1:${wallet.address}`,
+      })
+
+      expect(doc.content).toEqual(CONTENT0)
+      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+      expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
+    }, 30000)
+
+    test('can create and update stream with model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${METADATA.model.toString()}`
+      )
+      ceramic.did = didKeyWithCapability
+
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+        model: FAKE_STREAM_ID,
+        controller: `did:pkh:eip155:1:${wallet.address}`,
+      })
+
+      await doc.replace(CONTENT1, {
+        asDID: didKeyWithCapability,
+        anchor: false,
+        publish: false,
+      })
+
+      expect(doc.content).toEqual(CONTENT1)
+    }, 30000)
   })
 
   describe('Resources using wildcard', () => {
@@ -365,7 +388,7 @@ describe('CACAO Integration test', () => {
   })
 
   describe('Ceramic dids instance with capability/parent', () => {
-    test('can update with streamId in capability', async () => {
+    test('can update tile stream with streamId in capability', async () => {
       ceramic.did = didKeyWithParent
       // Create a determinstic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
@@ -388,26 +411,29 @@ describe('CACAO Integration test', () => {
       expect(deterministicDocument.content).toEqual({ foo: 'bar' })
     }, 30000)
 
-    test('can create new stream with family resource', async () => {
-      const family = 'testFamily1'
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*?family=${family}`)
-      ceramic.did = didKeyWithCapability
-
-      const doc = await TileDocument.create(
-        ceramic,
-        { foo: 'bar' },
-        {
-          family,
-        },
-        {
-          anchor: false,
-          publish: false,
-        }
+    test('can create and update new model stream with model resource', async () => {
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*?model=${METADATA.model.toString()}`
       )
 
-      expect(doc.content).toEqual({ foo: 'bar' })
+      ceramic.did = didKeyWithCapability
+      // Done 
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+        model: FAKE_STREAM_ID,
+      })
+
+      expect(doc.content).toEqual(CONTENT0)
       expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
-      expect(doc.metadata.family).toEqual(family)
+      // expect(doc.metadata.model).toEqual(METADATA.model.toString())
+
+      await doc.replace(CONTENT1, {
+        anchor: false,
+        publish: false,
+      })
+
+      expect(doc.content).toEqual(CONTENT1)
     }, 30000)
 
     test('create with wildcard * resource', async () => {
