@@ -23,6 +23,7 @@ export type UpdateMessage = {
   typ: MsgType.UPDATE
   stream: StreamID
   tip: CID
+  model?: StreamID
 }
 
 export type QueryMessage = {
@@ -101,6 +102,7 @@ export function serialize(message: PubsubMessage): Uint8Array {
         doc: message.stream.toString(),
         stream: message.stream.toString(),
         tip: message.tip.toString(),
+        ...(message.model && { model: message.model.toString() })
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
@@ -132,6 +134,7 @@ export function deserialize(message: any): PubsubMessage {
         typ: MsgType.UPDATE,
         stream,
         tip: toCID(parsed.tip),
+        ...(parsed.model && { model: StreamID.fromString(parsed.model) })
       }
     }
     case MsgType.RESPONSE: {

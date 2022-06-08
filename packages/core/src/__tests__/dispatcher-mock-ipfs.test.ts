@@ -26,6 +26,9 @@ const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adn
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
+const FAKE_MODEL: StreamID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexpxyz'
+)
 
 const mock_ipfs = {
   pubsub: {
@@ -196,7 +199,7 @@ describe('Dispatcher with mock ipfs', () => {
     await expect(dispatcher.handleMessage(message)).rejects.toThrow(/Unsupported message type/)
   })
 
-  it('handle message correctly', async () => {
+  it('handle message correctly without model', async () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
     async function register(state: StreamState) {
@@ -225,7 +228,7 @@ describe('Dispatcher with mock ipfs', () => {
     )
     const queryID = queryMessageSent.id
 
-    // Handle UPDATE message
+    // Handle UPDATE message without model
     dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
@@ -252,5 +255,38 @@ describe('Dispatcher with mock ipfs', () => {
     const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(stream2.id, FAKE_CID2)
+  })
+
+  it('handle message correctly with model', async () => {
+    dispatcher.repository.stateManager = {} as unknown as StateManager
+
+    async function register(state: StreamState) {
+      const runningState = new RunningState(state, false)
+      repository.add(runningState)
+      dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
+      return runningState
+    }
+
+    const initialState = {
+      type: 0,
+      log: [
+        {
+          cid: FAKE_STREAM_ID.cid,
+          type: CommitType.GENESIS,
+        },
+      ],
+    } as unknown as StreamState
+    const state$ = await register(initialState)
+
+    // Handle UPDATE message with model
+    dispatcher.repository.stateManager.update = jest.fn()
+    await dispatcher.handleMessage({
+      typ: MsgType.UPDATE,
+      stream: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      model: FAKE_MODEL,
+    })
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
+
   })
 })

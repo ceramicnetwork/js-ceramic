@@ -192,7 +192,7 @@ export class StateManager {
   }
 
   publishTip(state$: RunningState): void {
-    this.dispatcher.publishTip(state$.id, state$.tip)
+    this.dispatcher.publishTip(state$.id, state$.tip, state$.state.metadata.model)
   }
 
   /**
