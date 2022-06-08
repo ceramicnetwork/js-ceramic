@@ -130,7 +130,7 @@ export class CeramicCliUtils {
         config.httpApi.hostname = hostname
       }
       if (port) {
-        config.httpApi.port = _validatePort(port)
+        config.httpApi.port = port
       }
       if (ipfsApi) {
         config.ipfs.mode = IpfsMode.REMOTE
@@ -605,7 +605,7 @@ export class CeramicCliUtils {
  * Helper function: Parse provided port and verify validity or exit process
  * @param inPort
  */
-export function _validatePort(inPort) {
+export function validatePort(inPort) {
   const validPort = Number(inPort)
   if (inPort == null) {
     return inPort

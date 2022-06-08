@@ -27,7 +27,7 @@ import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
-import { _validatePort } from './ceramic-cli-utils.js'
+import { validatePort } from './ceramic-cli-utils.js'
 import type { ResolverRegistry } from 'did-resolver'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
@@ -171,7 +171,7 @@ export class CeramicDaemon {
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
-    this.port = _validatePort(this.opts.httpApi?.port) || DEFAULT_PORT
+    this.port = validatePort(this.opts.httpApi?.port) || DEFAULT_PORT
     this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
 
     this.app = addAsync(express())
