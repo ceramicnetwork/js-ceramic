@@ -102,7 +102,7 @@ export function serialize(message: PubsubMessage): Uint8Array {
         doc: message.stream.toString(),
         stream: message.stream.toString(),
         tip: message.tip.toString(),
-        model: message.model?.toString()
+        ...(message.model && { model: message.model.toString() })
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
