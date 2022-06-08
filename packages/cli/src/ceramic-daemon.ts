@@ -27,7 +27,6 @@ import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
-import { validatePort } from './ceramic-cli-utils.js'
 import type { ResolverRegistry } from 'did-resolver'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
@@ -66,7 +65,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     pubsubTopic: opts.network.pubsubTopic,
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
-    indexing: opts.indexing
+    indexing: opts.indexing,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
@@ -157,6 +156,21 @@ function makeResolvers(
     }
   }
   return result
+}
+
+/**
+ * Helper function: Parse provided port and verify validity or exit process
+ * @param inPort
+ */
+function validatePort(inPort) {
+  const validPort = Number(inPort)
+  if (inPort == null) {
+    return inPort
+  } else if (isNaN(validPort) || validPort > 65535) {
+    console.error('Invalid port number passed.')
+    process.exit(1)
+  }
+  return validPort
 }
 
 /**

@@ -601,21 +601,6 @@ export class CeramicCliUtils {
   }
 }
 
-/**
- * Helper function: Parse provided port and verify validity or exit process
- * @param inPort
- */
-export function validatePort(inPort) {
-  const validPort = Number(inPort)
-  if (inPort == null) {
-    return inPort
-  } else if (isNaN(validPort) || validPort > 65535) {
-    console.error('Invalid port number passed.')
-    process.exit(1)
-  }
-  return validPort
-}
-
 const depreciationNotice = () => {
   console.log(
     `${pc.red(pc.bold('This command has been deprecated.'))}

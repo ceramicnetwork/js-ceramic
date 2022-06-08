@@ -1,7 +1,7 @@
 import { program } from 'commander'
 import pc from 'picocolors'
 
-import {CeramicCliUtils} from '../ceramic-cli-utils.js'
+import { CeramicCliUtils } from '../ceramic-cli-utils.js'
 
 program
   .command('daemon')
