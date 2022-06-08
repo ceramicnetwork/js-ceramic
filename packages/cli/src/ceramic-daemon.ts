@@ -25,11 +25,13 @@ import * as SafeDidResolver from 'safe-did-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler.js'
-import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
+import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
+import { ErrorHandlingRouter } from './error-handling-router.js'
+import { collectionQuery } from './daemon/collection-query.js'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
@@ -248,14 +250,15 @@ export class CeramicDaemon {
   }
 
   registerAPIPaths(app: ExpressWithAsync, gateway: boolean): void {
-    const baseRouter = Router()
-    const commitsRouter = Router()
-    const documentsRouter = Router()
-    const multiqueriesRouter = Router()
-    const nodeRouter = Router()
-    const pinsRouter = Router()
-    const recordsRouter = Router()
-    const streamsRouter = Router()
+    const baseRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const commitsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const documentsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const multiqueriesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const nodeRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const pinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -265,15 +268,7 @@ export class CeramicDaemon {
     baseRouter.use('/pins', pinsRouter)
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
-
-    baseRouter.use(errorHandler(this.diagnosticsLogger))
-    commitsRouter.use(errorHandler(this.diagnosticsLogger))
-    documentsRouter.use(errorHandler(this.diagnosticsLogger))
-    multiqueriesRouter.use(errorHandler(this.diagnosticsLogger))
-    nodeRouter.use(errorHandler(this.diagnosticsLogger))
-    pinsRouter.use(errorHandler(this.diagnosticsLogger))
-    recordsRouter.use(errorHandler(this.diagnosticsLogger))
-    streamsRouter.use(errorHandler(this.diagnosticsLogger))
+    baseRouter.use('/collection', collectionRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -285,6 +280,7 @@ export class CeramicDaemon {
     nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
+    collectionRouter.getAsync('/', this.getCollection.bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -452,6 +448,17 @@ export class CeramicDaemon {
       streamId: streamId.toString(),
       docId: streamId.toString(),
       commits: serializedCommits,
+    })
+  }
+
+  async getCollection(req: Request, res: Response): Promise<void> {
+    const httpQuery = parseQueryObject(req.query)
+    const defaultPagination = { first: 100 }
+    const query = collectionQuery(httpQuery, defaultPagination)
+    const indexResponse = await this.ceramic.index.queryIndex(query)
+    res.json({
+      entries: indexResponse.entries.map(StreamUtils.serializeState),
+      pageInfo: indexResponse.pageInfo,
     })
   }
 
