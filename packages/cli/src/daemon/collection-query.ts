@@ -1,4 +1,4 @@
-import type { BaseQuery, ForwardPagination, Pagination } from '@ceramicnetwork/common'
+import type { BaseQuery, Pagination } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 /**
@@ -8,15 +8,18 @@ function isPositiveInteger(input: unknown): input is number {
   return typeof input === 'number' && Math.floor(input) === input && input > 0
 }
 
+export class InvalidPaginationError extends Error {
+  constructor() {
+    super(`Can not parse pagination fields: either "first" or "last" should be positive integers`)
+  }
+}
+
 /**
  * Parse +params+ and select only fields relevant to +ForwardPagination+ or +BackwardPagination+.
  *
- * If no relevant fields found, return +byDefault+.
+ * @throws if no relevant fields found.
  */
-export function parsePagination(
-  params: Record<string, any>,
-  byDefault: ForwardPagination
-): Pagination {
+export function parsePagination(params: Record<string, any>): Pagination {
   if (isPositiveInteger(params.first)) {
     return {
       first: params.first,
@@ -28,21 +31,18 @@ export function parsePagination(
       before: params.before,
     }
   } else {
-    return byDefault
+    throw new InvalidPaginationError()
   }
 }
 
 /**
  * Return index query based on the query string params from HTTP request.
  *
- * @throws If parsed +query.model+ is not a valid StreamID.
+ * @throws If parsed +query.model+ is not a valid StreamID, or if pagination is absent.
  */
-export function collectionQuery(
-  query: Record<string, any>,
-  defaultPagination: ForwardPagination
-): BaseQuery & Pagination {
+export function collectionQuery(query: Record<string, any>): BaseQuery & Pagination {
   try {
-    const pagination = parsePagination(query, defaultPagination)
+    const pagination = parsePagination(query)
     return {
       model: StreamID.fromString(query.model),
       account: query.account,
