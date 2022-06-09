@@ -87,6 +87,9 @@ export class DaemonHTTPApiConfig {
 
   /**
    * Port to listen on.
+   * jsonMember type needs to be AnyT vs Number to allow for non-number instantiation of the config
+   * before type coercion and value validation is triggered via the subsequent validatePort() helper
+   * function in ceramic-daemon.ts during the daemon startup.
    */
   @jsonMember(AnyT)
   port?: number
