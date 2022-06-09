@@ -5,9 +5,10 @@ import { StreamUtils, fetchJson } from '@ceramicnetwork/common'
  * IndexAPI implementation on top of HTTP endpoint.
  */
 export class RemoteIndexApi implements IndexApi {
+  private readonly _fetchJson: typeof fetchJson = fetchJson
   private readonly _collectionURL: URL
 
-  constructor(apiUrl: URL, private readonly fetchJsonFn: typeof fetchJson = fetchJson) {
+  constructor(apiUrl: URL) {
     this._collectionURL = new URL('./collection', apiUrl)
   }
 
@@ -19,7 +20,7 @@ export class RemoteIndexApi implements IndexApi {
     for (const key in query) {
       queryURL.searchParams.set(key, query[key])
     }
-    const response = await this.fetchJsonFn(queryURL)
+    const response = await this._fetchJson(queryURL)
     const entries = response.entries.map(StreamUtils.deserializeState)
     return {
       entries: entries,
