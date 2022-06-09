@@ -32,17 +32,17 @@ export enum AnchorStatus {
 
 export interface CommitHeader {
   controllers: Array<string>
-  family?: string
+  family?: string // deprecated
   model?: Uint8Array // StreamID encoded as byte array
-  schema?: string
-  tags?: Array<string>
+  schema?: string // deprecated
+  tags?: Array<string> // deprecated
 
   [index: string]: any // allow support for future changes
 }
 
 export interface GenesisHeader extends CommitHeader {
-  unique?: string
-  forbidControllerChange?: boolean
+  unique?: Uint8Array | string // Model and ModelInstanceDocument use Uint8Array, Caip10Link and TileDocument use 'string'
+  forbidControllerChange?: boolean // deprecated, only used by TileDocument
 }
 
 export type GenesisCommit = {
@@ -88,11 +88,11 @@ export type CeramicCommit =
  */
 export interface StreamMetadata {
   controllers: Array<string>
+  model?: StreamID
   family?: string // deprecated
   schema?: string // deprecated
   tags?: Array<string> // deprecated
-  forbidControllerChange?: boolean
-  model?: StreamID
+  forbidControllerChange?: boolean // deprecated, only used by TileDocument
   [index: string]: any // allow arbitrary properties
 }
 

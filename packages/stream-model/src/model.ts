@@ -287,7 +287,7 @@ export class Model extends Stream {
     // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: uint8arrays.toString(randomBytes(12), 'base64'),
+      unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
     const commit: GenesisCommit = { data: content, header }

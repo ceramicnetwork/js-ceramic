@@ -85,28 +85,6 @@ const jwsForVersion1 = {
   ],
 }
 
-const serialize = (data: any): any => {
-  if (Array.isArray(data)) {
-    const serialized = []
-    for (const item of data) {
-      serialized.push(serialize(item))
-    }
-    return serialized
-  }
-  const cid = CID.asCID(data)
-  if (!cid && typeof data === 'object') {
-    const serialized: Record<string, any> = {}
-    for (const prop in data) {
-      serialized[prop] = serialize(data[prop])
-    }
-    return serialized
-  }
-  if (cid) {
-    return data.toString()
-  }
-  return data
-}
-
 const ThreeIdResolver = {
   '3': async (did) => ({
     didResolutionMetadata: { contentType: 'application/did+json' },
@@ -188,11 +166,11 @@ async function checkSignedCommitMatchesExpectations(
 
   const payload = dagCBOR.decode(linkedBlock)
 
-  const serialized = { jws: serialize(jws), linkedBlock: serialize(payload) }
+  const unpacked = { jws, linkedBlock: payload }
 
   // Add the 'unique' header field to the data used to generate the expected genesis commit
-  if (serialized.linkedBlock.header?.unique) {
-    expectedCommit.header['unique'] = serialized.linkedBlock.header.unique
+  if (unpacked.linkedBlock.header?.unique) {
+    expectedCommit.header['unique'] = unpacked.linkedBlock.header.unique
   }
 
   const expected = await did.createDagJWS(expectedCommit)
@@ -200,9 +178,9 @@ async function checkSignedCommitMatchesExpectations(
 
   const { jws: eJws, linkedBlock: eLinkedBlock } = expected
   const ePayload = dagCBOR.decode(eLinkedBlock)
-  const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
+  const signed = { jws: eJws, linkedBlock: ePayload }
 
-  expect(serialized).toEqual(signed)
+  expect(unpacked).toEqual(signed)
 }
 
 describe('ModelInstanceDocumentHandler', () => {
