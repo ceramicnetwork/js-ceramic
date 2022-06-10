@@ -468,8 +468,7 @@ export class CeramicDaemon {
 
   async getCollection(req: Request, res: Response): Promise<void> {
     const httpQuery = parseQueryObject(req.query)
-    const defaultPagination = { first: 100 }
-    const query = collectionQuery(httpQuery, defaultPagination)
+    const query = collectionQuery(httpQuery)
     const indexResponse = await this.ceramic.index.queryIndex(query)
     res.json({
       entries: indexResponse.entries.map(StreamUtils.serializeState),
