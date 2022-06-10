@@ -5,6 +5,7 @@ import { StreamUtils, fetchJson } from '@ceramicnetwork/common'
  * IndexAPI implementation on top of HTTP endpoint.
  */
 export class RemoteIndexApi implements IndexApi {
+  // Stored as a member to make it easier to inject a mock in unit tests
   private readonly _fetchJson: typeof fetchJson = fetchJson
   private readonly _collectionURL: URL
 
