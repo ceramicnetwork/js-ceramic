@@ -21,7 +21,7 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { DataSource } from 'typeorm'
-import { knex } from 'knex'
+import Knex from 'knex'
 import { PostgresIndexApi } from '@ceramicnetwork/core'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
@@ -231,7 +231,8 @@ export class CeramicCliUtils {
         synchronize: true,
         logging: true,
       })*/
-      const dataSource = knex({
+      console.log('ceramic-cli-utils')
+      const dataSource = Knex({
         client: 'pg',
         connection: 'postgres://ceramic:password@127.0.0.1:5432/ceramic', //process.env.PG_CONNECTION_STRING,
         searchPath: ['ceramic', 'public'],

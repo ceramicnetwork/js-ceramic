@@ -13,10 +13,19 @@ export class PostgresIndexApi implements DatabaseIndexAPI {
   async indexStream(args: IndexStreamArgs): Promise<void> {
     const tableName = `mid_${args.model}`.substring(0, 'mid_'.length + 10)
 
-    return await this.dataSource.query(`
+    console.log("Postgres Index API")
+    return await this.dataSource(tableName).insert({
+      stream_id: args.streamID,
+      controller_did: args.controller,
+      created_at: 'NOW()',
+      updated_at: 'NOW()',
+      last_updated_at: 'NOW()',
+    }).then()
+
+    /*return await this.dataSource.query(`
         INSERT INTO ${tableName} (stream_id, controller, created_at, updated_at)
         VALUES (${args.streamID}, ${args.controller}, NOW(), NOW());
-    `)
+    `)*/
   }
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     throw new Error('Method not implemented.');
