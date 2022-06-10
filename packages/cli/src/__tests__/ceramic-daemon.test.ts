@@ -645,14 +645,15 @@ describe('Ceramic interop: core <> http-client', () => {
       test('model, account in query', async () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
         query.searchParams.set('model', MODEL_STREAM_ID.toString())
-        query.searchParams.set('account', randomString(10))
+        const account = `did:key:${randomString(10)}`
+        query.searchParams.set('account', account)
         query.searchParams.set('first', '100')
         const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
         await fetchJson(query.toString())
         expect(indexSpy).toBeCalledWith({
           first: 100,
           model: MODEL_STREAM_ID,
-          account: query.searchParams.get('account'),
+          account: account,
         })
       })
       test('serialize StreamState', async () => {
