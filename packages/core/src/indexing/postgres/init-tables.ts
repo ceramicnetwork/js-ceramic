@@ -29,6 +29,16 @@ export async function initTables(dataSource: any, modelsToIndex: Array<StreamID>
           console.log('skipping')
         }
       })
-      .then()
+      .then(function(status) {
+        console.log('then create', status)
+        // alter table test
+        return dataSource.schema.alterTable(tableName, function (t) {
+          t.string('comment_alter').defaultTo('test');
+        }).then()
+
+      })
+
   }
+
 }
+

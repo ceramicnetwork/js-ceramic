@@ -8,8 +8,8 @@ export async function createModelTableKnex(dataSource: any, tableName: string) {
     t.string('stream_id').unique().primary()
     t.string('controller_did').notNullable()
     t.dateTime('last_anchored_at')
-    t.dateTime('created_at')
-    t.dateTime('updated_at').notNullable()
+    t.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
+    t.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
     t.index(['stream_id'], `idx_${tableName}_stream_id`, {
       storageEngineIndexType: 'hash',
     })

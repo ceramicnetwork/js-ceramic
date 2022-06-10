@@ -14,12 +14,10 @@ export class PostgresIndexApi implements DatabaseIndexAPI {
     const tableName = `mid_${args.model}`.substring(0, 'mid_'.length + 10)
 
     console.log("Postgres Index API")
+    // created_at and last_updated_at set by default default value
     return await this.dataSource(tableName).insert({
       stream_id: args.streamID,
       controller_did: args.controller,
-      created_at: 'NOW()',
-      updated_at: 'NOW()',
-      last_updated_at: 'NOW()',
     }).then()
 
     /*return await this.dataSource.query(`
