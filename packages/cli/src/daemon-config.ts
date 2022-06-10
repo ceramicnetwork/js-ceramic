@@ -87,19 +87,11 @@ export class DaemonHTTPApiConfig {
 
   /**
    * Port to listen on.
+   * jsonMember type needs to be AnyT vs Number to allow for non-number instantiation of the config
+   * before type coercion and value validation is triggered via the subsequent validatePort() helper
+   * function in ceramic-daemon.ts during the daemon startup.
    */
-  @jsonMember(AnyT, {
-    serializer: (inPort) => {
-      const validPort = Number(inPort)
-      if (inPort == null) {
-        return inPort
-      } else if (isNaN(validPort) || validPort > 65535) {
-        console.error('Invalid port number passed.')
-        process.exit(1)
-      }
-      return validPort
-    },
-  })
+  @jsonMember(AnyT)
   port?: number
 
   /**

@@ -168,6 +168,21 @@ function makeResolvers(
 }
 
 /**
+ * Helper function: Parse provided port and verify validity or exit process
+ * @param inPort
+ */
+function validatePort(inPort) {
+  const validPort = Number(inPort)
+  if (inPort == null) {
+    return inPort
+  } else if (isNaN(validPort) || validPort > 65535) {
+    console.error('Invalid port number passed.')
+    process.exit(1)
+  }
+  return validPort
+}
+
+/**
  * Ceramic daemon implementation
  */
 export class CeramicDaemon {
@@ -179,7 +194,7 @@ export class CeramicDaemon {
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
-    this.port = this.opts.httpApi?.port || DEFAULT_PORT
+    this.port = validatePort(this.opts.httpApi?.port) || DEFAULT_PORT
     this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
 
     this.app = addAsync(express())
