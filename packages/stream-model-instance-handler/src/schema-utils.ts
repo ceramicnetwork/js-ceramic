@@ -1,7 +1,7 @@
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
-import Ajv from 'ajv'
+import ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 
 /**
@@ -9,10 +9,15 @@ import addFormats from 'ajv-formats'
  * TODO: Move schema stream loading out of this.
  */
 export class SchemaValidation {
-  private readonly _validator: Ajv
+  private readonly _validator = new ajv({
+    strict: true,
+    allErrors: true,
+    allowMatchingProperties: false,
+    ownProperties: false,
+    unevaluated: false,
+  })
 
   constructor() {
-    this._validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
     addFormats(this._validator)
   }
 
@@ -21,11 +26,16 @@ export class SchemaValidation {
     content: Record<string, any>,
     schemaStreamId: string
   ): Promise<void> {
+    console.log("VALIDATING MID!!!")
+    console.log("GOT CERAMIC", ceramic)
+    console.log("GOT CONTENT", content)
+    console.log("GOT SCHEMA STREAM ID", schemaStreamId)
     const schema = await this._loadSchemaById(ceramic, schemaStreamId)
     this._validate(content, schema)
   }
 
   private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<T | null> {
+    console.log("NEED TO FETCH THE MODEL TO VALIDATE MID", schemaStreamId)
     let commitId: CommitID
     try {
       commitId = CommitID.fromString(schemaStreamId)
@@ -35,7 +45,11 @@ export class SchemaValidation {
     return ceramic.loadStream<ModelInstanceDocument<T>>(commitId).then((doc) => doc.content)
   }
 
-  private _validate(content: Record<string, any>, schema: Record<string, any>): void {
+  private _validate(content: Record<string, any>, schema: SchemaObject): void {
+    console.log("WE HAVE THE MODEL, NOW VALIDATING CONTENT!!!")
+    console.log("CONTENT", content)
+    console.log("SCHEMA", schema)
+
     const isValid = this._validator.validate(schema, content)
     if (!isValid) {
       const errorMessages = this._validator.errorsText()

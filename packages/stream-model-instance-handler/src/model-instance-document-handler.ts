@@ -89,11 +89,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw new Error('Exactly one controller must be specified')
     }
 
-    // TODO(NET-1447): re-enable once model schema validation is added
-    /*if (state.metadata.schema) {
-      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
-    }*/
-
     const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
@@ -103,6 +98,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
+
+    await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.model.toString())
 
     return state
   }
