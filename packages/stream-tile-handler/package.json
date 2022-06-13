@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile-handler",
-  "version": "2.2.1-rc.0",
+  "version": "2.2.1-rc.1",
   "description": "Ceramic Tile Document stream handler",
   "keywords": [
     "ceramic",
@@ -50,5 +50,5 @@
     "key-did-resolver": "^2.0.2",
     "multiformats": "^9.5.8"
   },
-  "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
+  "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

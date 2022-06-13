@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/metrics",
-  "version": "1.0.1-rc.0",
+  "version": "1.0.1-rc.1",
   "description": "Ceramic metrics instrumentation and exporters",
   "keywords": [
     "ceramic",
@@ -38,5 +38,6 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.5"
-  }
+  },
+  "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

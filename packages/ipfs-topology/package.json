@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "2.0.7-rc.0",
+  "version": "2.0.7-rc.1",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",
@@ -35,5 +35,6 @@
   },
   "devDependencies": {
     "multiaddr": "^10.0.1"
-  }
+  },
+  "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

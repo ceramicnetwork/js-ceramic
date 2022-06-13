@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance",
-  "version": "0.2.0-rc.0",
+  "version": "0.2.0-rc.1",
   "description": "Ceramic Model Instance Document stream type",
   "keywords": [
     "ceramic",
@@ -38,5 +38,5 @@
     "fast-json-patch": "^3.1.0",
     "uint8arrays": "^3.0.0"
   },
-  "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
+  "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

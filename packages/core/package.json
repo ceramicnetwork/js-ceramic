@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.5.0-rc.0",
+  "version": "2.5.0-rc.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -80,5 +80,5 @@
     "mockdate": "^3.0.5",
     "tmp-promise": "^3.0.3"
   },
-  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
+  "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
