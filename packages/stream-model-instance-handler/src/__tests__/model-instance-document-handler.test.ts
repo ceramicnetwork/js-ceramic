@@ -2,7 +2,6 @@ import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
-import type { DID } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { ModelInstanceDocumentHandler } from '../model-instance-document-handler.js'
@@ -15,6 +14,7 @@ import {
   CeramicApi,
   CommitType,
   Context,
+  StreamState,
   StreamUtils,
   SignedCommitContainer,
   TestUtils,
@@ -24,6 +24,19 @@ import {
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DummySchemaValidation } from '../schema-utils.js'
+import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
+import { ModelHandler } from '@ceramicnetwork/stream-model-handler'
+import { Ceramic } from '@ceramicnetwork/core'
+import { CeramicClient } from '@ceramicnetwork/http-client'
+import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import tmp from 'tmp-promise'
+import getPort from 'get-port'
+import * as random from '@stablelib/random'
+import { Ed25519Provider } from 'key-did-provider-ed25519'
+import * as RealThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import { Resolver } from 'did-resolver'
+import { DID } from 'dids'
 
 jest.unstable_mockModule('did-jwt', () => {
   return {
@@ -62,7 +75,7 @@ const FAKE_STREAM_ID = StreamID.fromString(
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
-const METADATA = { controller: DID_ID, model: FAKE_STREAM_ID }
+const METADATA_WITH_FAKE_MODEL = { controller: DID_ID, model: FAKE_STREAM_ID }
 
 const jwsForVersion0 = {
   payload: 'bbbb',
@@ -184,7 +197,158 @@ async function checkSignedCommitMatchesExpectations(
   expect(unpacked).toEqual(signed)
 }
 
-describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
+const MODEL_CONTENT = {
+  name: 'MyModel',
+  accountRelation: ModelAccountRelation.LIST,
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    properties: {
+      stringPropName: {
+        type: 'string',
+        maxLength: 80,
+      },
+    },
+    additionalProperties: false,
+    required: ['stringPropName'],
+  },
+}
+
+const TOPIC = '/ceramic'
+// const SEED = 'SEED'
+
+const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
+  const core = await Ceramic.create(ipfs, {
+    pubsubTopic: TOPIC,
+    stateStoreDirectory,
+    anchorOnRequest: false,
+    indexing: {
+      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+      models: [FAKE_STREAM_ID.toString()],
+    },
+  })
+
+  const handler = new TileDocumentHandler()
+  ;(handler as any).verifyJWS = (): Promise<void> => {
+    return
+  }
+  // @ts-ignore
+  core._streamHandlers.add(handler)
+  return core
+}
+
+function makeDID(ceramic: CeramicApi, seed?: string): DID {
+  const effectiveSeed = seed || random.randomString(32)
+  const digest = sha256.hash(uint8arrays.fromString(effectiveSeed))
+  const provider = new Ed25519Provider(digest)
+
+  const keyDidResolver = KeyDidResolver.getResolver()
+  const threeIdResolver = RealThreeIdResolver.getResolver(ceramic)
+  const resolver = new Resolver({
+    ...threeIdResolver,
+    ...keyDidResolver,
+  })
+  return new DID({ provider, resolver })
+}
+
+describe('ModelInstanceDocumentHandler with real model and schema validator', () => {
+  jest.setTimeout(30000)
+  let ipfs: IpfsApi
+  let tmpFolder: any
+  let core: Ceramic
+  let daemon: CeramicDaemon
+  let client: CeramicClient
+  let did: DID
+  let context: Context
+  let signerUsingNewKey: CeramicSigner
+  let signerUsingOldKey: CeramicSigner
+  let modelStreamState: StreamState
+  let handler: ModelInstanceDocumentHandler
+
+  beforeAll(async () => {
+    ipfs = await createIPFS()
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    core = await makeCeramicCore(ipfs, tmpFolder.path)
+    const port = await getPort()
+    const apiUrl = 'http://localhost:' + port
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    await daemon.listen()
+    client = new CeramicClient(apiUrl, { syncInterval: 500 })
+
+    await core.setDID(makeDID(core, SEED))
+    await client.setDID(makeDID(client, SEED))
+
+    context = {
+      did,
+      ipfs,
+      anchorService: null,
+      api: client,
+    }
+
+    const modelHandler = new ModelHandler()
+
+    setDidToNotRotatedState(did)
+
+    const commit = (await Model._makeGenesis(context.api, MODEL_CONTENT)) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    modelStreamState = await modelHandler.applyCommit(commitData, context)
+  })
+
+  afterAll(async () => {
+    await ipfs.stop()
+    await client.close()
+    await daemon.close()
+    await core.close()
+    await tmpFolder.cleanup()
+  })
+
+  beforeEach(() => {
+    handler = new ModelInstanceDocumentHandler()
+
+    setDidToNotRotatedState(did)
+  })
+
+  it('applies genesis commit correctly with valid content (as per model schema)', async () => {
+    const commit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      {
+        controller: DID_ID,
+        model: modelStreamState.metadata.model
+      }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    const streamState = await handler.applyCommit(commitData, context)
+    delete streamState.metadata.unique
+    expect(true).toBeTruthy()
+  })
+
+  it('applies signed commit correctly with valid content (as per model schema)', async () => {
+    expect(true).toBeTruthy()
+  })
+})
+
+describe('ModelInstanceDocumentHandler with a fake model and a dummy schema validator', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
   let context: Context
@@ -256,24 +420,24 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA_WITH_FAKE_MODEL)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
       data: CONTENT0,
-      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
+      header: { controllers: [METADATA_WITH_FAKE_MODEL.controller], model: METADATA_WITH_FAKE_MODEL.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
   it('null content in genesis is valid', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, METADATA)
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, METADATA_WITH_FAKE_MODEL)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
       data: null,
-      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
+      header: { controllers: [METADATA_WITH_FAKE_MODEL.controller], model: METADATA_WITH_FAKE_MODEL.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -287,7 +451,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
 
     const expectedGenesis = {
       data: null,
-      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
+      header: { controllers: [METADATA_WITH_FAKE_MODEL.controller], model: METADATA_WITH_FAKE_MODEL.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -300,8 +464,8 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
   })
 
   it('creates genesis commits uniquely', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
+    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA_WITH_FAKE_MODEL)
+    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA_WITH_FAKE_MODEL)
 
     expect(commit1).not.toEqual(commit2)
   })
@@ -310,7 +474,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
@@ -332,7 +496,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -361,7 +525,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -405,7 +569,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
@@ -462,7 +626,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       null,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -504,7 +668,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -568,7 +732,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -611,7 +775,7 @@ describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA
+      METADATA_WITH_FAKE_MODEL
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 

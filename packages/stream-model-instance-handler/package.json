@@ -42,14 +42,22 @@
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.1.0",
+    "@ceramicnetwork/cli": "^2.2.0",
+    "@ceramicnetwork/core": "^2.4.0",
+    "@ceramicnetwork/http-client": "^2.1.0",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.6",
+    "@ceramicnetwork/stream-model": "^0.1.0",
+    "@ceramicnetwork/stream-model-handler": "^0.1.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "ceramic-cacao": "^1.0.0",
     "did-resolver": "^3.1.5",
     "dids": "^3.0.0",
+    "get-port": "^6.1.2",
     "key-did-resolver": "^2.0.2",
-    "multiformats": "^9.5.8"
+    "multiformats": "^9.5.8",
+    "tmp-promise": "^3.0.3"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }

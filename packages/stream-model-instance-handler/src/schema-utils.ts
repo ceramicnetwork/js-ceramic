@@ -1,8 +1,8 @@
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { CeramicApi } from '@ceramicnetwork/common'
-import { CommitID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
+import { Model } from '@ceramicnetwork/stream-model'
 
 export interface SchemaValidationInterface {
   validateSchema(
@@ -14,11 +14,11 @@ export interface SchemaValidationInterface {
 
 export class DummySchemaValidation implements SchemaValidationInterface {
   validateSchema(
-    ceramic: CeramicApi, 
-    content: Record<string, any>, 
+    ceramic: CeramicApi,
+    content: Record<string, any>,
     schemaStreamId: string
   ): Promise<void> {
-    return 
+    return
   }
 }
 
@@ -44,30 +44,20 @@ export class SchemaValidation implements SchemaValidationInterface {
     content: Record<string, any>,
     schemaStreamId: string
   ): Promise<void> {
-    console.log("VALIDATING MID!!!")
-    console.log("GOT CERAMIC", ceramic)
-    console.log("GOT CONTENT", content)
-    console.log("GOT SCHEMA STREAM ID", schemaStreamId)
-    const schema = await this._loadSchemaById(ceramic, schemaStreamId)
-    this._validate(content, schema)
+    const modelStream = await this._loadSchemaById(ceramic, schemaStreamId)
+    this._validate(content, modelStream.content.schema)
   }
 
-  private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<T | null> {
-    console.log("NEED TO FETCH THE MODEL TO VALIDATE MID", schemaStreamId)
-    let commitId: CommitID
+  private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<Model | null> {
     try {
-      commitId = CommitID.fromString(schemaStreamId)
-    } catch {
-      throw new Error('Commit missing when loading schema document')
+      console.log("CommitID.fromString(schemaStreamId)", schemaStreamId)
+      return ceramic.loadStream(StreamID.fromString(schemaStreamId))
+    } catch(e) {
+      throw new Error(`Can't load MID's model stream from stream id`)
     }
-    return ceramic.loadStream<ModelInstanceDocument<T>>(commitId).then((doc) => doc.content)
   }
 
   private _validate(content: Record<string, any>, schema: SchemaObject): void {
-    console.log("WE HAVE THE MODEL, NOW VALIDATING CONTENT!!!")
-    console.log("CONTENT", content)
-    console.log("SCHEMA", schema)
-
     const isValid = this._validator.validate(schema, content)
     if (!isValid) {
       const errorMessages = this._validator.errorsText()
