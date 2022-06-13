@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0-rc.0](/compare/@ceramicnetwork/core@2.4.0...@ceramicnetwork/core@2.5.0-rc.0) (2022-06-13)
+
+
+### Features
+
+* **core:** add family to pubsub update messages e2fef67
+* HTTP endpoint - it works (#2210) 28bf9aa, closes #2210
+
+
+
+
+
 # [2.4.0](/compare/@ceramicnetwork/core@2.3.1...@ceramicnetwork/core@2.4.0) (2022-06-06)
 
 

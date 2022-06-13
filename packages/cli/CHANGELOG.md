@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0-rc.0](/compare/@ceramicnetwork/cli@2.2.0...@ceramicnetwork/cli@2.3.0-rc.0) (2022-06-13)
+
+
+### Bug Fixes
+
+* user more real request to the collection endpoint (#2220) 300db14, closes #2220
+
+
+### Features
+
+* HTTP endpoint - it works (#2210) 28bf9aa, closes #2210
+* Implement IndexAPI on http client side (#2211) 03d09a5, closes #2211
+
+
+
+
+
 # [2.2.0](/compare/@ceramicnetwork/cli@2.1.1...@ceramicnetwork/cli@2.2.0) (2022-06-06)
 
 

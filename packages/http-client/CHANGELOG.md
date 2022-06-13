@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0-rc.0](/compare/@ceramicnetwork/http-client@2.1.0...@ceramicnetwork/http-client@2.2.0-rc.0) (2022-06-13)
+
+
+### Features
+
+* Implement IndexAPI on http client side (#2211) 03d09a5, closes #2211
+
+
+
+
+
 # [2.1.0](/compare/@ceramicnetwork/http-client@2.0.4...@ceramicnetwork/http-client@2.1.0) (2022-06-06)
 
 

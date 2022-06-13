@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.1.0...@ceramicnetwork/stream-model-handler@0.2.0-rc.0) (2022-06-13)
+
+
+### Features
+
+* **model-handler:** Enforce that Model streams cannot have extra fields in their content (#2213) a4c9b4d, closes #2213
+* **model, model-instance-document:** Encode 'unique' as Uint8Array (#2212) f6eb92b, closes #2212
+
+
+
+
+
 # [0.1.0](/compare/@ceramicnetwork/stream-model-handler@0.0.2...@ceramicnetwork/stream-model-handler@0.1.0) (2022-06-06)
 
 
