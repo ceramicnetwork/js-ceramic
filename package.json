@@ -5,7 +5,7 @@
     "test": "npx lerna exec npm t",
     "build": "npx lerna run build",
     "docs": "npx typedoc",
-    "publish:release-candidate": "npx lerna publish --allow-branch release-candidate --dist-tag next --preid rc --no-verify-access",
+    "publish:release-candidate": "npx lerna publish --allow-branch release-candidate --dist-tag next --preid rc --no-verify-access --conventional-prerelease",
     "publish:latest": "npx lerna publish --allow-branch main --create-release github --no-verify-access --conventional-graduate",
     "lint": "npx lerna run lint",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
