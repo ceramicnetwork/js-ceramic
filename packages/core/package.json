@@ -36,7 +36,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.2.0-rc.2",
     "@ceramicnetwork/ipfs-topology": "^2.0.7-rc.2",
-    "@ceramicnetwork/metrics": "^1.0.1-rc.0",
+    "@ceramicnetwork/metrics": "^0.0.1-rc.0",
     "@ceramicnetwork/pinning-aggregation": "^2.0.6-rc.2",
     "@ceramicnetwork/pinning-ipfs-backend": "^2.0.6-rc.2",
     "@ceramicnetwork/stream-caip10-link": "^2.0.6-rc.2",
