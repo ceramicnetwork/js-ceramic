@@ -14,16 +14,20 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
+import { SchemaValidation, SchemaValidationInterface } from './schema-utils.js'
+
+export type ModelInstanceDocumentHandlerOptions = {
+  schemaValidator?: SchemaValidationInterface
+}
 
 /**
  * ModelInstanceDocument stream handler implementation
  */
 export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstanceDocument> {
-  private readonly _schemaValidator: SchemaValidation
+  private readonly _schemaValidator: SchemaValidationInterface
 
-  constructor() {
-    this._schemaValidator = new SchemaValidation()
+  constructor(options?: ModelInstanceDocumentHandlerOptions) {
+    this._schemaValidator = options?.schemaValidator ?? new SchemaValidation()
   }
 
   get type(): number {

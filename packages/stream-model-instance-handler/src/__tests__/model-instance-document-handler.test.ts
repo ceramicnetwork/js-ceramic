@@ -23,6 +23,7 @@ import {
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { DummySchemaValidation } from '../schema-utils.js'
 
 jest.unstable_mockModule('did-jwt', () => {
   return {
@@ -183,7 +184,7 @@ async function checkSignedCommitMatchesExpectations(
   expect(unpacked).toEqual(signed)
 }
 
-describe('ModelInstanceDocumentHandler', () => {
+describe('ModelInstanceDocumentHandler with dummy schema validator', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
   let context: Context
@@ -243,7 +244,9 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   beforeEach(() => {
-    handler = new ModelInstanceDocumentHandler()
+    handler = new ModelInstanceDocumentHandler({
+      schemaValidator: new DummySchemaValidation()
+    })
 
     setDidToNotRotatedState(did)
   })

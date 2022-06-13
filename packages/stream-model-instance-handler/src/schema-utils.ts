@@ -4,11 +4,29 @@ import { CommitID } from '@ceramicnetwork/streamid'
 import ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 
+export interface SchemaValidationInterface {
+  validateSchema(
+    ceramic: CeramicApi,
+    content: Record<string, any>,
+    schemaStreamId: string
+  ): Promise<void>
+}
+
+export class DummySchemaValidation implements SchemaValidationInterface {
+  validateSchema(
+    ceramic: CeramicApi, 
+    content: Record<string, any>, 
+    schemaStreamId: string
+  ): Promise<void> {
+    return 
+  }
+}
+
 /**
  * Simple wrapper around AJV library for doing json-schema validation.
  * TODO: Move schema stream loading out of this.
  */
-export class SchemaValidation {
+export class SchemaValidation implements SchemaValidationInterface {
   private readonly _validator = new ajv({
     strict: true,
     allErrors: true,
