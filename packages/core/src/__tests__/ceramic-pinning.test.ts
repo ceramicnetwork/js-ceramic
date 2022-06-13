@@ -230,6 +230,22 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
+  it('Update preserves existing pin state by default', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await ceramic.pin.rm(stream.id, { publish: false })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await stream.update({ foo: 'foobarbaz' })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await ceramic.close()
+  })
+
   it('Stream can be pinned and unpinned on update', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
@@ -242,6 +258,23 @@ describe('Ceramic stream pinning', () => {
     await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await ceramic.close()
+  })
+
+  it('Load preserves existing pin state by default', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await TileDocument.load(ceramic, stream.id)
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await ceramic.pin.rm(stream.id, { publish: false })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC })
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+
     await ceramic.close()
   })
 
