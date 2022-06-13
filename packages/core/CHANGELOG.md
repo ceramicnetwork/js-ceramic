@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0-rc.3](/compare/@ceramicnetwork/core@2.5.0-rc.2...@ceramicnetwork/core@2.5.0-rc.3) (2022-06-13)
+
+
+### Bug Fixes
+
+* **core:** Depend on the right version of metrics package 2d12605
+
+
+
+
+
 # [2.5.0-rc.2](/compare/@ceramicnetwork/core@2.5.0-rc.0...@ceramicnetwork/core@2.5.0-rc.2) (2022-06-13)
 
 **Note:** Version bump only for package @ceramicnetwork/core
