@@ -1,29 +1,11 @@
-import fetch from 'cross-fetch'
 import { Networks } from '@ceramicnetwork/common'
 import type { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
 import { Multiaddr } from 'multiaddr'
 
-const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
-  switch (ceramicNetwork) {
-    case Networks.MAINNET:
-    case Networks.ELP:
-      return 'https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/mainnet.json'
-    case Networks.TESTNET_CLAY:
-      return 'https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json'
-    case Networks.DEV_UNSTABLE:
-      return 'https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json'
-    case Networks.LOCAL:
-    case Networks.INMEMORY:
-      return null
-    default: {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const preventCompilingUnhandledCase: never = ceramicNetwork
-      return null
-    }
-  }
-}
-
-const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
+/**
+ * Hardcoded list of bootstrap peers run by 3BoxLabs for each major network.
+ */
+const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
   switch (ceramicNetwork) {
     case Networks.MAINNET:
     case Networks.ELP:
@@ -65,20 +47,11 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null 
   }
 }
 
-async function fetchJson(url: string): Promise<any> {
-  try {
-    const res = await fetch(url).then((response) => response.json())
-    if (res.error) {
-      throw new Error(res.error)
-    }
-    return res
-  } catch (error) {
-    return []
-  }
-}
+export const DEFAULT_BOOTSTRAP_CONNECTION_PERIOD = 1000 * 60 * 60 // 1 hour
 
-export const DEFAULT_PEER_DISCOVERY_PERIOD = 1000 * 60 * 60 // 1 hour
-
+/**
+ * Used to connect the IPFS node used by Ceramic to the bootstrap nodes run by 3BoxLabs.
+ */
 export class IpfsTopology {
   intervalId: any
 
@@ -86,22 +59,12 @@ export class IpfsTopology {
     readonly ipfs: IpfsApi,
     readonly ceramicNetwork: string,
     readonly logger: DiagnosticsLogger,
-    readonly period: number = DEFAULT_PEER_DISCOVERY_PERIOD
+    readonly period: number = DEFAULT_BOOTSTRAP_CONNECTION_PERIOD
   ) {}
 
-  /**
-   * Connect to custom peer list
-   * @param peerList List of multiaddresses to swarm connect to
-   */
-  async connect(peerList: Array<string>) {
-    const addressList = peerList.map((peer) => new Multiaddr(peer))
-    await this._forceBootstrapConnection(this.ipfs, addressList)
-  }
-
   async forceConnection(): Promise<void> {
-    const base: Multiaddr[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || []
-    const dynamic = await this._dynamicBoostrapList(this.ceramicNetwork)
-    const bootstrapList = base.concat(dynamic)
+    this.logger.debug(`Performing periodic reconnection to bootstrap peers`)
+    const bootstrapList: Multiaddr[] = BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || []
     await this._forceBootstrapConnection(this.ipfs, bootstrapList)
   }
 
@@ -118,41 +81,32 @@ export class IpfsTopology {
     }
   }
 
-  private async _dynamicBoostrapList(network: string): Promise<Multiaddr[]> {
-    const url = PEER_FILE_URLS(network as Networks)
-    if (!url) {
-      return []
-    }
-    this.logger.imp(`Connecting to peers found in '${url}'`)
-    const list = await fetchJson(url)
-    return list?.map((peer) => new Multiaddr(peer)) || []
-  }
-
   private async _forceBootstrapConnection(
     ipfs: IpfsApi,
     bootstrapList: Multiaddr[]
   ): Promise<void> {
     // Don't want to swarm connect to ourself
-    const myPeerId = (await ipfs.id()).id
+    let myPeerId
+    try {
+      myPeerId = (await ipfs.id()).id
+    } catch (error) {
+      this.logger.warn(
+        `Error loading our PeerID from IPFS: ${error}. Skipping connection to bootstrap peers`
+      )
+      return
+    }
+
     const filteredBootstrapList = bootstrapList.filter((addr) => {
       return !addr.getPeerId()?.endsWith(myPeerId)
     })
 
-    await Promise.all(
-      filteredBootstrapList.map(async (node) => {
-        try {
-          await ipfs.swarm.connect(node)
-        } catch (error) {
-          this.logger.warn(`Can not connect to ${node}`)
-          this.logger.warn(error)
-        }
-      })
-    )
-
-    const connectedPeers = await ipfs.swarm.peers()
-    if (connectedPeers.length > 0) {
-      const peerAddresses = connectedPeers.map((obj) => obj.addr)
-      this.logger.imp(`Connected to peers: ${peerAddresses.join(', ')}`)
+    for (const node of filteredBootstrapList) {
+      try {
+        await ipfs.swarm.connect(node)
+      } catch (error) {
+        this.logger.warn(`Can not connect to ${node}`)
+        this.logger.warn(error)
+      }
     }
   }
 }
