@@ -40,6 +40,7 @@
     "@ceramicnetwork/http-client": "^2.2.0-rc.2",
     "@ceramicnetwork/ipfs-daemon": "^2.0.7-rc.2",
     "@ceramicnetwork/logger": "^2.0.2",
+    "@ceramicnetwork/metrics": "^0.0.1-rc.1",
     "@ceramicnetwork/stream-tile": "^2.2.1-rc.2",
     "@ceramicnetwork/streamid": "^2.1.0",
     "@stablelib/random": "^1.0.1",
