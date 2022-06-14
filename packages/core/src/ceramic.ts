@@ -49,6 +49,7 @@ import * as path from 'path'
 import { buildIndexing } from './indexing/build-indexing.js'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
+import * as net from 'net'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -414,6 +415,14 @@ export class Ceramic implements CeramicApi {
       // Just use the InMemoryAnchorService as the AnchorValidator
       anchorValidator = anchorService
     } else {
+      if (
+        !ethereumRpcUrl &&
+        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP)
+      ) {
+        logger.warn(
+          `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
+        )
+      }
       anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     }
 
