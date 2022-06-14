@@ -223,6 +223,13 @@ describe('ModelInstanceDocumentHandler', () => {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
       }),
+      loadStream: jest.fn(async () => {
+        return {
+          content: {
+            schema: {}
+          }
+        }
+      }),
       did,
     }
 
