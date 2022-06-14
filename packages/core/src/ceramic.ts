@@ -807,7 +807,7 @@ export class Ceramic implements CeramicApi {
 
     const results = await Promise.all(
       state.log.map(async ({ cid }) => {
-        const commit = await this.dispatcher.retrieveCommit(cid)
+        const commit = await this.dispatcher.retrieveCommit(cid, effectiveStreamId)
         return {
           cid: cid.toString(),
           value: await StreamUtils.convertCommitToSignedCommitContainer(commit, this.ipfs),

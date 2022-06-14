@@ -121,14 +121,14 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
           const commitData = await Utils.getCommitData(
             this.#dispatcher,
             req.cid,
-            null,
-            req.streamId
+            req.streamId,
+            null
           )
           if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
             await this.verifySignedCommit(commitData.envelope)
           }
 
-          const log = await this._loadCommitHistory(req.cid)
+          const log = await this._loadCommitHistory(req.cid, req.streamId)
           const candidate = new Candidate(req.cid, req.streamId, log)
 
           if (!result[candidate.key]) {
@@ -200,12 +200,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param commitId - Start CID
    * @private
    */
-  async _loadCommitHistory(commitId: CID): Promise<CID[]> {
+  async _loadCommitHistory(commitId: CID, streamId: StreamID): Promise<CID[]> {
     const history: CID[] = []
 
     let currentCommitId = commitId
     for (;;) {
-      const commitData = await Utils.getCommitData(this.#dispatcher, currentCommitId)
+      const commitData = await Utils.getCommitData(this.#dispatcher, currentCommitId, streamId)
       if (StreamUtils.isAnchorCommitData(commitData)) {
         return history
       }

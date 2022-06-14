@@ -107,7 +107,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   it('retrieves commit correctly', async () => {
     ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(1)
     expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -116,7 +116,7 @@ describe('Dispatcher with mock ipfs', () => {
   it('retries on timeout', async () => {
     ipfs.dag.get.mockRejectedValueOnce({ code: 'ERR_TIMEOUT' })
     ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(2)
     expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -126,15 +126,15 @@ describe('Dispatcher with mock ipfs', () => {
   it('caches and retrieves commit correctly', async () => {
     const ipfsSpy = ipfs.dag.get
     ipfsSpy.mockReturnValueOnce({ value: 'data' })
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
     // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
     // Commit found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
     const clonedCID = CID.parse(FAKE_CID.toString())
     expect(clonedCID !== FAKE_CID).toEqual(true)
     expect(ipfsSpy).toBeCalledTimes(1)
-    expect(await dispatcher.retrieveCommit(clonedCID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(clonedCID, FAKE_STREAM_ID)).toEqual('data')
     // Commit found in cache with different instance of same CID (IPFS lookup count unchanged)
     expect(ipfsSpy).toBeCalledTimes(1)
     expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -287,6 +287,5 @@ describe('Dispatcher with mock ipfs', () => {
       model: FAKE_MODEL,
     })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
-
   })
 })
