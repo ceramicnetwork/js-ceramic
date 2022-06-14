@@ -29,7 +29,7 @@
     "@ceramicnetwork/streamid": "^2.1.0",
     "@stablelib/random": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
-    "ceramic-cacao": "^1.0.0",
+    "ceramic-cacao": "^1.1.1",
     "dids": "^3.0.0",
     "ethers": "^5.5.4",
     "ganache-core": "^2.13.2",
