@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0-rc.4](/compare/@ceramicnetwork/core@2.5.0-rc.3...@ceramicnetwork/core@2.5.0-rc.4) (2022-06-14)
+
+
+### Bug Fixes
+
+* **cli:** fix metrics import and dependency (#2227) c418347, closes #2227
+
+
+
+
+
 # [2.5.0-rc.3](/compare/@ceramicnetwork/core@2.5.0-rc.2...@ceramicnetwork/core@2.5.0-rc.3) (2022-06-13)
 
 
