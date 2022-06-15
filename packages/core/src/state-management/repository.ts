@@ -125,7 +125,7 @@ export class Repository {
   private async fromNetwork(streamId: StreamID): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName)
     const genesisCid = streamId.cid
-    const commitData = await Utils.getCommitData(this.#deps.dispatcher, genesisCid)
+    const commitData = await Utils.getCommitData(this.#deps.dispatcher, genesisCid, streamId)
     if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }

@@ -72,8 +72,8 @@ export class Utils {
   static async getCommitData(
     dispatcher: Dispatcher,
     cid: CID,
-    timestamp?: number,
-    streamId?: StreamID
+    streamId: StreamID,
+    timestamp?: number
   ): Promise<CommitData> {
     const commit = await dispatcher.retrieveCommit(cid, streamId)
     if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)

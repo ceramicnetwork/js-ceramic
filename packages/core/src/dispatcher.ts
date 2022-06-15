@@ -140,19 +140,15 @@ export class Dispatcher {
    * @param cid - Commit CID
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
+  async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
     try {
       const result = await this._getFromIpfs(cid)
       await this._restrictCommitSize(cid)
       return result
     } catch (e) {
-      if (streamId) {
-        this._logger.err(
-          `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
-        )
-      } else {
-        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
-      }
+      this._logger.err(
+        `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
+      )
       throw e
     }
   }
@@ -270,7 +266,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip, model})
+    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip, model })
   }
 
   /**
