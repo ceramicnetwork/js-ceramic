@@ -43,7 +43,7 @@
     "rxjs": "^7.5.2"
   },
   "devDependencies": {
-    "dids": "^3.0.0",
+    "dids": "^3.2.0",
     "multiformats": "^9.5.8"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
