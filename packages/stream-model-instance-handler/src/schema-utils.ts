@@ -1,6 +1,3 @@
-
-import { CeramicApi } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
 import ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 
