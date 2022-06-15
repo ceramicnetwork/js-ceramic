@@ -1,4 +1,5 @@
-import * as polyfill from 'abort-controller'
+import * as polyfill from 'abortcontroller-polyfill'
+
 
 export function polyfillAbortController() {
   if (!globalThis.AbortController) {
