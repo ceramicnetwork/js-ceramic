@@ -49,7 +49,6 @@ import * as path from 'path'
 import { buildIndexing } from './indexing/build-indexing.js'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
-import * as net from 'net'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
