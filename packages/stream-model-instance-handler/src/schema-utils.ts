@@ -21,10 +21,10 @@ export class SchemaValidation {
     addFormats(this._validator)
   }
 
-  public async validateSchema(
+  public validateSchema(
     content: Record<string, any>,
     schema: SchemaObject
-  ): Promise<void> {
+  ) {
     const isValid = this._validator.validate(schema, content)
     if (!isValid) {
       const errorMessages = this._validator.errorsText()
