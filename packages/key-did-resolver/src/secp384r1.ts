@@ -9,8 +9,8 @@ import * as nist_weierstrass_common from './nist_weierstrass_common.js'
   * For BigInt see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
   */
 interface BigIntPoint {
-   x: BigInt,
-   y : BigInt
+   x: bigint,
+   y : bigint
 }
 
 /**

@@ -8,8 +8,8 @@ import { base64url } from 'multiformats/bases/base64'
   * For BigInt see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
   */
 interface BigIntPoint {
-   x: BigInt,
-   y : BigInt
+   x: bigint,
+   y : bigint
 }
 
 /**
