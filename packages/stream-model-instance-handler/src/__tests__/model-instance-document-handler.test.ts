@@ -11,6 +11,7 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -183,6 +184,56 @@ async function checkSignedCommitMatchesExpectations(
   expect(unpacked).toEqual(signed)
 }
 
+const MODEL_DEFINITION: ModelDefinition = {
+  name: 'MyModel',
+  accountRelation: ModelAccountRelation.LIST,
+  schema: {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      arrayProperty: {
+        type: "array",
+        items: {
+          type: "integer"
+        },
+        minItems: 2,
+        maxItems: 4
+      },
+      stringArrayProperty: {
+        type: "array",
+        items: {
+          type: "string",
+          maxLength: 6,
+          minLength: 2
+        }
+      },
+      stringProperty: {
+        type: "string",
+        maxLength: 8,
+        minLength: 3
+      },
+      intProperty: {
+        type: "integer",
+        maximum: 100,
+        minimum: 2
+      },
+      floatProperty: {
+        type: "number",
+        maximum: 110,
+        minimum: 3
+      }
+    },
+    required: [
+      "arrayProperty",
+      "stringArrayProperty",
+      "stringProperty",
+      "intProperty",
+      "floatProperty"
+    ]
+  }
+}
+
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
@@ -223,11 +274,13 @@ describe('ModelInstanceDocumentHandler', () => {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
       }),
-      loadStream: jest.fn(async () => {
-        return {
-          content: {
-            schema: {}
+      loadStream: jest.fn(async (streamId: StreamID) => {
+        if (streamId.toString() === FAKE_STREAM_ID.toString()) {
+          return {
+            content: MODEL_DEFINITION
           }
+        } else {
+          throw new Error("Trying to load unexpected stream in model-instance-document-handler.test.ts")
         }
       }),
       did,
