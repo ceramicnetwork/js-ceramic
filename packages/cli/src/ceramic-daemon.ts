@@ -59,7 +59,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   })
 
   // If desired, enable metrics
-  if (opts.metrics) {
+  if (opts.metrics?.metricsExporterEnabled) {
     Metrics.start(opts.metrics)
   }
 
