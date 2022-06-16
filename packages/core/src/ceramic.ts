@@ -707,10 +707,10 @@ export class Ceramic implements CeramicApi {
       throw new Error('Given genesis commit is not deterministic')
     }
 
-    const genesisCID = await this.ipfs.dag.put(genesis)
-    if (!streamRef.cid.equals(genesisCID)) {
+    const stream = await this.createStreamFromGenesis(streamRef.type, genesis)
+    if (!streamRef.equals(stream.id)) {
       throw new Error(
-        `Given StreamID CID ${streamRef.cid.toString()} does not match given genesis content`
+        `StreamID ${stream.id.toString()} generated does not match expected StreamID ${streamRef.toString()} determined from genesis content in multiquery request`
       )
     }
   }
