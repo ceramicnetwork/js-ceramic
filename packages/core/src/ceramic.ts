@@ -414,6 +414,14 @@ export class Ceramic implements CeramicApi {
       // Just use the InMemoryAnchorService as the AnchorValidator
       anchorValidator = anchorService
     } else {
+      if (
+        !ethereumRpcUrl &&
+        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP)
+      ) {
+        logger.warn(
+          `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
+        )
+      }
       anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     }
 
