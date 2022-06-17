@@ -54,6 +54,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     if (!this.dataSource.isInitialized) {
       await this.dataSource.initialize()
     }
-    await initTables(this.dataSource, this.knexConnection, this.modelsToIndex)
+    await initTables(this.knexConnection, this.modelsToIndex)
   }
 }

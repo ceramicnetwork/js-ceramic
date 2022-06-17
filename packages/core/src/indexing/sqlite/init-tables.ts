@@ -19,15 +19,11 @@ export async function listMidTables(knexConnection: Knex): Promise<Array<string>
 /**
  * Create `mid_%` tables and corresponding indexes.
  */
-export async function initTables(
-  dataSource: DataSource,
-  knexConnection: Knex,
-  modelsToIndex: Array<StreamID>
-) {
+export async function initTables(knexConnection: Knex, modelsToIndex: Array<StreamID>) {
   const existingTables = await listMidTables(knexConnection)
   const expectedTables = modelsToIndex.map(asTableName)
   const tablesToCreate = expectedTables.filter((tableName) => !existingTables.includes(tableName))
   for (const tableName of tablesToCreate) {
-    await createModelTable(dataSource, tableName)
+    await createModelTable(knexConnection, tableName)
   }
 }
