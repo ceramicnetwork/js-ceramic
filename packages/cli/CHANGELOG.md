@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0-rc.5](/compare/@ceramicnetwork/cli@2.3.0-rc.4...@ceramicnetwork/cli@2.3.0-rc.5) (2022-06-17)
+
+
+### Bug Fixes
+
+* **cli:** Metrics should be disabled by default (#2234) 709ee95, closes #2234
+
+
+### Features
+
+* **cli:** Add option to healthcheck to skip checking IPFS (#2241) 60dd88c, closes #2241
+
+
+
+
+
 # [2.3.0-rc.4](/compare/@ceramicnetwork/cli@2.3.0-rc.3...@ceramicnetwork/cli@2.3.0-rc.4) (2022-06-14)
 
 

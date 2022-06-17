@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0-rc.5](/compare/@ceramicnetwork/core@2.5.0-rc.4...@ceramicnetwork/core@2.5.0-rc.5) (2022-06-17)
+
+
+### Bug Fixes
+
+* **core:** Creating a stream via a multiquery should pin it (#2236) f6f6b55, closes #2236
+
+
+### Features
+
+* Add InsertionOrder and remove ChronologicalOrder (#2218) 4f98136, closes #2218
+
+
+
+
+
 # [2.5.0-rc.4](/compare/@ceramicnetwork/core@2.5.0-rc.3...@ceramicnetwork/core@2.5.0-rc.4) (2022-06-14)
 
 

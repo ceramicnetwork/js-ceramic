@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0-rc.3](/compare/@ceramicnetwork/common@2.2.0-rc.2...@ceramicnetwork/common@2.2.0-rc.3) (2022-06-17)
+
+
+### Features
+
+* Add InsertionOrder and remove ChronologicalOrder (#2218) 4f98136, closes #2218
+
+
+
+
+
 # [2.2.0-rc.2](/compare/@ceramicnetwork/common@2.2.0-rc.0...@ceramicnetwork/common@2.2.0-rc.2) (2022-06-13)
 
 **Note:** Version bump only for package @ceramicnetwork/common
