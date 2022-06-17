@@ -53,7 +53,7 @@ describe('init', () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const indexApi = new SqliteIndexApi(dataSource, knexConnection, modelsToIndex)
       await indexApi.init()
-      const created = await listMidTables(dataSource)
+      const created = await listMidTables(knexConnection)
       const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
       expect(created).toEqual(tableNames)
     })
@@ -63,7 +63,7 @@ describe('init', () => {
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
       const indexApiA = new SqliteIndexApi(dataSource, knexConnection, modelsA)
       await indexApiA.init()
-      const createdA = await listMidTables(dataSource)
+      const createdA = await listMidTables(knexConnection)
       const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
       expect(createdA).toEqual(tableNamesA)
 
@@ -71,7 +71,7 @@ describe('init', () => {
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
       const indexApiB = new SqliteIndexApi(dataSource, knexConnection, modelsB)
       await indexApiB.init()
-      const createdB = await listMidTables(dataSource)
+      const createdB = await listMidTables(knexConnection)
       const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
       expect(createdB).toEqual(tableNamesB)
     })
