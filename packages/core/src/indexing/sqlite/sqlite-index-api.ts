@@ -51,4 +51,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async init(): Promise<void> {
     await initTables(this.dbConnection, this.modelsToIndex)
   }
+
+  async close(): Promise<void> {
+    await this.dbConnection.destroy()
+  }
 }

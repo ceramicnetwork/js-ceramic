@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -56,6 +57,17 @@ describe('init', () => {
       const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
       expect(createdB).toEqual(tableNamesB)
     })
+  })
+})
+
+describe('close', () => {
+  test('destroys knex connection', async () => {
+    const fauxDbConnection = {
+      destroy: jest.fn(),
+    } as unknown as Knex
+    const indexApi = new SqliteIndexApi(fauxDbConnection, [])
+    await indexApi.close()
+    expect(fauxDbConnection.destroy).toBeCalled()
   })
 })
 

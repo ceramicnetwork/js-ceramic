@@ -1,5 +1,5 @@
 import tmp from 'tmp-promise'
-import knex from 'knex'
+import knex, { Knex } from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from '../sqlite-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
@@ -14,11 +14,12 @@ let EXPECTED: Array<string>
 
 let tmpFolder: tmp.DirectoryResult
 let order: InsertionOrder
+let dbConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
-  const dbConnection = knex({
+  dbConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
     connection: {
@@ -38,6 +39,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  await dbConnection.destroy()
   await tmpFolder.cleanup()
 })
 
