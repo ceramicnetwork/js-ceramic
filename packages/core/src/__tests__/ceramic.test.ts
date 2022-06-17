@@ -14,6 +14,7 @@ import { swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+import first from 'it-first'
 
 function createCeramic(
   ipfs: IpfsApi,
@@ -28,6 +29,11 @@ function createCeramic(
 
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
+}
+
+async function isPinned(ceramic: Ceramic, streamId: StreamID): Promise<boolean> {
+  const iterator = await ceramic.pin.ls(streamId)
+  return (await first(iterator)) == streamId.toString()
 }
 
 describe('Ceramic integration', () => {
@@ -455,11 +461,10 @@ describe('Ceramic integration', () => {
 
   it('Multiquery with genesis commit provided', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
       const ceramic2 = await createCeramic(ipfs2, false)
 
-      const content = null
+      const content = { foo: 'bar' }
       const metadata = {
         controllers: [ceramic1.did.id],
         family: 'family',
@@ -469,13 +474,14 @@ describe('Ceramic integration', () => {
       // Create a deterministic TileDocument
       const stream1 = await TileDocument.create(
         ceramic1,
-        content,
+        null,
         { ...metadata, deterministic: true },
         { anchor: false, publish: false }
       )
+      await stream1.update(content)
 
       // Create (off-chain) the deterministic TileDocument genesis commit
-      const genesisCommit = (await TileDocument.makeGenesis(ceramic1, content, {
+      const genesisCommit = (await TileDocument.makeGenesis(ceramic1, null, {
         ...metadata,
         deterministic: true,
       })) as GenesisCommit
@@ -489,7 +495,7 @@ describe('Ceramic integration', () => {
       ])
 
       const resolvedStream = res[stream1.id.toString()]
-      expect(resolvedStream.content).toEqual({})
+      expect(resolvedStream.content).toEqual(content)
       expect(resolvedStream.metadata).toEqual(metadata)
 
       await ceramic1.close()
@@ -530,6 +536,8 @@ describe('Ceramic integration', () => {
       const resolvedStream = res[streamID.toString()]
       expect(resolvedStream.content).toEqual({})
       expect(resolvedStream.metadata).toEqual(metadata)
+      const pinned = await isPinned(ceramic2, streamID)
+      expect(pinned).toBeTruthy()
 
       await ceramic1.close()
       await ceramic2.close()
