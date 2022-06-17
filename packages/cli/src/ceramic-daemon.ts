@@ -321,6 +321,13 @@ export class CeramicDaemon {
    * @dev Only checking for IPFS right now but checks for other subsystems can go here in the future
    */
   async healthcheck(req: Request, res: Response): Promise<void> {
+    const { checkIpfs } = parseQueryObject(req.query)
+    if (checkIpfs === false) {
+      res.status(200).send('Alive!')
+      return
+    }
+
+    // By default, check for health of the IPFS node
     for (let i = 0; i < HEALTHCHECK_RETRIES; i++) {
       try {
         if (await this.ceramic.ipfs.isOnline()) {
