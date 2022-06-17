@@ -389,6 +389,116 @@ Object {
 }
 `;
 
+exports[`ModelHandler applies genesis commits with view properties correctly 1`] = `
+Object {
+  "anchorStatus": 0,
+  "content": Object {
+    "accountRelation": "list",
+    "name": "MyModel",
+    "schema": Object {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": Object {
+        "owner": Object {
+          "maxLength": 80,
+          "pattern": "/^did:[a-zA-Z0-9.!#$%&'*+/=?^_\`{|}~-]+:[a-zA-Z0-9.!#$%&'*+/=?^_\`{|}~-]+$/",
+          "title": "GraphQLDID",
+          "type": "string",
+        },
+        "stringPropName": Object {
+          "maxLength": 80,
+          "type": "string",
+        },
+      },
+      "required": Array [
+        "stringPropName",
+      ],
+      "type": "object",
+    },
+    "views": Object {
+      "owner": Object {
+        "type": "documentAccount",
+      },
+    },
+  },
+  "log": Array [
+    Object {
+      "cid": Object {
+        "code": 112,
+        "hash": Uint8Array [
+          18,
+          32,
+          222,
+          189,
+          122,
+          219,
+          60,
+          229,
+          101,
+          68,
+          210,
+          42,
+          111,
+          107,
+          147,
+          57,
+          111,
+          105,
+          128,
+          168,
+          6,
+          124,
+          44,
+          193,
+          52,
+          240,
+          247,
+          128,
+          27,
+          99,
+          49,
+          9,
+          43,
+          149,
+        ],
+        "version": 1,
+      },
+      "type": 0,
+    },
+  ],
+  "metadata": Object {
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
+    "model": StreamID {
+      "_cid": Object {
+        "code": 113,
+        "hash": Uint8Array [
+          113,
+          11,
+          0,
+          9,
+          104,
+          109,
+          111,
+          100,
+          101,
+          108,
+          45,
+          118,
+          49,
+        ],
+        "version": 1,
+      },
+      "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
+      "_type": 2,
+    },
+  },
+  "signature": 2,
+  "type": 2,
+}
+`;
+
 exports[`ModelHandler applies signed commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
