@@ -52,7 +52,7 @@
     "dids": "^3.2.0",
     "ethr-did-resolver": "^5.0.3",
     "express": "^4.17.2",
-    "ipfs-http-client": "^55.0.0",
+    "ipfs-http-client": "^57.0.1",
     "key-did-provider-ed25519": "^2.0.0",
     "key-did-resolver": "^2.0.2",
     "levelup": "^5.1.1",
