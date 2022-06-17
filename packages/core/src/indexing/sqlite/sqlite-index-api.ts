@@ -25,7 +25,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     private readonly knexConnection: Knex,
     private readonly modelsToIndex: Array<StreamID>
   ) {
-    this.insertionOrder = new InsertionOrder(dataSource, knexConnection)
+    this.insertionOrder = new InsertionOrder(knexConnection)
   }
 
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {

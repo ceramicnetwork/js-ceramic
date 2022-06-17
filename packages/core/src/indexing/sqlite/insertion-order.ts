@@ -1,5 +1,4 @@
 import type { Knex } from 'knex'
-import type { DataSource } from 'typeorm'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Page, Pagination } from '@ceramicnetwork/common'
@@ -67,7 +66,7 @@ const INSERTION_ORDER = [{ column: 'created_at', order: 'DESC' }]
  * Insertion order: created_at DESC.
  */
 export class InsertionOrder {
-  constructor(private readonly dataSource: DataSource, private readonly knexConnection: Knex) {}
+  constructor(private readonly knexConnection: Knex) {}
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const pagination = parsePagination(query)
@@ -75,7 +74,7 @@ export class InsertionOrder {
     switch (paginationKind) {
       case PaginationKind.FORWARD: {
         const limit = pagination.first
-        const response = await this.query<Array<Selected>>(this.forwardQuery(query, pagination))
+        const response: Array<Selected> = await this.forwardQuery(query, pagination)
         const entries = response.slice(0, limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -91,7 +90,7 @@ export class InsertionOrder {
       }
       case PaginationKind.BACKWARD: {
         const limit = pagination.last
-        const response = await this.query<Array<Selected>>(this.backwardQuery(query, pagination))
+        const response: Array<Selected> = await this.backwardQuery(query, pagination)
         const entries = response.slice(-limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -113,7 +112,10 @@ export class InsertionOrder {
   /**
    * Forward query: traverse from the most recent to the last.
    */
-  private forwardQuery(query: BaseQuery, pagination: ForwardPaginationQuery): Knex.QueryBuilder {
+  private forwardQuery(
+    query: BaseQuery,
+    pagination: ForwardPaginationQuery
+  ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
     let base = this.knexConnection
       .from(tableName)
@@ -133,7 +135,10 @@ export class InsertionOrder {
   /**
    * Backward query: traverse from the last to the most recent.
    */
-  private backwardQuery(query: BaseQuery, pagination: BackwardPaginationQuery): Knex.QueryBuilder {
+  private backwardQuery(
+    query: BaseQuery,
+    pagination: BackwardPaginationQuery
+  ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
     const limit = pagination.last
     const identity = <T>(a: T) => a
@@ -161,13 +166,5 @@ export class InsertionOrder {
     } else {
       return base()
     }
-  }
-
-  /**
-   * Execute a query against a database.
-   */
-  private query<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
-    const asSQL = queryBuilder.toSQL()
-    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
   }
 }

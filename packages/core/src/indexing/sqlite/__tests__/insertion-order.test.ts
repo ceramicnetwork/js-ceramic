@@ -19,18 +19,22 @@ let order: InsertionOrder
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
+  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
   dataSource = new DataSource({
     type: 'sqlite',
-    database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
+    database: filename,
   })
   await dataSource.initialize()
   const knexConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
+    connection: {
+      filename: filename,
+    },
   })
   const indexAPI = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
   await indexAPI.init()
-  order = new InsertionOrder(dataSource, knexConnection)
+  order = new InsertionOrder(knexConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
   // The responses in the tests below are ok if they are in the same order as in the CSV.
   const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
