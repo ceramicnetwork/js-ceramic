@@ -110,6 +110,9 @@ export class InsertionOrder {
     }
   }
 
+  /**
+   * Forward query: traverse from the most recent to the last.
+   */
   private forwardQuery(query: BaseQuery, pagination: ForwardPaginationQuery): Knex.QueryBuilder {
     const tableName = asTableName(query.model)
     let base = this.knexConnection
@@ -125,9 +128,11 @@ export class InsertionOrder {
       return base.where('created_at', '<', after.created_at)
     }
     return base
-    // throw new NotImplementedError('forwardQuery')
   }
 
+  /**
+   * Backward query: traverse from the last to the most recent.
+   */
   private backwardQuery(query: BaseQuery, pagination: BackwardPaginationQuery): Knex.QueryBuilder {
     const tableName = asTableName(query.model)
     const limit = pagination.last
