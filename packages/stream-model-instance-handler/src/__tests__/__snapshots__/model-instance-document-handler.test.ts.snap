@@ -9,18 +9,7 @@ Object {
   },
   "anchorStatus": 3,
   "content": Object {
-    "arrayProperty": Array [
-      5,
-      6,
-      7,
-      8,
-    ],
-    "floatProperty": 104.1,
-    "intProperty": 81,
-    "stringArrayProperty": Array [
-      "ABCDEF",
-    ],
-    "stringProperty": "ABCDEFGH",
+    "myData": 1,
   },
   "log": Array [
     Object {
@@ -345,18 +334,7 @@ exports[`ModelInstanceDocumentHandler applies commit made using an old key if it
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "arrayProperty": Array [
-      0,
-      2,
-      3,
-      4,
-    ],
-    "floatProperty": 104,
-    "intProperty": 80,
-    "stringArrayProperty": Array [
-      "abcdef",
-    ],
-    "stringProperty": "abcdefgh",
+    "myData": 0,
   },
   "log": Array [
     Object {
@@ -461,18 +439,7 @@ exports[`ModelInstanceDocumentHandler applies genesis commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "arrayProperty": Array [
-      0,
-      2,
-      3,
-      4,
-    ],
-    "floatProperty": 104,
-    "intProperty": 80,
-    "stringArrayProperty": Array [
-      "abcdef",
-    ],
-    "stringProperty": "abcdefgh",
+    "myData": 0,
   },
   "log": Array [
     Object {
@@ -577,18 +544,7 @@ exports[`ModelInstanceDocumentHandler applies signed commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "arrayProperty": Array [
-      0,
-      2,
-      3,
-      4,
-    ],
-    "floatProperty": 104,
-    "intProperty": 80,
-    "stringArrayProperty": Array [
-      "abcdef",
-    ],
-    "stringProperty": "abcdefgh",
+    "myData": 0,
   },
   "log": Array [
     Object {
@@ -862,18 +818,7 @@ Object {
   },
   "next": Object {
     "content": Object {
-      "arrayProperty": Array [
-        5,
-        6,
-        7,
-        8,
-      ],
-      "floatProperty": 104.1,
-      "intProperty": 81,
-      "stringArrayProperty": Array [
-        "ABCDEF",
-      ],
-      "stringProperty": "ABCDEFGH",
+      "myData": 1,
     },
     "metadata": Object {
       "controllers": Array [
@@ -934,18 +879,7 @@ exports[`ModelInstanceDocumentHandler multiple consecutive updates 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "arrayProperty": Array [
-      0,
-      2,
-      3,
-      4,
-    ],
-    "floatProperty": 104,
-    "intProperty": 80,
-    "stringArrayProperty": Array [
-      "abcdef",
-    ],
-    "stringProperty": "abcdefgh",
+    "myData": 0,
   },
   "log": Array [
     Object {
@@ -1129,16 +1063,7 @@ Object {
   },
   "next": Object {
     "content": Object {
-      "arrayProperty": Array [
-        1,
-        2,
-      ],
-      "floatProperty": 104.1,
-      "intProperty": 81,
-      "stringArrayProperty": Array [
-        "ABCDEF",
-      ],
-      "stringProperty": "ABCDEFGH",
+      "myData": 2,
     },
     "metadata": Object {
       "controllers": Array [
