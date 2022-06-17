@@ -11,14 +11,14 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { StreamID } from '@ceramicnetwork/streamid'
 import first from 'it-first'
 
-const FAKE_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+const FAKE_MODEL_ID = StreamID.fromString(
+  'kjzl6hvfrbw6cbclh3fplllid7yvf18w05xw41wvuf9b4lk6q9jkq7d1o01wg6v'
 )
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
-const METADATA = { model: FAKE_STREAM_ID }
+const METADATA = { model: FAKE_MODEL_ID }
 
 async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
   const iterator = await ceramic.pin.ls(streamId)
@@ -60,7 +60,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    expect(doc.metadata.model.toString()).toEqual(FAKE_STREAM_ID.toString())
+    expect(doc.metadata.model.toString()).toEqual(FAKE_MODEL_ID.toString())
     expect(doc.metadata.unique instanceof Uint8Array).toBeTruthy()
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
