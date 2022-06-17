@@ -6,8 +6,8 @@ import { asTableName } from '../as-table-name.util.js'
 /**
  * List existing `mid_%` tables.
  */
-export async function listMidTables(knexConnection: Knex): Promise<Array<string>> {
-  const result: Array<{ name: string }> = await knexConnection
+export async function listMidTables(dbConnection: Knex): Promise<Array<string>> {
+  const result: Array<{ name: string }> = await dbConnection
     .from('sqlite_schema')
     .select('name')
     .whereIn('type', ['table'])
@@ -18,11 +18,11 @@ export async function listMidTables(knexConnection: Knex): Promise<Array<string>
 /**
  * Create `mid_%` tables and corresponding indexes.
  */
-export async function initTables(knexConnection: Knex, modelsToIndex: Array<StreamID>) {
-  const existingTables = await listMidTables(knexConnection)
+export async function initTables(dbConnection: Knex, modelsToIndex: Array<StreamID>) {
+  const existingTables = await listMidTables(dbConnection)
   const expectedTables = modelsToIndex.map(asTableName)
   const tablesToCreate = expectedTables.filter((tableName) => !existingTables.includes(tableName))
   for (const tableName of tablesToCreate) {
-    await createModelTable(knexConnection, tableName)
+    await createModelTable(dbConnection, tableName)
   }
 }

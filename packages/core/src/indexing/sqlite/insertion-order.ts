@@ -66,7 +66,7 @@ const INSERTION_ORDER = [{ column: 'created_at', order: 'DESC' }]
  * Insertion order: created_at DESC.
  */
 export class InsertionOrder {
-  constructor(private readonly knexConnection: Knex) {}
+  constructor(private readonly dbConnection: Knex) {}
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const pagination = parsePagination(query)
@@ -117,7 +117,7 @@ export class InsertionOrder {
     pagination: ForwardPaginationQuery
   ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
-    let base = this.knexConnection
+    let base = this.dbConnection
       .from(tableName)
       .select('stream_id', 'last_anchored_at', 'created_at')
       .orderBy(INSERTION_ORDER)
@@ -145,7 +145,7 @@ export class InsertionOrder {
     const base = (
       withWhereCallback: (builder: Knex.QueryBuilder) => Knex.QueryBuilder = identity
     ) => {
-      return this.knexConnection
+      return this.dbConnection
         .select('*')
         .from((builder) => {
           let subquery = builder

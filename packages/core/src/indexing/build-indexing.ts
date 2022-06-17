@@ -44,14 +44,14 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
   switch (protocol) {
     case 'sqlite':
     case 'sqlite3': {
-      const knexConnection = knex({
+      const dbConnection = knex({
         client: 'sqlite3',
         useNullAsDefault: true,
         connection: {
           filename: connectionString.pathname,
         },
       })
-      return new SqliteIndexApi(knexConnection, indexingConfig.models)
+      return new SqliteIndexApi(dbConnection, indexingConfig.models)
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)

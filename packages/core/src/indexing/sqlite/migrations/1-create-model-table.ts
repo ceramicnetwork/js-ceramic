@@ -1,7 +1,7 @@
 import type { Knex } from 'knex'
 
-export async function createModelTable(knexConnection: Knex, tableName: string) {
-  await knexConnection.schema.createTable(tableName, (table) => {
+export async function createModelTable(dbConnection: Knex, tableName: string) {
+  await dbConnection.schema.createTable(tableName, (table) => {
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()
     table.integer('last_anchored_at').nullable()

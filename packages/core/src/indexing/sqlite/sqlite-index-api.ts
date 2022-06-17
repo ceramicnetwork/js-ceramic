@@ -20,16 +20,16 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 export class SqliteIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
   constructor(
-    private readonly knexConnection: Knex,
+    private readonly dbConnection: Knex,
     private readonly modelsToIndex: Array<StreamID>
   ) {
-    this.insertionOrder = new InsertionOrder(knexConnection)
+    this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
-    await this.knexConnection(tableName)
+    await this.dbConnection(tableName)
       .insert({
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
@@ -49,6 +49,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async init(): Promise<void> {
-    await initTables(this.knexConnection, this.modelsToIndex)
+    await initTables(this.dbConnection, this.modelsToIndex)
   }
 }
