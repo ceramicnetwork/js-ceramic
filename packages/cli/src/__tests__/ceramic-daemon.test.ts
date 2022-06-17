@@ -25,6 +25,7 @@ import getPort from 'get-port'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
 import { DaemonConfig } from '../daemon-config.js'
+import fetch from 'cross-fetch'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -107,6 +108,35 @@ describe('Ceramic interop: core <> http-client', () => {
     await daemon.ceramic.context.anchorService.anchor()
     await changeHandle
   }
+
+  it('healthcheck passes', async () => {
+    const res = await fetch(`http://localhost:${daemon.port}/api/v0/node/healthcheck`)
+    expect(res.ok).toBeTruthy()
+    const text = await res.text()
+    expect(text).toEqual('Alive!')
+  })
+
+  it('healthcheck fails if ipfs unreachable', async () => {
+    const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
+    isOnlineSpy.mockRejectedValue(Error('ipfs is sad now'))
+    const res = await fetch(`http://localhost:${daemon.port}/api/v0/node/healthcheck`)
+    expect(res.ok).toBeFalsy()
+    const text = await res.text()
+    expect(text).toEqual('IPFS unreachable')
+    isOnlineSpy.mockReset()
+  })
+
+  it('healthcheck can skip ipfs check', async () => {
+    const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
+    isOnlineSpy.mockRejectedValue(Error('ipfs is sad now'))
+    const res = await fetch(
+      `http://localhost:${daemon.port}/api/v0/node/healthcheck?checkIpfs=false`
+    )
+    expect(res.ok).toBeTruthy()
+    const text = await res.text()
+    expect(text).toEqual('Alive!')
+    isOnlineSpy.mockReset()
+  })
 
   it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
     const streamtype = await TileDocument.create(client, { test: randomString(200000) })
