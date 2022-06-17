@@ -56,9 +56,4 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     }
     await initTables(this.dataSource, this.modelsToIndex)
   }
-
-  private query<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
-    const asSQL = queryBuilder.toSQL()
-    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
-  }
 }
