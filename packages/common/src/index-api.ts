@@ -2,20 +2,6 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import type { StreamState } from './stream.js'
 
 /**
- * Allowed ordering for an indexing query.
- */
-export enum Ordering {
-  /**
-   * `last_anchored_at DESC NULLS FIRST, created_at DESC`
-   */
-  CHRONOLOGICAL = 'chronological',
-  /**
-   * `created_at DESC` = when an entry was added to the index
-   */
-  INSERTION = 'insertion',
-}
-
-/**
  * Traverse from the most recent to the last, according to selected ordering.
  */
 export interface ForwardPagination {
@@ -44,7 +30,6 @@ export type Pagination = ForwardPagination | BackwardPagination
 export interface BaseQuery {
   readonly model: StreamID | string
   readonly account?: string
-  readonly order?: Ordering // default: CHRONOLOGICAL_DESC
 }
 
 /**
