@@ -70,6 +70,10 @@ export class TezosAuthProvider implements AuthProvider {
     if (provider.signer === undefined) {
       throw new Error('a `Signer` is required to use the `TezosAuthProvider`')
     }
+
+    console.warn(
+      'WARN: TezosAuthProvider is not fully supported. You may encounter issues using this.'
+    )
   }
 
   /**

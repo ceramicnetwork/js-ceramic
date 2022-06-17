@@ -11,7 +11,11 @@ const CHAIN_ID = 'polkadot:b0a8d493285c2df73290dfb7e61f870f'
 export class PolkadotAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
 
-  constructor(private readonly provider: any, private readonly address: string) {}
+  constructor(private readonly provider: any, private readonly address: string) {
+    console.warn(
+      'WARN: PolkadotAuthProvider is not fully supported. You may encounter issues using this.'
+    )
+  }
 
   async authenticate(message: string): Promise<string> {
     throw new Error(`Not Implemented: PolkadotAuthProvider#authenticate, ${message}`)

@@ -15,7 +15,11 @@ export class SolanaAuthProvider implements AuthProvider {
     private readonly provider: any,
     private readonly address: string,
     private readonly chainRef: string
-  ) {}
+  ) {
+    console.warn(
+      'WARN: SolanaAuthProvider is not fully supported. You may encounter issues using this.'
+    )
+  }
 
   async accountId(): Promise<AccountId> {
     return new AccountId({
