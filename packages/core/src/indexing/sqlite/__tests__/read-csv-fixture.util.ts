@@ -6,7 +6,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const MODEL = StreamID.fromString(MODEL_ID)
 
-export function readFixture(filepath: URL) {
+export function readCsvFixture(filepath: URL) {
   type CsvFixture = IndexStreamArgs & { createdAt?: Date }
   return new Promise<Array<CsvFixture>>((resolve, reject) => {
     const result = new Array<CsvFixture>()

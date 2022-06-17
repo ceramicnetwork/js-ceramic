@@ -3,7 +3,7 @@ import tmp from 'tmp-promise'
 import knex from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from '../sqlite-index-api.js'
-import { readFixture } from './read-fixture.util.js'
+import { readCsvFixture } from './read-csv-fixture.util.js'
 import { chunks } from './chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
 
@@ -33,7 +33,7 @@ beforeEach(async () => {
   order = new InsertionOrder(dataSource, knexConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
   // The responses in the tests below are ok if they are in the same order as in the CSV.
-  const rows = await readFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
+  const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
   for (const row of rows) {
     await indexAPI.indexStream(row)
   }
