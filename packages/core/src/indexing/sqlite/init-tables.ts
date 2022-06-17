@@ -1,4 +1,3 @@
-import type { DataSource } from 'typeorm'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { Knex } from 'knex'
 import { createModelTable } from './migrations/1-create-model-table.js'

@@ -1,4 +1,3 @@
-import { DataSource } from 'typeorm'
 import tmp from 'tmp-promise'
 import knex from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -14,17 +13,11 @@ const MODEL = MODELS_TO_INDEX[0]
 let EXPECTED: Array<string>
 
 let tmpFolder: tmp.DirectoryResult
-let dataSource: DataSource
 let order: InsertionOrder
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
-  dataSource = new DataSource({
-    type: 'sqlite',
-    database: filename,
-  })
-  await dataSource.initialize()
   const knexConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
@@ -32,7 +25,7 @@ beforeEach(async () => {
       filename: filename,
     },
   })
-  const indexAPI = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
+  const indexAPI = new SqliteIndexApi(knexConnection, MODELS_TO_INDEX)
   await indexAPI.init()
   order = new InsertionOrder(knexConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
@@ -45,7 +38,6 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await dataSource.close()
   await tmpFolder.cleanup()
 })
 

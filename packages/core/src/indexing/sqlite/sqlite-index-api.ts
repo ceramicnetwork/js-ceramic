@@ -1,4 +1,3 @@
-import type { DataSource } from 'typeorm'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { Knex } from 'knex'
@@ -21,7 +20,6 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 export class SqliteIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
   constructor(
-    private readonly dataSource: DataSource,
     private readonly knexConnection: Knex,
     private readonly modelsToIndex: Array<StreamID>
   ) {
@@ -51,9 +49,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async init(): Promise<void> {
-    if (!this.dataSource.isInitialized) {
-      await this.dataSource.initialize()
-    }
     await initTables(this.knexConnection, this.modelsToIndex)
   }
 }

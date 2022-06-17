@@ -1,6 +1,4 @@
-import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { DataSource } from 'typeorm'
 import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
@@ -11,17 +9,11 @@ const STREAM_ID_B = 'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93
 const CONTROLLER = 'did:key:foo'
 
 let tmpFolder: tmp.DirectoryResult
-let dataSource: DataSource
 let knexConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
-  dataSource = new DataSource({
-    type: 'sqlite',
-    database: filename,
-  })
-  await dataSource.initialize()
   knexConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
@@ -33,25 +25,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await knexConnection.destroy()
-  await dataSource.close()
   await tmpFolder.cleanup()
 })
 
 describe('init', () => {
-  test('initialize DataSource', async () => {
-    const dataSource = new DataSource({
-      type: 'sqlite',
-      database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-    })
-    const initializeSpy = jest.spyOn(dataSource, 'initialize')
-    const indexApi = new SqliteIndexApi(dataSource, knexConnection, [])
-    await indexApi.init()
-    expect(initializeSpy).toBeCalledTimes(1)
-  })
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new SqliteIndexApi(dataSource, knexConnection, modelsToIndex)
+      const indexApi = new SqliteIndexApi(knexConnection, modelsToIndex)
       await indexApi.init()
       const created = await listMidTables(knexConnection)
       const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
@@ -61,7 +42,7 @@ describe('init', () => {
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new SqliteIndexApi(dataSource, knexConnection, modelsA)
+      const indexApiA = new SqliteIndexApi(knexConnection, modelsA)
       await indexApiA.init()
       const createdA = await listMidTables(knexConnection)
       const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
@@ -69,7 +50,7 @@ describe('init', () => {
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dataSource, knexConnection, modelsB)
+      const indexApiB = new SqliteIndexApi(knexConnection, modelsB)
       await indexApiB.init()
       const createdB = await listMidTables(knexConnection)
       const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
@@ -98,14 +79,14 @@ describe('indexStream', () => {
 
   let indexApi: SqliteIndexApi
   beforeEach(async () => {
-    indexApi = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
+    indexApi = new SqliteIndexApi(knexConnection, MODELS_TO_INDEX)
     await indexApi.init()
   })
 
   test('new stream', async () => {
     const now = new Date()
     await indexApi.indexStream(STREAM_CONTENT)
-    const result: Array<any> = await dataSource.query(`SELECT * FROM mid_${MODELS_TO_INDEX[0]}`)
+    const result: Array<any> = await knexConnection.from(`mid_${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
@@ -128,7 +109,7 @@ describe('indexStream', () => {
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)
-    const result: Array<any> = await dataSource.query(`SELECT * FROM mid_${MODELS_TO_INDEX[0]}`)
+    const result: Array<any> = await knexConnection.from(`mid_${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
