@@ -52,6 +52,9 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
       const knexConnection = knex({
         client: 'sqlite3',
         useNullAsDefault: true,
+        connection: {
+          filename: connectionString.pathname,
+        },
       })
       return new SqliteIndexApi(dataSource, knexConnection, indexingConfig.models)
     }

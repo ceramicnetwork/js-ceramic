@@ -31,7 +31,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
-    const knexQuery = this.knexConnection(tableName)
+    await this.knexConnection(tableName)
       .insert({
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
@@ -44,7 +44,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
         last_anchored_at: asTimestamp(args.lastAnchor),
         updated_at: asTimestamp(args.updatedAt) || now,
       })
-    await this.query(knexQuery)
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {

@@ -16,18 +16,23 @@ let knexConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
+  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
   dataSource = new DataSource({
     type: 'sqlite',
-    database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
+    database: filename,
   })
   await dataSource.initialize()
   knexConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
+    connection: {
+      filename: filename,
+    },
   })
 })
 
 afterEach(async () => {
+  await knexConnection.destroy()
   await dataSource.close()
   await tmpFolder.cleanup()
 })
