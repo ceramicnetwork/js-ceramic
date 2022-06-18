@@ -74,9 +74,24 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await ipfs.stop()
   })
 
-  test('verifies the content against model schema', async () => {
+  test('verifies the content against model schema when creating an MID', async () => {
     await expect(
       ModelInstanceDocument.create(ceramic, {}, midMetadata)
+    ).rejects.toThrow(/data must have required property 'myData'/)
+  })
+
+  test('verifies the content against model schema when updating an MID', async () => {
+    const doc = await ModelInstanceDocument.create(
+      ceramic,
+      CONTENT0,
+      midMetadata
+    )
+    expect(doc.content).toEqual(CONTENT0)
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      doc.replace({})
     ).rejects.toThrow(/data must have required property 'myData'/)
   })
 
