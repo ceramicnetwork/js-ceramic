@@ -6,19 +6,13 @@ const SCHEMA: JSONSchema.Object = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
   type: 'object',
   properties: {
-    owner: {
-      "maxLength": 80,
-      "pattern": "/^did:[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+:[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/",
-      "title": "GraphQLDID",
-      "type": "string",
-    },
     stringPropName: {
       type: 'string',
       maxLength: 80,
     },
   },
   additionalProperties: false,
-  required: ['owner', 'stringPropName'],
+  required: ['stringPropName'],
 }
 
 const VIEWS_VALID: ModelViewsDefinition = {
@@ -31,12 +25,8 @@ const VIEWS_INVALID_TYPE: ModelViewsDefinition = {
   'owner': { type: 'invalidType' }
 }
 
-const VIEWS_INVALID_PROPERTY: ModelViewsDefinition = {
+const VIEWS_DUPLICATED_PROPERTY: ModelViewsDefinition = {
   'stringPropName': { type: 'documentAccount' }
-}
-
-const VIEWS_INVALID_MISSING_PROPERTY: ModelViewsDefinition = {
-  'missingProperty': { type: 'documentAccount' }
 }
 
 describe('ViewsValidation', () => {
@@ -58,16 +48,10 @@ describe('ViewsValidation', () => {
     }).toThrow(/unsupported model view definition type/)
   })
 
-  it('throws with invalid target property for a documentAccount view', async () => {
+  it('throws with property name duplicated from schema', async () => {
     expect(() => {
-      viewsValidator.validateViews(VIEWS_INVALID_PROPERTY, SCHEMA)
-    }).toThrow(/documentAccount has to be used with a DID property/)
-  })
-
-  it('throws with missing target property', async () => {
-    expect(() => {
-      viewsValidator.validateViews(VIEWS_INVALID_MISSING_PROPERTY, SCHEMA)
-    }).toThrow(/model view definition refers to a missing property/)
+      viewsValidator.validateViews(VIEWS_DUPLICATED_PROPERTY, SCHEMA)
+    }).toThrow(/view definition used with a property also present in schema/)
   })
 })
 

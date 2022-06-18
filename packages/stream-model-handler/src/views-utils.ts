@@ -14,12 +14,8 @@ export class ViewsValidation {
       if (!SUPPORTED_VIEW_TYPES.includes(value.type)) {
         throw new Error('unsupported model view definition type')
       }
-      const referredProp = schema.properties[key]
-      if (referredProp === undefined) {
-        throw new Error('model view definition refers to a missing property')
-      }
-      if (value.type === 'documentAccount' && referredProp['title'] !== 'GraphQLDID') {
-        throw new Error('documentAccount has to be used with a DID property')
+      if (schema.properties[key] !== undefined) {
+        throw new Error('view definition used with a property also present in schema')
       }
     })
   }

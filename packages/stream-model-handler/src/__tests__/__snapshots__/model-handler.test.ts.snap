@@ -399,12 +399,6 @@ Object {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": Object {
-        "owner": Object {
-          "maxLength": 80,
-          "pattern": "/^did:[a-zA-Z0-9.!#$%&'*+/=?^_\`{|}~-]+:[a-zA-Z0-9.!#$%&'*+/=?^_\`{|}~-]+$/",
-          "title": "GraphQLDID",
-          "type": "string",
-        },
         "stringPropName": Object {
           "maxLength": 80,
           "type": "string",

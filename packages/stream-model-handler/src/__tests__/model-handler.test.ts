@@ -101,12 +101,6 @@ const FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW: ModelDefinition = {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
     properties: {
-      owner: {
-        "maxLength": 80,
-        "pattern": "/^did:[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+:[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/",
-        "title": "GraphQLDID",
-        "type": "string",
-      },
       stringPropName: {
         type: 'string',
         maxLength: 80,
@@ -336,7 +330,7 @@ describe('ModelHandler', () => {
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
-  it('supports view properties in genesis comment', async () => {
+  it('supports view properties in genesis commit', async () => {
     const commit = await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)
     expect(commit).toBeDefined()
 
@@ -436,7 +430,7 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: commit.jws,
     }
-    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(/documentAccount has to be used with a DID property/)
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(/view definition used with a property also present in schema/)
   })
 
   it('fails to apply signed commit with invalid schema', async () => {
@@ -520,7 +514,7 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(/documentAccount has to be used with a DID property/)
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(/view definition used with a property also present in schema/)
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
