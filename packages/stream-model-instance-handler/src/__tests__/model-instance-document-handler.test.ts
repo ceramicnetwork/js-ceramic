@@ -60,10 +60,6 @@ const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
 
-const FAKE_STREAM_ID_EMPTY_SCHEMA = StreamID.fromString(
-  'kjzl6hvfrbw6cbe494mf4cbhmkxbeu5soy2t5iyrs761flvrk5emxpzcjeq5sz4'
-)
-
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
@@ -254,12 +250,6 @@ describe('ModelInstanceDocumentHandler', () => {
           return {
             content: MODEL_DEFINITION
           }
-        } else if (streamId.toString() === FAKE_STREAM_ID_EMPTY_SCHEMA.toString()) {
-          return {
-            content: {
-              schema: {}
-            }
-          }
         } else {
           throw new Error("Trying to load unexpected stream in model-instance-document-handler.test.ts")
         }
@@ -358,9 +348,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      {
-        model: FAKE_STREAM_ID_EMPTY_SCHEMA
-      }
+      METADATA
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
