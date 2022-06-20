@@ -166,6 +166,7 @@ export class ModelHandler implements StreamHandler<Model> {
     }
     const expectedPrev = state.log[state.log.length - 1].cid
     if (!payload.prev.equals(expectedPrev)) {
+      // This should never happen and would indicate a programming error if it did
       throw new Error(
         `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${payload.prev}`
       )
