@@ -95,20 +95,7 @@ const FINAL_CONTENT: ModelDefinition = {
 }
 
 const FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW: ModelDefinition = {
-  name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
-  schema: {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    type: 'object',
-    properties: {
-      stringPropName: {
-        type: 'string',
-        maxLength: 80,
-      },
-    },
-    additionalProperties: false,
-    required: ['stringPropName'],
-  },
+  ...FINAL_CONTENT,
   views: {
     'owner': { type: 'documentAccount' }
   }
