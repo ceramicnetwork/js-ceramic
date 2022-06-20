@@ -126,9 +126,9 @@ export class ModelHandler implements StreamHandler<Model> {
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
-    if (state.content.schema !== undefined) {
+    if (state.content.schema) {
       await this._schemaValidator.validateSchema(state.content.schema)
-      if (state.content.views !== undefined) {
+      if (state.content.views) {
         this._viewsValidator.validateViews(state.content.views, state.content.schema)
       }
     }
@@ -206,9 +206,9 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata, // No way to update metadata for Model streams
     }
 
-    if (newContent.schema !== undefined) {
+    if (newContent.schema) {
       await this._schemaValidator.validateSchema(newContent.schema)
-      if (newContent.views !== undefined) {
+      if (newContent.views) {
         this._viewsValidator.validateViews(newContent.views, newContent.schema)
       }
     }
