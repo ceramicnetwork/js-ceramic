@@ -59,6 +59,12 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       throw new Error('Caip10Link genesis commit cannot have data')
     }
 
+    const metadata = commit.header
+    if (!(metadata.controllers && metadata.controllers.length === 1)) {
+      throw new Error('Exactly one controller must be specified')
+    }
+    metadata.controller = metadata.controllers[0]
+
     // TODO - verify genesis commit
     const state = {
       type: Caip10Link.STREAM_TYPE_ID,
@@ -66,14 +72,10 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       next: {
         content: null,
       },
-      metadata: commit.header,
+      metadata,
       signature: SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
-    }
-
-    if (!(state.metadata.controllers && state.metadata.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
     }
 
     return state
@@ -122,7 +124,9 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     if (legacyAccountCaip10.toLowerCase() !== legacyControllerCaip10.toLowerCase()) {
-      throw new Error(`Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`)
+      throw new Error(
+        `Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`
+      )
     }
     state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
     return {
