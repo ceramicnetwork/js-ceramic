@@ -66,6 +66,24 @@ export enum ModelAccountRelation {
 }
 
 /**
+ * Identifies types of properties that are supported as view properties at DApps' runtime
+ *
+ * A view-property is one that is not stored in related MIDs' content, but is derived from their other properties
+ *
+ * Currently supported types of view properties:
+ * - 'documentAccount': view properties of this type have the MID's controller DID as values
+ *
+ */
+export type ModelViewDefinition = { type: 'documentAccount' }
+
+/**
+ * A mapping between model's property names and types of view properties
+ *
+ * It indicates which properties of a model are view properties and of what type
+ */
+export type ModelViewsDefinition = Record<string, ModelViewDefinition>
+
+/**
  * Contents of a Model Stream.
  */
 export interface ModelDefinition {
@@ -73,6 +91,7 @@ export interface ModelDefinition {
   description?: string
   schema: JSONSchema.Object
   accountRelation: ModelAccountRelation
+  views?: ModelViewsDefinition
 }
 
 /**
