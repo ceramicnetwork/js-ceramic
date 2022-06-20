@@ -414,6 +414,14 @@ export class Ceramic implements CeramicApi {
       // Just use the InMemoryAnchorService as the AnchorValidator
       anchorValidator = anchorService
     } else {
+      if (
+        !ethereumRpcUrl &&
+        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP)
+      ) {
+        logger.warn(
+          `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
+        )
+      }
       anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     }
 
@@ -699,10 +707,10 @@ export class Ceramic implements CeramicApi {
       throw new Error('Given genesis commit is not deterministic')
     }
 
-    const genesisCID = await this.ipfs.dag.put(genesis)
-    if (!streamRef.cid.equals(genesisCID)) {
+    const stream = await this.createStreamFromGenesis(streamRef.type, genesis)
+    if (!streamRef.equals(stream.id)) {
       throw new Error(
-        `Given StreamID CID ${streamRef.cid.toString()} does not match given genesis content`
+        `StreamID ${stream.id.toString()} generated does not match expected StreamID ${streamRef.toString()} determined from genesis content in multiquery request`
       )
     }
   }
@@ -807,7 +815,7 @@ export class Ceramic implements CeramicApi {
 
     const results = await Promise.all(
       state.log.map(async ({ cid }) => {
-        const commit = await this.dispatcher.retrieveCommit(cid)
+        const commit = await this.dispatcher.retrieveCommit(cid, effectiveStreamId)
         return {
           cid: cid.toString(),
           value: await StreamUtils.convertCommitToSignedCommitContainer(commit, this.ipfs),
@@ -836,6 +844,7 @@ export class Ceramic implements CeramicApi {
     this._shutdownController.abort()
     await this.dispatcher.close()
     await this.repository.close()
+    await this._index.close()
     this._ipfsTopology.stop()
     this._logger.imp('Ceramic instance closed successfully')
   }

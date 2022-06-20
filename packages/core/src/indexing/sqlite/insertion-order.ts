@@ -1,5 +1,4 @@
 import type { Knex } from 'knex'
-import type { DataSource } from 'typeorm'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Page, Pagination } from '@ceramicnetwork/common'
@@ -18,7 +17,7 @@ type Selected = { stream_id: string; last_anchored_at: number; created_at: numbe
  * Contains functions to transform (parse and stringify) GraphQL cursors
  * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
  *
- * A cursor for SQLite chronological order is a JSON having `last_anchored_at` (nullable) and `created_at` fields as numbers.
+ * A cursor for SQLite insertion order is a JSON having `created_at` field as number.
  */
 abstract class Cursor {
   /**
@@ -42,37 +41,32 @@ abstract class Cursor {
 }
 
 /**
- * Prepare chronological cursor.
+ * Prepare insertion cursor.
  */
-function asChronologicalCursor(
-  input: { created_at: number; last_anchored_at: number } | undefined
-) {
+function asInsertionCursor(input: { created_at: number } | undefined) {
   if (!input) return undefined
-  return { created_at: input.created_at, last_anchored_at: input.last_anchored_at }
+  return { created_at: input.created_at }
 }
 
-const CHRONOLOGICAL_ORDER = [
-  { column: 'last_anchored_at', order: 'DESC', nulls: 'last' }, // This translates to the SQL "(`last_anchored_at` is null) DESC", which results in sorting nulls first.  **SQLite only**
-  { column: 'last_anchored_at', order: 'DESC' },
-  { column: 'created_at', order: 'DESC' },
-]
+const REVERSE_ORDER = {
+  ASC: 'DESC',
+  DESC: 'ASC',
+}
 
 /**
  * Reverse ASC to DESC, and DESC to ASC in an order clause.
  */
 function reverseOrder<T extends { order: string }>(entries: Array<T>): Array<T> {
-  const reverse = {
-    ASC: 'DESC',
-    DESC: 'ASC',
-  }
-  return entries.map((entry) => ({ ...entry, order: reverse[entry.order] }))
+  return entries.map((entry) => ({ ...entry, order: REVERSE_ORDER[entry.order] }))
 }
 
+const INSERTION_ORDER = [{ column: 'created_at', order: 'DESC' }]
+
 /**
- * Chronological order: last_anchored_at NULLS FIRST DESC, created_at DESC.
+ * Insertion order: created_at DESC.
  */
-export class ChronologicalOrder {
-  constructor(private readonly dataSource: DataSource, private readonly knexConnection: Knex) {}
+export class InsertionOrder {
+  constructor(private readonly dbConnection: Knex) {}
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     const pagination = parsePagination(query)
@@ -80,7 +74,7 @@ export class ChronologicalOrder {
     switch (paginationKind) {
       case PaginationKind.FORWARD: {
         const limit = pagination.first
-        const response = await this.query<Array<Selected>>(this.forwardQuery(query, pagination))
+        const response: Array<Selected> = await this.forwardQuery(query, pagination)
         const entries = response.slice(0, limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -89,14 +83,14 @@ export class ChronologicalOrder {
           pageInfo: {
             hasNextPage: response.length > limit,
             hasPreviousPage: false,
-            endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
-            startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
+            endCursor: Cursor.stringify(asInsertionCursor(lastEntry)),
+            startCursor: Cursor.stringify(asInsertionCursor(firstEntry)),
           },
         }
       }
       case PaginationKind.BACKWARD: {
         const limit = pagination.last
-        const response = await this.query<Array<Selected>>(this.backwardQuery(query, pagination))
+        const response: Array<Selected> = await this.backwardQuery(query, pagination)
         const entries = response.slice(-limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -105,8 +99,8 @@ export class ChronologicalOrder {
           pageInfo: {
             hasNextPage: false,
             hasPreviousPage: response.length > limit,
-            endCursor: Cursor.stringify(asChronologicalCursor(lastEntry)),
-            startCursor: Cursor.stringify(asChronologicalCursor(firstEntry)),
+            endCursor: Cursor.stringify(asInsertionCursor(lastEntry)),
+            startCursor: Cursor.stringify(asInsertionCursor(firstEntry)),
           },
         }
       }
@@ -118,81 +112,59 @@ export class ChronologicalOrder {
   /**
    * Forward query: traverse from the most recent to the last.
    */
-  private forwardQuery(query: BaseQuery, pagination: ForwardPaginationQuery): Knex.QueryBuilder {
+  private forwardQuery(
+    query: BaseQuery,
+    pagination: ForwardPaginationQuery
+  ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
-    let base = this.knexConnection
+    let base = this.dbConnection
       .from(tableName)
       .select('stream_id', 'last_anchored_at', 'created_at')
-      .orderBy(CHRONOLOGICAL_ORDER)
+      .orderBy(INSERTION_ORDER)
       .limit(pagination.first + 1)
     if (query.account) {
       base = base.where({ controller_did: query.account })
     }
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
-      if (after.last_anchored_at) {
-        return base.where('last_anchored_at', '<', after.last_anchored_at)
-      } else {
-        return base
-          .where((builder) =>
-            builder.whereNull('last_anchored_at').andWhere('created_at', '<', after.created_at)
-          )
-          .orWhereNotNull('last_anchored_at')
-      }
-    } else {
-      return base
+      return base.where('created_at', '<', after.created_at)
     }
+    return base
   }
 
   /**
    * Backward query: traverse from the last to the most recent.
-   * Gets the oldest entries but the results get newer as you iterate.
    */
-  private backwardQuery(query: BaseQuery, pagination: BackwardPaginationQuery): Knex.QueryBuilder {
+  private backwardQuery(
+    query: BaseQuery,
+    pagination: BackwardPaginationQuery
+  ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
     const limit = pagination.last
     const identity = <T>(a: T) => a
     const base = (
       withWhereCallback: (builder: Knex.QueryBuilder) => Knex.QueryBuilder = identity
     ) => {
-      return this.knexConnection
+      return this.dbConnection
         .select('*')
         .from((builder) => {
           let subquery = builder
             .from(tableName)
             .select('stream_id', 'last_anchored_at', 'created_at')
-            .orderBy(reverseOrder(CHRONOLOGICAL_ORDER))
+            .orderBy(reverseOrder(INSERTION_ORDER))
             .limit(limit + 1) // To know if we have more entries to query
           if (query.account) {
             subquery = subquery.where({ controller_did: query.account })
           }
           return withWhereCallback(subquery)
         })
-        .orderBy(CHRONOLOGICAL_ORDER)
+        .orderBy(INSERTION_ORDER)
     }
     if (pagination.before) {
       const before = Cursor.parse(pagination.before)
-      if (before.last_anchored_at) {
-        return base((builder) =>
-          builder
-            .whereNull('last_anchored_at')
-            .orWhere('last_anchored_at', '>', before.last_anchored_at)
-        )
-      } else {
-        return base((builder) =>
-          builder.where({ last_anchored_at: null }).andWhere('created_at', '>', before.created_at)
-        )
-      }
+      return base((builder) => builder.where('created_at', '>', before.created_at))
     } else {
       return base()
     }
-  }
-
-  /**
-   * Execute a query against a database.
-   */
-  private query<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
-    const asSQL = queryBuilder.toSQL()
-    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
   }
 }

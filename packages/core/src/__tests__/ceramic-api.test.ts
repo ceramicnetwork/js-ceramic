@@ -221,7 +221,7 @@ describe('Ceramic API', () => {
 
       const expected = []
       for (const { cid } of stream.state.log) {
-        const commit = await ceramic.dispatcher.retrieveCommit(cid)
+        const commit = await ceramic.dispatcher.retrieveCommit(cid, stream.id)
         expected.push({
           cid: cid.toString(),
           value: await StreamUtils.convertCommitToSignedCommitContainer(commit, ipfs),

@@ -9,9 +9,13 @@ import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TaskQueue } from '../pubsub/task-queue.js'
 import { delay } from './delay.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_STREAM_ID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+)
 
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 30)
@@ -65,7 +69,7 @@ describe('Dispatcher with real ipfs over http', () => {
   it('basic ipfs http client functionality', async () => {
     const cid = await dispatcher.storeCommit({ foo: 'bar' })
 
-    const data = await dispatcher.retrieveCommit(cid)
+    const data = await dispatcher.retrieveCommit(cid, FAKE_STREAM_ID)
     expect(data.foo).toEqual('bar')
   })
 
@@ -74,7 +78,9 @@ describe('Dispatcher with real ipfs over http', () => {
 
     // try to load a CID that ipfs doesn't know about.  It will timeout.
     // Timeout error message is different depending on if we are talking to a go-ipfs or js-ipfs instance
-    await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/(context deadline exceeded|request timed out)/)
+    await expect(dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).rejects.toThrow(
+      /(context deadline exceeded|request timed out)/
+    )
 
     // Make sure we tried 3 times to get the cid from ipfs, not just once
     expect(ipfsGetSpy).toBeCalledTimes(3)
@@ -87,7 +93,7 @@ describe('Dispatcher with real ipfs over http', () => {
     // fail due to test timeout.  If the test succeeds, that means that signaling the
     // shutdownController successfully interrupted waiting on IPFS.
 
-    const getPromise = dispatcher.retrieveCommit(FAKE_CID)
+    const getPromise = dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)
     // Apparently, js-ipfs does not react on already triggered AbortSignal.
     // So we have to add a timeout to make sure an ipfs function is called before the signal is triggered.
     const isJsIpfsNode = Boolean((ipfsClient as any).preload) // Exists on js-ipfs node, and is not present on ipfs-http-client.

@@ -3,6 +3,88 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.1](/compare/@ceramicnetwork/core@2.5.1-rc.0...@ceramicnetwork/core@2.5.1) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+## [2.5.1-rc.0](/compare/@ceramicnetwork/core@2.5.0...@ceramicnetwork/core@2.5.1-rc.0) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.5.0](/compare/@ceramicnetwork/core@2.5.0-rc.5...@ceramicnetwork/core@2.5.0) (2022-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.5.0-rc.5](/compare/@ceramicnetwork/core@2.5.0-rc.4...@ceramicnetwork/core@2.5.0-rc.5) (2022-06-17)
+
+
+### Bug Fixes
+
+* **core:** Creating a stream via a multiquery should pin it (#2236) f6f6b55, closes #2236
+
+
+### Features
+
+* Add InsertionOrder and remove ChronologicalOrder (#2218) 4f98136, closes #2218
+
+
+
+
+
+# [2.5.0-rc.4](/compare/@ceramicnetwork/core@2.5.0-rc.3...@ceramicnetwork/core@2.5.0-rc.4) (2022-06-14)
+
+
+### Bug Fixes
+
+* **cli:** fix metrics import and dependency (#2227) c418347, closes #2227
+
+
+
+
+
+# [2.5.0-rc.3](/compare/@ceramicnetwork/core@2.5.0-rc.2...@ceramicnetwork/core@2.5.0-rc.3) (2022-06-13)
+
+
+### Bug Fixes
+
+* **core:** Depend on the right version of metrics package 2d12605
+
+
+
+
+
+# [2.5.0-rc.2](/compare/@ceramicnetwork/core@2.5.0-rc.0...@ceramicnetwork/core@2.5.0-rc.2) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.5.0-rc.0](/compare/@ceramicnetwork/core@2.4.0...@ceramicnetwork/core@2.5.0-rc.0) (2022-06-13)
+
+
+### Features
+
+* **core:** add family to pubsub update messages e2fef67
+* HTTP endpoint - it works (#2210) 28bf9aa, closes #2210
+
+
+
+
+
 # [2.4.0](/compare/@ceramicnetwork/core@2.3.1...@ceramicnetwork/core@2.4.0) (2022-06-06)
 
 

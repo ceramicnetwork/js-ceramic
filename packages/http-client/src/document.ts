@@ -13,13 +13,13 @@ import {
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import QueryString from 'query-string'
 
 export class Document extends Observable<StreamState> implements RunningStateLike {
   private readonly state$: StreamStateSubject
   private periodicSubscription: Subscription | undefined
+  private readonly _apiUrl: URL
 
-  constructor(initial: StreamState, private _apiUrl: string, syncInterval: number) {
+  constructor(initial: StreamState, _apiUrl: URL | string, syncInterval: number) {
     super((subscriber) => {
       // Set up periodic updates only when the first observer subscribes
       const isFirstObserver = this.state$.observers.length === 0
@@ -37,6 +37,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
       })
     })
     this.state$ = new StreamStateSubject(initial)
+    this._apiUrl = new URL(_apiUrl)
   }
 
   get value(): StreamState {
@@ -65,13 +66,14 @@ export class Document extends Observable<StreamState> implements RunningStateLik
   }
 
   static async createFromGenesis(
-    apiUrl: string,
+    apiUrl: URL | string,
     type: number,
     genesis: any,
     opts: CreateOpts,
     syncInterval: number
   ): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/streams', {
+    const url = new URL('./streams', apiUrl)
+    const { state } = await fetchJson(url, {
       method: 'post',
       body: {
         type,
@@ -83,13 +85,14 @@ export class Document extends Observable<StreamState> implements RunningStateLik
   }
 
   static async applyCommit(
-    apiUrl: string,
+    apiUrl: URL | string,
     streamId: StreamID | string,
     commit: CeramicCommit,
     opts: UpdateOpts,
     syncInterval: number
   ): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/commits', {
+    const url = new URL('./commits', apiUrl)
+    const { state } = await fetchJson(url, {
       method: 'post',
       body: {
         streamId: streamId.toString(),
@@ -102,17 +105,20 @@ export class Document extends Observable<StreamState> implements RunningStateLik
 
   private static async _load(
     streamId: StreamID | CommitID,
-    apiUrl: string,
+    apiUrl: URL | string,
     opts: LoadOpts
   ): Promise<StreamState> {
-    const url = apiUrl + '/streams/' + streamId.toString() + '?' + QueryString.stringify(opts)
+    const url = new URL(`./streams/${streamId}`, apiUrl)
+    for (const key in opts) {
+      url.searchParams.set(key, opts[key])
+    }
     const { state } = await fetchJson(url)
     return state
   }
 
   static async load(
     streamId: StreamID | CommitID,
-    apiUrl: string,
+    apiUrl: URL | string,
     syncInterval: number,
     opts: LoadOpts
   ): Promise<Document> {
@@ -122,9 +128,10 @@ export class Document extends Observable<StreamState> implements RunningStateLik
 
   static async loadStreamCommits(
     streamId: StreamID,
-    apiUrl: string
+    apiUrl: URL | string
   ): Promise<Array<Record<string, CeramicCommit>>> {
-    const { commits } = await fetchJson(`${apiUrl}/commits/${streamId}`)
+    const url = new URL(`./commits/${streamId}`, apiUrl)
+    const { commits } = await fetchJson(url)
 
     return commits.map((r: any) => {
       return {

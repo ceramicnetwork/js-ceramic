@@ -56,14 +56,32 @@ async function throwReadOnlyError(): Promise<void> {
 
 /**
  * Represents the relationship between an instance of this model and the controller account.
- * 'list' means there can be many instances of this model for a single account. 'link' means
+ * 'list' means there can be many instances of this model for a single account. 'single' means
  * there can be only one instance of this model per account (if a new instance is created it
  * overrides the old one).
  */
 export enum ModelAccountRelation {
   LIST = 'list',
-  LINK = 'link',
+  SINGLE = 'single',
 }
+
+/**
+ * Identifies types of properties that are supported as view properties at DApps' runtime
+ *
+ * A view-property is one that is not stored in related MIDs' content, but is derived from their other properties
+ *
+ * Currently supported types of view properties:
+ * - 'documentAccount': view properties of this type have the MID's controller DID as values
+ *
+ */
+export type ModelViewDefinition = { type: 'documentAccount' }
+
+/**
+ * A mapping between model's property names and types of view properties
+ *
+ * It indicates which properties of a model are view properties and of what type
+ */
+export type ModelViewsDefinition = Record<string, ModelViewDefinition>
 
 /**
  * Contents of a Model Stream.
@@ -73,6 +91,7 @@ export interface ModelDefinition {
   description?: string
   schema: JSONSchema.Object
   accountRelation: ModelAccountRelation
+  views?: ModelViewsDefinition
 }
 
 /**
@@ -287,7 +306,7 @@ export class Model extends Stream {
     // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: uint8arrays.toString(randomBytes(12), 'base64'),
+      unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
     const commit: GenesisCommit = { data: content, header }

@@ -10,7 +10,7 @@ interface FetchOpts {
   signal?: AbortSignal
 }
 
-export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any> {
+export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {
   if (opts.body) {
     Object.assign(opts, {
       body: JSON.stringify(opts.body),
@@ -25,7 +25,7 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
     ? mergeAbortSignals([opts.signal, timedAbortSignal.signal])
     : timedAbortSignal.signal
 
-  const res = await fetch(url, opts).finally(() => timedAbortSignal.clear())
+  const res = await fetch(String(url), opts).finally(() => timedAbortSignal.clear())
 
   if (!res.ok) {
     const text = await res.text()

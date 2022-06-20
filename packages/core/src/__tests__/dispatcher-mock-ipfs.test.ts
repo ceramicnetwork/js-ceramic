@@ -26,6 +26,9 @@ const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adn
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
+const FAKE_MODEL: StreamID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexpxyz'
+)
 
 const mock_ipfs = {
   pubsub: {
@@ -104,7 +107,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   it('retrieves commit correctly', async () => {
     ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(1)
     expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -113,7 +116,7 @@ describe('Dispatcher with mock ipfs', () => {
   it('retries on timeout', async () => {
     ipfs.dag.get.mockRejectedValueOnce({ code: 'ERR_TIMEOUT' })
     ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(2)
     expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -123,15 +126,15 @@ describe('Dispatcher with mock ipfs', () => {
   it('caches and retrieves commit correctly', async () => {
     const ipfsSpy = ipfs.dag.get
     ipfsSpy.mockReturnValueOnce({ value: 'data' })
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
     // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
-    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
     // Commit found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
     const clonedCID = CID.parse(FAKE_CID.toString())
     expect(clonedCID !== FAKE_CID).toEqual(true)
     expect(ipfsSpy).toBeCalledTimes(1)
-    expect(await dispatcher.retrieveCommit(clonedCID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(clonedCID, FAKE_STREAM_ID)).toEqual('data')
     // Commit found in cache with different instance of same CID (IPFS lookup count unchanged)
     expect(ipfsSpy).toBeCalledTimes(1)
     expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -196,7 +199,7 @@ describe('Dispatcher with mock ipfs', () => {
     await expect(dispatcher.handleMessage(message)).rejects.toThrow(/Unsupported message type/)
   })
 
-  it('handle message correctly', async () => {
+  it('handle message correctly without model', async () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
     async function register(state: StreamState) {
@@ -225,7 +228,7 @@ describe('Dispatcher with mock ipfs', () => {
     )
     const queryID = queryMessageSent.id
 
-    // Handle UPDATE message
+    // Handle UPDATE message without model
     dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
@@ -252,5 +255,37 @@ describe('Dispatcher with mock ipfs', () => {
     const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.update).toBeCalledWith(stream2.id, FAKE_CID2)
+  })
+
+  it('handle message correctly with model', async () => {
+    dispatcher.repository.stateManager = {} as unknown as StateManager
+
+    async function register(state: StreamState) {
+      const runningState = new RunningState(state, false)
+      repository.add(runningState)
+      dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
+      return runningState
+    }
+
+    const initialState = {
+      type: 0,
+      log: [
+        {
+          cid: FAKE_STREAM_ID.cid,
+          type: CommitType.GENESIS,
+        },
+      ],
+    } as unknown as StreamState
+    const state$ = await register(initialState)
+
+    // Handle UPDATE message with model
+    dispatcher.repository.stateManager.update = jest.fn()
+    await dispatcher.handleMessage({
+      typ: MsgType.UPDATE,
+      stream: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      model: FAKE_MODEL,
+    })
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID)
   })
 })

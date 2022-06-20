@@ -14,6 +14,8 @@ import { AnchorStatus, StreamState, LogEntry } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 
+const TILE_TYPE_ID = 0
+
 /**
  * Stream related utils
  */
@@ -128,6 +130,9 @@ export class StreamUtils {
     if (state.next?.metadata?.model) {
       cloned.next.metadata.model = state.next.metadata.model.toString()
     }
+    if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
+      cloned.metadata.unique = u8a.toString(cloned.metadata.unique, 'base64')
+    }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
 
@@ -170,6 +175,9 @@ export class StreamUtils {
     }
     if (state.next?.metadata?.model) {
       cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
+    }
+    if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
+      cloned.metadata.unique = u8a.fromString(state.metadata.unique, 'base64')
     }
 
     return cloned

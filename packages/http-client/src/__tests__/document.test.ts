@@ -28,7 +28,7 @@ test('emit on distinct changes', async () => {
     ],
   } as unknown as StreamState
 
-  const state$ = new Document(initial, '', 1000)
+  const state$ = new Document(initial, 'https://example.com', 1000)
   // Disable background polling to avoid getting an error from node-fetch since there's no
   // daemon listening to receive the requests.
   state$._syncState = async function () {
@@ -87,7 +87,7 @@ describe('periodic subscription', () => {
         },
       ],
     } as unknown as StreamState
-    const document = new Document(initial, '', SYNC_INTERVAL)
+    const document = new Document(initial, 'https://example.com', SYNC_INTERVAL)
     // Every Document#_syncState we commit when it was called.
     // Also we track how many invocations happened to stop after enough samples are acquired.
     const invocations = []
@@ -118,7 +118,7 @@ describe('periodic subscription', () => {
         },
       ],
     } as unknown as StreamState
-    const document = new Document(initial, '', SYNC_INTERVAL)
+    const document = new Document(initial, 'https://example.com', SYNC_INTERVAL)
     // Every Document#_syncState we commit when it was called.
     // Also we track how many invocations happened to stop after enough samples are acquired.
     const invocations = []

@@ -3,6 +3,62 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.1](/compare/@ceramicnetwork/common@2.2.1-rc.0...@ceramicnetwork/common@2.2.1) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [2.2.1-rc.0](/compare/@ceramicnetwork/common@2.2.0...@ceramicnetwork/common@2.2.1-rc.0) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.2.0](/compare/@ceramicnetwork/common@2.2.0-rc.3...@ceramicnetwork/common@2.2.0) (2022-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.2.0-rc.3](/compare/@ceramicnetwork/common@2.2.0-rc.2...@ceramicnetwork/common@2.2.0-rc.3) (2022-06-17)
+
+
+### Features
+
+* Add InsertionOrder and remove ChronologicalOrder (#2218) 4f98136, closes #2218
+
+
+
+
+
+# [2.2.0-rc.2](/compare/@ceramicnetwork/common@2.2.0-rc.0...@ceramicnetwork/common@2.2.0-rc.2) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.2.0-rc.0](/compare/@ceramicnetwork/common@2.1.0...@ceramicnetwork/common@2.2.0-rc.0) (2022-06-13)
+
+
+### Features
+
+* **core:** add family to pubsub update messages e2fef67
+* Implement IndexAPI on http client side (#2211) 03d09a5, closes #2211
+* **model, model-instance-document:** Encode 'unique' as Uint8Array (#2212) f6eb92b, closes #2212
+
+
+
+
+
 # [2.1.0](/compare/@ceramicnetwork/common@2.0.4...@ceramicnetwork/common@2.1.0) (2022-06-06)
 
 

@@ -3,6 +3,90 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1](/compare/@ceramicnetwork/cli@2.3.1-rc.0...@ceramicnetwork/cli@2.3.1) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.3.1-rc.0](/compare/@ceramicnetwork/cli@2.3.0...@ceramicnetwork/cli@2.3.1-rc.0) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.3.0](/compare/@ceramicnetwork/cli@2.3.0-rc.5...@ceramicnetwork/cli@2.3.0) (2022-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.3.0-rc.5](/compare/@ceramicnetwork/cli@2.3.0-rc.4...@ceramicnetwork/cli@2.3.0-rc.5) (2022-06-17)
+
+
+### Bug Fixes
+
+* **cli:** Metrics should be disabled by default (#2234) 709ee95, closes #2234
+
+
+### Features
+
+* **cli:** Add option to healthcheck to skip checking IPFS (#2241) 60dd88c, closes #2241
+
+
+
+
+
+# [2.3.0-rc.4](/compare/@ceramicnetwork/cli@2.3.0-rc.3...@ceramicnetwork/cli@2.3.0-rc.4) (2022-06-14)
+
+
+### Bug Fixes
+
+* **cli:** fix metrics import and dependency (#2227) c418347, closes #2227
+
+
+
+
+
+# [2.3.0-rc.3](/compare/@ceramicnetwork/cli@2.3.0-rc.2...@ceramicnetwork/cli@2.3.0-rc.3) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.3.0-rc.2](/compare/@ceramicnetwork/cli@2.3.0-rc.0...@ceramicnetwork/cli@2.3.0-rc.2) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.3.0-rc.0](/compare/@ceramicnetwork/cli@2.2.0...@ceramicnetwork/cli@2.3.0-rc.0) (2022-06-13)
+
+
+### Bug Fixes
+
+* user more real request to the collection endpoint (#2220) 300db14, closes #2220
+
+
+### Features
+
+* HTTP endpoint - it works (#2210) 28bf9aa, closes #2210
+* Implement IndexAPI on http client side (#2211) 03d09a5, closes #2211
+
+
+
+
+
 # [2.2.0](/compare/@ceramicnetwork/cli@2.1.1...@ceramicnetwork/cli@2.2.0) (2022-06-06)
 
 

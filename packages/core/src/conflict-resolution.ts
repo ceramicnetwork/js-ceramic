@@ -16,7 +16,7 @@ import {
 } from '@ceramicnetwork/common'
 import { Dispatcher } from './dispatcher.js'
 import cloneDeep from 'lodash.clonedeep'
-import { CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { HandlersMap } from './handlers-map.js'
 import { Utils } from './utils.js'
 
@@ -127,10 +127,14 @@ export async function pickLogToAccept(
 
 export class HistoryLog {
   static fromState(dispatcher: Dispatcher, state: StreamState): HistoryLog {
-    return new HistoryLog(dispatcher, state.log)
+    return new HistoryLog(dispatcher, state.log, StreamUtils.streamIdFromState(state))
   }
 
-  constructor(private readonly dispatcher: Dispatcher, readonly items: LogEntry[]) {}
+  constructor(
+    private readonly dispatcher: Dispatcher,
+    readonly items: LogEntry[],
+    readonly streamId: StreamID
+  ) {}
 
   get length(): number {
     return this.items.length
@@ -159,14 +163,19 @@ export class HistoryLog {
 
   slice(start?: number, end?: number): HistoryLog {
     const next = this.items.slice(start, end)
-    return new HistoryLog(this.dispatcher, next)
+    return new HistoryLog(this.dispatcher, next, this.streamId)
   }
 
   async toCommitData(): Promise<CommitData[]> {
     return await Promise.all(
       this.items.map(
         async (logEntry) =>
-          await Utils.getCommitData(this.dispatcher, logEntry.cid, logEntry.timestamp)
+          await Utils.getCommitData(
+            this.dispatcher,
+            logEntry.cid,
+            this.streamId,
+            logEntry.timestamp
+          )
       )
     )
   }
@@ -195,7 +204,7 @@ export async function fetchLog(
     return []
   }
   // Fetch expanded `CommitData` using the CID and running timestamp
-  const nextCommitData = await Utils.getCommitData(dispatcher, cid, timestamp)
+  const nextCommitData = await Utils.getCommitData(dispatcher, cid, stateLog.streamId, timestamp)
   // Update the running timestamp if it was updated via an anchor commit fetch
   timestamp = nextCommitData.timestamp
   const prevCid: CID = nextCommitData.commit.prev
@@ -274,8 +283,14 @@ export class ConflictResolution {
     // Most probably there is a timestamp information there. If no timestamp found, we consider it to be _now_.
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
+      const streamId = StreamUtils.streamIdFromState(state)
       const timestamp = unappliedCommits[0].timestamp
-      const genesis = await Utils.getCommitData(this.dispatcher, state.log[0].cid, timestamp)
+      const genesis = await Utils.getCommitData(
+        this.dispatcher,
+        state.log[0].cid,
+        streamId,
+        timestamp
+      )
       await handler.applyCommit(genesis, this.context)
     }
 
@@ -387,10 +402,12 @@ export class ConflictResolution {
    * Verify signature of a lone genesis commit, using current time to check for revoked key.
    */
   async verifyLoneGenesis(state: StreamState) {
+    const streamId = StreamUtils.streamIdFromState(state)
     const handler = this.handlers.get(state.type)
     const genesis = await Utils.getCommitData(
       this.dispatcher,
       state.log[0].cid,
+      streamId,
       state.log[0].timestamp
     )
     await handler.applyCommit(genesis, this.context)

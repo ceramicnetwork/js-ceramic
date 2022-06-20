@@ -3,6 +3,54 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.7](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.7-rc.0...@ceramicnetwork/pinning-powergate-backend@2.0.7) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+## [2.0.7-rc.0](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.6...@ceramicnetwork/pinning-powergate-backend@2.0.7-rc.0) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+## [2.0.6](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.6-rc.3...@ceramicnetwork/pinning-powergate-backend@2.0.6) (2022-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+## [2.0.6-rc.3](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.6-rc.2...@ceramicnetwork/pinning-powergate-backend@2.0.6-rc.3) (2022-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+## [2.0.6-rc.2](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.6-rc.0...@ceramicnetwork/pinning-powergate-backend@2.0.6-rc.2) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
+## [2.0.6-rc.0](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.5...@ceramicnetwork/pinning-powergate-backend@2.0.6-rc.0) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
 ## [2.0.5](/compare/@ceramicnetwork/pinning-powergate-backend@2.0.4...@ceramicnetwork/pinning-powergate-backend@2.0.5) (2022-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend

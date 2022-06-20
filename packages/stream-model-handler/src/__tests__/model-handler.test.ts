@@ -10,7 +10,7 @@ import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
-import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
+import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -77,7 +77,7 @@ const jwsForVersion1 = {
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
-const FINAL_CONTENT = {
+const FINAL_CONTENT: ModelDefinition = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
@@ -92,6 +92,20 @@ const FINAL_CONTENT = {
     additionalProperties: false,
     required: ['stringPropName'],
   },
+}
+
+const FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW: ModelDefinition = {
+  ...FINAL_CONTENT,
+  views: {
+    'owner': { type: 'documentAccount' }
+  }
+}
+
+const CONTENT_WITH_INVALID_VIEWS: ModelDefinition = {
+  ...FINAL_CONTENT,
+  views: {
+    'stringPropName': { type: 'documentAccount' }
+  }
 }
 
 const CONTENT_WITH_INVALID_SCHEMA = {
@@ -109,28 +123,6 @@ const CONTENT_WITH_INVALID_SCHEMA = {
     additionalProperties: false,
     required: 'THIS_SHOULD_BE_AN_ARRAY_OF_STRINGS',
   },
-}
-
-const serialize = (data: any): any => {
-  if (Array.isArray(data)) {
-    const serialized = []
-    for (const item of data) {
-      serialized.push(serialize(item))
-    }
-    return serialized
-  }
-  const cid = CID.asCID(data)
-  if (!cid && typeof data === 'object') {
-    const serialized: Record<string, any> = {}
-    for (const prop in data) {
-      serialized[prop] = serialize(data[prop])
-    }
-    return serialized
-  }
-  if (cid) {
-    return data.toString()
-  }
-  return data
 }
 
 const ThreeIdResolver = {
@@ -214,11 +206,11 @@ async function checkSignedCommitMatchesExpectations(
 
   const payload = dagCBOR.decode(linkedBlock)
 
-  const serialized = { jws: serialize(jws), linkedBlock: serialize(payload) }
+  const unpacked = { jws, linkedBlock: payload }
 
   // Add the 'unique' header field to the data used to generate the expected genesis commit
-  if (serialized.linkedBlock.header?.unique) {
-    expectedCommit.header['unique'] = serialized.linkedBlock.header.unique
+  if (unpacked.linkedBlock.header?.unique) {
+    expectedCommit.header['unique'] = unpacked.linkedBlock.header.unique
   }
 
   const expected = await did.createDagJWS(expectedCommit)
@@ -226,9 +218,9 @@ async function checkSignedCommitMatchesExpectations(
 
   const { jws: eJws, linkedBlock: eLinkedBlock } = expected
   const ePayload = dagCBOR.decode(eLinkedBlock)
-  const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
+  const signed = { jws: eJws, linkedBlock: ePayload }
 
-  expect(serialized).toEqual(signed)
+  expect(unpacked).toEqual(signed)
 }
 
 describe('ModelHandler', () => {
@@ -312,6 +304,18 @@ describe('ModelHandler', () => {
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
+  it('supports view properties in genesis commit', async () => {
+    const commit = await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)
+    expect(commit).toBeDefined()
+
+    const expectedGenesis = {
+      data: FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW,
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+    }
+
+    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
+  })
+
   it('Content is required', async () => {
     await expect(Model._makeGenesis(context.api, null)).rejects.toThrow(
       /Genesis content cannot be null/
@@ -339,6 +343,26 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
+    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
+    delete streamState.metadata.unique
+    expect(streamState).toMatchSnapshot()
+  })
+
+  it('applies genesis commits with views properties correctly', async () => {
+    const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    const streamState = await handler.applyCommit(commitData, context)
+    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
@@ -362,6 +386,25 @@ describe('ModelHandler', () => {
     await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
       `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
     )
+  })
+
+  it(`fails to apply genesis commits if views validation fails`, async () => {
+    const commit = (await Model._makeGenesis(
+      context.api,
+      CONTENT_WITH_INVALID_VIEWS
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(/view definition used with a property also present in schema/)
   })
 
   it('fails to apply signed commit with invalid schema', async () => {
@@ -405,6 +448,47 @@ describe('ModelHandler', () => {
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
     )
+  })
+
+  it('fails to apply signed commit if views validation fails', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const signedCommit = (await doc._makeCommit(
+      context.api,
+      CONTENT_WITH_INVALID_VIEWS
+    )) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(/view definition used with a property also present in schema/)
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
@@ -480,6 +564,50 @@ describe('ModelHandler', () => {
     const signedCommit = (await doc._makeCommit(
       context.api,
       FINAL_CONTENT
+    )) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    state = await handler.applyCommit(signedCommitData, context, state)
+    delete state.metadata.unique
+    delete state.next.metadata.unique
+    expect(state).toMatchSnapshot()
+  })
+
+  it('applies signed commit with views property correctly', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const signedCommit = (await doc._makeCommit(
+      context.api,
+      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
     )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

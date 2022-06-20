@@ -140,19 +140,15 @@ export class Dispatcher {
    * @param cid - Commit CID
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
+  async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
     try {
       const result = await this._getFromIpfs(cid)
       await this._restrictCommitSize(cid)
       return result
     } catch (e) {
-      if (streamId) {
-        this._logger.err(
-          `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
-        )
-      } else {
-        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
-      }
+      this._logger.err(
+        `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
+      )
       throw e
     }
   }
@@ -269,8 +265,8 @@ export class Dispatcher {
    * @param streamId  - Stream ID
    * @param tip - Commit CID
    */
-  publishTip(streamId: StreamID, tip: CID): Subscription {
-    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip: tip })
+  publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
+    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip, model })
   }
 
   /**
@@ -310,8 +306,8 @@ export class Dispatcher {
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
-
-    const { stream: streamId, tip } = message
+    // TODO(NET-1527) model isn't used in update yet, will be in later versions
+    const { stream: streamId, tip, model } = message
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
     this.repository.stateManager.update(streamId, tip)

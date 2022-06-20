@@ -1,4 +1,4 @@
-import { combineURLs, typeStreamID } from './utils.js'
+import { typeStreamID } from './utils.js'
 import { Document } from './document.js'
 
 import type { DID } from 'dids'
@@ -28,7 +28,7 @@ import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { RemotePinApi } from './remote-pin-api.js'
 import { RemoteIndexApi } from './remote-index-api.js'
 
-const API_PATH = '/api/v0'
+const API_PATH = '/api/v0/'
 const CERAMIC_HOST = 'http://localhost:7007'
 
 /**
@@ -60,7 +60,7 @@ export interface CeramicClientConfig {
  * Ceramic client implementation
  */
 export class CeramicClient implements CeramicApi {
-  private readonly _apiUrl: string
+  private readonly _apiUrl: URL
   /**
    * _streamCache stores handles to Documents that been handed out. This allows us
    * to update the state within the Document object when we learn about changes
@@ -81,14 +81,14 @@ export class CeramicClient implements CeramicApi {
   constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
-    this._apiUrl = combineURLs(apiHost, API_PATH)
+    this._apiUrl = new URL(API_PATH, apiHost)
     // this._streamCache = new LRUMap(config.streamCacheLimit) Not now. We do not know what to do when stream is evicted on HTTP client.
     this._streamCache = new Map()
 
     this.context = { api: this }
 
     this.pin = new RemotePinApi(this._apiUrl)
-    this.index = new RemoteIndexApi()
+    this.index = new RemoteIndexApi(this._apiUrl)
 
     this._streamConstructors = {
       [Caip10Link.STREAM_TYPE_ID]: Caip10Link,
@@ -158,7 +158,8 @@ export class CeramicClient implements CeramicApi {
       }
     })
 
-    const results = await fetchJson(this._apiUrl + '/multiqueries', {
+    const url = new URL('./multiqueries', this._apiUrl)
+    const results = await fetchJson(url, {
       method: 'post',
       body: {
         queries: queriesJSON,

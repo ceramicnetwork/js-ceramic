@@ -198,7 +198,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   private static async _makeGenesis<T>(
     signer: CeramicSigner,
-    content: T | null,
+    content: T,
     metadata: ModelInstanceDocumentMetadata
   ): Promise<CeramicCommit> {
     if (!metadata.model) {
@@ -219,7 +219,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: uint8arrays.toString(randomBytes(12), 'base64'),
+      unique: randomBytes(12),
       model: metadata.model.bytes,
     }
 

@@ -3,6 +3,57 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.1](/compare/@ceramicnetwork/ipfs-topology@2.1.1-rc.0...@ceramicnetwork/ipfs-topology@2.1.1) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+## [2.1.1-rc.0](/compare/@ceramicnetwork/ipfs-topology@2.1.0...@ceramicnetwork/ipfs-topology@2.1.1-rc.0) (2022-06-20)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [2.1.0](/compare/@ceramicnetwork/ipfs-topology@2.1.0-rc.0...@ceramicnetwork/ipfs-topology@2.1.0) (2022-06-17)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [2.1.0-rc.0](/compare/@ceramicnetwork/ipfs-topology@2.0.7-rc.2...@ceramicnetwork/ipfs-topology@2.1.0-rc.0) (2022-06-17)
+
+
+### Features
+
+* **ipfs-topology:** Do not connect to peerlist nodes at startup (#2233) 3d31e63, closes #2233
+
+
+
+
+
+## [2.0.7-rc.2](/compare/@ceramicnetwork/ipfs-topology@2.0.7-rc.0...@ceramicnetwork/ipfs-topology@2.0.7-rc.2) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+## [2.0.7-rc.0](/compare/@ceramicnetwork/ipfs-topology@2.0.6...@ceramicnetwork/ipfs-topology@2.0.7-rc.0) (2022-06-13)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
 ## [2.0.6](/compare/@ceramicnetwork/ipfs-topology@2.0.5...@ceramicnetwork/ipfs-topology@2.0.6) (2022-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology
