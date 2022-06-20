@@ -374,7 +374,7 @@ describe('ModelHandler', () => {
     expect(streamState).toMatchSnapshot()
   })
 
-  it('applies genesis commits with view properties correctly', async () => {
+  it('applies genesis commits with views properties correctly', async () => {
     const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
@@ -590,6 +590,50 @@ describe('ModelHandler', () => {
     const signedCommit = (await doc._makeCommit(
       context.api,
       FINAL_CONTENT
+    )) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    state = await handler.applyCommit(signedCommitData, context, state)
+    delete state.metadata.unique
+    delete state.next.metadata.unique
+    expect(state).toMatchSnapshot()
+  })
+
+  it('applies signed commit with views property correctly', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const signedCommit = (await doc._makeCommit(
+      context.api,
+      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
     )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
