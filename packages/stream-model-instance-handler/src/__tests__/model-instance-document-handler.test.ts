@@ -516,7 +516,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await handler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
