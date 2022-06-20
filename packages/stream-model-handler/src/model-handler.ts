@@ -206,11 +206,9 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata, // No way to update metadata for Model streams
     }
 
-    if (newContent.schema) {
-      await this._schemaValidator.validateSchema(newContent.schema)
-      if (newContent.views) {
-        this._viewsValidator.validateViews(newContent.views, newContent.schema)
-      }
+    await this._schemaValidator.validateSchema(newContent.schema)
+    if (newContent.views) {
+      this._viewsValidator.validateViews(newContent.views, newContent.schema)
     }
 
     return nextState

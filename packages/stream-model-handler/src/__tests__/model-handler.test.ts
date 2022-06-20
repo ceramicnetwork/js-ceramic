@@ -102,20 +102,7 @@ const FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW: ModelDefinition = {
 }
 
 const CONTENT_WITH_INVALID_VIEWS: ModelDefinition = {
-  name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
-  schema: {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    type: 'object',
-    properties: {
-      stringPropName: {
-        type: 'string',
-        maxLength: 80,
-      },
-    },
-    additionalProperties: false,
-    required: ['stringPropName'],
-  },
+  ...FINAL_CONTENT,
   views: {
     'stringPropName': { type: 'documentAccount' }
   }
