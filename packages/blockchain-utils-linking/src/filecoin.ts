@@ -7,7 +7,11 @@ import * as uint8arrays from 'uint8arrays'
 export class FilecoinAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
 
-  constructor(private readonly provider: any, private readonly address: string) {}
+  constructor(private readonly provider: any, private readonly address: string) {
+    console.warn(
+      'WARN: FilecoinAuthProvider is not fully supported. You may encounter issues using this.'
+    )
+  }
 
   async accountId(): Promise<AccountId> {
     const prefix = this.address[0]
