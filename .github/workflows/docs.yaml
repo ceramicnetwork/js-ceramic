@@ -25,7 +25,7 @@ jobs:
         run: npm run build
       - name: Generate docs
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: "--max_old_space_size=3584"
         run: npm run docs
       - uses: jakejarvis/s3-sync-action@master
         with:
