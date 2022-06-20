@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { DataSource } from 'typeorm'
 import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
@@ -11,44 +10,32 @@ const STREAM_ID_B = 'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93
 const CONTROLLER = 'did:key:foo'
 
 let tmpFolder: tmp.DirectoryResult
-let dataSource: DataSource
-let knexConnection: Knex
+let dbConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  dataSource = new DataSource({
-    type: 'sqlite',
-    database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-  })
-  await dataSource.initialize()
-  knexConnection = knex({
+  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
+  dbConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
+    connection: {
+      filename: filename,
+    },
   })
 })
 
 afterEach(async () => {
-  await dataSource.close()
+  await dbConnection.destroy()
   await tmpFolder.cleanup()
 })
 
 describe('init', () => {
-  test('initialize DataSource', async () => {
-    const dataSource = new DataSource({
-      type: 'sqlite',
-      database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-    })
-    const initializeSpy = jest.spyOn(dataSource, 'initialize')
-    const indexApi = new SqliteIndexApi(dataSource, knexConnection, [])
-    await indexApi.init()
-    expect(initializeSpy).toBeCalledTimes(1)
-  })
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new SqliteIndexApi(dataSource, knexConnection, modelsToIndex)
+      const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex)
       await indexApi.init()
-      const created = await listMidTables(dataSource)
+      const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
       expect(created).toEqual(tableNames)
     })
@@ -56,20 +43,31 @@ describe('init', () => {
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new SqliteIndexApi(dataSource, knexConnection, modelsA)
+      const indexApiA = new SqliteIndexApi(dbConnection, modelsA)
       await indexApiA.init()
-      const createdA = await listMidTables(dataSource)
+      const createdA = await listMidTables(dbConnection)
       const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
       expect(createdA).toEqual(tableNamesA)
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dataSource, knexConnection, modelsB)
+      const indexApiB = new SqliteIndexApi(dbConnection, modelsB)
       await indexApiB.init()
-      const createdB = await listMidTables(dataSource)
+      const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
       expect(createdB).toEqual(tableNamesB)
     })
+  })
+})
+
+describe('close', () => {
+  test('destroys knex connection', async () => {
+    const fauxDbConnection = {
+      destroy: jest.fn(),
+    } as unknown as Knex
+    const indexApi = new SqliteIndexApi(fauxDbConnection, [])
+    await indexApi.close()
+    expect(fauxDbConnection.destroy).toBeCalled()
   })
 })
 
@@ -93,14 +91,14 @@ describe('indexStream', () => {
 
   let indexApi: SqliteIndexApi
   beforeEach(async () => {
-    indexApi = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
+    indexApi = new SqliteIndexApi(dbConnection, MODELS_TO_INDEX)
     await indexApi.init()
   })
 
   test('new stream', async () => {
     const now = new Date()
     await indexApi.indexStream(STREAM_CONTENT)
-    const result: Array<any> = await dataSource.query(`SELECT * FROM mid_${MODELS_TO_INDEX[0]}`)
+    const result: Array<any> = await dbConnection.from(`mid_${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
@@ -123,7 +121,7 @@ describe('indexStream', () => {
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)
-    const result: Array<any> = await dataSource.query(`SELECT * FROM mid_${MODELS_TO_INDEX[0]}`)
+    const result: Array<any> = await dbConnection.from(`mid_${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)

@@ -52,4 +52,8 @@ export class LocalIndexApi implements IndexApi {
   async init(): Promise<void> {
     await this.databaseIndexApi?.init()
   }
+
+  async close(): Promise<void> {
+    await this.databaseIndexApi?.close()
+  }
 }

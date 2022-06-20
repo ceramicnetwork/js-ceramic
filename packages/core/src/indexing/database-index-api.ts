@@ -28,4 +28,9 @@ export interface DatabaseIndexApi {
    * Initialize connection to a database.
    */
   init(): Promise<void>
+
+  /**
+   * Stop connection to a database.
+   */
+  close(): Promise<void>
 }
