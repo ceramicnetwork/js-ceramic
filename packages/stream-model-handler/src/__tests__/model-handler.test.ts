@@ -97,15 +97,15 @@ const FINAL_CONTENT: ModelDefinition = {
 const FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW: ModelDefinition = {
   ...FINAL_CONTENT,
   views: {
-    'owner': { type: 'documentAccount' }
-  }
+    owner: { type: 'documentAccount' },
+  },
 }
 
 const CONTENT_WITH_INVALID_VIEWS: ModelDefinition = {
   ...FINAL_CONTENT,
   views: {
-    'stringPropName': { type: 'documentAccount' }
-  }
+    stringPropName: { type: 'documentAccount' },
+  },
 }
 
 const CONTENT_WITH_INVALID_SCHEMA = {
@@ -298,7 +298,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+      header: { controller: context.api.did.id, model: Model.MODEL.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -310,7 +310,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+      header: { controller: context.api.did.id, model: Model.MODEL.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -349,7 +349,10 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commits with views properties correctly', async () => {
-    const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)) as SignedCommitContainer
+    const commit = (await Model._makeGenesis(
+      context.api,
+      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
@@ -365,6 +368,28 @@ describe('ModelHandler', () => {
     expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
+  })
+
+  it('fails to apply genesis commits with legacy controllers array', async () => {
+    const rawCommit = await Model._makeRawGenesis(context.api, CONTENT_WITH_INVALID_SCHEMA)
+    rawCommit.header.controllers = [rawCommit.header.controller]
+    delete rawCommit.header.controller
+    const commit = await Model._signDagJWS(context.api, rawCommit)
+
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      `Controller must be specified`
+    )
   })
 
   it('fails to apply genesis commits with invalid schema', async () => {
@@ -404,7 +429,9 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: commit.jws,
     }
-    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(/view definition used with a property also present in schema/)
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /view definition used with a property also present in schema/
+    )
   })
 
   it('fails to apply signed commit with invalid schema', async () => {
@@ -488,7 +515,9 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(/view definition used with a property also present in schema/)
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /view definition used with a property also present in schema/
+    )
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
@@ -805,7 +834,8 @@ describe('ModelHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
     const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
-    rawCommit.header = { controllers: [did.id, did.id] }
+    const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
+    rawCommit.header = { controller: newDid }
     const signedCommit = await Model._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

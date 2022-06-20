@@ -76,19 +76,14 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-    const { controllers } = payload.header
-    // TODO(NET-1437): replace family with model
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controllers[0],
-      null,
-      streamId
-    )
+    const { controller } = payload.header
 
-    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
+    if (!payload.header.controller) {
+      throw new Error('Controller must be specified')
     }
+
+    // TODO(NET-1437): replace family with model
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
 
     const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
     const state = {
@@ -118,7 +113,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     context: Context
   ): Promise<StreamState> {
     const metadata = state.metadata
-    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const controller = metadata.controller
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
@@ -217,11 +212,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param content - content to validate
    * @private
    */
-  async _validateContent(
-    context: Context,
-    modelStreamId: StreamID,
-    content: any
-  ): Promise<void> {
+  async _validateContent(context: Context, modelStreamId: StreamID, content: any): Promise<void> {
     const model = await context.api.loadStream<Model>(modelStreamId)
     await this._schemaValidator.validateSchema(content, model.content.schema)
   }

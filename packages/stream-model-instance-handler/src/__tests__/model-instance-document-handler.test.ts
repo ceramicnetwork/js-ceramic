@@ -189,20 +189,18 @@ const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
-    type: "object",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
     additionalProperties: false,
     properties: {
       myData: {
-        type: "integer",
+        type: 'integer',
         maximum: 100,
-        minimum: 0
-      }
+        minimum: 0,
+      },
     },
-    required: [
-      "myData"
-    ]
-  }
+    required: ['myData'],
+  },
 }
 
 describe('ModelInstanceDocumentHandler', () => {
@@ -248,10 +246,12 @@ describe('ModelInstanceDocumentHandler', () => {
       loadStream: jest.fn(async (streamId: StreamID) => {
         if (streamId.toString() === FAKE_STREAM_ID.toString()) {
           return {
-            content: MODEL_DEFINITION
+            content: MODEL_DEFINITION,
           }
         } else {
-          throw new Error("Trying to load unexpected stream in model-instance-document-handler.test.ts")
+          throw new Error(
+            'Trying to load unexpected stream in model-instance-document-handler.test.ts'
+          )
         }
       }),
       did,
@@ -289,7 +289,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const expectedGenesis = {
       data: CONTENT0,
-      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
+      header: { controller: METADATA.controller, model: METADATA.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -303,7 +303,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const expectedGenesis = {
       data: null,
-      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
+      header: { controller: METADATA.controller, model: METADATA.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -474,6 +474,28 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(state2).toMatchSnapshot()
   })
 
+  test('throws error when applying genesis commit with legacy controllers array', async () => {
+    const rawCommit = await ModelInstanceDocument._makeRawGenesis(context.api, {}, METADATA)
+    rawCommit.header.controllers = [rawCommit.header.controller]
+    delete rawCommit.header.controller
+    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /Controller must be specified/
+    )
+  })
+
   test('throws error when applying genesis commit with invalid schema', async () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
@@ -492,13 +514,12 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: commit.jws,
     }
 
-    await expect(
-      handler.applyCommit(commitData, context)
-    ).rejects.toThrow(/data must have required property 'myData'/)
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {
-
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -535,9 +556,9 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: signedCommit.jws,
     }
 
-    await expect(
-      handler.applyCommit(signedCommitData, context, state)
-    ).rejects.toThrow(/data must have required property 'myData'/)
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   it('throws error if commit signed by wrong DID', async () => {
@@ -585,7 +606,8 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const rawCommit = doc._makeRawCommit(CONTENT1)
-    rawCommit.header = { controllers: [did.id, did.id] }
+    const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
+    rawCommit.header = { controller: newDid }
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

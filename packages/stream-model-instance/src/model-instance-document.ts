@@ -200,7 +200,16 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     signer: CeramicSigner,
     content: T,
     metadata: ModelInstanceDocumentMetadata
-  ): Promise<CeramicCommit> {
+  ): Promise<SignedCommitContainer> {
+    const commit = await this._makeRawGenesis(signer, content, metadata)
+    return ModelInstanceDocument._signDagJWS(signer, commit)
+  }
+
+  private static async _makeRawGenesis<T>(
+    signer: CeramicSigner,
+    content: T,
+    metadata: ModelInstanceDocumentMetadata
+  ): Promise<GenesisCommit> {
     if (!metadata.model) {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
@@ -216,15 +225,13 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       }
     }
 
-    // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
-      controllers: [metadata.controller],
+      controller: metadata.controller,
       unique: randomBytes(12),
       model: metadata.model.bytes,
     }
 
-    const commit: GenesisCommit = { data: content, header }
-    return ModelInstanceDocument._signDagJWS(signer, commit)
+    return { data: content, header }
   }
 
   /**

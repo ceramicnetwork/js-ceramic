@@ -287,7 +287,19 @@ export class Model extends Stream {
     signer: CeramicSigner,
     content: Partial<ModelDefinition>,
     metadata?: ModelMetadata
-  ): Promise<CeramicCommit> {
+  ): Promise<SignedCommitContainer> {
+    const commit: GenesisCommit = await this._makeRawGenesis(signer, content, metadata)
+    return Model._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Helper function for _makeGenesis() to allow unit tests to update the commit before it is signed.
+   */
+  private static async _makeRawGenesis(
+    signer: CeramicSigner,
+    content: Partial<ModelDefinition>,
+    metadata?: ModelMetadata
+  ): Promise<GenesisCommit> {
     if (content == null) {
       throw new Error(`Genesis content cannot be null`)
     }
@@ -303,14 +315,12 @@ export class Model extends Stream {
       }
     }
 
-    // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
-      controllers: [metadata.controller],
+      controller: metadata.controller,
       unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
-    const commit: GenesisCommit = { data: content, header }
-    return Model._signDagJWS(signer, commit)
+    return { data: content, header }
   }
 
   /**

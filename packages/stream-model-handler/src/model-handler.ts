@@ -94,20 +94,21 @@ export class ModelHandler implements StreamHandler<Model> {
 
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
     // TODO(NET-1437): replace family with model
-    const { controllers, family } = payload.header
+    const { controller, family } = payload.header
+
+    if (!payload.header.controller) {
+      throw new Error('Controller must be specified')
+    }
+
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
-      controllers[0],
+      controller,
       family,
       streamId
     )
 
     assertNoExtraKeys(payload.data)
-
-    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
-    }
 
     const modelStreamId = StreamID.fromBytes(payload.header.model)
     if (!modelStreamId.equals(Model.MODEL)) {
@@ -149,7 +150,7 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context
   ): Promise<StreamState> {
     const metadata = state.metadata
-    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const controller = metadata.controller
     const family = metadata.family
 
     // Verify the signature first
