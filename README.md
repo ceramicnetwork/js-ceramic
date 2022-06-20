@@ -12,7 +12,7 @@
 > **Project status**: **`Clay` testnet is now live. 🚀** <br/>
 > Clay is a decentralized public network ready for experimental application development and testing. It anchors documents on the Ethereum Ropsten and Rinkeby testnets. It is the last major milestone before `Fire` mainnet, which is under development and will launch in late Q1 2021. Documents published on Clay will _not_ be portable to Fire.
 
-> June 2022: As Rinkeby and Ropsten are on their way to being deprecated, Clay will be shifting to using the Gnosis Chain (xDAI) for anchoring documents. Documents published on Rinkeby/Ropsten through Clay will _not_ be ported over to Gnosis.
+> June 2022: As Rinkeby and Ropsten are on their way to being deprecated, Clay will be shifting to using the Gnosis Chain (previously xDAI) for anchoring streams. Streams published on Rinkeby/Ropsten through Clay will _not_ be ported over to Gnosis.
 
 ## Clients
 
