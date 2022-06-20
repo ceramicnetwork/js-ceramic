@@ -198,7 +198,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   private static async _makeGenesis<T>(
     signer: CeramicSigner,
-    content: T | null,
+    content: T,
     metadata: ModelInstanceDocumentMetadata
   ): Promise<CeramicCommit> {
     if (!metadata.model) {
