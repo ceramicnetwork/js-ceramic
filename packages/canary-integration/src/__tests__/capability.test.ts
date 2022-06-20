@@ -11,17 +11,17 @@ import { createCeramic } from '../create-ceramic.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
 
-const FAKE_STREAM_ID = StreamID.fromString(
+const MODEL_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
 
-const FAKE_STREAM_ID_2 = StreamID.fromString(
+const MODEL_STREAM_ID_2 = StreamID.fromString(
   'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 )
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
-const METADATA = { model: FAKE_STREAM_ID }
+const METADATA = { model: MODEL_STREAM_ID }
 
 const addCapToDid = async (wallet, didKey, resource) => {
   // Create CACAO with did:key as aud
@@ -197,14 +197,14 @@ describe('CACAO Integration test', () => {
       const didKeyWithCapability = await addCapToDid(
         wallet,
         didKey,
-        `ceramic://*?model=${FAKE_STREAM_ID_2.toString()}`
+        `ceramic://*?model=${MODEL_STREAM_ID_2.toString()}`
       )
 
       ceramic.did = didKeyWithCapability
 
       await expect(
         ModelInstanceDocument.create(ceramic, CONTENT0, {
-          model: FAKE_STREAM_ID,
+          model: METADATA.model,
           controller: `did:pkh:eip155:1:${wallet.address}`,
         })
       ).rejects.toThrowError(
@@ -217,20 +217,20 @@ describe('CACAO Integration test', () => {
       const didKeyWithCapability = await addCapToDid(
         wallet,
         didKey,
-        `ceramic://*?model=${FAKE_STREAM_ID.toString()}`
+        `ceramic://*?model=${METADATA.model.toString()}`
       )
 
       ceramic.did = didKeyWithCapability
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
-        model: FAKE_STREAM_ID,
+        model: METADATA.model,
         controller: `did:pkh:eip155:1:${wallet.address}`,
       })
 
       const didKeyWithBadCapability = await addCapToDid(
         wallet,
         didKey,
-        `ceramic://*?model=${FAKE_STREAM_ID_2.toString()}`
+        `ceramic://*?model=${MODEL_STREAM_ID_2.toString()}`
       )
 
       ceramic.did = didKeyWithBadCapability
@@ -252,7 +252,7 @@ describe('CACAO Integration test', () => {
 
       await expect(
         ModelInstanceDocument.create(ceramic, CONTENT0, {
-          model: FAKE_STREAM_ID,
+          model: METADATA.model,
           controller: `did:pkh:eip155:1:${wallet.address}`,
         })
       ).rejects.toThrowError(
@@ -270,7 +270,7 @@ describe('CACAO Integration test', () => {
 
       await expect(
         ModelInstanceDocument.create(ceramic, CONTENT0, {
-          model: FAKE_STREAM_ID,
+          model: METADATA.model,
           controller: `did:key:z6MkwDAbu8iqPb2BbMs7jnGGErEu4U5zFYkVxWPb4zSAcg39#z6MkwDAbu8iqPb2BbMs7jnGGErEu4U5zFYkVxWPb4zSAcg39`,
         })
       ).rejects.toThrow(/invalid_jws/)
@@ -286,7 +286,7 @@ describe('CACAO Integration test', () => {
       ceramic.did = didKeyWithCapability
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
-        model: FAKE_STREAM_ID,
+        model: MODEL_STREAM_ID,
         controller: `did:pkh:eip155:1:${wallet.address}`,
       })
 
@@ -315,7 +315,7 @@ describe('CACAO Integration test', () => {
       ceramic.did = didKeyWithCapability
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
-        model: FAKE_STREAM_ID,
+        model: METADATA.model,
         controller: `did:pkh:eip155:1:${wallet.address}`,
       })
 
@@ -333,7 +333,7 @@ describe('CACAO Integration test', () => {
       ceramic.did = didKeyWithCapability
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
-        model: FAKE_STREAM_ID,
+        model: METADATA.model,
         controller: `did:pkh:eip155:1:${wallet.address}`,
       })
 
@@ -419,14 +419,13 @@ describe('CACAO Integration test', () => {
       )
 
       ceramic.did = didKeyWithCapability
-      // Done 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
-        model: FAKE_STREAM_ID,
+        model: METADATA.model,
       })
 
       expect(doc.content).toEqual(CONTENT0)
       expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
-      // expect(doc.metadata.model).toEqual(METADATA.model.toString())
+      expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
 
       await doc.replace(CONTENT1, {
         anchor: false,

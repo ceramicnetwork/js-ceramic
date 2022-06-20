@@ -16,6 +16,7 @@ export class SignatureUtils {
    * @param did - DID instance
    * @param controller - Stream controller DID value
    * @param family - family of the stream being updated
+   * @param model - model of the stream being updated 
    * @param streamId - Stream ID for the commit
    * @private
    */
@@ -23,7 +24,7 @@ export class SignatureUtils {
     commitData: CommitData,
     did: DID,
     controller: string,
-    model: StreamID,
+    model: StreamID | null,
     streamId: StreamID
   ): Promise<void> {
     const cacao = await this._verifyCapabilityAuthz(commitData, streamId, model)
