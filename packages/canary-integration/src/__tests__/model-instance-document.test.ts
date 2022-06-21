@@ -14,7 +14,6 @@ import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/st
 import {SqliteIndexApi} from "@ceramicnetwork/core/lib/indexing/sqlite/sqlite-index-api";
 import {listMidTables} from "@ceramicnetwork/core/lib/indexing/sqlite/init-tables";
 import knex, { Knex } from 'knex'
-import { DataSource } from 'typeorm'
 import tmp from 'tmp-promise'
 
 
@@ -29,65 +28,46 @@ const CONTENT3 = { myData: 3 }
 const METADATA = { model: FAKE_STREAM_ID } //, controller: 'test123' }
 
 let tmpFolder: tmp.DirectoryResult
-let dataSource: DataSource
-let knexConnection: Knex
+let dbConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  dataSource = new DataSource({
-    type: 'sqlite',
-    database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-  })
-  await dataSource.initialize()
-  knexConnection = knex({
+  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
+  dbConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
+    connection: {
+      filename: filename,
+    },
   })
 })
 
 afterEach(async () => {
-  await dataSource.close()
+  await dbConnection.destroy()
   await tmpFolder.cleanup()
 })
 
 describe('init', () => {
-  test('initialize DataSource', async () => {
-    const dataSource = new DataSource({
-      type: 'sqlite',
-      database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-    })
-    const initializeSpy = jest.spyOn(dataSource, 'initialize')
-    const indexApi = new SqliteIndexApi(dataSource, knexConnection, [])
-    await indexApi.init()
-    expect(initializeSpy).toBeCalledTimes(1)
-  })
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [FAKE_STREAM_ID]
-      const indexApi = new SqliteIndexApi(dataSource, knexConnection, modelsToIndex)
+      const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex)
       await indexApi.init()
-      const created = await listMidTables(dataSource)
+      const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
       expect(created).toEqual(tableNames)
     })
+  })
+})
 
-    /*test('create new table with existing ones', async () => {
-      // First init with one model
-      const modelsA = [FAKE_STREAM_ID]
-      const indexApiA = new SqliteIndexApi(dataSource, knexConnection, modelsA)
-      await indexApiA.init()
-      const createdA = await listMidTables(dataSource)
-      const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
-      expect(createdA).toEqual(tableNamesA)
-
-      // Next add another one
-      const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dataSource, knexConnection, modelsB)
-      await indexApiB.init()
-      const createdB = await listMidTables(dataSource)
-      const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
-      expect(createdB).toEqual(tableNamesB)
-    })*/
+describe('close', () => {
+  test('destroys knex connection', async () => {
+    const fauxDbConnection = {
+      destroy: jest.fn(),
+    } as unknown as Knex
+    const indexApi = new SqliteIndexApi(fauxDbConnection, [])
+    await indexApi.close()
+    expect(fauxDbConnection.destroy).toBeCalled()
   })
 })
 
