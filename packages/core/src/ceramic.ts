@@ -189,6 +189,7 @@ export class Ceramic implements CeramicApi {
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownController: AbortController
+  private readonly _models: Array<StreamID>
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -234,6 +235,7 @@ export class Ceramic implements CeramicApi {
       conflictResolution: conflictResolution,
     })
     this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+    this._models = modules.indexing.getActiveModelsToIndex()
   }
 
   get index(): IndexApi {
@@ -630,13 +632,15 @@ export class Ceramic implements CeramicApi {
     )
 
     // add stream to MID indexing if model is present
-    if (stream.metadata.model) {
-      const last_anchor_ts = state$.state.anchorProof ? state$.state.anchorProof.blockTimestamp : null
+    if (stream.metadata.model) { // && this._models.indexOf(stream.metadata.model) != -1) {
+      const last_anchor_ts = state$.state.anchorProof
+        ? new Date(state$.state.anchorProof.blockTimestamp * 1000)
+        : null
       const STREAM_CONTENT = {
         model: stream.metadata.model,
         streamID: stream.id,
         controller: stream.controllers[0],
-        lastAnchor: last_anchor_ts ? new Date(last_anchor_ts * 1000) : null,
+        lastAnchor: last_anchor_ts,
       }
       await this._index.indexStream(STREAM_CONTENT)
     }

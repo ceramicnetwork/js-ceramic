@@ -5,7 +5,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { ModelInstanceDocument, ModelInstanceDocumentMetadata } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
-import { Ceramic } from '@ceramicnetwork/core'
+import {Ceramic, CeramicConfig} from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -16,10 +16,8 @@ import {listMidTables} from "@ceramicnetwork/core/lib/indexing/sqlite/init-table
 import knex, { Knex } from 'knex'
 import tmp from 'tmp-promise'
 
-
-const FAKE_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-)
+const INDEXING_MODELS = ["kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s","kjzl6hvfrbw6c8c8ks6ndp7elnd03csx3q7934qmacryhqoqn1para6sfpau6xi"]
+const FAKE_STREAM_ID = StreamID.fromString("kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s")
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -30,7 +28,7 @@ const METADATA = { model: FAKE_STREAM_ID } //, controller: 'test123' }
 let tmpFolder: tmp.DirectoryResult
 let dbConnection: Knex
 
-beforeEach(async () => {
+  beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
   dbConnection = knex({
@@ -108,11 +106,17 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
   beforeAll(async () => {
     ipfs = await createIPFS()
-    core = await createCeramic(ipfs)
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
+    console.log(filename)
+    const ceramicConfig: CeramicConfig = {
+      indexing: {db: "sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite", models: INDEXING_MODELS}
+    }
+    core = await createCeramic(ipfs, ceramicConfig)
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port }, 'indexing': {'db': 'sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite', 'models':INDEXING_MODELS}}))
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)

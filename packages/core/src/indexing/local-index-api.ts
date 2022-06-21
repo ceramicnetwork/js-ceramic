@@ -21,6 +21,10 @@ export class LocalIndexApi implements IndexApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
+  /**
+   * Add stream to index in appropriate model table
+   * @param args
+   */
   async indexStream(args: IndexStreamArgs): Promise<void> {
       this.databaseIndexApi.indexStream(args)
   }

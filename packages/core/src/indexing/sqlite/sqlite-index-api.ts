@@ -26,22 +26,31 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
+  public getActiveModelsToIndex(): Array<StreamID> {
+    // TODO: update to runtime check once adminAPI unlocks to load models on the fly
+    return this.modelsToIndex
+  }
+
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
-    await this.dbConnection(tableName)
-      .insert({
-        stream_id: String(args.streamID),
-        controller_did: String(args.controller),
-        last_anchored_at: asTimestamp(args.lastAnchor),
-        created_at: asTimestamp(args.createdAt) || now,
-        updated_at: asTimestamp(args.updatedAt) || now,
-      })
-      .onConflict('stream_id')
-      .merge({
-        last_anchored_at: asTimestamp(args.lastAnchor),
-        updated_at: asTimestamp(args.updatedAt) || now,
-      })
+
+    // only index active models in config
+    if (this.getActiveModelsToIndex().indexOf(args.model) != -1) {
+      await this.dbConnection(tableName)
+        .insert({
+          stream_id: String(args.streamID),
+          controller_did: String(args.controller),
+          last_anchored_at: asTimestamp(args.lastAnchor),
+          created_at: asTimestamp(args.createdAt) || now,
+          updated_at: asTimestamp(args.updatedAt) || now,
+        })
+        .onConflict('stream_id')
+        .merge({
+          last_anchored_at: asTimestamp(args.lastAnchor),
+          updated_at: asTimestamp(args.updatedAt) || now,
+        })
+    }
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
