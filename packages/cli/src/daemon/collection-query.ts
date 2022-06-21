@@ -2,6 +2,11 @@ import type { BaseQuery, Pagination } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 /**
+ * Maximum number of indexing entries requested.
+ */
+const MAX_ENTRIES_ALLOWED = 1000
+
+/**
  * Check if +input+ is a positive integer.
  */
 function isPositiveInteger(input: unknown): input is number {
@@ -14,16 +19,21 @@ export class InvalidPaginationError extends Error {
   }
 }
 
-const MAX_LIMIT = 1000
-
+/**
+ * Thrown if requested number of entries is larger than +MAX_ENTRIES_ALLOWED+.
+ */
 export class MaxEntriesError extends Error {
   constructor(requestedEntries: number) {
-    super(`Requested too many entries: ${requestedEntries}. Maximum is ${MAX_LIMIT}`)
+    super(`Requested too many entries: ${requestedEntries}. Maximum is ${MAX_ENTRIES_ALLOWED}`)
   }
 }
 
+/**
+ * @param requestedEntries Number of entries requested: either `first` for forward pagination or `last` for backward pagination.
+ * @throws MaxEntriesError if `requestedEntries > MAX_ENTRIES_ALLOWED`.
+ */
 function assertPageLimit(requestedEntries: number) {
-  if (requestedEntries > MAX_LIMIT) {
+  if (requestedEntries > MAX_ENTRIES_ALLOWED) {
     throw new MaxEntriesError(requestedEntries)
   }
 }
@@ -31,7 +41,7 @@ function assertPageLimit(requestedEntries: number) {
 /**
  * Parse +params+ and select only fields relevant to +ForwardPagination+ or +BackwardPagination+.
  *
- * @throws if no relevant fields found.
+ * @throws if no relevant fields found, or if requested more than allowed (see +assertPageLimit+)
  */
 export function parsePagination(params: Record<string, any>): Pagination {
   if (isPositiveInteger(params.first)) {
