@@ -8,20 +8,34 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 import { SiweMessage, Cacao } from 'ceramic-cacao'
 import { createCeramic } from '../create-ceramic.js'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { ModelInstanceDocument, ModelInstanceDocumentMetadata } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 
-const MODEL_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-)
+const getModelDef = (name:string): ModelDefinition => ({
+  name: name,
+  accountRelation: ModelAccountRelation.LIST,
+  schema: {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: "integer",
+        maximum: 10000,
+        minimum: 0
+      },
+    },
+    required: [
+      "myData"
+    ]
+  }
+})
 
-const MODEL_STREAM_ID_2 = StreamID.fromString(
-  'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
-)
-
+const MODEL_DEFINITION = getModelDef('MyModel')
+const MODEL_DEFINITION_2 = getModelDef('MyModel_2')
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
-const METADATA = { model: MODEL_STREAM_ID }
 
 const addCapToDid = async (wallet, didKey, resource) => {
   // Create CACAO with did:key as aud
@@ -54,6 +68,8 @@ describe('CACAO Integration test', () => {
   let didKeyWithParent: DID
   let didKey2: DID
   let wallet2: Wallet
+  let METADATA: ModelInstanceDocumentMetadata
+  let MODEL_STREAM_ID_2: StreamID
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -79,6 +95,12 @@ describe('CACAO Integration test', () => {
     const didKeyProvider2 = new Ed25519Provider(randomBytes(32))
     didKey2 = new DID({ provider: didKeyProvider2, resolver: KeyDidResolver.getResolver() })
     await didKey2.authenticate()
+
+    // Create models, get streamids
+    const model = await Model.create(ceramic, MODEL_DEFINITION)
+    const model2 = await Model.create(ceramic, MODEL_DEFINITION_2)
+    MODEL_STREAM_ID_2 = model2.id
+    METADATA = { model: model.id }
   }, 120000)
 
   afterAll(async () => {
@@ -286,7 +308,7 @@ describe('CACAO Integration test', () => {
       ceramic.did = didKeyWithCapability
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
-        model: MODEL_STREAM_ID,
+        model: METADATA.model,
         controller: `did:pkh:eip155:1:${wallet.address}`,
       })
 
