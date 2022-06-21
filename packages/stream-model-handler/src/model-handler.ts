@@ -94,12 +94,13 @@ export class ModelHandler implements StreamHandler<Model> {
 
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
     const { controllers, model } = payload.header
+    const modelStreamID = StreamID.fromBytes(model)
     
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
       controllers[0],
-      model,
+      modelStreamID,
       streamId
     )
 
