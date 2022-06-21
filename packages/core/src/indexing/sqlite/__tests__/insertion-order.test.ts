@@ -1,6 +1,5 @@
-import { DataSource } from 'typeorm'
 import tmp from 'tmp-promise'
-import knex from 'knex'
+import knex, { Knex } from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from '../sqlite-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
@@ -14,23 +13,22 @@ const MODEL = MODELS_TO_INDEX[0]
 let EXPECTED: Array<string>
 
 let tmpFolder: tmp.DirectoryResult
-let dataSource: DataSource
 let order: InsertionOrder
+let dbConnection: Knex
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  dataSource = new DataSource({
-    type: 'sqlite',
-    database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
-  })
-  await dataSource.initialize()
-  const knexConnection = knex({
+  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
+  dbConnection = knex({
     client: 'sqlite3',
     useNullAsDefault: true,
+    connection: {
+      filename: filename,
+    },
   })
-  const indexAPI = new SqliteIndexApi(dataSource, knexConnection, MODELS_TO_INDEX)
+  const indexAPI = new SqliteIndexApi(dbConnection, MODELS_TO_INDEX)
   await indexAPI.init()
-  order = new InsertionOrder(dataSource, knexConnection)
+  order = new InsertionOrder(dbConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
   // The responses in the tests below are ok if they are in the same order as in the CSV.
   const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
@@ -41,7 +39,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await dataSource.close()
+  await dbConnection.destroy()
   await tmpFolder.cleanup()
 })
 

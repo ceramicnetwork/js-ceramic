@@ -859,6 +859,7 @@ export class Ceramic implements CeramicApi {
     this._shutdownController.abort()
     await this.dispatcher.close()
     await this.repository.close()
+    await this._index.close()
     this._ipfsTopology.stop()
     this._logger.imp('Ceramic instance closed successfully')
   }

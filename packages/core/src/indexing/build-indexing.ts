@@ -1,7 +1,6 @@
 import type { DatabaseIndexApi } from './database-index-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
-import { DataSource } from 'typeorm'
 import knex from 'knex'
 
 export type IndexingConfig = {
@@ -45,15 +44,14 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
   switch (protocol) {
     case 'sqlite':
     case 'sqlite3': {
-      const dataSource = new DataSource({
-        type: 'sqlite',
-        database: connectionString.pathname,
-      })
-      const knexConnection = knex({
+      const dbConnection = knex({
         client: 'sqlite3',
         useNullAsDefault: true,
+        connection: {
+          filename: connectionString.pathname,
+        },
       })
-      return new SqliteIndexApi(dataSource, knexConnection, indexingConfig.models)
+      return new SqliteIndexApi(dbConnection, indexingConfig.models)
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)

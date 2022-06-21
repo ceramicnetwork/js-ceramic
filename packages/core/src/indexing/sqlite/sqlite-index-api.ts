@@ -1,4 +1,3 @@
-import type { DataSource } from 'typeorm'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { Knex } from 'knex'
@@ -21,17 +20,16 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 export class SqliteIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
   constructor(
-    private readonly dataSource: DataSource,
-    private readonly knexConnection: Knex,
+    private readonly dbConnection: Knex,
     private readonly modelsToIndex: Array<StreamID>
   ) {
-    this.insertionOrder = new InsertionOrder(dataSource, knexConnection)
+    this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
-    const knexQuery = this.knexConnection(tableName)
+    await this.dbConnection(tableName)
       .insert({
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
@@ -44,7 +42,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
         last_anchored_at: asTimestamp(args.lastAnchor),
         updated_at: asTimestamp(args.updatedAt) || now,
       })
-    await this.query(knexQuery)
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
@@ -52,14 +49,10 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async init(): Promise<void> {
-    if (!this.dataSource.isInitialized) {
-      await this.dataSource.initialize()
-    }
-    await initTables(this.dataSource, this.modelsToIndex)
+    await initTables(this.dbConnection, this.modelsToIndex)
   }
 
-  private query<T = any>(queryBuilder: Knex.QueryBuilder): Promise<T> {
-    const asSQL = queryBuilder.toSQL()
-    return this.dataSource.query(asSQL.sql, asSQL.bindings as any[])
+  async close(): Promise<void> {
+    await this.dbConnection.destroy()
   }
 }

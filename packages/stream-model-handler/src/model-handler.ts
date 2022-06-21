@@ -15,10 +15,11 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
+import { ViewsValidation } from './views-utils.js'
 
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
-const ALLOWED_CONTENT_KEYS = new Set(['name', 'description', 'schema', 'accountRelation'])
+const ALLOWED_CONTENT_KEYS = new Set(['name', 'description', 'schema', 'accountRelation', 'views'])
 
 /**
  * Helper function for asserting that the content of a Model Stream only contains the expected fields
@@ -36,6 +37,7 @@ const assertNoExtraKeys = function (content: Record<string, any>) {
  */
 export class ModelHandler implements StreamHandler<Model> {
   private readonly _schemaValidator: SchemaValidation
+  private readonly _viewsValidator: ViewsValidation
 
   get type(): number {
     return Model.STREAM_TYPE_ID
@@ -51,6 +53,7 @@ export class ModelHandler implements StreamHandler<Model> {
 
   constructor() {
     this._schemaValidator = new SchemaValidation()
+    this._viewsValidator = new ViewsValidation()
   }
 
   /**
@@ -123,8 +126,11 @@ export class ModelHandler implements StreamHandler<Model> {
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
-    if (state.content.schema !== undefined) {
+    if (state.content.schema) {
       await this._schemaValidator.validateSchema(state.content.schema)
+      if (state.content.views) {
+        this._viewsValidator.validateViews(state.content.views, state.content.schema)
+      }
     }
 
     return state
@@ -200,8 +206,9 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata, // No way to update metadata for Model streams
     }
 
-    if (newContent.schema !== undefined) {
-      await this._schemaValidator.validateSchema(newContent.schema)
+    await this._schemaValidator.validateSchema(newContent.schema)
+    if (newContent.views) {
+      this._viewsValidator.validateViews(newContent.views, newContent.schema)
     }
 
     return nextState
