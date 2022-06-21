@@ -14,6 +14,20 @@ export class InvalidPaginationError extends Error {
   }
 }
 
+const MAX_LIMIT = 1000
+
+export class MaxEntriesError extends Error {
+  constructor(requestedEntries: number) {
+    super(`Requested too many entries: ${requestedEntries}. Maximum is ${MAX_LIMIT}`)
+  }
+}
+
+function assertPageLimit(requestedEntries: number) {
+  if (requestedEntries > MAX_LIMIT) {
+    throw new MaxEntriesError(requestedEntries)
+  }
+}
+
 /**
  * Parse +params+ and select only fields relevant to +ForwardPagination+ or +BackwardPagination+.
  *
@@ -21,11 +35,13 @@ export class InvalidPaginationError extends Error {
  */
 export function parsePagination(params: Record<string, any>): Pagination {
   if (isPositiveInteger(params.first)) {
+    assertPageLimit(params.first)
     return {
       first: params.first,
       after: params.after,
     }
   } else if (isPositiveInteger(params.last)) {
+    assertPageLimit(params.last)
     return {
       last: params.last,
       before: params.before,
