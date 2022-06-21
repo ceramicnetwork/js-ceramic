@@ -2,33 +2,42 @@ import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CeramicApi, CommitType, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { ModelInstanceDocument, ModelInstanceDocumentMetadata } from '@ceramicnetwork/stream-model-instance'
+import {
+  ModelInstanceDocument,
+  ModelInstanceDocumentMetadata,
+} from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
-import {Ceramic, CeramicConfig} from '@ceramicnetwork/core'
+import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { StreamID } from '@ceramicnetwork/streamid'
 import first from 'it-first'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
-import {SqliteIndexApi} from "@ceramicnetwork/core/lib/indexing/sqlite/sqlite-index-api";
-import {listMidTables} from "@ceramicnetwork/core/lib/indexing/sqlite/init-tables";
+import { SqliteIndexApi } from '@ceramicnetwork/core/lib/indexing/sqlite/sqlite-index-api'
+import { listMidTables } from '@ceramicnetwork/core/lib/indexing/sqlite/init-tables'
 import knex, { Knex } from 'knex'
 import tmp from 'tmp-promise'
 
-const INDEXING_MODELS = ["kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s","kjzl6hvfrbw6c8c8ks6ndp7elnd03csx3q7934qmacryhqoqn1para6sfpau6xi"]
-const FAKE_STREAM_ID = StreamID.fromString("kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s")
+const INDEXING_MODELS = [
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s',
+  'kjzl6hvfrbw6c8c8ks6ndp7elnd03csx3q7934qmacryhqoqn1para6sfpau6xi',
+  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+]
+const FAKE_STREAM_ID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
-const METADATA = { model: FAKE_STREAM_ID } //, controller: 'test123' }
+const METADATA = { model: FAKE_STREAM_ID }
 
 let tmpFolder: tmp.DirectoryResult
 let dbConnection: Knex
 
-  beforeEach(async () => {
+beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
   dbConnection = knex({
@@ -78,20 +87,18 @@ const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
-    type: "object",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
     additionalProperties: false,
     properties: {
       myData: {
-        type: "integer",
+        type: 'integer',
         maximum: 10000,
-        minimum: 0
+        minimum: 0,
       },
     },
-    required: [
-      "myData"
-    ]
-  }
+    required: ['myData'],
+  },
 }
 
 describe('ModelInstanceDocument API http-client tests', () => {
@@ -110,13 +117,25 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
     console.log(filename)
     const ceramicConfig: CeramicConfig = {
-      indexing: {db: "sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite", models: INDEXING_MODELS}
+      indexing: {
+        db: 'sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite',
+        models: INDEXING_MODELS,
+      },
     }
     core = await createCeramic(ipfs, ceramicConfig)
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port }, 'indexing': {'db': 'sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite', 'models':INDEXING_MODELS}}))
+    daemon = new CeramicDaemon(
+      core,
+      DaemonConfig.fromObject({
+        'http-api': { port },
+        indexing: {
+          db: 'sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite',
+          models: INDEXING_MODELS,
+        },
+      })
+    )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)
@@ -133,17 +152,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('verifies the content against model schema when creating an MID', async () => {
-    await expect(
-      ModelInstanceDocument.create(ceramic, {}, midMetadata)
-    ).rejects.toThrow(/data must have required property 'myData'/)
+    await expect(ModelInstanceDocument.create(ceramic, {}, midMetadata)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   test('verifies the content against model schema when updating an MID', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)
 
     await expect(
@@ -154,11 +169,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test(`Create a valid doc`, async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
     expect(doc.state.log.length).toEqual(1)
@@ -170,11 +181,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('Create and update doc', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)
 
     // confirm stream was added to index
@@ -198,15 +205,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(result.length).toEqual(1)
     raw = result[0]
     expect(raw.updated_at).toBeGreaterThan(updated_at_create)*/
-
   })
 
   test('Anchor genesis', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await anchorUpdate(core, doc)
@@ -220,11 +222,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('Anchor after updating', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     await doc.replace(CONTENT1)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
@@ -241,11 +239,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('multiple updates', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
     await anchorUpdate(core, doc)
@@ -290,7 +284,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('create respects anchor flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { anchor: false })
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+      anchor: false,
+    })
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
 
@@ -300,7 +296,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('replace respects anchor flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { anchor: false })
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+      anchor: false,
+    })
     await doc.replace(CONTENT1, { anchor: false })
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })

@@ -9,7 +9,7 @@ import type {
 import { SyncOptions } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
-import {IndexStreamArgs} from "./database-index-api.js";
+import { IndexStreamArgs } from './database-index-api.js'
 
 /**
  * API to query an index.
@@ -26,7 +26,7 @@ export class LocalIndexApi implements IndexApi {
    * @param args
    */
   async indexStream(args: IndexStreamArgs): Promise<void> {
-      this.databaseIndexApi.indexStream(args)
+    this.databaseIndexApi.indexStream(args)
   }
 
   /**

@@ -27,16 +27,24 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   public getActiveModelsToIndex(): Array<StreamID> {
+    // Helper function to get array of active models that are currently being indexed by node
     // TODO: update to runtime check once adminAPI unlocks to load models on the fly
     return this.modelsToIndex
+  }
+
+  private _isIndexStream(args: StreamID): Boolean {
+    // TODO: find more efficient way
+    return this.getActiveModelsToIndex().some(function (streamId) {
+      return String(streamId) === String(args)
+    })
   }
 
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
 
-    // only index active models in config
-    if (this.getActiveModelsToIndex().indexOf(args.model) != -1) {
+    // only index streams with active models in config
+    if (this._isIndexStream(args.model)) {
       await this.dbConnection(tableName)
         .insert({
           stream_id: String(args.streamID),
