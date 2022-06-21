@@ -93,13 +93,14 @@ export class ModelHandler implements StreamHandler<Model> {
     }
 
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
-    // TODO(NET-1437): replace family with model
-    const { controllers, family } = payload.header
+    const { controllers, model } = payload.header
+    const modelStreamID = StreamID.fromBytes(model)
+    
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
       controllers[0],
-      family,
+      modelStreamID,
       streamId
     )
 
@@ -150,7 +151,7 @@ export class ModelHandler implements StreamHandler<Model> {
   ): Promise<StreamState> {
     const metadata = state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
-    const family = metadata.family
+    const model = metadata.model
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
@@ -158,7 +159,7 @@ export class ModelHandler implements StreamHandler<Model> {
       commitData,
       context.did,
       controller,
-      family,
+      model,
       streamId
     )
 

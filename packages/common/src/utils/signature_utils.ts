@@ -15,7 +15,7 @@ export class SignatureUtils {
    * @param commitData - Commit to be verified
    * @param did - DID instance
    * @param controller - Stream controller DID value
-   * @param family - family of the stream being updated
+   * @param model - model of the stream being updated 
    * @param streamId - Stream ID for the commit
    * @private
    */
@@ -23,10 +23,10 @@ export class SignatureUtils {
     commitData: CommitData,
     did: DID,
     controller: string,
-    family: string,
+    model: StreamID | null,
     streamId: StreamID
   ): Promise<void> {
-    const cacao = await this._verifyCapabilityAuthz(commitData, streamId, family)
+    const cacao = await this._verifyCapabilityAuthz(commitData, streamId, model)
 
     const atTime = commitData.timestamp ? new Date(commitData.timestamp * 1000) : undefined
     await did.verifyJWS(commitData.envelope, {
@@ -42,13 +42,13 @@ export class SignatureUtils {
    * Verifies capability attached to a signed commit
    * @param commitData - Commit to be verified
    * @param streamId - Stream ID for the commit
-   * @param family - family of the stream being updated
+   * @param model - model of the stream being updated 
    * @returns Cacao is capability was found and verified, null otherwise
    */
   private static async _verifyCapabilityAuthz(
     commitData: CommitData,
     streamId: StreamID,
-    family: string
+    model: StreamID | null,
   ): Promise<Cacao | null> {
     const cacao = commitData.capability
 
@@ -61,9 +61,9 @@ export class SignatureUtils {
       !resources.includes(`ceramic://*`) &&
       !resources.includes(`ceramic://${streamId.toString()}`) &&
       !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`) &&
-      !(family && resources.includes(`ceramic://*?family=${family}`))
+      !(model && resources.includes(`ceramic://*?model=${model.toString()}`))
     ) {
-      throw new Error(`Capability does not have appropriate permissions to update this Stream}`)
+      throw new Error(`Capability does not have appropriate permissions to update this Stream`)
     }
 
     return cacao

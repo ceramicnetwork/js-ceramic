@@ -76,13 +76,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-    const { controllers } = payload.header
-    // TODO(NET-1437): replace family with model
+    const { controllers, model } = payload.header
+    const modelStreamID = StreamID.fromBytes(model)
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
       controllers[0],
-      null,
+      modelStreamID,
       streamId
     )
 
@@ -90,7 +90,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw new Error('Exactly one controller must be specified')
     }
 
-    const metadata = { ...payload.header, model: StreamID.fromBytes(payload.header.model) }
+    const metadata = { ...payload.header, model: modelStreamID }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},
@@ -119,11 +119,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   ): Promise<StreamState> {
     const metadata = state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const model = metadata.model
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
-    // TODO(NET-1437): replace family with model
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
