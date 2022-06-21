@@ -376,6 +376,7 @@ export class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
     let indexingApi: DatabaseIndexApi | undefined = undefined
+    const networkOptions = Ceramic._generateNetworkOptions(config)
     if (config.indexing) {
       indexingApi = buildIndexing(config.indexing)
     } else {
@@ -383,8 +384,6 @@ export class Ceramic implements CeramicApi {
         `Indexing is not configured. Please, add the indexing settings to your config file`
       )
     }
-
-    const networkOptions = Ceramic._generateNetworkOptions(config)
 
     let anchorService = null
     if (!config.gateway) {
