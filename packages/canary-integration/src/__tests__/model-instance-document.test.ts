@@ -10,15 +10,85 @@ import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { StreamID } from '@ceramicnetwork/streamid'
 import first from 'it-first'
+import {SqliteIndexApi} from "@ceramicnetwork/core/lib/indexing/sqlite/sqlite-index-api";
+import {listMidTables} from "@ceramicnetwork/core/lib/indexing/sqlite/init-tables";
+import knex, { Knex } from 'knex'
+import { DataSource } from 'typeorm'
+import tmp from 'tmp-promise'
+
 
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
+
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
-const METADATA = { model: FAKE_STREAM_ID }
+const METADATA = { model: FAKE_STREAM_ID } //, controller: 'test123' }
+
+let tmpFolder: tmp.DirectoryResult
+let dataSource: DataSource
+let knexConnection: Knex
+
+beforeEach(async () => {
+  tmpFolder = await tmp.dir({ unsafeCleanup: true })
+  dataSource = new DataSource({
+    type: 'sqlite',
+    database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
+  })
+  await dataSource.initialize()
+  knexConnection = knex({
+    client: 'sqlite3',
+    useNullAsDefault: true,
+  })
+})
+
+afterEach(async () => {
+  await dataSource.close()
+  await tmpFolder.cleanup()
+})
+
+describe('init', () => {
+  test('initialize DataSource', async () => {
+    const dataSource = new DataSource({
+      type: 'sqlite',
+      database: `${tmpFolder.path}/tmp-ceramic.sqlite`,
+    })
+    const initializeSpy = jest.spyOn(dataSource, 'initialize')
+    const indexApi = new SqliteIndexApi(dataSource, knexConnection, [])
+    await indexApi.init()
+    expect(initializeSpy).toBeCalledTimes(1)
+  })
+  describe('create tables', () => {
+    test('create new table from scratch', async () => {
+      const modelsToIndex = [FAKE_STREAM_ID]
+      const indexApi = new SqliteIndexApi(dataSource, knexConnection, modelsToIndex)
+      await indexApi.init()
+      const created = await listMidTables(dataSource)
+      const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
+      expect(created).toEqual(tableNames)
+    })
+
+    /*test('create new table with existing ones', async () => {
+      // First init with one model
+      const modelsA = [FAKE_STREAM_ID]
+      const indexApiA = new SqliteIndexApi(dataSource, knexConnection, modelsA)
+      await indexApiA.init()
+      const createdA = await listMidTables(dataSource)
+      const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
+      expect(createdA).toEqual(tableNamesA)
+
+      // Next add another one
+      const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
+      const indexApiB = new SqliteIndexApi(dataSource, knexConnection, modelsB)
+      await indexApiB.init()
+      const createdB = await listMidTables(dataSource)
+      const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
+      expect(createdB).toEqual(tableNamesB)
+    })*/
+  })
+})
 
 async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
   const iterator = await ceramic.pin.ls(streamId)
@@ -69,12 +139,28 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, METADATA)
     expect(JSON.stringify(doc.content)).toEqual(JSON.stringify(CONTENT0))
 
+    // confirm stream was added to index
+    /*let result: Array<any> = await dataSource.query(`SELECT * FROM mid_${FAKE_STREAM_ID}`)
+    expect(result.length).toEqual(1)
+    let raw = result[0]
+    expect(raw.stream_id).toEqual(doc.id)
+    expect(raw.controller_did).toEqual(METADATA.controller)
+    const updated_at_create = raw.updated_at
+    expect(raw.last_anchored_at).toBeNull()*/
+
     await doc.replace(CONTENT1)
 
     expect(JSON.stringify(doc.content)).toEqual(JSON.stringify(CONTENT1))
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.log[1].type).toEqual(CommitType.SIGNED)
+
+    // confirm updated_at timestamp was updated
+    /*result = await dataSource.query(`SELECT * FROM mid_${FAKE_STREAM_ID}`)
+    expect(result.length).toEqual(1)
+    raw = result[0]
+    expect(raw.updated_at).toBeGreaterThan(updated_at_create)*/
+
   })
 
   test('Anchor genesis', async () => {

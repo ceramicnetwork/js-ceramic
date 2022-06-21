@@ -629,23 +629,18 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    // add stream to MID if model is present
-    console.log('>>>> HELLLO - will apply... ??')
-    stream.content.model = StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd')
-    stream.metadata.model = StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd')
-    console.log(stream.metadata.model, stream.content.model, stream.controllers[0], stream.id, stream.content.last_anchored_at, state$.state.anchorProof.blockTimestamp) //, this._init.arguments.indexing)
-
+    // add stream to MID indexing if model is present
     if (stream.metadata.model) {
-      console.log('>>>>> add stream')
-      const last_anchor_ts = state$.state.anchorProof.blockTimestamp
+      const last_anchor_ts = state$.state.anchorProof ? state$.state.anchorProof.blockTimestamp : null
       const STREAM_CONTENT = {
-        model: stream.metadata.model, // StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd')
+        model: stream.metadata.model,
         streamID: stream.id,
         controller: stream.controllers[0],
         lastAnchor: last_anchor_ts ? new Date(last_anchor_ts * 1000) : null,
       }
       await this._index.indexStream(STREAM_CONTENT)
     }
+
     return stream
   }
 
