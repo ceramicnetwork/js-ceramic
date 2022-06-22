@@ -46,9 +46,9 @@ import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-valid
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
-import { buildIndexing } from './indexing/build-indexing.js'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
+import { makeIndexApi } from './initialization/make-index-api.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -69,8 +69,8 @@ const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache po
 const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
   [Networks.ELP]: ['eip155:1'], // Ethereum mainnet
-  [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4'], // Ethereum Ropsten, Rinkeby
-  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4'], // Ethereum Ropsten, Rinkeby
+  [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
+  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
   [Networks.LOCAL]: ['eip155:1337'], // Ganache
   [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
 }
@@ -143,7 +143,7 @@ export interface CeramicParameters {
  * Protocol options that are derived from the specified Ceramic network name (e.g. "mainnet", "testnet-clay", etc)
  */
 interface CeramicNetworkOptions {
-  name: string // Must be one of the supported network names
+  name: Networks // Must be one of the supported network names
   pubsubTopic: string // The topic that will be used for broadcasting protocol messages
 }
 
@@ -375,16 +375,8 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    let indexingApi: DatabaseIndexApi | undefined = undefined
-    if (config.indexing) {
-      indexingApi = buildIndexing(config.indexing)
-    } else {
-      logger.warn(
-        `Indexing is not configured. Please, add the indexing settings to your config file`
-      )
-    }
-
     const networkOptions = Ceramic._generateNetworkOptions(config)
+    const indexingApi = makeIndexApi(config.indexing, networkOptions.name, logger)
 
     let anchorService = null
     if (!config.gateway) {

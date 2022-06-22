@@ -84,12 +84,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('tile', commitData.commit)
-      const { controllers, family } = payload.header
+      const { controllers } = payload.header
       await SignatureUtils.verifyCommitSignature(
         commitData,
         context.did,
         controllers[0],
-        family,
+        null,
         streamId
       )
     } else if (payload.data) {
@@ -132,7 +132,6 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-    const family = state.next?.metadata?.family || state.metadata.family
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
@@ -140,7 +139,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       commitData,
       context.did,
       controller,
-      family,
+      null,
       streamId
     )
 

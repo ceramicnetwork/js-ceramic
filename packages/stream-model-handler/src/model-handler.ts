@@ -93,18 +93,14 @@ export class ModelHandler implements StreamHandler<Model> {
     }
 
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
-    // TODO(NET-1437): replace family with model
-    const { controller, family } = payload.header
-
-    if (!payload.header.controller) {
-      throw new Error('Controller must be specified')
-    }
+    const { controllers, model } = payload.header
+    const modelStreamID = StreamID.fromBytes(model)
 
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
-      controller,
-      family,
+      controllers[0],
+      modelStreamID,
       streamId
     )
 
@@ -117,7 +113,7 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    const metadata = { ...payload.header, model: modelStreamId }
+    const metadata = { ...payload.header, model: modelStreamId } // todo
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data,
@@ -151,17 +147,11 @@ export class ModelHandler implements StreamHandler<Model> {
   ): Promise<StreamState> {
     const metadata = state.metadata
     const controller = metadata.controller
-    const family = metadata.family
+    const model = metadata.model
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      family,
-      streamId
-    )
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit

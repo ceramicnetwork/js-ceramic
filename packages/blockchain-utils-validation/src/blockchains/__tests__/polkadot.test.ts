@@ -33,7 +33,7 @@ class SingleAccountSigner implements Signer {
   }
 }
 
-describe('Blockchain: Polkadot', () => {
+describe.skip('Blockchain: Polkadot', () => {
   const registry = new TypeRegistry()
   let keyPairSr25519: KeyringPair, keyPairEd25519: KeyringPair, keyPairSecp256k: KeyringPair
 
