@@ -90,14 +90,16 @@ jobs:
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
       -
-        name: Setup Dagger
+        name: Install Dagger
         uses: dagger/dagger-for-github@v3
         with:
-          version: ${{ env.DAGGER_VERSION }}
-          cmds: |
-            project init
-            project update
-            project update "github.com/3box/pipeline-tools@develop"
+          install-only: true
+      -
+        name: Setup Dagger
+        run: |
+            dagger project init
+            dagger project update
+            dagger project update "github.com/3box/pipeline-tools@develop"
       -
         name: Verify Docker image
         run: dagger do verify -p ${{ env.DAGGER_PLAN }}
