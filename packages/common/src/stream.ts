@@ -141,6 +141,11 @@ export interface StreamState {
   metadata: StreamMetadata
   signature: SignatureStatus
   anchorStatus: AnchorStatus
+  /**
+   * 'anchorScheduledFor' is not an accurate representation of when the stream will be anchored, and will be removed
+   * in a future version
+   * @deprecated
+   */
   anchorScheduledFor?: number // only present when anchor status is pending
   anchorProof?: AnchorProof // the anchor proof of the latest anchor, only present when anchor status is anchored
   log: Array<LogEntry>

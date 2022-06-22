@@ -15,6 +15,7 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
+import { Model } from '@ceramicnetwork/stream-model'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
@@ -78,13 +79,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-    const { controllers } = payload.header
-    // TODO(NET-1437): replace family with model
+    const { controllers, model } = payload.header
+    const modelStreamID = StreamID.fromBytes(model)
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
       controllers[0],
-      null,
+      modelStreamID,
       streamId
     )
 
@@ -92,17 +93,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw new Error('Exactly one controller must be specified')
     }
 
-    // TODO(NET-1447): re-enable once model schema validation is added
-    /*if (state.metadata.schema) {
-      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
-    }*/
-
-    const model = StreamID.fromBytes(payload.header.model)
-    if (model.type != MODEL_STREAM_TYPE_ID) {
+    if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
       throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
     }
 
-    const metadata = { ...payload.header, model }
+    const metadata = { ...payload.header, model: modelStreamID }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},
@@ -111,6 +106,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
+
+    await this._validateContent(context, state.metadata.model, state.content)
 
     return state
   }
@@ -129,11 +126,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   ): Promise<StreamState> {
     const metadata = state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const model = metadata.model
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
-    // TODO(NET-1437): replace family with model
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -168,12 +165,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.next?.content ?? state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
 
-    // TODO(NET-1447): Add schema validation based on the 'model'
-
     nextState.next = {
       content: newContent,
       metadata, // No way to update metadata for ModelInstanceDocument streams
     }
+
+    await this._validateContent(context, metadata.model, newContent)
 
     return nextState
   }
@@ -218,5 +215,17 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof,
     }
+  }
+
+  /**
+   * Validates content against the schema of the model stream with given stream id
+   * @param context - Ceramic context
+   * @param modelStreamId - model stream's id
+   * @param content - content to validate
+   * @private
+   */
+  async _validateContent(context: Context, modelStreamId: StreamID, content: any): Promise<void> {
+    const model = await context.api.loadStream<Model>(modelStreamId)
+    await this._schemaValidator.validateSchema(content, model.content.schema)
   }
 }

@@ -11,6 +11,7 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -183,6 +184,24 @@ async function checkSignedCommitMatchesExpectations(
   expect(unpacked).toEqual(signed)
 }
 
+const MODEL_DEFINITION: ModelDefinition = {
+  name: 'MyModel',
+  accountRelation: ModelAccountRelation.LIST,
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'integer',
+        maximum: 100,
+        minimum: 0,
+      },
+    },
+    required: ['myData'],
+  },
+}
+
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
@@ -223,6 +242,17 @@ describe('ModelInstanceDocumentHandler', () => {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
       }),
+      loadStream: jest.fn(async (streamId: StreamID) => {
+        if (streamId.toString() === FAKE_MODEL_ID.toString()) {
+          return {
+            content: MODEL_DEFINITION,
+          }
+        } else {
+          throw new Error(
+            'Trying to load unexpected stream in model-instance-document-handler.test.ts'
+          )
+        }
+      }),
       did,
     }
 
@@ -258,18 +288,6 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const expectedGenesis = {
       data: CONTENT0,
-      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
-    }
-
-    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
-  })
-
-  it('null content in genesis is valid', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, METADATA)
-    expect(commit).toBeDefined()
-
-    const expectedGenesis = {
-      data: null,
       header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
     }
 
@@ -480,49 +498,30 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(state2).toMatchSnapshot()
   })
 
-  it('Can update null genesis content to real content', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+  test('throws error when applying genesis commit with invalid schema', async () => {
+    const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
-      null,
+      {},
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
-    // apply genesis
-    const genesisCommitData = {
+    const commitData = {
       cid: FAKE_CID_1,
       type: CommitType.GENESIS,
       commit: payload,
-      envelope: genesisCommit.jws,
+      envelope: commit.jws,
     }
-    let state = await handler.applyCommit(genesisCommitData, context)
 
-    const state$ = TestUtils.runningState(state)
-    const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    state = await handler.applyCommit(signedCommitData, context, state)
-    delete state.metadata.unique
-    delete state.next.metadata.unique
-    expect(state).toMatchSnapshot()
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
-  it('Can set existing content to null', async () => {
+  test('throws error when applying signed commit with invalid schema', async () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -540,11 +539,11 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    let state = await handler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, null)) as SignedCommitContainer
+    const signedCommit = (await doc._makeCommit(context.api, {})) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -558,10 +557,10 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    state = await handler.applyCommit(signedCommitData, context, state)
-    delete state.metadata.unique
-    delete state.next.metadata.unique
-    expect(state).toMatchSnapshot()
+
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   it('throws error if commit signed by wrong DID', async () => {

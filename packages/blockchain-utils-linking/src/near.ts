@@ -22,7 +22,11 @@ export class NearAuthProvider implements AuthProvider {
     private readonly near: any,
     private readonly accountName: string,
     private readonly chainRef: string
-  ) {}
+  ) {
+    console.warn(
+      'WARN: NearAuthProvider is not fully supported. You may encounter issues using this.'
+    )
+  }
 
   async authenticate(message: string): Promise<string> {
     const key = await this.near.connection.signer.keyStore.getKey(this.chainRef, this.accountName)
