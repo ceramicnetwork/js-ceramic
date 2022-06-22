@@ -48,7 +48,7 @@ import os from 'os'
 import * as path from 'path'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
-import { makeIndexApi } from './initialization/make-index-api'
+import { makeIndexApi } from './initialization/make-index-api.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
