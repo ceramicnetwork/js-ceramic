@@ -40,46 +40,48 @@ let keyPairSr25519: KeyringPair, keyPairEd25519: KeyringPair, keyPairSecp256k: K
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeAll(async () => {
-  ipfs = await createIPFS()
-  ceramic = await createCeramic(ipfs)
-  await cryptoWaitReady()
-  keyPairSr25519 = keyringSr25519.addFromSeed(seed)
-  keyPairEd25519 = keyringEd25519.addFromSeed(seed)
-  keyPairSecp256k = keyringSecp256k.addFromSeed(seed)
-}, 120000)
+describe.skip('Polkadot Caip10 tests', () => {
+  beforeAll(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+    await cryptoWaitReady()
+    keyPairSr25519 = keyringSr25519.addFromSeed(seed)
+    keyPairEd25519 = keyringEd25519.addFromSeed(seed)
+    keyPairSecp256k = keyringSecp256k.addFromSeed(seed)
+  }, 120000)
 
-afterAll(async () => {
-  await ceramic.close()
-  await ipfs?.stop()
-}, 120000)
+  afterAll(async () => {
+    await ceramic.close()
+    await ipfs?.stop()
+  }, 120000)
 
-test('happy path', async () => {
-  await Promise.all(
-    [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
-      const provider = new SingleAccountSigner(registry, keyPair)
-      const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
-      await happyPath(ceramic, authProvider)
-    })
-  )
-}, 120000)
+  test('happy path', async () => {
+    await Promise.all(
+      [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
+        const provider = new SingleAccountSigner(registry, keyPair)
+        const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
+        await happyPath(ceramic, authProvider)
+      })
+    )
+  }, 120000)
 
-test('wrong proof', async () => {
-  await Promise.all(
-    [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
-      const provider = new SingleAccountSigner(registry, keyPair)
-      const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
-      await wrongProof(ceramic, authProvider)
-    })
-  )
-}, 120000)
+  test('wrong proof', async () => {
+    await Promise.all(
+      [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
+        const provider = new SingleAccountSigner(registry, keyPair)
+        const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
+        await wrongProof(ceramic, authProvider)
+      })
+    )
+  }, 120000)
 
-test('clear did', async () => {
-  await Promise.all(
-    [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
-      const provider = new SingleAccountSigner(registry, keyPair)
-      const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
-      await clearDid(ceramic, authProvider)
-    })
-  )
-}, 120000)
+  test('clear did', async () => {
+    await Promise.all(
+      [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
+        const provider = new SingleAccountSigner(registry, keyPair)
+        const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
+        await clearDid(ceramic, authProvider)
+      })
+    )
+  }, 120000)
+})

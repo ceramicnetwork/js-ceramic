@@ -45,7 +45,11 @@ export class CosmosAuthProvider implements AuthProvider {
     private readonly provider: any,
     private readonly address: string,
     private readonly chainRef: string
-  ) {}
+  ) {
+    console.warn(
+      'WARN: CosmosAuthProvider is not fully supported. You may encounter issues using this.'
+    )
+  }
 
   async authenticate(message: string): Promise<string> {
     const accountID = await this.accountId()

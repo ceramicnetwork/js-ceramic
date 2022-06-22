@@ -48,13 +48,13 @@ afterAll(() => {
   jest.clearAllMocks()
 })
 
-test('accountId', async () => {
+test.skip('accountId', async () => {
   const provider = new SingleAccountSigner(registry, keyPairSr25519)
   const authProvider = new PolkadotAuthProvider(provider, keyPairSr25519.address)
   await expect(authProvider.accountId()).resolves.toMatchSnapshot()
 })
 
-describe('createLink', () => {
+describe.skip('createLink', () => {
   test('create proof with sr25519', async () => {
     const provider = new SingleAccountSigner(registry, keyPairSr25519)
     const authProvider = new PolkadotAuthProvider(provider, keyPairSr25519.address)

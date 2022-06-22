@@ -84,12 +84,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('tile', commitData.commit)
-      const { controllers, family } = payload.header
+      const { controllers } = payload.header
       await SignatureUtils.verifyCommitSignature(
         commitData,
         context.did,
         controllers[0],
-        family,
+        null,
         streamId
       )
     } else if (payload.data) {
@@ -134,15 +134,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     // Verify the signature
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-    const family = state.next?.metadata?.family || state.metadata.family
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      family,
-      streamId
-    )
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
 
     if (payload.header.controllers) {
       if (payload.header.controllers.length !== 1) {
