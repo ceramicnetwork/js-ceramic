@@ -76,12 +76,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-    const { controllers, model } = payload.header // todo
+    const { controllers, model } = payload.header
+    const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
-      controllers[0],
+      controller,
       modelStreamID,
       streamId
     )
@@ -90,7 +91,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw new Error('Exactly one controller must be specified')
     }
 
-    const metadata = { ...payload.header, model: modelStreamID }
+    const metadata = { controller, model: modelStreamID }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},

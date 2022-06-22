@@ -94,12 +94,13 @@ export class ModelHandler implements StreamHandler<Model> {
 
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
     const { controllers, model } = payload.header
+    const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
 
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
-      controllers[0],
+      controller,
       modelStreamID,
       streamId
     )
@@ -113,7 +114,7 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    const metadata = { ...payload.header, model: modelStreamId } // todo
+    const metadata = { controller, model: modelStreamId }
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data,

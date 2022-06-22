@@ -316,7 +316,7 @@ export class Model extends Stream {
     }
 
     const header: GenesisHeader = {
-      controller: metadata.controller,
+      controllers: [metadata.controller],
       unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
