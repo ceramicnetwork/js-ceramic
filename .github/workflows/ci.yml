@@ -10,6 +10,7 @@ env:
   # Dagger
   DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
   DAGGER_VERSION: "0.2.20"
+  DAGGER_LOG_FORMAT: "plain"
   PIPELINE_TOOLS_VER: "develop"
   COMPONENT: "ceramic"
   # Secrets
@@ -29,7 +30,7 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Setup Dagger and run unit tests
+        name: Run unit tests
         uses: dagger/dagger-for-github@v3
         with:
           version: ${{ env.DAGGER_VERSION }}
@@ -47,7 +48,7 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Setup Dagger and run unit tests
+        name: Run unit tests
         uses: dagger/dagger-for-github@v3
         with:
           version: ${{ env.DAGGER_VERSION }}
@@ -89,6 +90,8 @@ jobs:
         if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
+          # TODO: Remove
+          echo "BRANCH=develop" >> $GITHUB_ENV
       -
         name: Install Dagger
         uses: dagger/dagger-for-github@v3
