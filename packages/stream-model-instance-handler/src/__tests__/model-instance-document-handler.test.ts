@@ -189,20 +189,18 @@ const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
-    type: "object",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
     additionalProperties: false,
     properties: {
       myData: {
-        type: "integer",
+        type: 'integer',
         maximum: 100,
-        minimum: 0
-      }
+        minimum: 0,
+      },
     },
-    required: [
-      "myData"
-    ]
-  }
+    required: ['myData'],
+  },
 }
 
 describe('ModelInstanceDocumentHandler', () => {
@@ -248,10 +246,12 @@ describe('ModelInstanceDocumentHandler', () => {
       loadStream: jest.fn(async (streamId: StreamID) => {
         if (streamId.toString() === FAKE_STREAM_ID.toString()) {
           return {
-            content: MODEL_DEFINITION
+            content: MODEL_DEFINITION,
           }
         } else {
-          throw new Error("Trying to load unexpected stream in model-instance-document-handler.test.ts")
+          throw new Error(
+            'Trying to load unexpected stream in model-instance-document-handler.test.ts'
+          )
         }
       }),
       did,
@@ -492,13 +492,12 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: commit.jws,
     }
 
-    await expect(
-      handler.applyCommit(commitData, context)
-    ).rejects.toThrow(/data must have required property 'myData'/)
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {
-
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -535,9 +534,9 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: signedCommit.jws,
     }
 
-    await expect(
-      handler.applyCommit(signedCommitData, context, state)
-    ).rejects.toThrow(/data must have required property 'myData'/)
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   it('throws error if commit signed by wrong DID', async () => {
@@ -653,7 +652,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
-      commit: { proof: FAKE_CID_3, prev: FAKE_CID_2 },
+      commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_2 },
       proof: anchorProof,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)

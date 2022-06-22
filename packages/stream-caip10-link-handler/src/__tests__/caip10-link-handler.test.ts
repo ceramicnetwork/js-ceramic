@@ -59,7 +59,7 @@ const COMMITS = {
       prev: FAKE_CID_1,
     },
   },
-  r2: { commit: { proof: FAKE_CID_4 } },
+  r2: { commit: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 } },
   proof: {
     value: {
       blockNumber: 123456,
@@ -255,7 +255,7 @@ describe('Caip10LinkHandler', () => {
         id: FAKE_CID_1,
         prev: FAKE_CID_1,
       },
-      r2: { proof: FAKE_CID_4 },
+      r2: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 },
       r2proof: {
         value: {
           blockNumber: 123456,
@@ -280,7 +280,7 @@ describe('Caip10LinkHandler', () => {
         id: FAKE_CID_1,
         prev: FAKE_CID_3,
       },
-      r4: { proof: FAKE_CID_7 },
+      r4: { proof: FAKE_CID_7, id: FAKE_CID_1, prev: FAKE_CID_5 },
       r4proof: {
         value: {
           blockNumber: 123456,

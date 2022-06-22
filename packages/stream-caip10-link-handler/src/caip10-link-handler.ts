@@ -89,7 +89,6 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     const commit = commitData.commit
     StreamUtils.assertCommitLinksToState(state, commit)
 
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     let validProof = null
     try {
       validProof = await validateLink(commit.data)

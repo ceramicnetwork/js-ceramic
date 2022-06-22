@@ -97,15 +97,15 @@ const FINAL_CONTENT: ModelDefinition = {
 const FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW: ModelDefinition = {
   ...FINAL_CONTENT,
   views: {
-    'owner': { type: 'documentAccount' }
-  }
+    owner: { type: 'documentAccount' },
+  },
 }
 
 const CONTENT_WITH_INVALID_VIEWS: ModelDefinition = {
   ...FINAL_CONTENT,
   views: {
-    'stringPropName': { type: 'documentAccount' }
-  }
+    stringPropName: { type: 'documentAccount' },
+  },
 }
 
 const CONTENT_WITH_INVALID_SCHEMA = {
@@ -349,7 +349,10 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commits with views properties correctly', async () => {
-    const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)) as SignedCommitContainer
+    const commit = (await Model._makeGenesis(
+      context.api,
+      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
@@ -404,7 +407,9 @@ describe('ModelHandler', () => {
       commit: payload,
       envelope: commit.jws,
     }
-    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(/view definition used with a property also present in schema/)
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /view definition used with a property also present in schema/
+    )
   })
 
   it('fails to apply signed commit with invalid schema', async () => {
@@ -488,7 +493,9 @@ describe('ModelHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(/view definition used with a property also present in schema/)
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /view definition used with a property also present in schema/
+    )
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
@@ -875,7 +882,7 @@ describe('ModelHandler', () => {
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
-      commit: { proof: FAKE_CID_3, prev: FAKE_CID_2 },
+      commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_2 },
       proof: anchorProof,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)

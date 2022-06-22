@@ -135,7 +135,7 @@ const COMMITS = {
       },
     },
   },
-  r2: { commit: { proof: FAKE_CID_4 } },
+  r2: { commit: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 } },
   proof: {
     blockNumber: 123456,
     blockTimestamp: 1615799679,
