@@ -1,6 +1,5 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-import { Model } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
@@ -16,6 +15,9 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
+
+// Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
+const MODEL_STREAM_TYPE_ID = 2
 
 /**
  * ModelInstanceDocument stream handler implementation
@@ -96,7 +98,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }*/
 
     const model = StreamID.fromBytes(payload.header.model)
-    if (model.type != Model.STREAM_TYPE_ID) {
+    if (model.type != MODEL_STREAM_TYPE_ID) {
       throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
     }
 
