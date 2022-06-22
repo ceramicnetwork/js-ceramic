@@ -115,10 +115,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ipfs = await createIPFS()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
-    console.log(filename)
     const ceramicConfig: CeramicConfig = {
       indexing: {
-        db: 'sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite',
+        db: `sqlite://${filename}`,
         models: INDEXING_MODELS,
       },
     }
