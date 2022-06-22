@@ -8,9 +8,9 @@ on:
 
 env:
   # Dagger
-  DAGGER_CI: cue.mod/pkg/github.com/3box/pipeline-tools/ci/main.cue
-  DAGGER_VERSION: "0.2.15"
-  PIPELINE_TOOLS_VER: "0.1.1"
+  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
+  DAGGER_VERSION: "0.2.20"
+  PIPELINE_TOOLS_VER: "develop"
   COMPONENT: "ceramic"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -21,20 +21,119 @@ env:
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
-  push:
-    name: Test and push image
+  testJs:
+    name: Unit tests with `js-ipfs`
     runs-on: ubuntu-latest
     steps:
       -
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Run CI pipeline
+        name: Setup Dagger
         uses: dagger/dagger-for-github@v3
         with:
           version: ${{ env.DAGGER_VERSION }}
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
-            do build -p ${{ env.DAGGER_CI }}
+            project update "github.com/3box/pipeline-tools@develop"
+      -
+        name: Run unit tests
+        run: |
+          dagger do testJs -p ${{ env.DAGGER_PLAN }}
+
+  testGo:
+    name: Unit tests with `go-ipfs`
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
+      -
+        name: Setup Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          version: ${{ env.DAGGER_VERSION }}
+          cmds: |
+            project init
+            project update
+            project update "github.com/3box/pipeline-tools@develop"
+      -
+        name: Run unit tests
+        run: |
+          dagger do testGo -p ${{ env.DAGGER_PLAN }}
+
+  publish:
+    name: Verify and publish Docker image
+    runs-on: ubuntu-latest
+    needs: [testJs, testGo]
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
+      -
+        name: Set branch name
+        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      -
+        name: Set sha tag
+        run: |
+          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
+          echo "SHA=${{ github.sha }}" >> $GITHUB_ENV
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
+      -
+        name: Set main branch tag
+        if: ${{ env.BRANCH == 'main' }}
+        run: |
+          echo "ENV_TAG=prod" >> $GITHUB_ENV
+      -
+        name: Set rc branch tag
+        if: ${{ env.BRANCH == 'release-candidate' }}
+        run: |
+          echo "ENV_TAG=tnet" >> $GITHUB_ENV
+      -
+        name: Set develop branch tag
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+      -
+        name: Setup Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          version: ${{ env.DAGGER_VERSION }}
+          cmds: |
+            project init
+            project update
+            project update "github.com/3box/pipeline-tools@develop"
+      -
+        name: Verify Docker image
+        run: dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Push Docker image
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Post deployment event
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
+        run: dagger do queue -w "actions:queue:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+
+  docs:
+    name: Publish docs
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
+      -
+        name: Setup Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          version: ${{ env.DAGGER_VERSION }}
+          cmds: |
+            project init
+            project update
+            project update "github.com/3box/pipeline-tools@develop"
+      -
+        name: Run unit tests
+        run: |
+          dagger do docs -p ${{ env.DAGGER_PLAN }}
