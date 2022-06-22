@@ -575,7 +575,10 @@ describe('Ceramic interop: core <> http-client', () => {
         ...metadata,
         controller: metadata.controllers[0],
       })
-      expect(resClient[streamId.toString()].metadata).toEqual(metadata)
+      expect(resClient[streamId.toString()].metadata).toEqual({
+        ...metadata,
+        controller: metadata.controllers[0],
+      })
     })
   })
 
