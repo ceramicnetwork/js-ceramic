@@ -142,11 +142,14 @@ export class ModelHandler implements StreamHandler<Model> {
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
+    // Retrieve the payload
+    const payload = commitData.commit
+    StreamUtils.assertCommitLinksToState(state, payload)
+
+    // Verify the signature
     const metadata = state.metadata
     const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
     const family = metadata.family
-
-    // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
     await SignatureUtils.verifyCommitSignature(
       commitData,
@@ -155,22 +158,6 @@ export class ModelHandler implements StreamHandler<Model> {
       family,
       streamId
     )
-
-    // Retrieve the payload
-    const payload = commitData.commit
-
-    if (!payload.id.equals(state.log[0].cid)) {
-      throw new Error(
-        `Invalid genesis CID in commit. Found: ${payload.id}, expected ${state.log[0].cid}`
-      )
-    }
-    const expectedPrev = state.log[state.log.length - 1].cid
-    if (!payload.prev.equals(expectedPrev)) {
-      // This should never happen and would indicate a programming error if it did
-      throw new Error(
-        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${payload.prev}`
-      )
-    }
 
     if (payload.header) {
       throw new Error(
@@ -220,12 +207,7 @@ export class ModelHandler implements StreamHandler<Model> {
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    const expectedPrev = state.log[state.log.length - 1].cid
-    if (!commitData.commit.prev.equals(expectedPrev)) {
-      throw new Error(
-        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${commitData.commit.prev}`
-      )
-    }
+    StreamUtils.assertCommitLinksToState(state, commitData.commit)
 
     const proof = commitData.proof
     state.log.push({
