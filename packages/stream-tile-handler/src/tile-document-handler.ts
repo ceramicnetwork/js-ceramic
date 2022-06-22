@@ -130,7 +130,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // Retrieve the payload
     const payload = commitData.commit
-    StreamUtils.assertCommitLinksToState(state, payload)
+    StreamUtils.assertCommitLinksToState(state, payload, true)
 
     // Verify the signature
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]

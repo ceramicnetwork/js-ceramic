@@ -87,7 +87,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
    */
   async _applySigned(commitData: CommitData, state: StreamState): Promise<StreamState> {
     const commit = commitData.commit
-    StreamUtils.assertCommitLinksToState(state, commit)
+    StreamUtils.assertCommitLinksToState(state, commit, true)
 
     let validProof = null
     try {
