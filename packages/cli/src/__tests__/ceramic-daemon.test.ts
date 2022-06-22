@@ -672,6 +672,18 @@ describe('Ceramic interop: core <> http-client', () => {
           model: MODEL_STREAM_ID,
         })
       })
+      test('too much entries requested: forward pagination', async () => {
+        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+        query.searchParams.set('model', MODEL_STREAM_ID.toString())
+        query.searchParams.set('first', '20000')
+        await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+      })
+      test('too much entries requested: forward pagination', async () => {
+        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+        query.searchParams.set('model', MODEL_STREAM_ID.toString())
+        query.searchParams.set('last', '20000')
+        await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+      })
       test('model, account in query', async () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
         query.searchParams.set('model', MODEL_STREAM_ID.toString())
