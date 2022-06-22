@@ -2,7 +2,10 @@ import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CeramicApi, CommitType, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { ModelInstanceDocument, ModelInstanceDocumentMetadata } from '@ceramicnetwork/stream-model-instance'
+import {
+  ModelInstanceDocument,
+  ModelInstanceDocumentMetadata,
+} from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
 import { Ceramic } from '@ceramicnetwork/core'
@@ -26,20 +29,18 @@ const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
-    type: "object",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
     additionalProperties: false,
     properties: {
       myData: {
-        type: "integer",
+        type: 'integer',
         maximum: 10000,
-        minimum: 0
+        minimum: 0,
       },
     },
-    required: [
-      "myData"
-    ]
-  }
+    required: ['myData'],
+  },
 }
 
 describe('ModelInstanceDocument API http-client tests', () => {
@@ -75,17 +76,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('verifies the content against model schema when creating an MID', async () => {
-    await expect(
-      ModelInstanceDocument.create(ceramic, {}, midMetadata)
-    ).rejects.toThrow(/data must have required property 'myData'/)
+    await expect(ModelInstanceDocument.create(ceramic, {}, midMetadata)).rejects.toThrow(
+      /data must have required property 'myData'/
+    )
   })
 
   test('verifies the content against model schema when updating an MID', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)
 
     await expect(
@@ -96,27 +93,18 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test(`Create a valid doc`, async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
-    expect(doc.metadata.unique instanceof Uint8Array).toBeTruthy()
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
   test('Create and update doc', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)
 
     await doc.replace(CONTENT1)
@@ -128,11 +116,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('Anchor genesis', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await anchorUpdate(core, doc)
@@ -146,11 +130,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('Anchor after updating', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     await doc.replace(CONTENT1)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
@@ -167,11 +147,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('multiple updates', async () => {
-    const doc = await ModelInstanceDocument.create(
-      ceramic,
-      CONTENT0,
-      midMetadata
-    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
     await anchorUpdate(core, doc)
@@ -199,7 +175,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
 
     expect(doc1.id.toString()).not.toEqual(doc2.id.toString())
-    expect(doc1.metadata.unique.toString()).not.toEqual(doc2.metadata.unique.toString())
   })
 
   test('Can load a stream', async () => {
@@ -216,7 +191,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('create respects anchor flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { anchor: false })
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+      anchor: false,
+    })
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
 
@@ -226,7 +203,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('replace respects anchor flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { anchor: false })
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+      anchor: false,
+    })
     await doc.replace(CONTENT1, { anchor: false })
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
