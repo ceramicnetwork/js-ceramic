@@ -496,7 +496,7 @@ describe('Ceramic integration', () => {
 
       const resolvedStream = res[stream1.id.toString()]
       expect(resolvedStream.content).toEqual(content)
-      expect(resolvedStream.metadata).toEqual(metadata)
+      expect(resolvedStream.metadata).toEqual({ ...metadata, controller: metadata.controllers[0] })
 
       await ceramic1.close()
       await ceramic2.close()
@@ -535,7 +535,7 @@ describe('Ceramic integration', () => {
 
       const resolvedStream = res[streamID.toString()]
       expect(resolvedStream.content).toEqual({})
-      expect(resolvedStream.metadata).toEqual(metadata)
+      expect(resolvedStream.metadata).toEqual({ ...metadata, controller: metadata.controllers[0] })
       const pinned = await isPinned(ceramic2, streamID)
       expect(pinned).toBeTruthy()
 
