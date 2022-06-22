@@ -29,7 +29,7 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Setup Dagger
+        name: Setup Dagger and run unit tests
         uses: dagger/dagger-for-github@v3
         with:
           version: ${{ env.DAGGER_VERSION }}
@@ -37,10 +37,7 @@ jobs:
             project init
             project update
             project update "github.com/3box/pipeline-tools@develop"
-      -
-        name: Run unit tests
-        run: |
-          dagger do testJs -p ${{ env.DAGGER_PLAN }}
+            do testJs -p ${{ env.DAGGER_PLAN }}
 
   testGo:
     name: Unit tests with `go-ipfs`
@@ -50,7 +47,7 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v3
       -
-        name: Setup Dagger
+        name: Setup Dagger and run unit tests
         uses: dagger/dagger-for-github@v3
         with:
           version: ${{ env.DAGGER_VERSION }}
@@ -58,10 +55,7 @@ jobs:
             project init
             project update
             project update "github.com/3box/pipeline-tools@develop"
-      -
-        name: Run unit tests
-        run: |
-          dagger do testGo -p ${{ env.DAGGER_PLAN }}
+            do testGo -p ${{ env.DAGGER_PLAN }}
 
   publish:
     name: Verify and publish Docker image
