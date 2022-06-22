@@ -21,6 +21,8 @@ import {
   TestUtils,
   IpfsApi,
   CeramicSigner,
+  GenesisCommit,
+  RawCommit,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -160,7 +162,7 @@ const rotateKey = (did: DID, rotateDate: string) => {
 async function checkSignedCommitMatchesExpectations(
   did: DID,
   commit: SignedCommitContainer,
-  expectedCommit: Record<string, any>
+  expectedCommit: GenesisCommit | RawCommit
 ) {
   const { jws, linkedBlock } = commit
   expect(jws).toBeDefined()
@@ -289,7 +291,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const expectedGenesis = {
       data: CONTENT0,
-      header: { controller: METADATA.controller, model: METADATA.model.bytes },
+      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -303,7 +305,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const expectedGenesis = {
       data: null,
-      header: { controller: METADATA.controller, model: METADATA.model.bytes },
+      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -472,28 +474,6 @@ describe('ModelInstanceDocumentHandler', () => {
     delete state2.metadata.unique
     delete state2.next.metadata.unique
     expect(state2).toMatchSnapshot()
-  })
-
-  test('throws error when applying genesis commit with legacy controllers array', async () => {
-    const rawCommit = await ModelInstanceDocument._makeRawGenesis(context.api, {}, METADATA)
-    rawCommit.header.controllers = [rawCommit.header.controller]
-    delete rawCommit.header.controller
-    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
-
-    const commitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: commit.jws,
-    }
-
-    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
-      /Controller must be specified/
-    )
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {
