@@ -35,7 +35,7 @@ export function makeIndexApi(
   const indexApi = buildIndexing(indexingConfig)
   if (isNonProduction(indexApi, network, indexingConfig.models)) {
     logger.warn(
-      'For production deployments we recommend using Postgres not SQLite as it will scale better'
+      'SQLite configuration detected for indexing database.  For production deployments we recommend using Postgres not SQLite as it will scale better'
     )
   }
   return indexApi
