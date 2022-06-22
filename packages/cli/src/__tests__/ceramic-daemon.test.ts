@@ -571,7 +571,10 @@ describe('Ceramic interop: core <> http-client', () => {
       const resCore = await core.multiQuery([{ genesis, streamId }])
       const resClient = await client.multiQuery([{ genesis, streamId }])
 
-      expect(resCore[streamId.toString()].metadata).toEqual(metadata)
+      expect(resCore[streamId.toString()].metadata).toEqual({
+        ...metadata,
+        controller: metadata.controllers[0],
+      })
       expect(resClient[streamId.toString()].metadata).toEqual(metadata)
     })
   })
@@ -676,13 +679,17 @@ describe('Ceramic interop: core <> http-client', () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
         query.searchParams.set('model', MODEL_STREAM_ID.toString())
         query.searchParams.set('first', '20000')
-        await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+        await expect(fetchJson(query.toString())).rejects.toThrow(
+          /Requested too many entries: 20000/
+        )
       })
       test('too much entries requested: forward pagination', async () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
         query.searchParams.set('model', MODEL_STREAM_ID.toString())
         query.searchParams.set('last', '20000')
-        await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+        await expect(fetchJson(query.toString())).rejects.toThrow(
+          /Requested too many entries: 20000/
+        )
       })
       test('model, account in query', async () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
