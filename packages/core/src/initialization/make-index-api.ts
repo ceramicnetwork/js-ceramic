@@ -29,7 +29,7 @@ export function makeIndexApi(
   logger: DiagnosticsLogger
 ): DatabaseIndexApi | undefined {
   if (!indexingConfig) {
-    logger.warn(`Indexing is not configured. Please, add the indexing settings to your config file`)
+    logger.warn(`Indexing is not configured. Please add the indexing settings to your config file`)
     return undefined
   }
   const indexApi = buildIndexing(indexingConfig)
