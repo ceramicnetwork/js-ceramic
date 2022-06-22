@@ -11,7 +11,7 @@ env:
   DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
   DAGGER_VERSION: "0.2.20"
   DAGGER_LOG_FORMAT: "plain"
-  PIPELINE_TOOLS_VER: "0.1.12"
+  PIPELINE_TOOLS_VER: "0.1.2"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
