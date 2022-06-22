@@ -103,6 +103,11 @@ jobs:
             dagger project init
             dagger project update
             dagger project update "github.com/3box/pipeline-tools@develop"
+
+            AWS_SCRIPTS=cue.mod/pkg/universe.dagger.io/aws/_scripts
+            mkdir -p $AWS_SCRIPTS
+            curl -fsSL "https://raw.githubusercontent.com/dagger/dagger/v${{ env.DAGGER_VERSION }}/pkg/universe.dagger.io/aws/_scripts/install.sh" > $AWS_SCRIPTS/install.sh
+            chmod +x $AWS_SCRIPTS/install.sh
       -
         name: Verify Docker image
         run: dagger do verify -p ${{ env.DAGGER_PLAN }}
