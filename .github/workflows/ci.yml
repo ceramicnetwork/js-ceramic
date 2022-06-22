@@ -36,7 +36,7 @@ jobs:
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools@develop"
+            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
             do testJs -p ${{ env.DAGGER_PLAN }}
 
   testGo:
@@ -54,7 +54,7 @@ jobs:
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools@develop"
+            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
             do testGo -p ${{ env.DAGGER_PLAN }}
 
   publish:
@@ -99,7 +99,7 @@ jobs:
         run: |
             dagger project init
             dagger project update
-            dagger project update "github.com/3box/pipeline-tools@develop"
+            dagger project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
 
             AWS_SCRIPTS=cue.mod/pkg/universe.dagger.io/aws/_scripts
             mkdir -p $AWS_SCRIPTS
@@ -133,5 +133,5 @@ jobs:
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools@develop
+            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
             do docs -p ${{ env.DAGGER_PLAN }}
