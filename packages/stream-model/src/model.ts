@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
