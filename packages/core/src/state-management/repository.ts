@@ -71,8 +71,8 @@ export class Repository {
     concurrencyLimit: number,
     private readonly logger: DiagnosticsLogger
   ) {
-    this.loadingQ = new ExecutionQueue(concurrencyLimit, logger)
-    this.executionQ = new ExecutionQueue(concurrencyLimit, logger)
+    this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
+    this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
