@@ -61,7 +61,7 @@
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
     "multiformats": "^9.5.8",
-    "p-queue": "^7.1.0",
+    "p-queue": "^7.2.0",
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
     "uint8arrays": "^3.0.0"
