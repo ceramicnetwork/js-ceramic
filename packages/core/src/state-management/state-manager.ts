@@ -202,11 +202,19 @@ export class StateManager {
    * @param tip - Stream Tip CID
    * @private
    */
-  update(streamId: StreamID, tip: CID): void {
+  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
     this.executionQ.forStream(streamId).add(async () => {
       const state$ = await this.fromMemoryOrStore(streamId)
       if (state$) await this._handleTip(state$, tip)
     })
+    // this.fromMemoryOrStore(streamId).then((state$) => {
+    //   if (!state$) {
+    //     return
+    //   }
+    //   this.executionQ.forStream(streamId).add(async () => {
+    //     await this._handleTip(state$, tip)
+    //   })
+    // })
   }
 
   /**
