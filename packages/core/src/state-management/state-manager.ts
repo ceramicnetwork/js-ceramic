@@ -40,7 +40,7 @@ export class StateManager {
    * @param anchorService - currently used instance of AnchorService
    * @param conflictResolution - currently used instance of ConflictResolution
    * @param logger - Logger
-   * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#get`.
+   * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
    */
   constructor(
