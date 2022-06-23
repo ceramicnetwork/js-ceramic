@@ -230,26 +230,15 @@ export class StreamUtils {
    * we have a more robust error handling framework in place.
    * @param state
    * @param commit
-   * @param skipIdCheck - There was a bug in older versions of ceramic that caused the 'id' field
-   *   of Caip10Link update commits and some TileDocument update commits to be incorrect. Because
-   *   of that we cannot verify the 'id' field for TileDocument and Caip10Link streams, and so
-   *   the 'skipIdCheck' flag allows those two streamtypes to skip that check.  Newer streamtypes
-   *   like Model and ModelInstanceDocument do not have this problem.
    */
-  static assertCommitLinksToState(
-    state: StreamState,
-    commit: RawCommit | AnchorCommit,
-    skipIdCheck = false
-  ) {
-    if (!skipIdCheck) {
-      const streamId = this.streamIdFromState(state)
-      if (!commit.id.equals(state.log[0].cid)) {
-        throw new Error(
-          `Invalid genesis CID in commit for StreamID ${streamId.toString()}. Found: ${
-            commit.id
-          }, expected ${state.log[0].cid}`
-        )
-      }
+  static assertCommitLinksToState(state: StreamState, commit: RawCommit | AnchorCommit) {
+    const streamId = this.streamIdFromState(state)
+    if (!commit.id.equals(state.log[0].cid)) {
+      throw new Error(
+        `Invalid genesis CID in commit for StreamID ${streamId.toString()}. Found: ${
+          commit.id
+        }, expected ${state.log[0].cid}`
+      )
     }
 
     const expectedPrev = state.log[state.log.length - 1].cid
