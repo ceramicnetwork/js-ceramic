@@ -8,75 +8,17 @@ import {
 } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
-import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
+import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { StreamID } from '@ceramicnetwork/streamid'
 import first from 'it-first'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
-import { SqliteIndexApi } from '@ceramicnetwork/core/lib/indexing/sqlite/sqlite-index-api'
-import { listMidTables } from '@ceramicnetwork/core/lib/indexing/sqlite/init-tables'
-import knex, { Knex } from 'knex'
-import tmp from 'tmp-promise'
-
-const INDEXING_MODELS = [
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s',
-  'kjzl6hvfrbw6c8c8ks6ndp7elnd03csx3q7934qmacryhqoqn1para6sfpau6xi',
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-]
-const FAKE_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
-const METADATA = { model: FAKE_STREAM_ID }
-
-let tmpFolder: tmp.DirectoryResult
-let dbConnection: Knex
-
-beforeEach(async () => {
-  tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
-  dbConnection = knex({
-    client: 'sqlite3',
-    useNullAsDefault: true,
-    connection: {
-      filename: filename,
-    },
-  })
-})
-
-afterEach(async () => {
-  await dbConnection.destroy()
-  await tmpFolder.cleanup()
-})
-
-describe('init', () => {
-  describe('create tables', () => {
-    test('create new table from scratch', async () => {
-      const modelsToIndex = [FAKE_STREAM_ID]
-      const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex)
-      await indexApi.init()
-      const created = await listMidTables(dbConnection)
-      const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
-      expect(created).toEqual(tableNames)
-    })
-  })
-})
-
-describe('close', () => {
-  test('destroys knex connection', async () => {
-    const fauxDbConnection = {
-      destroy: jest.fn(),
-    } as unknown as Knex
-    const indexApi = new SqliteIndexApi(fauxDbConnection, [])
-    await indexApi.close()
-    expect(fauxDbConnection.destroy).toBeCalled()
-  })
-})
 
 async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
   const iterator = await ceramic.pin.ls(streamId)
@@ -113,28 +55,11 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
   beforeAll(async () => {
     ipfs = await createIPFS()
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
-    const ceramicConfig: CeramicConfig = {
-      indexing: {
-        db: `sqlite://${filename}`,
-        models: INDEXING_MODELS,
-      },
-    }
-    core = await createCeramic(ipfs, ceramicConfig)
+    core = await createCeramic(ipfs)
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(
-      core,
-      DaemonConfig.fromObject({
-        'http-api': { port },
-        indexing: {
-          db: 'sqlite:///Users/Alex/Documents/GitHub/indexing.sqlite',
-          models: INDEXING_MODELS,
-        },
-      })
-    )
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)
@@ -183,27 +108,12 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)
 
-    // confirm stream was added to index
-    /*let result: Array<any> = await dataSource.query(`SELECT * FROM mid_${FAKE_STREAM_ID}`)
-    expect(result.length).toEqual(1)
-    let raw = result[0]
-    expect(raw.stream_id).toEqual(doc.id)
-    expect(raw.controller_did).toEqual(METADATA.controller)
-    const updated_at_create = raw.updated_at
-    expect(raw.last_anchored_at).toBeNull()*/
-
     await doc.replace(CONTENT1)
 
     expect(doc.content).toEqual(CONTENT1)
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.log[1].type).toEqual(CommitType.SIGNED)
-
-    // confirm updated_at timestamp was updated
-    /*result = await dataSource.query(`SELECT * FROM mid_${FAKE_STREAM_ID}`)
-    expect(result.length).toEqual(1)
-    raw = result[0]
-    expect(raw.updated_at).toBeGreaterThan(updated_at_create)*/
   })
 
   test('Anchor genesis', async () => {

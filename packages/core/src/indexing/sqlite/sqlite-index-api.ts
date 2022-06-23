@@ -27,13 +27,15 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   public getActiveModelsToIndex(): Array<StreamID> {
-    // Helper function to get array of active models that are currently being indexed by node
-    // TODO: update to runtime check once adminAPI unlocks to load models on the fly
+    /**
+     * Helper function to return array of active models that are currently being indexed by node
+     * as defined in the config file.
+     * TODO: extend to runtime check once adminAPI unlocks to add and load models on the fly
+     */
     return this.modelsToIndex
   }
 
-  private _isIndexStream(args: StreamID): Boolean {
-    // TODO: find more efficient way
+  private _shouldIndexStream(args: StreamID): Boolean {
     return this.getActiveModelsToIndex().some(function (streamId) {
       return String(streamId) === String(args)
     })
@@ -44,21 +46,22 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     const now = asTimestamp(new Date())
 
     // only index streams with active models in config
-    if (this._isIndexStream(args.model)) {
-      await this.dbConnection(tableName)
-        .insert({
-          stream_id: String(args.streamID),
-          controller_did: String(args.controller),
-          last_anchored_at: asTimestamp(args.lastAnchor),
-          created_at: asTimestamp(args.createdAt) || now,
-          updated_at: asTimestamp(args.updatedAt) || now,
-        })
-        .onConflict('stream_id')
-        .merge({
-          last_anchored_at: asTimestamp(args.lastAnchor),
-          updated_at: asTimestamp(args.updatedAt) || now,
-        })
+    if (!this._shouldIndexStream(args.model)) {
+      return
     }
+    await this.dbConnection(tableName)
+      .insert({
+        stream_id: String(args.streamID),
+        controller_did: String(args.controller),
+        last_anchored_at: asTimestamp(args.lastAnchor),
+        created_at: asTimestamp(args.createdAt) || now,
+        updated_at: asTimestamp(args.updatedAt) || now,
+      })
+      .onConflict('stream_id')
+      .merge({
+        last_anchored_at: asTimestamp(args.lastAnchor),
+        updated_at: asTimestamp(args.updatedAt) || now,
+      })
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {

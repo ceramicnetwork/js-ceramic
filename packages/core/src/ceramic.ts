@@ -630,9 +630,20 @@ export class Ceramic implements CeramicApi {
     )
 
     // add stream to MID indexing if model is present
+    await this.addStreamToIndex(stream)
+
+    return stream
+  }
+
+  /**
+   * Helper function to add stream to db index.
+   * @param stream
+   * @private
+   */
+  async addStreamToIndex(stream) {
     if (stream.metadata.model) {
-      const last_anchor_ts = state$.state.anchorProof
-        ? new Date(state$.state.anchorProof.blockTimestamp * 1000)
+      const last_anchor_ts = stream.state.metadata.anchorProof
+        ? new Date(stream.state.metadata.anchorProof.blockTimestamp * 1000)
         : null
       const STREAM_CONTENT = {
         model: stream.metadata.model,
@@ -642,8 +653,6 @@ export class Ceramic implements CeramicApi {
       }
       await this._index.indexStream(STREAM_CONTENT)
     }
-
-    return stream
   }
 
   /**
