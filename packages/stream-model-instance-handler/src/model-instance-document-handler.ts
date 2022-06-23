@@ -17,6 +17,9 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
 
+// Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
+const MODEL_STREAM_TYPE_ID = 2
+
 /**
  * ModelInstanceDocument stream handler implementation
  */
@@ -88,6 +91,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
+    }
+
+    if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
+      throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
     }
 
     const metadata = { ...payload.header, model: modelStreamID }
