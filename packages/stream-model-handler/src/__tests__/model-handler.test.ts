@@ -811,7 +811,7 @@ describe('ModelHandler', () => {
     const doc = new Model(state$, context)
     const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
     const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
-    rawCommit.header = { controller: newDid }
+    rawCommit.header = { controllers: [newDid] }
     const signedCommit = await Model._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

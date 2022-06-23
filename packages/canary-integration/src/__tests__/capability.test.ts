@@ -115,7 +115,7 @@ describe('CACAO Integration test', () => {
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testCapabilities1',
-        controller: [`did:pkh:eip155:1:${wallet.address}`],
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
       })
 
       await expect(
