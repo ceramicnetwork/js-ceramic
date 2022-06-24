@@ -10,6 +10,7 @@ import addFormats from 'ajv-formats'
  */
 export class SchemaValidation {
   private readonly _validator: Ajv
+  private readonly _cache: Map<string, Record<string, any>>
 
   constructor() {
     this._validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
@@ -25,14 +26,23 @@ export class SchemaValidation {
     this._validate(content, schema)
   }
 
-  private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<T | null> {
+  private async _loadSchemaById(
+    ceramic: CeramicApi,
+    schemaStreamId: string
+  ): Promise<Record<string, any> | null> {
     let commitId: CommitID
     try {
       commitId = CommitID.fromString(schemaStreamId)
     } catch {
       throw new Error('Commit missing when loading schema document')
     }
-    return ceramic.loadStream<TileDocument<T>>(commitId).then((doc) => doc.content)
+    if (this._cache.has(commitId.toString())) {
+      return this._cache.get(commitId.toString())
+    }
+
+    const schema = await ceramic.loadStream<TileDocument>(commitId).then((doc) => doc.content)
+    this._cache.set(commitId.toString(), schema)
+    return schema
   }
 
   private _validate(content: Record<string, any>, schema: Record<string, any>): void {
