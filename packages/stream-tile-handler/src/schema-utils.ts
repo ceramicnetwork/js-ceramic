@@ -37,6 +37,10 @@ export class SchemaValidation {
 
   private _validate(content: Record<string, any>, schema: Record<string, any>): void {
     const isValid = this._validator.validate(schema, content)
+
+    // Remove schema from the Ajv instance's cache, otherwise the ajv cache grows unbounded
+    this._validator.removeSchema(schema)
+
     if (!isValid) {
       const errorMessages = this._validator.errorsText()
       throw new Error(`Validation Error: ${errorMessages}`)
