@@ -15,6 +15,13 @@ commands:
           name: Test
           command: npm run test
           no_output_timeout: 30m
+  send-dispatch-event:
+    steps:
+      - run: |
+          curl -X POST -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/ceramicnetwork/js-ceramic/dispatches \
+          -d '{"event_type":"test-success"}'
+
 jobs:
   with-go-ipfs:
     machine:
@@ -36,9 +43,18 @@ jobs:
       IPFS_FLAVOR: js
     steps:
       - build-and-test
+  dispatch-event:
+    machine:
+      image: ubuntu-2004:202107-02
+    steps:
+      - send-dispatch-event
 
 workflows:
   build-and-test:
     jobs:
       - with-go-ipfs
       - with-js-ipfs
+      - dispatch-event:
+          requires:
+            - with-go-ipfs
+            - with-js-ipfs
