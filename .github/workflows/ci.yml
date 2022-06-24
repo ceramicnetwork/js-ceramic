@@ -18,18 +18,16 @@ env:
   AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  # Miscellaneous
+  BRANCH: ${{ github.event.client_payload.branch }}
+  SHA: ${{ github.event.client_payload.sha }}
+  SHA_TAG: ${${{ github.event.client_payload.sha }}:0:12}
 
 jobs:
   publish:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v3
-      -
-        name: Set branch name
-        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
       -
         name: Set sha tag
         run: |

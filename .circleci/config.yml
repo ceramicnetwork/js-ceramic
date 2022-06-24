@@ -17,15 +17,24 @@ commands:
 #          no_output_timeout: 30m
   send-dispatch-event:
     steps:
-      - run: |
-          res=$(curl -X POST -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: token $DISPATCH_TOKEN" \
-          https://api.github.com/repos/ceramicnetwork/js-ceramic/dispatches \
-          -d '{"event_type":"test-success"}') || exit 1
-          echo $res
-          if [[ $res != "" ]]; then
-            exit 1
-          fi
+      - run:
+          name: Dispatch test success event
+          command: |
+            res=$(curl -X POST -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $DISPATCH_TOKEN" \
+            https://api.github.com/repos/ceramicnetwork/js-ceramic/dispatches \
+            -d '{
+                "event_type": "test-success",
+                "client_payload": {
+                  "branch": "$CIRCLE_BRANCH",
+                  "sha": "$CIRCLE_SHA1"
+                }
+              }
+            ') || exit 1
+            echo $res
+            if [[ $res != "" ]]; then
+              exit 1
+            fi
 
 jobs:
   with-go-ipfs:
