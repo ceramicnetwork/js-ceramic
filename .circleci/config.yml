@@ -6,15 +6,15 @@ commands:
   build-and-test:
     steps:
       - checkout
-      - node/install:
-          node-version: "16"
-      - node/install-packages
-      - run: npm run lint
-      - run: npm run build
-      - run:
-          name: Test
-          command: npm run test
-          no_output_timeout: 30m
+#      - node/install:
+#          node-version: "16"
+#      - node/install-packages
+#      - run: npm run lint
+#      - run: npm run build
+#      - run:
+#          name: Test
+#          command: npm run test
+#          no_output_timeout: 30m
   send-dispatch-event:
     steps:
       - run: |
