@@ -1,7 +1,6 @@
 name: Test and publish Docker images
 
 on:
-  workflow_dispatch: # manually triggered
   repository_dispatch:
     types: [test-success]
 
@@ -28,12 +27,6 @@ jobs:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Set sha tag
-        run: |
-          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
-          echo "SHA=${{ github.sha }}" >> $GITHUB_ENV
-          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
       -
         name: Set main branch tag
         if: ${{ env.BRANCH == 'main' }}
