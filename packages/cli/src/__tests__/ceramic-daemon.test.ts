@@ -571,14 +571,8 @@ describe('Ceramic interop: core <> http-client', () => {
       const resCore = await core.multiQuery([{ genesis, streamId }])
       const resClient = await client.multiQuery([{ genesis, streamId }])
 
-      expect(resCore[streamId.toString()].metadata).toEqual({
-        ...metadata,
-        controller: metadata.controllers[0],
-      })
-      expect(resClient[streamId.toString()].metadata).toEqual({
-        ...metadata,
-        controller: metadata.controllers[0],
-      })
+      expect(resCore[streamId.toString()].metadata).toEqual(metadata)
+      expect(resClient[streamId.toString()].metadata).toEqual(metadata)
     })
   })
 
