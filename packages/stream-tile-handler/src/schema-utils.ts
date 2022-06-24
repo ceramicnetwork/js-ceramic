@@ -10,7 +10,7 @@ import addFormats from 'ajv-formats'
  */
 export class SchemaValidation {
   private readonly _validator: Ajv
-  private readonly _cache: Map<string, Record<string, any>>
+  private readonly _cache: Map<string, Record<string, any>> = new Map()
 
   constructor() {
     this._validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
