@@ -26,8 +26,8 @@ commands:
             -d '{
                 "event_type": "test-success",
                 "client_payload": {
-                  "branch": "$CIRCLE_BRANCH",
-                  "sha": "$CIRCLE_SHA1"
+                  "branch": "${CIRCLE_BRANCH}",
+                  "sha": "${CIRCLE_SHA1}"
                 }
               }
             ') || exit 1
