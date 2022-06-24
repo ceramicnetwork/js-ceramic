@@ -205,6 +205,28 @@ describe('Caip10LinkHandler', () => {
     )
   })
 
+  it('fails to apply commit with invalid prev link', async () => {
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const state = await handler.applyCommit(genesisCommitData, context)
+    const commit = { ...COMMITS.r1.commit }
+    commit.prev = FAKE_CID_3
+    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Commit doesn't properly point to previous commit in log/
+    )
+  })
+
+  it('fails to apply commit with invalid id property', async () => {
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const state = await handler.applyCommit(genesisCommitData, context)
+    const commit = { ...COMMITS.r1.commit }
+    commit.id = FAKE_CID_3
+    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Invalid genesis CID in commit/
+    )
+  })
+
   it('applies anchor commit correctly', async () => {
     // create signed commit
     await context.ipfs.dag.put(COMMITS.r1.commit, FAKE_CID_2)
