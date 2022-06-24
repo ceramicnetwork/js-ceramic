@@ -6,15 +6,15 @@ commands:
   build-and-test:
     steps:
       - checkout
-#      - node/install:
-#          node-version: "16"
-#      - node/install-packages
-#      - run: npm run lint
-#      - run: npm run build
-#      - run:
-#          name: Test
-#          command: npm run test
-#          no_output_timeout: 30m
+      - node/install:
+          node-version: "16"
+      - node/install-packages
+      - run: npm run lint
+      - run: npm run build
+      - run:
+          name: Test
+          command: npm run test
+          no_output_timeout: 30m
   send-dispatch-event:
     steps:
       - run:
@@ -44,11 +44,11 @@ jobs:
       IPFS_FLAVOR: go
     steps:
       - build-and-test
-#      - run:
-#          name: Build docs
-#          command: npm run docs
-#          environment:
-#            NODE_OPTIONS: '--max_old_space_size=4096'
+      - run:
+          name: Build docs
+          command: npm run docs
+          environment:
+            NODE_OPTIONS: '--max_old_space_size=4096'
   with-js-ipfs:
     machine:
       image: ubuntu-2004:202107-02
