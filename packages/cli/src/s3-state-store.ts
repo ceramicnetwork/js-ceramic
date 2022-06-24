@@ -4,12 +4,26 @@ import { StateStore } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
+import PQueue from 'p-queue'
+
+/**
+ * Maximum GET/HEAD requests per second to AWS S3
+ */
+const MAX_LOAD_RPS = 4000
 
 /**
  * Ceramic store for saving stream state to S3
  */
 export class S3StateStore implements StateStore {
   readonly #bucketName: string
+  /**
+   * Limit reading to +MAX_CONCURRENT_READS+ requests per second
+   */
+  readonly #loadingLimit = new PQueue({
+    intervalCap: MAX_LOAD_RPS,
+    interval: 1000,
+    carryoverConcurrencyCount: true,
+  })
   #store
 
   constructor(bucketName: string) {
@@ -41,19 +55,21 @@ export class S3StateStore implements StateStore {
    * @param streamId - stream ID
    */
   async load(streamId: StreamID): Promise<StreamState> {
-    try {
-      const state = await this.#store.get(streamId.baseID.toString())
-      if (state) {
-        return StreamUtils.deserializeState(JSON.parse(state))
-      } else {
-        return null
+    return this.#loadingLimit.add(async () => {
+      try {
+        const state = await this.#store.get(streamId.baseID.toString())
+        if (state) {
+          return StreamUtils.deserializeState(JSON.parse(state))
+        } else {
+          return null
+        }
+      } catch (err) {
+        if (err.notFound) {
+          return null // return null for non-existent entry
+        }
+        throw err
       }
-    } catch (err) {
-      if (err.notFound) {
-        return null // return null for non-existent entry
-      }
-      throw err
-    }
+    })
   }
 
   /**
