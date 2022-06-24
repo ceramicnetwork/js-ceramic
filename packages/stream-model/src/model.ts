@@ -118,6 +118,10 @@ export class Model extends Stream {
     return super.content
   }
 
+  get metadata(): ModelMetadata {
+    return { controller: this.state$.value.metadata.controllers[0] }
+  }
+
   /**
    * Creates a Model.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network

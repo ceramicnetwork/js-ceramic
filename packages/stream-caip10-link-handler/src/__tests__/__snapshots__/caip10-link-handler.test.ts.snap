@@ -140,7 +140,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     "controllers": Array [
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
@@ -201,7 +200,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     "controllers": Array [
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
@@ -308,7 +306,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     "controllers": Array [
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
@@ -317,7 +314,6 @@ Object {
   "next": Object {
     "content": "did:3:testdid1",
     "metadata": Object {
-      "controller": "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
       "controllers": Array [
         "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
       ],

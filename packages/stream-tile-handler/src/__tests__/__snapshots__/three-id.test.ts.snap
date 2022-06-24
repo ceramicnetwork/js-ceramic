@@ -147,7 +147,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -214,7 +213,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -324,7 +322,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -340,7 +337,6 @@ Object {
       },
     },
     "metadata": Object {
-      "controller": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
       "controllers": Array [
         "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
       ],

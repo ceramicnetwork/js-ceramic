@@ -91,7 +91,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw new Error('Exactly one controller must be specified')
     }
 
-    const metadata = { controller, model: modelStreamID }
+    const metadata = { controllers: [controller], model: modelStreamID }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},

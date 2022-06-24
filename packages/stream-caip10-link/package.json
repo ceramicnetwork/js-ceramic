@@ -35,7 +35,8 @@
     "@ceramicnetwork/common": "^2.2.1",
     "@ceramicnetwork/streamid": "^2.1.0",
     "caip": "~1.1.0",
-    "did-resolver": "^3.1.5"
+    "did-resolver": "^3.1.5",
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^2.0.6",

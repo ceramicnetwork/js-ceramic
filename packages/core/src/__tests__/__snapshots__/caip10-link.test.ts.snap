@@ -264,7 +264,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     "controllers": Array [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
@@ -368,7 +367,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     "controllers": Array [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
@@ -377,7 +375,6 @@ Object {
   "next": Object {
     "content": "did:3:bafysdfwefwe",
     "metadata": Object {
-      "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       "controllers": Array [
         "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       ],
@@ -483,7 +480,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     "controllers": Array [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
@@ -492,7 +488,6 @@ Object {
   "next": Object {
     "content": "did:3:bafysdfwefwe",
     "metadata": Object {
-      "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       "controllers": Array [
         "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       ],
@@ -555,7 +550,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     "controllers": Array [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
@@ -619,7 +613,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     "controllers": Array [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],

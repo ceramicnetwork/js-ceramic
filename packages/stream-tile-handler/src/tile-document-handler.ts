@@ -99,13 +99,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
-    const metadata = payload.header
-    metadata.controller = metadata.controllers[0]
 
     const state = {
       type: TileDocument.STREAM_TYPE_ID,
       content: payload.data || {},
-      metadata,
+      metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
@@ -135,13 +133,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      null,
-      streamId
-    )
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -191,8 +183,6 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const newMetadata = { ...oldMetadata, ...payload.header }
-
-    newMetadata.controller = newMetadata.controllers[0]
 
     if (newMetadata.schema) {
       // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load

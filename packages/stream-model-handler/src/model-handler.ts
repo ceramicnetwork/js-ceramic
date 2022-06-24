@@ -114,7 +114,7 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    const metadata = { controller, model: modelStreamId }
+    const metadata = { controllers: [controller], model: modelStreamId }
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data,

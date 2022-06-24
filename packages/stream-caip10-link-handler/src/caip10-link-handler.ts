@@ -63,7 +63,6 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     if (!(metadata.controllers && metadata.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
-    metadata.controller = metadata.controllers[0]
 
     // TODO - verify genesis commit
     const state = {

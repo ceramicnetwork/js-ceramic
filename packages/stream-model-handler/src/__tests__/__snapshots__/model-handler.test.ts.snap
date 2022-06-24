@@ -159,7 +159,9 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
     "model": StreamID {
       "_cid": Object {
         "code": 113,
@@ -256,7 +258,9 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
     "model": StreamID {
       "_cid": Object {
         "code": 113,
@@ -353,7 +357,9 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
     "model": StreamID {
       "_cid": Object {
         "code": 113,
@@ -455,7 +461,9 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
     "model": StreamID {
       "_cid": Object {
         "code": 113,
@@ -580,7 +588,9 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
     "model": StreamID {
       "_cid": Object {
         "code": 113,
@@ -625,7 +635,9 @@ Object {
       },
     },
     "metadata": Object {
-      "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+      "controllers": Array [
+        "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+      ],
       "model": StreamID {
         "_cid": Object {
           "code": 113,
@@ -751,7 +763,9 @@ Object {
     },
   ],
   "metadata": Object {
-    "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    "controllers": Array [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
     "model": StreamID {
       "_cid": Object {
         "code": 113,
@@ -801,7 +815,9 @@ Object {
       },
     },
     "metadata": Object {
-      "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+      "controllers": Array [
+        "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+      ],
       "model": StreamID {
         "_cid": Object {
           "code": 113,
