@@ -147,7 +147,7 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context
   ): Promise<StreamState> {
     const metadata = state.metadata
-    const controller = metadata.controller
+    const controller = metadata.controllers[0]
     const model = metadata.model
 
     // Verify the signature first

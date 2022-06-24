@@ -119,7 +119,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     context: Context
   ): Promise<StreamState> {
     const metadata = state.metadata
-    const controller = metadata.controller
+    const controller = metadata.controllers[0]
     const model = metadata.model
 
     // Verify the signature first
