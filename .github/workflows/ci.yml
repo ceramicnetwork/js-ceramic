@@ -1,10 +1,8 @@
 name: Test and publish Docker images
 
 on:
-  push:
-    branches: [ develop, release-candidate, main ]
-  pull_request: # pull requests
-  workflow_dispatch: # manually triggered
+  repository_dispatch:
+    types: [test-success]
 
 env:
   # Dagger
@@ -19,61 +17,16 @@ env:
   AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  # Miscellaneous
+  BRANCH: ${{ github.event.client_payload.branch }}
+  SHA: ${{ github.event.client_payload.sha }}
+  SHA_TAG: ${${{ github.event.client_payload.sha }}:0:12}
 
 jobs:
-  testJs:
-    name: Unit tests with `js-ipfs`
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v3
-      -
-        name: Run unit tests
-        uses: dagger/dagger-for-github@v3
-        with:
-          version: ${{ env.DAGGER_VERSION }}
-          cmds: |
-            project init
-            project update
-            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
-            do testJs -p ${{ env.DAGGER_PLAN }}
-
-  testGo:
-    name: Unit tests with `go-ipfs`
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v3
-      -
-        name: Run unit tests
-        uses: dagger/dagger-for-github@v3
-        with:
-          version: ${{ env.DAGGER_VERSION }}
-          cmds: |
-            project init
-            project update
-            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
-            do testGo -p ${{ env.DAGGER_PLAN }}
-
   publish:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
-    needs: [testJs, testGo]
     steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v3
-      -
-        name: Set branch name
-        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
-      -
-        name: Set sha tag
-        run: |
-          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
-          echo "SHA=${{ github.sha }}" >> $GITHUB_ENV
-          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
       -
         name: Set main branch tag
         if: ${{ env.BRANCH == 'main' }}
