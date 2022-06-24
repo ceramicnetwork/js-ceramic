@@ -28,6 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
+        name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
+      -
         name: Set main branch tag
         if: ${{ env.BRANCH == 'main' }}
         run: |
@@ -78,6 +83,8 @@ jobs:
       -
         name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
       -
         name: Publish docs
         uses: dagger/dagger-for-github@v3
