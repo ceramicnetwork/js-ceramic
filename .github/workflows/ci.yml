@@ -37,6 +37,7 @@ jobs:
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
             -d '{"state":"pending","target_url":"${{ env.RUN_URL }}","description":"Image verification started","context":"ci/image: verify"}') || exit 1
+          echo $res
           if [[ $res != *"201"* ]]; then
             exit 1
           fi
@@ -101,6 +102,7 @@ jobs:
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
             -d '{"state":"success","target_url":"${{ env.RUN_URL }}","description":"Image verification successful","context":"ci/image: verify"}') || exit 1
+          echo $res
           if [[ $res != *"201"* ]]; then
             exit 1
           fi
@@ -114,6 +116,7 @@ jobs:
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
             -d '{"state":"failure","target_url":"${{ env.RUN_URL }}","description":"Image verification failed","context":"ci/image: verify"}') || exit 1
+          echo $res
           if [[ $res != *"201"* ]]; then
             exit 1
           fi
