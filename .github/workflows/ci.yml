@@ -38,7 +38,7 @@ jobs:
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
             -d '{"state":"pending","target_url":"${{ env.RUN_URL }}","description":"Image verification started","context":"ci/image: verify"}') || exit 1
           echo $res
-          if [[ $res != *"201"* ]]; then
+          if [[ $res != *"pending"* ]]; then
             exit 1
           fi
       -
@@ -103,7 +103,7 @@ jobs:
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
             -d '{"state":"success","target_url":"${{ env.RUN_URL }}","description":"Image verification successful","context":"ci/image: verify"}') || exit 1
           echo $res
-          if [[ $res != *"201"* ]]; then
+          if [[ $res != *"success"* ]]; then
             exit 1
           fi
       -
@@ -117,7 +117,7 @@ jobs:
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
             -d '{"state":"failure","target_url":"${{ env.RUN_URL }}","description":"Image verification failed","context":"ci/image: verify"}') || exit 1
           echo $res
-          if [[ $res != *"201"* ]]; then
+          if [[ $res != *"failure"* ]]; then
             exit 1
           fi
 
