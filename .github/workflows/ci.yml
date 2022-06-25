@@ -19,7 +19,7 @@ env:
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   # Miscellaneous
-  RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+  RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   BRANCH: ${{ github.event.client_payload.branch }}
   SHA: ${{ github.event.client_payload.sha }}
 
@@ -30,6 +30,7 @@ jobs:
     steps:
       -
         run: |
+          echo "${{ env.RUN_URL }}"
           res=$(curl \
             -X POST \
             -H "Accept: application/vnd.github.v3+json" \
