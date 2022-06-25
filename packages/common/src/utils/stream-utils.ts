@@ -7,6 +7,7 @@ import {
   CeramicCommit,
   CommitData,
   IpfsApi,
+  RawCommit,
   SignedCommit,
   SignedCommitContainer,
 } from '../index.js'
@@ -214,6 +215,41 @@ export class StreamUtils {
     }
 
     return true
+  }
+
+  /**
+   * Asserts that the 'id' and 'prev' properties of the given commit properly link to the tip of
+   * the given stream state.
+   *
+   * By the time the code gets into a StreamtypeHandler's applyCommit function the link to the state
+   * should already have been established by the stream loading and conflict resolution code, so
+   * if this check were to fail as part of a StreamtypeHandler's applyCommit function, that would
+   * indicate a programming error.
+   *
+   * TODO: Use a process-fatal 'invariant' designed for checking against programming errors, once
+   * we have a more robust error handling framework in place.
+   * @param state
+   * @param commit
+   */
+  static assertCommitLinksToState(state: StreamState, commit: RawCommit | AnchorCommit) {
+    const streamId = this.streamIdFromState(state)
+
+    // Older versions of the CAS created AnchorCommits without an 'id' field, so only check
+    // the commit's 'id' field if it is present.
+    if (commit.id && !commit.id.equals(state.log[0].cid)) {
+      throw new Error(
+        `Invalid genesis CID in commit for StreamID ${streamId.toString()}. Found: ${
+          commit.id
+        }, expected ${state.log[0].cid}`
+      )
+    }
+
+    const expectedPrev = state.log[state.log.length - 1].cid
+    if (!commit.prev.equals(expectedPrev)) {
+      throw new Error(
+        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${commit.prev}`
+      )
+    }
   }
 
   /**

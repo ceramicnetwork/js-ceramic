@@ -87,7 +87,8 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
    */
   async _applySigned(commitData: CommitData, state: StreamState): Promise<StreamState> {
     const commit = commitData.commit
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+    StreamUtils.assertCommitLinksToState(state, commit)
+
     let validProof = null
     try {
       validProof = await validateLink(commit.data)
@@ -122,7 +123,9 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     if (legacyAccountCaip10.toLowerCase() !== legacyControllerCaip10.toLowerCase()) {
-      throw new Error(`Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`)
+      throw new Error(
+        `Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`
+      )
     }
     state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
     return {
@@ -151,7 +154,8 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+    StreamUtils.assertCommitLinksToState(state, commitData.commit)
+
     state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR })
     let content = state.content
     if (state.next?.content) {
