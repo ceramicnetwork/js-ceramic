@@ -24,29 +24,22 @@ env:
   SHA: ${{ github.event.client_payload.sha }}
 
 jobs:
-  start:
-    name: Set commit status
+  publish:
+    name: Verify and publish Docker image
     runs-on: ubuntu-latest
     steps:
       -
+        name: Set commit status "pending"
         run: |
-          echo "${{ env.RUN_URL }}"
           res=$(curl \
             -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
-            -d '{"state":"pending","target_url":"${{ env.RUN_URL }}","description":"Image verification started","context":"ci/image"}') || exit 1
-          echo $res
-          if [[ $res != "" ]]; then
+            -d '{"state":"pending","target_url":"${{ env.RUN_URL }}","description":"Image verification started","context":"ci/image: verify"}') || exit 1
+          if [[ $res != *"201"* ]]; then
             exit 1
           fi
-
-  publish:
-    name: Verify and publish Docker image
-    runs-on: ubuntu-latest
-    needs: start
-    steps:
       -
         name: Checkout code
         uses: actions/checkout@v3
@@ -99,22 +92,29 @@ jobs:
         name: Post deployment event
         if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
         run: dagger do -l error queue -w "actions:queue:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
-
-  end:
-    name: Set commit status
-    runs-on: ubuntu-latest
-    needs: publish
-    steps:
       -
+        name: Set commit status "successful"
         run: |
           res=$(curl \
             -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
-            -d '{"state":"success","target_url":"${{ env.RUN_URL }}","description":"Image verification successful","context":"ci/image"}') || exit 1
-          echo $res
-          if [[ $res != "" ]]; then
+            -d '{"state":"success","target_url":"${{ env.RUN_URL }}","description":"Image verification successful","context":"ci/image: verify"}') || exit 1
+          if [[ $res != *"201"* ]]; then
+            exit 1
+          fi
+      -
+        name: Set commit status "failure"
+        if: ${{ failure() }}
+        run: |
+          res=$(curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.GH_TOKEN }}" \
+            https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
+            -d '{"state":"failure","target_url":"${{ env.RUN_URL }}","description":"Image verification failed","context":"ci/image: verify"}') || exit 1
+          if [[ $res != *"201"* ]]; then
             exit 1
           fi
 
