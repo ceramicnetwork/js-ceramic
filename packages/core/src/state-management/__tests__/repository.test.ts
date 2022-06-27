@@ -5,7 +5,6 @@ import { Ceramic } from '../../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Repository } from '../repository.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
-import { delay } from '../../__tests__/delay.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 
 let ipfs: IpfsApi
@@ -122,7 +121,7 @@ test('subscribe makes state endured', async () => {
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   stream1.subscribe()
-  await delay(200) // Wait for rxjs plumbing
+  await TestUtils.delay(200) // Wait for rxjs plumbing
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
 })

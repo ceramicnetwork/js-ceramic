@@ -478,21 +478,20 @@ describe('Ceramic API', () => {
 
     it('loads the same stream at multiple points in time', async () => {
       // test data for the atTime feature
-      const delay = () => new Promise((resolve) => setTimeout(resolve, 1000))
       streamFStates.push(streamF.state)
       // timestamp before the first anchor commit
       streamFTimestamps.push(Math.floor(Date.now() / 1000))
-      await delay()
+      await TestUtils.delay(1000)
       await streamF.update({ ...streamF.content, update: 'new stuff' })
       await TestUtils.anchorUpdate(ceramic, streamF)
-      await delay()
+      await TestUtils.delay(1000)
       // timestamp between the first and the second anchor commit
       streamFTimestamps.push(Math.floor(Date.now() / 1000))
       streamFStates.push(streamF.state)
-      await delay()
+      await TestUtils.delay(1000)
       await streamF.update({ ...streamF.content, update: 'newer stuff' })
       await TestUtils.anchorUpdate(ceramic, streamF)
-      await delay()
+      await TestUtils.delay(1000)
       // timestamp after the second anchor commit
       streamFTimestamps.push(Math.floor(Date.now() / 1000))
       streamFStates.push(streamF.state)
