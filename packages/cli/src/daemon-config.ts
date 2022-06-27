@@ -1,7 +1,46 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { StreamID } from '@ceramicnetwork/streamid'
-import fs from 'fs/promises'
+import { readFile } from 'node:fs/promises'
+import { homedir } from 'os'
+
+const HOME_DIR = `${homedir()}/`.replace(/\/\/$/, '')
+
+/**
+ * Replace `~/` with `<homedir>/` absolute path.
+ * @param input Relative path.
+ */
+function expandHomedir(input: string): string {
+  return input.replace(/^~\//, HOME_DIR)
+}
+
+/**
+ * If +input+ path is relative to +configFilepath+, return absolute filepath.
+ *
+ * Includes expansion of `~/` to home directory. See [[expandHomedir]].
+ * @param input Relative path to resolve.
+ * @param configFilepath Base folder used for path resolution.
+ */
+function expandSinglePath(input: string, configFilepath: URL): string {
+  return new URL(expandHomedir(input), configFilepath).pathname
+}
+
+/**
+ * Resolve relative files used in DaemonConfig using +expandSinglePath+ function.
+ *
+ * Modifies +config+.
+ */
+function expandPaths(config: DaemonConfig, configFilepath: URL): void {
+  if (config.logger?.logDirectory) {
+    config.logger.logDirectory = expandSinglePath(config.logger.logDirectory, configFilepath)
+  }
+  if (config.stateStore?.localDirectory) {
+    config.stateStore.localDirectory = expandSinglePath(
+      config.stateStore.localDirectory,
+      configFilepath
+    )
+  }
+}
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -364,8 +403,10 @@ export class DaemonConfig {
   }
 
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
-    const content = await fs.readFile(filepath, { encoding: 'utf8' })
-    return DaemonConfig.fromString(content)
+    const content = await readFile(filepath, { encoding: 'utf8' })
+    const config = DaemonConfig.fromString(content)
+    expandPaths(config, filepath)
+    return config
   }
 
   static fromObject(json: Record<string, any>): DaemonConfig {
