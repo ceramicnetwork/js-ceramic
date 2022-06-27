@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.2.1...@ceramicnetwork/stream-model-instance-handler@0.3.0-rc.0) (2022-06-27)
+
+
+### Bug Fixes
+
+* **stream-tile-handler,stream-model-handler,stream-model-instance-handler:** Don't cache schemas (#2267) 1744d84, closes #2267
+
+
+### Features
+
+* **stream-model-instance:** Enforce that model field must refer to a Model StreamID (#2243) 6957a71, closes #2243
+
+
+
+
+
 ## [0.2.1](/compare/@ceramicnetwork/stream-model-instance-handler@0.2.1-rc.0...@ceramicnetwork/stream-model-instance-handler@0.2.1) (2022-06-20)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.6.0-rc.0](/compare/@ceramicnetwork/core@2.5.1...@ceramicnetwork/core@2.6.0-rc.0) (2022-06-27)
+
+
+### Bug Fixes
+
+* **core:** fix startup error from broken import (#2255) 6c847aa, closes #2255
+* **core:** Only use the execution and loading queues when applying commits or loading over pubsub (#2259) 99393e2, closes #2259
+* **core:** StreamID comes from genesis commit CID, not tip (#2256) ff1e3db, closes #2256
+
+
+### Features
+
+* add gnosis chain and goerli to supported networks [NET-1556] (#2239) 25877cf, closes #2239
+* Attempt to limit concurrent S3 reads (#2219) bac9378, closes #2219
+* **core:** add stream to index api http (#2252) 001233b, closes #2252
+* warn at startup if runs SQLite in production (#2254) 425b8ed, closes #2254
+
+
+
+
+
 ## [2.5.1](/compare/@ceramicnetwork/core@2.5.1-rc.0...@ceramicnetwork/core@2.5.1) (2022-06-20)
 
 **Note:** Version bump only for package @ceramicnetwork/core

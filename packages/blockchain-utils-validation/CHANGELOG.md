@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.8-rc.0](/compare/@ceramicnetwork/blockchain-utils-validation@2.0.7...@ceramicnetwork/blockchain-utils-validation@2.0.8-rc.0) (2022-06-27)
+
+
+### Bug Fixes
+
+* **blockchain-utils-linking,blockchain-utils-validation,canary-integration:** Disable flaky polkadot tests (#2250) 2047ab4, closes #2250
+
+
+
+
+
 ## [2.0.7](/compare/@ceramicnetwork/blockchain-utils-validation@2.0.7-rc.0...@ceramicnetwork/blockchain-utils-validation@2.0.7) (2022-06-20)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation

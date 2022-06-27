@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.3-rc.0](/compare/@ceramicnetwork/stream-tile@2.2.2...@ceramicnetwork/stream-tile@2.2.3-rc.0) (2022-06-27)
+
+
+### Bug Fixes
+
+* **core:** StreamID comes from genesis commit CID, not tip (#2256) ff1e3db, closes #2256
+
+
+
+
+
 ## [2.2.2](/compare/@ceramicnetwork/stream-tile@2.2.2-rc.0...@ceramicnetwork/stream-tile@2.2.2) (2022-06-20)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

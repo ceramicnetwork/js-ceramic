@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.0](/compare/@ceramicnetwork/cli@2.3.1...@ceramicnetwork/cli@2.4.0-rc.0) (2022-06-27)
+
+
+### Features
+
+* Attempt to limit concurrent S3 reads (#2219) bac9378, closes #2219
+* Enforce max limit of entries for indexing http api (#2253) 1346d88, closes #2253
+
+
+### Reverts
+
+* Revert "can we please temporarily log the full headers from dapps in the wild? (#2165)" (#2171) 2fe46ab, closes #2165 #2171
+
+
+
+
+
 ## [2.3.1](/compare/@ceramicnetwork/cli@2.3.1-rc.0...@ceramicnetwork/cli@2.3.1) (2022-06-20)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
