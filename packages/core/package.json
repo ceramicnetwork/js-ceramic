@@ -26,7 +26,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand",
     "build": "genversion --es6 src/version.ts && npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
