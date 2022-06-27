@@ -171,10 +171,11 @@ describe('Ceramic API', () => {
       await TileDocument.create(ceramic, { a: 'test' }, { schema: schemaDoc.commitId })
     })
 
-    it('can create stream with valid model to trigger indexing', async () => {
+    it('can create and update stream with valid model to trigger indexing', async () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
 
+      // TODO: NET-1614 Extend with targeted payload comparison
       const addIndexSpy = jest.spyOn(ceramic._index, 'indexStream')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
       expect(addIndexSpy).toBeCalledTimes(1)
