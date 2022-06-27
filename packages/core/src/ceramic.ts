@@ -642,7 +642,7 @@ export class Ceramic implements CeramicApi {
     const STREAM_CONTENT = {
       model: stream.metadata.model,
       streamID: stream.id,
-      controller: stream.controller,
+      controller: stream.metadata.controller,
       lastAnchor: last_anchor_ts,
     }
     await this._index.indexStream(STREAM_CONTENT)
