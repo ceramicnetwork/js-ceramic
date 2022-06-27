@@ -78,6 +78,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw Error('ModelInstanceDocument genesis commit must be signed')
     }
 
+    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
+      throw new Error('Exactly one controller must be specified')
+    }
+
     const streamId = await StreamID.fromGenesis('MID', commitData.commit)
     const { controllers, model } = payload.header
     const controller = controllers[0]
@@ -89,10 +93,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       modelStreamID,
       streamId
     )
-
-    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
-    }
 
     if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
       throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)

@@ -92,6 +92,10 @@ export class ModelHandler implements StreamHandler<Model> {
       throw Error('Model genesis commit must be signed')
     }
 
+    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
+      throw new Error('Exactly one controller must be specified')
+    }
+
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
     const { controllers, model } = payload.header
     const controller = controllers[0]
