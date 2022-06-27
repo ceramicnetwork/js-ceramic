@@ -27,7 +27,7 @@
     "eslint": "^8.7.0",
     "eslint-config-3box": "^0.4.0",
     "eslint-plugin-jest": "^25.7.0",
-    "jest": "^27.4.7",
+    "jest": "^28.1.1",
     "jest-resolver-enhanced": "^1.0.1",
     "lerna": "^4.0.0",
     "prettier": "^2.5.1",
