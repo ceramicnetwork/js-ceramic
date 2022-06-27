@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
@@ -89,9 +88,10 @@ export enum ModelAccountRelation {
  *
  * Currently supported types of view properties:
  * - 'documentAccount': view properties of this type have the MID's controller DID as values
+ * - 'documentVersion': view properties of this type have the MID's commit ID as values
  *
  */
-export type ModelViewDefinition = { type: 'documentAccount' }
+export type ModelViewDefinition = { type: 'documentAccount' } | { type: 'documentVersion' }
 
 /**
  * A mapping between model's property names and types of view properties

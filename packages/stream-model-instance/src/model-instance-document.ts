@@ -168,7 +168,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const rawCommit: RawCommit = {
       data: jsonPatch,
       prev: this.tip,
-      id: this.state$.id.cid,
+      id: this.id.cid,
     }
     const commit = await ModelInstanceDocument._signDagJWS(this.api, rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)

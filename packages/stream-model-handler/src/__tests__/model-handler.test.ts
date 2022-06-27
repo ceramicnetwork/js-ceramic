@@ -831,6 +831,90 @@ describe('ModelHandler', () => {
     )
   })
 
+  it('fails to apply commit with invalid prev link', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
+    rawCommit.prev = FAKE_CID_3
+    const signedCommit = await Model._signDagJWS(context.api, rawCommit)
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Commit doesn't properly point to previous commit in log/
+    )
+  })
+
+  it('fails to apply commit with invalid id property', async () => {
+    const genesisCommit = (await Model._makeGenesis(
+      context.api,
+      PLACEHOLDER_CONTENT
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new Model(state$, context)
+    const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
+    rawCommit.id = FAKE_CID_3
+    const signedCommit = await Model._signDagJWS(context.api, rawCommit)
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Invalid genesis CID in commit/
+    )
+  })
+
   it('applies anchor commit correctly', async () => {
     const genesisCommit = (await Model._makeGenesis(
       context.api,
@@ -881,7 +965,7 @@ describe('ModelHandler', () => {
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
-      commit: { proof: FAKE_CID_3, prev: FAKE_CID_2 },
+      commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_2 },
       proof: anchorProof,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)

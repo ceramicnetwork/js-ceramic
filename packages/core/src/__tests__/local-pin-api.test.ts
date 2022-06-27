@@ -19,7 +19,7 @@ const streamState = {
 const state$ = new RunningState(streamState, true)
 const repository = {
   load: jest.fn(() => Promise.resolve(state$)),
-  get: jest.fn(() => Promise.resolve(state$)),
+  fromMemoryOrStore: jest.fn(() => Promise.resolve(state$)),
   pin: jest.fn(),
   unpin: jest.fn(),
   list: jest.fn(),

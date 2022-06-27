@@ -19,7 +19,7 @@ export class LocalPinApi implements PinApi {
   }
 
   async rm(streamId: StreamID, opts?: PublishOpts): Promise<void> {
-    const state$ = await this.repository.get(streamId)
+    const state$ = await this.repository.fromMemoryOrStore(streamId)
     if (!state$) {
       this.logger.verbose(`Cannot unpin stream ${streamId.toString()} as it isn't pinned`)
       return

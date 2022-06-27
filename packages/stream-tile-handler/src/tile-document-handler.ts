@@ -128,19 +128,14 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-
-    // Verify the signature first
-    const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
-
     // Retrieve the payload
     const payload = commitData.commit
+    StreamUtils.assertCommitLinksToState(state, payload)
 
-    if (!payload.id.equals(state.log[0].cid)) {
-      throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
-    }
+    // Verify the signature
+    const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
+    const streamId = StreamUtils.streamIdFromState(state)
+    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
 
     if (payload.header.controllers) {
       if (payload.header.controllers.length !== 1) {
@@ -211,7 +206,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+    StreamUtils.assertCommitLinksToState(state, commitData.commit)
+
     const proof = commitData.proof
     state.log.push({
       cid: commitData.cid,

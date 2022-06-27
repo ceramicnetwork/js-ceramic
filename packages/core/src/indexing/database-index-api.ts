@@ -20,6 +20,11 @@ export interface DatabaseIndexApi {
   indexStream(args: IndexStreamArgs): Promise<void>
 
   /**
+   * Get all models to be actively indexed by node
+   */
+  getActiveModelsToIndex(): Array<StreamID>
+
+  /**
    * Query the index.
    */
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>>

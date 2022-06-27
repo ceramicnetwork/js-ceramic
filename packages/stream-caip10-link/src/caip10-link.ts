@@ -201,7 +201,7 @@ export class Caip10Link extends Stream {
    * @param proof
    */
   makeCommit(proof: LinkProof): RawCommit {
-    return { data: proof, prev: this.tip, id: this.state$.id.cid }
+    return { data: proof, prev: this.tip, id: this.id.cid }
   }
 
   /**

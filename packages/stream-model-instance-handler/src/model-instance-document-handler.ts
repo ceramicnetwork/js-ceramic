@@ -17,6 +17,9 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
 
+// Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
+const MODEL_STREAM_TYPE_ID = 2
+
 /**
  * ModelInstanceDocument stream handler implementation
  */
@@ -91,6 +94,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw new Error('Exactly one controller must be specified')
     }
 
+    if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
+      throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
+    }
+
     const metadata = { controllers: [controller], model: modelStreamID }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
@@ -118,28 +125,16 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
+    // Retrieve the payload
+    const payload = commitData.commit
+    StreamUtils.assertCommitLinksToState(state, payload)
+
+    // Verify the signature
     const metadata = state.metadata
     const controller = metadata.controllers[0]
     const model = metadata.model
-
-    // Verify the signature first
     const streamId = StreamUtils.streamIdFromState(state)
     await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
-
-    // Retrieve the payload
-    const payload = commitData.commit
-
-    if (!payload.id.equals(state.log[0].cid)) {
-      throw new Error(
-        `Invalid genesis CID in commit. Found: ${payload.id}, expected ${state.log[0].cid}`
-      )
-    }
-    const expectedPrev = state.log[state.log.length - 1].cid
-    if (!payload.prev.equals(expectedPrev)) {
-      throw new Error(
-        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${payload.prev}`
-      )
-    }
 
     if (payload.header) {
       throw new Error(
@@ -181,12 +176,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    const expectedPrev = state.log[state.log.length - 1].cid
-    if (!commitData.commit.prev.equals(expectedPrev)) {
-      throw new Error(
-        `Commit doesn't properly point to previous commit in log. Expected ${expectedPrev}, found 'prev' ${commitData.commit.prev}`
-      )
-    }
+    StreamUtils.assertCommitLinksToState(state, commitData.commit)
 
     const proof = commitData.proof
     state.log.push({

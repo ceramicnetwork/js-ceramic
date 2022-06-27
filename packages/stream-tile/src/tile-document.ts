@@ -301,7 +301,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       header,
       data: jsonPatch,
       prev: this.tip,
-      id: this.state$.id.cid,
+      id: this.id.cid,
     }
     const commit = await TileDocument._signDagJWS(this.api, rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)

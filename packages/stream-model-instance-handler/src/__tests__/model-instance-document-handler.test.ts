@@ -57,15 +57,14 @@ const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54ad
 const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
-
-const FAKE_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+const FAKE_MODEL_ID = StreamID.fromString(
+  'kjzl6hvfrbw6cbclh3fplllid7yvf18w05xw41wvuf9b4lk6q9jkq7d1o01wg6v'
 )
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
-const METADATA = { controller: DID_ID, model: FAKE_STREAM_ID }
+const METADATA = { controller: DID_ID, model: FAKE_MODEL_ID }
 
 const jwsForVersion0 = {
   payload: 'bbbb',
@@ -246,7 +245,7 @@ describe('ModelInstanceDocumentHandler', () => {
         return ['fakechain:123']
       }),
       loadStream: jest.fn(async (streamId: StreamID) => {
-        if (streamId.toString() === FAKE_STREAM_ID.toString()) {
+        if (streamId.toString() === FAKE_MODEL_ID.toString()) {
           return {
             content: MODEL_DEFINITION,
           }
@@ -299,7 +298,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
     const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
-      model: FAKE_STREAM_ID,
+      model: FAKE_MODEL_ID,
     })
     expect(commit).toBeDefined()
 
@@ -344,6 +343,31 @@ describe('ModelInstanceDocumentHandler', () => {
     const streamState = await handler.applyCommit(commitData, context)
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
+  })
+
+  it('model must be a Model streamtype', async () => {
+    const nonModelStreamId = StreamID.fromString(
+      'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+    )
+
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+      model: nonModelStreamId,
+    })
+
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /Model for ModelInstanceDocument must refer to a StreamID of a Model stream/
+    )
   })
 
   it('makes signed commit correctly', async () => {
@@ -544,7 +568,7 @@ describe('ModelInstanceDocumentHandler', () => {
   it('throws error if commit signed by wrong DID', async () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
       controller: 'did:3:fake',
-      model: FAKE_STREAM_ID,
+      model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -607,6 +631,92 @@ describe('ModelInstanceDocumentHandler', () => {
     )
   })
 
+  it('fails to apply commit with invalid prev link', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new ModelInstanceDocument(state$, context)
+    const rawCommit = doc._makeRawCommit(CONTENT1)
+    rawCommit.prev = FAKE_CID_3
+    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Commit doesn't properly point to previous commit in log/
+    )
+  })
+
+  it('fails to apply commit with invalid id property', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new ModelInstanceDocument(state$, context)
+    const rawCommit = doc._makeRawCommit(CONTENT1)
+    rawCommit.id = FAKE_CID_3
+    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      /Invalid genesis CID in commit/
+    )
+  })
+
   it('applies anchor commit correctly', async () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
@@ -655,7 +765,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
-      commit: { proof: FAKE_CID_3, prev: FAKE_CID_2 },
+      commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_2 },
       proof: anchorProof,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
@@ -668,7 +778,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     // make and apply genesis with old key
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
-      model: FAKE_STREAM_ID,
+      model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -721,7 +831,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     // make genesis with new key
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
-      model: FAKE_STREAM_ID,
+      model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -750,7 +860,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     // make genesis commit using old key
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
-      model: FAKE_STREAM_ID,
+      model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 

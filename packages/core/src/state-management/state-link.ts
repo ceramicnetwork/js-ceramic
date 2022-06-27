@@ -1,6 +1,11 @@
 import { Observable, Subscription } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { StreamState, RunningStateLike, StreamStateSubject } from '@ceramicnetwork/common'
+import {
+  StreamState,
+  RunningStateLike,
+  StreamStateSubject,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 
 /**
  * Maintain Stream state. Can be updated from inside, thus maintaining separate states per stream instance.
@@ -41,6 +46,6 @@ export class StateLink extends Observable<StreamState> implements RunningStateLi
   }
 
   get id(): StreamID {
-    return new StreamID(this.state.type, this.state.log[this.state.log.length - 1].cid)
+    return StreamUtils.streamIdFromState(this.state)
   }
 }
