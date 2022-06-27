@@ -10,10 +10,14 @@ import { TaskQueueLike } from '../pubsub/task-queue.js'
  * This makes a task code simpler.
  */
 export class ExecutionQueue {
-  readonly tasks: NamedTaskQueue
-  readonly semaphore: Semaphore
+  private readonly tasks: NamedTaskQueue
+  private readonly semaphore: Semaphore
 
-  constructor(concurrencyLimit: number, logger: DiagnosticsLogger) {
+  constructor(
+    private readonly name: string,
+    private readonly concurrencyLimit: number,
+    private readonly logger: DiagnosticsLogger
+  ) {
     this.tasks = new NamedTaskQueue((error) => {
       logger.err(error)
     })
@@ -27,11 +31,21 @@ export class ExecutionQueue {
     return {
       add: (task) => {
         return this.tasks.add(streamId.toString(), () => {
+          if (this.semaphore.count == 0) {
+            this.logger.warn(
+              `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
+            )
+          }
           return this.semaphore.use(() => task())
         })
       },
       run: (task) => {
         return this.tasks.run(streamId.toString(), () => {
+          if (this.semaphore.count == 0) {
+            this.logger.warn(
+              `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
+            )
+          }
           return this.semaphore.use(() => task())
         })
       },
