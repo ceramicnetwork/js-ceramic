@@ -2,12 +2,17 @@ import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, StreamUtils, IpfsApi, CommitType } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { createCeramic } from './create-ceramic.js'
+import {
+  ModelInstanceDocument,
+  ModelInstanceDocumentMetadata,
+} from '@ceramicnetwork/stream-model-instance'
+import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 /**
  * Generates string of particular size in bytes
@@ -35,6 +40,24 @@ describe('Ceramic API', () => {
     type: 'object',
     additionalProperties: {
       type: 'string',
+    },
+  }
+
+  const MODEL_DEFINITION: ModelDefinition = {
+    name: 'MyModel',
+    accountRelation: ModelAccountRelation.LIST,
+    schema: {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        myData: {
+          type: 'integer',
+          maximum: 10000,
+          minimum: 0,
+        },
+      },
+      required: ['myData'],
     },
   }
 
@@ -146,6 +169,24 @@ describe('Ceramic API', () => {
     it('can create stream with valid schema', async () => {
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
       await TileDocument.create(ceramic, { a: 'test' }, { schema: schemaDoc.commitId })
+    })
+
+    it('can create and update stream with valid model to trigger indexing', async () => {
+      const CONTENT0 = { myData: 0 }
+      const CONTENT1 = { myData: 1 }
+
+      // TODO: NET-1614 Extend with targeted payload comparison
+      const addIndexSpy = jest.spyOn(ceramic._index, 'indexStream')
+      const model = await Model.create(ceramic, MODEL_DEFINITION)
+      expect(addIndexSpy).toBeCalledTimes(1)
+      const midMetadata = { model: model.id }
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      expect(doc.content).toEqual(CONTENT0)
+      expect(addIndexSpy).toBeCalledTimes(2)
+      await doc.replace(CONTENT1)
+      expect(doc.content).toEqual(CONTENT1)
+      expect(addIndexSpy).toBeCalledTimes(3)
+      addIndexSpy.mockRestore()
     })
 
     it('must assign schema with specific commit', async () => {

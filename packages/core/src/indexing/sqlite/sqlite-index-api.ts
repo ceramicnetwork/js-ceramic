@@ -19,16 +19,23 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 
 export class SqliteIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
-  constructor(
-    private readonly dbConnection: Knex,
-    private readonly modelsToIndex: Array<StreamID>
-  ) {
+  constructor(private readonly dbConnection: Knex, readonly modelsToIndex: Array<StreamID>) {
     this.insertionOrder = new InsertionOrder(dbConnection)
+  }
+
+  public getActiveModelsToIndex(): Array<StreamID> {
+    /**
+     * Helper function to return array of active models that are currently being indexed by node
+     * as defined in the config file.
+     * TODO: extend to runtime check once adminAPI unlocks to add and load models on the fly
+     */
+    return this.modelsToIndex
   }
 
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
+
     await this.dbConnection(tableName)
       .insert({
         stream_id: String(args.streamID),
