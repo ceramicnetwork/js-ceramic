@@ -40,7 +40,7 @@ export class StateManager {
    * @param anchorService - currently used instance of AnchorService
    * @param conflictResolution - currently used instance of ConflictResolution
    * @param logger - Logger
-   * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#get`.
+   * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
    */
   constructor(
@@ -202,10 +202,14 @@ export class StateManager {
    * @param tip - Stream Tip CID
    * @private
    */
-  update(streamId: StreamID, tip: CID): void {
-    this.executionQ.forStream(streamId).add(async () => {
-      const state$ = await this.fromMemoryOrStore(streamId)
-      if (state$) await this._handleTip(state$, tip)
+  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
+    this.fromMemoryOrStore(streamId).then((state$) => {
+      if (!state$) {
+        return
+      }
+      this.executionQ.forStream(streamId).add(async () => {
+        await this._handleTip(state$, tip)
+      })
     })
   }
 

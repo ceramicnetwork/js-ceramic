@@ -96,7 +96,7 @@ export class Repository {
       deps.anchorService,
       deps.conflictResolution,
       this.logger,
-      (streamId) => this.get(streamId),
+      (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts)
     )
   }
@@ -265,12 +265,10 @@ export class Repository {
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
    */
-  async get(streamId: StreamID): Promise<RunningState | undefined> {
-    return this.loadingQ.forStream(streamId).run(async () => {
-      const fromMemory = this.fromMemory(streamId)
-      if (fromMemory) return fromMemory
-      return this.fromStateStore(streamId)
-    })
+  async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
+    const fromMemory = this.fromMemory(streamId)
+    if (fromMemory) return fromMemory
+    return this.fromStateStore(streamId)
   }
 
   /**
@@ -349,7 +347,7 @@ export class Repository {
   updates$(init: StreamState): Observable<StreamState> {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
-      this.get(id).then((found) => {
+      this.fromMemoryOrStore(id).then((found) => {
         const state$ = found || new RunningState(init, false)
         this.inmemory.endure(id.toString(), state$)
         state$.subscribe(subscriber).add(() => {

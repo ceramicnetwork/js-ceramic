@@ -317,7 +317,7 @@ describe('Ceramic anchoring', () => {
     // @ts-ignore
     const c2anchorValidator = ceramic2._anchorValidator
     const validateChainInclusionSpy = jest.spyOn(c2anchorValidator, 'validateChainInclusion')
-    validateChainInclusionSpy.mockRejectedValueOnce(new Error("blockNumbers don't match"))
+    validateChainInclusionSpy.mockRejectedValue(new Error("blockNumbers don't match"))
 
     // Even though validating the anchor commit fails, the stream should still be loaded successfully
     // just with the anchor commit missing.
