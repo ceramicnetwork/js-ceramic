@@ -19,10 +19,7 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 
 export class SqliteIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
-  constructor(
-    private readonly dbConnection: Knex,
-    private readonly modelsToIndex: Array<StreamID>
-  ) {
+  constructor(private readonly dbConnection: Knex, readonly modelsToIndex: Array<StreamID>) {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
@@ -35,20 +32,10 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     return this.modelsToIndex
   }
 
-  private _shouldIndexStream(args: StreamID): Boolean {
-    return this.getActiveModelsToIndex().some(function (streamId) {
-      return String(streamId) === String(args)
-    })
-  }
-
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
 
-    // only index streams with active models in config
-    if (!this._shouldIndexStream(args.model)) {
-      return
-    }
     await this.dbConnection(tableName)
       .insert({
         stream_id: String(args.streamID),

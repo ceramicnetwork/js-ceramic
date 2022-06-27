@@ -630,7 +630,9 @@ export class Ceramic implements CeramicApi {
     )
 
     // add stream to MID indexing if model is present
-    await this.addStreamToIndex(stream)
+    if (stream.metadata.model) {
+      await this.addStreamToIndex(stream)
+    }
 
     return stream
   }
@@ -640,19 +642,17 @@ export class Ceramic implements CeramicApi {
    * @param stream
    * @private
    */
-  async addStreamToIndex(stream) {
-    if (stream.metadata.model) {
-      const last_anchor_ts = stream.state.metadata.anchorProof
-        ? new Date(stream.state.metadata.anchorProof.blockTimestamp * 1000)
-        : null
-      const STREAM_CONTENT = {
-        model: stream.metadata.model,
-        streamID: stream.id,
-        controller: stream.controllers[0],
-        lastAnchor: last_anchor_ts,
-      }
-      await this._index.indexStream(STREAM_CONTENT)
+  private async addStreamToIndex(stream) {
+    const last_anchor_ts = stream.state$.value.metadata.anchorProof
+      ? new Date(stream.state$.value.metadata.anchorProof.blockTimestamp * 1000)
+      : null
+    const STREAM_CONTENT = {
+      model: stream.metadata.model,
+      streamID: stream.id,
+      controller: stream.controllers[0],
+      lastAnchor: last_anchor_ts,
     }
+    await this._index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -684,12 +684,19 @@ export class Ceramic implements CeramicApi {
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.repository.applyCreateOpts(streamId, opts)
-    return streamFromState<T>(
+    const stream = streamFromState<T>(
       this.context,
       this._streamHandlers,
       state$.value,
       this.repository.updates$
     )
+
+    // add stream to MID indexing if model is present
+    if (stream.metadata.model) {
+      await this.addStreamToIndex(stream)
+    }
+
+    return stream
   }
 
   /**
