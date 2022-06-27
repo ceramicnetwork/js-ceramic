@@ -1,11 +1,10 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import MockDate from 'mockdate'
 import type { Ceramic } from '../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { createCeramic } from './create-ceramic.js'
 
 const DID_USED = 'did:3:bafysdfwefwe'
@@ -169,12 +168,12 @@ describe('Ceramic API', () => {
 
       const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await anchorUpdate(ceramic, link)
+      await TestUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       await link.setDid(DID_USED, authProvider, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await anchorUpdate(ceramic, link)
+      await TestUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       expect(link.did).toEqual(DID_USED)
