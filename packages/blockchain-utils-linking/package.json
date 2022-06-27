@@ -30,6 +30,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/streamid": "^2.1.0",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
     "ceramic-cacao": "^1.1.1",
