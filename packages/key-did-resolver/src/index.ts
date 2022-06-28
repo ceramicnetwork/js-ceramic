@@ -65,3 +65,4 @@ export function getResolver(): ResolverRegistry {
 }
 
 export default { getResolver }
+export { secp256r1, secp384r1, secp521r1, nist_weierstrass_common, secp256k1, ed25519, BigIntPoint, base64urlPoint, octetPoint }
