@@ -13,6 +13,8 @@ import * as ed25519 from './ed25519.js'
 import * as secp256r1 from './secp256r1.js'
 import * as secp384r1 from './secp384r1.js'
 import * as secp521r1 from './secp521r1.js'
+import * as nist_weierstrass_common from './nist_weierstrass_common.js'
+import { BigIntPoint, base64urlPoint, octetPoint } from './nist_weierstrass_common'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
