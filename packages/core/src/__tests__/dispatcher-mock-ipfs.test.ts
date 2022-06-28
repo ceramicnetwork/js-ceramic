@@ -8,7 +8,6 @@ import {
   LoggerProvider,
   IpfsApi,
   TestUtils,
-  polyfillAbortController,
 } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
@@ -17,8 +16,6 @@ import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
-
-polyfillAbortController()
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
