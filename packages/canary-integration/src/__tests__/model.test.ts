@@ -20,6 +20,8 @@ describe('Model API http-client tests', () => {
   let ceramic: CeramicClient
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+
     ipfs = await createIPFS()
     core = await createCeramic(ipfs)
 
@@ -168,6 +170,8 @@ describe('Model API multi-node tests', () => {
   let ceramic1: Ceramic
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
     ceramic0 = await createCeramic(ipfs0)

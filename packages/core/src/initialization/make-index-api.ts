@@ -28,6 +28,9 @@ export function makeIndexApi(
   network: Networks,
   logger: DiagnosticsLogger
 ): DatabaseIndexApi | undefined {
+  if (!process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+    return undefined
+  }
   if (!indexingConfig) {
     logger.warn(`Indexing is not configured. Please add the indexing settings to your config file`)
     return undefined
