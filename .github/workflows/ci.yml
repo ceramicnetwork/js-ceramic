@@ -119,9 +119,11 @@ jobs:
       -
         name: Login to Amazon ECR
         id: login-ecr
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
         uses: aws-actions/amazon-ecr-login@v1
       -
         name: Publish build event
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
         run: |
           res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} \
             -H "Content-Type: application/json" \
