@@ -55,7 +55,7 @@ export class TimedAbortSignal {
 export async function abortable<T>(
   original: AbortSignal,
   fn: (abortSignal: AbortSignal) => Promise<T>
-) {
+): Promise<T> {
   const controller = new AbortController()
   const onAbort = () => {
     controller.abort()
