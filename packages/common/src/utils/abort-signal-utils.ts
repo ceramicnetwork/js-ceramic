@@ -43,3 +43,22 @@ export class TimedAbortSignal {
     this._subscription?.unsubscribe()
   }
 }
+
+/**
+ * Call a function with abort signal and clear the memory.
+ *
+ * Some functions do not clear a signal listener after successful execution. Here we make sure
+ * a function we call does not leave stuff in memory.
+ * @param original Original AbortSignal.
+ * @param fn Function that uses an AbortSignal.
+ */
+export async function abortable<T>(original: AbortSignal, fn: (abortSignal: AbortSignal) => Promise<T>) {
+  const controller = new AbortController()
+  const onAbort = () => {
+    controller.abort()
+  }
+  original.addEventListener('abort', onAbort)
+  return fn(controller.signal).finally(() => {
+    original.removeEventListener('abort', onAbort)
+  })
+}
