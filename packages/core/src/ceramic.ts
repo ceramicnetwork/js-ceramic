@@ -1,7 +1,3 @@
-import { polyfillAbortController } from '@ceramicnetwork/common'
-
-polyfillAbortController()
-
 import { Dispatcher } from './dispatcher.js'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'

@@ -1,8 +1,5 @@
 import { timer, fromEvent, merge, Subscription } from 'rxjs'
 import { first } from 'rxjs/operators'
-import { polyfillAbortController } from '../polyfill-abort-controller.js'
-
-polyfillAbortController()
 
 export function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
   const controller = new AbortController()
@@ -45,4 +42,27 @@ export class TimedAbortSignal {
   clear() {
     this._subscription?.unsubscribe()
   }
+}
+
+/**
+ * Call a function with abort signal and clear the memory.
+ *
+ * Some functions do not clear a signal listener after successful execution. By wrapping the original AbortSignal (which may be long-lived) in a temporary AbortSignal that we can throw out when `fn` completes, we make sure
+ * a function we call does not leave stuff in memory.
+ * @param original Original AbortSignal.
+ * @param fn Function that uses an AbortSignal.
+ */
+export async function abortable<T>(
+  original: AbortSignal,
+  fn: (abortSignal: AbortSignal) => Promise<T>
+): Promise<T> {
+  const controller = new AbortController()
+  const onAbort = () => {
+    controller.abort()
+  }
+  original.addEventListener('abort', onAbort)
+  if (original.aborted) controller.abort()
+  return fn(controller.signal).finally(() => {
+    original.removeEventListener('abort', onAbort)
+  })
 }
