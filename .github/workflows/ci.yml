@@ -43,7 +43,7 @@ jobs:
         name: Set commit status "pending"
         run: |
           res=$(curl \
-            -X POST --verbose --fail \
+            -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
@@ -115,7 +115,7 @@ jobs:
       -
         name: Publish build event
         run: |
-          res=$(docker run --rm curlimages/curl curl -X POST --verbose --fail ${{ env.EVENT_WEBHOOK_URL }} \
+          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} \
             -H "Content-Type: application/json" \
             --user ${{ env.AWS_ACCESS_KEY_ID }}:${{ env.AWS_SECRET_ACCESS_KEY }} \
             --aws-sigv4 "aws:amz:${{ env.AWS_REGION }}:execute-api" \
@@ -139,7 +139,7 @@ jobs:
         name: Set commit status "success"
         run: |
           res=$(curl \
-            -X POST --verbose --fail \
+            -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
@@ -153,7 +153,7 @@ jobs:
         if: ${{ failure() }}
         run: |
           res=$(curl \
-            -X POST --verbose --fail \
+            -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ env.GH_TOKEN }}" \
             https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
