@@ -47,7 +47,7 @@ export class TimedAbortSignal {
 /**
  * Call a function with abort signal and clear the memory.
  *
- * Some functions do not clear a signal listener after successful execution. Here we make sure
+ * Some functions do not clear a signal listener after successful execution. By wrapping the original AbortSignal (which may be long-lived) in a temporary AbortSignal that we can throw out when `fn` completes, we make sure
  * a function we call does not leave stuff in memory.
  * @param original Original AbortSignal.
  * @param fn Function that uses an AbortSignal.
