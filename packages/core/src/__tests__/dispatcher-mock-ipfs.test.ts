@@ -2,13 +2,7 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import {
-  CommitType,
-  StreamState,
-  LoggerProvider,
-  IpfsApi,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
@@ -39,7 +33,7 @@ const mock_ipfs = {
     get: jest.fn(),
   },
   block: {
-    stat: jest.fn(() => ({ size: 10 })),
+    stat: jest.fn(async () => ({ size: 10 })),
   },
   id: async () => ({ id: 'ipfsid' }),
 }
@@ -95,7 +89,7 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('store commit correctly', async () => {
-    ipfs.dag.put.mockReturnValueOnce(FAKE_CID)
+    ipfs.dag.put.mockReturnValueOnce(Promise.resolve(FAKE_CID))
     expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
 
     expect(ipfs.dag.put.mock.calls.length).toEqual(1)
@@ -103,7 +97,7 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('retrieves commit correctly', async () => {
-    ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
+    ipfs.dag.get.mockReturnValueOnce(Promise.resolve({ value: 'data' }))
     expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(1)
@@ -112,7 +106,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   it('retries on timeout', async () => {
     ipfs.dag.get.mockRejectedValueOnce({ code: 'ERR_TIMEOUT' })
-    ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
+    ipfs.dag.get.mockReturnValueOnce(Promise.resolve({ value: 'data' }))
     expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(2)
@@ -122,7 +116,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   it('caches and retrieves commit correctly', async () => {
     const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockReturnValueOnce({ value: 'data' })
+    ipfsSpy.mockReturnValueOnce(Promise.resolve({ value: 'data' }))
     expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
     // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
@@ -139,7 +133,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   it('caches and retrieves with path correctly', async () => {
     const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockImplementation(function (cid: CID, opts: any) {
+    ipfsSpy.mockImplementation(async function (cid: CID, opts: any) {
       if (opts.path == '/foo') {
         return { value: 'foo' }
       } else if (opts.path == '/bar') {
