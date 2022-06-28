@@ -23,6 +23,8 @@ import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
+import {DatabaseIndexApi} from "../indexing/database-index-api";
+import {LocalIndexApi} from "../indexing/local-index-api";
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -31,6 +33,7 @@ export type RepositoryDependencies = {
   handlers: HandlersMap
   anchorService: AnchorService
   conflictResolution: ConflictResolution
+  indexing: LocalIndexApi | undefined
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
@@ -97,7 +100,8 @@ export class Repository {
       deps.conflictResolution,
       this.logger,
       (streamId) => this.fromMemoryOrStore(streamId),
-      (streamId, opts) => this.load(streamId, opts)
+      (streamId, opts) => this.load(streamId, opts),
+      deps.indexing,
     )
   }
 

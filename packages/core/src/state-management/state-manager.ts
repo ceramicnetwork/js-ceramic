@@ -21,6 +21,7 @@ import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { LocalIndexApi } from '../indexing/local-index-api'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -42,6 +43,7 @@ export class StateManager {
    * @param logger - Logger
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
+   * @param _index - currently used instance of IndexApi
    */
   constructor(
     private readonly dispatcher: Dispatcher,
@@ -54,7 +56,8 @@ export class StateManager {
     private readonly load: (
       streamId: StreamID,
       opts?: LoadOpts | CreateOpts
-    ) => Promise<RunningState>
+    ) => Promise<RunningState>,
+    private readonly _index: LocalIndexApi
   ) {}
 
   /**
@@ -202,15 +205,36 @@ export class StateManager {
    * @param tip - Stream Tip CID
    * @private
    */
-  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
+  handlePubsubUpdate(streamId: StreamID, tip: CID, model: StreamID): void {
     this.fromMemoryOrStore(streamId).then((state$) => {
       if (!state$) {
         return
       }
       this.executionQ.forStream(streamId).add(async () => {
+        if (state$.value.metadata.model) {
+          await this.addStreamToIndex(state$)
+        }
         await this._handleTip(state$, tip)
       })
     })
+  }
+
+  /**
+   * Helper function to add stream to db index.
+   * @param stream
+   * @private
+   */
+  private async addStreamToIndex(state) {
+    const last_anchor_ts = state.value.metadata.anchorProof
+      ? new Date(state.value.metadata.anchorProof.blockTimestamp * 1000)
+      : null
+    const STREAM_CONTENT = {
+      model: state.value.metadata.model,
+      streamID: state.metadata.stream,
+      controller: state.controllers[0],
+      lastAnchor: last_anchor_ts,
+    }
+    await this._index.indexStream(STREAM_CONTENT)
   }
 
   /**

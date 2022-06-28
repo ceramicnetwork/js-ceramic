@@ -230,10 +230,16 @@ describe('Dispatcher with mock ipfs', () => {
 
     // Handle UPDATE message without model
     dispatcher.repository.stateManager.handlePubsubUpdate = jest.fn()
-    await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID })
+    await dispatcher.handleMessage({
+      typ: MsgType.UPDATE,
+      stream: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      model: null,
+    })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       state$.id,
-      FAKE_CID
+      FAKE_CID,
+      null
     )
 
     const continuationState = {
@@ -259,7 +265,8 @@ describe('Dispatcher with mock ipfs', () => {
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       stream2.id,
-      FAKE_CID2
+      FAKE_CID2,
+      null
     )
   })
 
@@ -285,6 +292,7 @@ describe('Dispatcher with mock ipfs', () => {
     const state$ = await register(initialState)
 
     // Handle UPDATE message with model
+    //const addIndexSpy = jest.spyOn(dispatcher.repository.stateManager._index, 'indexStream')
     dispatcher.repository.stateManager.handlePubsubUpdate = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
@@ -294,7 +302,11 @@ describe('Dispatcher with mock ipfs', () => {
     })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       state$.id,
-      FAKE_CID
+      FAKE_CID,
+      FAKE_MODEL
     )
+    //expect(dispatcher.repository.stateManager._index.indexStream).toBeCalledTimes(1) // should work
+    /*expect(addIndexSpy).toBeCalledTimes(1)
+    addIndexSpy.mockRestore()*/
   })
 })

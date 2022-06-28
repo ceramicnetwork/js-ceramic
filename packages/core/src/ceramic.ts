@@ -225,6 +225,7 @@ export class Ceramic implements CeramicApi {
       this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
+    const localIndex = new LocalIndexApi(modules.indexing, this.repository, this._logger)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -232,8 +233,9 @@ export class Ceramic implements CeramicApi {
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
+      indexing: localIndex,
     })
-    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+    this._index = localIndex //new LocalIndexApi(modules.indexing, this.repository, this._logger)
   }
 
   get index(): IndexApi {

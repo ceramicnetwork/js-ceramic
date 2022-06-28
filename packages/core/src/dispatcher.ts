@@ -308,9 +308,10 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
     // TODO(NET-1527) model isn't used in update yet, will be in later versions
     const { stream: streamId, tip, model } = message
+
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
-    this.repository.stateManager.handlePubsubUpdate(streamId, tip)
+    this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
     // TODO: Handle 'anchorService' if present in message
   }
 
@@ -355,7 +356,7 @@ export class Dispatcher {
             "'"
         )
       }
-      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip)
+      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip, null)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }
