@@ -1,5 +1,5 @@
 import { writeHeapSnapshot } from 'node:v8'
-import { appendFileSync } from 'node:fs'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 /**
  * Return +timestamp+ formatted as ISO8601 string. No milliseconds.
@@ -14,14 +14,13 @@ function timestamp(timestamp: Date = new Date()): string {
  * It takes time to make a heapdump. We log when the heapdumping starts and finishes in `${folder}/heapdump-progress` file.
  *
  * @param folder Folder that contains a heapdump.
+ * @param logger Used to annouce the heapdump events: when it is started and finished.
  */
-export function handleHeapdumpSignal(folder: URL): void {
+export function handleHeapdumpSignal(folder: URL, logger: DiagnosticsLogger): void {
   process.on('SIGUSR2', () => {
     const filepath = new URL(`./ceramic-${timestamp()}.heapsnapshot`, folder)
-    const notifierFilepath = new URL(`./heapdumping-progress`, folder)
-    const pid = process.pid
-    appendFileSync(notifierFilepath, `${timestamp()}: ${pid}: started: ${filepath.pathname}\n`)
+    logger.write(`heapdump started: ${filepath.pathname}`)
     writeHeapSnapshot(filepath.pathname)
-    appendFileSync(notifierFilepath, `${timestamp()}: ${pid}: finished: ${filepath.pathname}\n`)
+    logger.write(`heapdump finished: ${filepath.pathname}`)
   })
 }

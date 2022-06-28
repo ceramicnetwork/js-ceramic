@@ -187,9 +187,10 @@ export class CeramicCliUtils {
         config.stateStore.s3Bucket = stateStoreS3Bucket
       }
     }
+    const daemon = await CeramicDaemon.create(config)
 
-    handleHeapdumpSignal(new URL('./', configFilepath))
-    return CeramicDaemon.create(config)
+    handleHeapdumpSignal(new URL('./', configFilepath), daemon.diagnosticsLogger)
+    return daemon
   }
 
   /**
