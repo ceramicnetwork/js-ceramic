@@ -1,20 +1,68 @@
 version: 2.1
 orbs:
-  node: circleci/node@1.1.6
-jobs:
+  node: circleci/node@5.0.0
+
+commands:
   build-and-test:
-    docker:
-      - image: circleci/node:14
     steps:
       - checkout
-      - node/with-cache:
-          steps:
-            - run: npm ci
-            - run: npm run lint
-            - run: npm run build
-            - run: npm run test
-            - run: npm run docs
+      - node/install:
+          node-version: "16"
+      - node/install-packages
+      - run: npm run lint
+      - run: npm run build
+      - run:
+          name: Test
+          command: npm run test
+          no_output_timeout: 30m
+  send-dispatch-event:
+    steps:
+      - run:
+          name: Dispatch test success event
+          command: |
+            res=$(curl -X POST \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: token $DISPATCH_TOKEN" \
+              https://api.github.com/repos/ceramicnetwork/js-ceramic/dispatches \
+              -d "{\"event_type\": \"test-success\", \"client_payload\": { \"branch\": \"$CIRCLE_BRANCH\", \"sha\": \"$CIRCLE_SHA1\"} }") || exit 1
+            echo $res
+            if [[ $res != "" ]]; then
+              exit 1
+            fi
+
+jobs:
+  with-go-ipfs:
+    machine:
+      image: ubuntu-2004:202107-02
+    environment:
+      IPFS_FLAVOR: go
+    steps:
+      - build-and-test
+      - run:
+          name: Build docs
+          command: npm run docs
+          environment:
+            NODE_OPTIONS: '--max_old_space_size=4096'
+  with-js-ipfs:
+    machine:
+      image: ubuntu-2004:202107-02
+    environment:
+      NODE_OPTIONS: '--max_old_space_size=4096'
+      IPFS_FLAVOR: js
+    steps:
+      - build-and-test
+  dispatch-event:
+    machine:
+      image: ubuntu-2004:202107-02
+    steps:
+      - send-dispatch-event
+
 workflows:
-    build-and-test:
-      jobs:
-        - build-and-test
+  build-and-test:
+    jobs:
+      - with-go-ipfs
+      - with-js-ipfs
+      - dispatch-event:
+          requires:
+            - with-go-ipfs
+            - with-js-ipfs

@@ -1,4 +1,4 @@
-import { Subscription } from 'rxjs';
+import { Subscription } from 'rxjs'
 
 /**
  * Track a set of active subscriptions. Unsubscribe them all at once.
@@ -8,20 +8,24 @@ import { Subscription } from 'rxjs';
 export class SubscriptionSet {
   constructor(readonly subscriptions: Set<Subscription> = new Set()) {}
 
+  get size(): number {
+    return this.subscriptions.size
+  }
+
   /**
    * Start tracking a subscription, so that it is closed with others on +close+.
    */
   add(subscription: Subscription) {
     subscription.add(() => {
-      this.subscriptions.delete(subscription);
-    });
-    this.subscriptions.add(subscription);
+      this.subscriptions.delete(subscription)
+    })
+    this.subscriptions.add(subscription)
   }
 
   /**
    * Unsubscribe all the subscriptions.
    */
   unsubscribe() {
-    this.subscriptions.forEach((s) => s.unsubscribe());
+    this.subscriptions.forEach((s) => s.unsubscribe())
   }
 }

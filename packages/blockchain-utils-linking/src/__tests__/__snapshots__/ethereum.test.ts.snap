@@ -8,11 +8,38 @@ Object {
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
-Timestamp: 0",
-  "signature": "0x4b71ddc9261244b86d19588c828b5867bf4cda399183190ecca86fbd1b3803c16b2158118a75f99cdf2a0e41bb61afde137c5e300c28301fc1db7c85349b49d31b",
-  "timestamp": 0,
+Timestamp: 1538352000",
+  "signature": "0x146cf11fa0472090d25b04d75c4159855c696549f2ae2ea47aea4aa89f8508a1234e3c2000622d9e3d02473bb77438d27d063024f82ec6326f1bcb6e5a3dc36b1b",
+  "timestamp": 1538352000,
   "type": "ethereum-eoa",
   "version": 2,
+}
+`;
+
+exports[`Ocap requestCapability 1`] = `
+Object {
+  "h": Object {
+    "t": "eip4361",
+  },
+  "p": Object {
+    "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
+    "domain": "https://service.org/",
+    "exp": "2018-10-02T00:00:00.000Z",
+    "iat": "2018-10-01T00:00:00.000Z",
+    "iss": "did:pkh:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
+    "nonce": "12345",
+    "resources": Array [
+      "ipfs://ABCDEF",
+      "ar://1234",
+      "ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s",
+    ],
+    "statement": "Give this application access to some of your data on Ceramic",
+    "version": "1",
+  },
+  "s": Object {
+    "s": "0x53b459f3eef15be6fd9cb94d973e1934c0769c0bd455fb70ae050b15d5604d234ddfca1b1119f8c8cdcedc6c49a141553853a8718b17156f0bc19632c5b7f6ee1c",
+    "t": "eip191",
+  },
 }
 `;
 
@@ -42,4 +69,4 @@ did:3:bafysdfwefwe",
 }
 `;
 
-exports[`createLink throw if erc1271 is on wrong chain 1`] = `[Error: ChainId in provider (1337) is different from AccountID (123)]`;
+exports[`createLink throw if erc1271 is on wrong chain 1`] = `[Error: ChainId in provider (1337) is different from AccountId (123)]`;

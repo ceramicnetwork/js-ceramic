@@ -1,9 +1,9 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import * as u8a from 'uint8arrays'
-import * as bigintModArith from 'bigint-mod-arith'
+import * as bigintModArith from './bigint-mod-arith.js'
 
-import * as nist_weierstrass_common from './nist_weierstrass_common'
+import * as nist_weierstrass_common from './nist_weierstrass_common.js'
 
 /**
   * x,y point as a BigInt (requires at least ES2020)
@@ -42,7 +42,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
                crv: "P-256",
                x: key.xm,
                y: key.ym,
-       }, 
+       },
     }],
     authentication: [keyId],
     assertionMethod: [keyId],
@@ -53,7 +53,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
 
 /**
  * Decompress a compressed public key in SEC format.
- * See section 2.3.3 in SEC 1 v2 : https://www.secg.org/sec1-v2.pdf. 
+ * See section 2.3.3 in SEC 1 v2 : https://www.secg.org/sec1-v2.pdf.
  *
  * Code based on: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
  *
@@ -92,12 +92,12 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
 }
 
 /**
- * 
- * @param pubKeyBytes - public key as uncompressed byte array with no prefix (raw key), 
+ *
+ * @param pubKeyBytes - public key as uncompressed byte array with no prefix (raw key),
  *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
  * @returns point x,y with coordinates as multibase encoded base64urls
- * 
- * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256. 
+ *
+ * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256.
  * At present only raw p-256 keys are covered in the specification.
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Unexpected pubKeyBytes
@@ -112,7 +112,7 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
 
   // raw p-256 key
   if(bytesCount == 64) {
-     return nist_weierstrass_common.publicKeyToXY(publicKeyHex); 
+     return nist_weierstrass_common.publicKeyToXY(publicKeyHex);
    }
 
   // uncompressed p-256 key, SEC format

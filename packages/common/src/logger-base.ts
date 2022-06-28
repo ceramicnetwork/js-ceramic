@@ -3,7 +3,7 @@ export enum LogStyle {
   info = 'info',
   imp = 'imp',
   warn = 'warn',
-  err = 'err'
+  err = 'err',
 }
 
 export enum LogLevel {
@@ -21,15 +21,15 @@ export interface WriteableStream {
  * Logs to the console based on log level
  */
 export class DiagnosticsLoggerBase {
-  public readonly logLevel: LogLevel;
-  protected logger: any;
-  protected readonly fileLogger: WriteableStream;
-  protected readonly includeStackTrace: boolean;
+  public readonly logLevel: LogLevel
+  protected logger: any
+  protected readonly fileLogger: WriteableStream
+  protected readonly includeStackTrace: boolean
   protected readonly logToFiles
 
   constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: WriteableStream) {
-    this.logLevel = logLevel;
-    this.includeStackTrace = this.logLevel <= LogLevel.debug ? true : false;
+    this.logLevel = logLevel
+    this.includeStackTrace = this.logLevel <= LogLevel.debug ? true : false
     this.logToFiles = logToFiles
     this.fileLogger = fileLogger
   }
@@ -39,36 +39,36 @@ export class DiagnosticsLoggerBase {
    * @param content Content to log
    */
   public write(content: string | Record<string, unknown> | Error): void {
-    this.debug(content);
+    this.debug(content)
   }
 
   public verbose(content: string | Record<string, unknown> | Error): void {
     if (this.logLevel > LogLevel.verbose) {
-      return;
+      return
     }
-    this.log(LogStyle.verbose, content);
+    this.log(LogStyle.verbose, content)
   }
 
   public debug(content: string | Record<string, unknown> | Error): void {
     if (this.logLevel > LogLevel.debug) {
-      return;
+      return
     }
-    this.log(LogStyle.info, content);
+    this.log(LogStyle.info, content)
   }
 
   public imp(content: string | Record<string, unknown> | Error): void {
     if (this.logLevel > LogLevel.important) {
-      return;
+      return
     }
-    this.log(LogStyle.imp, content);
+    this.log(LogStyle.imp, content)
   }
 
   public warn(content: string | Record<string, unknown> | Error): void {
-    this.log(LogStyle.warn, content);
+    this.log(LogStyle.warn, content)
   }
 
   public err(content: string | Record<string, unknown> | Error): void {
-    this.log(LogStyle.err, content);
+    this.log(LogStyle.err, content)
   }
 
   public log(style: LogStyle, content: string | Record<string, unknown> | Error): void {
@@ -77,23 +77,22 @@ export class DiagnosticsLoggerBase {
 }
 
 export interface ServiceLog {
-  [key: string]: any;
+  [key: string]: any
 }
 
 /**
  * Logs content from app services to files and/or console
  */
 export class ServiceLoggerBase {
-  public readonly service: string;
+  public readonly service: string
   public readonly logToFiles: boolean
   public readonly logToConsole: boolean
   public readonly logLevel: LogLevel
 
-  protected readonly stream: WriteableStream;
-
+  protected readonly stream: WriteableStream
 
   constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream?: WriteableStream) {
-    this.service = service;
+    this.service = service
     this.logLevel = logLevel
     this.logToFiles = logToFiles
     this.stream = stream
@@ -114,12 +113,12 @@ export class ServiceLoggerBase {
    * @param message Content to log
    */
   public write(message: string): void {
-    const now = new Date();
+    const now = new Date()
     // RFC1123 timestamp
-    message = `[${now.toUTCString()}] service=${this.service} ${message}`;
+    message = `[${now.toUTCString()}] service=${this.service} ${message}`
 
     if (this.logToConsole) {
-      console.log(message);
+      console.log(message)
     }
   }
 
@@ -133,21 +132,36 @@ export class ServiceLoggerBase {
 }
 
 export interface FileLoggerFactory {
-    (logPath: string): WriteableStream;
+  (logPath: string): WriteableStream
 }
 
+/**
+ * Configuration options related to logging.
+ */
 export interface LoggerConfig {
-    logDirectory?: string,
-    logLevel?: LogLevel,
-    logToFiles?: boolean,
+  /**
+   * If 'logToFiles' is true, this contains the path on the local filesystem where log files will
+   * be written.
+   */
+  logDirectory?: string
+
+  /**
+   * Log level. Defaults to 2. Lower numbers are more verbose.
+   */
+  logLevel?: LogLevel
+
+  /**
+   * Controls whether logs get persisted to the file system.
+   */
+  logToFiles?: boolean
 }
 
 // Can't have a default log directory as that would require using the `path` module before we know
 // for sure if it's safe to do so. If `logToFiles` is false we must avoid using any node-specific
 // functionality as we might be running in-browser
 const DEFAULT_LOG_CONFIG = {
-    logLevel: LogLevel.important,
-    logToFiles: false
+  logLevel: LogLevel.important,
+  logToFiles: false,
 }
 
 /**
@@ -162,12 +176,13 @@ export class LoggerProviderBase {
   constructor(config: LoggerConfig = {}, fileLoggerFactory?: FileLoggerFactory) {
     this.config = {
       logLevel: config.logLevel !== undefined ? config.logLevel : DEFAULT_LOG_CONFIG.logLevel,
-      logToFiles: config.logToFiles !== undefined ? config.logToFiles : DEFAULT_LOG_CONFIG.logToFiles,
+      logToFiles:
+        config.logToFiles !== undefined ? config.logToFiles : DEFAULT_LOG_CONFIG.logToFiles,
       logDirectory: config.logDirectory,
     }
     this._fileLoggerFactory = fileLoggerFactory
     if (this.config.logToFiles && !this._fileLoggerFactory) {
-      throw new Error("Must provide a FileLoggerFactory in order to log to files")
+      throw new Error('Must provide a FileLoggerFactory in order to log to files')
     }
     this._diagnosticLogger = this._makeDiagnosticLogger()
   }

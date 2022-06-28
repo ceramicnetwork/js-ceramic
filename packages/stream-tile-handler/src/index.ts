@@ -1,1 +1,1 @@
-export * from './tile-document-handler'
+export * from './tile-document-handler.js'

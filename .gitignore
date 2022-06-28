@@ -5,9 +5,12 @@ lerna-debug.log
 .vscode
 *.iml
 docs/
+.run/
+cue.mod/
 
 packages/*/lib/
 packages/*/node_modules/
 packages/*/coverage/
 packages/*/logs/
 packages/*/package-lock.json
+packages/core/src/version.ts

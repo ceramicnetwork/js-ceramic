@@ -1,15 +1,29 @@
-import { StreamState, Stream, StreamUtils } from "@ceramicnetwork/common"
-import StreamID from '@ceramicnetwork/streamid'
-import { StateStore } from "@ceramicnetwork/core";
-import LevelUp from "levelup";
-import S3LevelDOWN from "s3leveldown"
-import toArray from "stream-to-array"
+import { StreamState, Stream, StreamUtils } from '@ceramicnetwork/common'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { StateStore } from '@ceramicnetwork/core'
+import LevelUp from 'levelup'
+import S3LevelDOWN from 's3leveldown'
+import toArray from 'stream-to-array'
+import PQueue from 'p-queue'
+
+/**
+ * Maximum GET/HEAD requests per second to AWS S3
+ */
+const MAX_LOAD_RPS = 4000
 
 /**
  * Ceramic store for saving stream state to S3
  */
 export class S3StateStore implements StateStore {
   readonly #bucketName: string
+  /**
+   * Limit reading to +MAX_CONCURRENT_READS+ requests per second
+   */
+  readonly #loadingLimit = new PQueue({
+    intervalCap: MAX_LOAD_RPS,
+    interval: 1000,
+    carryoverConcurrencyCount: true,
+  })
   #store
 
   constructor(bucketName: string) {
@@ -21,7 +35,8 @@ export class S3StateStore implements StateStore {
    */
   open(networkName: string): void {
     const location = this.#bucketName + '/ceramic/' + networkName + '/state-store'
-    this.#store = new LevelUp(new S3LevelDOWN(location));
+    // @ts-ignore
+    this.#store = new LevelUp(new S3LevelDOWN(location))
   }
 
   /**
@@ -29,7 +44,10 @@ export class S3StateStore implements StateStore {
    * @param stream - Stream instance
    */
   async save(stream: Stream): Promise<void> {
-    await this.#store.put(stream.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(stream.state)))
+    await this.#store.put(
+      stream.id.baseID.toString(),
+      JSON.stringify(StreamUtils.serializeState(stream.state))
+    )
   }
 
   /**
@@ -37,19 +55,21 @@ export class S3StateStore implements StateStore {
    * @param streamId - stream ID
    */
   async load(streamId: StreamID): Promise<StreamState> {
-    try {
-      const state = await this.#store.get(streamId.baseID.toString())
-      if (state) {
-        return StreamUtils.deserializeState(JSON.parse(state));
-      } else {
-        return null;
+    return this.#loadingLimit.add(async () => {
+      try {
+        const state = await this.#store.get(streamId.baseID.toString())
+        if (state) {
+          return StreamUtils.deserializeState(JSON.parse(state))
+        } else {
+          return null
+        }
+      } catch (err) {
+        if (err.notFound) {
+          return null // return null for non-existent entry
+        }
+        throw err
       }
-    } catch (err) {
-      if (err.notFound) {
-        return null // return null for non-existent entry
-      }
-      throw err
-    }
+    })
   }
 
   /**
@@ -63,12 +83,13 @@ export class S3StateStore implements StateStore {
   /**
    * List pinned streams
    * @param streamId - Stream ID
+   * @param limit - limit on number of results
    */
-  async list(streamId?: StreamID): Promise<string[]> {
+  async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     if (streamId == null) {
-      const bufArray = await toArray(this.#store.createKeyStream())
+      const bufArray = await toArray(this.#store.createKeyStream({ limit }))
       return bufArray.map((buf) => buf.toString())
-    }  else {
+    } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []
     }

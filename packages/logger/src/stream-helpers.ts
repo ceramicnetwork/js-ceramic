@@ -1,21 +1,18 @@
-import { Writable } from 'stream';
-import {
-    createStream as createRfsStream,
-    Options as RfsOptions
-} from 'rotating-file-stream';
+import { Writable } from 'stream'
+import { createStream as createRfsStream, Options as RfsOptions } from 'rotating-file-stream'
 
 /**
  * A handler for writable streams that only writes if the stream has finished
  * processing or draining
  */
 export class SafeStreamHandler {
-  public ready = true;
-  protected stream: Writable;
-  protected name: string;
+  public ready = true
+  protected stream: Writable
+  protected name: string
 
   constructor(stream: Writable, name?: string) {
-    this.stream = stream;
-    this.name = name;
+    this.stream = stream
+    this.name = name
   }
 
   /**
@@ -23,7 +20,7 @@ export class SafeStreamHandler {
    * @param message Message to write
    */
   public write(message: string): void {
-    this.writeStream(message);
+    this.writeStream(message)
   }
 
   /**
@@ -36,25 +33,25 @@ export class SafeStreamHandler {
 
   protected writeStream(message: string): void {
     if (!this.ready) {
-      console.warn(`Stream busy: ${this.name}. Write will be dropped: "${message}"`);
-      return;
+      console.warn(`Stream busy: ${this.name}. Write will be dropped: "${message}"`)
+      return
     }
-    this.ready = false;
+    this.ready = false
 
     this.stream.on('error', (err) => {
-      throw err;
-    });
+      throw err
+    })
     this.stream.on('drain', () => {
-      this.ready = true;
-      return;
+      this.ready = true
+      return
     })
     this.stream.on('finish', () => {
-      this.ready = true;
-      return;
+      this.ready = true
+      return
     })
     this.ready = this.stream.write(message, () => {
-      return;
-    });
+      return
+    })
   }
 }
 
@@ -63,17 +60,17 @@ export class SafeStreamHandler {
  * by creating and closing a new stream on each write.
  */
 export class RotatingFileStream {
-  private filePath: string;
-  private immediate: boolean;
-  private stream: Writable | undefined;
-  private options: RfsOptions;
+  private filePath: string
+  private immediate: boolean
+  private stream: Writable | undefined
+  private options: RfsOptions
 
-  constructor(filePath: string,  writeImmediately?: boolean, options?: RfsOptions) {
-    this.filePath = filePath;
-    this.immediate = writeImmediately;
-    this.options = options;
+  constructor(filePath: string, writeImmediately?: boolean, options?: RfsOptions) {
+    this.filePath = filePath
+    this.immediate = writeImmediately
+    this.options = options
     if (!this.immediate) {
-      this.stream = createRfsStream(this.filePath, options);
+      this.stream = createRfsStream(this.filePath, options)
     }
   }
 
@@ -82,26 +79,26 @@ export class RotatingFileStream {
    * @param message Message to write
    */
   public write(message: string): void {
-    let fileStream = this.stream;
+    let fileStream = this.stream
     if (this.immediate) {
-      fileStream = createRfsStream(this.filePath, this.options);
+      fileStream = createRfsStream(this.filePath, this.options)
     }
-    const stream = new SafeStreamHandler(fileStream, this.filePath);
-    stream.write(message);
+    const stream = new SafeStreamHandler(fileStream, this.filePath)
+    stream.write(message)
     if (this.immediate) {
-      stream.end();
+      stream.end()
     }
   }
 
   /**
    * Ends the instance's internal stream
-   * 
+   *
    * When `immediate` is not `true`, a call to `write` after calling this method
    * will throw an error.
    */
   public end(): void {
     if (this.stream !== undefined) {
-      this.stream.end();
+      this.stream.end()
     }
   }
 }

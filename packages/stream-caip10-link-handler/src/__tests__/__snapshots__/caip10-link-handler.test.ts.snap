@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Caip10LinkHandler applies anchor record correctly 1`] = `
+exports[`Caip10LinkHandler applies anchor commit correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
@@ -11,7 +11,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -54,7 +54,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -97,7 +97,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -141,7 +141,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
+      "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -157,7 +157,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -201,7 +201,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
+      "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -220,7 +220,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -263,7 +263,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -307,7 +307,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
+      "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -315,7 +315,7 @@ Object {
     "content": "did:3:testdid1",
     "metadata": Object {
       "controllers": Array [
-        "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
+        "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
       ],
       "family": "caip10-eip155:1",
       "lastUpdate": 1608116721,

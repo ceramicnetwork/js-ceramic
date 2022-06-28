@@ -3,6 +3,271 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.4](/compare/key-did-resolver@2.0.4-rc.1...key-did-resolver@2.0.4) (2022-05-18)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [2.0.4-rc.1](/compare/key-did-resolver@2.0.3...key-did-resolver@2.0.4-rc.1) (2022-05-18)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [2.0.3](/compare/key-did-resolver@2.0.2...key-did-resolver@2.0.3) (2022-05-18)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [2.0.2](/compare/key-did-resolver@2.0.1-rc.1...key-did-resolver@2.0.2) (2022-05-18)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [2.0.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0...key-did-resolver@2.0.1-rc.1) (2022-05-12)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## 2.0.1-rc.0 (2022-05-12)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0](/compare/key-did-resolver@2.0.0-rc.1...key-did-resolver@2.0.0) (2022-04-19)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-rc.1](/compare/key-did-resolver@2.0.0-rc.0...key-did-resolver@2.0.0-rc.1) (2022-04-19)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# 2.0.0-rc.0 (2022-03-31)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.4](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0-alpha.3...key-did-resolver@2.0.0-alpha.4) (2022-03-24)
+
+
+### Features
+
+* Do not depend on bigint-mod-arith ([#2074](https://github.com/ceramicnetwork/js-ceramic/issues/2074)) ([ad731cd](https://github.com/ceramicnetwork/js-ceramic/commit/ad731cd875ba4c1d9f398e4dc8be843ee4810862))
+* polyfill AbortController, so that Ceramic node works on Node.js v14 ([#2090](https://github.com/ceramicnetwork/js-ceramic/issues/2090)) ([fff3e8a](https://github.com/ceramicnetwork/js-ceramic/commit/fff3e8a18ef7d2ba86c80743f61f0487dae3e129))
+
+
+
+
+
+# [2.0.0-alpha.3](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0-alpha.2...key-did-resolver@2.0.0-alpha.3) (2022-03-03)
+
+
+### Features
+
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+
+
+
+
+
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.0-alpha.1...key-did-resolver@2.0.0-alpha.2) (2022-02-10)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@2.0.0-alpha.1) (2022-01-14)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.4.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.4...key-did-resolver@1.4.5-rc.0) (2022-01-12)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.4.4](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.3...key-did-resolver@1.4.4) (2022-01-12)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.4.3](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@1.4.3) (2022-01-09)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.4.2](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@1.4.2) (2022-01-09)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0...key-did-resolver@1.4.1) (2022-01-09)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+
+# [1.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0-rc.0...key-did-resolver@1.4.0) (2021-08-25)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.5...key-did-resolver@1.4.0-rc.0) (2021-08-24)
+
+
+### Features
+
+* named exports ([884a6d8](https://github.com/ceramicnetwork/js-ceramic/commit/884a6d8e490f1c2c99ed99a17e9fd8c3dfb132d2))
+
+
+
+
+
+## [1.3.2-rc.5](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.4...key-did-resolver@1.3.2-rc.5) (2021-08-23)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## 1.3.2-rc.4 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+## [1.3.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.2...key-did-resolver@1.3.2-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.3.2-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.1...key-did-resolver@1.3.2-rc.2) (2021-08-22)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## 1.3.2-rc.1 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+## [1.3.2-rc.0](/compare/key-did-resolver@1.3.1...key-did-resolver@1.3.2-rc.0) (2021-08-13)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.3.1](/compare/key-did-resolver@1.3.0-rc.0...key-did-resolver@1.3.1) (2021-08-11)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [1.3.0](/compare/key-did-resolver@1.3.0-rc.0...key-did-resolver@1.3.0) (2021-08-11)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [1.3.0-rc.0](/compare/key-did-resolver@1.2.1...key-did-resolver@1.3.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+
+
+### Reverts
+
+* Revert "Merge secp256r1 key-did-method with npm run docs working (#1418)" (#1440) 8f45f82, closes #1418 #1440
+
+
+
+
+
 ## [1.2.1](/compare/key-did-resolver@1.2.0...key-did-resolver@1.2.1) (2021-05-25)
 
 **Note:** Version bump only for package key-did-resolver

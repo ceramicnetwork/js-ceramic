@@ -1,15 +1,19 @@
-export * from "./auth-provider";
-export * as ethereum from "./ethereum";
-export * from "./util";
-export * as filecoin from "./filecoin";
-export * as polkadot from "./polkadot";
-export * as eosio from "./eosio";
-export * as cosmos from "./cosmos";
+export * from './auth-provider.js'
+export * as ethereum from './ethereum.js'
+export * from './util.js'
+export * as filecoin from './filecoin.js'
+export * as polkadot from './polkadot.js'
+export * as eosio from './eosio.js'
+export * as cosmos from './cosmos.js'
+export * as tezos from './tezos.js'
+export * as solana from './solana.js'
 
-export { EthereumAuthProvider } from "./ethereum";
-export { EthereumAuthProvider as AvalancheAuthProvider } from "./ethereum";
-export { FilecoinAuthProvider } from "./filecoin";
-export { EosioAuthProvider } from "./eosio";
-export { PolkadotAuthProvider } from "./polkadot";
-export { CosmosAuthProvider } from "./cosmos";
-export { NearAuthProvider } from "./near";
+export { EthereumAuthProvider } from './ethereum.js'
+export { EthereumAuthProvider as AvalancheAuthProvider } from './ethereum.js'
+export { FilecoinAuthProvider } from './filecoin.js'
+export { EosioAuthProvider } from './eosio.js'
+export { PolkadotAuthProvider } from './polkadot.js'
+export { CosmosAuthProvider } from './cosmos.js'
+export { NearAuthProvider } from './near.js'
+export { TezosAuthProvider, TezosProvider } from './tezos.js'
+export { SolanaAuthProvider } from './solana.js'

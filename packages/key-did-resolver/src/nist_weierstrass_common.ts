@@ -1,8 +1,7 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import * as u8a from 'uint8arrays'
-import  multibase from'multibase'
-//import * as bigintModArith from 'bigint-mod-arith'
+import { base64url } from 'multiformats/bases/base64'
 
 /**
   * x,y point as a BigInt (requires at least ES2020)
@@ -57,8 +56,8 @@ export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
     throw new TypeError('input must be string with characters 0-9,A-F,a-f'); 
    }
  const u8aOctetPoint = publicKeyHexToUint8ArrayPointPair(publicKeyHex);
- const xm = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet))).slice(1);
- const ym = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet))).slice(1);
+ const xm = base64url.encode(u8aOctetPoint.xOctet).slice(1);
+ const ym = base64url.encode(u8aOctetPoint.yOctet).slice(1);
  return { xm, ym };
 }
 
@@ -131,8 +130,8 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
   if(typeof ecpoint.x !== "bigint" &&  typeof ecpoint.y !== "bigint") { throw new Error("Input coordinates must be BigInt");  }
 
     const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
-    const xm = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet))).slice(1);
-    const ym = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet))).slice(1);
+    const xm = base64url.encode(u8aOctetPoint.xOctet).slice(1);
+    const ym = base64url.encode(u8aOctetPoint.yOctet).slice(1);
     return { xm, ym };
 }
 

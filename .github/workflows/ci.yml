@@ -1,0 +1,144 @@
+name: Verify and publish Docker image
+
+on:
+  repository_dispatch:
+    types: [test-success]
+
+env:
+  # Dagger
+  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
+  DAGGER_VERSION: "0.2.20"
+  DAGGER_LOG_FORMAT: "plain"
+  PIPELINE_TOOLS_VER: "0.1.2"
+  # Secrets
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  # Miscellaneous
+  RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  BRANCH: ${{ github.event.client_payload.branch }}
+  SHA: ${{ github.event.client_payload.sha }}
+
+jobs:
+  publish:
+    name: Verify and publish Docker image
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set commit status "pending"
+        run: |
+          res=$(curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.GH_TOKEN }}" \
+            https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
+            -d '{"state":"pending","target_url":"${{ env.RUN_URL }}","description":"Image verification started","context":"ci/image: verify"}') || exit 1
+          echo $res
+          if [[ $res != *"pending"* ]]; then
+            exit 1
+          fi
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
+      -
+        name: Set sha tag
+        run: |
+          SHA_TAG=$(echo ${{ env.SHA }} | head -c 12)
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
+      -
+        name: Set main branch tag
+        if: ${{ env.BRANCH == 'main' }}
+        run: |
+          echo "ENV_TAG=prod" >> $GITHUB_ENV
+      -
+        name: Set rc branch tag
+        if: ${{ env.BRANCH == 'release-candidate' }}
+        run: |
+          echo "ENV_TAG=tnet" >> $GITHUB_ENV
+      -
+        name: Set develop branch tag
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Setup Dagger
+        run: |
+            dagger project init
+            dagger project update
+            dagger project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
+
+            AWS_SCRIPTS=cue.mod/pkg/universe.dagger.io/aws/_scripts
+            mkdir -p $AWS_SCRIPTS
+            curl -fsSL "https://raw.githubusercontent.com/dagger/dagger/v${{ env.DAGGER_VERSION }}/pkg/universe.dagger.io/aws/_scripts/install.sh" > $AWS_SCRIPTS/install.sh
+            chmod +x $AWS_SCRIPTS/install.sh
+      -
+        name: Verify Docker image
+        run: dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Push Docker image
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Post deployment event
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
+        run: dagger do -l error queue -w "actions:queue:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Set commit status "successful"
+        run: |
+          res=$(curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.GH_TOKEN }}" \
+            https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
+            -d '{"state":"success","target_url":"${{ env.RUN_URL }}","description":"Image verification successful","context":"ci/image: verify"}') || exit 1
+          echo $res
+          if [[ $res != *"success"* ]]; then
+            exit 1
+          fi
+      -
+        name: Set commit status "failure"
+        if: ${{ failure() }}
+        run: |
+          res=$(curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.GH_TOKEN }}" \
+            https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ env.SHA }} \
+            -d '{"state":"failure","target_url":"${{ env.RUN_URL }}","description":"Image verification failed","context":"ci/image: verify"}') || exit 1
+          echo $res
+          if [[ $res != *"failure"* ]]; then
+            exit 1
+          fi
+
+  docs:
+    name: Publish docs
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: publish
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
+      -
+        name: Publish docs
+        uses: dagger/dagger-for-github@v3
+        with:
+          version: ${{ env.DAGGER_VERSION }}
+          cmds: |
+            project init
+            project update
+            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
+            do docs -p ${{ env.DAGGER_PLAN }}

@@ -1,30 +1,24 @@
-import { BlockchainHandler } from "../blockchain-handler";
-import { AccountID } from "caip";
-import * as linking from "@ceramicnetwork/blockchain-utils-linking";
+import { BlockchainHandler } from '../blockchain-handler.js'
+import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import * as signingTools from '@zondax/filecoin-signing-tools'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
-const namespace = "fil";
+const namespace = 'fil'
 
-export async function validateLink(
-  proof: linking.LinkProof
-): Promise<linking.LinkProof | null> {
-  const account = new AccountID(proof.account);
-  const payload = linking.filecoin.asTransaction(
-    account.address,
-    proof.message
-  );
-  const transaction = signingTools.transactionSerialize(payload);
-  const recover = signingTools.verifySignature(proof.signature, transaction);
+export async function validateLink(proof: linking.LinkProof): Promise<linking.LinkProof | null> {
+  // Handle legacy CAIP links
+  const account = normalizeAccountId(proof.account)
+  const payload = linking.filecoin.asTransaction(account.address, proof.message)
+  const transaction = signingTools.transactionSerialize(payload)
+  const recover = signingTools.verifySignature(proof.signature, transaction)
   if (recover) {
-    return proof;
+    return proof
   } else {
-    return null;
+    return null
   }
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
-};
-
-export default Handler;
+}

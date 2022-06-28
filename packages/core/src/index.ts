@@ -1,5 +1,7 @@
-import Ceramic from "./ceramic";
+import * as PubsubMessage from './pubsub/pubsub-message.js'
 
-export * from './store/state-store'
-export * from './ceramic'
-export default Ceramic
+export { PubsubMessage }
+export { Ceramic } from './ceramic.js'
+
+export * from './store/state-store.js'
+export * from './ceramic.js'
