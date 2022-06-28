@@ -31,8 +31,8 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  BRANCH: ${{ github.event.client_payload.branch }} || ${{ github.event.inputs.branch }}
-  SHA: ${{ github.event.client_payload.sha }} || ${{ github.event.inputs.sha }}
+  BRANCH: ${{ github.event.inputs.branch }}
+  SHA: ${{ github.event.inputs.sha }}
 
 jobs:
   image:
