@@ -52,12 +52,16 @@ export class TimedAbortSignal {
  * @param original Original AbortSignal.
  * @param fn Function that uses an AbortSignal.
  */
-export async function abortable<T>(original: AbortSignal, fn: (abortSignal: AbortSignal) => Promise<T>) {
+export async function abortable<T>(
+  original: AbortSignal,
+  fn: (abortSignal: AbortSignal) => Promise<T>
+) {
   const controller = new AbortController()
   const onAbort = () => {
     controller.abort()
   }
   original.addEventListener('abort', onAbort)
+  if (original.aborted) controller.abort()
   return fn(controller.signal).finally(() => {
     original.removeEventListener('abort', onAbort)
   })
