@@ -96,11 +96,14 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
+    expect(doc.metadata).toEqual({
+      controller: ceramic.did.id.toString(),
+      model: midMetadata.model,
+    })
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
-    expect(doc.metadata.unique instanceof Uint8Array).toBeTruthy()
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
@@ -176,7 +179,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
 
     expect(doc1.id.toString()).not.toEqual(doc2.id.toString())
-    expect(doc1.metadata.unique.toString()).not.toEqual(doc2.metadata.unique.toString())
   })
 
   test('Can load a stream', async () => {

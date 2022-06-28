@@ -1,4 +1,5 @@
 import jsonpatch from 'fast-json-patch'
+import cloneDeep from 'lodash.clonedeep'
 import * as dagCbor from '@ipld/dag-cbor'
 import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
@@ -144,6 +145,8 @@ async function throwReadOnlyError(): Promise<void> {
   )
 }
 
+export type TileMetadata = StreamMetadata
+
 /**
  * TileDocument stream implementation
  */
@@ -156,6 +159,11 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   get content(): T {
     return super.content
+  }
+
+  get metadata(): TileMetadata {
+    const { next, metadata } = this.state$.value
+    return cloneDeep(next?.metadata ?? metadata)
   }
 
   /**

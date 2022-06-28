@@ -21,6 +21,8 @@ import {
   TestUtils,
   IpfsApi,
   CeramicSigner,
+  GenesisCommit,
+  RawCommit,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -159,7 +161,7 @@ const rotateKey = (did: DID, rotateDate: string) => {
 async function checkSignedCommitMatchesExpectations(
   did: DID,
   commit: SignedCommitContainer,
-  expectedCommit: Record<string, any>
+  expectedCommit: GenesisCommit | RawCommit
 ) {
   const { jws, linkedBlock } = commit
   expect(jws).toBeDefined()
@@ -608,7 +610,8 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const rawCommit = doc._makeRawCommit(CONTENT1)
-    rawCommit.header = { controllers: [did.id, did.id] }
+    const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
+    rawCommit.header = { controllers: [newDid] }
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

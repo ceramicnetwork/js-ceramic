@@ -78,26 +78,27 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw Error('ModelInstanceDocument genesis commit must be signed')
     }
 
+    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
+      throw new Error('Exactly one controller must be specified')
+    }
+
     const streamId = await StreamID.fromGenesis('MID', commitData.commit)
     const { controllers, model } = payload.header
+    const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
-      controllers[0],
+      controller,
       modelStreamID,
       streamId
     )
-
-    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
-    }
 
     if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
       throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
     }
 
-    const metadata = { ...payload.header, model: modelStreamID }
+    const metadata = { controllers: [controller], model: modelStreamID }
     const state = {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},
@@ -130,7 +131,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Verify the signature
     const metadata = state.metadata
-    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const controller = metadata.controllers[0]
     const model = metadata.model
     const streamId = StreamUtils.streamIdFromState(state)
     await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)

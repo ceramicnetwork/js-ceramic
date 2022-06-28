@@ -9,6 +9,7 @@ import {
   UpdateOpts,
   RawCommit,
   GenesisCommit,
+  StreamMetadata,
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
@@ -16,6 +17,7 @@ import { AccountId } from 'caip'
 import type { DID } from 'dids'
 import { parse } from 'did-resolver'
 import { normalizeAccountId } from '@ceramicnetwork/common'
+import cloneDeep from 'lodash.clonedeep'
 
 const throwReadOnlyError = (): Promise<void> => {
   throw new Error(
@@ -32,6 +34,8 @@ const DEFAULT_CREATE_OPTS = {
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
+export type Caip10Metadata = StreamMetadata
+
 /**
  * Caip10Link stream implementation
  */
@@ -47,6 +51,11 @@ export class Caip10Link extends Stream {
    */
   get did(): string | null {
     return this.content
+  }
+
+  get metadata(): Caip10Metadata {
+    const { next, metadata } = this.state$.value
+    return cloneDeep(next?.metadata ?? metadata)
   }
 
   /**

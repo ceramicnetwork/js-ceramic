@@ -44,10 +44,10 @@ describe('Model API http-client tests', () => {
 
     expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
     expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
+    expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    expect(model.metadata.unique instanceof Uint8Array).toBeTruthy()
   })
 
   test('Create and update placeholder', async () => {
@@ -98,7 +98,6 @@ describe('Model API http-client tests', () => {
     const model2 = await Model.create(ceramic, FINAL_CONTENT)
 
     expect(model1.id.toString()).not.toEqual(model2.id.toString())
-    expect(model1.metadata.unique.toString()).not.toEqual(model2.metadata.unique.toString())
   })
 
   test('Cannot create incomplete model with create()', async () => {
