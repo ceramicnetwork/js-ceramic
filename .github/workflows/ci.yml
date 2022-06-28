@@ -9,7 +9,7 @@ on:
       branch:
         description: 'Branch to build'
         required: false
-        default: 'develop'
+        default: ''
       sha:
         description: 'Commit hash'
         required: false
@@ -31,14 +31,22 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  BRANCH: ${{ github.event.inputs.branch }}
-  SHA: ${{ github.event.inputs.sha }}
+  BRANCH: ${{ github.event.client_payload.branch }}
+  SHA: ${{ github.event.client_payload.sha }}
 
 jobs:
   image:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
     steps:
+      -
+        name: Set branch from inputs
+        if: ${{ env.BRANCH == '' }}
+        run: echo "BRANCH=${{ github.event.inputs.branch }}" >> $GITHUB_ENV
+      -
+        name: Set SHA from inputs
+        if: ${{ env.SHA == '' }}
+        run: echo "SHA=${{ github.event.inputs.sha }}" >> $GITHUB_ENV
       -
         name: Set commit status "pending"
         run: |
