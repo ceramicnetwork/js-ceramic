@@ -225,9 +225,6 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('makes and gets updates correctly with subscription', async () => {
-    function delay(ms: number) {
-      return new Promise((resolve) => setTimeout(resolve, ms))
-    }
     const initialContent = { a: 'initial' }
     const middleContent = { ...initialContent, b: 'middle' }
     const finalContent = { ...middleContent, c: 'final' }
@@ -240,7 +237,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // change from core viewable in client
     await doc1.update(middleContent)
     await anchorDoc(doc1)
-    await delay(1000) // 2x polling interval
+    await TestUtils.delay(1000) // 2x polling interval
     expect(doc1.content).toEqual(middleContent)
     expect(doc1.content).toEqual(doc2.content)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
@@ -248,7 +245,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
     await doc2.update(finalContent)
     await anchorDoc(doc2)
-    await delay(1000) // 2x polling interval
+    await TestUtils.delay(1000) // 2x polling interval
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.content).toEqual(finalContent)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))

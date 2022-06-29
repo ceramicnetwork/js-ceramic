@@ -8,7 +8,6 @@ import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TaskQueue } from '../pubsub/task-queue.js'
-import { delay } from './delay.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 const TOPIC = '/ceramic'
@@ -98,7 +97,7 @@ describe('Dispatcher with real ipfs over http', () => {
     // So we have to add a timeout to make sure an ipfs function is called before the signal is triggered.
     const isJsIpfsNode = Boolean((ipfsClient as any).preload) // Exists on js-ipfs node, and is not present on ipfs-http-client.
     if (isJsIpfsNode) {
-      await delay(1000)
+      await TestUtils.delay(1000)
     }
     shutdownController.abort()
     await expect(getPromise).rejects.toThrow(/aborted/)

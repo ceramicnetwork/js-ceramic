@@ -11,7 +11,6 @@ import {
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import first from 'it-first'
@@ -64,7 +63,7 @@ describe('Ceramic integration', () => {
 
       const stream1 = await TileDocument.create(ceramic1, { test: 456 })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       // we can't load stream from id since nodes are not connected
       // so we won't find the genesis object from it's CID
@@ -128,7 +127,7 @@ describe('Ceramic integration', () => {
       const stream1 = await TileDocument.create(ceramic1, null, metadata)
       await stream1.update({ test: 321 })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       // Through a different ceramic instance create a new stream with the same contents that will
       // therefore resolve to the same genesis commit and thus the same streamId.  Make sure the new
@@ -140,7 +139,7 @@ describe('Ceramic integration', () => {
 
       await stream1.update({ test: 'abcde' })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       expect(stream1.content).toEqual({ test: 'abcde' })
       await TestUtils.waitForState(
@@ -165,11 +164,11 @@ describe('Ceramic integration', () => {
 
       const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       await stream1.update({ test: 'abcde' })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       const logCommits = await ceramic1.loadStreamCommits(stream1.id)
 
@@ -211,7 +210,7 @@ describe('Ceramic integration', () => {
       })
       expect(stream1).toBeDefined()
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       expect(addSpy1).toBeCalledTimes(1)
       expect(loadSpy1).toBeCalledTimes(2) // once from create, once from applyCommit as part of anchor
@@ -221,7 +220,7 @@ describe('Ceramic integration', () => {
 
       await stream1.update({ test: 'abcde' }, null, { publish: false })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
       expect(addSpy2).not.toBeCalled()
@@ -255,7 +254,7 @@ describe('Ceramic integration', () => {
       expect(addSpy1).toBeCalledTimes(1)
       expect(stream1).toBeDefined()
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       addSpy1.mockClear()
       loadSpy1.mockClear()
@@ -264,7 +263,7 @@ describe('Ceramic integration', () => {
       expect(loadSpy1).toBeCalledTimes(1)
       expect(addSpy1).toBeCalledTimes(0)
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
       expect(addSpy2).not.toBeCalled()

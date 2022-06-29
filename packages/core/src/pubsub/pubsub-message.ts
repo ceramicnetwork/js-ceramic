@@ -6,7 +6,6 @@ import {Metrics, METRIC_NAMES} from '../../../metrics/lib/metrics-setup.js'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'
-import { TextDecoder, TextEncoder } from 'util'
 import * as uint8arrays from 'uint8arrays'
 
 /**

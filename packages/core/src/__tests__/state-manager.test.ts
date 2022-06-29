@@ -13,7 +13,6 @@ import { RunningState } from '../state-management/running-state.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { Ceramic } from '../ceramic.js'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { streamFromState } from '../state-management/stream-from-state.js'
 import * as uint8arrays from 'uint8arrays'
@@ -210,7 +209,7 @@ test('commit history and atCommit', async () => {
   expect(stream.commitId).toEqual(commit0)
   expect(commit0.equals(CommitID.make(streamState.id, streamState.id.cid))).toBeTruthy()
 
-  await anchorUpdate(ceramic, stream)
+  await TestUtils.anchorUpdate(ceramic, stream)
   expect(stream.allCommitIds.length).toEqual(2)
   expect(stream.anchorCommitIds.length).toEqual(1)
   const commit1 = stream.allCommitIds[1]
@@ -230,7 +229,7 @@ test('commit history and atCommit', async () => {
   expect(commit2.equals(commit1)).toBeFalsy()
   expect(commit2).toEqual(stream.commitId)
 
-  await anchorUpdate(ceramic, stream)
+  await TestUtils.anchorUpdate(ceramic, stream)
   expect(stream.allCommitIds.length).toEqual(4)
   expect(stream.anchorCommitIds.length).toEqual(2)
   const commit3 = stream.allCommitIds[3]
@@ -335,7 +334,7 @@ describe('atCommit', () => {
       syncTimeoutSeconds: 0,
     })
     await stream1.update({ abc: 321, def: 456, gh: 987 })
-    await anchorUpdate(ceramic, stream1)
+    await TestUtils.anchorUpdate(ceramic, stream1)
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
     const stream2 = await TileDocument.load(ceramic, stream1.id)
@@ -385,7 +384,7 @@ test('handles basic conflict', async () => {
   stream1.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
   const streamId = stream1.id
-  await anchorUpdate(ceramic, stream1)
+  await TestUtils.anchorUpdate(ceramic, stream1)
   const tipPreUpdate = stream1.tip
 
   const newContent = { abc: 321, def: 456, gh: 987 }
@@ -395,7 +394,7 @@ test('handles basic conflict', async () => {
     publish: false,
   })
 
-  await anchorUpdate(ceramic, stream1)
+  await TestUtils.anchorUpdate(ceramic, stream1)
   expect(stream1.content).toEqual(newContent)
   const tipValidUpdate = stream1.tip
   // create invalid change that happened after main change
@@ -422,7 +421,7 @@ test('handles basic conflict', async () => {
     publish: false,
   })
 
-  await anchorUpdate(ceramic, stream2)
+  await TestUtils.anchorUpdate(ceramic, stream2)
   const tipInvalidUpdate = state$.tip
   expect(stream2.content).toEqual(conflictingNewContent)
   // loading tip from valid log to stream with invalid
@@ -457,11 +456,11 @@ test('handles basic conflict', async () => {
 
 test('enforces schema in update that assigns schema', async () => {
   const schemaDoc = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-  await anchorUpdate(ceramic, schemaDoc)
+  await TestUtils.anchorUpdate(ceramic, schemaDoc)
 
   const stream = await TileDocument.create(ceramic, { stuff: 1 })
   const streamState = await ceramic.repository.load(stream.id, {})
-  await anchorUpdate(ceramic, stream)
+  await TestUtils.anchorUpdate(ceramic, stream)
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId })
   await expect(
     ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {
@@ -473,7 +472,7 @@ test('enforces schema in update that assigns schema', async () => {
 
 test('enforce previously assigned schema during future update', async () => {
   const schemaDoc = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-  await anchorUpdate(ceramic, schemaDoc)
+  await TestUtils.anchorUpdate(ceramic, schemaDoc)
 
   const conformingContent = { stuff: 'foo' }
   const nonConformingContent = { stuff: 1 }
@@ -481,7 +480,7 @@ test('enforce previously assigned schema during future update', async () => {
     schema: schemaDoc.commitId,
   })
   const streamState = await ceramic.repository.load(stream.id, {})
-  await anchorUpdate(ceramic, stream)
+  await TestUtils.anchorUpdate(ceramic, stream)
 
   const updateRec = await stream.makeCommit(ceramic, nonConformingContent)
   await expect(
