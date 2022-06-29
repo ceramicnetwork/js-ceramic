@@ -39,11 +39,16 @@ export interface IndexApi {
   queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>>
 }
 
+export type Edge<T> = {
+  cursor: string
+  node: T
+}
+
 /**
  * Response from indexing api. Contains entries `T` and clues for the next or previous page.
  */
 export interface Page<T> {
-  readonly entries: Array<T>
+  readonly edges: Array<Edge<T>>
   readonly pageInfo: PageInfo
 }
 

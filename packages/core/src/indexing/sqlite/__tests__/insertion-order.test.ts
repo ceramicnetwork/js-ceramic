@@ -55,8 +55,8 @@ test('forward pagination', async () => {
     })
     afterCursor = result.pageInfo.endCursor
     const expected = pages[i]
-    expect(result.entries.length).toEqual(expected.length)
-    expect(result.entries.map(String)).toEqual(expected)
+    expect(result.edges.length).toEqual(expected.length)
+    expect(result.edges.map((e) => String(e.node))).toEqual(expected)
     const hasNextPage = Boolean(pages[i + 1])
     expect(result.pageInfo.hasNextPage).toEqual(hasNextPage)
     expect(result.pageInfo.hasPreviousPage).toEqual(false)
@@ -76,8 +76,8 @@ test('backward pagination', async () => {
     })
     beforeCursor = result.pageInfo.startCursor
     const expected = pages[i]
-    expect(result.entries.length).toEqual(expected.length)
-    expect(result.entries.map(String)).toEqual(expected)
+    expect(result.edges.length).toEqual(expected.length)
+    expect(result.edges.map((e) => String(e.node))).toEqual(expected)
     const hasPreviousPage = Boolean(pages[i + 1])
     expect(result.pageInfo.hasNextPage).toEqual(false)
     expect(result.pageInfo.hasPreviousPage).toEqual(hasPreviousPage)
@@ -94,14 +94,14 @@ test('filtered by account', async () => {
     account: presentAccount,
     first: 5,
   })
-  expect(withPresentAccount.entries.map(String)).toEqual(EXPECTED.slice(0, 5))
+  expect(withPresentAccount.edges.map((e) => String(e.node))).toEqual(EXPECTED.slice(0, 5))
   // Should return an empty page
   const withAbsentAccount = await order.page({
     model: MODEL,
     account: absentAccount,
     first: 5,
   })
-  expect(withAbsentAccount.entries).toEqual([])
+  expect(withAbsentAccount.edges).toEqual([])
   expect(withAbsentAccount.pageInfo.hasNextPage).toEqual(false)
   expect(withAbsentAccount.pageInfo.hasPreviousPage).toEqual(false)
   expect(withAbsentAccount.pageInfo.endCursor).toBeUndefined()

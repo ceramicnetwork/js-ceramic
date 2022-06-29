@@ -79,7 +79,12 @@ export class InsertionOrder {
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
         return {
-          entries: entries.map((row) => StreamID.fromString(row.stream_id)),
+          edges: entries.map((row) => {
+            return {
+              cursor: 'FIXME',
+              node: StreamID.fromString(row.stream_id),
+            }
+          }),
           pageInfo: {
             hasNextPage: response.length > limit,
             hasPreviousPage: false,
@@ -95,7 +100,12 @@ export class InsertionOrder {
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
         return {
-          entries: entries.map((row) => StreamID.fromString(row.stream_id)),
+          edges: entries.map((row) => {
+            return {
+              cursor: 'FIXME',
+              node: StreamID.fromString(row.stream_id),
+            }
+          }),
           pageInfo: {
             hasNextPage: false,
             hasPreviousPage: response.length > limit,
