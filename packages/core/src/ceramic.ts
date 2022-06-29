@@ -23,6 +23,7 @@ import {
   AnchorValidator,
   AnchorStatus,
   IndexApi,
+  StreamState,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -45,6 +46,7 @@ import * as path from 'path'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { makeIndexApi } from './initialization/make-index-api.js'
+import { RunningState } from './state-management/running-state'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -853,6 +855,15 @@ export class Ceramic implements CeramicApi {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._supportedChains
+  }
+
+  /**
+   * Turns +state+ into a Stream instance of the appropriate StreamType.
+   * Does not add the resulting instance to a cache.
+   * @param state StreamState for a stream.
+   */
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): T {
+    return streamFromState<T>(this.context, this._streamHandlers, state, this.repository.updates$)
   }
 
   /**
