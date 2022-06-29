@@ -68,6 +68,11 @@ export class TestUtils {
     return CID.create(1, SHA256_CODE, decodeMultiHash(body))
   }
 
+  /**
+   * Trigger anchor for a stream. WARNING: can only work on Ceramic Core.
+   * @param ceramic Ceramic Core instance.
+   * @param stream Stream to trigger anchor on.
+   */
   static async anchorUpdate(ceramic: CeramicApi, stream: Stream): Promise<void> {
     const anchorService = ceramic.context.anchorService as any
     if ('anchor' in anchorService) {
