@@ -6,7 +6,6 @@ import type {
   StreamState,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
-import { SyncOptions } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
 import { IndexStreamArgs } from './database-index-api.js'
@@ -37,7 +36,7 @@ export class LocalIndexApi implements IndexApi {
     if (!this._shouldIndexStream(args.model)) {
       return
     }
-    this.databaseIndexApi.indexStream(args)
+    await this.databaseIndexApi.indexStream(args)
   }
 
   /**

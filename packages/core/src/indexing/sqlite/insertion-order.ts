@@ -81,7 +81,7 @@ export class InsertionOrder {
         return {
           edges: entries.map((row) => {
             return {
-              cursor: 'FIXME',
+              cursor: Cursor.stringify(row),
               node: StreamID.fromString(row.stream_id),
             }
           }),
@@ -102,7 +102,7 @@ export class InsertionOrder {
         return {
           edges: entries.map((row) => {
             return {
-              cursor: 'FIXME',
+              cursor: Cursor.stringify(row),
               node: StreamID.fromString(row.stream_id),
             }
           }),
