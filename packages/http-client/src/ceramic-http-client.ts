@@ -127,10 +127,10 @@ export class CeramicClient implements CeramicApi {
     const found = this._streamCache.get(stream.id.toString())
     if (found) {
       if (!StreamUtils.statesEqual(stream.state, found.state)) found.next(stream.state)
-      return this.buildStream<T>(found)
+      return this.buildStreamFromDocument<T>(found)
     } else {
       this._streamCache.set(stream.id.toString(), stream)
-      return this.buildStream<T>(stream)
+      return this.buildStreamFromDocument<T>(stream)
     }
   }
 
@@ -147,7 +147,7 @@ export class CeramicClient implements CeramicApi {
       stream = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
       this._streamCache.set(stream.id.toString(), stream)
     }
-    return this.buildStream<T>(stream)
+    return this.buildStreamFromDocument<T>(stream)
   }
 
   async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
@@ -171,7 +171,7 @@ export class CeramicClient implements CeramicApi {
       const [k, v] = e
       const state = StreamUtils.deserializeState(v)
       const stream = new Document(state, this._apiUrl, this._config.syncInterval)
-      acc[k] = this.buildStream(stream)
+      acc[k] = this.buildStreamFromDocument(stream)
       return acc
     }, {})
   }
@@ -198,10 +198,10 @@ export class CeramicClient implements CeramicApi {
     const fromCache = this._streamCache.get(effectiveStreamId.toString())
     if (fromCache) {
       fromCache.next(document.state)
-      return this.buildStream<T>(document)
+      return this.buildStreamFromDocument<T>(document)
     } else {
       this._streamCache.set(effectiveStreamId.toString(), document)
-      return this.buildStream<T>(document)
+      return this.buildStreamFromDocument<T>(document)
     }
   }
 
@@ -224,18 +224,11 @@ export class CeramicClient implements CeramicApi {
     this._streamConstructors[streamHandler.name] = streamHandler.stream_constructor
   }
 
-  findStreamConstructor<T extends Stream>(type: number) {
-    const constructor = this._streamConstructors[type]
-    if (constructor) {
-      return constructor as StreamConstructor<T>
-    } else {
-      throw new Error(`Failed to find constructor for stream ${type}`)
-    }
-  }
-
-  private buildStream<T extends Stream = Stream>(stream: Document) {
-    const streamConstructor = this.findStreamConstructor<T>(stream.state.type)
-    return new streamConstructor(stream, this.context)
+  private buildStreamFromDocument<T extends Stream = Stream>(stream: Document): T {
+    const type = stream.state.type
+    const streamConstructor = this._streamConstructors[type]
+    if (!streamConstructor) throw new Error(`Failed to find constructor for stream ${type}`)
+    return new streamConstructor(stream, this.context) as T
   }
 
   async setDID(did: DID): Promise<void> {
