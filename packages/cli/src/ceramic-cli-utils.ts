@@ -581,9 +581,7 @@ export class CeramicCliUtils {
       await this._saveConfig(DEFAULT_DAEMON_CONFIG, filepath)
       return DEFAULT_DAEMON_CONFIG
     }
-
-    const fileContents = await fs.readFile(filepath, { encoding: 'utf8' })
-    return DaemonConfig.fromString(fileContents)
+    return DaemonConfig.fromFile(filepath)
   }
 
   /**
