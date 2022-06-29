@@ -719,7 +719,12 @@ describe('Ceramic interop: core <> http-client', () => {
         // Return faux but serializable StreamState
         daemon.ceramic.index.queryIndex = async () => {
           return {
-            entries: [fauxStreamState],
+            edges: [
+              {
+                cursor: 'opaque-cursor',
+                node: fauxStreamState,
+              },
+            ],
             pageInfo: {
               hasNextPage: false,
               hasPreviousPage: false,
@@ -728,9 +733,9 @@ describe('Ceramic interop: core <> http-client', () => {
         }
         // It gets serialized
         const response = await fetchJson(query.toString())
-        expect(response.entries.length).toEqual(1)
+        expect(response.edges.length).toEqual(1)
         // Check if it is indeed the same serialized state
-        expect(response.entries[0]).toEqual(StreamUtils.serializeState(fauxStreamState))
+        expect(response.edges[0].node).toEqual(StreamUtils.serializeState(fauxStreamState))
         // Get the original queryIndex method back
         daemon.ceramic.index.queryIndex = original
       })
