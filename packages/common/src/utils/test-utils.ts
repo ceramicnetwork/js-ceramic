@@ -69,13 +69,17 @@ export class TestUtils {
   }
 
   static async anchorUpdate(ceramic: CeramicApi, stream: Stream): Promise<void> {
-    const tillAnchored = firstValueFrom(
-      stream.pipe(
-        filter((state) => [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus))
-      )
-    )
     const anchorService = ceramic.context.anchorService as any
-    await anchorService.anchor()
-    await tillAnchored
+    if ('anchor' in anchorService) {
+      const tillAnchored = firstValueFrom(
+        stream.pipe(
+          filter((state) =>
+            [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus)
+          )
+        )
+      )
+      await anchorService.anchor()
+      await tillAnchored
+    }
   }
 }
