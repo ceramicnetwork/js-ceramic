@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 
 /**
- * Replace `~/` with `<homedir>/` absolute path.
+ * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
  * @param input Relative path.
  */
 function expandHomedir(input: string): string {
@@ -15,7 +15,7 @@ function expandHomedir(input: string): string {
 /**
  * If +input+ path is relative to +configFilepath+, return absolute filepath.
  *
- * Includes expansion of `~/` to home directory. See [[expandHomedir]].
+ * Includes expansion of `~/` to home directory, and of `~+/` to current working dir. See [[expandHomedir]].
  * @param input Relative path to resolve.
  * @param configFilepath Base folder used for path resolution.
  */
