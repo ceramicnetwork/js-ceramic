@@ -60,7 +60,7 @@ function reverseOrder<T extends { order: string }>(entries: Array<T>): Array<T> 
   return entries.map((entry) => ({ ...entry, order: REVERSE_ORDER[entry.order] }))
 }
 
-const INSERTION_ORDER = [{ column: 'created_at', order: 'DESC' }]
+const INSERTION_ORDER = [{ column: 'created_at', order: 'ASC' }]
 
 /**
  * Insertion order: created_at DESC.
@@ -127,7 +127,7 @@ export class InsertionOrder {
     }
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
-      return base.where('created_at', '<', after.created_at)
+      return base.where('created_at', '>', after.created_at)
     }
     return base
   }
@@ -162,7 +162,7 @@ export class InsertionOrder {
     }
     if (pagination.before) {
       const before = Cursor.parse(pagination.before)
-      return base((builder) => builder.where('created_at', '>', before.created_at))
+      return base((builder) => builder.where('created_at', '<', before.created_at))
     } else {
       return base()
     }
