@@ -648,6 +648,7 @@ export class Ceramic implements CeramicApi {
       streamID: stream.id,
       controller: stream.metadata.controller,
       lastAnchor: last_anchor_ts,
+      firstAnchor: null,
     }
     await this._index.indexStream(STREAM_CONTENT)
   }

@@ -87,6 +87,7 @@ describe('indexStream', () => {
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
     lastAnchor: null,
+    firstAnchor: null
   }
 
   let indexApi: SqliteIndexApi
@@ -118,6 +119,7 @@ describe('indexStream', () => {
       ...STREAM_CONTENT,
       updatedAt: updateTime,
       lastAnchor: updateTime,
+      firstAnchor: null
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)
