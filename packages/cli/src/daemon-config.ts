@@ -4,14 +4,12 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 
-const HOME_DIR = `${homedir()}/`.replace(/\/\/$/, '')
-
 /**
  * Replace `~/` with `<homedir>/` absolute path.
  * @param input Relative path.
  */
 function expandHomedir(input: string): string {
-  return input.replace(/^~\//, HOME_DIR)
+  return input.replace(/^~\+(?=$|\/|\\)/, process.cwd()).replace(/^~(?=$|\/|\\)/, homedir())
 }
 
 /**
