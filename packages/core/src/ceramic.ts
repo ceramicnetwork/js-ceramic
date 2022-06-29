@@ -23,6 +23,7 @@ import {
   AnchorValidator,
   AnchorStatus,
   IndexApi,
+  StreamState,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -853,6 +854,15 @@ export class Ceramic implements CeramicApi {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._supportedChains
+  }
+
+  /**
+   * Turns +state+ into a Stream instance of the appropriate StreamType.
+   * Does not add the resulting instance to a cache.
+   * @param state SreamState for a stream.
+   */
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): Promise<T> {
+    throw new Error('FIXME buildStreamFromState') // FIXME buildStreamFromState
   }
 
   /**

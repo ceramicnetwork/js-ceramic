@@ -1,5 +1,5 @@
 import type { DID } from 'dids'
-import type { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream.js'
+import type { Stream, StreamHandler, CeramicCommit, AnchorStatus, StreamState } from './stream.js'
 import type { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
@@ -133,6 +133,13 @@ export interface CeramicApi extends CeramicSigner {
    * stream.
    */
   getSupportedChains(): Promise<Array<string>>
+
+  /**
+   * Turns +state+ into a Stream instance of the appropriate StreamType.
+   * Does not add the resulting instance to a cache.
+   * @param state SreamState for a stream.
+   */
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): Promise<T>
 
   /**
    * Closes Ceramic instance

@@ -19,6 +19,7 @@ import {
   SyncOptions,
   AnchorStatus,
   IndexApi,
+  StreamState,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -222,6 +223,15 @@ export class CeramicClient implements CeramicApi {
 
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
     this._streamConstructors[streamHandler.name] = streamHandler.stream_constructor
+  }
+
+  /**
+   * Turns +state+ into a Stream instance of the appropriate StreamType.
+   * Does not add the resulting instance to a cache.
+   * @param state SreamState for a stream.
+   */
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): Promise<T> {
+    throw new Error('FIXME buildStreamFromState') // FIXME buildStreamFromState
   }
 
   private buildStreamFromDocument<T extends Stream = Stream>(stream: Document): T {
