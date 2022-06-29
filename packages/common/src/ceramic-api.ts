@@ -137,9 +137,9 @@ export interface CeramicApi extends CeramicSigner {
   /**
    * Turns +state+ into a Stream instance of the appropriate StreamType.
    * Does not add the resulting instance to a cache.
-   * @param state SreamState for a stream.
+   * @param state StreamState for a stream.
    */
-  buildStreamFromState<T extends Stream = Stream>(state: StreamState): Promise<T>
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): T
 
   /**
    * Closes Ceramic instance

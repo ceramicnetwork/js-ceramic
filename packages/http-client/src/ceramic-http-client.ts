@@ -228,10 +228,11 @@ export class CeramicClient implements CeramicApi {
   /**
    * Turns +state+ into a Stream instance of the appropriate StreamType.
    * Does not add the resulting instance to a cache.
-   * @param state SreamState for a stream.
+   * @param state StreamState for a stream.
    */
-  buildStreamFromState<T extends Stream = Stream>(state: StreamState): Promise<T> {
-    throw new Error('FIXME buildStreamFromState') // FIXME buildStreamFromState
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): T {
+    const stream$ = new Document(state, this._apiUrl, this._config.syncInterval)
+    return this.buildStreamFromDocument(stream$) as T
   }
 
   private buildStreamFromDocument<T extends Stream = Stream>(stream: Document): T {

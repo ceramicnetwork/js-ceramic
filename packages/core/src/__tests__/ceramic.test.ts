@@ -7,10 +7,11 @@ import {
   SyncOptions,
   GenesisCommit,
   MultiQuery,
+  CeramicApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import { swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import first from 'it-first'
@@ -668,5 +669,27 @@ describe('Ceramic integration', () => {
       await expect(stream.update({ date: 'invalid-date' })).rejects.toThrow()
       await ceramic.close()
     })
+  })
+})
+
+describe('buildStreamFromState', () => {
+  let ipfs: IpfsApi
+  let ceramic: CeramicApi
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
+    await ipfs.stop()
+  })
+
+  test('build instance of Streamtype', async () => {
+    const tile = await TileDocument.create(ceramic, { hello: 'world' })
+    const created = ceramic.buildStreamFromState(tile.state)
+    expect(created).toBeInstanceOf(TileDocument)
+    expect(created.id).toEqual(tile.id)
+    expect(created.content).toEqual(tile.content)
   })
 })
