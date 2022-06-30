@@ -203,7 +203,9 @@ export class IndexingConfig {
   @jsonMember(String)
   db?: string
 
-  @jsonMember(Boolean)
+  @jsonMember(Boolean, {
+    name: 'allow-queries-before-historical-sync',
+  })
   allowQueriesBeforeHistoricalSync?: boolean = false
 
   @jsonArrayMember(StreamID, {
