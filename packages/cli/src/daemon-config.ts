@@ -203,6 +203,9 @@ export class IndexingConfig {
   @jsonMember(String)
   db?: string
 
+  @jsonMember(Boolean)
+  allowQueriesBeforeHistoricalSync?: boolean = false
+
   @jsonArrayMember(StreamID, {
     emitDefaultValue: true,
     deserializer: (arr?: Array<string>) => {
