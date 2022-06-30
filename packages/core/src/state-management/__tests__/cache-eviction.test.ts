@@ -1,9 +1,8 @@
-import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
-import { delay } from '../../__tests__/delay.js'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
@@ -153,20 +152,20 @@ test('free if no one subscribed', async () => {
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   const subscription1 = stream1.subscribe()
-  await delay(100) // Wait for plumbing
+  await TestUtils.delay(100) // Wait for plumbing
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   const stream2 = await ceramic.loadStream(stream1.id)
   const subscription2 = stream2.subscribe()
-  await delay(100) // Wait for plumbing
+  await TestUtils.delay(100) // Wait for plumbing
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   subscription1.unsubscribe()
-  await delay(100) // Wait for plumbing
+  await TestUtils.delay(100) // Wait for plumbing
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   subscription2.unsubscribe()
-  await delay(100) // Wait for plumbing
+  await TestUtils.delay(100) // Wait for plumbing
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
 })
@@ -179,7 +178,7 @@ describe('evicted then subscribed', () => {
     // No more stream1 in memory, and it is not pinned!
     expect(ceramic.repository.inmemory.get(stream1.id.toString())).toBeUndefined()
     stream1.subscribe()
-    await delay(100) // Wait for plumbing
+    await TestUtils.delay(100) // Wait for plumbing
     const inmemory = ceramic.repository.inmemory.get(stream1.id.toString())
     // We set to memory the latest known state, i.e. from streamtype.state
     expect(inmemory).toBeDefined()
@@ -204,7 +203,7 @@ describe('evicted then subscribed', () => {
     )
 
     stream2.subscribe()
-    await delay(100) // Wait for plumbing
+    await TestUtils.delay(100) // Wait for plumbing
     const inmemory = ceramic.repository.inmemory.get(stream2.id.toString())
     // We set to memory the pinned state, instead of the one from streamtype.state
     expect(inmemory).toBeDefined()

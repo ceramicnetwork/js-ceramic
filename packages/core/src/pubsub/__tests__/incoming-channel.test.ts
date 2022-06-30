@@ -1,10 +1,9 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { from, firstValueFrom, lastValueFrom } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-channel.js'
-import { delay } from '../../__tests__/delay.js'
 import { asIpfsMessage } from './as-ipfs-message.js'
 import { MsgType } from '../pubsub-message.js'
 import { TaskQueue } from '../task-queue.js'
@@ -35,11 +34,11 @@ describe('connection', () => {
     const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe')
     const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe')
     const subscription = incoming$.subscribe()
-    await delay(200)
+    await TestUtils.delay(200)
     // await incoming$.tasks.onIdle()
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC])
     subscription.unsubscribe()
-    await delay(200)
+    await TestUtils.delay(200)
     expect(await ipfs.pubsub.ls()).toEqual([])
     expect(subscribeSpy).toBeCalledTimes(1)
     expect(unsubscribeSpy).toBeCalledTimes(1)
@@ -57,11 +56,11 @@ describe('connection', () => {
     const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe')
     const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe')
     const subscription = incoming$.subscribe()
-    await delay(200) // Wait till rxjs machinery is done
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
     expect(subscribeSpy).toBeCalledTimes(1) // Initial pubsub.subscribe
     expect(unsubscribeSpy).toBeCalledTimes(0)
     subscribeSpy.mock.calls[0][2].onError(new Error('fake error'))
-    await delay(resubscribePeriod * 3)
+    await TestUtils.delay(resubscribePeriod * 3)
     expect(subscribeSpy).toBeCalledTimes(2) // +1 on resubscribe
     expect(unsubscribeSpy).toBeCalledTimes(1)
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC]) // And now we subscribed
@@ -94,7 +93,7 @@ test('pass incoming message', async () => {
   const subscription = incoming$.subscribe((message) => {
     result.push(message)
   })
-  await delay(200) // Wait till rxjs machinery is done
+  await TestUtils.delay(200) // Wait till rxjs machinery is done
   expect(result).toEqual(messages)
   subscription.unsubscribe()
 })
@@ -142,7 +141,7 @@ describe('filterOuter', () => {
     const subscription = incoming$.pipe(filterExternal(peerId$)).subscribe((message) => {
       result.push(message)
     })
-    await delay(200) // Wait till rxjs machinery is done
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
     expect(result).toEqual(outerMessages)
     subscription.unsubscribe()
   })
@@ -165,11 +164,11 @@ describe('PubsubIncoming', () => {
       new TaskQueue()
     )
     const subscription = incoming$.subscribe()
-    await delay(200) // Wait till rxjs machinery is done
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
     expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
     expect(fauxIpfs.pubsub.unsubscribe).toBeCalledTimes(0)
     subscription.unsubscribe()
-    await delay(200) // Wait till rxjs machinery is done
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
     expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
     expect(fauxIpfs.pubsub.unsubscribe).toBeCalledTimes(1)
   })
@@ -212,7 +211,7 @@ describe('PubsubIncoming', () => {
       new TaskQueue()
     )
     const lastValue = lastValueFrom(incoming$)
-    await delay(200) // Wait till rxjs machinery is done
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     fauxIpfs.pubsub.subscribe.mock.calls[0][2].onError(error)

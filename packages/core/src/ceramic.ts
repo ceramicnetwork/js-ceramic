@@ -1,7 +1,3 @@
-import { polyfillAbortController } from '@ceramicnetwork/common'
-
-polyfillAbortController()
-
 import { Dispatcher } from './dispatcher.js'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
@@ -27,6 +23,7 @@ import {
   AnchorValidator,
   AnchorStatus,
   IndexApi,
+  StreamState,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -49,6 +46,7 @@ import * as path from 'path'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { makeIndexApi } from './initialization/make-index-api.js'
+import { RunningState } from './state-management/running-state'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -621,27 +619,28 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    // add stream to MID indexing if model is present
-    if (stream.metadata.model) {
-      await this.addStreamToIndex(stream)
-    }
+    await this.indexStreamIfNeeded(stream)
 
     return stream
   }
 
   /**
-   * Helper function to add stream to db index.
+   * Helper function to add stream to db index if it has a 'model' in its metadata.
    * @param stream
    * @private
    */
-  private async addStreamToIndex(stream) {
+  private async indexStreamIfNeeded(stream) {
+    if (!stream.metadata.model) {
+      return
+    }
+
     const last_anchor_ts = stream.state$.value.metadata.anchorProof
       ? new Date(stream.state$.value.metadata.anchorProof.blockTimestamp * 1000)
       : null
     const STREAM_CONTENT = {
       model: stream.metadata.model,
       streamID: stream.id,
-      controller: stream.controllers[0],
+      controller: stream.metadata.controller,
       lastAnchor: last_anchor_ts,
     }
     await this._index.indexStream(STREAM_CONTENT)
@@ -683,10 +682,7 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    // add stream to MID indexing if model is present
-    if (stream.metadata.model) {
-      await this.addStreamToIndex(stream)
-    }
+    await this.indexStreamIfNeeded(stream)
 
     return stream
   }
@@ -859,6 +855,15 @@ export class Ceramic implements CeramicApi {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._supportedChains
+  }
+
+  /**
+   * Turns +state+ into a Stream instance of the appropriate StreamType.
+   * Does not add the resulting instance to a cache.
+   * @param state StreamState for a stream.
+   */
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): T {
+    return streamFromState<T>(this.context, this._streamHandlers, state, this.repository.updates$)
   }
 
   /**

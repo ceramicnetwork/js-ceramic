@@ -3,7 +3,7 @@ import { ViewsValidation } from '../views-utils'
 import { ModelViewsDefinition } from '@ceramicnetwork/stream-model'
 
 const SCHEMA: JSONSchema.Object = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
   type: 'object',
   properties: {
     stringPropName: {
@@ -16,17 +16,18 @@ const SCHEMA: JSONSchema.Object = {
 }
 
 const VIEWS_VALID: ModelViewsDefinition = {
-  'owner': { type: 'documentAccount' }
+  owner: { type: 'documentAccount' },
+  version: { type: 'documentVersion' },
 }
 
 const VIEWS_INVALID_TYPE: ModelViewsDefinition = {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  'owner': { type: 'invalidType' }
+  owner: { type: 'invalidType' },
 }
 
 const VIEWS_DUPLICATED_PROPERTY: ModelViewsDefinition = {
-  'stringPropName': { type: 'documentAccount' }
+  stringPropName: { type: 'documentAccount' },
 }
 
 describe('ViewsValidation', () => {
@@ -54,4 +55,3 @@ describe('ViewsValidation', () => {
     }).toThrow(/view definition used with a property also present in schema/)
   })
 })
-

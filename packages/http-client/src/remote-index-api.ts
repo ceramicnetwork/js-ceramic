@@ -22,9 +22,14 @@ export class RemoteIndexApi implements IndexApi {
       queryURL.searchParams.set(key, query[key])
     }
     const response = await this._fetchJson(queryURL)
-    const entries = response.entries.map(StreamUtils.deserializeState)
+    const edges = response.edges.map((e) => {
+      return {
+        cursor: e.cursor,
+        node: StreamUtils.deserializeState(e.node),
+      }
+    })
     return {
-      entries: entries,
+      edges: edges,
       pageInfo: response.pageInfo,
     }
   }

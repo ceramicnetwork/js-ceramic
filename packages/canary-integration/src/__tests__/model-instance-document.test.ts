@@ -1,13 +1,12 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CeramicApi, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
 } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
-import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
@@ -96,11 +95,14 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
+    expect(doc.metadata).toEqual({
+      controller: ceramic.did.id.toString(),
+      model: midMetadata.model,
+    })
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
-    expect(doc.metadata.unique instanceof Uint8Array).toBeTruthy()
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
@@ -120,7 +122,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await anchorUpdate(core, doc)
+    await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -136,7 +138,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await doc.replace(CONTENT1)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await anchorUpdate(core, doc)
+    await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -151,13 +153,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
-    await anchorUpdate(core, doc)
+    await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     await doc.replace(CONTENT2)
     await doc.replace(CONTENT3)
 
-    await anchorUpdate(core, doc)
+    await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -176,13 +178,12 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
 
     expect(doc1.id.toString()).not.toEqual(doc2.id.toString())
-    expect(doc1.metadata.unique.toString()).not.toEqual(doc2.metadata.unique.toString())
   })
 
   test('Can load a stream', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
-    await anchorUpdate(core, doc)
+    await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     const loaded = await ModelInstanceDocument.load(ceramic, doc.id)
@@ -281,7 +282,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   test('load updated and anchored doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
-    await anchorUpdate(ceramic0, doc)
+    await TestUtils.anchorUpdate(ceramic0, doc)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 

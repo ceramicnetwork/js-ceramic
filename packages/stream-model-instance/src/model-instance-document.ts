@@ -23,12 +23,30 @@ import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 /**
  * Arguments used to generate the metadata for Model Instance Documents
  */
-export interface ModelInstanceDocumentMetadata {
+export interface ModelInstanceDocumentMetadataArgs {
   /**
    * The DID that is allowed to author updates to this ModelInstanceDocument
    */
   controller?: string
 
+  /**
+   * The StreamID of the Model that this ModelInstanceDocument belongs to.
+   */
+  model: StreamID
+}
+
+/**
+ * Metadata for a ModelInstanceDocument
+ */
+export interface ModelInstanceDocumentMetadata {
+  /**
+   * The DID that is allowed to author updates to this ModelInstanceDocument
+   */
+  controller: string
+
+  /**
+   * The StreamID of the Model that this ModelInstanceDocument belongs to.
+   */
   model: StreamID
 }
 
@@ -74,6 +92,11 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     return super.content
   }
 
+  get metadata(): ModelInstanceDocumentMetadata {
+    const metadata = this.state$.value.metadata
+    return { controller: metadata.controllers[0], model: metadata.model }
+  }
+
   /**
    * Creates a Model Instance Document.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
@@ -84,7 +107,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   static async create<T>(
     ceramic: CeramicApi,
     content: T | null,
-    metadata: ModelInstanceDocumentMetadata,
+    metadata: ModelInstanceDocumentMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
@@ -199,8 +222,17 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   private static async _makeGenesis<T>(
     signer: CeramicSigner,
     content: T,
-    metadata: ModelInstanceDocumentMetadata
-  ): Promise<CeramicCommit> {
+    metadata: ModelInstanceDocumentMetadataArgs
+  ): Promise<SignedCommitContainer> {
+    const commit = await this._makeRawGenesis(signer, content, metadata)
+    return ModelInstanceDocument._signDagJWS(signer, commit)
+  }
+
+  private static async _makeRawGenesis<T>(
+    signer: CeramicSigner,
+    content: T,
+    metadata: ModelInstanceDocumentMetadataArgs
+  ): Promise<GenesisCommit> {
     if (!metadata.model) {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
@@ -216,15 +248,13 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       }
     }
 
-    // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       unique: randomBytes(12),
       model: metadata.model.bytes,
     }
 
-    const commit: GenesisCommit = { data: content, header }
-    return ModelInstanceDocument._signDagJWS(signer, commit)
+    return { data: content, header }
   }
 
   /**

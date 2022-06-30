@@ -43,47 +43,93 @@ afterEach(async () => {
   await tmpFolder.cleanup()
 })
 
-test('forward pagination', async () => {
-  const pageSize = 5
-  const pages = chunks(EXPECTED, pageSize)
-  let afterCursor: string | undefined = undefined
-  for (let i = 0; i < pages.length; i++) {
-    const result = await order.page({
+describe('forward pagination', () => {
+  test('pagination', async () => {
+    const pageSize = 5
+    const pages = chunks(EXPECTED, pageSize)
+    let afterCursor: string | undefined = undefined
+    for (let i = 0; i < pages.length; i++) {
+      const result = await order.page({
+        model: MODEL,
+        first: pageSize,
+        after: afterCursor,
+      })
+      afterCursor = result.pageInfo.endCursor
+      const expected = pages[i]
+      expect(result.edges.length).toEqual(expected.length)
+      expect(result.edges.map((e) => String(e.node))).toEqual(expected)
+      const hasNextPage = Boolean(pages[i + 1])
+      expect(result.pageInfo.hasNextPage).toEqual(hasNextPage)
+      expect(result.pageInfo.hasPreviousPage).toEqual(false)
+      expect(result.pageInfo.endCursor).toBeTruthy()
+      expect(result.pageInfo.startCursor).toBeTruthy()
+    }
+  })
+  test('using edge cursor', async () => {
+    const pageSize = 5
+    const pages = chunks(EXPECTED, pageSize)
+    const expectedFirstPage = pages[0]
+    const firstPage = await order.page({
       model: MODEL,
       first: pageSize,
-      after: afterCursor,
     })
-    afterCursor = result.pageInfo.endCursor
-    const expected = pages[i]
-    expect(result.entries.length).toEqual(expected.length)
-    expect(result.entries.map(String)).toEqual(expected)
-    const hasNextPage = Boolean(pages[i + 1])
-    expect(result.pageInfo.hasNextPage).toEqual(hasNextPage)
-    expect(result.pageInfo.hasPreviousPage).toEqual(false)
-    expect(result.pageInfo.endCursor).toBeTruthy()
-    expect(result.pageInfo.startCursor).toBeTruthy()
-  }
-})
-test('backward pagination', async () => {
-  const pageSize = 5
-  const pages = chunks(EXPECTED.reverse(), pageSize).map((arr) => arr.reverse())
-  let beforeCursor: string | undefined = undefined
-  for (let i = 0; i < pages.length; i++) {
-    const result = await order.page({
+    expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
+    const secondEntry = firstPage.edges[1]
+    const customPage = await order.page({
       model: MODEL,
-      last: pageSize,
-      before: beforeCursor,
+      first: 3,
+      after: secondEntry.cursor,
     })
-    beforeCursor = result.pageInfo.startCursor
-    const expected = pages[i]
-    expect(result.entries.length).toEqual(expected.length)
-    expect(result.entries.map(String)).toEqual(expected)
-    const hasPreviousPage = Boolean(pages[i + 1])
-    expect(result.pageInfo.hasNextPage).toEqual(false)
-    expect(result.pageInfo.hasPreviousPage).toEqual(hasPreviousPage)
-    expect(result.pageInfo.endCursor).toBeTruthy()
-    expect(result.pageInfo.startCursor).toBeTruthy()
-  }
+    // Returns 3 entries after the 2nd one
+    expect(customPage.edges.length).toEqual(3)
+    expect(customPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage.slice(2))
+  })
+})
+
+describe('backward pagination', () => {
+  const PAGE_SIZE = 5
+  let pages: Array<Array<string>>
+  beforeEach(() => {
+    pages = chunks(EXPECTED.reverse(), PAGE_SIZE).map((arr) => arr.reverse())
+  })
+
+  test('pagination', async () => {
+    let beforeCursor: string | undefined = undefined
+    for (let i = 0; i < pages.length; i++) {
+      const result = await order.page({
+        model: MODEL,
+        last: PAGE_SIZE,
+        before: beforeCursor,
+      })
+      beforeCursor = result.pageInfo.startCursor
+      const expected = pages[i]
+      expect(result.edges.length).toEqual(expected.length)
+      expect(result.edges.map((e) => String(e.node))).toEqual(expected)
+      const hasPreviousPage = Boolean(pages[i + 1])
+      expect(result.pageInfo.hasNextPage).toEqual(false)
+      expect(result.pageInfo.hasPreviousPage).toEqual(hasPreviousPage)
+      expect(result.pageInfo.endCursor).toBeTruthy()
+      expect(result.pageInfo.startCursor).toBeTruthy()
+    }
+  })
+
+  test('using edge cursor', async () => {
+    const expectedFirstPage = pages[0]
+    const firstPage = await order.page({
+      model: MODEL,
+      last: PAGE_SIZE,
+    })
+    expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
+    const secondLastEntry = firstPage.edges[firstPage.edges.length - 2]
+    const customPage = await order.page({
+      model: MODEL,
+      last: 3,
+      before: secondLastEntry.cursor,
+    })
+    // Returns 3 entries before the 2nd last one
+    expect(customPage.edges.length).toEqual(3)
+    expect(customPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage.slice(0, 3))
+  })
 })
 
 test('filtered by account', async () => {
@@ -94,14 +140,14 @@ test('filtered by account', async () => {
     account: presentAccount,
     first: 5,
   })
-  expect(withPresentAccount.entries.map(String)).toEqual(EXPECTED.slice(0, 5))
+  expect(withPresentAccount.edges.map((e) => String(e.node))).toEqual(EXPECTED.slice(0, 5))
   // Should return an empty page
   const withAbsentAccount = await order.page({
     model: MODEL,
     account: absentAccount,
     first: 5,
   })
-  expect(withAbsentAccount.entries).toEqual([])
+  expect(withAbsentAccount.edges).toEqual([])
   expect(withAbsentAccount.pageInfo.hasNextPage).toEqual(false)
   expect(withAbsentAccount.pageInfo.hasPreviousPage).toEqual(false)
   expect(withAbsentAccount.pageInfo.endCursor).toBeUndefined()

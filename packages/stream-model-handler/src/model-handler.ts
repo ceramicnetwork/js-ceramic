@@ -92,23 +92,24 @@ export class ModelHandler implements StreamHandler<Model> {
       throw Error('Model genesis commit must be signed')
     }
 
+    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
+      throw new Error('Exactly one controller must be specified')
+    }
+
     const streamId = await StreamID.fromGenesis('model', commitData.commit)
     const { controllers, model } = payload.header
+    const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
 
     await SignatureUtils.verifyCommitSignature(
       commitData,
       context.did,
-      controllers[0],
+      controller,
       modelStreamID,
       streamId
     )
 
     assertNoExtraKeys(payload.data)
-
-    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
-    }
 
     const modelStreamId = StreamID.fromBytes(payload.header.model)
     if (!modelStreamId.equals(Model.MODEL)) {
@@ -117,7 +118,7 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    const metadata = { ...payload.header, model: modelStreamId }
+    const metadata = { controllers: [controller], model: modelStreamId }
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data,
@@ -155,7 +156,7 @@ export class ModelHandler implements StreamHandler<Model> {
 
     // Verify the signature
     const metadata = state.metadata
-    const controller = metadata.controllers[0] // TODO(NET-1464): Use `controller` instead of `controllers`
+    const controller = metadata.controllers[0]
     const model = metadata.model
     const streamId = StreamUtils.streamIdFromState(state)
     await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)

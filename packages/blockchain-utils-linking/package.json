@@ -22,7 +22,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -38,7 +38,6 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/streamid": "^2.1.0",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",

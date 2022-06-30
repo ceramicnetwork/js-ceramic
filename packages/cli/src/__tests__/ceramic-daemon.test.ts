@@ -225,9 +225,6 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('makes and gets updates correctly with subscription', async () => {
-    function delay(ms: number) {
-      return new Promise((resolve) => setTimeout(resolve, ms))
-    }
     const initialContent = { a: 'initial' }
     const middleContent = { ...initialContent, b: 'middle' }
     const finalContent = { ...middleContent, c: 'final' }
@@ -240,7 +237,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // change from core viewable in client
     await doc1.update(middleContent)
     await anchorDoc(doc1)
-    await delay(1000) // 2x polling interval
+    await TestUtils.delay(1000) // 2x polling interval
     expect(doc1.content).toEqual(middleContent)
     expect(doc1.content).toEqual(doc2.content)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
@@ -248,7 +245,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
     await doc2.update(finalContent)
     await anchorDoc(doc2)
-    await delay(1000) // 2x polling interval
+    await TestUtils.delay(1000) // 2x polling interval
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.content).toEqual(finalContent)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
@@ -676,13 +673,17 @@ describe('Ceramic interop: core <> http-client', () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
         query.searchParams.set('model', MODEL_STREAM_ID.toString())
         query.searchParams.set('first', '20000')
-        await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+        await expect(fetchJson(query.toString())).rejects.toThrow(
+          /Requested too many entries: 20000/
+        )
       })
       test('too much entries requested: forward pagination', async () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
         query.searchParams.set('model', MODEL_STREAM_ID.toString())
         query.searchParams.set('last', '20000')
-        await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+        await expect(fetchJson(query.toString())).rejects.toThrow(
+          /Requested too many entries: 20000/
+        )
       })
       test('model, account in query', async () => {
         const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
@@ -715,7 +716,12 @@ describe('Ceramic interop: core <> http-client', () => {
         // Return faux but serializable StreamState
         daemon.ceramic.index.queryIndex = async () => {
           return {
-            entries: [fauxStreamState],
+            edges: [
+              {
+                cursor: 'opaque-cursor',
+                node: fauxStreamState,
+              },
+            ],
             pageInfo: {
               hasNextPage: false,
               hasPreviousPage: false,
@@ -724,9 +730,9 @@ describe('Ceramic interop: core <> http-client', () => {
         }
         // It gets serialized
         const response = await fetchJson(query.toString())
-        expect(response.entries.length).toEqual(1)
+        expect(response.edges.length).toEqual(1)
         // Check if it is indeed the same serialized state
-        expect(response.entries[0]).toEqual(StreamUtils.serializeState(fauxStreamState))
+        expect(response.edges[0].node).toEqual(StreamUtils.serializeState(fauxStreamState))
         // Get the original queryIndex method back
         daemon.ceramic.index.queryIndex = original
       })

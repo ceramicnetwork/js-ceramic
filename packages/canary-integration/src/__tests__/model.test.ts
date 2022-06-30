@@ -1,10 +1,9 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
-import { anchorUpdate } from '@ceramicnetwork/core/lib/state-management/__tests__/anchor-update'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
@@ -44,10 +43,10 @@ describe('Model API http-client tests', () => {
 
     expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
     expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
+    expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    expect(model.metadata.unique instanceof Uint8Array).toBeTruthy()
   })
 
   test('Create and update placeholder', async () => {
@@ -66,7 +65,7 @@ describe('Model API http-client tests', () => {
     const model = await Model.create(ceramic, FINAL_CONTENT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await anchorUpdate(core, model)
+    await TestUtils.anchorUpdate(core, model)
     await model.sync()
 
     expect(model.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -82,7 +81,7 @@ describe('Model API http-client tests', () => {
     await model.replacePlaceholder(FINAL_CONTENT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await anchorUpdate(core, model)
+    await TestUtils.anchorUpdate(core, model)
     await model.sync()
 
     expect(model.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -98,7 +97,6 @@ describe('Model API http-client tests', () => {
     const model2 = await Model.create(ceramic, FINAL_CONTENT)
 
     expect(model1.id.toString()).not.toEqual(model2.id.toString())
-    expect(model1.metadata.unique.toString()).not.toEqual(model2.metadata.unique.toString())
   })
 
   test('Cannot create incomplete model with create()', async () => {
@@ -150,7 +148,7 @@ describe('Model API http-client tests', () => {
   test('Can load a complete stream', async () => {
     const model = await Model.createPlaceholder(ceramic, PLACEHOLDER_CONTENT)
     await model.replacePlaceholder(FINAL_CONTENT)
-    await anchorUpdate(core, model)
+    await TestUtils.anchorUpdate(core, model)
     await model.sync()
 
     const loaded = await Model.load(ceramic, model.id)
@@ -225,7 +223,7 @@ describe('Model API multi-node tests', () => {
   test('load updated and anchored model', async () => {
     const model = await Model.createPlaceholder(ceramic0, PLACEHOLDER_CONTENT)
     await model.replacePlaceholder(FINAL_CONTENT)
-    await anchorUpdate(ceramic0, model)
+    await TestUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
 

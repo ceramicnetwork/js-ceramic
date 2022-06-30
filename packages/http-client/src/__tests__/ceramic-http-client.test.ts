@@ -36,6 +36,15 @@ const second = {
 } as unknown as StreamState
 const streamId = new StreamID(0, FAKE_CID_1)
 
+describe('buildStreamFromState', () => {
+  test('build instance of Streamtype', async () => {
+    const client = new CeramicClient(API_URL)
+    const a = client.buildStreamFromState(initial)
+    expect(a).toBeInstanceOf(TileDocument)
+    expect(a.id.cid).toEqual(FAKE_CID_1)
+  })
+})
+
 describe('applyCommit', () => {
   describe('document not in cache', () => {
     test('add to cache', async () => {

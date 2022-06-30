@@ -1,14 +1,17 @@
 import { jest } from '@jest/globals'
 import { RemoteIndexApi } from '../remote-index-api.js'
-import { CommitType, fetchJson, StreamState, TestUtils } from '@ceramicnetwork/common'
+import { CommitType, fetchJson, Page, StreamState, TestUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
 const MODEL = new StreamID(1, TestUtils.randomCID())
 
-const EMPTY_RESPONSE = {
-  entries: [],
-  pageInfo: {},
+const EMPTY_RESPONSE: Page<StreamState> = {
+  edges: [],
+  pageInfo: {
+    hasPreviousPage: false,
+    hasNextPage: false,
+  },
 }
 const FAUX_STREAM_STATE = {
   type: 0,
@@ -45,10 +48,18 @@ test('model, account in query', async () => {
 })
 
 test('serialize stream state', async () => {
-  const response = { ...EMPTY_RESPONSE, entries: [FAUX_STREAM_STATE] }
+  const response: Page<StreamState> = {
+    ...EMPTY_RESPONSE,
+    edges: [
+      {
+        cursor: 'some-opaque-string',
+        node: FAUX_STREAM_STATE,
+      },
+    ],
+  }
   const fauxFetch = jest.fn(async () => response) as typeof fetchJson
   const indexApi = new RemoteIndexApi(FAUX_ENDPOINT)
   ;(indexApi as any)._fetchJson = fauxFetch
   const result = await indexApi.queryIndex({ model: MODEL, account: 'did:key:foo', first: 5 })
-  expect(result.entries[0]).toEqual(FAUX_STREAM_STATE)
+  expect(result.edges[0].node).toEqual(FAUX_STREAM_STATE)
 })

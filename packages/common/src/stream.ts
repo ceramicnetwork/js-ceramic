@@ -180,10 +180,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     return this._context.api
   }
 
-  get metadata(): StreamMetadata {
-    const { next, metadata } = this.state$.value
-    return cloneDeep(next?.metadata ?? metadata)
-  }
+  abstract get metadata(): Record<string, any>
 
   get content(): any {
     const { next, content } = this.state$.value
