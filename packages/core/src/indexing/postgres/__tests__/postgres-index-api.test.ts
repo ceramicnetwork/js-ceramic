@@ -22,7 +22,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await dbConnection.destroy()
-  await pgTeardown()
 })
 
 export async function listMidTables(dbConnection: Knex) {
@@ -142,5 +141,6 @@ describe('indexStream', () => {
     expect(closeDates(updatedAt, updateTime)).toBeTruthy()
     const createdAt = new Date(raw.created_at)
     expect(closeDates(createdAt, createTime)).toBeTruthy()
+    await pgTeardown()
   })
 })
