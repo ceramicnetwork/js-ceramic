@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.2.3-rc.0...@ceramicnetwork/stream-tile@2.3.0-rc.0) (2022-06-30)
+
+
+### Features
+
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+
+
+
+
+
 ## [2.2.3-rc.0](/compare/@ceramicnetwork/stream-tile@2.2.2...@ceramicnetwork/stream-tile@2.2.3-rc.0) (2022-06-27)
 
 

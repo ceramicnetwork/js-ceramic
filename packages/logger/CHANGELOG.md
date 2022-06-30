@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@2.0.4...@ceramicnetwork/logger@2.0.5-rc.0) (2022-06-30)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
 ## [2.0.4](/compare/@ceramicnetwork/logger@2.0.4-rc.1...@ceramicnetwork/logger@2.0.4) (2022-05-18)
 
 **Note:** Version bump only for package @ceramicnetwork/logger

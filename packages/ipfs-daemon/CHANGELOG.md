@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.0.9-rc.0...@ceramicnetwork/ipfs-daemon@2.1.0-rc.0) (2022-06-30)
+
+
+### Features
+
+* Remove AbortController polyfill ([#2278](https://github.com/ceramicnetwork/js-ceramic/issues/2278)) ([65b9bee](https://github.com/ceramicnetwork/js-ceramic/commit/65b9beedafa108c07d4c7080c038061c35b88110))
+
+
+
+
+
 ## [2.0.9-rc.0](/compare/@ceramicnetwork/ipfs-daemon@2.0.8...@ceramicnetwork/ipfs-daemon@2.0.9-rc.0) (2022-06-27)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
