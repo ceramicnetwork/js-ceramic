@@ -473,6 +473,7 @@ export class CeramicDaemon {
   }
 
   async getCollection(req: Request, res: Response): Promise<void> {
+    // TODO(NET-1630) Throw if historical indexing is in progress
     if (!this.opts.indexing.allowQueriesBeforeHistoricalSync) {
       res.statusCode = 503
       throw new Error(`Index for historical data is not available`)
