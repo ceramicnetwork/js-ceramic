@@ -62,7 +62,6 @@ function reverseOrder<T extends { order: string }>(entries: Array<T>): Array<T> 
 
 const INSERTION_ORDER = [{ column: 'created_at', order: 'DESC' }]
 
-
 /**
  * Insertion order: created_at DESC.
  */

@@ -27,13 +27,15 @@ afterEach(async () => {
 
 export async function listMidTables(dbConnection: Knex) {
   const dataArr = []
-  await dbConnection.select('tablename')
+  await dbConnection
+    .select('tablename')
     .from('pg_tables')
-    .whereRaw('schemaname=\'public\' AND tablename LIKE (\'kjz%\')').then(function(result) {
-    result.forEach(function(value) {
-      dataArr.push(value.tablename)
-    });
-  });
+    .whereRaw("schemaname='public' AND tablename LIKE ('kjz%')")
+    .then(function (result) {
+      result.forEach(function (value) {
+        dataArr.push(value.tablename)
+      })
+    })
   return dataArr
 }
 

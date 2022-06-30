@@ -7,7 +7,6 @@ import { Knex } from 'knex'
  * Create `mid_%` tables and corresponding indexes.
  */
 export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID>) {
-
   const expectedTables = modelsToIndex.map(asTableName).map((tableName) => {
     if (tableName.length > 63) {
       console.error(`Invalid model added to config file: ${tableName}`)
@@ -18,9 +17,9 @@ export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID
 
   for (const tableName of expectedTables) {
     await dataSource.schema.hasTable(tableName).then(function (exists) {
-        if (!exists) {
-          createModelTable(dataSource, tableName)
-        }
-      })
+      if (!exists) {
+        createModelTable(dataSource, tableName)
+      }
+    })
   }
 }

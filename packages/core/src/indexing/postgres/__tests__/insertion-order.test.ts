@@ -4,7 +4,7 @@ import { PostgresIndexApi } from '../postgres-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { chunks } from './chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
-import {jest} from "@jest/globals"
+import { jest } from '@jest/globals'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 
