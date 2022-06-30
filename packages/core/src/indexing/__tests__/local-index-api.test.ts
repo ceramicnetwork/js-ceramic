@@ -11,7 +11,12 @@ describe('with database backend', () => {
   test('return page from the database', async () => {
     const query = { model: 'foo', first: randomInt(100) }
     const backendPage: Page<string> = {
-      entries: Array.from({ length: query.first }).map(() => randomString(3)),
+      edges: Array.from({ length: query.first }).map(() => {
+        return {
+          cursor: randomString(32),
+          node: randomString(32),
+        }
+      }),
       pageInfo: {
         hasPreviousPage: true,
         hasNextPage: true,
@@ -38,10 +43,10 @@ describe('with database backend', () => {
     expect(response.pageInfo).toEqual(backendPage.pageInfo)
     // Transform from StreamId to StreamState via Repository::streamState
     expect(streamStateFn).toBeCalledTimes(query.first)
-    backendPage.entries.forEach((fauxStreamId) => {
-      expect(streamStateFn).toBeCalledWith(fauxStreamId)
+    backendPage.edges.forEach((edge) => {
+      expect(streamStateFn).toBeCalledWith(edge.node)
     })
-    expect(response.entries.map((e) => e.content)).toEqual(backendPage.entries)
+    expect(response.edges.map((e) => e.node.content)).toEqual(backendPage.edges.map((e) => e.node))
   })
 })
 
@@ -54,7 +59,7 @@ describe('without database backend', () => {
     const response = await indexApi.queryIndex({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
-      entries: [],
+      edges: [],
       pageInfo: {
         hasNextPage: false,
         hasPreviousPage: false,
