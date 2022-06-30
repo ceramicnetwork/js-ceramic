@@ -2,7 +2,6 @@ import tmp from 'tmp-promise'
 import { writeFile } from 'node:fs/promises'
 import { DaemonConfig } from '../daemon-config'
 import { homedir } from 'node:os'
-import * as process from 'process'
 
 describe('reading from file', () => {
   let folder: tmp.DirectoryResult
