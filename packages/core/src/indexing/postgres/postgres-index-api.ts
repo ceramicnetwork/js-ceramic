@@ -5,8 +5,6 @@ import { initTables } from '../postgres/init-tables.js'
 import { InsertionOrder } from '../postgres/insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
-import { asTimestamp } from '../sqlite/sqlite-index-api'
-//import DeferredKeySelection from 'knex'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
@@ -26,12 +24,11 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
 
-    console.log('Postgres Index API')
     // created_at and last_updated_at set by default default value
     await this.dbConnection(tableName)
       .insert({
-        stream_id: args.streamID,
-        controller_did: args.controller,
+        stream_id: String(args.streamID),
+        controller_did: String(args.controller),
         last_anchored_at: args.lastAnchor,
         created_at: args.createdAt || new Date(),
         updated_at: args.updatedAt || new Date(),

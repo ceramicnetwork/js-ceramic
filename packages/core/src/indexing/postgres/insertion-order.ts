@@ -62,6 +62,7 @@ function reverseOrder<T extends { order: string }>(entries: Array<T>): Array<T> 
 
 const INSERTION_ORDER = [{ column: 'created_at', order: 'DESC' }]
 
+
 /**
  * Insertion order: created_at DESC.
  */
@@ -153,6 +154,7 @@ export class InsertionOrder {
             .select('stream_id', 'last_anchored_at', 'created_at')
             .orderBy(reverseOrder(INSERTION_ORDER))
             .limit(limit + 1) // To know if we have more entries to query
+            .as('T')
           if (query.account) {
             subquery = subquery.where({ controller_did: query.account })
           }

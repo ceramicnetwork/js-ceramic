@@ -55,10 +55,9 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
       return new SqliteIndexApi(dbConnection, indexingConfig.models)
     }
     case 'postgres': {
-      console.log('>>>>>>>>>', connectionString.toString())
       const dataSource = knex({
         client: 'pg',
-        connection: connectionString.toString(), //'postgres://ceramic:password@127.0.0.1:5432/ceramic', //process.env.PG_CONNECTION_STRING,
+        connection: connectionString.toString(),
         searchPath: ['ceramic', 'public'],
       })
       return new PostgresIndexApi(dataSource, indexingConfig.models)

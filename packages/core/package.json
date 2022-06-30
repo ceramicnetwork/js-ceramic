@@ -65,6 +65,7 @@
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
     "pg": "^8.7.3",
+    "@databases/pg-test": "^3.1.2",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
