@@ -473,6 +473,10 @@ export class CeramicDaemon {
   }
 
   async getCollection(req: Request, res: Response): Promise<void> {
+    if (!this.opts.indexing.allowQueriesBeforeHistoricalSync) {
+      res.statusCode = 503
+      throw new Error(`Index for historical data is not available`)
+    }
     const httpQuery = parseQueryObject(req.query)
     const query = collectionQuery(httpQuery)
     const indexResponse = await this.ceramic.index.queryIndex(query)
