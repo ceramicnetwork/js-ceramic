@@ -16,10 +16,13 @@ let EXPECTED: Array<string>
 
 let order: InsertionOrder
 let dbConnection: Knex
-jest.setTimeout(300000) // 5mins timeout for initial docker fetch+init
+jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
+
+beforeAll(async () => {
+  await pgSetup()
+})
 
 beforeEach(async () => {
-  await pgSetup()
   dbConnection = knex({
     client: 'pg',
     connection: process.env.DATABASE_URL,
@@ -37,9 +40,17 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  await dropMidTables(dbConnection)
   await dbConnection.destroy()
-  //await pgTeardown()
 })
+
+afterAll(async () => {
+  await pgTeardown()
+})
+
+export async function dropMidTables(dbConnection: Knex) {
+  dbConnection.raw(`DROP TABLE IF EXISTS ${MODEL_ID};`)
+}
 
 describe('forward pagination', () => {
   test('pagination', async () => {

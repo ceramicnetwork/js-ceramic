@@ -10,10 +10,13 @@ const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohex
 const CONTROLLER = 'did:key:foo'
 
 let dbConnection: Knex
-jest.setTimeout(300000) // 5mins timeout for initial docker fetch+init
+jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
+
+beforeAll(async () => {
+  await pgSetup()
+})
 
 beforeEach(async () => {
-  await pgSetup()
   dbConnection = knex({
     client: 'pg',
     connection: process.env.DATABASE_URL,
@@ -21,6 +24,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  await dropMidTables(dbConnection)
   await dbConnection.destroy()
 })
 
@@ -36,6 +40,14 @@ export async function listMidTables(dbConnection: Knex) {
       })
     })
   return dataArr
+}
+
+afterAll(async () => {
+  await pgTeardown()
+})
+
+export async function dropMidTables(dbConnection: Knex) {
+  dbConnection.raw(`DROP TABLE IF EXISTS ${STREAM_ID_A};DROP TABLE IF EXISTS ${STREAM_ID_B};`)
 }
 
 describe('init', () => {
@@ -141,6 +153,5 @@ describe('indexStream', () => {
     expect(closeDates(updatedAt, updateTime)).toBeTruthy()
     const createdAt = new Date(raw.created_at)
     expect(closeDates(createdAt, createTime)).toBeTruthy()
-    await pgTeardown()
   })
 })
