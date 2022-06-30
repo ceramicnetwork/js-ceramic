@@ -38,7 +38,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await dbConnection.destroy()
-  await pgTeardown()
+  //await pgTeardown()
 })
 
 describe('forward pagination', () => {
