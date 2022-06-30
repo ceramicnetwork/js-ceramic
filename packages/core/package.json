@@ -65,7 +65,6 @@
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
     "pg": "^8.7.3",
-    "@databases/pg-test": "^3.1.2",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
@@ -79,7 +78,8 @@
     "key-did-provider-ed25519": "^2.0.0",
     "key-did-resolver": "^2.0.2",
     "mockdate": "^3.0.5",
-    "tmp-promise": "^3.0.3"
+    "tmp-promise": "^3.0.3",
+    "@databases/pg-test": "^3.1.2"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

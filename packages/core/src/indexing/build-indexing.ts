@@ -58,7 +58,6 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
-        searchPath: ['ceramic', 'public'],
       })
       return new PostgresIndexApi(dataSource, indexingConfig.models)
     }
