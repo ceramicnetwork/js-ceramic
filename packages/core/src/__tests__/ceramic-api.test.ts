@@ -7,10 +7,7 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
-import {
-  ModelInstanceDocument,
-  ModelInstanceDocumentMetadata,
-} from '@ceramicnetwork/stream-model-instance'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 /**
@@ -61,6 +58,8 @@ describe('Ceramic API', () => {
   }
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+
     ipfs = await createIPFS()
   })
 

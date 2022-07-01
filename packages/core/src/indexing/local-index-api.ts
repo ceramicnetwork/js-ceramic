@@ -22,6 +22,10 @@ export class LocalIndexApi implements IndexApi {
   ) {}
 
   private _shouldIndexStream(args: StreamID): Boolean {
+    if (!this.databaseIndexApi) {
+      return false
+    }
+
     return this.databaseIndexApi.getActiveModelsToIndex().some(function (streamId) {
       return String(streamId) === String(args)
     })
