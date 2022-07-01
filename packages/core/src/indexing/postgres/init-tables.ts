@@ -16,10 +16,9 @@ export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID
   })
 
   for (const tableName of expectedTables) {
-    await dataSource.schema.hasTable(tableName).then(function (exists) {
-      if (!exists) {
-        createModelTable(dataSource, tableName)
-      }
-    })
+    const exists = await dataSource.schema.hasTable(tableName)
+    if (!exists) {
+      await createModelTable(dataSource, tableName)
+    }
   }
 }

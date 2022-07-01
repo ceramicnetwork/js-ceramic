@@ -40,7 +40,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await dropMidTables(dbConnection)
+  await dropMidTables()
   await dbConnection.destroy()
 })
 
@@ -48,8 +48,8 @@ afterAll(async () => {
   await pgTeardown()
 })
 
-export async function dropMidTables(dbConnection: Knex) {
-  dbConnection.raw(`DROP TABLE IF EXISTS ${MODEL_ID};`)
+export async function dropMidTables() {
+  await dbConnection.schema.dropTableIfExists(MODEL_ID)
 }
 
 describe('forward pagination', () => {

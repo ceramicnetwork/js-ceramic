@@ -24,11 +24,11 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await dropMidTables(dbConnection)
+  await dropMidTables()
   await dbConnection.destroy()
 })
 
-export async function listMidTables(dbConnection: Knex) {
+export async function listMidTables() {
   const dataArr = []
   await dbConnection
     .select('tablename')
@@ -42,13 +42,14 @@ export async function listMidTables(dbConnection: Knex) {
   return dataArr
 }
 
+export async function dropMidTables() {
+  await dbConnection.schema.dropTableIfExists(STREAM_ID_A)
+  await dbConnection.schema.dropTableIfExists(STREAM_ID_B)
+}
+
 afterAll(async () => {
   await pgTeardown()
 })
-
-export async function dropMidTables(dbConnection: Knex) {
-  dbConnection.raw(`DROP TABLE IF EXISTS ${STREAM_ID_A};DROP TABLE IF EXISTS ${STREAM_ID_B};`)
-}
 
 describe('init', () => {
   describe('create tables', () => {
@@ -56,7 +57,7 @@ describe('init', () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex)
       await indexApi.init()
-      const created = await listMidTables(dbConnection)
+      const created = await listMidTables()
       const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
       expect(created).toEqual(tableNames)
     })
@@ -66,7 +67,7 @@ describe('init', () => {
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
       const indexApiA = new PostgresIndexApi(dbConnection, modelsA)
       await indexApiA.init()
-      const createdA = await listMidTables(dbConnection)
+      const createdA = await listMidTables()
       const tableNamesA = modelsA.map((m) => `${m.toString()}`)
       expect(createdA).toEqual(tableNamesA)
 
@@ -74,7 +75,7 @@ describe('init', () => {
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
       const indexApiB = new PostgresIndexApi(dbConnection, modelsB)
       await indexApiB.init()
-      const createdB = await listMidTables(dbConnection)
+      const createdB = await listMidTables()
       const tableNamesB = modelsB.map((m) => `${m.toString()}`)
       expect(createdB).toEqual(tableNamesB)
     })
