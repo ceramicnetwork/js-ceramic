@@ -20,12 +20,11 @@ import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { randomString } from '@stablelib/random'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import getPort from 'get-port'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
-import { DaemonConfig } from '../daemon-config.js'
 import fetch from 'cross-fetch'
 import { makeCeramicCore } from './make-ceramic-core.js'
+import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 
 const seed = 'SEED'
 const MODEL_STREAM_ID = new StreamID(1, TestUtils.randomCID())
@@ -49,10 +48,8 @@ describe('Ceramic interop: core <> http-client', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path, [MODEL_STREAM_ID].map(String))
-    const port = await getPort()
-    const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
-    await daemon.listen()
+    daemon = await makeCeramicDaemon(core)
+    const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
     await core.setDID(makeDID(core, seed))
