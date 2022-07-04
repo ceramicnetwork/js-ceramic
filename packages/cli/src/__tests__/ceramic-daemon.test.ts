@@ -15,7 +15,6 @@ import {
   CommitType,
   StreamState,
 } from '@ceramicnetwork/common'
-import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -26,30 +25,10 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
 import { DaemonConfig } from '../daemon-config.js'
 import fetch from 'cross-fetch'
+import { makeCeramicCore } from './make-ceramic-core.js'
 
 const seed = 'SEED'
-const TOPIC = '/ceramic'
 const MODEL_STREAM_ID = new StreamID(1, TestUtils.randomCID())
-
-const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
-  const core = await Ceramic.create(ipfs, {
-    pubsubTopic: TOPIC,
-    stateStoreDirectory,
-    anchorOnRequest: false,
-    indexing: {
-      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [MODEL_STREAM_ID.toString()],
-    },
-  })
-
-  const handler = new TileDocumentHandler()
-  ;(handler as any).verifyJWS = (): Promise<void> => {
-    return
-  }
-  // @ts-ignore
-  core._streamHandlers.add(handler)
-  return core
-}
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
@@ -69,7 +48,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    core = await makeCeramicCore(ipfs, tmpFolder.path)
+    core = await makeCeramicCore(ipfs, tmpFolder.path, [MODEL_STREAM_ID].map(String))
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
