@@ -23,7 +23,8 @@ import {
   AnchorValidator,
   AnchorStatus,
   IndexApi,
-  StreamState,
+  CommitType,
+  StreamState
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -46,7 +47,7 @@ import * as path from 'path'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { makeIndexApi } from './initialization/make-index-api.js'
-import { RunningState } from './state-management/running-state'
+import { RunningState } from './state-management/running-state.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -502,6 +503,12 @@ export class Ceramic implements CeramicApi {
         this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
       }
 
+      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+        this._logger.warn(
+          `Warning: indexing and query APIs are experimental and still under active development.  Please do not create Composites, Models, or ModelInstanceDocument streams, or use any of the new GraphQL query APIs on mainnet until they are officially released`
+        )
+      }
+
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()
       }
@@ -629,19 +636,26 @@ export class Ceramic implements CeramicApi {
    * @param stream
    * @private
    */
-  private async indexStreamIfNeeded(stream) {
+  private async indexStreamIfNeeded(stream: Stream): Promise<void> {
     if (!stream.metadata.model) {
       return
     }
 
-    const last_anchor_ts = stream.state$.value.metadata.anchorProof
-      ? new Date(stream.state$.value.metadata.anchorProof.blockTimestamp * 1000)
-      : null
+    const asDate = (unixTimestamp: number | null | undefined) => {
+      return unixTimestamp ? new Date(unixTimestamp * 1000) : null
+    }
+
+    // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
+    const lastAnchor = asDate(stream.state.anchorProof?.blockTimestamp)
+    const firstAnchor = asDate(
+      stream.state.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
+    )
     const STREAM_CONTENT = {
       model: stream.metadata.model,
       streamID: stream.id,
       controller: stream.metadata.controller,
-      lastAnchor: last_anchor_ts,
+      lastAnchor: lastAnchor,
+      firstAnchor: firstAnchor,
     }
     await this._index.indexStream(STREAM_CONTENT)
   }

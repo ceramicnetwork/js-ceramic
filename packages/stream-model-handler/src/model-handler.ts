@@ -67,6 +67,15 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
+    if (!process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+      context.loggerProvider
+        .getDiagnosticsLogger()
+        .err(
+          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_INDEXING environment variable'
+        )
+      throw new Error('Indexing is not enabled')
+    }
+
     if (state == null) {
       // apply genesis
       return this._applyGenesis(commitData, context)
