@@ -19,7 +19,7 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { randomString } from '@stablelib/random'
 
 const MODEL_STREAM_ID = new StreamID(1, TestUtils.randomCID())
-const SEED = 'SEED'
+const SEED = randomString(32)
 
 let ipfs: IpfsApi
 let daemon: CeramicDaemon
@@ -53,81 +53,77 @@ afterEach(async () => {
   await tmpFolder.cleanup()
 })
 
-describe('index api', () => {
-  describe('getCollection calls IndexAPI', () => {
-    test('model in query', async () => {
-      const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-      query.searchParams.set('model', MODEL_STREAM_ID.toString())
-      query.searchParams.set('first', '100')
-      const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
-      await fetchJson(query.toString())
-      expect(indexSpy).toBeCalledWith({
-        first: 100,
-        model: MODEL_STREAM_ID,
-      })
-    })
-    test('too much entries requested: forward pagination', async () => {
-      const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-      query.searchParams.set('model', MODEL_STREAM_ID.toString())
-      query.searchParams.set('first', '20000')
-      await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
-    })
-    test('too much entries requested: forward pagination', async () => {
-      const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-      query.searchParams.set('model', MODEL_STREAM_ID.toString())
-      query.searchParams.set('last', '20000')
-      await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
-    })
-    test('model, account in query', async () => {
-      const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-      query.searchParams.set('model', MODEL_STREAM_ID.toString())
-      const account = `did:key:${randomString(10)}`
-      query.searchParams.set('account', account)
-      query.searchParams.set('first', '100')
-      const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
-      await fetchJson(query.toString())
-      expect(indexSpy).toBeCalledWith({
-        first: 100,
-        model: MODEL_STREAM_ID,
-        account: account,
-      })
-    })
-    test('serialize StreamState', async () => {
-      const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-      query.searchParams.set('model', MODEL_STREAM_ID.toString())
-      query.searchParams.set('first', '100')
-      const original = daemon.ceramic.index.queryIndex.bind(daemon.ceramic.index)
-      const fauxStreamState = {
-        type: 0,
-        log: [
-          {
-            type: CommitType.GENESIS,
-            cid: TestUtils.randomCID(),
-          },
-        ],
-      } as unknown as StreamState
-      // Return faux but serializable StreamState
-      daemon.ceramic.index.queryIndex = async () => {
-        return {
-          edges: [
-            {
-              cursor: 'opaque-cursor',
-              node: fauxStreamState,
-            },
-          ],
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-        }
-      }
-      // It gets serialized
-      const response = await fetchJson(query.toString())
-      expect(response.edges.length).toEqual(1)
-      // Check if it is indeed the same serialized state
-      expect(response.edges[0].node).toEqual(StreamUtils.serializeState(fauxStreamState))
-      // Get the original queryIndex method back
-      daemon.ceramic.index.queryIndex = original
-    })
+test('model in query', async () => {
+  const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+  query.searchParams.set('model', MODEL_STREAM_ID.toString())
+  query.searchParams.set('first', '100')
+  const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
+  await fetchJson(query.toString())
+  expect(indexSpy).toBeCalledWith({
+    first: 100,
+    model: MODEL_STREAM_ID,
   })
+})
+test('too much entries requested: forward pagination', async () => {
+  const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+  query.searchParams.set('model', MODEL_STREAM_ID.toString())
+  query.searchParams.set('first', '20000')
+  await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+})
+test('too much entries requested: forward pagination', async () => {
+  const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+  query.searchParams.set('model', MODEL_STREAM_ID.toString())
+  query.searchParams.set('last', '20000')
+  await expect(fetchJson(query.toString())).rejects.toThrow(/Requested too many entries: 20000/)
+})
+test('model, account in query', async () => {
+  const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+  query.searchParams.set('model', MODEL_STREAM_ID.toString())
+  const account = `did:key:${randomString(10)}`
+  query.searchParams.set('account', account)
+  query.searchParams.set('first', '100')
+  const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
+  await fetchJson(query.toString())
+  expect(indexSpy).toBeCalledWith({
+    first: 100,
+    model: MODEL_STREAM_ID,
+    account: account,
+  })
+})
+test('serialize StreamState', async () => {
+  const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
+  query.searchParams.set('model', MODEL_STREAM_ID.toString())
+  query.searchParams.set('first', '100')
+  const original = daemon.ceramic.index.queryIndex.bind(daemon.ceramic.index)
+  const fauxStreamState = {
+    type: 0,
+    log: [
+      {
+        type: CommitType.GENESIS,
+        cid: TestUtils.randomCID(),
+      },
+    ],
+  } as unknown as StreamState
+  // Return faux but serializable StreamState
+  daemon.ceramic.index.queryIndex = async () => {
+    return {
+      edges: [
+        {
+          cursor: 'opaque-cursor',
+          node: fauxStreamState,
+        },
+      ],
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    }
+  }
+  // It gets serialized
+  const response = await fetchJson(query.toString())
+  expect(response.edges.length).toEqual(1)
+  // Check if it is indeed the same serialized state
+  expect(response.edges[0].node).toEqual(StreamUtils.serializeState(fauxStreamState))
+  // Get the original queryIndex method back
+  daemon.ceramic.index.queryIndex = original
 })
