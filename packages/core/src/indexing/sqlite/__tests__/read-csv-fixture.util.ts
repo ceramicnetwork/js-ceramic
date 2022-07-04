@@ -25,6 +25,7 @@ export function readCsvFixture(filepath: URL) {
             ? new Date(Number(row.last_anchored_at) * 1000)
             : undefined,
           createdAt: row.created_at ? new Date(Number(row.created_at) * 1000) : undefined,
+          firstAnchor: null,
         })
       })
       .on('error', (error) => reject(error))

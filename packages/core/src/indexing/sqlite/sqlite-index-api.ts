@@ -41,6 +41,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
         last_anchored_at: asTimestamp(args.lastAnchor),
+        first_anchored_at: asTimestamp(args.firstAnchor),
         created_at: asTimestamp(args.createdAt) || now,
         updated_at: asTimestamp(args.updatedAt) || now,
       })
