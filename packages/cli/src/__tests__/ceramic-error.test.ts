@@ -23,7 +23,7 @@ let tmpFolder: tmp.DirectoryResult
 
 function safeRead(filepath: string): string {
   if (fs.existsSync(filepath)) {
-    return fs.readFileSync(filepath).toString()
+    return fs.readFileSync(filepath, 'utf-8')
   } else {
     return ''
   }
