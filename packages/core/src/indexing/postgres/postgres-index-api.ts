@@ -16,7 +16,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     /**
      * Helper function to return array of active models that are currently being indexed by node
      * as defined in the config file.
-     * TODO: extend to runtime check once adminAPI unlocks to add and load models on the fly
+     * TODO (NET-1634): extend to runtime check once adminAPI unlocks to add and load models on the fly
      */
     return this.modelsToIndex
   }
@@ -24,19 +24,19 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     const tableName = asTableName(args.model)
 
-    // created_at and last_updated_at set by default default value
+    // created_at and last_updated_at set by default value
     await this.dbConnection(tableName)
       .insert({
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
         last_anchored_at: args.lastAnchor,
-        created_at: args.createdAt || new Date(),
-        updated_at: args.updatedAt || new Date(),
+        created_at: args.createdAt || this.dbConnection.fn.now(),
+        updated_at: args.updatedAt || this.dbConnection.fn.now(),
       })
       .onConflict('stream_id')
       .merge({
         last_anchored_at: args.lastAnchor,
-        updated_at: args.updatedAt || new Date(),
+        updated_at: args.updatedAt || this.dbConnection.fn.now(),
       })
   }
 

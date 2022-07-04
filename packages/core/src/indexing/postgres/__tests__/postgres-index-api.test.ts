@@ -4,6 +4,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import knex, { Knex } from 'knex'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
+import { asTableName } from '../../as-table-name.util'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -58,7 +59,7 @@ describe('init', () => {
       const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex)
       await indexApi.init()
       const created = await listMidTables()
-      const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
+      const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
     })
 
@@ -68,7 +69,7 @@ describe('init', () => {
       const indexApiA = new PostgresIndexApi(dbConnection, modelsA)
       await indexApiA.init()
       const createdA = await listMidTables()
-      const tableNamesA = modelsA.map((m) => `${m.toString()}`)
+      const tableNamesA = modelsA.map(asTableName)
       expect(createdA).toEqual(tableNamesA)
 
       // Next add another one
@@ -76,7 +77,7 @@ describe('init', () => {
       const indexApiB = new PostgresIndexApi(dbConnection, modelsB)
       await indexApiB.init()
       const createdB = await listMidTables()
-      const tableNamesB = modelsB.map((m) => `${m.toString()}`)
+      const tableNamesB = modelsB.map(asTableName)
       expect(createdB).toEqual(tableNamesB)
     })
   })
