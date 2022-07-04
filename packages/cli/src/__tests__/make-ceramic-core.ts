@@ -5,7 +5,7 @@ import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 export async function makeCeramicCore(
   ipfs: IpfsApi,
   stateStoreDirectory: string,
-  modelsToIndex: Array<string>
+  modelsToIndex: Array<string> = []
 ): Promise<Ceramic> {
   const core = await Ceramic.create(ipfs, {
     pubsubTopic: '/ceramic',
