@@ -94,7 +94,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('healthcheck fails if ipfs unreachable', async () => {
     const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
-    isOnlineSpy.mockRejectedValue(Error('ipfs is sad now'))
+    isOnlineSpy.mockRejectedValue(new Error('ipfs is sad now') as never)
     const res = await fetch(`http://localhost:${daemon.port}/api/v0/node/healthcheck`)
     expect(res.ok).toBeFalsy()
     const text = await res.text()
@@ -104,7 +104,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('healthcheck can skip ipfs check', async () => {
     const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
-    isOnlineSpy.mockRejectedValue(Error('ipfs is sad now'))
+    isOnlineSpy.mockRejectedValue(new Error('ipfs is sad now') as never)
     const res = await fetch(
       `http://localhost:${daemon.port}/api/v0/node/healthcheck?checkIpfs=false`
     )
@@ -147,7 +147,6 @@ describe('Ceramic interop: core <> http-client', () => {
     delete state2.log
     delete state1.metadata.unique
     delete state2.metadata.unique
-    delete state2.doctype
 
     expect(state1).toEqual(state2)
   })
