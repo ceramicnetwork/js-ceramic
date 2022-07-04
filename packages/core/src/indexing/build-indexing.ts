@@ -1,6 +1,7 @@
 import type { DatabaseIndexApi } from './database-index-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
+import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import knex from 'knex'
 
 export type IndexingConfig = {
@@ -52,6 +53,13 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
         },
       })
       return new SqliteIndexApi(dbConnection, indexingConfig.models)
+    }
+    case 'postgres': {
+      const dataSource = knex({
+        client: 'pg',
+        connection: connectionString.toString(),
+      })
+      return new PostgresIndexApi(dataSource, indexingConfig.models)
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)

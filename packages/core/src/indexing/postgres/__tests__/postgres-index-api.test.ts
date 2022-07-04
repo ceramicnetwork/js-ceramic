@@ -1,60 +1,83 @@
 import { jest } from '@jest/globals'
-import tmp from 'tmp-promise'
-import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
+import { PostgresIndexApi } from '../postgres-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { listMidTables } from '../init-tables.js'
 import knex, { Knex } from 'knex'
+import pgSetup from '@databases/pg-test/jest/globalSetup'
+import pgTeardown from '@databases/pg-test/jest/globalTeardown'
+import { asTableName } from '../../as-table-name.util'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const CONTROLLER = 'did:key:foo'
 
-let tmpFolder: tmp.DirectoryResult
 let dbConnection: Knex
+jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
+
+beforeAll(async () => {
+  await pgSetup()
+})
 
 beforeEach(async () => {
-  tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
   dbConnection = knex({
-    client: 'sqlite3',
-    useNullAsDefault: true,
-    connection: {
-      filename: filename,
-    },
+    client: 'pg',
+    connection: process.env.DATABASE_URL,
   })
 })
 
 afterEach(async () => {
+  await dropMidTables()
   await dbConnection.destroy()
-  await tmpFolder.cleanup()
+})
+
+export async function listMidTables() {
+  const dataArr = []
+  await dbConnection
+    .select('tablename')
+    .from('pg_tables')
+    .whereRaw("schemaname='public' AND tablename LIKE ('kjz%')")
+    .then(function (result) {
+      result.forEach(function (value) {
+        dataArr.push(value.tablename)
+      })
+    })
+  return dataArr
+}
+
+export async function dropMidTables() {
+  await dbConnection.schema.dropTableIfExists(STREAM_ID_A)
+  await dbConnection.schema.dropTableIfExists(STREAM_ID_B)
+}
+
+afterAll(async () => {
+  await pgTeardown()
 })
 
 describe('init', () => {
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex)
+      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex)
       await indexApi.init()
-      const created = await listMidTables(dbConnection)
-      const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
+      const created = await listMidTables()
+      const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
     })
 
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new SqliteIndexApi(dbConnection, modelsA)
+      const indexApiA = new PostgresIndexApi(dbConnection, modelsA)
       await indexApiA.init()
-      const createdA = await listMidTables(dbConnection)
-      const tableNamesA = modelsA.map((m) => `${m.toString()}`)
+      const createdA = await listMidTables()
+      const tableNamesA = modelsA.map(asTableName)
       expect(createdA).toEqual(tableNamesA)
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dbConnection, modelsB)
+      const indexApiB = new PostgresIndexApi(dbConnection, modelsB)
       await indexApiB.init()
-      const createdB = await listMidTables(dbConnection)
-      const tableNamesB = modelsB.map((m) => `${m.toString()}`)
+      const createdB = await listMidTables()
+      const tableNamesB = modelsB.map(asTableName)
       expect(createdB).toEqual(tableNamesB)
     })
   })
@@ -65,7 +88,7 @@ describe('close', () => {
     const fauxDbConnection = {
       destroy: jest.fn(),
     } as unknown as Knex
-    const indexApi = new SqliteIndexApi(fauxDbConnection, [])
+    const indexApi = new PostgresIndexApi(fauxDbConnection, [])
     await indexApi.close()
     expect(fauxDbConnection.destroy).toBeCalled()
   })
@@ -75,8 +98,8 @@ describe('close', () => {
  * Difference between `a` and `b` timestamps is less than or equal to `deltaS`.
  */
 function closeDates(a: Date, b: Date, deltaS = 1) {
-  const aSeconds = asTimestamp(a)
-  const bSeconds = asTimestamp(b)
+  const aSeconds = a.getSeconds()
+  const bSeconds = b.getSeconds()
   return Math.abs(aSeconds - bSeconds) <= deltaS
 }
 
@@ -87,12 +110,11 @@ describe('indexStream', () => {
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
     lastAnchor: null,
-    firstAnchor: null
   }
 
-  let indexApi: SqliteIndexApi
+  let indexApi: PostgresIndexApi
   beforeEach(async () => {
-    indexApi = new SqliteIndexApi(dbConnection, MODELS_TO_INDEX)
+    indexApi = new PostgresIndexApi(dbConnection, MODELS_TO_INDEX)
     await indexApi.init()
   })
 
@@ -119,7 +141,6 @@ describe('indexStream', () => {
       ...STREAM_CONTENT,
       updatedAt: updateTime,
       lastAnchor: updateTime,
-      firstAnchor: null
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)
