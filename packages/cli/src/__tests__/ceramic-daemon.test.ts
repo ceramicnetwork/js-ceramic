@@ -12,49 +12,24 @@ import {
   TimedAbortSignal,
   GenesisCommit,
   TestUtils,
-  CommitType,
-  StreamState,
 } from '@ceramicnetwork/common'
-import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { randomString } from '@stablelib/random'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import getPort from 'get-port'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
-import { DaemonConfig } from '../daemon-config.js'
 import fetch from 'cross-fetch'
+import { makeCeramicCore } from './make-ceramic-core.js'
+import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 
 const seed = 'SEED'
-const TOPIC = '/ceramic'
-const MODEL_STREAM_ID = new StreamID(1, TestUtils.randomCID())
-
-const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
-  const core = await Ceramic.create(ipfs, {
-    pubsubTopic: TOPIC,
-    stateStoreDirectory,
-    anchorOnRequest: false,
-    indexing: {
-      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [MODEL_STREAM_ID.toString()],
-    },
-  })
-
-  const handler = new TileDocumentHandler()
-  ;(handler as any).verifyJWS = (): Promise<void> => {
-    return
-  }
-  // @ts-ignore
-  core._streamHandlers.add(handler)
-  return core
-}
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
   let ipfs: IpfsApi
-  let tmpFolder: any
+  let tmpFolder: tmp.DirectoryResult
   let core: Ceramic
   let daemon: CeramicDaemon
   let client: CeramicClient
@@ -70,10 +45,8 @@ describe('Ceramic interop: core <> http-client', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path)
-    const port = await getPort()
-    const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
-    await daemon.listen()
+    daemon = await makeCeramicDaemon(core)
+    const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
     await core.setDID(makeDID(core, seed))
@@ -118,7 +91,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('healthcheck fails if ipfs unreachable', async () => {
     const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
-    isOnlineSpy.mockRejectedValue(Error('ipfs is sad now'))
+    isOnlineSpy.mockRejectedValue(new Error('ipfs is sad now') as never)
     const res = await fetch(`http://localhost:${daemon.port}/api/v0/node/healthcheck`)
     expect(res.ok).toBeFalsy()
     const text = await res.text()
@@ -128,7 +101,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('healthcheck can skip ipfs check', async () => {
     const isOnlineSpy = jest.spyOn(ipfs, 'isOnline')
-    isOnlineSpy.mockRejectedValue(Error('ipfs is sad now'))
+    isOnlineSpy.mockRejectedValue(new Error('ipfs is sad now') as never)
     const res = await fetch(
       `http://localhost:${daemon.port}/api/v0/node/healthcheck?checkIpfs=false`
     )
@@ -171,7 +144,6 @@ describe('Ceramic interop: core <> http-client', () => {
     delete state2.log
     delete state1.metadata.unique
     delete state2.metadata.unique
-    delete state2.doctype
 
     expect(state1).toEqual(state2)
   })
@@ -653,89 +625,6 @@ describe('Ceramic interop: core <> http-client', () => {
       // Now force re-pin and make sure underlying state and ipfs records get re-pinned
       await client.pin.add(docA.id, true)
       expect(pinSpy).toBeCalledTimes(4)
-    })
-  })
-
-  describe('index api', () => {
-    describe('getCollection calls IndexAPI', () => {
-      test('model in query', async () => {
-        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-        query.searchParams.set('model', MODEL_STREAM_ID.toString())
-        query.searchParams.set('first', '100')
-        const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
-        await fetchJson(query.toString())
-        expect(indexSpy).toBeCalledWith({
-          first: 100,
-          model: MODEL_STREAM_ID,
-        })
-      })
-      test('too much entries requested: forward pagination', async () => {
-        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-        query.searchParams.set('model', MODEL_STREAM_ID.toString())
-        query.searchParams.set('first', '20000')
-        await expect(fetchJson(query.toString())).rejects.toThrow(
-          /Requested too many entries: 20000/
-        )
-      })
-      test('too much entries requested: forward pagination', async () => {
-        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-        query.searchParams.set('model', MODEL_STREAM_ID.toString())
-        query.searchParams.set('last', '20000')
-        await expect(fetchJson(query.toString())).rejects.toThrow(
-          /Requested too many entries: 20000/
-        )
-      })
-      test('model, account in query', async () => {
-        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-        query.searchParams.set('model', MODEL_STREAM_ID.toString())
-        const account = `did:key:${randomString(10)}`
-        query.searchParams.set('account', account)
-        query.searchParams.set('first', '100')
-        const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
-        await fetchJson(query.toString())
-        expect(indexSpy).toBeCalledWith({
-          first: 100,
-          model: MODEL_STREAM_ID,
-          account: account,
-        })
-      })
-      test('serialize StreamState', async () => {
-        const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
-        query.searchParams.set('model', MODEL_STREAM_ID.toString())
-        query.searchParams.set('first', '100')
-        const original = daemon.ceramic.index.queryIndex.bind(daemon.ceramic.index)
-        const fauxStreamState = {
-          type: 0,
-          log: [
-            {
-              type: CommitType.GENESIS,
-              cid: TestUtils.randomCID(),
-            },
-          ],
-        } as unknown as StreamState
-        // Return faux but serializable StreamState
-        daemon.ceramic.index.queryIndex = async () => {
-          return {
-            edges: [
-              {
-                cursor: 'opaque-cursor',
-                node: fauxStreamState,
-              },
-            ],
-            pageInfo: {
-              hasNextPage: false,
-              hasPreviousPage: false,
-            },
-          }
-        }
-        // It gets serialized
-        const response = await fetchJson(query.toString())
-        expect(response.edges.length).toEqual(1)
-        // Check if it is indeed the same serialized state
-        expect(response.edges[0].node).toEqual(StreamUtils.serializeState(fauxStreamState))
-        // Get the original queryIndex method back
-        daemon.ceramic.index.queryIndex = original
-      })
     })
   })
 })
