@@ -32,7 +32,7 @@ env:
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}"
-  BRANCH:${{ github.event.client_payload.branch || github.event.inputs.branch || github.ref_name }}
+  BRANCH: ${{ github.event.client_payload.branch || github.event.inputs.branch || github.ref_name }}
   SHA: ${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}
 
 jobs:
