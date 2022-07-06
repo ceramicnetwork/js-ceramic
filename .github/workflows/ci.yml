@@ -31,23 +31,15 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha }}"
-  BRANCH: ${{ github.event.client_payload.branch }}
-  SHA: ${{ github.event.client_payload.sha }}
+  STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}"
+  BRANCH: ${{ github.event.client_payload.branch || github.event.inputs.branch || github.ref_name }}
+  SHA: ${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}
 
 jobs:
   image:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Set branch from inputs
-        if: ${{ env.BRANCH == '' }}
-        run: echo "BRANCH=${{ github.event.inputs.branch }}" >> $GITHUB_ENV
-      -
-        name: Set SHA from inputs
-        if: ${{ env.SHA == '' }}
-        run: echo "SHA=${{ github.event.inputs.sha }}" >> $GITHUB_ENV
       -
         name: Set publish flag
         if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
@@ -70,11 +62,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ env.BRANCH }}
-      -
-        name: Set sha tag
-        run: |
-          SHA_TAG=$(echo ${{ env.SHA }} | head -c 12)
-          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
       -
         name: Set main branch tag
         if: ${{ env.BRANCH == 'main' }}
@@ -103,7 +90,7 @@ jobs:
         run: |
             dagger project init
             dagger project update
-            dagger project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
+            dagger project update "github.com/3box/pipeline-tools@develop"
 
             AWS_SCRIPTS=cue.mod/pkg/universe.dagger.io/aws/_scripts
             AWS_INSTALL="https://raw.githubusercontent.com/dagger/dagger/v${{ env.DAGGER_VERSION }}/pkg/universe.dagger.io/aws/_scripts/install.sh"
@@ -116,11 +103,11 @@ jobs:
       -
         name: Push Docker image
         if: ${{ env.PUBLISH == 'true' }}
-        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         name: Post deployment event
         if: ${{ env.PUBLISH == 'true' }}
-        run: dagger do -l error queue -w "actions:queue:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do -l error queue -w "actions:queue:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         name: Login to Amazon ECR
         id: login-ecr
