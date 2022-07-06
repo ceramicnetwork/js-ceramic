@@ -105,6 +105,7 @@ jobs:
             dagger project update
             dagger project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
 
+            AWS_SCRIPTS=cue.mod/pkg/universe.dagger.io/aws/_scripts
             AWS_INSTALL="https://raw.githubusercontent.com/dagger/dagger/v${{ env.DAGGER_VERSION }}/pkg/universe.dagger.io/aws/_scripts/install.sh"
             mkdir -p $AWS_SCRIPTS
             curl -fsSL $AWS_INSTALL > $AWS_SCRIPTS/install.sh
