@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0...@ceramicnetwork/core@2.7.0-rc.0) (2022-07-06)
+
+
+### Features
+
+* **core,model-handler,model-instance-handler:** Disable indexing and query features by default until they are ready ([#2280](https://github.com/ceramicnetwork/js-ceramic/issues/2280)) ([acb010c](https://github.com/ceramicnetwork/js-ceramic/commit/acb010ccb9ced4b2228f574e4325806a4a2d7241))
+* **core:** Postgres MID table creation and indexing ([#2288](https://github.com/ceramicnetwork/js-ceramic/issues/2288)) ([2406073](https://github.com/ceramicnetwork/js-ceramic/commit/2406073b7b34a080be505f612b1596f8bf866a5b))
+* Store first anchored time in the indexing database ([#2287](https://github.com/ceramicnetwork/js-ceramic/issues/2287)) ([35a7e3e](https://github.com/ceramicnetwork/js-ceramic/commit/35a7e3ee838ae775306e4cd748300e6acf3fb101))
+
+
+
+
+
 # [2.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0-rc.1...@ceramicnetwork/core@2.6.0) (2022-07-06)
 
 **Note:** Version bump only for package @ceramicnetwork/core
