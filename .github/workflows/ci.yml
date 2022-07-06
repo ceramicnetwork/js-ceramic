@@ -31,7 +31,7 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha }}"
+  STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}"
   BRANCH: "develop"
   # TODO:
   # ${{ github.event.client_payload.branch }}
