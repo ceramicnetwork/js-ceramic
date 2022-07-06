@@ -32,24 +32,14 @@ env:
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}"
-  BRANCH: "develop"
-  # TODO:
-  # ${{ github.event.client_payload.branch }}
-  SHA: ${{ github.event.client_payload.sha }}
+  BRANCH:${{ github.event.client_payload.branch || github.event.inputs.branch || github.ref_name }}
+  SHA: ${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}
 
 jobs:
   image:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Set branch from inputs
-        if: ${{ env.BRANCH == '' }}
-        run: echo "BRANCH=${{ github.event.inputs.branch }}" >> $GITHUB_ENV
-      -
-        name: Set SHA from inputs
-        if: ${{ env.SHA == '' }}
-        run: echo "SHA=${{ github.event.inputs.sha }}" >> $GITHUB_ENV
       -
         name: Set publish flag
         if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
@@ -72,11 +62,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ env.BRANCH }}
-      -
-        name: Set sha tag
-        run: |
-          SHA_TAG=$(echo ${{ env.SHA }} | head -c 12)
-          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
       -
         name: Set main branch tag
         if: ${{ env.BRANCH == 'main' }}
@@ -128,30 +113,30 @@ jobs:
         id: login-ecr
         if: ${{ env.PUBLISH == 'true' }}
         uses: aws-actions/amazon-ecr-login@v1
-#      -
-#        name: Publish build event
-#        if: ${{ env.PUBLISH == 'true' }}
-#        run: |
-#          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} \
-#            -H "Content-Type: application/json" \
-#            --user ${{ env.AWS_ACCESS_KEY_ID }}:${{ env.AWS_SECRET_ACCESS_KEY }} \
-#            --aws-sigv4 "aws:amz:${{ env.AWS_REGION }}:execute-api" \
-#            -d '
-#              {
-#                "event_type": "new_ceramic_image",
-#                "client_payload":
-#                {
-#                  "env_tag": "${{ env.ENV_TAG }}",
-#                  "sha_tag": "${{ env.SHA }}",
-#                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}",
-#                  "attempt": "${{ github.run_attempt }}"
-#                }
-#              }
-#            ') || exit 1
-#          echo $res
-#          if [[ $res != *"Forwarded event"* ]]; then
-#            exit 1
-#          fi
+      -
+        name: Publish build event
+        if: ${{ env.PUBLISH == 'true' }}
+        run: |
+          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            --user ${{ env.AWS_ACCESS_KEY_ID }}:${{ env.AWS_SECRET_ACCESS_KEY }} \
+            --aws-sigv4 "aws:amz:${{ env.AWS_REGION }}:execute-api" \
+            -d '
+              {
+                "event_type": "new_ceramic_image",
+                "client_payload":
+                {
+                  "env_tag": "${{ env.ENV_TAG }}",
+                  "sha_tag": "${{ env.SHA }}",
+                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}",
+                  "attempt": "${{ github.run_attempt }}"
+                }
+              }
+            ') || exit 1
+          echo $res
+          if [[ $res != *"Forwarded event"* ]]; then
+            exit 1
+          fi
       -
         name: Set commit status "success"
         run: |
