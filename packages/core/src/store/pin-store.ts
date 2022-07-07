@@ -1,9 +1,8 @@
 import { StateStore } from './state-store.js'
-import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
+import { base64urlToJSON, PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
-import { base64urlToJSON } from '../utils.js'
 
 /**
  * Encapsulates logic for pinning streams
@@ -57,7 +56,7 @@ export class PinStore {
 
   async rm(runningState: RunningState): Promise<void> {
     const commitLog = runningState.state.log.map((logEntry) => logEntry.cid)
-    const points = await this.getComponentCIDsOfCommits(commitLog)
+    const points = await this.getComponentCIDsOfCommits(commitLog, false)
     Promise.all(points.map((point) => this.pinning.unpin(point))).catch(() => {
       // Do Nothing
     })
@@ -77,15 +76,21 @@ export class PinStore {
    * AnchorProof, and of all the CIDs in the path from the merkle root to the leaf of the merkle tree
    * for that commit).
    * @param commits - CIDs of Ceramic commits to expand
+   * @param includeAnchorProofCIDs - if false, skip CIDs that belong to the anchor proof and the
+   *   path through the merkle tree.  This is to avoid unpinning CIDs that may be used by Streams
+   *   other than the one being unpinned
    * @protected
    */
-  protected async getComponentCIDsOfCommits(commits: Array<CID>): Promise<Array<CID>> {
+  protected async getComponentCIDsOfCommits(
+    commits: Array<CID>,
+    includeAnchorProofCIDs = true
+  ): Promise<Array<CID>> {
     const points: CID[] = []
     for (const cid of commits) {
       points.push(cid)
 
       const commit = await this.retrieve(cid)
-      if (StreamUtils.isAnchorCommit(commit)) {
+      if (StreamUtils.isAnchorCommit(commit) && includeAnchorProofCIDs) {
         points.push(commit.proof)
 
         const path = commit.path ? 'root/' + commit.path : 'root'
