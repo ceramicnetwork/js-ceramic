@@ -107,7 +107,7 @@ jobs:
       -
         name: Push Docker image
         if: ${{ env.PUBLISH == 'true' }}
-        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":${{ env.VERSION }}:_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         name: Post deployment event
         if: ${{ env.PUBLISH == 'true' }}
