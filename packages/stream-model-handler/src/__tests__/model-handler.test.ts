@@ -587,7 +587,6 @@ describe('ModelHandler', () => {
     }
     state = await handler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
-    delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
   })
 
@@ -631,7 +630,6 @@ describe('ModelHandler', () => {
     }
     state = await handler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
-    delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
   })
 

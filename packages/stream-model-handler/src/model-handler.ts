@@ -178,14 +178,7 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    const nextState = cloneDeep(state)
-
-    nextState.signature = SignatureStatus.SIGNED
-    nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
-
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
-
-    const oldContent: ModelDefinition = state.next?.content ?? state.content
+    const oldContent: ModelDefinition = state.content
     if (oldContent.name && oldContent.schema && oldContent.accountRelation) {
       throw new Error('Cannot update a finalized Model')
     }
@@ -194,15 +187,16 @@ export class ModelHandler implements StreamHandler<Model> {
     Model.assertComplete(newContent, streamId)
     assertNoExtraKeys(newContent)
 
-    nextState.next = {
-      content: newContent,
-      metadata, // No way to update metadata for Model streams
-    }
-
     await this._schemaValidator.validateSchema(newContent.schema)
     if (newContent.views) {
       this._viewsValidator.validateViews(newContent.views, newContent.schema)
     }
+
+    const nextState = cloneDeep(state)
+    nextState.signature = SignatureStatus.SIGNED
+    nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
+    nextState.content = newContent
+    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
     return nextState
   }
@@ -222,26 +216,18 @@ export class ModelHandler implements StreamHandler<Model> {
     StreamUtils.assertCommitLinksToState(state, commitData.commit)
 
     const proof = commitData.proof
-    state.log.push({
+    const newState = {
+      ...state,
+      anchorStatus: AnchorStatus.ANCHORED,
+      anchorProof: proof,
+    }
+    newState.log.push({
       cid: commitData.cid,
       type: CommitType.ANCHOR,
       timestamp: proof.blockTimestamp,
     })
-    let content = state.content
+    delete newState.anchorScheduledFor
 
-    if (state.next?.content) {
-      content = state.next.content
-      delete state.next.content
-    }
-
-    delete state.next
-    delete state.anchorScheduledFor
-
-    return {
-      ...state,
-      content,
-      anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: proof,
-    }
+    return newState
   }
 }

@@ -497,7 +497,22 @@ exports[`ModelHandler applies signed commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "name": "myModel",
+    "accountRelation": "list",
+    "name": "MyModel",
+    "schema": Object {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": Object {
+        "stringPropName": Object {
+          "maxLength": 80,
+          "type": "string",
+        },
+      },
+      "required": Array [
+        "stringPropName",
+      ],
+      "type": "object",
+    },
   },
   "log": Array [
     Object {
@@ -613,54 +628,6 @@ Object {
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
       "_type": 2,
-    },
-  },
-  "next": Object {
-    "content": Object {
-      "accountRelation": "list",
-      "name": "MyModel",
-      "schema": Object {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "additionalProperties": false,
-        "properties": Object {
-          "stringPropName": Object {
-            "maxLength": 80,
-            "type": "string",
-          },
-        },
-        "required": Array [
-          "stringPropName",
-        ],
-        "type": "object",
-      },
-    },
-    "metadata": Object {
-      "controllers": Array [
-        "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
-      ],
-      "model": StreamID {
-        "_cid": Object {
-          "code": 113,
-          "hash": Uint8Array [
-            113,
-            11,
-            0,
-            9,
-            104,
-            109,
-            111,
-            100,
-            101,
-            108,
-            45,
-            118,
-            49,
-          ],
-          "version": 1,
-        },
-        "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
-        "_type": 2,
-      },
     },
   },
   "signature": 2,
@@ -672,7 +639,27 @@ exports[`ModelHandler applies signed commit with views property correctly 1`] = 
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "name": "myModel",
+    "accountRelation": "list",
+    "name": "MyModel",
+    "schema": Object {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": Object {
+        "stringPropName": Object {
+          "maxLength": 80,
+          "type": "string",
+        },
+      },
+      "required": Array [
+        "stringPropName",
+      ],
+      "type": "object",
+    },
+    "views": Object {
+      "owner": Object {
+        "type": "documentAccount",
+      },
+    },
   },
   "log": Array [
     Object {
@@ -788,59 +775,6 @@ Object {
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
       "_type": 2,
-    },
-  },
-  "next": Object {
-    "content": Object {
-      "accountRelation": "list",
-      "name": "MyModel",
-      "schema": Object {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "additionalProperties": false,
-        "properties": Object {
-          "stringPropName": Object {
-            "maxLength": 80,
-            "type": "string",
-          },
-        },
-        "required": Array [
-          "stringPropName",
-        ],
-        "type": "object",
-      },
-      "views": Object {
-        "owner": Object {
-          "type": "documentAccount",
-        },
-      },
-    },
-    "metadata": Object {
-      "controllers": Array [
-        "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
-      ],
-      "model": StreamID {
-        "_cid": Object {
-          "code": 113,
-          "hash": Uint8Array [
-            113,
-            11,
-            0,
-            9,
-            104,
-            109,
-            111,
-            100,
-            101,
-            108,
-            45,
-            118,
-            49,
-          ],
-          "version": 1,
-        },
-        "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
-        "_type": 2,
-      },
     },
   },
   "signature": 2,
