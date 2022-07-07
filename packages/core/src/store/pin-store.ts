@@ -54,6 +54,16 @@ export class PinStore {
     runningState.markAsPinned()
   }
 
+  /**
+   * Effectively opposite of 'add' - this finds all the IPFS CIDs that are required to load the
+   * given stream and unpins them from IPFS, and them removes the stream state from the Ceramic
+   * state store. There is one notable difference of behavior however, which is that 'rm()'
+   * intentionally leaves the CIDs that make up the anchor proof and anchor merkle tree pinned.
+   * This is to avoid accidentally unpinning data that is needed by other streams, in the case where
+   * there are multiple pinned streams that contain anchor commits from the same anchor batch
+   * and therefore share the same anchor proof and merkle tree.
+   * @param runningState
+   */
   async rm(runningState: RunningState): Promise<void> {
     const commitLog = runningState.state.log.map((logEntry) => logEntry.cid)
     const points = await this.getComponentCIDsOfCommits(commitLog, false)
