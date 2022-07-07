@@ -101,7 +101,6 @@ export interface StreamMetadata {
  */
 export interface StreamNext {
   content?: any
-  controllers?: Array<string>
   metadata?: StreamMetadata
 }
 
