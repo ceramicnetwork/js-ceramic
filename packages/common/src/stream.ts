@@ -187,10 +187,6 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     return cloneDeep(next?.content ?? content)
   }
 
-  get controllers(): Array<string> {
-    return this.metadata.controllers
-  }
-
   get tip(): CID {
     return this.state$.value.log[this.state$.value.log.length - 1].cid
   }
