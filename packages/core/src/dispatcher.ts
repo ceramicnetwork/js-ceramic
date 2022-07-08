@@ -25,7 +25,7 @@ import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './pubsub/task-queue.js'
-import { Utils } from './utils'
+import { Utils } from './utils.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
