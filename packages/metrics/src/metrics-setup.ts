@@ -20,13 +20,16 @@ const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 class _Metrics {
   protected readonly config
   protected readonly counters
+  protected readonly gauges
   protected readonly histograms
   protected meterProvider: MeterProvider
   protected metricExporter: PrometheusExporter
   protected meter
+
   constructor() {
     this.config = exporterConfig
     this.counters = {}
+    this.gauges = {}
     this.histograms = {}
     this.meter = null
     this.meterProvider = null
@@ -83,6 +86,19 @@ class _Metrics {
     }
     // Record the observed value
     this.histograms[name].record(value, params)
+  }
+
+  observe(name: string, value: number, params?: any) {
+    // If not initialized, just return
+    if (!this.meter) {
+      return
+    }
+    // Create this ObservableGauge if we have not already
+    if (!(name in this.gauges)) {
+      this.gauges[name] = this.meter.createObservableGauge(name)
+    }
+    // Record the observed value
+    this.gauges[name].observe(value, params)
   }
 }
 
