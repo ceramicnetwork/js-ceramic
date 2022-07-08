@@ -58,6 +58,10 @@ export class Caip10Link extends Stream {
     return cloneDeep(next?.metadata ?? metadata)
   }
 
+  get controllers(): Array<string> {
+    return this.metadata.controllers
+  }
+
   /**
    * Creates a Caip10Link for the given CAIP10 address. Initially created without a link to any DID,
    *   use 'setDid' to create the public link between the given CAIP10 account and a DID.
