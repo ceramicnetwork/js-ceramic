@@ -57,14 +57,22 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
           filename: connectionString.pathname,
         },
       })
-      return new SqliteIndexApi(dbConnection, indexingConfig.models, indexingConfig.allowQueriesBeforeHistoricalSync)
+      return new SqliteIndexApi(
+        dbConnection,
+        indexingConfig.models,
+        indexingConfig.allowQueriesBeforeHistoricalSync
+      )
     }
     case 'postgres': {
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
       })
-      return new PostgresIndexApi(dataSource, indexingConfig.models, indexingConfig.allowQueriesBeforeHistoricalSync)
+      return new PostgresIndexApi(
+        dataSource,
+        indexingConfig.models,
+        indexingConfig.allowQueriesBeforeHistoricalSync
+      )
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)
