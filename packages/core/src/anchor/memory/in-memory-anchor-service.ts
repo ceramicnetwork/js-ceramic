@@ -323,6 +323,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       blockTimestamp: timestamp,
       txHash: CID.parse(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
+      // @note: force version 1 here? should it matter if its in memory
+      version: 1
     }
     const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }

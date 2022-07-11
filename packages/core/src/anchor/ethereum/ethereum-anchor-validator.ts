@@ -6,6 +6,9 @@ import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { base16 } from 'multiformats/bases/base16'
 
+import { Interface } from '@ethersproject/abi';
+
+
 /**
  * Ethereum network configuration
  */
@@ -22,9 +25,17 @@ interface EthNetwork {
  */
 const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
   'eip155:1': { network: 'mainnet', chain: 'ETH', chainId: 1, networkId: 1, type: 'Production' },
-  'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
+  
+  //PROD
+  // 'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
+  
   'eip155:4': { network: 'rinkeby', chain: 'ETH', chainId: 4, networkId: 4, type: 'Test' },
   'eip155:5': { network: 'goerli', chain: 'ETH', chainId: 5, networkId: 5, type: 'Test' },
+  
+  //DEV
+  // 'eip155:1337': { network: 'local', chain: 'ETH', chainId: 1337, networkId: 5777, type: 'Test' },
+  'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 1337, networkId: 1337, type: 'Test' },
+  
   'eip155:100': { network: 'mainnet', chain: 'Gnosis', chainId: 100, networkId: 100, type: 'Test' },
 }
 
@@ -94,12 +105,24 @@ export class EthereumAnchorValidator implements AnchorValidator {
     try {
       // determine network based on a chain ID
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
+
+      console.log("this._transactionCache")
+      console.log(this._transactionCache)
+      
       let transaction = this._transactionCache.get(txHash)
+      console.log(`this._transactionCache.get: ${txHash}`)
+      console.log(transaction)
 
       if (!transaction) {
         transaction = await provider.getTransaction(txHash)
+        console.log("first undefined")
+        console.log(transaction)
         this._transactionCache.set(txHash, transaction)
       }
+
+      // provider.getTransactionReceipt()
+      console.log(`Block Number: ${provider.blockNumber}`)
+
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
@@ -140,17 +163,64 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * Validate anchor proof on the chain
    * @param anchorProof - Anchor proof instance
    */
-  async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
+  async validateLegacy(anchorProof: AnchorProof): Promise<[TransactionResponse, Block]> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
+    console.log("validateLegacy, decoded")
+    console.log(decoded)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
-
+    console.log("txHash")
+    console.log(txHash)
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
+    console.log("transaction?")
+    console.log(transaction)
     const txValueHexNumber = parseInt(transaction.data, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
+    console.log("txValueHexNumber")
+    console.log(txValueHexNumber)
+    console.log("rootValueHexNumber")
+    console.log(rootValueHexNumber)
 
     if (txValueHexNumber !== rootValueHexNumber) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
+
+    return [transaction, block]
+  }
+
+  async validateContract(anchorProof: AnchorProof): Promise<[TransactionResponse, Block]> {
+    const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, anchorProof.txHash.toString())
+    console.log("validateContract, transaction?")
+    console.log(transaction)
+    const abi = [
+      "function anchor(bytes)",
+    ];
+    const iface = new Interface(abi);
+    console.log("iface")
+    console.log(iface)
+    const decodedArgs = iface.decodeFunctionData('anchor', transaction.data)
+    console.log("decodedArgs")
+    console.log(decodedArgs)
+    const rootCID = decodedArgs[0]
+    console.log("rootCID")
+    console.log(rootCID)
+    return [transaction, block]
+  }
+
+  async validate(anchorProof: AnchorProof): Promise<[TransactionResponse, Block]> {
+    if(anchorProof.version === 1){
+      return this.validateContract(anchorProof)
+    }else{
+      return this.validateLegacy(anchorProof)
+    }
+  }
+  
+  async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
+
+    console.log("VALIDATE ANCHOR INCLUSION")
+    console.log("anchor proof")
+    console.log(anchorProof)
+
+    const [transaction, block] = await this.validate(anchorProof)
 
     if (anchorProof.blockNumber !== transaction.blockNumber) {
       throw new Error(
@@ -163,6 +233,13 @@ export class EthereumAnchorValidator implements AnchorValidator {
         `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`
       )
     }
+
+    console.log("before block number cutoff check")
+    const BLOCK_THRESHHOLD = 1 //1000000000; //put into config, check where
+    if (transaction.blockNumber < BLOCK_THRESHHOLD) {
+      throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
+    }    
+
   }
 
   /**
@@ -170,13 +247,23 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * @param chain - CAIP-2 Chain ID
    * @private
    */
+  //ACTIVE
   private _getEthProvider(chain: string): providers.BaseProvider {
+    
+    console.log(`_getEthProvider: ${chain}`)
     const fromCache = this.providersCache.get(chain)
+    console.log("this.providersCache.entries()")
+    console.log(this.providersCache.entries())
+
     if (fromCache) return fromCache
 
     if (!chain.startsWith('eip155')) {
       throw new Error(`Unsupported chainId '${chain}' - must be eip155 namespace`)
     }
+
+    console.log("chain")
+    console.log(chain)
+    console.log(this._chainId)
 
     if (this._chainId && this._chainId != chain) {
       throw new Error(

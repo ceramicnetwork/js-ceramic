@@ -401,4 +401,31 @@ describe('Ceramic anchoring', () => {
       await ceramic.close()
     })
   })
+
+  // early test idea, but can test in a lower abstraction's tests
+  // describe('Anchor Versioning', () => {
+  //   it('Correct Anchor Version 1', async () => {
+  //     const [ceramic1, ceramic2] = await Promise.all([
+  //       createCeramic(ipfs1, true),
+  //       createCeramic(ipfs2, false),
+  //     ])
+
+  //     const stream1 = await TileDocument.create(ceramic1, { a: 1 })
+  //     await stream1.update({ a: 2 })
+  //     await stream1.update({ a: 3 })
+
+  //     await anchorUpdate(ceramic1, stream1)
+
+  //     expect(stream1.content).toEqual({ a: 3 })
+  //     expect(stream1.state.log.length).toEqual(4)
+  //     expect(stream1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+  //     const stream2 = await ceramic2.loadStream(stream1.id)
+  //     expect(stream1.content).toEqual(stream2.content)
+  //     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
+
+  //     await ceramic1.close()
+  //     await ceramic2.close()
+  //   })
+  // })
 })

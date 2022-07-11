@@ -40,6 +40,8 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
     'metrics-port': DEFAULT_METRICS_EXPORTER_PORT,
   },
   network: { name: Networks.TESTNET_CLAY },
+  //network: { name: Networks.LOCAL },
+  
   node: {},
   'state-store': {
     mode: StateStoreMode.FS,

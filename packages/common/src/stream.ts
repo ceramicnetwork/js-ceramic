@@ -57,14 +57,34 @@ export interface RawCommit {
   prev: CID
 }
 
+
+/*
+type AnchorProof struct {
+  version 1
+  chainId String
+  blockNumber Int
+  blockTimestamp Int
+  txHash Link
+  root Link
+}
+*/
 export interface AnchorProof {
   chainId: string
   blockNumber: number
   blockTimestamp: number
   txHash: CID
   root: CID
+  version?: number
 }
 
+/*
+type AnchorCommit struct {
+  id Link
+  prev Link
+  proof &AnchorProof
+  path String
+}
+*/
 export interface AnchorCommit {
   id: CID
   prev: CID
