@@ -50,7 +50,7 @@
     "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",
     "@polkadot/keyring": "^6.2.1",
-    "@polkadot/types": "^4.6.2",
+    "@polkadot/types": "^8.12.2",
     "@polkadot/util": "^7.1.1",
     "@smontero/eosio-local-provider": "^0.0.3",
     "@solana/wallet-adapter-base": "^0.7.1",
