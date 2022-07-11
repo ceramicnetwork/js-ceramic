@@ -5,7 +5,15 @@ import { DaemonConfig } from '../daemon-config.js'
 
 export async function makeCeramicDaemon(core: Ceramic): Promise<CeramicDaemon> {
   const port = await getPort()
-  const daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+  const daemon = new CeramicDaemon(
+    core,
+    DaemonConfig.fromObject({
+      'http-api': { port },
+      indexing: {
+        'allow-queries-before-historical-sync': true,
+      },
+    })
+  )
   await daemon.listen()
   return daemon
 }
