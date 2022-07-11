@@ -5,7 +5,7 @@ import { initTables } from './init-tables.js'
 import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
-import { IndexQueryNotAvailableError } from '../index-query-not-available.error'
+import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
