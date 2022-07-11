@@ -1,12 +1,12 @@
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
-  AnchorStatus,
+  AnchorStatus, CommitType,
   Context,
   CreateOpts,
   LoadOpts,
   PinningOpts,
-  PublishOpts,
+  PublishOpts, Stream,
   StreamState,
   SyncOptions,
   UpdateOpts,
@@ -23,7 +23,6 @@ import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
-import {DatabaseIndexApi} from "../indexing/database-index-api";
 import {LocalIndexApi} from "../indexing/local-index-api";
 
 export type RepositoryDependencies = {
@@ -33,7 +32,7 @@ export type RepositoryDependencies = {
   handlers: HandlersMap
   anchorService: AnchorService
   conflictResolution: ConflictResolution
-  indexing: LocalIndexApi | undefined
+  indexing: LocalIndexApi
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
@@ -89,6 +88,10 @@ export class Repository {
     return this.#deps.pinStore
   }
 
+  get _index(): LocalIndexApi {
+    return this.#deps.indexing
+  }
+
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDeps(deps: RepositoryDependencies): void {
     this.#deps = deps
@@ -101,7 +104,8 @@ export class Repository {
       this.logger,
       (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts),
-      deps.indexing,
+      this.indexStreamIfNeeded,
+      deps.indexing
     )
   }
 
@@ -335,6 +339,36 @@ export class Repository {
   }
 
   /**
+   * Helper function to add stream to db index if it has a 'model' in its metadata.
+   * @param state
+   * @public
+   */
+  public async indexStreamIfNeeded(state: RunningState): Promise<void> {
+    if (!state.value.metadata.model) {
+      return
+    }
+
+    const asDate = (unixTimestamp: number | null | undefined) => {
+      return unixTimestamp ? new Date(unixTimestamp * 1000) : null
+    }
+
+    // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
+    const lastAnchor = asDate(state.value.anchorProof?.blockTimestamp)
+    const firstAnchor = asDate(
+      state.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
+    )
+    const STREAM_CONTENT = {
+      model: state.value.metadata.model,
+      streamID: state.id,
+      controller: state.value.metadata.controller,
+      lastAnchor: lastAnchor,
+      firstAnchor: firstAnchor,
+    }
+
+    await this._index.indexStream(STREAM_CONTENT)
+  }
+
+  /**
    * Updates for the StreamState, even if a (pinned or not pinned) stream has already been evicted.
    * Marks the stream as durable, that is not subject to cache eviction.
    *
@@ -371,5 +405,6 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
+    await this._index.close()
   }
 }

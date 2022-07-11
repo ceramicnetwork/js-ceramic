@@ -43,7 +43,7 @@ export class StateManager {
    * @param logger - Logger
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
-   * @param _index - currently used instance of IndexApi
+   * @param indexStreamIfNeeded - `Repository#indexStreamIfNeeded`
    */
   constructor(
     private readonly dispatcher: Dispatcher,
@@ -57,7 +57,8 @@ export class StateManager {
       streamId: StreamID,
       opts?: LoadOpts | CreateOpts
     ) => Promise<RunningState>,
-    private readonly _index: LocalIndexApi
+    private readonly indexStreamIfNeeded,
+    private readonly _index: LocalIndexApi | undefined
   ) {}
 
   /**
@@ -175,22 +176,27 @@ export class StateManager {
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
     const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
+    console.log('>>>> bladibla', next)
     if (next) {
       state$.next(next)
       this.logger.verbose(
         `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
       )
-      await this._updateStateIfPinned(state$)
+      await this._updateStateIfPinnedOrIndexed(state$)
       return true
     } else {
       return false
     }
   }
 
-  private async _updateStateIfPinned(state$: RunningState): Promise<void> {
+  private async _updateStateIfPinnedOrIndexed(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
+    console.log('>>>>>>>> _updateStateIfPinnedOrIndexed')
     if (isPinned) {
+      console.log('>>>>>>> PINNING!!!!')
       await this.pinStore.add(state$)
+      console.log('>>>> WOOHOO')
+      await this.indexStreamIfNeeded(state$)
     }
   }
 
@@ -205,36 +211,17 @@ export class StateManager {
    * @param tip - Stream Tip CID
    * @private
    */
-  handlePubsubUpdate(streamId: StreamID, tip: CID, model: StreamID): void {
+  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
     this.fromMemoryOrStore(streamId).then((state$) => {
       if (!state$) {
         return
       }
       this.executionQ.forStream(streamId).add(async () => {
-        if (state$.value.metadata.model) {
-          await this.addStreamToIndex(state$)
-        }
         await this._handleTip(state$, tip)
       })
+      console.log('>>>>>>>>> HEIDIHO')
+      this.indexStreamIfNeeded(state$)
     })
-  }
-
-  /**
-   * Helper function to add stream to db index.
-   * @param stream
-   * @private
-   */
-  private async addStreamToIndex(state) {
-    const last_anchor_ts = state.value.metadata.anchorProof
-      ? new Date(state.value.metadata.anchorProof.blockTimestamp * 1000)
-      : null
-    const STREAM_CONTENT = {
-      model: state.value.metadata.model,
-      streamID: state.metadata.stream,
-      controller: state.controllers[0],
-      lastAnchor: last_anchor_ts,
-    }
-    await this._index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -374,12 +361,12 @@ export class StateManager {
               }
               if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
               state$.next(next)
-              await this._updateStateIfPinned(state$)
+              await this._updateStateIfPinnedOrIndexed(state$)
               return
             }
             case AnchorStatus.PROCESSING: {
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-              await this._updateStateIfPinned(state$)
+              await this._updateStateIfPinnedOrIndexed(state$)
               return
             }
             case AnchorStatus.ANCHORED: {

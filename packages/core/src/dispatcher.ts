@@ -6,7 +6,7 @@ import {
   ServiceLogger,
   StreamUtils,
   UnreachableCaseError,
-  abortable
+  abortable,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Repository } from './state-management/repository.js'
@@ -324,7 +324,7 @@ export class Dispatcher {
 
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
-    this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
+    this.repository.stateManager.handlePubsubUpdate(streamId, tip)
     // TODO: Handle 'anchorService' if present in message
   }
 
@@ -369,7 +369,7 @@ export class Dispatcher {
             "'"
         )
       }
-      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip, null)
+      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }
