@@ -44,6 +44,12 @@ const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
 
+const ABI = [
+  "function anchor(bytes)",
+];
+
+const iface = new Interface(ABI);
+
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -105,24 +111,13 @@ export class EthereumAnchorValidator implements AnchorValidator {
     try {
       // determine network based on a chain ID
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-
-      console.log("this._transactionCache")
-      console.log(this._transactionCache)
-      
+ 
       let transaction = this._transactionCache.get(txHash)
-      console.log(`this._transactionCache.get: ${txHash}`)
-      console.log(transaction)
 
       if (!transaction) {
         transaction = await provider.getTransaction(txHash)
-        console.log("first undefined")
-        console.log(transaction)
         this._transactionCache.set(txHash, transaction)
       }
-
-      // provider.getTransactionReceipt()
-      console.log(`Block Number: ${provider.blockNumber}`)
-
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
@@ -160,53 +155,32 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   /**
-   * Validate anchor proof on the chain
+   * Validate version 0 anchor proof on the chain by readin tx data directly
    * @param anchorProof - Anchor proof instance
    */
-  async validateLegacy(anchorProof: AnchorProof): Promise<[TransactionResponse, Block]> {
+  async validateLegacy(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
-    console.log("validateLegacy, decoded")
-    console.log(decoded)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
-    console.log("txHash")
-    console.log(txHash)
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    console.log("transaction?")
-    console.log(transaction)
     const txValueHexNumber = parseInt(transaction.data, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-    console.log("txValueHexNumber")
-    console.log(txValueHexNumber)
-    console.log("rootValueHexNumber")
-    console.log(rootValueHexNumber)
-
-    if (txValueHexNumber !== rootValueHexNumber) {
-      throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
-    }
-
-    return [transaction, block]
+    return [transaction, block, txValueHexNumber, rootValueHexNumber]
   }
 
-  async validateContract(anchorProof: AnchorProof): Promise<[TransactionResponse, Block]> {
+  /**
+   * Validate version 1 anchor proof on the chain by parsing first encoded parameter
+   * @param anchorProof - Anchor proof instance
+   */
+  async validateContract(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, anchorProof.txHash.toString())
-    console.log("validateContract, transaction?")
-    console.log(transaction)
-    const abi = [
-      "function anchor(bytes)",
-    ];
-    const iface = new Interface(abi);
-    console.log("iface")
-    console.log(iface)
     const decodedArgs = iface.decodeFunctionData('anchor', transaction.data)
-    console.log("decodedArgs")
-    console.log(decodedArgs)
     const rootCID = decodedArgs[0]
-    console.log("rootCID")
-    console.log(rootCID)
-    return [transaction, block]
+    const txValueHexNumber = parseInt(rootCID, 16)
+    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)  
+    return [transaction, block, txValueHexNumber, rootValueHexNumber]
   }
 
-  async validate(anchorProof: AnchorProof): Promise<[TransactionResponse, Block]> {
+  async validate(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
     if(anchorProof.version === 1){
       return this.validateContract(anchorProof)
     }else{
@@ -215,12 +189,16 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
   
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
+    const [transaction, block, txValue, rootValue] = await this.validate(anchorProof)
+    
+    //dev
+    console.log("validation result")
+    console.log(`[txValue  ]: ${txValue}`)
+    console.log(`[rootValue]: ${rootValue}`)
 
-    console.log("VALIDATE ANCHOR INCLUSION")
-    console.log("anchor proof")
-    console.log(anchorProof)
-
-    const [transaction, block] = await this.validate(anchorProof)
+    if (txValue !== rootValue) {
+      throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
+    }
 
     if (anchorProof.blockNumber !== transaction.blockNumber) {
       throw new Error(
@@ -250,20 +228,13 @@ export class EthereumAnchorValidator implements AnchorValidator {
   //ACTIVE
   private _getEthProvider(chain: string): providers.BaseProvider {
     
-    console.log(`_getEthProvider: ${chain}`)
     const fromCache = this.providersCache.get(chain)
-    console.log("this.providersCache.entries()")
-    console.log(this.providersCache.entries())
 
     if (fromCache) return fromCache
 
     if (!chain.startsWith('eip155')) {
       throw new Error(`Unsupported chainId '${chain}' - must be eip155 namespace`)
     }
-
-    console.log("chain")
-    console.log(chain)
-    console.log(this._chainId)
 
     if (this._chainId && this._chainId != chain) {
       throw new Error(
