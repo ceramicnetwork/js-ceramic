@@ -5,7 +5,7 @@ import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { InsertionOrder } from './insertion-order.js'
-import { IndexQueryNotAvailableError } from '../index-query-not-available.error'
+import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
