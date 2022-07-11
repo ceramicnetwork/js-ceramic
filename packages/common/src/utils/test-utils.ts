@@ -1,12 +1,14 @@
-import type { StreamState, Stream } from '../stream.js'
+import { BehaviorSubject, lastValueFrom, firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
-import { BehaviorSubject, lastValueFrom } from 'rxjs'
-import { RunningStateLike } from '../running-state-like.js'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import * as random from '@stablelib/random'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
+import type { StreamState, Stream } from '../stream.js'
+import { RunningStateLike } from '../running-state-like.js'
+import { AnchorStatus } from '../stream.js'
+import type { CeramicApi } from '../ceramic-api.js'
 
 const SHA256_CODE = 0x12
 
@@ -64,5 +66,25 @@ export class TestUtils {
       random.randomBytes(32),
     ])
     return CID.create(1, SHA256_CODE, decodeMultiHash(body))
+  }
+
+  /**
+   * Trigger anchor for a stream. WARNING: can only work on Ceramic Core.
+   * @param ceramic Ceramic Core instance.
+   * @param stream Stream to trigger anchor on.
+   */
+  static async anchorUpdate(ceramic: CeramicApi, stream: Stream): Promise<void> {
+    const anchorService = ceramic.context.anchorService as any
+    if ('anchor' in anchorService) {
+      const tillAnchored = firstValueFrom(
+        stream.pipe(
+          filter((state) =>
+            [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus)
+          )
+        )
+      )
+      await anchorService.anchor()
+      await tillAnchored
+    }
   }
 }

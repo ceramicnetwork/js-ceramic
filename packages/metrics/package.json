@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/metrics",
-  "version": "0.0.1",
+  "version": "0.0.3-rc.0",
   "description": "Ceramic metrics instrumentation and exporters",
   "keywords": [
     "ceramic",
@@ -24,7 +24,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

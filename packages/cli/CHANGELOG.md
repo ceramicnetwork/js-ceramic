@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.4.0...@ceramicnetwork/cli@2.4.1-rc.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.4.0-rc.1...@ceramicnetwork/cli@2.4.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.4.0-rc.0...@ceramicnetwork/cli@2.4.0-rc.1) (2022-06-30)
+
+
+### Features
+
+* Add edge cursors and use expected order ([#2282](https://github.com/ceramicnetwork/js-ceramic/issues/2282)) ([87d8e3f](https://github.com/ceramicnetwork/js-ceramic/commit/87d8e3fc65b7a1743111b4a1105513fd4e98a42b))
+* Add path expansion to config file handling ([#2274](https://github.com/ceramicnetwork/js-ceramic/issues/2274)) ([c791499](https://github.com/ceramicnetwork/js-ceramic/commit/c791499a33f888f7a2cbe1415ac6c9bc451bcbe8))
+* Fix failing test due to unnecessary import of "process" package ([e7f3e0d](https://github.com/ceramicnetwork/js-ceramic/commit/e7f3e0d5c5db49552070fd3e8e77815a95adee3f))
+* Heapdump on SIGUSR2 ([#2269](https://github.com/ceramicnetwork/js-ceramic/issues/2269)) ([88cbcf2](https://github.com/ceramicnetwork/js-ceramic/commit/88cbcf29f484ac279e159c321a5e4b529e873f2e))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+
+
+
+
+
 # [2.4.0-rc.0](/compare/@ceramicnetwork/cli@2.3.1...@ceramicnetwork/cli@2.4.0-rc.0) (2022-06-27)
 
 

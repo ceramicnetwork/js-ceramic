@@ -1,12 +1,10 @@
 import { jest } from '@jest/globals'
-import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Repository } from '../repository.js'
-import { anchorUpdate } from './anchor-update.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
-import { delay } from '../../__tests__/delay.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 
 let ipfs: IpfsApi
@@ -92,7 +90,7 @@ describe('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-    await anchorUpdate(ceramic, schema)
+    await TestUtils.anchorUpdate(ceramic, schema)
     // Create invalid stream
     const ipfs2 = await createIPFS()
     const permissiveCeramic = await createCeramic(ipfs2)
@@ -123,7 +121,7 @@ test('subscribe makes state endured', async () => {
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   stream1.subscribe()
-  await delay(200) // Wait for rxjs plumbing
+  await TestUtils.delay(200) // Wait for rxjs plumbing
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
 })

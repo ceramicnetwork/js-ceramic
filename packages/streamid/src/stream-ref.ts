@@ -53,7 +53,7 @@ export namespace StreamRef {
       }
       return commitId
     } else {
-      throw new Error(`Can not build CommitID or StreamID`)
+      throw new Error(`Can not build CommitID or StreamID from ${JSON.stringify(input)}`)
     }
   }
 }

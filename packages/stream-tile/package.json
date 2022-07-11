@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile",
-  "version": "2.2.3-rc.0",
+  "version": "2.3.1-rc.0",
   "description": "Ceramic Tile Document stream type",
   "keywords": [
     "ceramic",
@@ -31,11 +31,12 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.2.2-rc.0",
-    "@ceramicnetwork/streamid": "^2.1.0",
+    "@ceramicnetwork/common": "^2.3.1-rc.0",
+    "@ceramicnetwork/streamid": "^2.3.0-rc.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
+    "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^3.0.0"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

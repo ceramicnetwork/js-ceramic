@@ -19,6 +19,8 @@ import {
   TestUtils,
   IpfsApi,
   CeramicSigner,
+  GenesisCommit,
+  RawCommit,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -198,7 +200,7 @@ const rotateKey = (did: DID, rotateDate: string) => {
 async function checkSignedCommitMatchesExpectations(
   did: DID,
   commit: SignedCommitContainer,
-  expectedCommit: Record<string, any>
+  expectedCommit: GenesisCommit | RawCommit
 ) {
   const { jws, linkedBlock } = commit
   expect(jws).toBeDefined()
@@ -231,6 +233,8 @@ describe('ModelHandler', () => {
   let signerUsingOldKey: CeramicSigner
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+
     const recs: Record<string, any> = {}
     const ipfs = {
       dag: {
@@ -343,8 +347,6 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
-    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
-    delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
 
@@ -365,8 +367,6 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
-    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
-    delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
 
@@ -812,7 +812,8 @@ describe('ModelHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new Model(state$, context)
     const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
-    rawCommit.header = { controllers: [did.id, did.id] }
+    const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
+    rawCommit.header = { controllers: [newDid] }
     const signedCommit = await Model._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

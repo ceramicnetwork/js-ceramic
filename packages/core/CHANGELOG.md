@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0...@ceramicnetwork/core@2.7.0-rc.0) (2022-07-06)
+
+
+### Features
+
+* **core,model-handler,model-instance-handler:** Disable indexing and query features by default until they are ready ([#2280](https://github.com/ceramicnetwork/js-ceramic/issues/2280)) ([acb010c](https://github.com/ceramicnetwork/js-ceramic/commit/acb010ccb9ced4b2228f574e4325806a4a2d7241))
+* **core:** Postgres MID table creation and indexing ([#2288](https://github.com/ceramicnetwork/js-ceramic/issues/2288)) ([2406073](https://github.com/ceramicnetwork/js-ceramic/commit/2406073b7b34a080be505f612b1596f8bf866a5b))
+* Store first anchored time in the indexing database ([#2287](https://github.com/ceramicnetwork/js-ceramic/issues/2287)) ([35a7e3e](https://github.com/ceramicnetwork/js-ceramic/commit/35a7e3ee838ae775306e4cd748300e6acf3fb101))
+
+
+
+
+
+# [2.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0-rc.1...@ceramicnetwork/core@2.6.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0-rc.0...@ceramicnetwork/core@2.6.0-rc.1) (2022-06-30)
+
+
+### Features
+
+* Add a method to CeramicAPI that transforms raw StreamState to an instance of Streamtype ([#2286](https://github.com/ceramicnetwork/js-ceramic/issues/2286)) ([9475ccc](https://github.com/ceramicnetwork/js-ceramic/commit/9475ccc6b1c43ad4c3101bdf77bd98fcea6fedf8))
+* Add edge cursors and use expected order ([#2282](https://github.com/ceramicnetwork/js-ceramic/issues/2282)) ([87d8e3f](https://github.com/ceramicnetwork/js-ceramic/commit/87d8e3fc65b7a1743111b4a1105513fd4e98a42b))
+* Remove AbortController polyfill ([#2278](https://github.com/ceramicnetwork/js-ceramic/issues/2278)) ([65b9bee](https://github.com/ceramicnetwork/js-ceramic/commit/65b9beedafa108c07d4c7080c038061c35b88110))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+
+
+
+
+
 # [2.6.0-rc.0](/compare/@ceramicnetwork/core@2.5.1...@ceramicnetwork/core@2.6.0-rc.0) (2022-06-27)
 
 

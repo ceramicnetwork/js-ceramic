@@ -6,7 +6,7 @@ import { listMidTables } from '../init-tables.js'
 import knex, { Knex } from 'knex'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
-const STREAM_ID_B = 'k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna'
+const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const CONTROLLER = 'did:key:foo'
 
 let tmpFolder: tmp.DirectoryResult
@@ -36,7 +36,7 @@ describe('init', () => {
       const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex)
       await indexApi.init()
       const created = await listMidTables(dbConnection)
-      const tableNames = modelsToIndex.map((m) => `mid_${m.toString()}`)
+      const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
       expect(created).toEqual(tableNames)
     })
 
@@ -46,7 +46,7 @@ describe('init', () => {
       const indexApiA = new SqliteIndexApi(dbConnection, modelsA)
       await indexApiA.init()
       const createdA = await listMidTables(dbConnection)
-      const tableNamesA = modelsA.map((m) => `mid_${m.toString()}`)
+      const tableNamesA = modelsA.map((m) => `${m.toString()}`)
       expect(createdA).toEqual(tableNamesA)
 
       // Next add another one
@@ -54,7 +54,7 @@ describe('init', () => {
       const indexApiB = new SqliteIndexApi(dbConnection, modelsB)
       await indexApiB.init()
       const createdB = await listMidTables(dbConnection)
-      const tableNamesB = modelsB.map((m) => `mid_${m.toString()}`)
+      const tableNamesB = modelsB.map((m) => `${m.toString()}`)
       expect(createdB).toEqual(tableNamesB)
     })
   })
@@ -87,6 +87,7 @@ describe('indexStream', () => {
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
     lastAnchor: null,
+    firstAnchor: null
   }
 
   let indexApi: SqliteIndexApi
@@ -98,7 +99,7 @@ describe('indexStream', () => {
   test('new stream', async () => {
     const now = new Date()
     await indexApi.indexStream(STREAM_CONTENT)
-    const result: Array<any> = await dbConnection.from(`mid_${MODELS_TO_INDEX[0]}`).select('*')
+    const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
@@ -118,10 +119,11 @@ describe('indexStream', () => {
       ...STREAM_CONTENT,
       updatedAt: updateTime,
       lastAnchor: updateTime,
+      firstAnchor: null
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)
-    const result: Array<any> = await dbConnection.from(`mid_${MODELS_TO_INDEX[0]}`).select('*')
+    const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)

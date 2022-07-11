@@ -1,16 +1,16 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import MockDate from 'mockdate'
 import type { Ceramic } from '../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { createCeramic } from './create-ceramic.js'
 
 const DID_USED = 'did:3:bafysdfwefwe'
 const LEGACY_ACCOUNT = '0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337'
 const ACCOUNT = 'eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69'
+const FAMILY = 'caip10-eip155:1337'
 const PROOF = {
   version: 2,
   type: 'ethereum-eoa',
@@ -74,8 +74,10 @@ describe('Ceramic API', () => {
 
     it('Create from valid account id', async () => {
       const link = await Caip10Link.fromAccount(ceramic, ACCOUNT)
-      expect(link.metadata.controllers).toHaveLength(1)
-      expect(link.metadata.controllers[0]).toEqual(LEGACY_ACCOUNT.toLowerCase())
+      expect(link.metadata).toEqual({
+        controllers: [LEGACY_ACCOUNT.toLowerCase()],
+        family: FAMILY,
+      })
       expect(link.did).toBeNull()
       expect(link.state.log).toHaveLength(1)
       expect(link.state).toMatchSnapshot()
@@ -83,8 +85,10 @@ describe('Ceramic API', () => {
 
     it('Create from legacy account id', async () => {
       const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
-      expect(link.metadata.controllers).toHaveLength(1)
-      expect(link.metadata.controllers[0]).toEqual(LEGACY_ACCOUNT.toLowerCase())
+      expect(link.metadata).toEqual({
+        controllers: [LEGACY_ACCOUNT.toLowerCase()],
+        family: FAMILY,
+      })
       expect(link.did).toBeNull()
       expect(link.state.log).toHaveLength(1)
       expect(link.state).toMatchSnapshot()
@@ -164,12 +168,12 @@ describe('Ceramic API', () => {
 
       const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await anchorUpdate(ceramic, link)
+      await TestUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       await link.setDid(DID_USED, authProvider, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await anchorUpdate(ceramic, link)
+      await TestUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       expect(link.did).toEqual(DID_USED)

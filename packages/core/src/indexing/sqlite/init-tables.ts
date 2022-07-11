@@ -11,7 +11,7 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
     .from('sqlite_schema')
     .select('name')
     .whereIn('type', ['table'])
-    .andWhereLike('name', 'mid_%')
+    .andWhereLike('name', 'kjz%')
   return result.map((r) => r.name)
 }
 

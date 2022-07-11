@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link-handler",
-  "version": "2.0.8-rc.0",
+  "version": "2.1.1-rc.0",
   "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",
@@ -24,7 +24,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -32,9 +32,9 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-validation": "^2.0.8-rc.0",
-    "@ceramicnetwork/common": "^2.2.2-rc.0",
-    "@ceramicnetwork/stream-caip10-link": "^2.0.8-rc.0"
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.9-rc.0",
+    "@ceramicnetwork/common": "^2.3.1-rc.0",
+    "@ceramicnetwork/stream-caip10-link": "^2.1.1-rc.0"
   },
   "devDependencies": {
     "@stablelib/sha256": "^1.0.1",

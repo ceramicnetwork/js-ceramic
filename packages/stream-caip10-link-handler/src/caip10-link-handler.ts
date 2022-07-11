@@ -59,6 +59,11 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       throw new Error('Caip10Link genesis commit cannot have data')
     }
 
+    const metadata = commit.header
+    if (!(metadata.controllers && metadata.controllers.length === 1)) {
+      throw new Error('Exactly one controller must be specified')
+    }
+
     // TODO - verify genesis commit
     const state = {
       type: Caip10Link.STREAM_TYPE_ID,
@@ -66,14 +71,10 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       next: {
         content: null,
       },
-      metadata: commit.header,
+      metadata,
       signature: SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
-    }
-
-    if (!(state.metadata.controllers && state.metadata.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
     }
 
     return state

@@ -187,7 +187,7 @@ function validatePort(inPort) {
 export class CeramicDaemon {
   private server?: Server
   private readonly app: ExpressWithAsync
-  private readonly diagnosticsLogger: DiagnosticsLogger
+  readonly diagnosticsLogger: DiagnosticsLogger
   public hostname: string
   public port: number
 
@@ -477,7 +477,12 @@ export class CeramicDaemon {
     const query = collectionQuery(httpQuery)
     const indexResponse = await this.ceramic.index.queryIndex(query)
     res.json({
-      entries: indexResponse.entries.map(StreamUtils.serializeState),
+      edges: indexResponse.edges.map((e) => {
+        return {
+          cursor: e.cursor,
+          node: StreamUtils.serializeState(e.node),
+        }
+      }),
       pageInfo: indexResponse.pageInfo,
     })
   }

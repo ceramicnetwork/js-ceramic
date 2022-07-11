@@ -8,28 +8,29 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 import { SiweMessage, Cacao } from 'ceramic-cacao'
 import { createCeramic } from '../create-ceramic.js'
-import { ModelInstanceDocument, ModelInstanceDocumentMetadata } from '@ceramicnetwork/stream-model-instance'
+import {
+  ModelInstanceDocument,
+  ModelInstanceDocumentMetadata,
+} from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 
-const getModelDef = (name:string): ModelDefinition => ({
+const getModelDef = (name: string): ModelDefinition => ({
   name: name,
   accountRelation: ModelAccountRelation.LIST,
   schema: {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
-    type: "object",
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
     additionalProperties: false,
     properties: {
       myData: {
-        type: "integer",
+        type: 'integer',
         maximum: 10000,
-        minimum: 0
+        minimum: 0,
       },
     },
-    required: [
-      "myData"
-    ]
-  }
+    required: ['myData'],
+  },
 })
 
 const MODEL_DEFINITION = getModelDef('MyModel')
@@ -72,6 +73,8 @@ describe('CACAO Integration test', () => {
   let MODEL_STREAM_ID_2: StreamID
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
     // Create a did:pkh for the user
@@ -214,7 +217,6 @@ describe('CACAO Integration test', () => {
   })
 
   describe('Model instance stream with resources using model', () => {
-
     test('fails to create using capability with wrong model resource', async () => {
       const didKeyWithCapability = await addCapToDid(
         wallet,
@@ -233,7 +235,6 @@ describe('CACAO Integration test', () => {
         'Capability does not have appropriate permissions to update this Stream'
       )
     }, 30000)
-
 
     test('fails to update using capability with wrong model resource', async () => {
       const didKeyWithCapability = await addCapToDid(
@@ -327,7 +328,6 @@ describe('CACAO Integration test', () => {
       ).rejects.toThrow(/Failed/)
     }, 30000)
 
-
     test('can create stream with model resource', async () => {
       const didKeyWithCapability = await addCapToDid(
         wallet,
@@ -342,7 +342,7 @@ describe('CACAO Integration test', () => {
       })
 
       expect(doc.content).toEqual(CONTENT0)
-      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address}`)
       expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
     }, 30000)
 
@@ -446,7 +446,7 @@ describe('CACAO Integration test', () => {
       })
 
       expect(doc.content).toEqual(CONTENT0)
-      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address}`)
       expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
 
       await doc.replace(CONTENT1, {

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/streamid",
-  "version": "2.1.0",
+  "version": "2.3.0-rc.0",
   "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",
@@ -20,7 +20,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

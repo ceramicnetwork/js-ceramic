@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.3.0...@ceramicnetwork/stream-model-handler@0.4.0-rc.0) (2022-07-06)
+
+
+### Features
+
+* **core,model-handler,model-instance-handler:** Disable indexing and query features by default until they are ready ([#2280](https://github.com/ceramicnetwork/js-ceramic/issues/2280)) ([acb010c](https://github.com/ceramicnetwork/js-ceramic/commit/acb010ccb9ced4b2228f574e4325806a4a2d7241))
+
+
+
+
+
+# [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.3.0-rc.0...@ceramicnetwork/stream-model-handler@0.3.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [0.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.2.2-rc.0...@ceramicnetwork/stream-model-handler@0.3.0-rc.0) (2022-06-30)
+
+
+### Features
+
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+
+
+
+
+
 ## [0.2.2-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.2.1...@ceramicnetwork/stream-model-handler@0.2.2-rc.0) (2022-06-27)
 
 

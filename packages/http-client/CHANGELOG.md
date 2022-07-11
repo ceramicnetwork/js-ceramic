@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.3.0...@ceramicnetwork/http-client@2.3.1-rc.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.3.0-rc.0...@ceramicnetwork/http-client@2.3.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.2.2-rc.0...@ceramicnetwork/http-client@2.3.0-rc.0) (2022-06-30)
+
+
+### Features
+
+* Add a method to CeramicAPI that transforms raw StreamState to an instance of Streamtype ([#2286](https://github.com/ceramicnetwork/js-ceramic/issues/2286)) ([9475ccc](https://github.com/ceramicnetwork/js-ceramic/commit/9475ccc6b1c43ad4c3101bdf77bd98fcea6fedf8))
+* Add edge cursors and use expected order ([#2282](https://github.com/ceramicnetwork/js-ceramic/issues/2282)) ([87d8e3f](https://github.com/ceramicnetwork/js-ceramic/commit/87d8e3fc65b7a1743111b4a1105513fd4e98a42b))
+
+
+
+
+
 ## [2.2.2-rc.0](/compare/@ceramicnetwork/http-client@2.2.1...@ceramicnetwork/http-client@2.2.2-rc.0) (2022-06-27)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

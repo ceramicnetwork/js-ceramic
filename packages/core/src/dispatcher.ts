@@ -6,6 +6,7 @@ import {
   ServiceLogger,
   StreamUtils,
   UnreachableCaseError,
+  abortable
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Repository } from './state-management/repository.js'
@@ -101,23 +102,31 @@ export class Dispatcher {
         if (cacaoBlock) {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
           const capIPFSUri = decodedProtectedHeader.cap
-          await Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, this._shutdownSignal)
+          await abortable(this._shutdownSignal, (signal) => {
+            return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
+          })
         }
 
         // put the JWS into the ipfs dag
-        const cid = await this._ipfs.dag.put(jws, {
-          storeCodec: 'dag-jose',
-          hashAlg: 'sha2-256',
-          signal: this._shutdownSignal,
+        const cid = await abortable(this._shutdownSignal, (signal) => {
+          return this._ipfs.dag.put(jws, {
+            storeCodec: 'dag-jose',
+            hashAlg: 'sha2-256',
+            signal: signal,
+          })
         })
         // put the payload into the ipfs dag
         const linkCid = jws.link
-        await Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, this._shutdownSignal)
+        await abortable(this._shutdownSignal, (signal) => {
+          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
+        })
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
       }
-      const cid = await this._ipfs.dag.put(data, { signal: this._shutdownSignal })
+      const cid = await abortable(this._shutdownSignal, (signal) => {
+        return this._ipfs.dag.put(data, { signal: signal })
+      })
       await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
@@ -212,10 +221,12 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._ipfs.dag.get(asCid, {
-          timeout: this._ipfsTimeout,
-          path,
-          signal: this._shutdownSignal,
+        dagResult = await abortable(this._shutdownSignal, (signal) => {
+          return this._ipfs.dag.get(asCid, {
+            timeout: this._ipfsTimeout,
+            path,
+            signal: signal,
+          })
         })
       } catch (err) {
         if (
@@ -246,9 +257,11 @@ export class Dispatcher {
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await this._ipfs.block.stat(asCid, {
-      timeout: this._ipfsTimeout,
-      signal: this._shutdownSignal,
+    const stat = await abortable(this._shutdownSignal, (signal) => {
+      return this._ipfs.block.stat(asCid, {
+        timeout: this._ipfsTimeout,
+        signal: signal,
+      })
     })
     if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
