@@ -3,6 +3,7 @@ import { base64urlToJSON, PinningBackend, StreamUtils } from '@ceramicnetwork/co
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
+import { Model } from '@ceramicnetwork/stream-model'
 
 /**
  * Encapsulates logic for pinning streams
@@ -12,7 +13,8 @@ export class PinStore {
     readonly stateStore: StateStore,
     readonly pinning: PinningBackend,
     readonly retrieve: (cid: CID) => Promise<any | null>,
-    readonly resolve: (path: string) => Promise<CID>
+    readonly resolve: (path: string) => Promise<CID>,
+    readonly loadStream: (streamID: StreamID) => Promise<RunningState>
   ) {}
 
   open(networkName: string): void {
@@ -52,6 +54,13 @@ export class PinStore {
     await Promise.all(points.map((point) => this.pinning.pin(point)))
     await this.stateStore.save(runningState)
     runningState.markAsPinned()
+
+    const model = runningState.state.metadata.model
+    // TODO(NET-1645): Check for UNLOADABLE StreamType instead of hard-coded MODEL
+    if (model && !model.equals(Model.MODEL)) {
+      const modelStream = await this.loadStream(model)
+      await this.add(modelStream) // recursive call to also pin the model stream
+    }
   }
 
   /**
