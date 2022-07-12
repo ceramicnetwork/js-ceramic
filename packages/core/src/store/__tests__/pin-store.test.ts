@@ -284,7 +284,7 @@ describe('#rm', () => {
     expect(runningStateSpy).toBeCalledTimes(1)
   })
 
-  test('rm signed commit payloads and capabilities', async () => {
+  test('rm signed commit payloads', async () => {
     const stateWithSignedCommit = Object.assign({}, state, {
       log: [
         { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
@@ -310,7 +310,7 @@ describe('#rm', () => {
     await pinStore.rm(runningState)
     expect(stateStore.remove).toBeCalledWith(StreamUtils.streamIdFromState(stateWithSignedCommit))
     expect(runningStateSpy).toBeCalledTimes(1)
-    expect(pinning.unpin).toBeCalledTimes(4)
+    expect(pinning.unpin).toBeCalledTimes(3) // unsigned genesis commit, signed update commit, plus signed commit payload
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(pinning.unpin.mock.calls[0][0].toString()).toEqual(
@@ -319,8 +319,7 @@ describe('#rm', () => {
     expect(pinning.unpin.mock.calls[1][0].toString()).toEqual(
       stateWithSignedCommit.log[1].cid.toString()
     )
-    expect(pinning.unpin.mock.calls[2][0].toString()).toEqual(capCID.toString())
-    expect(pinning.unpin.mock.calls[3][0].toString()).toEqual(linkCID.toString())
+    expect(pinning.unpin.mock.calls[2][0].toString()).toEqual(linkCID.toString())
     expect(runningState.pinnedCommits).toBeNull()
   })
 
