@@ -29,7 +29,7 @@ const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 const DEFAULT_METRICS_EXPORTER_PORT = Number(process.env.METRICS_PORT) || 9090
-const DEFAULT_METRICS_EXPORTER_ENABLED = process.env.METRICS_EXPORTER_ENABLED || false
+const DEFAULT_METRICS_EXPORTER_ENABLED = Boolean(process.env.METRICS_EXPORTER_ENABLED) || false
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
@@ -48,6 +48,7 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   },
   indexing: {
     db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
+    'allow-queries-before-historical-sync': true,
     models: [],
   },
 })

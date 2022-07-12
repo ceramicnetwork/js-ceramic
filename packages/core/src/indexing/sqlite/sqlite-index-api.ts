@@ -5,6 +5,7 @@ import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js
 import { initTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { InsertionOrder } from './insertion-order.js'
+import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -18,8 +19,13 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 }
 
 export class SqliteIndexApi implements DatabaseIndexApi {
-  private readonly insertionOrder: InsertionOrder
-  constructor(private readonly dbConnection: Knex, readonly modelsToIndex: Array<StreamID>) {
+  readonly insertionOrder: InsertionOrder
+
+  constructor(
+    private readonly dbConnection: Knex,
+    readonly modelsToIndex: Array<StreamID>,
+    private readonly allowQueriesBeforeHistoricalSync: boolean
+  ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
@@ -53,6 +59,10 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+    // TODO(NET-1630) Throw if historical indexing is in progress
+    if (!this.allowQueriesBeforeHistoricalSync) {
+      throw new IndexQueryNotAvailableError(query.model)
+    }
     return this.insertionOrder.page(query)
   }
 

@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/streamid": "^2.3.0-rc.0",
+    "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
     "ceramic-cacao": "^1.1.1",

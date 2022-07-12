@@ -14,6 +14,11 @@ export type IndexingConfig = {
    * List of models to index.
    */
   models: Array<StreamID>
+
+  /**
+   * Allow a query only if historical sync is over.
+   */
+  allowQueriesBeforeHistoricalSync: boolean
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {
@@ -52,14 +57,22 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
           filename: connectionString.pathname,
         },
       })
-      return new SqliteIndexApi(dbConnection, indexingConfig.models)
+      return new SqliteIndexApi(
+        dbConnection,
+        indexingConfig.models,
+        indexingConfig.allowQueriesBeforeHistoricalSync
+      )
     }
     case 'postgres': {
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
       })
-      return new PostgresIndexApi(dataSource, indexingConfig.models)
+      return new PostgresIndexApi(
+        dataSource,
+        indexingConfig.models,
+        indexingConfig.allowQueriesBeforeHistoricalSync
+      )
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)

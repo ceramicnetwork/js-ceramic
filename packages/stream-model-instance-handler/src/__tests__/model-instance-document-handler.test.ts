@@ -439,7 +439,6 @@ describe('ModelInstanceDocumentHandler', () => {
     }
     state = await handler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
-    delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
   })
 
@@ -498,7 +497,6 @@ describe('ModelInstanceDocumentHandler', () => {
     }
     const state2 = await handler.applyCommit(signedCommitData_2, context, deepCopy(state1))
     delete state2.metadata.unique
-    delete state2.next.metadata.unique
     expect(state2).toMatchSnapshot()
   })
 

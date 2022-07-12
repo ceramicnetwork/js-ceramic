@@ -166,6 +166,10 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     return cloneDeep(next?.metadata ?? metadata)
   }
 
+  get controllers(): Array<string> {
+    return this.metadata.controllers
+  }
+
   /**
    * Creates a Tile document.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
