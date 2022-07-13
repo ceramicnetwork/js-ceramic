@@ -63,7 +63,9 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.LOCAL]: 'http://localhost:8081',
 }
 
-const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
+// const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
+const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:8545' // default Ganache port
+
 
 const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
