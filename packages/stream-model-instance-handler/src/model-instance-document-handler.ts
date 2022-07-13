@@ -14,7 +14,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
+import { isEmpty, SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
@@ -204,6 +204,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @private
    */
   async _validateContent(context: Context, modelStreamId: StreamID, content: any): Promise<void> {
+    if (isEmpty(content)) {
+      // We leave the possibility to set content to null/{} as a way of 'soft' deletion of an MID
+      return Promise.resolve()
+    }
     const model = await context.api.loadStream<Model>(modelStreamId)
     await this._schemaValidator.validateSchema(content, model.content.schema)
   }

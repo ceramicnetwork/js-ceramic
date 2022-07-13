@@ -298,6 +298,18 @@ describe('ModelInstanceDocumentHandler', () => {
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
+  it('null content in genesis is valid', async () => {
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, METADATA)
+    expect(commit).toBeDefined()
+
+    const expectedGenesis = {
+      data: null,
+      header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
+    }
+
+    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
+  })
+
   it('Takes controller from authenticated DID if controller not specified', async () => {
     const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
       model: FAKE_MODEL_ID,
@@ -399,6 +411,47 @@ describe('ModelInstanceDocumentHandler', () => {
     const patch = jsonpatch.compare(CONTENT0, CONTENT1)
     const expectedCommit = { data: patch, prev: FAKE_CID_1, id: FAKE_CID_1 }
     await checkSignedCommitMatchesExpectations(did, commit, expectedCommit)
+  })
+
+  it('applies signed commit with null content correctly, not taking model schema into consideration (as means of soft delete)', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new ModelInstanceDocument(state$, context)
+    const signedCommit = (await doc._makeCommit(context.api, null)) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    state = await handler.applyCommit(signedCommitData, context, state)
+    delete state.metadata.unique
+    expect(state).toMatchSnapshot()
   })
 
   it('applies signed commit correctly', async () => {
@@ -503,7 +556,7 @@ describe('ModelInstanceDocumentHandler', () => {
   test('throws error when applying genesis commit with invalid schema', async () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
-      {},
+      { wrongKey: 'some-value' },
       METADATA
     )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
@@ -545,7 +598,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, {})) as SignedCommitContainer
+    const signedCommit = (await doc._makeCommit(context.api, { someKey: 'wrong-value' })) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 

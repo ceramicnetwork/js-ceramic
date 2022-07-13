@@ -76,10 +76,26 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await ipfs.stop()
   })
 
+  test('allows empty content when creating an MID', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, {}, midMetadata)
+    expect(doc.content).toEqual({})
+  })
+
   test('verifies the content against model schema when creating an MID', async () => {
-    await expect(ModelInstanceDocument.create(ceramic, {}, midMetadata)).rejects.toThrow(
+    await expect(ModelInstanceDocument.create(ceramic, { wrongKey: 'some-value' }, midMetadata)).rejects.toThrow(
       /data must have required property 'myData'/
     )
+  })
+
+  test('allows empty content when updating an MID (as means of soft-delete)', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    expect(doc.content).toEqual(CONTENT0)
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    await doc.replace({})
+
+    expect(doc.content).toEqual({})
   })
 
   test('verifies the content against model schema when updating an MID', async () => {
@@ -89,7 +105,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      doc.replace({})
+      doc.replace({ wrongKey: 'some-value' })
     ).rejects.toThrow(/data must have required property 'myData'/)
   })
 

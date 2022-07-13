@@ -1,6 +1,12 @@
 import ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 
+export function isEmpty(obj: any): boolean {
+  return obj
+    && Object.keys(obj).length === 0
+    && Object.getPrototypeOf(obj) === Object.prototype
+}
+
 /**
  * Simple wrapper around AJV library for doing json-schema validation.
  * TODO: Move schema stream loading out of this.
