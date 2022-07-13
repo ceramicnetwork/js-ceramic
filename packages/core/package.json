@@ -75,7 +75,7 @@
     "@ceramicnetwork/ipfs-daemon": "^2.1.1-rc.0",
     "@databases/pg-test": "^3.1.2",
     "@types/node": "^18.0.3",
-    "ceramic-cacao": "^1.1.1",
+    "ceramic-cacao": "^1.2.1",
     "csv-parser": "^3.0.0",
     "did-resolver": "^3.1.5",
     "genversion": "^3.0.2",

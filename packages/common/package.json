@@ -42,7 +42,7 @@
     "@opentelemetry/semantic-conventions": "^1.3.0",
     "@stablelib/random": "^1.0.1",
     "caip": "~1.1.0",
-    "ceramic-cacao": "^1.1.1",
+    "ceramic-cacao": "^1.2.1",
     "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
     "jet-logger": "^1.1.5",

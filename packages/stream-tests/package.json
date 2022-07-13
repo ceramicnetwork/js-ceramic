@@ -31,7 +31,7 @@
     "@stablelib/sha256": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
     "caip": "~1.1.0",
-    "ceramic-cacao": "^1.1.1",
+    "ceramic-cacao": "^1.2.1",
     "did-resolver": "^3.1.5",
     "dids": "^3.2.0",
     "ethers": "^5.5.4",

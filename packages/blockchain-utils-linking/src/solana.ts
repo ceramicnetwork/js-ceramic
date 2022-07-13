@@ -1,8 +1,11 @@
 import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider.js'
-import { asOldCaipString, getConsentMessage, LinkProof } from './util.js'
+import { asOldCaipString, CapabilityOpts, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
+import { StreamID } from 'streamid/lib/stream-id.js'
+import { Cacao, SiwsMessage } from 'ceramic-cacao'
+import { randomString } from '@stablelib/random'
 
 export const SOLANA_TESTNET_CHAIN_REF = '4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z' // Solana testnet
 export const SOLANA_DEVNET_CHAIN_REF = 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1' // Solana devnet
@@ -53,6 +56,51 @@ export class SolanaAuthProvider implements AuthProvider {
       account: asOldCaipString(accountID),
       timestamp,
     }
+  }
+
+  async requestCapability(
+    sessionDID: string,
+    streams: Array<StreamID | string>,
+    opts: CapabilityOpts = {}
+  ): Promise<Cacao> {
+    if (!this.provider.signMessage) {
+      throw new Error(`Unsupported provider; provider must implement signMessage`)
+    }
+
+    console.warn(
+      'WARN: requestCapability is an experimental API, that is subject to change at any time.'
+    )
+
+    const domain = typeof window !== 'undefined' ? window.location.hostname : opts.domain
+    if (!domain) throw new Error("Missing parameter 'domain'")
+
+    // NOTE: To allow proper customization of the expiry date, we need a solid library to represent
+    // time durations that includes edge cases. We should not try dealing with timestamps ourselves.
+    const now = new Date()
+    const oneDayLater = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+    const siwsMessage = new SiwsMessage({
+      domain: domain,
+      address: this.address,
+      statement: opts.statement ?? 'Give this application access to some of your data on Ceramic',
+      uri: sessionDID,
+      version: opts.version ?? '1',
+      nonce: opts.nonce ?? randomString(10),
+      issuedAt: now.toISOString(),
+      expirationTime: opts.expirationTime ?? oneDayLater.toISOString(),
+      chainId: (await this.accountId()).chainId.reference,
+      resources: (opts.resources ?? []).concat(
+        streams.map((s) => (typeof s === 'string' ? StreamID.fromString(s) : s).toUrl())
+      ),
+    })
+
+    if (opts.requestId) siwsMessage.requestId = opts.requestId
+
+    const signatureBytes = await this.provider.signMessage(siwsMessage.signMessage())
+    const signature = uint8arrays.toString(signatureBytes, 'base58btc')
+    siwsMessage.signature = signature
+    const cacao = Cacao.fromSiwsMessage(siwsMessage)
+    return cacao
   }
 
   withAddress(address: string): AuthProvider {

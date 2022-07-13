@@ -34,7 +34,7 @@
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
-    "ceramic-cacao": "^1.1.1",
+    "ceramic-cacao": "^1.2.1",
     "near-api-js": "^0.44.2",
     "uint8arrays": "^3.0.0"
   },

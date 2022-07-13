@@ -75,7 +75,7 @@ export class EthereumAuthProvider implements AuthProvider {
     opts: CapabilityOpts = {}
   ): Promise<Cacao> {
     console.warn(
-      'WARN: requestCapability os an experimental API, that is subject to change any time.'
+      'WARN: requestCapability is an experimental API, that is subject to change any time.'
     )
 
     const domain = typeof window !== 'undefined' ? window.location.hostname : opts.domain

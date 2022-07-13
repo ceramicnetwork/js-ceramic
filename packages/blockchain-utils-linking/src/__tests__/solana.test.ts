@@ -1,9 +1,10 @@
+import { StreamID } from '@ceramicnetwork/streamid'
 import { jest } from '@jest/globals'
 import { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base'
-import { SOLANA_MAINNET_CHAIN_REF, SolanaAuthProvider } from '../solana.js'
 import { Keypair } from '@solana/web3.js'
 import { sign } from '@stablelib/ed25519'
 import * as uint8arrays from 'uint8arrays'
+import { SolanaAuthProvider, SOLANA_MAINNET_CHAIN_REF } from '../solana.js'
 
 const did = 'did:3:bafysdfwefwe'
 const privKey =
@@ -57,6 +58,34 @@ describe('Blockchain: Solana', () => {
       )
       const result = await authProvider.authenticate('msg')
       expect(result).toMatchSnapshot()
+    })
+  })
+
+  describe('Ocap', () => {
+    test('requestCapability', async () => {
+      const provider = new MyWalletAdapter(keyPairEd25519)
+      const authProvider = new SolanaAuthProvider(
+        provider,
+        keyPairEd25519.publicKey.toString(),
+        chainRef
+      )
+
+      const streamId = new StreamID(
+        'tile',
+        'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
+      )
+
+      await expect(
+        authProvider.requestCapability(
+          'did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8',
+          [streamId],
+          {
+            domain: 'https://service.org/',
+            nonce: '12345',
+            resources: ['ipfs://ABCDEF', 'ar://1234'],
+          }
+        )
+      ).resolves.toMatchSnapshot()
     })
   })
 })
