@@ -50,7 +50,7 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jest": "^27.0.3",
-    "@types/node": "^17.0.5",
+    "@types/node": "^18.0.3",
     "tsm": "^2.2.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

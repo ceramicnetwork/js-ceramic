@@ -6,7 +6,7 @@ import {
   StreamState,
   IpfsApi,
   SignatureStatus,
-  TestUtils
+  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
@@ -85,7 +85,7 @@ describe('Level data store', () => {
 
     const unpinSpy = jest.spyOn(realIpfs.pin, 'rm')
     await ceramic.pin.rm(stream.id)
-    expect(unpinSpy).toBeCalledTimes(5)
+    expect(unpinSpy).toBeCalledTimes(3) // genesis commit envelope, genesis commit payload, and anchor commit
 
     await ceramic.close()
     await realIpfs.stop()

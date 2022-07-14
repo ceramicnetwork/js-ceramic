@@ -2,7 +2,13 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
-import { CommitData, CommitType, IpfsApi, StreamUtils } from '@ceramicnetwork/common'
+import {
+  base64urlToJSON,
+  CommitData,
+  CommitType,
+  IpfsApi,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
@@ -177,8 +183,4 @@ export const promiseTimeout = (
     setTimeout(() => reject(new Error(timeoutErrorMsg)), ms)
   })
   return Promise.race([timeout, promise])
-}
-
-export function base64urlToJSON(s: string): Record<string, any> {
-  return JSON.parse(toString(fromString(s, 'base64url'))) as Record<string, any>
 }

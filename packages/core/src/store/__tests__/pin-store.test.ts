@@ -10,6 +10,8 @@ import {
   StreamState,
   CommitType,
   TestUtils,
+  JSONToBase64Url,
+  StreamUtils,
 } from '@ceramicnetwork/common'
 import { RunningState } from '../../state-management/running-state.js'
 
@@ -72,7 +74,7 @@ test('#close', async () => {
 })
 
 describe('#add', () => {
-  test('save and pin', async () => {
+  test('save and pin unsigned genesis', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const runningState = new RunningState(state, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
@@ -84,6 +86,48 @@ describe('#add', () => {
     expect(pinning.pin.mock.calls[0][0].toString()).toEqual(state.log[0].cid.toString())
     expect(runningStateSpy).toBeCalledTimes(1)
     expect(runningState.pinnedCommits).toEqual(new Set(state.log.map(({ cid }) => cid.toString())))
+  })
+
+  test('pin signed commit payloads and capabilities', async () => {
+    const stateWithSignedCommit = Object.assign({}, state, {
+      log: [
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+      ],
+    })
+    const linkCID = CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
+    const capCID = CID.parse('QmdC5Hav9zdn2iS75reafXBq1PH4EnqUmoxwoxkS5QtuME')
+    const protectedHeaderJSON = { cap: `ipfs://${capCID.toString()}` }
+    const encodedProtectedHeader = JSONToBase64Url(protectedHeaderJSON)
+    const retrieve = jest.fn(async (cid: CID) => {
+      if (cid.equals(stateWithSignedCommit.log[1].cid)) {
+        return {
+          link: linkCID,
+          signatures: [{ protected: encodedProtectedHeader }],
+        }
+      }
+    })
+
+    const pinStore = new PinStore(stateStore, pinning, retrieve, jest.fn())
+    const runningState = new RunningState(stateWithSignedCommit, false)
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
+    await pinStore.add(runningState)
+    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(pinning.pin).toBeCalledTimes(4)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    expect(pinning.pin.mock.calls[0][0].toString()).toEqual(
+      stateWithSignedCommit.log[0].cid.toString()
+    )
+    expect(pinning.pin.mock.calls[1][0].toString()).toEqual(
+      stateWithSignedCommit.log[1].cid.toString()
+    )
+    expect(pinning.pin.mock.calls[2][0].toString()).toEqual(capCID.toString())
+    expect(pinning.pin.mock.calls[3][0].toString()).toEqual(linkCID.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(
+      new Set(stateWithSignedCommit.log.map(({ cid }) => cid.toString()))
+    )
   })
 
   test('save and pin proof without path', async () => {
@@ -229,13 +273,95 @@ describe('#add', () => {
   })
 })
 
-test('#rm', async () => {
-  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-  const stream = new FakeType(TestUtils.runningState(state), {})
-  const runningState = new RunningState(state, true)
-  await pinStore.rm(runningState)
-  expect(stateStore.remove).toBeCalledWith(stream.id)
-  expect(pinning.unpin).toBeCalledWith(state.log[0].cid)
+describe('#rm', () => {
+  test('basic rm', async () => {
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const runningState = new RunningState(state, true)
+    const runningStateSpy = jest.spyOn(runningState, 'markAsUnpinned')
+    await pinStore.rm(runningState)
+    expect(stateStore.remove).toBeCalledWith(StreamUtils.streamIdFromState(state))
+    expect(pinning.unpin).toBeCalledWith(state.log[0].cid)
+    expect(runningStateSpy).toBeCalledTimes(1)
+  })
+
+  test('rm signed commit payloads', async () => {
+    const stateWithSignedCommit = Object.assign({}, state, {
+      log: [
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+      ],
+    })
+    const linkCID = CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
+    const capCID = CID.parse('QmdC5Hav9zdn2iS75reafXBq1PH4EnqUmoxwoxkS5QtuME')
+    const protectedHeaderJSON = { cap: `ipfs://${capCID.toString()}` }
+    const encodedProtectedHeader = JSONToBase64Url(protectedHeaderJSON)
+    const retrieve = jest.fn(async (cid: CID) => {
+      if (cid.equals(stateWithSignedCommit.log[1].cid)) {
+        return {
+          link: linkCID,
+          signatures: [{ protected: encodedProtectedHeader }],
+        }
+      }
+    })
+
+    const pinStore = new PinStore(stateStore, pinning, retrieve, jest.fn())
+    const runningState = new RunningState(stateWithSignedCommit, true)
+    const runningStateSpy = jest.spyOn(runningState, 'markAsUnpinned')
+    await pinStore.rm(runningState)
+    expect(stateStore.remove).toBeCalledWith(StreamUtils.streamIdFromState(stateWithSignedCommit))
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(pinning.unpin).toBeCalledTimes(3) // unsigned genesis commit, signed update commit, plus signed commit payload
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    expect(pinning.unpin.mock.calls[0][0].toString()).toEqual(
+      stateWithSignedCommit.log[0].cid.toString()
+    )
+    expect(pinning.unpin.mock.calls[1][0].toString()).toEqual(
+      stateWithSignedCommit.log[1].cid.toString()
+    )
+    expect(pinning.unpin.mock.calls[2][0].toString()).toEqual(linkCID.toString())
+    expect(runningState.pinnedCommits).toBeNull()
+  })
+
+  test('dont rm anchor proofs', async () => {
+    const stateWithProof = Object.assign({}, state, {
+      log: [
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+      ],
+    })
+    const proofCID = CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
+    const leftCID = CID.parse('QmdC5Hav9zdn2iS75reafXBq1PH4EnqUmoxwoxkS5QtuME')
+    const rightCID = CID.parse('QmcyyLvDzCrduuvGVUQEh1DzFvM7UWGfc9sUg87PjjYCw7')
+    const proofRootCID = CID.parse('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
+    const retrieve = jest.fn(async (cid: CID) => {
+      if (cid.equals(stateWithProof.log[1].cid)) {
+        return {
+          proof: proofCID,
+          path: 'L/R',
+        }
+      }
+    })
+    const resolve = jest.fn(async (query: string) => {
+      if (query === `${proofCID}/root`) {
+        return proofRootCID
+      } else if (query === `${proofCID}/root/L`) {
+        return leftCID
+      } else if (query === `${proofCID}/root/L/R`) {
+        return rightCID
+      }
+    })
+    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
+    const runningState = new RunningState(stateWithProof, false)
+    const runningStateSpy = jest.spyOn(runningState, 'markAsUnpinned')
+    await pinStore.rm(runningState)
+    expect(stateStore.remove).toBeCalledWith(StreamUtils.streamIdFromState(stateWithProof))
+    expect(pinning.unpin).toBeCalledTimes(2)
+    expect(pinning.unpin.mock.calls[0][0].toString()).toEqual(stateWithProof.log[0].cid.toString())
+    expect(pinning.unpin.mock.calls[1][0].toString()).toEqual(stateWithProof.log[1].cid.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toBeNull()
+  })
 })
 
 test('#ls', async () => {
