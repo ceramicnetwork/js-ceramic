@@ -192,7 +192,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
   
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
     const [transaction, block, txValue, rootValue] = await this.validate(anchorProof)
-  
     if (txValue !== rootValue) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
