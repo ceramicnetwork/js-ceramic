@@ -5,9 +5,7 @@ import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { base16 } from 'multiformats/bases/base16'
-
 import { Interface } from '@ethersproject/abi';
-
 
 /**
  * Ethereum network configuration
@@ -25,17 +23,10 @@ interface EthNetwork {
  */
 const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
   'eip155:1': { network: 'mainnet', chain: 'ETH', chainId: 1, networkId: 1, type: 'Production' },
-  
-  //PROD
-  // 'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
-  
+  'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
   'eip155:4': { network: 'rinkeby', chain: 'ETH', chainId: 4, networkId: 4, type: 'Test' },
   'eip155:5': { network: 'goerli', chain: 'ETH', chainId: 5, networkId: 5, type: 'Test' },
-  
-  //DEV
-  // 'eip155:1337': { network: 'local', chain: 'ETH', chainId: 1337, networkId: 5777, type: 'Test' },
   'eip155:1337': { network: 'local', chain: 'ETH', chainId: 1337, networkId: 1337, type: 'Test' },
-  
   'eip155:100': { network: 'mainnet', chain: 'Gnosis', chainId: 100, networkId: 100, type: 'Test' },
 }
 
