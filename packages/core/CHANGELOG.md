@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0-rc.1](/compare/@ceramicnetwork/core@2.7.0-rc.0...@ceramicnetwork/core@2.7.0-rc.1) (2022-07-14)
+
+
+### Bug Fixes
+
+* **core:** Don't unpin anchor proof, merkle tree, or CACAO when unpinning streams (#2307) 5b9773a, closes #2307
+
+
+### Features
+
+* Add allowQueriesBeforeHistoricalSync flag to config (#2289) cf68d7e, closes #2289
+
+
+
+
+
 # [2.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0...@ceramicnetwork/core@2.7.0-rc.0) (2022-07-06)
 
 

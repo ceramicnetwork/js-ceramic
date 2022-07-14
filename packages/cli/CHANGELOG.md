@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0-rc.0](/compare/@ceramicnetwork/cli@2.4.1-rc.0...@ceramicnetwork/cli@2.5.0-rc.0) (2022-07-14)
+
+
+### Features
+
+* Add allowQueriesBeforeHistoricalSync flag to config (#2289) cf68d7e, closes #2289
+* **cli:** use env vars to override config file (#2324) 2da33cc, closes #2324
+
+
+
+
+
 ## [2.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.4.0...@ceramicnetwork/cli@2.4.1-rc.0) (2022-07-06)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

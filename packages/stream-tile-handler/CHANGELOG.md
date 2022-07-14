@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.4-rc.1](/compare/@ceramicnetwork/stream-tile-handler@2.2.4-rc.0...@ceramicnetwork/stream-tile-handler@2.2.4-rc.1) (2022-07-14)
+
+
+### Bug Fixes
+
+* **core:** Don't unpin anchor proof, merkle tree, or CACAO when unpinning streams (#2307) 5b9773a, closes #2307
+
+
+
+
+
 ## [2.2.4-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.3...@ceramicnetwork/stream-tile-handler@2.2.4-rc.0) (2022-07-06)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
