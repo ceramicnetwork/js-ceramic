@@ -973,63 +973,6 @@ describe('ModelHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  // it('applies version 1 anchor commit correctly', async () => {
-  //   const genesisCommit = (await Model._makeGenesis(
-  //     context.api,
-  //     PLACEHOLDER_CONTENT
-  //   )) as SignedCommitContainer
-  //   await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-  //   const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-  //   await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-  //   // apply genesis
-  //   const genesisCommitData = {
-  //     cid: FAKE_CID_1,
-  //     type: CommitType.GENESIS,
-  //     commit: payload,
-  //     envelope: genesisCommit.jws,
-  //   }
-  //   let state = await handler.applyCommit(genesisCommitData, context)
-
-  //   const state$ = TestUtils.runningState(state)
-  //   const doc = new Model(state$, context)
-  //   const signedCommit = (await doc._makeCommit(
-  //     context.api,
-  //     FINAL_CONTENT
-  //   )) as SignedCommitContainer
-
-  //   await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-  //   const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-  //   await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-  //   // apply signed
-  //   const signedCommitData = {
-  //     cid: FAKE_CID_2,
-  //     type: CommitType.SIGNED,
-  //     commit: sPayload,
-  //     envelope: signedCommit.jws,
-  //   }
-  //   state = await handler.applyCommit(signedCommitData, context, state)
-  //   const anchorProof = {
-  //     blockNumber: 123456,
-  //     blockTimestamp: 1615799679,
-  //     chainId: 'fakechain:123',
-  //     // version: 1
-  //   }
-  //   await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
-  //   const anchorCommitData = {
-  //     cid: FAKE_CID_4,
-  //     type: CommitType.ANCHOR,
-  //     commit: { proof: FAKE_CID_3, prev: FAKE_CID_2 },
-  //     proof: anchorProof,
-  //   }
-  //   state = await handler.applyCommit(anchorCommitData, context, state)
-  //   delete state.metadata.unique
-  //   expect(state).toMatchSnapshot()
-  // })
-
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
