@@ -41,6 +41,16 @@ const ABI = [
 
 const iface = new Interface(ABI);
 
+/*
+type for overall validation result
+*/
+type ValidationResult = {
+  txResponse: TransactionResponse,
+  block: Block,
+  txValueHexNumber: number,
+  rootValueHexNumber: number
+}
+
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -154,20 +164,20 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * Validate version 0 anchor proof on the chain by readin tx data directly
    * @param anchorProof - Anchor proof instance
    */
-  async validateLegacy(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
+  async validateLegacy(anchorProof: AnchorProof): Promise<ValidationResult> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txValueHexNumber = parseInt(transaction.data, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-    return [transaction, block, txValueHexNumber, rootValueHexNumber]
+    return new this.ValidationResult(transaction, block, txValueHexNumber, rootValueHexNumber)
   }
 
   /**
    * Validate version 1 anchor proof on the chain by parsing first encoded parameter
    * @param anchorProof - Anchor proof instance
    */
-  async validateContract(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
+  async validateContract(anchorProof: AnchorProof): Promise<ValidationResult> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
@@ -175,10 +185,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const rootCID = decodedArgs[0]
     const txValueHexNumber = parseInt(rootCID, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)  
-    return [transaction, block, txValueHexNumber, rootValueHexNumber]
+    return new this.ValidationResult(transaction, block, txValueHexNumber, rootValueHexNumber)
   }
-
-  async validate(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
+  ValidationResult
+  async validate(anchorProof: AnchorProof): Promise<ValidationResult> {
     if(anchorProof.version === 1){
       return this.validateContract(anchorProof)
     }else{
@@ -187,25 +197,25 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
   
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-    const [transaction, block, txValue, rootValue] = await this.validate(anchorProof)
-    if (txValue !== rootValue) {
+    const validationResult: ValidationResult = await this.validate(anchorProof)
+    if (validationResult.txValueHexNumber !== validationResult.rootValueHexNumber) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
 
-    if (anchorProof.blockNumber !== transaction.blockNumber) {
+    if (anchorProof.blockNumber !== validationResult.txResponse.blockNumber) {
       throw new Error(
-        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${transaction.blockNumber}`
+        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${validationResult.txResponse.blockNumber}`
       )
     }
 
-    if (anchorProof.blockTimestamp !== block.timestamp) {
+    if (anchorProof.blockTimestamp !== validationResult.block.timestamp) {
       throw new Error(
-        `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`
+        `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${validationResult.block.timestamp}`
       )
     }
 
     const BLOCK_THRESHHOLD = 1 //1000000000; //put into config, check where
-    if (transaction.blockNumber < BLOCK_THRESHHOLD) {
+    if (validationResult.txResponse.blockNumber < BLOCK_THRESHHOLD) {
       throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
     }    
 
