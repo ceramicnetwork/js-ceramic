@@ -6,7 +6,7 @@ import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
-import { validTableStructure } from './migrations/2-mid-schema-verification.js'
+import { validTableStructure } from './migrations/mid-schema-verification.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder

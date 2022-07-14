@@ -1,6 +1,6 @@
 /**
  * Valid SQLite table structure for mid tables
- * Will be used to verify table integrity during node startup
+ * Used to verify table integrity during node startup
  */
 
 export const validTableStructure = {

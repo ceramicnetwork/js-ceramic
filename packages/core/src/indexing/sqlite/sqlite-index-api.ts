@@ -6,7 +6,7 @@ import { initTables, verifyTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { InsertionOrder } from './insertion-order.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
-import { validTableStructure } from './migrations/2-mid-schema-verfication.js'
+import { validTableStructure } from './migrations/mid-schema-verfication.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
