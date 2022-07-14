@@ -151,9 +151,7 @@ interface CeramicNetworkOptions {
   pubsubTopic: string // The topic that will be used for broadcasting protocol messages
 }
 
-// ACTIVE
-// const DEFAULT_NETWORK = Networks.INMEMORY
-const DEFAULT_NETWORK = Networks.LOCAL
+const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
   const streamRef = StreamRef.from(streamId)

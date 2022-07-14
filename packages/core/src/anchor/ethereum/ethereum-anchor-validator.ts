@@ -220,7 +220,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * @param chain - CAIP-2 Chain ID
    * @private
    */
-  //ACTIVE
   private _getEthProvider(chain: string): providers.BaseProvider {
     
     const fromCache = this.providersCache.get(chain)
