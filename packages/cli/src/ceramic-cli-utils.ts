@@ -28,8 +28,8 @@ const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CON
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
-const DEFAULT_METRICS_EXPORTER_PORT = Number(process.env.METRICS_PORT) || 9090
-const DEFAULT_METRICS_EXPORTER_ENABLED = Boolean(process.env.METRICS_EXPORTER_ENABLED) || false
+const DEFAULT_METRICS_EXPORTER_ENABLED = false
+const DEFAULT_METRICS_EXPORTER_PORT = 9090
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
@@ -117,8 +117,13 @@ export class CeramicCliUtils {
       : DEFAULT_DAEMON_CONFIG_FILENAME
     const config = await this._loadDaemonConfig(configFilepath)
 
+    // Environment variables override values from config file
+    if (envVarExists(process.env.CERAMIC_INDEXING_DB_URI)) config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
+    if (envVarExists(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)) config.metrics.metricsExporterEnabled = Boolean(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
+    if (envVarExists(process.env.CERAMIC_METRICS_PORT)) config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
+
     {
-      // CLI flags override values from config file
+      // CLI flags override values from environment variables and config file
       // todo: Make interface for CLI flags, separate flag validation into helper function, separate
       // overriding DaemonConfig with CLI flags into another helper function.
       if (stateStoreDirectory && stateStoreS3Bucket) {
@@ -626,4 +631,13 @@ Please use the upgraded Glaze CLI instead.
 Please test with the new CLI before reporting any problems.
 ${pc.green('npm i -g @glazed/cli')}`
   )
+}
+
+/**
+ * Checks if the variable has been set based on default assumptions for environment variables
+ * @param envVar Any environment variable
+ * @returns True if the environment variable is not undefined and not the empty string. False otherwise.
+ */
+function envVarExists(envVar: any): boolean {
+  return (envVar != undefined && envVar != '')
 }
