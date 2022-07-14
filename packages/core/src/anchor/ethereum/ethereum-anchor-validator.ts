@@ -110,20 +110,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
   ): Promise<[TransactionResponse, Block]> {
     try {
       // determine network based on a chain ID
-      console.log(`chainId: ${chainId} : ${txHash} : ${typeof(txHash)}`)
-      console.log("this._getEthProvider(chainId)")
-      console.log(this._getEthProvider(chainId))
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      console.log("provider")
-      console.log(provider)
       let transaction = this._transactionCache.get(txHash)
-      console.log("transaction x")
-      console.log(transaction)
 
       if (!transaction) {
-        console.log("_getTransactionAndBlockInfo")
-        console.log("txHash")
-        console.log(txHash)
         transaction = await provider.getTransaction(txHash)
         this._transactionCache.set(txHash, transaction)
       }
@@ -169,14 +159,11 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * @param anchorProof - Anchor proof instance
    */
   async validateLegacy(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
-    console.log("validateLegacy")
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txValueHexNumber = parseInt(transaction.data, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-    console.log(transaction.data)
-    print(anchorProof.root.toString(base16)) //issue with anchorproof type
     return [transaction, block, txValueHexNumber, rootValueHexNumber]
   }
 
@@ -185,25 +172,13 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * @param anchorProof - Anchor proof instance
    */
   async validateContract(anchorProof: AnchorProof): Promise<[TransactionResponse, Block, number, number]> {
-    console.log("validateContract, proof")
-    console.log(anchorProof)
-    console.log(anchorProof.txHash)
-    // console.log(anchorProof.txHash.bytes)
-    console.log(typeof(anchorProof.txHash))
-    console.log(anchorProof.txHash.multihash.bytes)
-    console.log("^^^^^^toJson^^^^^^")
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
-    console.log(txHash)
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    console.log("transaction")
-    console.log(transaction)
     const decodedArgs = iface.decodeFunctionData('anchor', transaction.data)
     const rootCID = decodedArgs[0]
     const txValueHexNumber = parseInt(rootCID, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)  
-    console.log(rootCID)
-    console.log(anchorProof.root.toString(base16))
     return [transaction, block, txValueHexNumber, rootValueHexNumber]
   }
 
@@ -217,15 +192,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
   
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
     const [transaction, block, txValue, rootValue] = await this.validate(anchorProof)
-    
-    console.log("Before Proof")
-    console.log(anchorProof)
-
-    //dev
-    console.log("validation result")
-    console.log(`[txValue  ]: ${txValue}`)
-    console.log(`[rootValue]: ${rootValue}`)
-
+  
     if (txValue !== rootValue) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
@@ -242,7 +209,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    console.log("before block number cutoff check")
     const BLOCK_THRESHHOLD = 1 //1000000000; //put into config, check where
     if (transaction.blockNumber < BLOCK_THRESHHOLD) {
       throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
@@ -258,8 +224,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
   //ACTIVE
   private _getEthProvider(chain: string): providers.BaseProvider {
     
-    console.log("_getEthProvider")
-    console.log(chain)
     const fromCache = this.providersCache.get(chain)
 
     if (fromCache) return fromCache

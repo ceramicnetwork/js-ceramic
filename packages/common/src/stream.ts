@@ -62,8 +62,6 @@ export interface AnchorProof {
   blockNumber: number
   blockTimestamp: number
   txHash: CID
-  // txHash: CID | string
-  // txHash: string
   root: CID
   version?: number
 }
