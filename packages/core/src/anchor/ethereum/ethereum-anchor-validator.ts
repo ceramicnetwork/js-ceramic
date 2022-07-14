@@ -84,6 +84,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
     this._chainId = chainId
   }
 
+  private async _getTransaction(txHash: string) : Promise<TransactionResponse> {
+    return this._transactionCache.get(txHash)
+  }
+
   /**
    * Given a chainId and a transaction hash, loads information from ethereum about the transaction
    * and block the transaction was included in.
@@ -102,7 +106,8 @@ export class EthereumAnchorValidator implements AnchorValidator {
     try {
       // determine network based on a chain ID
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      let transaction = this._transactionCache.get(txHash)
+    
+      let transaction: TransactionResponse = await this._getTransaction(txHash)
 
       if (!transaction) {
         transaction = await provider.getTransaction(txHash)
