@@ -63,19 +63,14 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.LOCAL]: 'http://localhost:8081',
 }
 
-// const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
-const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:8545' // default Ganache port
-
+const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
 
 const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
   [Networks.ELP]: ['eip155:1'], // Ethereum mainnet
   [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
-  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
-  
-  // [Networks.LOCAL]: ['eip155:1337'], // Ganache
+  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli  
   [Networks.LOCAL]: ['eip155:3', 'eip155:1337'], // Ganache
-  
   [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
 }
 
