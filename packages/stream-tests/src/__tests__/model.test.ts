@@ -40,6 +40,12 @@ describe('Model API http-client tests', () => {
     await ipfs.stop()
   })
 
+  test('Model model is unloadable', async () => {
+    await expect(ceramic.loadStream(Model.MODEL)).rejects.toThrow(
+      /UNLOADABLE is not a valid stream type/
+    )
+  })
+
   test('Create valid model', async () => {
     const model = await Model.create(ceramic, FINAL_CONTENT)
 
