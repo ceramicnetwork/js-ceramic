@@ -133,7 +133,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       // determine network based on a chain ID
     
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      let transaction: TransactionResponse = await this._getTransaction(provider, chainId, txHash)
+      const transaction: TransactionResponse = await this._getTransaction(provider, chainId, txHash)
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
