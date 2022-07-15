@@ -206,7 +206,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   async _validateContent(context: Context, modelStreamId: StreamID, content: any): Promise<void> {
     if (isEmpty(content)) {
       // We leave the possibility to set content to null/{} as a way of 'soft' deletion of an MID
-      return Promise.resolve()
+      return
     }
     const model = await context.api.loadStream<Model>(modelStreamId)
     await this._schemaValidator.validateSchema(content, model.content.schema)
