@@ -14,10 +14,16 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { RunningState } from '../../state-management/running-state.js'
+import { StreamID } from '@ceramicnetwork/streamid'
+import cloneDeep from 'lodash.clonedeep'
 
 let stateStore: StateStore
 let pinning: PinningBackend
 const NETWORK = 'fakeNetwork'
+
+const FAKE_STREAM_ID = StreamID.fromString(
+  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+)
 
 beforeEach(() => {
   stateStore = {
@@ -60,14 +66,14 @@ class FakeType extends Stream {
 }
 
 test('#open', async () => {
-  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
   pinStore.open(NETWORK)
   expect(stateStore.open).toBeCalledWith(NETWORK)
   expect(pinning.open).toBeCalled()
 })
 
 test('#close', async () => {
-  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
   await pinStore.close()
   expect(stateStore.close).toBeCalled()
   expect(pinning.close).toBeCalled()
@@ -75,7 +81,7 @@ test('#close', async () => {
 
 describe('#add', () => {
   test('save and pin unsigned genesis', async () => {
-    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
     const runningState = new RunningState(state, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
@@ -108,7 +114,7 @@ describe('#add', () => {
       }
     })
 
-    const pinStore = new PinStore(stateStore, pinning, retrieve, jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, retrieve, jest.fn(), jest.fn())
     const runningState = new RunningState(stateWithSignedCommit, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
@@ -151,7 +157,7 @@ describe('#add', () => {
         return proofRootCID
       }
     })
-    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
+    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve, jest.fn())
     const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
@@ -198,7 +204,7 @@ describe('#add', () => {
         return rightCID
       }
     })
-    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
+    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve, jest.fn())
     const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
@@ -220,7 +226,7 @@ describe('#add', () => {
   })
 
   test('save and pin only new commits', async () => {
-    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
     const toBeUpdatedState = Object.assign({}, state)
     const runningState = new RunningState(toBeUpdatedState, true)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
@@ -246,7 +252,7 @@ describe('#add', () => {
   })
 
   test('save and pin all commits using force', async () => {
-    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
     const toBeUpdatedState = Object.assign({}, state)
     const runningState = new RunningState(toBeUpdatedState, true)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
@@ -271,11 +277,41 @@ describe('#add', () => {
       new Set(toBeUpdatedState.log.map(({ cid }) => cid.toString()))
     )
   })
+
+  test('pinning stream with model pins the model too', async () => {
+    const modelState = cloneDeep(state)
+    const modelRunningState = { state: modelState, markAsPinned: jest.fn() }
+    const midState = cloneDeep(state)
+    midState.metadata.model = FAKE_STREAM_ID
+    midState.log[0].cid = CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm')
+
+    const loadStream = jest.fn(async (streamID: StreamID) => {
+      if (streamID.equals(FAKE_STREAM_ID)) {
+        return Promise.resolve(modelRunningState)
+      }
+    })
+
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), loadStream)
+    const runningState = new RunningState(midState, false)
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
+    await pinStore.add(runningState)
+    expect(stateStore.save).toBeCalledTimes(2)
+    expect(stateStore.save.mock.calls[0][0]).toEqual(runningState)
+    expect(stateStore.save.mock.calls[1][0]).toEqual(modelRunningState)
+    expect(pinning.pin).toBeCalledTimes(2)
+    expect(pinning.pin.mock.calls[0][0].toString()).toEqual(midState.log[0].cid.toString())
+    expect(pinning.pin.mock.calls[1][0].toString()).toEqual(modelState.log[0].cid.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(modelRunningState.markAsPinned).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(
+      new Set(midState.log.map(({ cid }) => cid.toString()))
+    )
+  })
 })
 
 describe('#rm', () => {
   test('basic rm', async () => {
-    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
     const runningState = new RunningState(state, true)
     const runningStateSpy = jest.spyOn(runningState, 'markAsUnpinned')
     await pinStore.rm(runningState)
@@ -304,7 +340,7 @@ describe('#rm', () => {
       }
     })
 
-    const pinStore = new PinStore(stateStore, pinning, retrieve, jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, retrieve, jest.fn(), jest.fn())
     const runningState = new RunningState(stateWithSignedCommit, true)
     const runningStateSpy = jest.spyOn(runningState, 'markAsUnpinned')
     await pinStore.rm(runningState)
@@ -351,7 +387,7 @@ describe('#rm', () => {
         return rightCID
       }
     })
-    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
+    const pinStore = new PinStore(stateStore, pinning, retrieve, resolve, jest.fn())
     const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsUnpinned')
     await pinStore.rm(runningState)
@@ -365,7 +401,7 @@ describe('#rm', () => {
 })
 
 test('#ls', async () => {
-  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+  const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
   const stream = new FakeType(TestUtils.runningState(state), {})
   const list = ['1', '2', '3']
   stateStore.list = jest.fn(async () => list)

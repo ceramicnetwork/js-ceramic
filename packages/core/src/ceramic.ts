@@ -24,7 +24,7 @@ import {
   AnchorStatus,
   IndexApi,
   CommitType,
-  StreamState
+  StreamState,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -436,8 +436,8 @@ export class Ceramic implements CeramicApi {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions)
     const shutdownController = new AbortController()
     const dispatcher = new Dispatcher(
       ipfs,
