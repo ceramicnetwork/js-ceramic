@@ -40,12 +40,13 @@ const ABI = [
 ];
 
 const iface = new Interface(ABI);
-const BLOCK_THRESHHOLD = 1000000000; //TODO finalzie block number
-//block threshold per chain 
+
+//TODO finalize block number
 const BLOCK_THRESHHOLDS = {
-  "eip155:1": 1000000000,
-  "eip155:3": 1000000000,
-  "eip155:5": 1000000000 
+  "eip155:1": 1000000000, //mainnet
+  "eip155:3": 1000000000, //ropsten
+  "eip155:5": 1000000000,  //goerli
+  "eip155:1337": 1,  //ganache
 }
 
 /*
