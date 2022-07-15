@@ -162,7 +162,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   /**
-   * Validate version 0 anchor proof on the chain by reading tx data directly
+   * Validate version 0 anchor proof on the chain by the reading tx data directly
    * @param anchorProof - Anchor proof instance
    */
   async parseAnchorProofLegacy(anchorProof: AnchorProof): Promise<ValidationResult> {
