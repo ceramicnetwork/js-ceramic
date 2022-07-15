@@ -41,7 +41,12 @@ const ABI = [
 
 const iface = new Interface(ABI);
 const BLOCK_THRESHHOLD = 1000000000; //TODO finalzie block number
-
+//block threshold per chain 
+const BLOCK_THRESHHOLDS = {
+  "eip155:1": 1000000000,
+  "eip155:3": 1000000000,
+  "eip155:5": 1000000000 
+}
 
 /*
 type for overall validation result
@@ -96,8 +101,16 @@ export class EthereumAnchorValidator implements AnchorValidator {
     this._chainId = chainId
   }
 
-  private async _getTransaction(txHash: string) : Promise<TransactionResponse> {
-    return this._transactionCache.get(txHash)
+  /**
+  * isoldated method for fetching tx from cache, and if not set
+  **/
+  private async _getTransaction(provider: providers.BaseProvider, chainId: string, txHash: string) : Promise<TransactionResponse> {
+    let tx = this._transactionCache.get(txHash)
+    if (!tx) {
+      tx = await provider.getTransaction(txHash)
+      this._transactionCache.set(txHash, tx)
+    }
+    return tx
   }
 
   /**
@@ -117,14 +130,9 @@ export class EthereumAnchorValidator implements AnchorValidator {
   ): Promise<[TransactionResponse, Block]> {
     try {
       // determine network based on a chain ID
-      const provider: providers.BaseProvider = this._getEthProvider(chainId)
     
-      let transaction: TransactionResponse = await this._getTransaction(txHash)
-
-      if (!transaction) {
-        transaction = await provider.getTransaction(txHash)
-        this._transactionCache.set(txHash, transaction)
-      }
+      const provider: providers.BaseProvider = this._getEthProvider(chainId)
+      let transaction: TransactionResponse = await this._getTransaction(provider, chainId, txHash)
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
@@ -220,7 +228,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
     }    
 
-
+    //TODO: check contract addresses matches
 
   }
 
