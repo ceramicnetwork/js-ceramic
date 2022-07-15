@@ -226,7 +226,6 @@ export class ModelHandler implements StreamHandler<Model> {
       type: CommitType.ANCHOR,
       timestamp: proof.blockTimestamp,
     })
-    delete newState.anchorScheduledFor
 
     return newState
   }
