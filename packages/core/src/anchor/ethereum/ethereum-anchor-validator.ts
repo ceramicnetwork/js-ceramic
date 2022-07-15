@@ -173,7 +173,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * Validate version 0 anchor proof on the chain by the reading tx data directly
    * @param anchorProof - Anchor proof instance
    */
-  async parseAnchorProofLegacy(anchorProof: AnchorProof): Promise<ValidationResult> {
+  async parseAnchorProofV0(anchorProof: AnchorProof): Promise<ValidationResult> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
@@ -186,7 +186,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * Validate version 1 anchor proof on the chain by parsing first encoded parameter
    * @param anchorProof - Anchor proof instance
    */
-  async parseAnchorProofV2(anchorProof: AnchorProof): Promise<ValidationResult> {
+  async parseAnchorProofV1(anchorProof: AnchorProof): Promise<ValidationResult> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
@@ -199,9 +199,9 @@ export class EthereumAnchorValidator implements AnchorValidator {
 
   async validate(anchorProof: AnchorProof): Promise<ValidationResult> {
     if(anchorProof.version === 1){
-      return this.parseAnchorProofV2(anchorProof)
+      return this.parseAnchorProofV1(anchorProof)
     }else{
-      return this.parseAnchorProofLegacy(anchorProof)
+      return this.parseAnchorProofV0(anchorProof)
     }
   }
   
@@ -224,7 +224,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
 
     // if the block number is greater than the threshold and the version is 0 or non existent
-    if ((validationResult.txResponse.blockNumber > BLOCK_THRESHHOLD) && (anchorProof.version === 0 || !anchorProof.version)) {
+    if ((validationResult.txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId]) && (anchorProof.version === 0 || !anchorProof.version)) {
       throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
     }    
 
