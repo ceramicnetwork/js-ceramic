@@ -216,9 +216,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
 
     // if the block number is greater than the threshold and the version is 0 or non existent
-    if (
-        (validationResult.txResponse.blockNumber > BLOCK_THRESHHOLD && (anchorProof.version === 0 || !anchorProof.version))
-     ) {
+    if ((validationResult.txResponse.blockNumber > BLOCK_THRESHHOLD) && (anchorProof.version === 0 || !anchorProof.version)) {
       throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
     }    
 
