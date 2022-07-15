@@ -5,7 +5,7 @@ import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { base16 } from 'multiformats/bases/base16'
-import { Interface } from '@ethersproject/abi';
+import { Interface } from '@ethersproject/abi'
 
 /**
  * Ethereum network configuration
@@ -35,27 +35,25 @@ const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
 
-const ABI = [
-  "function anchor(bytes)",
-];
+const ABI = ['function anchor(bytes)']
 
-const iface = new Interface(ABI);
+const iface = new Interface(ABI)
 
 //TODO finalize block number
 const BLOCK_THRESHHOLDS = {
-  "eip155:1": 1000000000, //mainnet
-  "eip155:3": 1000000000, //ropsten
-  "eip155:5": 1000000000,  //goerli
-  "eip155:1337": 1,  //ganache
+  'eip155:1': 1000000000, //mainnet
+  'eip155:3': 1000000000, //ropsten
+  'eip155:5': 1000000000, //goerli
+  'eip155:1337': 1, //ganache
 }
 
 /*
 type for overall validation result
 */
 type ValidationResult = {
-  txResponse: TransactionResponse,
-  block: Block,
-  txValueHexNumber: number,
+  txResponse: TransactionResponse
+  block: Block
+  txValueHexNumber: number
   rootValueHexNumber: number
 }
 
@@ -103,9 +101,13 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   /**
-  * isoldated method for fetching tx from cache, and if not set
-  **/
-  private async _getTransaction(provider: providers.BaseProvider, chainId: string, txHash: string) : Promise<TransactionResponse> {
+   * isoldated method for fetching tx from cache, and if not set
+   **/
+  private async _getTransaction(
+    provider: providers.BaseProvider,
+    chainId: string,
+    txHash: string
+  ): Promise<TransactionResponse> {
     let tx = this._transactionCache.get(txHash)
     if (!tx) {
       tx = await provider.getTransaction(txHash)
@@ -131,7 +133,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
   ): Promise<[TransactionResponse, Block]> {
     try {
       // determine network based on a chain ID
-    
+
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
       const transaction: TransactionResponse = await this._getTransaction(provider, chainId, txHash)
 
@@ -194,18 +196,18 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const decodedArgs = iface.decodeFunctionData('anchor', transaction.data)
     const rootCID = decodedArgs[0]
     const txValueHexNumber = parseInt(rootCID, 16)
-    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)  
+    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
     return { txResponse: transaction, block, txValueHexNumber, rootValueHexNumber }
   }
 
   async validate(anchorProof: AnchorProof): Promise<ValidationResult> {
-    if(anchorProof.version === 1){
+    if (anchorProof.version === 1) {
       return this.parseAnchorProofV1(anchorProof)
-    }else{
+    } else {
       return this.parseAnchorProofV0(anchorProof)
     }
   }
-  
+
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
     const validationResult: ValidationResult = await this.validate(anchorProof)
     if (validationResult.txValueHexNumber !== validationResult.rootValueHexNumber) {
@@ -225,12 +227,16 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
 
     // if the block number is greater than the threshold and the version is 0 or non existent
-    if ((validationResult.txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId]) && (anchorProof.version === 0 || !anchorProof.version)) {
-      throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
-    }    
+    if (
+      validationResult.txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId] &&
+      (anchorProof.version === 0 || !anchorProof.version)
+    ) {
+      throw new Error(
+        `Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+      )
+    }
 
     //TODO: check contract addresses matches
-
   }
 
   /**
@@ -239,7 +245,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * @private
    */
   private _getEthProvider(chain: string): providers.BaseProvider {
-    
     const fromCache = this.providersCache.get(chain)
 
     if (fromCache) return fromCache
