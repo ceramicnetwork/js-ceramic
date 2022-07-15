@@ -40,6 +40,8 @@ const ABI = [
 ];
 
 const iface = new Interface(ABI);
+const BLOCK_THRESHHOLD = 1000000000; //TODO finalzie block number
+
 
 /*
 type for overall validation result
@@ -152,7 +154,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
       }
       return [transaction, block]
     } catch (e) {
-      console.log(e)
       this._logger.err(
         `Error loading transaction info for transaction ${txHash} from Ethereum: ${e}`
       )
@@ -161,23 +162,23 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   /**
-   * Validate version 0 anchor proof on the chain by readin tx data directly
+   * Validate version 0 anchor proof on the chain by reading tx data directly
    * @param anchorProof - Anchor proof instance
    */
-  async validateLegacy(anchorProof: AnchorProof): Promise<ValidationResult> {
+  async parseAnchorProofLegacy(anchorProof: AnchorProof): Promise<ValidationResult> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txValueHexNumber = parseInt(transaction.data, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-    return new this.ValidationResult(transaction, block, txValueHexNumber, rootValueHexNumber)
+    return { txResponse: transaction, block, txValueHexNumber, rootValueHexNumber }
   }
 
   /**
    * Validate version 1 anchor proof on the chain by parsing first encoded parameter
    * @param anchorProof - Anchor proof instance
    */
-  async validateContract(anchorProof: AnchorProof): Promise<ValidationResult> {
+  async parseAnchorProofV2(anchorProof: AnchorProof): Promise<ValidationResult> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
@@ -185,14 +186,14 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const rootCID = decodedArgs[0]
     const txValueHexNumber = parseInt(rootCID, 16)
     const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)  
-    return new this.ValidationResult(transaction, block, txValueHexNumber, rootValueHexNumber)
+    return { txResponse: transaction, block, txValueHexNumber, rootValueHexNumber }
   }
-  ValidationResult
+
   async validate(anchorProof: AnchorProof): Promise<ValidationResult> {
     if(anchorProof.version === 1){
-      return this.validateContract(anchorProof)
+      return this.parseAnchorProofV2(anchorProof)
     }else{
-      return this.validateLegacy(anchorProof)
+      return this.parseAnchorProofLegacy(anchorProof)
     }
   }
   
@@ -214,10 +215,14 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    const BLOCK_THRESHHOLD = 1 //1000000000; //put into config, check where
-    if (validationResult.txResponse.blockNumber < BLOCK_THRESHHOLD) {
+    // if the block number is greater than the threshold and the version is 0 or non existent
+    if (
+        (validationResult.txResponse.blockNumber > BLOCK_THRESHHOLD && (anchorProof.version === 0 || !anchorProof.version))
+     ) {
       throw new Error(`Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`)
     }    
+
+
 
   }
 
