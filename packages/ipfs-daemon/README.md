@@ -48,7 +48,7 @@ docker pull ceramicnetwork/ipfs-daemon
 docker run -p 5011:5011 -e CERAMIC_NETWORK=testnet-clay ceramicnetwork/ipfs-daemon
 
 ## Contributing
-We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
+We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/ceramic/blob/main/SPECIFICATION.md) for details of how the protocol works.
 
 ## License
 
