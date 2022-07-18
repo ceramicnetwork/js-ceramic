@@ -27,6 +27,13 @@ export async function initTables(dbConnection: Knex, modelsToIndex: Array<Stream
   }
 }
 
+/**
+ * Verify mid table validity via passed schema
+ * @param dataSource
+ * @param modelsToIndex
+ * @param validTableStructure
+ */
+// TODO (NET-1635): unify logic between postgres & sqlite
 export async function verifyTables(
   dataSource: Knex,
   modelsToIndex: Array<StreamID>,

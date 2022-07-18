@@ -12,7 +12,7 @@ export const validTableStructure = {
   },
   controller_did: {
     type: 'character varying',
-    maxLength: 255,
+    maxLength: 1024,
     nullable: false,
     defaultValue: null,
   },
