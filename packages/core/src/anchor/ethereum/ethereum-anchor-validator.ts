@@ -26,7 +26,6 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
   'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
   'eip155:4': { network: 'rinkeby', chain: 'ETH', chainId: 4, networkId: 4, type: 'Test' },
   'eip155:5': { network: 'goerli', chain: 'ETH', chainId: 5, networkId: 5, type: 'Test' },
-  'eip155:1337': { network: 'local', chain: 'ETH', chainId: 1337, networkId: 1337, type: 'Test' },
   'eip155:100': { network: 'mainnet', chain: 'Gnosis', chainId: 100, networkId: 100, type: 'Test' },
 }
 
@@ -39,7 +38,7 @@ const ABI = ['function anchor(bytes)']
 
 const iface = new Interface(ABI)
 
-//TODO finalize block number
+//TODO (NET-1659): Finalize block number once CAS is creating smart contract anchors 
 const BLOCK_THRESHHOLDS = {
   'eip155:1': 1000000000, //mainnet
   'eip155:3': 1000000000, //ropsten
@@ -105,7 +104,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
    **/
   private async _getTransaction(
     provider: providers.BaseProvider,
-    chainId: string,
     txHash: string
   ): Promise<TransactionResponse> {
     let tx = this._transactionCache.get(txHash)
@@ -200,7 +198,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     return { txResponse: transaction, block, txValueHexNumber, rootValueHexNumber }
   }
 
-  async validate(anchorProof: AnchorProof): Promise<ValidationResult> {
+  async parseAnchorProof(anchorProof: AnchorProof): Promise<ValidationResult> {
     if (anchorProof.version === 1) {
       return this.parseAnchorProofV1(anchorProof)
     } else {
@@ -209,7 +207,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-    const validationResult: ValidationResult = await this.validate(anchorProof)
+    const validationResult: ValidationResult = await this.parseAnchorProof(anchorProof)
     if (validationResult.txValueHexNumber !== validationResult.rootValueHexNumber) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
@@ -235,8 +233,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
         `Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
       )
     }
-
-    //TODO: check contract addresses matches
+    //TODO (NET-1657): Add check to validateAnchorInclusion for ensuring contract addresses match the official contract address
   }
 
   /**

@@ -323,7 +323,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       blockTimestamp: timestamp,
       txHash: CID.parse(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
-      //TODO: update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
+      //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       version: 1
     }
     const proof = await this.#dispatcher.storeCommit(proofData)
