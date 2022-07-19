@@ -40,10 +40,11 @@ export async function verifyTables(
   validTableStructure: Object
 ) {
   const tables = await listMidTables(dataSource)
+  const validSchema = JSON.stringify(validTableStructure)
 
   for (const tableName of tables) {
     const columns = await dataSource.table(tableName).columnInfo()
-    if (JSON.stringify(validTableStructure) != JSON.stringify(columns)) {
+    if (validSchema != JSON.stringify(columns)) {
       throw new Error(
         `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
