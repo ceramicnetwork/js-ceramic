@@ -20,6 +20,7 @@ export const UNKNOWN_CALLER = 'Unknown'
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
 class _Metrics {
+  protected caller
   protected readonly config
   protected readonly counters
   protected readonly histograms
@@ -27,8 +28,8 @@ class _Metrics {
   protected metricExporter: PrometheusExporter
   protected meter
   constructor() {
-    this.config = exporterConfig
     this.caller = ''
+    this.config = exporterConfig
     this.counters = {}
     this.histograms = {}
     this.meter = null
@@ -37,7 +38,7 @@ class _Metrics {
   }
 
   /* Set up the exporter at run time, after we have read the configuration */
-  start(metrics_config: any = exporterConfig, caller?: string = UNKNOWN_CALLER) {
+  start(metrics_config: any = exporterConfig, caller: string = UNKNOWN_CALLER) {
     // do not import type so as to be usable as a package anywhere
 
     this.config['preventServerStart'] = !metrics_config.metricsExporterEnabled
