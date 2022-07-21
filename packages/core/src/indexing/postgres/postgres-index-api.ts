@@ -1,11 +1,12 @@
 import { StreamID } from 'streamid/lib/stream-id.js'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js'
-import { initTables } from './init-tables.js'
+import { initTables, verifyTables } from './init-tables.js'
 import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
+import { validTableStructure } from './migrations/mid-schema-verification.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
@@ -53,8 +54,13 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
+  async verify(validTableStructure: Object): Promise<void> {
+    await verifyTables(this.dbConnection, this.modelsToIndex, validTableStructure)
+  }
+
   async init(): Promise<void> {
     await initTables(this.dbConnection, this.modelsToIndex)
+    await this.verify(validTableStructure)
   }
 
   async close(): Promise<void> {
