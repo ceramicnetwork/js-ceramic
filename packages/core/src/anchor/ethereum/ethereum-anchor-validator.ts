@@ -133,7 +133,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       // determine network based on a chain ID
 
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      const transaction: TransactionResponse = await this._getTransaction(provider, chainId, txHash)
+      const transaction: TransactionResponse = await this._getTransaction(provider, txHash)
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
@@ -230,7 +230,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       (anchorProof.version === 0 || !anchorProof.version)
     ) {
       throw new Error(
-        `Any anchor proofs created after block ${BLOCK_THRESHHOLD} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+        `Any anchor proofs created after block ${BLOCK_THRESHHOLDS[this._chainId]} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
       )
     }
     //TODO (NET-1657): Add check to validateAnchorInclusion for ensuring contract addresses match the official contract address
