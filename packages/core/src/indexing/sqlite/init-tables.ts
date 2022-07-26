@@ -12,7 +12,7 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
     .from('sqlite_schema')
     .select('name')
     .whereIn('type', ['table'])
-    .andWhere((q) => q.whereLike('name', 'kjz%').orWhere('name', Model.MODEL.toString()))
+    .andWhere((q) => q.whereLike('name', 'kjz%').orWhere('name', Model.MODEL.toString()).orWhere('name', 'kh4q0kq8h3j3zb52p8gjcayuwrdpt'))
   return result.map((r) => r.name)
 }
 

@@ -127,7 +127,7 @@ export class Model extends Stream {
     const multihash = multihashes.encode(data, 'identity')
     const digest = create(code, multihash)
     const cid = CID.createV1(code, digest)
-    return new StreamID('UNLOADABLE', cid)
+    return new StreamID(Model.STREAM_TYPE_ID, cid)
   })()
 
   private _isReadOnly = false

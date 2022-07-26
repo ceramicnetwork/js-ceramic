@@ -121,7 +121,7 @@ export class ModelHandler implements StreamHandler<Model> {
     assertNoExtraKeys(payload.data)
 
     const modelStreamId = StreamID.fromBytes(payload.header.model)
-    if (!modelStreamId.equals(Model.MODEL)) {
+    if (!modelStreamId.equals(StreamID.fromString('kh4q0kq8h3j3zb52p8gjcayuwrdpt'))) {
       throw new Error(
         `Invalid 'model' metadata property in Model stream: ${modelStreamId.toString()}`
       )
