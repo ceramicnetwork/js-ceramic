@@ -7,6 +7,7 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { asTableName } from '../../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../../index-query-not-available.error.js'
 import { listMidTables } from '../init-tables.js'
+import { Model } from '@ceramicnetwork/stream-model'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -27,11 +28,12 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await dropMidTables()
+  await dropTables()
   await dbConnection.destroy()
 })
 
-export async function dropMidTables() {
+export async function dropTables() {
+  await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
   await dbConnection.schema.dropTableIfExists(STREAM_ID_A)
   await dbConnection.schema.dropTableIfExists(STREAM_ID_B)
 }
@@ -45,6 +47,17 @@ describe('init', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true)
+      await indexApi.init()
+      const created = await listMidTables(dbConnection)
+      const tableNames = modelsToIndex.map(asTableName)
+      expect(created).toEqual(tableNames)
+    })
+
+    test('table creation is idempotent', async () => {
+      const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
+      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true)
+      await indexApi.init()
+      // init again to make sure we don't error trying to re-create the tables
       await indexApi.init()
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
@@ -87,6 +100,8 @@ describe('init', () => {
       await indexApiB.init()
       const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map(asTableName)
+      createdB.sort()
+      tableNamesB.sort()
       expect(createdB).toEqual(tableNamesB)
     })
   })
