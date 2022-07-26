@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0-rc.0](/compare/@ceramicnetwork/stream-tests@2.4.1-rc.1...@ceramicnetwork/stream-tests@2.5.0-rc.0) (2022-07-26)
+
+
+### Features
+
+* **core:** Pinning a ModelInstanceDocument should also pin its Model (#2319) 6df9ae9, closes #2319
+* **stream-model:** Change Model model for indexing to use UNLOADABLE streamtype (#2326) cac8010, closes #2326
+
+
+
+
+
 ## 2.4.1-rc.1 (2022-07-14)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

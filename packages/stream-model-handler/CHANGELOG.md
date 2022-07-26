@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0-rc.2](/compare/@ceramicnetwork/stream-model-handler@0.4.0-rc.1...@ceramicnetwork/stream-model-handler@0.4.0-rc.2) (2022-07-26)
+
+
+### Features
+
+* **stream-model:** Change Model model for indexing to use UNLOADABLE streamtype (#2326) cac8010, closes #2326
+
+
+
+
+
 # [0.4.0-rc.1](/compare/@ceramicnetwork/stream-model-handler@0.4.0-rc.0...@ceramicnetwork/stream-model-handler@0.4.0-rc.1) (2022-07-14)
 
 
