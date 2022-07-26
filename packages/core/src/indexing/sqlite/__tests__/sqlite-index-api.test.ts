@@ -47,6 +47,7 @@ describe('init', () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex, true)
       await indexApi.init()
+      // init again to make sure we don't error trying to re-create the tables
       await indexApi.init()
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map((m) => `${m.toString()}`)

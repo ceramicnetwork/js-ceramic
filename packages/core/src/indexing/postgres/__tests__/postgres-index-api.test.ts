@@ -57,6 +57,7 @@ describe('init', () => {
       const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
       const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true)
       await indexApi.init()
+      // init again to make sure we don't error trying to re-create the tables
       await indexApi.init()
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
