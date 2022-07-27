@@ -290,6 +290,7 @@ export class Dispatcher {
     try {
       switch (message.typ) {
         case MsgType.UPDATE:
+          console.log('>>>>>>> RECEIVING AN UPDATE PUBSUB MESSAGE', message)
           await this._handleUpdateMessage(message)
           break
         case MsgType.QUERY:
@@ -389,6 +390,7 @@ export class Dispatcher {
    * Feel free to disregard it though.
    */
   private publish(message: PubsubMessage): Subscription {
+    console.log('>>>>>>> SENDING A PUBSUB MESSAGE', message)
     return this.messageBus.next(message)
   }
 }
