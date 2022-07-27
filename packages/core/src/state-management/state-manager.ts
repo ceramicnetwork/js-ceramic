@@ -21,6 +21,7 @@ import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { LocalIndexApi } from '../indexing/local-index-api'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -42,6 +43,7 @@ export class StateManager {
    * @param logger - Logger
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
+   * @param indexStreamIfNeeded - `Repository#indexStreamIfNeeded`
    */
   constructor(
     private readonly dispatcher: Dispatcher,
@@ -54,7 +56,9 @@ export class StateManager {
     private readonly load: (
       streamId: StreamID,
       opts?: LoadOpts | CreateOpts
-    ) => Promise<RunningState>
+    ) => Promise<RunningState>,
+    private readonly indexStreamIfNeeded,
+    private readonly _index: LocalIndexApi | undefined
   ) {}
 
   /**
@@ -177,16 +181,19 @@ export class StateManager {
       this.logger.verbose(
         `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
       )
-      await this._updateStateIfPinned(state$)
+      await this._updateStateIfPinnedOrIndexed(state$)
       return true
     } else {
       return false
     }
   }
 
-  private async _updateStateIfPinned(state$: RunningState): Promise<void> {
+  private async _updateStateIfPinnedOrIndexed(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
+    console.log('>>>>>>> INDEXING STREAM - YOU SHOULD SEE THE INDEX UPDATE MOMENTARILY')
+    await this.indexStreamIfNeeded(state$)
     if (isPinned) {
+      console.log('>>>>>>> PINNING!!!!')
       await this.pinStore.add(state$)
     }
   }
@@ -210,6 +217,7 @@ export class StateManager {
       this.executionQ.forStream(streamId).add(async () => {
         await this._handleTip(state$, tip)
       })
+      this.indexStreamIfNeeded(state$)
     })
   }
 
@@ -350,12 +358,12 @@ export class StateManager {
               }
               if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
               state$.next(next)
-              await this._updateStateIfPinned(state$)
+              await this._updateStateIfPinnedOrIndexed(state$)
               return
             }
             case AnchorStatus.PROCESSING: {
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-              await this._updateStateIfPinned(state$)
+              await this._updateStateIfPinnedOrIndexed(state$)
               return
             }
             case AnchorStatus.ANCHORED: {
