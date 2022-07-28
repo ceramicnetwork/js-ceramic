@@ -209,8 +209,16 @@ export class StateManager {
    * @param tip - Stream Tip CID
    * @private
    */
-  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
-    this.fromMemoryOrStore(streamId).then((state$) => {
+  async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    if (model && this._index.shouldIndexStream(model)) {
+      const inPinStore = await this.pinStore.ls(streamId)
+      if (inPinStore.length === 0) {
+        const runningState = await this.load(streamId)
+        await this.pinStore.add(runningState)
+      }
+    }
+
+    await this.fromMemoryOrStore(streamId).then((state$) => {
       if (!state$) {
         return
       }

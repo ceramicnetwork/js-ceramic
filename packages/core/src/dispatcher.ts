@@ -290,7 +290,6 @@ export class Dispatcher {
     try {
       switch (message.typ) {
         case MsgType.UPDATE:
-          console.log('>>>>>>> RECEIVING AN UPDATE PUBSUB MESSAGE', message)
           await this._handleUpdateMessage(message)
           break
         case MsgType.QUERY:
@@ -325,7 +324,7 @@ export class Dispatcher {
     const { stream: streamId, tip, model } = message
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
-    this.repository.stateManager.handlePubsubUpdate(streamId, tip)
+    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
     // TODO: Handle 'anchorService' if present in message
   }
 
