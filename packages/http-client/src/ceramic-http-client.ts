@@ -107,7 +107,7 @@ export class CeramicClient implements CeramicApi {
    * Sets the DID instance that will be used to author commits to streams.
    * @param did
    */
-  set did(did: DID) {
+  set did(did: DID | undefined) {
     this.context.did = did
   }
 
