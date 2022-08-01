@@ -169,6 +169,7 @@ export class EthereumAnchorService implements AnchorService {
     }
 
     switch (json.status) {
+      case 'READY':
       case 'PENDING':
         return {
           status: AnchorStatus.PENDING,
