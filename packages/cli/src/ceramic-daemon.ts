@@ -18,8 +18,6 @@ import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as PkhDidResolver from 'pkh-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
-import * as NftDidResolver from 'nft-did-resolver'
-import * as SafeDidResolver from 'safe-did-resolver'
 
 import { DID } from 'dids'
 import cors from 'cors'
@@ -135,14 +133,6 @@ function makeResolvers(
     ...KeyDidResolver.getResolver(),
     ...PkhDidResolver.getResolver(),
     ...ThreeIdResolver.getResolver(ceramic),
-    ...NftDidResolver.getResolver({
-      ceramic: ceramic,
-      ...opts.didResolvers?.nftDidResolver,
-    }),
-    ...SafeDidResolver.getResolver({
-      ceramic: ceramic,
-      ...opts.didResolvers?.safeDidResolver,
-    }),
   }
   if (
     opts.didResolvers?.ethrDidResolver?.networks &&

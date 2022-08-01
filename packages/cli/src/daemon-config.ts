@@ -241,22 +241,6 @@ export class IndexingConfig {
 @toJson
 export class DaemonDidResolversConfig {
   /**
-   * Configuration for nft-did-resolver. Its README contains appropriate documentation.
-   *
-   * When specifying in a config file, use the name 'nft-did-resolver'.
-   */
-  @jsonMember(AnyT, { name: 'nft-did-resolver' })
-  nftDidResolver?: any
-
-  /**
-   * Configuration for safe-did-resolver. Its README contains appropriate documentation.
-   *
-   * When specifying in a config file, use the name 'safe-did-resolver'.
-   */
-  @jsonMember(AnyT, { name: 'safe-did-resolver' })
-  safeDidResolver?: any
-
-  /**
    * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
    *
    * When specifying in a config file, use the name 'ethr-did-resolver'.
