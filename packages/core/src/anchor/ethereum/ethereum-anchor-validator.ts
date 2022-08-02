@@ -38,7 +38,7 @@ const ABI = ['function anchor(bytes)']
 
 const iface = new Interface(ABI)
 
-//TODO (NET-1659): Finalize block number once CAS is creating smart contract anchors 
+//TODO (NET-1659): Finalize block number once CAS is creating smart contract anchors
 const BLOCK_THRESHHOLDS = {
   'eip155:1': 1000000000, //mainnet
   'eip155:3': 1000000000, //ropsten
@@ -230,7 +230,9 @@ export class EthereumAnchorValidator implements AnchorValidator {
       (anchorProof.version === 0 || !anchorProof.version)
     ) {
       throw new Error(
-        `Any anchor proofs created after block ${BLOCK_THRESHHOLDS[this._chainId]} must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+        `Any anchor proofs created after block ${
+          BLOCK_THRESHHOLDS[this._chainId]
+        } must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
       )
     }
     //TODO (NET-1657): Add check to validateAnchorInclusion for ensuring contract addresses match the official contract address
