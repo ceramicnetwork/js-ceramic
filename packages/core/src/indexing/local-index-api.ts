@@ -21,7 +21,7 @@ export class LocalIndexApi implements IndexApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  private _shouldIndexStream(args: StreamID): Boolean {
+  shouldIndexStream(args: StreamID): Boolean {
     if (!this.databaseIndexApi) {
       return false
     }
@@ -37,7 +37,7 @@ export class LocalIndexApi implements IndexApi {
    */
   async indexStream(args: IndexStreamArgs): Promise<void> {
     // only index streams with active models in config
-    if (!this._shouldIndexStream(args.model)) {
+    if (!this.shouldIndexStream(args.model)) {
       return
     }
     await this.databaseIndexApi.indexStream(args)

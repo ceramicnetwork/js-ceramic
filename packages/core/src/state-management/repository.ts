@@ -1,12 +1,14 @@
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
-  AnchorStatus, CommitType,
+  AnchorStatus,
+  CommitType,
   Context,
   CreateOpts,
   LoadOpts,
   PinningOpts,
-  PublishOpts, Stream,
+  PublishOpts,
+  Stream,
   StreamState,
   SyncOptions,
   UpdateOpts,
@@ -23,7 +25,7 @@ import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
-import {LocalIndexApi} from "../indexing/local-index-api";
+import { LocalIndexApi } from '../indexing/local-index-api'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher

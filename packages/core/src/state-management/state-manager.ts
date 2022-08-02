@@ -176,27 +176,23 @@ export class StateManager {
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
     const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
-    console.log('>>>> bladibla', next)
     if (next) {
       state$.next(next)
       this.logger.verbose(
         `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
       )
-      await this._updateStateIfPinnedOrIndexed(state$)
+      await this._updateStateIfPinned(state$)
       return true
     } else {
       return false
     }
   }
 
-  private async _updateStateIfPinnedOrIndexed(state$: RunningState): Promise<void> {
+  private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
-    console.log('>>>>>>>> _updateStateIfPinnedOrIndexed')
+    await this.indexStreamIfNeeded(state$)
     if (isPinned) {
-      console.log('>>>>>>> PINNING!!!!')
       await this.pinStore.add(state$)
-      console.log('>>>> WOOHOO')
-      await this.indexStreamIfNeeded(state$)
     }
   }
 
@@ -209,17 +205,24 @@ export class StateManager {
    *
    * @param streamId
    * @param tip - Stream Tip CID
-   * @private
+   * @param model - Model Stream ID
    */
-  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
-    this.fromMemoryOrStore(streamId).then((state$) => {
+  async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    if (model && this._index.shouldIndexStream(model)) {
+      const inPinStore = await this.pinStore.ls(streamId)
+      if (inPinStore.length === 0) {
+        const runningState = await this.load(streamId)
+        await this.pinStore.add(runningState)
+      }
+    }
+
+    await this.fromMemoryOrStore(streamId).then((state$) => {
       if (!state$) {
         return
       }
       this.executionQ.forStream(streamId).add(async () => {
         await this._handleTip(state$, tip)
       })
-      console.log('>>>>>>>>> HEIDIHO')
       this.indexStreamIfNeeded(state$)
     })
   }
@@ -361,12 +364,12 @@ export class StateManager {
               }
               if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
               state$.next(next)
-              await this._updateStateIfPinnedOrIndexed(state$)
+              await this._updateStateIfPinned(state$)
               return
             }
             case AnchorStatus.PROCESSING: {
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-              await this._updateStateIfPinnedOrIndexed(state$)
+              await this._updateStateIfPinned(state$)
               return
             }
             case AnchorStatus.ANCHORED: {
