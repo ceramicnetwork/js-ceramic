@@ -9,7 +9,8 @@ jobs:
     name: Trigger CircleCI tests
     runs-on: ubuntu-latest
     steps:
-      - uses: circleci/trigger_circleci_pipeline@v1.0
+      - uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.0.5
+        with:
+          GHA_Actor: "smrz2001"
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
-          GH_ACTOR: "smrz2001"
