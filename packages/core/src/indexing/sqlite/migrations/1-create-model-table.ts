@@ -1,6 +1,7 @@
 import type { Knex } from 'knex'
 
 export async function createModelTable(dbConnection: Knex, tableName: string) {
+  console.log(`Creating ComposeDB Indexing table for model: ${tableName}`)
   await dbConnection.schema.createTable(tableName, (table) => {
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()
