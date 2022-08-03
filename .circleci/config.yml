@@ -74,8 +74,7 @@ jobs:
 
 workflows:
   build-and-test:
-    # This workflow is set to be triggered conditionally, only when
-    # the GitHub Action is triggered.
+    # This workflow is set to be triggered conditionally, only when the GitHub Action is triggered.
     when: << pipeline.parameters.GHA_Event >>
     jobs:
       - with-go-ipfs

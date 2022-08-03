@@ -1,7 +1,7 @@
 name: Trigger CircleCI tests
 
 on:
-  push: # any push events
+  push: # all push events
   workflow_dispatch: # manually triggered
 
 jobs:
@@ -12,4 +12,3 @@ jobs:
       - uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.0.5
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
-          GHA_Actor: "ukstv"
