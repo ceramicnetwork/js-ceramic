@@ -140,6 +140,7 @@ describe('indexStream', () => {
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
     expect(raw.last_anchored_at).toBeNull()
+    expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)
     const updatedAt = new Date(raw.updated_at)
     expect(closeDates(createdAt, now)).toBeTruthy()

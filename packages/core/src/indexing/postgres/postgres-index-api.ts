@@ -36,6 +36,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
         last_anchored_at: args.lastAnchor,
+        first_anchored_at: args.firstAnchor,
         created_at: args.createdAt || this.dbConnection.fn.now(),
         updated_at: args.updatedAt || this.dbConnection.fn.now(),
       })
