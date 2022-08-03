@@ -20,7 +20,6 @@ env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
-  CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.sha }}"
@@ -28,15 +27,6 @@ env:
   SHA: ${{ github.event.client_payload.sha || github.sha }}
 
 jobs:
-  circleci:
-    name: Trigger CircleCI tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: circleci/trigger_circleci_pipeline@v1.0
-        env:
-          CCI_TOKEN: ${{ env.CCI_TOKEN }}
-          GH_ACTOR: "smrz2001"
-
   image:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest

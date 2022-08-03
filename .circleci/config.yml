@@ -76,7 +76,8 @@ workflows:
   # This workflow is set to be triggered conditionally, only when
   # the GitHub Action is triggered.
   # With no other workflows, normal push events will be ignored.
-  when: << pipeline.parameters.GHA_Action >>
+  when:
+    equal: [ "push", << pipeline.parameters.GHA_Event >>]
   build-and-test:
     jobs:
       - with-go-ipfs
