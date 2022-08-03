@@ -72,7 +72,7 @@ class _Metrics {
     }
     // Create this counter if we have not already
     if (!(name in this.counters)) {
-      this.counters[name] = this.meter.createCounter('${caller}:${name}')
+      this.counters[name] = this.meter.createCounter(`${this.caller}:${name}`)
     }
     // Add to the count
     this.counters[name].add(value, params)
@@ -85,7 +85,7 @@ class _Metrics {
     }
     // Create this Histogram if we have not already
     if (!(name in this.histograms)) {
-      this.histograms[name] = this.meter.createHistogram('${caller}:${name}')
+      this.histograms[name] = this.meter.createHistogram(`${this.caller}:${name}`)
     }
     // Record the observed value
     this.histograms[name].record(value, params)
