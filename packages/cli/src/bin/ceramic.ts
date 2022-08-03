@@ -2,8 +2,10 @@ import { program } from 'commander'
 import pc from 'picocolors'
 
 import { CeramicCliUtils } from '../ceramic-cli-utils.js'
+import { version } from '../version.js'
 
 program
+  .version(version, '-v, -V, --version', 'output the version number')
   .command('daemon')
   .option('--config <path>', 'Path to the Ceramic Daemon config file')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
