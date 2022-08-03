@@ -123,7 +123,7 @@ export class ModelHandler implements StreamHandler<Model> {
     const modelStreamId = StreamID.fromBytes(payload.header.model)
     if (!modelStreamId.equals(Model.MODEL)) {
       throw new Error(
-        `Invalid 'model' metadata property in Model stream: ${payload.header.model.toString()}`
+        `Invalid 'model' metadata property in Model stream: ${modelStreamId.toString()}`
       )
     }
 
@@ -226,7 +226,6 @@ export class ModelHandler implements StreamHandler<Model> {
       type: CommitType.ANCHOR,
       timestamp: proof.blockTimestamp,
     })
-    delete newState.anchorScheduledFor
 
     return newState
   }

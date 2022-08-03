@@ -104,7 +104,6 @@ export class EthereumAnchorService implements AnchorService {
       streamId: cidStream.streamId,
       cid: cidStream.cid,
       message: 'Sending anchoring request',
-      anchorScheduledFor: null,
     })
   }
 
@@ -176,7 +175,6 @@ export class EthereumAnchorService implements AnchorService {
           streamId: cidStream.streamId,
           cid: cidStream.cid,
           message: json.message,
-          anchorScheduledFor: json.scheduledAt,
         }
       case 'PROCESSING':
         return {

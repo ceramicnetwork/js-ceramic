@@ -5,6 +5,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
 import knex, { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../../index-query-not-available.error.js'
+import { asTableName } from '../../as-table-name.util'
+import { Model } from '@ceramicnetwork/stream-model'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -39,6 +41,38 @@ describe('init', () => {
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
       expect(created).toEqual(tableNames)
+    })
+
+    test('table creation is idempotent', async () => {
+      const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+      const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex, true)
+      await indexApi.init()
+      // init again to make sure we don't error trying to re-create the tables
+      await indexApi.init()
+      const created = await listMidTables(dbConnection)
+      const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
+      expect(created).toEqual(tableNames)
+    })
+
+    test('create new table from scratch but fail table validation', async () => {
+      const INVALID_TABLE_STRUCTURE = {
+        stream_id: {
+          type: 'character varying',
+          maxLength: 254,
+          nullable: false,
+          defaultValue: null,
+        },
+      }
+
+      const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
+      const indexApi = new SqliteIndexApi(dbConnection, modelsToIndex, true)
+      await indexApi.init()
+      const created = await listMidTables(dbConnection)
+      const tableNames = modelsToIndex.map(asTableName)
+      expect(created).toEqual(tableNames)
+      await expect(indexApi.verify(INVALID_TABLE_STRUCTURE)).rejects.toThrow(
+        /Schema verification failed for index/
+      )
     })
 
     test('create new table with existing ones', async () => {
