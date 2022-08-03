@@ -362,7 +362,6 @@ export class StateManager {
                 ...state$.value,
                 anchorStatus: AnchorStatus.PENDING,
               }
-              if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
               state$.next(next)
               await this._updateStateIfPinned(state$)
               return

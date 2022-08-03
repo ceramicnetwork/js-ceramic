@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0-rc.1](/compare/@ceramicnetwork/streamid@2.3.0-rc.0...@ceramicnetwork/streamid@2.3.0-rc.1) (2022-07-26)
+
+
+### Features
+
+* **stream-model:** Change Model model for indexing to use UNLOADABLE streamtype (#2326) cac8010, closes #2326
+
+
+
+
+
 # [2.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.2.0...@ceramicnetwork/streamid@2.3.0-rc.0) (2022-07-06)
 
 

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0-rc.1](/compare/@ceramicnetwork/stream-caip10-link@2.2.0-rc.0...@ceramicnetwork/stream-caip10-link@2.2.0-rc.1) (2022-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.2.0-rc.0](/compare/@ceramicnetwork/stream-caip10-link@2.1.1-rc.0...@ceramicnetwork/stream-caip10-link@2.2.0-rc.0) (2022-07-14)
+
+
+### Features
+
+* **common:** Remove 'controllers' accessor from Stream base class (#2305) 05bf615, closes #2305
+
+
+
+
+
 ## [2.1.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.1.0...@ceramicnetwork/stream-caip10-link@2.1.1-rc.0) (2022-07-06)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link

@@ -7,6 +7,7 @@ import type { CID } from 'multiformats/cid'
 import path from 'path'
 import os from 'os'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
+import { Repository } from '../state-management/repository'
 
 export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
@@ -25,7 +26,7 @@ export class PinStoreFactory {
   readonly networkName: string
   private _stateStore: StateStore
 
-  constructor(readonly ipfs: IpfsApi, props: Props) {
+  constructor(readonly ipfs: IpfsApi, readonly repository: Repository, props: Props) {
     this.networkName = props.networkName
     this.localStateStoreDirectory = props.stateStoreDirectory || DEFAULT_STATE_STORE_DIRECTORY
     this.pinningEndpoints =
@@ -56,7 +57,8 @@ export class PinStoreFactory {
     const resolve = async (path: string): Promise<CID> => {
       return (await ipfs.dag.resolve(path)).cid
     }
-    const pinStore = new PinStore(this._stateStore, pinning, retrieve, resolve)
+    const loadStream = this.repository.load.bind(this.repository)
+    const pinStore = new PinStore(this._stateStore, pinning, retrieve, resolve, loadStream)
     pinStore.open(this.networkName)
     return pinStore
   }

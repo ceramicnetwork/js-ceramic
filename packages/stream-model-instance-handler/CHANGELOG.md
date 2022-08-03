@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0-rc.2](/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.2) (2022-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.4.0-rc.1](/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.1) (2022-07-14)
+
+
+### Bug Fixes
+
+* **core:** Don't unpin anchor proof, merkle tree, or CACAO when unpinning streams (#2307) 5b9773a, closes #2307
+
+
+### Features
+
+* **stream-model-handler,stream-model-instance-handler:** Remove state.next from Model and MID StreamState (#2306) 3e06b21, closes #2306
+
+
+
+
+
 # [0.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.3.0...@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.0) (2022-07-06)
 
 

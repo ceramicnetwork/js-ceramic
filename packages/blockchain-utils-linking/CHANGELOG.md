@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.8-rc.2](/compare/@ceramicnetwork/blockchain-utils-linking@2.0.8-rc.1...@ceramicnetwork/blockchain-utils-linking@2.0.8-rc.2) (2022-07-26)
+
+
+### Reverts
+
+* Revert "fix(blockchain-utils-linking): patch ethereum requestCap test failing due to cacao bump (#2323)" c0ededf, closes #2323
+
+
+
+
+
+## [2.0.8-rc.1](/compare/@ceramicnetwork/blockchain-utils-linking@2.0.8-rc.0...@ceramicnetwork/blockchain-utils-linking@2.0.8-rc.1) (2022-07-14)
+
+
+### Bug Fixes
+
+* **blockchain-utils-linking:** patch ethereum requestCap test failing due to cacao bump (#2323) 475b6cf, closes #2323
+
+
+
+
+
 ## [2.0.8-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.7...@ceramicnetwork/blockchain-utils-linking@2.0.8-rc.0) (2022-07-06)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

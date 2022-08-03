@@ -106,6 +106,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(isPinned(ceramic, doc.metadata.model)).resolves.toBeTruthy()
   })
 
   test('Create and update doc', async () => {
@@ -220,6 +221,16 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
     await doc.replace(CONTENT1, { pin: false })
     await expect(isPinned(ceramic, doc.id)).resolves.toBeFalsy()
+  })
+
+  test(`Pinning a ModelInstanceDocument pins its Model`, async () => {
+    // Unpin Model streams so we can test that pinning the MID causes the Model to become pinned
+    await ceramic.pin.rm(model.id)
+    await expect(isPinned(ceramic, model.id)).resolves.toBeFalsy()
+
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(isPinned(ceramic, model.id)).resolves.toBeTruthy()
   })
 })
 

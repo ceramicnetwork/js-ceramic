@@ -1,9 +1,9 @@
 import { StateStore } from './state-store.js'
-import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
+import { base64urlToJSON, PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
-import { base64urlToJSON } from '../utils.js'
+import { Model } from '@ceramicnetwork/stream-model'
 
 /**
  * Encapsulates logic for pinning streams
@@ -13,7 +13,8 @@ export class PinStore {
     readonly stateStore: StateStore,
     readonly pinning: PinningBackend,
     readonly retrieve: (cid: CID) => Promise<any | null>,
-    readonly resolve: (path: string) => Promise<CID>
+    readonly resolve: (path: string) => Promise<CID>,
+    readonly loadStream: (streamID: StreamID) => Promise<RunningState>
   ) {}
 
   open(networkName: string): void {
@@ -53,11 +54,28 @@ export class PinStore {
     await Promise.all(points.map((point) => this.pinning.pin(point)))
     await this.stateStore.save(runningState)
     runningState.markAsPinned()
+
+    const model = runningState.state.metadata.model
+    // TODO(NET-1645): Check for UNLOADABLE StreamType instead of hard-coded MODEL
+    if (model && !model.equals(Model.MODEL)) {
+      const modelStream = await this.loadStream(model)
+      await this.add(modelStream) // recursive call to also pin the model stream
+    }
   }
 
+  /**
+   * Effectively opposite of 'add' - this finds all the IPFS CIDs that are required to load the
+   * given stream and unpins them from IPFS, and them removes the stream state from the Ceramic
+   * state store. There is one notable difference of behavior however, which is that 'rm()'
+   * intentionally leaves the CIDs that make up the anchor proof and anchor merkle tree pinned.
+   * This is to avoid accidentally unpinning data that is needed by other streams, in the case where
+   * there are multiple pinned streams that contain anchor commits from the same anchor batch
+   * and therefore share the same anchor proof and merkle tree.
+   * @param runningState
+   */
   async rm(runningState: RunningState): Promise<void> {
     const commitLog = runningState.state.log.map((logEntry) => logEntry.cid)
-    const points = await this.getComponentCIDsOfCommits(commitLog)
+    const points = await this.getComponentCIDsOfCommits(commitLog, false)
     Promise.all(points.map((point) => this.pinning.unpin(point))).catch(() => {
       // Do Nothing
     })
@@ -77,15 +95,21 @@ export class PinStore {
    * AnchorProof, and of all the CIDs in the path from the merkle root to the leaf of the merkle tree
    * for that commit).
    * @param commits - CIDs of Ceramic commits to expand
+   * @param includeAnchorAndCACAO - if false, skip CIDs that belong to anchor proofs, the
+   *   paths through anchor merkle trees, and any CACAOs.  This is to avoid unpinning CIDs that may
+   *   be used by Streams other than the one being unpinned
    * @protected
    */
-  protected async getComponentCIDsOfCommits(commits: Array<CID>): Promise<Array<CID>> {
+  protected async getComponentCIDsOfCommits(
+    commits: Array<CID>,
+    includeAnchorAndCACAO = true
+  ): Promise<Array<CID>> {
     const points: CID[] = []
     for (const cid of commits) {
       points.push(cid)
 
       const commit = await this.retrieve(cid)
-      if (StreamUtils.isAnchorCommit(commit)) {
+      if (StreamUtils.isAnchorCommit(commit) && includeAnchorAndCACAO) {
         points.push(commit.proof)
 
         const path = commit.path ? 'root/' + commit.path : 'root'
@@ -99,11 +123,13 @@ export class PinStore {
         }
       }
       if (StreamUtils.isSignedCommit(commit)) {
-        const decodedProtectedHeader = base64urlToJSON(commit.signatures[0].protected)
-        if (decodedProtectedHeader.cap) {
-          const capIPFSUri = decodedProtectedHeader.cap
-          const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
-          points.push(capCID)
+        if (includeAnchorAndCACAO) {
+          const decodedProtectedHeader = base64urlToJSON(commit.signatures[0].protected)
+          if (decodedProtectedHeader.cap) {
+            const capIPFSUri = decodedProtectedHeader.cap
+            const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+            points.push(capCID)
+          }
         }
         points.push(commit.link)
       }

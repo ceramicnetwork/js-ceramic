@@ -118,9 +118,6 @@ export class StreamUtils {
     if (cloned.anchorStatus != null) {
       cloned.anchorStatus = AnchorStatus[cloned.anchorStatus]
     }
-    if (cloned.anchorScheduledFor != null) {
-      cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toISOString()
-    }
     if (cloned.anchorProof != null) {
       cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString()
       cloned.anchorProof.root = cloned.anchorProof.root.toString()
@@ -158,19 +155,10 @@ export class StreamUtils {
       cloned.anchorProof.root = toCID(cloned.anchorProof.root)
     }
 
-    let showScheduledFor = true
     if (cloned.anchorStatus) {
       cloned.anchorStatus = AnchorStatus[cloned.anchorStatus]
-      showScheduledFor =
-        cloned.anchorStatus !== AnchorStatus.FAILED && cloned.anchorStatus !== AnchorStatus.ANCHORED
     }
-    if (cloned.anchorScheduledFor) {
-      if (showScheduledFor) {
-        cloned.anchorScheduledFor = Date.parse(cloned.anchorScheduledFor) // ISO format of the UTC time
-      } else {
-        delete cloned.anchorScheduledFor
-      }
-    }
+
     if (state.metadata?.model) {
       cloned.metadata.model = StreamID.fromString(state.metadata.model)
     }

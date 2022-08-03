@@ -2,13 +2,12 @@ import type { Knex } from 'knex'
 
 export async function createModelTable(dataSource: Knex, tableName: string) {
   await dataSource.schema.createTable(tableName, function (table) {
-    // create unique index name <64 chars that is still referenceable to MID table
+    // create unique index name <64 chars that are still capable of being referenced to MID table
     const indexName = tableName.substring(tableName.length - 10)
 
     table.string('stream_id').primary(`idx_${indexName}_pkey`).unique(`constr_${indexName}_unique`)
-    table.string('controller_did').notNullable()
-    table.dateTime('last_anchored_at').nullable()
-    table.dateTime('first_anchored_at').nullable()
+    table.string('controller_did', 1024).notNullable()
+    table.dateTime('last_anchored_at')
     table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
     table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
 

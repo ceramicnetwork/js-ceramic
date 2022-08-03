@@ -197,12 +197,32 @@ export class DaemonAnchorConfig {
   ethereumRpcUrl?: string
 }
 
+/**
+ * Configuration options related to Index API.
+ */
 @jsonObject
 @toJson
 export class IndexingConfig {
+  /**
+   * Connection string to a database. Only sqlite and postgres are supported.
+   * Examples:
+   *  - `sqlite:///path/to/database.sqlite`,
+   *  - `postgres:///user:password@host:5432/database`
+   */
   @jsonMember(String)
   db?: string
 
+  /**
+   * Allow serving indexing queries if historical indexing is not done yet.
+   */
+  @jsonMember(Boolean, {
+    name: 'allow-queries-before-historical-sync',
+  })
+  allowQueriesBeforeHistoricalSync?: boolean = false
+
+  /**
+   * Models to index.
+   */
   @jsonArrayMember(StreamID, {
     emitDefaultValue: true,
     deserializer: (arr?: Array<string>) => {
