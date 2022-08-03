@@ -5,15 +5,6 @@ on:
   repository_dispatch:
     types: [test-success]
   workflow_dispatch: # manually triggered
-    inputs:
-      branch:
-        description: 'Branch to build'
-        required: false
-        default: ''
-      sha:
-        description: 'Commit hash'
-        required: false
-        default: ''
 
 env:
   # Dagger
@@ -29,13 +20,23 @@ env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}"
-  BRANCH: ${{ github.event.client_payload.branch || github.event.inputs.branch || github.ref_name }}
-  SHA: ${{ github.event.client_payload.sha || github.event.inputs.sha || github.sha }}
+  STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.sha }}"
+  BRANCH: ${{ github.event.client_payload.branch || github.ref_name }}
+  SHA: ${{ github.event.client_payload.sha || github.sha }}
 
 jobs:
+  circleci:
+    name: Trigger CircleCI tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: circleci/trigger_circleci_pipeline@v1.0
+        env:
+          CCI_TOKEN: ${{ env.CCI_TOKEN }}
+          GH_ACTOR: "smrz2001"
+
   image:
     name: Verify and publish Docker image
     runs-on: ubuntu-latest
@@ -58,7 +59,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           # Use specified SHA, otherwise use the branch
-          ref: ${{ github.event.client_payload.sha || github.event.inputs.sha || env.BRANCH }}
+          ref: ${{ github.event.client_payload.sha || env.BRANCH }}
       -
         name: Set sha tag
         run: |
@@ -178,7 +179,7 @@ jobs:
   docs:
     name: Publish docs
     runs-on: ubuntu-latest
-    if: ${{ github.event.client_payload.branch == 'main' || github.event.inputs.branch == 'main' }}
+    if: ${{ github.event.client_payload.branch == 'main' || github.ref_name == 'main' }}
     needs: image
     steps:
       -

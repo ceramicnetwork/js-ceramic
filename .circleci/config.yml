@@ -1,4 +1,19 @@
 version: 2.1
+
+parameters:
+  GHA_Event:
+    type: string
+    default: ""
+  GHA_Actor:
+    type: string
+    default: ""
+  GHA_Action:
+    type: string
+    default: ""
+  GHA_Meta:
+    type: string
+    default: ""
+
 orbs:
   node: circleci/node@5.0.0
 
@@ -58,6 +73,10 @@ jobs:
       - send-dispatch-event
 
 workflows:
+  # This workflow is set to be triggered conditionally, only when
+  # the GitHub Action is triggered.
+  # With no other workflows, normal push events will be ignored.
+  when: << pipeline.parameters.GHA_Action >>
   build-and-test:
     jobs:
       - with-go-ipfs
