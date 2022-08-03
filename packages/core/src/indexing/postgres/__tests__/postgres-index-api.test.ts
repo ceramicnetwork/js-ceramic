@@ -134,7 +134,6 @@ describe('indexStream', () => {
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
     lastAnchor: null,
-    firstAnchor: null,
   }
 
   let indexApi: PostgresIndexApi
@@ -152,7 +151,6 @@ describe('indexStream', () => {
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
     expect(raw.last_anchored_at).toBeNull()
-    expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)
     const updatedAt = new Date(raw.updated_at)
     expect(closeDates(createdAt, now)).toBeTruthy()
@@ -167,7 +165,6 @@ describe('indexStream', () => {
       ...STREAM_CONTENT,
       updatedAt: updateTime,
       lastAnchor: updateTime,
-      firstAnchor: null,
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)

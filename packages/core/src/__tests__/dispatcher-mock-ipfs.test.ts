@@ -282,7 +282,6 @@ describe('Dispatcher with mock ipfs', () => {
     const state$ = await register(initialState)
 
     // Handle UPDATE message with model
-    //const addIndexSpy = jest.spyOn(dispatcher.repository.stateManager, 'indexStreamIfNeeded').and.callThrough()
     dispatcher.repository.stateManager.handlePubsubUpdate = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
@@ -295,8 +294,5 @@ describe('Dispatcher with mock ipfs', () => {
       FAKE_CID,
       FAKE_MODEL
     )
-    //expect(dispatcher.repository.indexStreamIfNeeded).toBeCalledTimes(1) // should work
-    //expect(addIndexSpy).toBeCalledTimes(1)
-    //addIndexSpy.mockRestore()
   })
 })

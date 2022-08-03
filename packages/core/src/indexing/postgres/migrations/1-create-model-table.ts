@@ -17,9 +17,6 @@ export async function createModelTable(dataSource: Knex, tableName: string) {
     table.index(['last_anchored_at'], `idx_${indexName}_last_anchored_at`, {
       storageEngineIndexType: 'hash',
     })
-    table.index(['first_anchored_at'], `idx_${indexName}_first_anchored_at`, {
-      storageEngineIndexType: 'hash',
-    })
     table.index(['created_at'], `idx_${indexName}_created_at`, {
       storageEngineIndexType: 'hash',
     })
