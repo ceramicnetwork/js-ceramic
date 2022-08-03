@@ -1,7 +1,7 @@
 name: Trigger CircleCI tests
 
 on:
-  push:
+  push: # any push events
   workflow_dispatch: # manually triggered
 
 jobs:
