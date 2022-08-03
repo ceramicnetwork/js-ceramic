@@ -73,12 +73,10 @@ jobs:
       - send-dispatch-event
 
 workflows:
-  # This workflow is set to be triggered conditionally, only when
-  # the GitHub Action is triggered.
-  # With no other workflows, normal push events will be ignored.
-  when:
-    equal: [ "push", << pipeline.parameters.GHA_Event >>]
   build-and-test:
+    # This workflow is set to be triggered conditionally, only when
+    # the GitHub Action is triggered.
+    when: << pipeline.parameters.GHA_Event >>
     jobs:
       - with-go-ipfs
       - with-js-ipfs
