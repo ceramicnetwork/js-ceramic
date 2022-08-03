@@ -180,7 +180,7 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _index: LocalIndexApi
+  //private readonly _index: LocalIndexApi
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -234,12 +234,11 @@ export class Ceramic implements CeramicApi {
       conflictResolution: conflictResolution,
       indexing: localIndex,
     })
-    this._index = localIndex //new LocalIndexApi(modules.indexing, this.repository, this._logger)
   }
 
-  get index(): IndexApi {
+  /*get index(): IndexApi {
     return this._index
-  }
+  }*/
 
   /**
    * Get IPFS instance
@@ -526,7 +525,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this._index.init()
+      //await this._index.init()
 
       await this._startupChecks()
     } catch (err) {
@@ -861,7 +860,7 @@ export class Ceramic implements CeramicApi {
     this._shutdownController.abort()
     await this.dispatcher.close()
     await this.repository.close()
-    await this._index.close()
+    //await this._index.close()
     this._ipfsTopology.stop()
     this._logger.imp('Ceramic instance closed successfully')
   }

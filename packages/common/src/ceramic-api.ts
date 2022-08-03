@@ -61,7 +61,7 @@ export interface CeramicApi extends CeramicSigner {
   readonly pin: PinApi
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
-  readonly index: IndexApi
+  //readonly index: IndexApi
 
   /**
    * Register Stream handler
