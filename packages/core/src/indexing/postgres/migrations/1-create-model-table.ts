@@ -1,7 +1,6 @@
 import type { Knex } from 'knex'
 
 export async function createModelTable(dataSource: Knex, tableName: string) {
-  console.log(`Creating ComposeDB Indexing table for model: ${tableName}`)
   await dataSource.schema.createTable(tableName, function (table) {
     // create unique index name <64 chars that are still capable of being referenced to MID table
     const indexName = tableName.substring(tableName.length - 10)

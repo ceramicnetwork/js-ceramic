@@ -1,5 +1,5 @@
 import { StreamID } from 'streamid/lib/stream-id.js'
-import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
+import type { BaseQuery, Pagination, Page, DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js'
 import { initTables, verifyTables } from './init-tables.js'
 import { InsertionOrder } from './insertion-order.js'
@@ -13,7 +13,8 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   constructor(
     private readonly dbConnection: Knex,
     readonly modelsToIndex: Array<StreamID>,
-    private readonly allowQueriesBeforeHistoricalSync: boolean
+    private readonly allowQueriesBeforeHistoricalSync: boolean,
+    private logger: DiagnosticsLogger
   ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
@@ -60,7 +61,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   }
 
   async init(): Promise<void> {
-    await initTables(this.dbConnection, this.modelsToIndex)
+    await initTables(this.dbConnection, this.modelsToIndex, this.logger)
     await this.verify(validTableStructure)
   }
 

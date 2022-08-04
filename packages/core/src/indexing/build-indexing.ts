@@ -3,6 +3,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import knex from 'knex'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 export type IndexingConfig = {
   /**
@@ -45,11 +46,13 @@ function parseURL(input: string) {
  * Build DatabaseIndexAPI instance based on passed indexing configuration.
  */
 export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi {
+  const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const connectionString = parseURL(indexingConfig.db)
   const protocol = connectionString.protocol.replace(/:$/, '')
   switch (protocol) {
     case 'sqlite':
     case 'sqlite3': {
+      diagnosticsLogger.imp('Initializing SQLite connection')
       const dbConnection = knex({
         client: 'sqlite3',
         useNullAsDefault: true,
@@ -60,10 +63,12 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
       return new SqliteIndexApi(
         dbConnection,
         indexingConfig.models,
-        indexingConfig.allowQueriesBeforeHistoricalSync
+        indexingConfig.allowQueriesBeforeHistoricalSync,
+        diagnosticsLogger
       )
     }
     case 'postgres': {
+      diagnosticsLogger.imp('Initializing PostgreSQL connection')
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
@@ -71,7 +76,8 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
       return new PostgresIndexApi(
         dataSource,
         indexingConfig.models,
-        indexingConfig.allowQueriesBeforeHistoricalSync
+        indexingConfig.allowQueriesBeforeHistoricalSync,
+        diagnosticsLogger
       )
     }
     default:
