@@ -191,7 +191,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       type: CommitType.ANCHOR,
       timestamp: proof.blockTimestamp,
     })
-    delete newState.anchorScheduledFor
 
     return newState
   }

@@ -258,7 +258,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       streamId: streamId,
       cid: tip,
       message: 'Sending anchoring request',
-      anchorScheduledFor: null,
     })
     return this.pollForAnchorResponse(streamId, tip)
   }

@@ -164,7 +164,6 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     delete state.next
-    delete state.anchorScheduledFor
 
     return {
       ...state,

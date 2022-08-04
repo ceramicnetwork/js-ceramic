@@ -9,7 +9,6 @@ export interface AnchorServicePending {
   readonly streamId: StreamID
   readonly cid: CID
   readonly message: string
-  readonly anchorScheduledFor: number
 }
 
 export interface AnchorServiceProcessing {

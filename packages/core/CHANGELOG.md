@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0-rc.2](/compare/@ceramicnetwork/core@2.7.0-rc.1...@ceramicnetwork/core@2.7.0-rc.2) (2022-07-26)
+
+
+### Bug Fixes
+
+* **core:** Detect model model index table and don't recreate (#2340) cc83b3b, closes #2340
+
+
+### Features
+
+* **core:** Add anchor status for READY requests(#2325) c9d4bbb, closes #2325
+* **core:** MID table schema validation on node startup (#2320) ffdc92b, closes #2320
+* **core:** Pinning a ModelInstanceDocument should also pin its Model (#2319) 6df9ae9, closes #2319
+
+
+
+
+
 # [2.7.0-rc.1](/compare/@ceramicnetwork/core@2.7.0-rc.0...@ceramicnetwork/core@2.7.0-rc.1) (2022-07-14)
 
 

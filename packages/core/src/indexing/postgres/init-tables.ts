@@ -2,6 +2,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import { createModelTable } from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
+import { Model } from '@ceramicnetwork/stream-model'
 
 /**
  * List existing mid tables.
@@ -11,7 +12,7 @@ export async function listMidTables(dataSource: Knex): Promise<Array<string>> {
   const result = await dataSource
     .select('tablename')
     .from('pg_tables')
-    .andWhereLike('tablename', 'kjz%')
+    .andWhere((q) => q.whereLike('tablename', 'kjz%').orWhere('tablename', Model.MODEL.toString()))
 
   result.forEach(function (value) {
     midTables.push(value.tablename)

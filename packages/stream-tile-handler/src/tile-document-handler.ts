@@ -228,7 +228,6 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     }
 
     delete state.next
-    delete state.anchorScheduledFor
 
     return {
       ...state,
