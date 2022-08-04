@@ -42,7 +42,7 @@ test('Commit serialization round trip - unsigned genesis commit', async () => {
     id: FAKE_CID,
     data: null,
     prev: null,
-    header: { controllers: [FAKE_DID], model: FAKE_STREAM_ID },
+    header: { controllers: [FAKE_DID], model: FAKE_STREAM_ID.bytes },
   }
 
   const serialized = StreamUtils.serializeCommit(commit)
@@ -56,6 +56,7 @@ test('Commit serialization round trip - unsigned genesis commit', async () => {
   expect(deserialized.header.controllers[0].toString()).toEqual(
     commit.header.controllers[0].toString()
   )
-  expect(deserialized.header.model.type).toEqual(commit.header.model.type)
-  expect(deserialized.header.model.cid.toString()).toEqual(commit.header.model.cid.toString())
+  const deserializedModel = StreamID.fromBytes(deserialized.header.model)
+  expect(deserializedModel.type).toEqual(FAKE_STREAM_ID.type)
+  expect(deserializedModel.cid.toString()).toEqual(FAKE_STREAM_ID.cid.toString())
 })
