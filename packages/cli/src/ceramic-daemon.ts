@@ -37,6 +37,7 @@ const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
+const CALLER_NAME = 'js-ceramic'
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -60,7 +61,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
 
   // If desired, enable metrics
   if (opts.metrics?.metricsExporterEnabled) {
-    Metrics.start(opts.metrics)
+    Metrics.start(opts.metrics, CALLER_NAME)
   }
 
   const ceramicConfig: CeramicConfig = {

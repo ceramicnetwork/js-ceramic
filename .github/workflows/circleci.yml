@@ -1,0 +1,14 @@
+name: Trigger CircleCI tests
+
+on:
+  push: # all push events
+  workflow_dispatch: # manually triggered
+
+jobs:
+  circleci:
+    name: Trigger CircleCI tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.0.5
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
