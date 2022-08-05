@@ -62,12 +62,6 @@ export interface CeramicClientConfig {
  */
 export class CeramicClient implements CeramicApi {
   private readonly _apiUrl: URL
-  /**
-   * Stores handles to streams that have active subscriptions so they can be closed
-   * when the client is closed
-   * @private
-   */
-  private readonly _subscribedStreams: Map<string, Set<Document>>
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
@@ -81,7 +75,6 @@ export class CeramicClient implements CeramicApi {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = new URL(API_PATH, apiHost)
-    this._subscribedStreams = new Map()
     this.context = { api: this }
 
     this.pin = new RemotePinApi(this._apiUrl)
@@ -107,51 +100,20 @@ export class CeramicClient implements CeramicApi {
     this.context.did = did
   }
 
-  private makeDocument(state: StreamState): Document {
-    return new Document(
-      state,
-      this._apiUrl,
-      this._config.syncInterval,
-      this.trackStreamSubscription.bind(this),
-      this.untrackStreamSubscription.bind(this)
-    )
-  }
-
-  private async trackStreamSubscription(stream: Document) {
-    const id = stream.id.baseID.toString()
-    let streams = this._subscribedStreams.get(id)
-    if (!streams) {
-      streams = new Set()
-      this._subscribedStreams.set(id, streams)
-    }
-    streams.add(stream)
-  }
-
-  private async untrackStreamSubscription(stream: Document) {
-    const id = stream.id.baseID.toString()
-    const streams = this._subscribedStreams.get(id)
-    streams.delete(stream)
-    if (streams.size == 0) {
-      this._subscribedStreams.delete(id)
-    }
-  }
-
   async createStreamFromGenesis<T extends Stream>(
     type: number,
     genesis: any,
     opts: CreateOpts = {}
   ): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts }
-    const url = new URL('./streams', this._apiUrl)
-    const { state } = await fetchJson(url, {
-      method: 'post',
-      body: {
-        type,
-        genesis: StreamUtils.serializeCommit(genesis),
-        opts,
-      },
-    })
-    const stream = this.makeDocument(StreamUtils.deserializeState(state))
+    const stream = await Document.createFromGenesis(
+      this._apiUrl,
+      type,
+      genesis,
+      opts,
+      this._config.syncInterval
+    )
+
     return this.buildStreamFromDocument<T>(stream)
   }
 
@@ -161,8 +123,7 @@ export class CeramicClient implements CeramicApi {
   ): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
     const streamRef = StreamRef.from(streamId)
-    const state = await Document.loadState(streamRef, this._apiUrl, opts)
-    const stream = this.makeDocument(state)
+    const stream = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
     return this.buildStreamFromDocument<T>(stream)
   }
 
@@ -186,7 +147,7 @@ export class CeramicClient implements CeramicApi {
     return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
       const state = StreamUtils.deserializeState(v)
-      const stream = this.makeDocument(state)
+      const stream = new Document(state, this._apiUrl, this._config.syncInterval)
       acc[k] = this.buildStreamFromDocument(stream)
       return acc
     }, {})
@@ -204,16 +165,14 @@ export class CeramicClient implements CeramicApi {
   ): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts }
     const effectiveStreamId: StreamID = typeStreamID(streamId)
-    const url = new URL('./commits', this._apiUrl)
-    const { state } = await fetchJson(url, {
-      method: 'post',
-      body: {
-        streamId: effectiveStreamId.toString(),
-        commit: StreamUtils.serializeCommit(commit),
-        opts,
-      },
-    })
-    const document = this.makeDocument(StreamUtils.deserializeState(state))
+    const document = await Document.applyCommit(
+      this._apiUrl,
+      effectiveStreamId,
+      commit,
+      opts,
+      this._config.syncInterval
+    )
+
     return this.buildStreamFromDocument<T>(document)
   }
 
@@ -242,7 +201,7 @@ export class CeramicClient implements CeramicApi {
    * @param state StreamState for a stream.
    */
   buildStreamFromState<T extends Stream = Stream>(state: StreamState): T {
-    const stream$ = this.makeDocument(state)
+    const stream$ = new Document(state, this._apiUrl, this._config.syncInterval)
     return this.buildStreamFromDocument(stream$) as T
   }
 
@@ -268,11 +227,6 @@ export class CeramicClient implements CeramicApi {
     return supportedChains
   }
 
-  async close(): Promise<void> {
-    for (const streamSet of this._subscribedStreams.values()) {
-      for (const stream of streamSet) {
-        stream.complete()
-      }
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async close(): Promise<void> {}
 }
