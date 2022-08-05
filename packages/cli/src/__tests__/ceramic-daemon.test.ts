@@ -204,8 +204,8 @@ describe('Ceramic interop: core <> http-client', () => {
     const doc1 = await TileDocument.create(core, initialContent)
     await anchorDoc(doc1)
     const doc2 = await client.loadStream<TileDocument>(doc1.id)
-    const subscription1 = doc1.subscribe()
-    const subscription2 = doc2.subscribe()
+    doc1.subscribe()
+    doc2.subscribe()
     // change from core viewable in client
     await doc1.update(middleContent)
     await anchorDoc(doc1)
@@ -221,9 +221,6 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.content).toEqual(finalContent)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
-
-    subscription1.unsubscribe()
-    subscription2.unsubscribe()
   })
 
   it('makes and gets updates correctly with manual sync', async () => {
