@@ -31,6 +31,9 @@ export function makeIndexApi(
   if (!process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
     return undefined
   }
+  if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING == "" || process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING == "false") {
+    return undefined
+  }
   if (network == Networks.MAINNET || network == Networks.ELP) {
     // TODO enable ComposeDB on mainnet once mainnet anchors are indexable.
     throw new Error(`ComposeDB indexing features are not yet supported on mainnet`)
