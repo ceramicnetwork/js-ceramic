@@ -63,3 +63,4 @@ export function getResolver(): ResolverRegistry {
 }
 
 export default { getResolver }
+
