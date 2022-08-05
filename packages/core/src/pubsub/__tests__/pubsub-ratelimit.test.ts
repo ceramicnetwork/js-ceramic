@@ -69,7 +69,7 @@ describe('pubsub with queries rate limited', () => {
       }
     })
 
-    const allMessagesPublished = new Promise<void>((resolve, _) => {
+    const allMessagesPublished = new Promise<void>((resolve) => {
       let i = 0
       messages.map((message) => {
         pubsub.next(message).add(() => {
@@ -106,7 +106,7 @@ describe('pubsub with queries rate limited', () => {
 
     let maxQueriesPerSecondPublished
     let maxQueriesPerSecondPlusOnePublished
-    const allQueriesPublished = new Promise<void>((resolveAllQueriesPublished, _) => {
+    const allQueriesPublished = new Promise<void>((resolveAllQueriesPublished) => {
       maxQueriesPerSecondPublished = new Promise<void>((resolveQueriesPerSecondPublished) => {
         maxQueriesPerSecondPlusOnePublished = new Promise<void>(
           (resolveQueriesPerSecondPlusOnePublished) => {
@@ -158,7 +158,7 @@ describe('pubsub with queries rate limited', () => {
     })
 
     // All messages should be *submitted* without error
-    const allQueriesPublished = new Promise<void>((resolve, _) => {
+    const allQueriesPublished = new Promise<void>((resolve) => {
       let i = 0
       messages.map((message) => {
         pubsub.next(message).add(() => {

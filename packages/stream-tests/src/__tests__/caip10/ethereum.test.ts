@@ -6,7 +6,6 @@ import { ContractFactory, Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
 import type { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { happyPath, clearDid, wrongProof } from './caip-flows.js'
 import { AccountId } from 'caip'
 

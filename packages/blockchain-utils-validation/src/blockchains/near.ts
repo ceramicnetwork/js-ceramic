@@ -9,7 +9,7 @@ const verifySignature = async (
   pubKey: Uint8Array,
   message: string,
   signature: Uint8Array
-): Promise<Boolean> => {
+): Promise<boolean> => {
   const hash = crypto.createHash('sha256').update(message).digest()
   const hashString = uint8arrays.toString(hash, 'base64')
   const verified = nacl.sign.detached.verify(
