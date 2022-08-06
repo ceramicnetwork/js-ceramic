@@ -1,5 +1,5 @@
 import * as u8a from 'uint8arrays'
-import * as bigintModArith from './bigint-mod-arith.js'
+import * as bigintModArith from 'bigint-mod-arith'
 import * as nist_weierstrass_common from './nist-weierstrass-common.js'
 import { BigIntPoint } from './nist-weierstrass-common'
 

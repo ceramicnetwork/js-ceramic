@@ -1,27 +1,28 @@
 {
-  "name": "key-did-resolver",
+  "name": "nist-weirstrauss",
   "version": "2.0.4",
-  "description": "Ceramic did:key method resolver",
+  "description": "Utilities for NIST curves for the Ceramic did:key method resolver",
   "keywords": [
     "ceramic",
-    "did:key",
-    "did",
-    "key"
+    "nist",
+    "weirstrauss"
   ],
-  "author": "Janko Simonovic <simonovic86@gmail.com>",
-  "homepage": "",
+  "author": "Brent Shambaugh <brent.shambaugh@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "./lib"
+    "lib": "./lib",
+    "src" : "./src"
   },
   "main": "./lib/index.js",
+  "source": "src/index.ts",
   "types": "./lib/index.d.ts",
   "type": "module",
   "exports": {
     ".": "./lib/index.js"
   },
   "files": [
-    "lib"
+    "lib",
+    "src"
   ],
   "sideEffects": false,
   "scripts": {
@@ -33,14 +34,9 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@stablelib/ed25519": "^1.0.2",
     "multiformats": "^9.5.2",
     "uint8arrays": "^3.0.0",
-    "varint": "^6.0.0"
-  },
-  "devDependencies": {
-    "@types/varint": "^6.0.0",
-    "did-resolver": "^3.1.5"
+    "bigint-mod-arith": "^3.1.0"
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }
