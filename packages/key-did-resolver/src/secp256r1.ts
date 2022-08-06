@@ -1,7 +1,8 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import * as u8a from 'uint8arrays'
-import * as bigintModArith from './bigint-mod-arith.js'
+import * as bigintModArith from 'bigint-mod-arith'
+
 
 import * as nist_weierstrass_common from './nist_weierstrass_common.js'
 
