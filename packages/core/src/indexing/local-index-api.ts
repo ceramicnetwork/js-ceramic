@@ -21,7 +21,7 @@ export class LocalIndexApi implements IndexApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  private _shouldIndexStream(args: StreamID): Boolean {
+  private _shouldIndexStream(args: StreamID): boolean {
     if (!this.databaseIndexApi) {
       return false
     }

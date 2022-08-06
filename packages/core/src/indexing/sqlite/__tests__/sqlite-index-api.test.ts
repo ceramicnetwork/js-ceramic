@@ -5,7 +5,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { listMidTables } from '../init-tables.js'
 import knex, { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../../index-query-not-available.error.js'
-import { asTableName } from '../../as-table-name.util'
+import { asTableName } from '../../as-table-name.util.js'
 import { Model } from '@ceramicnetwork/stream-model'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'

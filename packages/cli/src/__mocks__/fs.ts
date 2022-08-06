@@ -24,6 +24,7 @@ class MockStream {
     this.filePath = filePath
     this.writeFlag = writeFlag
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(event: string, cb: any): void {
     /* eslint-disable-line */
   }

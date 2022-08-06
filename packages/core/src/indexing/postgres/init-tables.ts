@@ -50,7 +50,7 @@ export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID
 export async function verifyTables(
   dataSource: Knex,
   modelsToIndex: Array<StreamID>,
-  validTableStructure: Object
+  validTableStructure: object
 ) {
   const tables = await listMidTables(dataSource)
   const validSchema = JSON.stringify(validTableStructure)

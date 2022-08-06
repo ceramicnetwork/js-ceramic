@@ -1,5 +1,4 @@
-// TODO: change this when we have the metrics package registered
-import {Metrics, METRIC_NAMES} from '../../../metrics/lib/metrics-setup.js'
+import {Metrics, METRIC_NAMES} from '@ceramicnetwork/metrics'
 
 export function instrumentRequest(req, res, next) {
 

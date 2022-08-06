@@ -67,7 +67,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verify(validTableStructure: Object): Promise<void> {
+  async verify(validTableStructure: object): Promise<void> {
     await verifyTables(this.dbConnection, this.modelsToIndex, validTableStructure)
   }
 
