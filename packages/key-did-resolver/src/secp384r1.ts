@@ -5,50 +5,52 @@ import * as bigintModArith from './bigint-mod-arith.js'
 import * as nist_weierstrass_common from './nist_weierstrass_common.js'
 
 /**
-  * x,y point as a BigInt (requires at least ES2020)
-  * For BigInt see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
-  */
+ * x,y point as a BigInt (requires at least ES2020)
+ * For BigInt see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
+ */
 interface BigIntPoint {
-   x: BigInt,
-   y : BigInt
+  x: bigint
+  y: bigint
 }
 
 /**
-  * xm,ym point with components expresse with base64url utilizing multiformats
-  *
-  * base64url is expressed in the Multibase Table: https://github.com/multiformats/multibase/blob/master/multibase.csv
-  */
+ * xm,ym point with components expresse with base64url utilizing multiformats
+ *
+ * base64url is expressed in the Multibase Table: https://github.com/multiformats/multibase/blob/master/multibase.csv
+ */
 interface base64urlPoint {
-   xm: string,
-   ym: string
+  xm: string
+  ym: string
 }
 
 /**
  * Constructs the document based on the method key
  */
-export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any {
+export function keyToDidDoc(pubKeyBytes: Uint8Array, fingerprint: string): any {
   const did = `did:key:${fingerprint}`
   const keyId = `${did}#${fingerprint}`
-  const key = pubKeyBytesToXY(pubKeyBytes);
+  const key = pubKeyBytesToXY(pubKeyBytes)
   return {
     id: did,
-    verificationMethod: [{
-      id: keyId,
-      type: 'JsonWebKey2020',
-      controller: did,
-       publicKeyJwk: {
-         kty: "EC",
-               crv: "P-384",
-               x: key.xm,
-               y: key.ym,
-       },
-    }],
+    verificationMethod: [
+      {
+        id: keyId,
+        type: 'JsonWebKey2020',
+        controller: did,
+        publicKeyJwk: {
+          kty: 'EC',
+          crv: 'P-384',
+          x: key.xm,
+          y: key.ym,
+        },
+      },
+    ],
     authentication: [keyId],
     assertionMethod: [keyId],
     capabilityDelegation: [keyId],
     capabilityInvocation: [keyId],
   }
-  }
+}
 
 /**
  * Decompress a compressed public key in SEC format.
@@ -59,35 +61,34 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * @param - 49 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
  * @throws TypeError: input cannot be null or undefined.
  */
- export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
-  if(!nist_weierstrass_common.testUint8Array(comp)) {
-    throw new TypeError('input must be a Uint8Array');
-   }
+export function ECPointDecompress(comp: Uint8Array): BigIntPoint {
+  if (!nist_weierstrass_common.testUint8Array(comp)) {
+    throw new TypeError('input must be a Uint8Array')
+  }
   // two, prime, b, and pIdent are constants for the P-384 curve
-  const two = BigInt(2);
-  const prime = (two ** 384n) - (two ** 128n) - (two ** 96n) + (two ** 32n ) - 1n;
-  const b = 27580193559959705877849011840389048093056905856361568521428707301988689241309860865136260764883745107765439761230575n;
-  const pIdent = (prime + 1n) / 4n;
+  const two = BigInt(2)
+  const prime = two ** 384n - two ** 128n - two ** 96n + two ** 32n - 1n
+  const b =
+    27580193559959705877849011840389048093056905856361568521428707301988689241309860865136260764883745107765439761230575n
+  const pIdent = (prime + 1n) / 4n
 
-  const signY = BigInt(comp[0] - 2);
-  const x = comp.subarray(1);
-  const xBig = BigInt(u8a.toString(x,'base10'));
+  const signY = BigInt(comp[0] - 2)
+  const x = comp.subarray(1)
+  const xBig = BigInt(u8a.toString(x, 'base10'))
 
-  const a = xBig**3n - xBig*3n + b;
-  let yBig = bigintModArith.modPow(a,pIdent,prime);
+  const a = xBig ** 3n - xBig * 3n + b
+  let yBig = bigintModArith.modPow(a, pIdent, prime)
 
   // "// If the parity doesn't match it's the *other* root"
-  if( yBig % 2n !== signY)
-    {
-         // y = prime - y
-         yBig = prime - yBig;
-    }
+  if (yBig % 2n !== signY) {
+    // y = prime - y
+    yBig = prime - yBig
+  }
 
-    return {
-      x: xBig,
-      y: yBig
-    };
-
+  return {
+    x: xBig,
+    y: yBig,
+  }
 }
 
 /**
@@ -102,34 +103,34 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * @throws Error: Unexpected pubKeyBytes
  * @internal
  */
-export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
-  if(!nist_weierstrass_common.testUint8Array(pubKeyBytes)) {
-    throw new TypeError('input must be a Uint8Array');
+export function pubKeyBytesToXY(pubKeyBytes: Uint8Array): base64urlPoint {
+  if (!nist_weierstrass_common.testUint8Array(pubKeyBytes)) {
+    throw new TypeError('input must be a Uint8Array')
   }
-  const publicKeyHex = nist_weierstrass_common.pubKeyBytesToHex(pubKeyBytes);
-  const bytesCount = publicKeyHex.length / 2;
+  const publicKeyHex = nist_weierstrass_common.pubKeyBytesToHex(pubKeyBytes)
+  const bytesCount = publicKeyHex.length / 2
 
   // raw p-384 key
-  if(bytesCount == 96) {
-     return nist_weierstrass_common.publicKeyToXY(publicKeyHex);
-   }
-
-  // uncompressed p-384 key, SEC format
-  if(bytesCount == 97) {
-   if(publicKeyHex.slice(0,2) == '04') {
-     const publicKey = publicKeyHex.slice(2);
-     return nist_weierstrass_common.publicKeyToXY(publicKey);
-   }
+  if (bytesCount == 96) {
+    return nist_weierstrass_common.publicKeyToXY(publicKeyHex)
   }
 
-  // compressed p-384 key, SEC format
-  if(bytesCount == 49) {
-   if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
-     const publicKey = u8a.fromString(publicKeyHex,'base16')
-     const point = ECPointDecompress(publicKey);
-      return nist_weierstrass_common.publicKeyIntToXY(point);
+  // uncompressed p-384 key, SEC format
+  if (bytesCount == 97) {
+    if (publicKeyHex.slice(0, 2) == '04') {
+      const publicKey = publicKeyHex.slice(2)
+      return nist_weierstrass_common.publicKeyToXY(publicKey)
     }
   }
 
-     throw new Error('Unexpected pubKeyBytes');
+  // compressed p-384 key, SEC format
+  if (bytesCount == 49) {
+    if (publicKeyHex.slice(0, 2) == '03' || publicKeyHex.slice(0, 2) == '02') {
+      const publicKey = u8a.fromString(publicKeyHex, 'base16')
+      const point = ECPointDecompress(publicKey)
+      return nist_weierstrass_common.publicKeyIntToXY(point)
+    }
+  }
+
+  throw new Error('Unexpected pubKeyBytes')
 }
