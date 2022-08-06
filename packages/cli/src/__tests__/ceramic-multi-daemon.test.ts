@@ -21,8 +21,8 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: []
-    }
+      models: [],
+    },
   })
 
   const handler = new TileDocumentHandler()
@@ -140,9 +140,10 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     // wait for doc2 to learn about the new state
     const receivedUpdatePromise = new Promise((resolve) => {
-      doc2.subscribe((state) => {
+      const subscription = doc2.subscribe((state) => {
         if (state.log.length > 1) {
           resolve(state)
+          subscription.unsubscribe()
         }
       })
     })
