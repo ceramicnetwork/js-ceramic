@@ -1,5 +1,5 @@
 {
-  "name": "nist-weirstrauss",
+  "name": "nist-weierstrauss",
   "version": "2.0.4",
   "description": "Utilities for NIST curves for the Ceramic did:key method resolver",
   "keywords": [
