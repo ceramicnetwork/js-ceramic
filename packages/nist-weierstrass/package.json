@@ -10,7 +10,7 @@
   "author": "Brent Shambaugh <brent.shambaugh@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "./lib",
+    "lib": "./lib"
   },
   "main": "./lib/index.js",
   "source": "src/index.ts",
