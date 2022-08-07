@@ -14,7 +14,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     private readonly dbConnection: Knex,
     readonly modelsToIndex: Array<StreamID>,
     private readonly allowQueriesBeforeHistoricalSync: boolean,
-    private logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger
   ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
