@@ -190,8 +190,11 @@ export class StateManager {
 
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
+    // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
+    const shouldIndex =
+      state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
     await this.indexStreamIfNeeded(state$)
-    if (isPinned) {
+    if (isPinned || shouldIndex) {
       await this.pinStore.add(state$)
     }
   }
@@ -218,7 +221,7 @@ export class StateManager {
     if (!state$) {
       state$ = await this.load(streamId)
     }
-    this.executionQ.forStream(streamId).add(async() => {
+    this.executionQ.forStream(streamId).add(async () => {
       await this._handleTip(state$, tip)
     })
     await this.indexStreamIfNeeded(state$)
