@@ -133,12 +133,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Creates a deterministic Tile document.
+   * Creates a deterministic ModelInstanceDocument with a 'single' accountRelation.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
-  static async deterministic<T>(
+  static async single<T>(
     ceramic: CeramicApi,
     metadata: ModelInstanceDocumentMetadataArgs,
     opts: CreateOpts = {}

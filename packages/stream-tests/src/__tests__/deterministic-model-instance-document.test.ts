@@ -1,10 +1,9 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CeramicApi, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, CommitType, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
-  ModelInstanceDocumentMetadata,
   ModelInstanceDocumentMetadataArgs,
 } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
@@ -17,8 +16,6 @@ import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/st
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
-const CONTENT2 = { myData: 2 }
-const CONTENT3 = { myData: 3 }
 
 async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
   const iterator = await ceramic.pin.ls(streamId)
@@ -84,7 +81,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test(`Create a valid empty doc`, async () => {
-    const doc = await ModelInstanceDocument.deterministic(ceramic, midMetadata)
+    const doc = await ModelInstanceDocument.single(ceramic, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.metadata).toEqual({
       controller: ceramic.did.id.toString(),
@@ -99,7 +96,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test(`Create doc and set content`, async () => {
-    const doc = await ModelInstanceDocument.deterministic(ceramic, midMetadata)
+    const doc = await ModelInstanceDocument.single(ceramic, midMetadata)
     await doc.replace(CONTENT0)
     expect(doc.content).toEqual(CONTENT0)
     expect(doc.state.log.length).toEqual(2)
@@ -128,9 +125,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('Can load document deterministically', async () => {
-    const doc1 = await ModelInstanceDocument.deterministic(ceramic, midMetadata)
+    const doc1 = await ModelInstanceDocument.single(ceramic, midMetadata)
     await doc1.replace(CONTENT0)
-    const doc2 = await ModelInstanceDocument.deterministic(ceramic, midMetadata)
+    const doc2 = await ModelInstanceDocument.single(ceramic, midMetadata)
 
     expect(doc2.id.toString()).toEqual(doc1.id.toString())
     expect(doc2.content).toEqual(doc1.content)
@@ -173,7 +170,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   })
 
   test('load doc', async () => {
-    const doc = await ModelInstanceDocument.deterministic(ceramic0, midMetadata)
+    const doc = await ModelInstanceDocument.single(ceramic0, midMetadata)
     await doc.replace(CONTENT1)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
@@ -189,10 +186,10 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   })
 
   test('load doc deterministically', async () => {
-    const doc = await ModelInstanceDocument.deterministic(ceramic0, midMetadata)
+    const doc = await ModelInstanceDocument.single(ceramic0, midMetadata)
     await doc.replace(CONTENT1)
 
-    const loaded = await ModelInstanceDocument.deterministic(ceramic1, midMetadata)
+    const loaded = await ModelInstanceDocument.single(ceramic1, midMetadata)
 
     const docState = doc.state
     const loadedState = loaded.state
