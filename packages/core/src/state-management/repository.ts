@@ -106,6 +106,7 @@ export class Repository {
       this.logger,
       (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts),
+      // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
       this.indexStreamIfNeeded,
       deps.indexing
     )
@@ -345,8 +346,8 @@ export class Repository {
    * @param state
    * @public
    */
-  public async indexStreamIfNeeded(state: RunningState): Promise<void> {
-    if (!state.value.metadata.model) {
+  public async indexStreamIfNeeded(state$: RunningState): Promise<void> {
+    if (!state$.value.metadata.model) {
       return
     }
 
@@ -355,14 +356,14 @@ export class Repository {
     }
 
     // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
-    const lastAnchor = asDate(state.value.anchorProof?.blockTimestamp)
+    const lastAnchor = asDate(state$.value.anchorProof?.blockTimestamp)
     const firstAnchor = asDate(
-      state.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
+      state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
     )
     const STREAM_CONTENT = {
-      model: state.value.metadata.model,
-      streamID: state.id,
-      controller: state.value.metadata.controller,
+      model: state$.value.metadata.model,
+      streamID: state$.id,
+      controller: state$.value.metadata.controller,
       lastAnchor: lastAnchor,
       firstAnchor: firstAnchor,
     }

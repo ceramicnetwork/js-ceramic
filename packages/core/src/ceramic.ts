@@ -234,6 +234,7 @@ export class Ceramic implements CeramicApi {
       conflictResolution: conflictResolution,
       indexing: localIndex,
     })
+    // TODO (NET-1687): remove indexing part of refactor to push indexing into state-manager.ts
     this._index = localIndex
   }
 
