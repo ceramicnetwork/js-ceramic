@@ -117,9 +117,12 @@ export class CeramicCliUtils {
     const config = await this._loadDaemonConfig(configFilepath)
 
     // Environment variables override values from config file
-    if (process.env.CERAMIC_INDEXING_DB_URI) config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
-    if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED) config.metrics.metricsExporterEnabled = Boolean(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
-    if (process.env.CERAMIC_METRICS_PORT) config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
+    if (process.env.CERAMIC_INDEXING_DB_URI)
+      config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
+    if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
+      config.metrics.metricsExporterEnabled = Boolean(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
+    if (process.env.CERAMIC_METRICS_PORT)
+      config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
 
     {
       // CLI flags override values from environment variables and config file

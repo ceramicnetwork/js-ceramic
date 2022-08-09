@@ -1,4 +1,4 @@
-import { Metrics, METRIC_NAMES } from '../metrics-setup'
+import { Metrics, METRIC_NAMES } from '../metrics-setup.js'
 
 describe('simple test of metrics', () => {
   beforeAll(async () => {

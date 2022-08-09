@@ -1,6 +1,6 @@
 import tmp from 'tmp-promise'
 import { writeFile } from 'node:fs/promises'
-import { DaemonConfig } from '../daemon-config'
+import { DaemonConfig } from '../daemon-config.js'
 import { homedir } from 'node:os'
 
 describe('reading from file', () => {

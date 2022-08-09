@@ -5,10 +5,12 @@ import { SqliteIndexApi } from '../sqlite-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { chunks } from './chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
 const MODEL = MODELS_TO_INDEX[0]
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let EXPECTED: Array<string>
 
@@ -26,7 +28,7 @@ beforeEach(async () => {
       filename: filename,
     },
   })
-  const indexAPI = new SqliteIndexApi(dbConnection, MODELS_TO_INDEX)
+  const indexAPI = new SqliteIndexApi(dbConnection, MODELS_TO_INDEX, true, logger)
   await indexAPI.init()
   order = new InsertionOrder(dbConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.

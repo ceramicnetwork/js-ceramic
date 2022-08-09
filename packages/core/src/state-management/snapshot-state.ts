@@ -19,7 +19,7 @@ export class SnapshotState extends Observable<StreamState> implements RunningSta
     this.id = new StreamID(this.state.type, this.state.log[0].cid)
   }
 
-  next(value: StreamState): void {
+  next(): void {
     throw new Error('Snapshot can not be updated')
   }
 }
