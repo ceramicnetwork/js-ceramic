@@ -25,7 +25,7 @@ import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
-import { LocalIndexApi } from '../indexing/local-index-api'
+import { LocalIndexApi } from '../indexing/local-index-api.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher

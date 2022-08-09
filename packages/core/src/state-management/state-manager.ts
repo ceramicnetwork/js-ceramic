@@ -21,7 +21,7 @@ import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import { LocalIndexApi } from '../indexing/local-index-api'
+import { LocalIndexApi } from '../indexing/local-index-api.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
