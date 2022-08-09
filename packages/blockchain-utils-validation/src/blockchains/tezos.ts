@@ -15,8 +15,6 @@ export const PUBLIC_KEY_NOT_PUBLISHED_ERROR = new Error(
 // @ts-ignore TS can't resolve these, but they are there and tests pass
 const { TEZOS_NAMESPACE, TEZOS_CHAIN_REF } = tezos
 
-const FAKE_API_ENDPOINT = 'https://fake-api.example.com' // this enpoint is never actually called
-
 /**
  * Encodes a message to its Micheline string representation
  *

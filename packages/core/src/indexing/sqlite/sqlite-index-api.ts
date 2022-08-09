@@ -1,5 +1,5 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
+import type { BaseQuery, Pagination, Page, DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Knex } from 'knex'
 import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js'
 import { initTables, verifyTables } from './init-tables.js'
@@ -25,7 +25,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   constructor(
     private readonly dbConnection: Knex,
     readonly modelsToIndex: Array<StreamID>,
-    private readonly allowQueriesBeforeHistoricalSync: boolean
+    private readonly allowQueriesBeforeHistoricalSync: boolean,
+    private logger: DiagnosticsLogger
   ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
@@ -67,12 +68,12 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verify(validTableStructure: Object): Promise<void> {
+  async verify(validTableStructure: object): Promise<void> {
     await verifyTables(this.dbConnection, this.modelsToIndex, validTableStructure)
   }
 
   async init(): Promise<void> {
-    await initTables(this.dbConnection, this.modelsToIndex)
+    await initTables(this.dbConnection, this.modelsToIndex, this.logger)
     await this.verify(validTableStructure)
   }
 

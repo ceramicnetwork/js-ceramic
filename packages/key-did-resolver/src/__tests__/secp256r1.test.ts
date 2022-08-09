@@ -2,7 +2,7 @@
 
 import varint from "varint"
 import { base58btc } from 'multiformats/bases/base58'
-import * as mapper from "../secp256r1"
+import * as mapper from "../secp256r1.js"
 import * as u8a from 'uint8arrays'
 
 describe('Secp256r1 mapper', () => {
@@ -26,7 +26,7 @@ describe('Secp256r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
- 
+
     it('successfully resolves the document from did:key from raw public key #3', async () => {
         const id = "zrurwcJZss4ruepVNu1H3xmSirvNbzgBk9qrCktB6kaewXnJAhYWwtP3bxACqBpzjZdN7TyHNzzGGSSH5qvZsSDir9z"
 

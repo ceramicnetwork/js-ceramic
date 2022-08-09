@@ -22,6 +22,12 @@ export const validTableStructure = {
     nullable: true,
     defaultValue: null,
   },
+  first_anchored_at: {
+    type: 'timestamp with time zone',
+    maxLength: null,
+    nullable: true,
+    defaultValue: null,
+  },
   created_at: {
     type: 'timestamp with time zone',
     maxLength: null,

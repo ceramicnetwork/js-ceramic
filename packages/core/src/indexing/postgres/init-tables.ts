@@ -3,6 +3,7 @@ import { createModelTable } from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { Model } from '@ceramicnetwork/stream-model'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 /**
  * List existing mid tables.
@@ -23,10 +24,14 @@ export async function listMidTables(dataSource: Knex): Promise<Array<string>> {
 /**
  * Create mid tables and corresponding indexes
  */
-export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID>) {
+export async function initTables(
+  dataSource: Knex,
+  modelsToIndex: Array<StreamID>,
+  logger: DiagnosticsLogger
+) {
   const expectedTables = modelsToIndex.map(asTableName).map((tableName) => {
     if (tableName.length > 63) {
-      console.error(`Invalid model added to config file: ${tableName}`)
+      logger.err(`Invalid model added to config file: ${tableName}`)
       process.exit(-1)
     }
     return tableName
@@ -35,6 +40,7 @@ export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID
   for (const tableName of expectedTables) {
     const exists = await dataSource.schema.hasTable(tableName)
     if (!exists) {
+      logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
       await createModelTable(dataSource, tableName)
     }
   }
@@ -50,7 +56,7 @@ export async function initTables(dataSource: Knex, modelsToIndex: Array<StreamID
 export async function verifyTables(
   dataSource: Knex,
   modelsToIndex: Array<StreamID>,
-  validTableStructure: Object
+  validTableStructure: object
 ) {
   const tables = await listMidTables(dataSource)
   const validSchema = JSON.stringify(validTableStructure)

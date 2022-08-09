@@ -24,8 +24,8 @@ commands:
       - node/install:
           node-version: "16"
       - node/install-packages
-      - run: npm run lint
       - run: npm run build
+      - run: npm run lint
       - run:
           name: Test
           command: npm run test
