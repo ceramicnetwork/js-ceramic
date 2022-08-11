@@ -13,6 +13,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
 
 
+## [2.5.1](/compare/@ceramicnetwork/cli@2.5.0...@ceramicnetwork/cli@2.5.1) (2022-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
 
 
 
