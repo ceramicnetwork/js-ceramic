@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.6.0-rc.1](/compare/@ceramicnetwork/cli@2.5.1...@ceramicnetwork/cli@2.6.0-rc.1) (2022-08-11)
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag (#2339) df53df4, closes #2339
+* **cli:** Undeprecate read-only CLI commands (#2364) 7db84e0, closes #2364
+* **core:** working implementation of indexable anchors Phase 2 (#2315) 987cd43, closes #2315
+
+
+
+
+
 # [2.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.5.0...@ceramicnetwork/cli@2.6.0-rc.0) (2022-08-10)
 
 

@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0-rc.1](/compare/@ceramicnetwork/core@2.7.1...@ceramicnetwork/core@2.8.0-rc.1) (2022-08-11)
+
+
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis (#2366) 3e53142, closes #2366
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag (#2339) df53df4, closes #2339
+* **core:** working implementation of indexable anchors Phase 2 (#2315) 987cd43, closes #2315
+
+
+
+
+
 # [2.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.8.0-rc.0) (2022-08-10)
 
 
