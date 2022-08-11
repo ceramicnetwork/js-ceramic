@@ -6,10 +6,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 # [2.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.8.0-rc.0) (2022-08-10)
 
 
-### Bug Fixes
-
-* **core:** Add default endpoint for gnosis ([#2366](https://github.com/ceramicnetwork/js-ceramic/issues/2366)) ([3e53142](https://github.com/ceramicnetwork/js-ceramic/commit/3e531428df28b811687186b6ebd7415a1cd3fec9))
-
 
 ### Features
 
@@ -17,7 +13,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
 
 
+## [2.7.1](/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.7.1) (2022-08-11)
 
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis ([#2366](https://github.com/ceramicnetwork/js-ceramic/issues/2366)) ([3e53142](https://github.com/ceramicnetwork/js-ceramic/commit/3e531428df28b811687186b6ebd7415a1cd3fec9))
 
 
 # [2.7.0](/compare/@ceramicnetwork/core@2.7.0-rc.2...@ceramicnetwork/core@2.7.0) (2022-08-08)
