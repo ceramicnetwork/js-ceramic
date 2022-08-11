@@ -96,7 +96,7 @@ export class InsertionOrder {
       case PaginationKind.BACKWARD: {
         const limit = pagination.last
         const response: Array<Selected> = await this.backwardQuery(query, pagination)
-        const entries = response.slice(0, limit)
+        const entries = response.slice(-limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
         return {
@@ -131,7 +131,7 @@ export class InsertionOrder {
       .from(tableName)
       .select('stream_id', 'last_anchored_at', 'created_at')
       .orderBy(INSERTION_ORDER)
-      .limit(pagination.first + 1) // To know if we have more entries to query
+      .limit(pagination.first + 1)
     if (query.account) {
       base = base.where({ controller_did: query.account })
     }
@@ -150,18 +150,31 @@ export class InsertionOrder {
     pagination: BackwardPaginationQuery
   ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
-    let base = this.dbConnection
-      .from(tableName)
-      .select('stream_id', 'last_anchored_at', 'created_at')
-      .orderBy(reverseOrder(INSERTION_ORDER))
-      .limit(pagination.last + 1) // To know if we have more entries to query
-    if (query.account) {
-      base = base.where({ controller_did: query.account })
+    const limit = pagination.last
+    const identity = <T>(a: T) => a
+    const base = (
+      withWhereCallback: (builder: Knex.QueryBuilder) => Knex.QueryBuilder = identity
+    ) => {
+      return this.dbConnection
+        .select('*')
+        .from((builder) => {
+          let subquery = builder
+            .from(tableName)
+            .select('stream_id', 'last_anchored_at', 'created_at')
+            .orderBy(reverseOrder(INSERTION_ORDER))
+            .limit(limit + 1) // To know if we have more entries to query
+          if (query.account) {
+            subquery = subquery.where({ controller_did: query.account })
+          }
+          return withWhereCallback(subquery)
+        })
+        .orderBy(INSERTION_ORDER)
     }
     if (pagination.before) {
       const before = Cursor.parse(pagination.before)
-      return base.where('created_at', '<', before.created_at)
+      return base((builder) => builder.where('created_at', '<', before.created_at))
+    } else {
+      return base()
     }
-    return base
   }
 }

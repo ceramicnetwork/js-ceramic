@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { CeramicApi, IpfsApi, Page, StreamState } from '@ceramicnetwork/common'
+import { IpfsApi, Page, StreamState } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -10,9 +10,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
-import first from 'it-first'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
 
@@ -186,7 +184,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(results[4].content).toEqual(CONTENT5)
   })
 
-  test('multiple documents - one page, reverse order', async () => {
+  test('multiple documents - one page, backwards iteration', async () => {
     const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc1.replace(CONTENT1)
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
@@ -197,16 +195,17 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const resultObj = await ceramic.index.queryIndex({ model: model.id, last: 100 })
     const results = await extractDocuments(ceramic, resultObj)
 
+    // Using `last` doesn't change the order of documents returned within each page
     expect(results.length).toEqual(3)
-    expect(results[0].id.toString()).toEqual(doc3.id.toString())
-    expect(results[0].content).toEqual(CONTENT3)
+    expect(results[0].id.toString()).toEqual(doc1.id.toString())
+    expect(results[0].content).toEqual(CONTENT1)
     expect(results[1].id.toString()).toEqual(doc2.id.toString())
     expect(results[1].content).toEqual(CONTENT2)
-    expect(results[2].id.toString()).toEqual(doc1.id.toString())
-    expect(results[2].content).toEqual(CONTENT1)
+    expect(results[2].id.toString()).toEqual(doc3.id.toString())
+    expect(results[2].content).toEqual(CONTENT3)
   })
 
-  test('multiple documents - multiple pages, reverse order', async () => {
+  test('multiple documents - multiple pages, backwards iteration', async () => {
     const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc1.replace(CONTENT1)
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
@@ -219,13 +218,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const resultObj1 = await ceramic.index.queryIndex({
       model: model.id,
       last: 2,
-      before: resultObj0.pageInfo.endCursor,
+      before: resultObj0.pageInfo.startCursor,
     })
     expect(resultObj1.pageInfo.hasPreviousPage).toBeTruthy()
     const resultObj2 = await ceramic.index.queryIndex({
       model: model.id,
       last: 2,
-      before: resultObj1.pageInfo.endCursor,
+      before: resultObj1.pageInfo.startCursor,
     })
     expect(resultObj2.pageInfo.hasPreviousPage).toBeFalsy()
 
@@ -237,15 +236,17 @@ describe('ModelInstanceDocument API http-client tests', () => {
       ])
     ).flat()
 
+    // Using `last` doesn't change the order of documents returned within each page, it just changes
+    // the order of the pages themselves.
     expect(results.length).toEqual(5)
-    expect(results[0].id.toString()).toEqual(doc5.id.toString())
-    expect(results[0].content).toEqual(CONTENT5)
-    expect(results[1].id.toString()).toEqual(doc4.id.toString())
-    expect(results[1].content).toEqual(CONTENT4)
-    expect(results[2].id.toString()).toEqual(doc3.id.toString())
-    expect(results[2].content).toEqual(CONTENT3)
-    expect(results[3].id.toString()).toEqual(doc2.id.toString())
-    expect(results[3].content).toEqual(CONTENT2)
+    expect(results[0].id.toString()).toEqual(doc4.id.toString())
+    expect(results[0].content).toEqual(CONTENT4)
+    expect(results[1].id.toString()).toEqual(doc5.id.toString())
+    expect(results[1].content).toEqual(CONTENT5)
+    expect(results[2].id.toString()).toEqual(doc2.id.toString())
+    expect(results[2].content).toEqual(CONTENT2)
+    expect(results[3].id.toString()).toEqual(doc3.id.toString())
+    expect(results[3].content).toEqual(CONTENT3)
     expect(results[4].id.toString()).toEqual(doc1.id.toString())
     expect(results[4].content).toEqual(CONTENT1)
   })

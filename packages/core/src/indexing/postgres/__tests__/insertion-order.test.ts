@@ -101,8 +101,7 @@ describe('backward pagination', () => {
   const PAGE_SIZE = 5
   let pages: Array<Array<string>>
   beforeEach(() => {
-    const expectedCopy = [...EXPECTED]
-    pages = chunks(expectedCopy.reverse(), PAGE_SIZE)
+    pages = chunks(EXPECTED.reverse(), PAGE_SIZE).map((arr) => arr.reverse())
   })
 
   test('pagination', async () => {
@@ -113,7 +112,7 @@ describe('backward pagination', () => {
         last: PAGE_SIZE,
         before: beforeCursor,
       })
-      beforeCursor = result.pageInfo.endCursor
+      beforeCursor = result.pageInfo.startCursor
       const expected = pages[i]
       expect(result.edges.length).toEqual(expected.length)
       expect(result.edges.map((e) => String(e.node))).toEqual(expected)
@@ -132,15 +131,15 @@ describe('backward pagination', () => {
       last: PAGE_SIZE,
     })
     expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
-    const secondEntry = firstPage.edges[1]
+    const secondLastEntry = firstPage.edges[firstPage.edges.length - 2]
     const customPage = await order.page({
       model: MODEL,
       last: 3,
-      before: secondEntry.cursor,
+      before: secondLastEntry.cursor,
     })
-    // Returns the 3 entries after skipping the oldest 2
+    // Returns 3 entries before the 2nd last one
     expect(customPage.edges.length).toEqual(3)
-    expect(customPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage.slice(2, 5))
+    expect(customPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage.slice(0, 3))
   })
 })
 
