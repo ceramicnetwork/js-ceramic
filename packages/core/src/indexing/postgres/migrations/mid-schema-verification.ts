@@ -16,6 +16,12 @@ export const validTableStructure = {
     nullable: false,
     defaultValue: null,
   },
+  stream_content: {
+    type: 'jsonb',
+    maxLength: null,
+    nullable: false,
+    defaultValue: "'{}'::jsonb",
+  },
   last_anchored_at: {
     type: 'timestamp with time zone',
     maxLength: null,

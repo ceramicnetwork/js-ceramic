@@ -8,6 +8,7 @@ import { IndexQueryNotAvailableError } from '../../index-query-not-available.err
 import { asTableName } from '../../as-table-name.util.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
+import { STREAM_TEST_DATA_PROFILE } from './sqlite-index-api.fixture.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -123,6 +124,7 @@ describe('indexStream', () => {
     model: MODELS_TO_INDEX[0],
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
+    streamContent: STREAM_TEST_DATA_PROFILE,
     lastAnchor: null,
     firstAnchor: null,
   }
@@ -141,6 +143,7 @@ describe('indexStream', () => {
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
+    expect(raw.stream_content).toEqual(STREAM_TEST_DATA_PROFILE)
     expect(raw.last_anchored_at).toBeNull()
     expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)

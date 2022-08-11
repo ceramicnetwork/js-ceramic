@@ -4,6 +4,7 @@ export async function createModelTable(dbConnection: Knex, tableName: string) {
   await dbConnection.schema.createTable(tableName, (table) => {
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()
+    table.string('stream_content').notNullable().defaultTo('{}')
     table.integer('last_anchored_at').nullable()
     table.integer('first_anchored_at').nullable()
     table.integer('created_at').notNullable()

@@ -7,6 +7,7 @@ export async function createModelTable(dataSource: Knex, tableName: string) {
 
     table.string('stream_id').primary(`idx_${indexName}_pkey`).unique(`constr_${indexName}_unique`)
     table.string('controller_did', 1024).notNullable()
+    table.jsonb('stream_content').notNullable().defaultTo('{}')
     table.dateTime('last_anchored_at').nullable()
     table.dateTime('first_anchored_at').nullable()
     table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
