@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.7.1](/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.7.1) (2022-08-11)
+
+
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis (#2366) 319adf2, closes #2366
+
+
+
+
+
 # [2.7.0](/compare/@ceramicnetwork/core@2.7.0-rc.2...@ceramicnetwork/core@2.7.0) (2022-08-08)
 
 **Note:** Version bump only for package @ceramicnetwork/core
