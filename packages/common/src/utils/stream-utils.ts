@@ -14,6 +14,7 @@ import {
 import { AnchorStatus, StreamState, LogEntry } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
+import * as uint8arrays from 'uint8arrays'
 
 const TILE_TYPE_ID = 0
 
@@ -62,7 +63,7 @@ export class StreamUtils {
     }
 
     if (commit.header?.model) {
-      cloned.header.model = commit.header.model.toString()
+      cloned.header.model = uint8arrays.toString(commit.header.model, 'base64')
     }
 
     return cloned
@@ -101,7 +102,7 @@ export class StreamUtils {
     }
 
     if (cloned.header?.model) {
-      cloned.header.model = StreamID.fromString(cloned.header.model)
+      cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
     }
 
     return cloned

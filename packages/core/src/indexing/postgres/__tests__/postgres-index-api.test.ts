@@ -138,7 +138,6 @@ describe('indexStream', () => {
     streamContent: STREAM_TEST_DATA_PROFILE,
     controller: CONTROLLER,
     lastAnchor: null,
-    firstAnchor: null,
   }
 
   let indexApi: PostgresIndexApi

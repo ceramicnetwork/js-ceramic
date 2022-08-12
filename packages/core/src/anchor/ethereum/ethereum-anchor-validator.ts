@@ -16,6 +16,7 @@ interface EthNetwork {
   chainId: number
   networkId: number
   type: string
+  endpoint?: string
 }
 
 /**
@@ -26,7 +27,14 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
   'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
   'eip155:4': { network: 'rinkeby', chain: 'ETH', chainId: 4, networkId: 4, type: 'Test' },
   'eip155:5': { network: 'goerli', chain: 'ETH', chainId: 5, networkId: 5, type: 'Test' },
-  'eip155:100': { network: 'mainnet', chain: 'Gnosis', chainId: 100, networkId: 100, type: 'Test' },
+  'eip155:100': {
+    network: 'mainnet',
+    chain: 'Gnosis',
+    chainId: 100,
+    networkId: 100,
+    type: 'Test',
+    endpoint: 'https://rpc.ankr.com/gnosis',
+  },
 }
 
 const BASE_CHAIN_ID = 'eip155'
@@ -258,13 +266,15 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    if (this.ethereumRpcEndpoint) {
-      const provider = new providers.JsonRpcProvider(this.ethereumRpcEndpoint)
+    const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
+    const endpoint = this.ethereumRpcEndpoint || ethNetwork?.endpoint
+
+    if (endpoint) {
+      const provider = new providers.JsonRpcProvider(endpoint)
       this.providersCache.set(chain, provider)
       return provider
     }
 
-    const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
     if (ethNetwork == null) {
       throw new Error(`No ethereum provider available for chainId ${chain}`)
     }
