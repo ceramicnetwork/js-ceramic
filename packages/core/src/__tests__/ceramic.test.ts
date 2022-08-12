@@ -14,7 +14,6 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import first from 'it-first'
 
 function createCeramic(
   ipfs: IpfsApi,
@@ -29,11 +28,6 @@ function createCeramic(
 
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
-}
-
-async function isPinned(ceramic: Ceramic, streamId: StreamID): Promise<boolean> {
-  const iterator = await ceramic.pin.ls(streamId)
-  return (await first(iterator)) == streamId.toString()
 }
 
 describe('Ceramic integration', () => {
@@ -536,7 +530,7 @@ describe('Ceramic integration', () => {
       const resolvedStream = res[streamID.toString()]
       expect(resolvedStream.content).toEqual({})
       expect(resolvedStream.metadata).toEqual(metadata)
-      const pinned = await isPinned(ceramic2, streamID)
+      const pinned = await TestUtils.isPinned(ceramic2, streamID)
       expect(pinned).toBeTruthy()
 
       await ceramic1.close()
