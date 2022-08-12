@@ -1,6 +1,9 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import {
+  ModelInstanceDocument,
+  ModelInstanceDocumentMetadata,
+} from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
   CommitData,
@@ -15,10 +18,14 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
+
+interface ModelInstanceDocumentHeader extends ModelInstanceDocumentMetadata {
+  unique?: Uint8Array
+}
 
 /**
  * ModelInstanceDocument stream handler implementation
@@ -82,33 +89,37 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
-    const isSigned = StreamUtils.isSignedCommitData(commitData)
-    if (!isSigned) {
-      throw Error('ModelInstanceDocument genesis commit must be signed')
-    }
+    const { controllers, model } = payload.header
+    const controller = controllers[0]
+    const modelStreamID = StreamID.fromBytes(model)
+    const streamId = await StreamID.fromGenesis('MID', commitData.commit)
+    const metadata = { controllers: [controller], model: modelStreamID }
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
-
-    const streamId = await StreamID.fromGenesis('MID', commitData.commit)
-    const { controllers, model } = payload.header
-    const controller = controllers[0]
-    const modelStreamID = StreamID.fromBytes(model)
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      modelStreamID,
-      streamId
-    )
-
     if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
       throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
     }
 
-    const metadata = { controllers: [controller], model: modelStreamID }
-    const state = {
+    const isSigned = StreamUtils.isSignedCommitData(commitData)
+    if (isSigned) {
+      await SignatureUtils.verifyCommitSignature(
+        commitData,
+        context.did,
+        controller,
+        modelStreamID,
+        streamId
+      )
+    } else if (payload.data || payload.header.unique) {
+      throw Error('ModelInstanceDocument genesis commit with content must be signed')
+    }
+
+    const modelStream = await context.api.loadStream<Model>(metadata.model)
+    await this._validateContent(modelStream, payload.data, true)
+    await this._validateHeader(modelStream, payload.header)
+
+    return {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata,
@@ -116,10 +127,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
-
-    await this._validateContent(context, state.metadata.model, state.content)
-
-    return state
   }
 
   /**
@@ -155,7 +162,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     const oldContent = state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    await this._validateContent(context, metadata.model, newContent)
+    const modelStream = await context.api.loadStream<Model>(metadata.model)
+    await this._validateContent(modelStream, newContent, false)
 
     const nextState = cloneDeep(state)
     nextState.signature = SignatureStatus.SIGNED
@@ -197,13 +205,41 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
   /**
    * Validates content against the schema of the model stream with given stream id
-   * @param context - Ceramic context
-   * @param modelStreamId - model stream's id
+   * @param model - The model that this ModelInstanceDocument belongs to
    * @param content - content to validate
+   * @param genesis - whether the commit being applied is a genesis commit
    * @private
    */
-  async _validateContent(context: Context, modelStreamId: StreamID, content: any): Promise<void> {
-    const model = await context.api.loadStream<Model>(modelStreamId)
-    await this._schemaValidator.validateSchema(content, model.content.schema)
+  async _validateContent(model: Model, content: any, genesis: boolean): Promise<void> {
+    if (genesis && model.content.accountRelation == ModelAccountRelation.SINGLE) {
+      if (content) {
+        throw new Error(
+          `Deterministic genesis commits for ModelInstanceDocuments must not have content`
+        )
+      }
+    } else {
+      await this._schemaValidator.validateSchema(content, model.content.schema)
+    }
+  }
+
+  /**
+   * Validates the ModelInstanceDocument header against the Model definition.
+   * @param model - The model that this ModelInstanceDocument belongs to
+   * @param header - the header to validate
+   */
+  async _validateHeader(model: Model, header: ModelInstanceDocumentHeader): Promise<void> {
+    if (model.content.accountRelation == ModelAccountRelation.SINGLE) {
+      if (header.unique) {
+        throw new Error(
+          `ModelInstanceDocuments for models with SINGLE accountRelations must be created deterministically`
+        )
+      }
+    } else {
+      if (!header.unique) {
+        throw new Error(
+          `Deterministic ModelInstanceDocuments are only allowed on models that have the SINGLE accountRelation`
+        )
+      }
+    }
   }
 }

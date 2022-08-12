@@ -21,6 +21,7 @@ import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { LocalIndexApi } from '../indexing/local-index-api.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -42,6 +43,7 @@ export class StateManager {
    * @param logger - Logger
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
+   * @param indexStreamIfNeeded - `Repository#indexStreamIfNeeded`
    */
   constructor(
     private readonly dispatcher: Dispatcher,
@@ -54,7 +56,9 @@ export class StateManager {
     private readonly load: (
       streamId: StreamID,
       opts?: LoadOpts | CreateOpts
-    ) => Promise<RunningState>
+    ) => Promise<RunningState>,
+    private readonly indexStreamIfNeeded,
+    private readonly _index: LocalIndexApi | undefined
   ) {}
 
   /**
@@ -186,7 +190,11 @@ export class StateManager {
 
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
-    if (isPinned) {
+    // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
+    const shouldIndex =
+      state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
+    await this.indexStreamIfNeeded(state$)
+    if (isPinned || shouldIndex) {
       await this.pinStore.add(state$)
     }
   }
@@ -200,17 +208,23 @@ export class StateManager {
    *
    * @param streamId
    * @param tip - Stream Tip CID
-   * @private
+   * @param model - Model Stream ID
    */
-  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
-    this.fromMemoryOrStore(streamId).then((state$) => {
-      if (!state$) {
-        return
-      }
-      this.executionQ.forStream(streamId).add(async () => {
-        await this._handleTip(state$, tip)
-      })
+  async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    let state$ = await this.fromMemoryOrStore(streamId)
+    const shouldIndex = model && this._index.shouldIndexStream(model)
+    if (!shouldIndex && !state$) {
+      // stream isn't pinned or indexed, nothing to do
+      return
+    }
+
+    if (!state$) {
+      state$ = await this.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._handleTip(state$, tip)
     })
+    await this.indexStreamIfNeeded(state$)
   }
 
   /**

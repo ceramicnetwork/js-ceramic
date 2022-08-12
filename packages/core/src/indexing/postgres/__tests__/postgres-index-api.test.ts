@@ -136,7 +136,6 @@ describe('indexStream', () => {
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
     lastAnchor: null,
-    firstAnchor: null,
   }
 
   let indexApi: PostgresIndexApi
