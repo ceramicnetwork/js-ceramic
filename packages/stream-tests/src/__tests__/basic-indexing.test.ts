@@ -52,7 +52,7 @@ const extractDocuments = function (
   )
 }
 
-describe('ModelInstanceDocument API http-client tests', () => {
+describe('Basic end-to-end indexing query test', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
@@ -102,7 +102,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     })
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
-  }, 12000 * 10) // todo revert
+  }, 30 * 1000)
 
   afterEach(async () => {
     await ceramic.close()
