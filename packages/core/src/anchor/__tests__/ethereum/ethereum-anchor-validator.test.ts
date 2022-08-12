@@ -1,6 +1,8 @@
 import { jest } from '@jest/globals'
 import { LoggerProvider, AnchorValidator, AnchorProof } from '@ceramicnetwork/common'
 import { CID } from 'multiformats'
+import { decode } from 'multiformats/hashes/digest'
+import * as uint8arrays from 'uint8arrays'
 
 const TEST_CHAIN_ID = '1337'
 const ANCHOR_PROOF: AnchorProof = {
@@ -11,6 +13,8 @@ const ANCHOR_PROOF: AnchorProof = {
   root: CID.parse('bafyreic5p7grucmzx363ayxgoywb6d4qf5zjxgbqjixpkokbf5jtmdj5ni'),
   version: 1,
 }
+const TX_HASH =
+  '0x' + uint8arrays.toString(decode(ANCHOR_PROOF.txHash.multihash.bytes).digest, 'base16')
 const TEST_TRANSACTION = {
   data: '0x7d3b0ca2000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000250f017112205d7fcd1a0999befdb062e6762c1f0f902f729b98304a2ef539412f53360d3d6a000000000000000000000000000000000000000000000000000000',
   blockNumber: ANCHOR_PROOF.blockNumber,
@@ -24,7 +28,8 @@ const MockJsonRpcProvider = {
   getBlock: null,
 
   reset() {
-    this.getTransaction = jest.fn(() => {
+    this.getTransaction = jest.fn((txHash) => {
+      expect(txHash).toEqual(TX_HASH)
       return Promise.resolve(TEST_TRANSACTION)
     })
     this.getNetwork = jest.fn(() => {
