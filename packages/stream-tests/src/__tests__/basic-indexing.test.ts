@@ -114,7 +114,7 @@ describe('Basic end-to-end indexing query test', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
 
     const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
-    const results = await extractDocuments(ceramic, resultObj)
+    const results = extractDocuments(ceramic, resultObj)
 
     expect(results.length).toEqual(1)
     expect(results[0].id.toString()).toEqual(doc.id.toString())
@@ -129,7 +129,7 @@ describe('Basic end-to-end indexing query test', () => {
     const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
     const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
-    const results = await extractDocuments(ceramic, resultObj)
+    const results = extractDocuments(ceramic, resultObj)
 
     expect(results.length).toEqual(3)
     expect(results[0].id.toString()).toEqual(doc1.id.toString())
@@ -163,13 +163,11 @@ describe('Basic end-to-end indexing query test', () => {
     })
     expect(resultObj2.pageInfo.hasNextPage).toBeFalsy()
 
-    const results = (
-      await Promise.all([
-        extractDocuments(ceramic, resultObj0),
-        extractDocuments(ceramic, resultObj1),
-        extractDocuments(ceramic, resultObj2),
-      ])
-    ).flat()
+    const results = [
+      extractDocuments(ceramic, resultObj0),
+      extractDocuments(ceramic, resultObj1),
+      extractDocuments(ceramic, resultObj2),
+    ].flat()
 
     expect(results.length).toEqual(5)
     expect(results[0].id.toString()).toEqual(doc1.id.toString())
@@ -193,7 +191,7 @@ describe('Basic end-to-end indexing query test', () => {
     console.log(`docIds: [${doc1.id.toString()}, ${doc2.id.toString()}, ${doc3.id.toString()}]`)
 
     const resultObj = await ceramic.index.queryIndex({ model: model.id, last: 100 })
-    const results = await extractDocuments(ceramic, resultObj)
+    const results = extractDocuments(ceramic, resultObj)
 
     // Using `last` doesn't change the order of documents returned within each page
     expect(results.length).toEqual(3)
@@ -228,13 +226,11 @@ describe('Basic end-to-end indexing query test', () => {
     })
     expect(resultObj2.pageInfo.hasPreviousPage).toBeFalsy()
 
-    const results = (
-      await Promise.all([
-        extractDocuments(ceramic, resultObj2),
-        extractDocuments(ceramic, resultObj1),
-        extractDocuments(ceramic, resultObj0),
-      ])
-    ).flat()
+    const results = [
+      extractDocuments(ceramic, resultObj2),
+      extractDocuments(ceramic, resultObj1),
+      extractDocuments(ceramic, resultObj0),
+    ].flat()
 
     // Using `last` doesn't change the order of documents returned within each page, it just changes
     // the order of the pages themselves.
