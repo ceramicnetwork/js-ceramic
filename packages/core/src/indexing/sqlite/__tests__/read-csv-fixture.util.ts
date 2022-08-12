@@ -21,6 +21,7 @@ export function readCsvFixture(filepath: URL) {
           model: MODEL,
           streamID: StreamID.fromString(row.stream_id),
           controller: row.controller,
+          streamContent: row.stream_content ? row.stream_content : '{}',
           lastAnchor: row.last_anchored_at
             ? new Date(Number(row.last_anchored_at) * 1000)
             : undefined,
