@@ -230,24 +230,24 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     const results = (
       await Promise.all([
-        extractDocuments(ceramic, resultObj0),
-        extractDocuments(ceramic, resultObj1),
         extractDocuments(ceramic, resultObj2),
+        extractDocuments(ceramic, resultObj1),
+        extractDocuments(ceramic, resultObj0),
       ])
     ).flat()
 
     // Using `last` doesn't change the order of documents returned within each page, it just changes
     // the order of the pages themselves.
     expect(results.length).toEqual(5)
-    expect(results[0].id.toString()).toEqual(doc4.id.toString())
-    expect(results[0].content).toEqual(CONTENT4)
-    expect(results[1].id.toString()).toEqual(doc5.id.toString())
-    expect(results[1].content).toEqual(CONTENT5)
-    expect(results[2].id.toString()).toEqual(doc2.id.toString())
-    expect(results[2].content).toEqual(CONTENT2)
-    expect(results[3].id.toString()).toEqual(doc3.id.toString())
-    expect(results[3].content).toEqual(CONTENT3)
-    expect(results[4].id.toString()).toEqual(doc1.id.toString())
-    expect(results[4].content).toEqual(CONTENT1)
+    expect(results[0].id.toString()).toEqual(doc1.id.toString())
+    expect(results[0].content).toEqual(CONTENT1)
+    expect(results[1].id.toString()).toEqual(doc2.id.toString())
+    expect(results[1].content).toEqual(CONTENT2)
+    expect(results[2].id.toString()).toEqual(doc3.id.toString())
+    expect(results[2].content).toEqual(CONTENT3)
+    expect(results[3].id.toString()).toEqual(doc4.id.toString())
+    expect(results[3].content).toEqual(CONTENT4)
+    expect(results[4].id.toString()).toEqual(doc5.id.toString())
+    expect(results[4].content).toEqual(CONTENT5)
   })
 })
