@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { IpfsApi, CeramicApi, SyncOptions } from '@ceramicnetwork/common'
+import { IpfsApi, CeramicApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import * as u8a from 'uint8arrays'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -10,8 +10,6 @@ import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-import { StreamID } from '@ceramicnetwork/streamid'
-import first from 'it-first'
 
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
@@ -77,11 +75,6 @@ async function createDeterministicStream(
   )
 }
 
-async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
-  const iterator = await ceramic.pin.ls(streamId)
-  return (await first(iterator)) == streamId.toString()
-}
-
 describe('Ceramic stream pinning', () => {
   jest.setTimeout(60000)
   let ipfs1: IpfsApi
@@ -116,7 +109,7 @@ describe('Ceramic stream pinning', () => {
   it('Stream pinned will retain data on restart', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', true)
-    await expect(isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
     const content = { some: 'data' }
     await stream1.update(content)
     expect(stream1.content).toEqual(content)
@@ -200,7 +193,7 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })
@@ -212,7 +205,7 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -225,7 +218,7 @@ describe('Ceramic stream pinning', () => {
       pin: false,
     })
     await stream.update({ foo: 'baz' })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -236,13 +229,13 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await ceramic.pin.rm(stream.id, { publish: false })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'foobarbaz' })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
 
@@ -253,11 +246,11 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false, pin: true })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
 
@@ -267,13 +260,13 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await TileDocument.load(ceramic, stream.id)
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await ceramic.pin.rm(stream.id, { publish: false })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -285,11 +278,11 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
-    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })

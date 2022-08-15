@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { IpfsApi, Page, StreamState } from '@ceramicnetwork/common'
+import { IpfsApi, Page, StreamState, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -111,7 +111,9 @@ describe('Basic end-to-end indexing query test', () => {
   })
 
   test('basic query', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
+    // Indexed streams should always get pinned, regardless of the 'pin' flag
+    await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
 
     const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
     const results = extractDocuments(ceramic, resultObj)

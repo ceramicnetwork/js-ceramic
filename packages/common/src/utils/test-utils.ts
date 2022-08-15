@@ -9,6 +9,7 @@ import type { StreamState, Stream } from '../stream.js'
 import { RunningStateLike } from '../running-state-like.js'
 import { AnchorStatus } from '../stream.js'
 import type { CeramicApi } from '../ceramic-api.js'
+import first from 'it-first'
 
 const SHA256_CODE = 0x12
 
@@ -58,6 +59,11 @@ export class TestUtils {
     return new Promise<void>((resolve) => {
       setTimeout(() => resolve(), ms)
     })
+  }
+
+  static async isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
+    const iterator = await ceramic.pin.ls(streamId)
+    return (await first(iterator)) == streamId.toString()
   }
 
   static randomCID(): CID {

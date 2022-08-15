@@ -1,29 +1,21 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CeramicApi, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
-  ModelInstanceDocumentMetadata,
   ModelInstanceDocumentMetadataArgs,
 } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { StreamID } from '@ceramicnetwork/streamid'
-import first from 'it-first'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
-
-async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
-  const iterator = await ceramic.pin.ls(streamId)
-  return (await first(iterator)) == streamId.toString()
-}
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -106,8 +98,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
-    await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
-    await expect(isPinned(ceramic, doc.metadata.model)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.metadata.model)).resolves.toBeTruthy()
   })
 
   test('Create and update doc', async () => {
@@ -206,7 +198,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
   test('create respects pin flag', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
-    await expect(isPinned(ceramic, doc.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()
   })
 
   test('replace respects anchor flag', async () => {
@@ -219,19 +211,19 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
   test('replace respects pin flag', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-    await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
     await doc.replace(CONTENT1, { pin: false })
-    await expect(isPinned(ceramic, doc.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()
   })
 
   test(`Pinning a ModelInstanceDocument pins its Model`, async () => {
     // Unpin Model streams so we can test that pinning the MID causes the Model to become pinned
     await ceramic.pin.rm(model.id)
-    await expect(isPinned(ceramic, model.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, model.id)).resolves.toBeFalsy()
 
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-    await expect(isPinned(ceramic, doc.id)).resolves.toBeTruthy()
-    await expect(isPinned(ceramic, model.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, model.id)).resolves.toBeTruthy()
   })
 })
 
