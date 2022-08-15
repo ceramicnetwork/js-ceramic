@@ -363,9 +363,11 @@ export class ConflictResolution {
     const selectedState = await pickLogToAccept(localState, remoteState)
     if (selectedState === localState) {
       if (opts.throwOnInvalidCommit) {
-        const commit = unappliedCommits[unappliedCommits.length - 1]
+        const commit = unappliedCommits[unappliedCommits.length - 1].cid
+        const streamId = StreamUtils.streamIdFromState(localState)
+        const tip = localState.log[localState.log.length - 1].cid
         throw new Error(
-          `Commit rejected by conflict resolution. Rejected commit CID: ${commit.cid.toString()} `
+          `Commit to stream ${streamId.toString()} rejected by conflict resolution. Rejected commit CID: ${commit.toString()}. Current tip: ${tip.toString()}`
         )
       }
       return null

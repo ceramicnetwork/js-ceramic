@@ -448,7 +448,7 @@ test('handles basic conflict', async () => {
       streamState1,
       CommitID.make(streamId, tipInvalidUpdate)
     )
-  ).rejects.toThrow(/Commit rejected by conflict resolution/)
+  ).rejects.toThrow(/rejected by conflict resolution/)
 
   // Ensure that stateManager.atCommit does not mutate the passed in state object
   expect(JSON.stringify(streamState1.state)).toEqual(JSON.stringify(streamState1Original))

@@ -265,7 +265,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // should be rejected by conflict resolution
     expect(streamOg.state.log.length).toEqual(1)
     await expect(streamOg.update(contentRejected)).rejects.toThrow(
-      /Commit rejected by conflict resolution/
+      /rejected by conflict resolution/
     )
     expect(streamOg.state.log.length).toEqual(1)
 
