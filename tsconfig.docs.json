@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["./packages/client/src", "./packages/devtools/src", "./packages/devtools-node/src"],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["DOM", "ES2020"],
+    "skipLibCheck": true
+  },
+  "typedocOptions": {
+    "name": "Ceramic API",
+    "readme": "none",
+    "entryDocument": "index.md",
+    "entryPoints": [],
+    "disableSources": true,
+    "excludeExternals": true,
+    "excludeInternal": true,
+    "excludePrivate": true,
+    "githubPages": false,
+    "hideBreadcrumbs": true,
+    "hideInPageTOC": true
+  }
+}
