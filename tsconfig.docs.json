@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./packages/client/src", "./packages/devtools/src", "./packages/devtools-node/src"],
+  "include": ["./packages/cli/src"],
   "compilerOptions": {
     "jsx": "preserve",
     "lib": ["DOM", "ES2020"],
@@ -10,7 +10,9 @@
     "name": "Ceramic API",
     "readme": "none",
     "entryDocument": "index.md",
-    "entryPoints": [],
+    "entryPoints": [
+      "./packages/cli/src/index.ts",
+    ],
     "disableSources": true,
     "excludeExternals": true,
     "excludeInternal": true,
