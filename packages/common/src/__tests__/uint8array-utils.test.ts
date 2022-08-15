@@ -1,4 +1,4 @@
-import { base64urlToJSON, JSONToBase64Url } from '../utils/uint8array-utils'
+import { base64urlToJSON, JSONToBase64Url } from '../utils/uint8array-utils.js'
 
 describe('utils', () => {
   test('base64Url encoding round-trip', () => {

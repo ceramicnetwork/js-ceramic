@@ -5,6 +5,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
+  ModelInstanceDocumentMetadataArgs,
 } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
@@ -50,7 +51,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let daemon: CeramicDaemon
   let ceramic: CeramicClient
   let model: Model
-  let midMetadata: ModelInstanceDocumentMetadata
+  let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
@@ -242,7 +243,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let ceramic0: Ceramic
   let ceramic1: Ceramic
   let model: Model
-  let midMetadata: ModelInstanceDocumentMetadata
+  let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'

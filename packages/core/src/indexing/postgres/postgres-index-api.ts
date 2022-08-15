@@ -1,5 +1,5 @@
 import { StreamID } from 'streamid/lib/stream-id.js'
-import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
+import type { BaseQuery, Pagination, Page, DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js'
 import { initTables, verifyTables } from './init-tables.js'
 import { InsertionOrder } from './insertion-order.js'
@@ -13,7 +13,8 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   constructor(
     private readonly dbConnection: Knex,
     readonly modelsToIndex: Array<StreamID>,
-    private readonly allowQueriesBeforeHistoricalSync: boolean
+    private readonly allowQueriesBeforeHistoricalSync: boolean,
+    private readonly logger: DiagnosticsLogger
   ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
@@ -36,6 +37,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
         stream_id: String(args.streamID),
         controller_did: String(args.controller),
         last_anchored_at: args.lastAnchor,
+        first_anchored_at: args.firstAnchor,
         created_at: args.createdAt || this.dbConnection.fn.now(),
         updated_at: args.updatedAt || this.dbConnection.fn.now(),
       })
@@ -54,12 +56,12 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verify(validTableStructure: Object): Promise<void> {
+  async verify(validTableStructure: object): Promise<void> {
     await verifyTables(this.dbConnection, this.modelsToIndex, validTableStructure)
   }
 
   async init(): Promise<void> {
-    await initTables(this.dbConnection, this.modelsToIndex)
+    await initTables(this.dbConnection, this.modelsToIndex, this.logger)
     await this.verify(validTableStructure)
   }
 

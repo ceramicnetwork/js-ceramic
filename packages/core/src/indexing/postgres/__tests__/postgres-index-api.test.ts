@@ -8,10 +8,12 @@ import { asTableName } from '../../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../../index-query-not-available.error.js'
 import { listMidTables } from '../init-tables.js'
 import { Model } from '@ceramicnetwork/stream-model'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const CONTROLLER = 'did:key:foo'
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let dbConnection: Knex
 jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
@@ -46,7 +48,7 @@ describe('init', () => {
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true)
+      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true, logger)
       await indexApi.init()
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
@@ -55,7 +57,7 @@ describe('init', () => {
 
     test('table creation is idempotent', async () => {
       const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true)
+      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true, logger)
       await indexApi.init()
       // init again to make sure we don't error trying to re-create the tables
       await indexApi.init()
@@ -75,7 +77,7 @@ describe('init', () => {
       }
 
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true)
+      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true, logger)
       await indexApi.init()
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
@@ -88,7 +90,7 @@ describe('init', () => {
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new PostgresIndexApi(dbConnection, modelsA, true)
+      const indexApiA = new PostgresIndexApi(dbConnection, modelsA, true, logger)
       await indexApiA.init()
       const createdA = await listMidTables(dbConnection)
       const tableNamesA = modelsA.map(asTableName)
@@ -96,7 +98,7 @@ describe('init', () => {
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new PostgresIndexApi(dbConnection, modelsB, true)
+      const indexApiB = new PostgresIndexApi(dbConnection, modelsB, true, logger)
       await indexApiB.init()
       const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map(asTableName)
@@ -112,7 +114,7 @@ describe('close', () => {
     const fauxDbConnection = {
       destroy: jest.fn(),
     } as unknown as Knex
-    const indexApi = new PostgresIndexApi(fauxDbConnection, [], true)
+    const indexApi = new PostgresIndexApi(fauxDbConnection, [], true, logger)
     await indexApi.close()
     expect(fauxDbConnection.destroy).toBeCalled()
   })
@@ -134,12 +136,11 @@ describe('indexStream', () => {
     streamID: StreamID.fromString(STREAM_ID_B),
     controller: CONTROLLER,
     lastAnchor: null,
-    firstAnchor: null,
   }
 
   let indexApi: PostgresIndexApi
   beforeEach(async () => {
-    indexApi = new PostgresIndexApi(dbConnection, MODELS_TO_INDEX, true)
+    indexApi = new PostgresIndexApi(dbConnection, MODELS_TO_INDEX, true, logger)
     await indexApi.init()
   })
 
@@ -152,6 +153,7 @@ describe('indexStream', () => {
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
     expect(raw.last_anchored_at).toBeNull()
+    expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)
     const updatedAt = new Date(raw.updated_at)
     expect(closeDates(createdAt, now)).toBeTruthy()
@@ -166,6 +168,7 @@ describe('indexStream', () => {
       ...STREAM_CONTENT,
       updatedAt: updateTime,
       lastAnchor: updateTime,
+      firstAnchor: updateTime,
     }
     // It updates the fields if a stream is present.
     await indexApi.indexStream(updatedStreamContent)
@@ -176,6 +179,8 @@ describe('indexStream', () => {
     expect(raw.controller_did).toEqual(CONTROLLER)
     const lastAnchor = new Date(raw.last_anchored_at)
     expect(closeDates(lastAnchor, updateTime)).toBeTruthy()
+    const firstAnchor = new Date(raw.last_anchored_at)
+    expect(closeDates(firstAnchor, updateTime)).toBeTruthy()
     const updatedAt = new Date(raw.updated_at)
     expect(closeDates(updatedAt, updateTime)).toBeTruthy()
     const createdAt = new Date(raw.created_at)
@@ -187,7 +192,7 @@ describe('page', () => {
   const FAUX_DB_CONNECTION = {} as unknown as Knex
 
   test('call the order if historical sync is allowed', async () => {
-    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, [], true)
+    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, [], true, logger)
     const mockPage = jest.fn(async () => {
       return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
     })
@@ -196,7 +201,7 @@ describe('page', () => {
     expect(mockPage).toBeCalled()
   })
   test('throw if historical sync is not allowed', async () => {
-    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, [], false)
+    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, [], false, logger)
     await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
       IndexQueryNotAvailableError
     )

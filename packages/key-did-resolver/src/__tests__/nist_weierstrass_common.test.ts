@@ -1,6 +1,6 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
-import * as mapper from "../nist_weierstrass_common"
+import * as mapper from "../nist_weierstrass_common.js"
 import * as u8a from 'uint8arrays'
 
 test('test a hex string with unexpected input', () => {
@@ -196,7 +196,7 @@ test('convert raw public key as a hex string into an x,y point with x and y base
   };
   const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
   expect(base64urlPoint).toEqual(output);
-});  
+});
 
 test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
       expect(() => {
@@ -273,7 +273,7 @@ test('convert a public key x,y where x and y are integers to a pair of Uint8Arra
                   };
 
    const u8aPoint = mapper.publicKeyIntToUint8ArrayPointPair(ecpoint);
-   expect(u8aPoint).toEqual(output);   
+   expect(u8aPoint).toEqual(output);
 });
 
 test('key compression (y-coordinate even)', () => {
@@ -292,17 +292,17 @@ test('key compression (y-coordinate even)', () => {
 test('key compression (y-coordinate odd) key#2', () => {
    const inputPublicKeyHex = '7f235830dd3defa722ef1aa249d6a0ddbba4f990b0817538933f573640653542856da88d335f1fb25b8bcfbe089528dce09b1f7cb99fdd60f88300f4c2cc6d35'
    const output = Uint8Array.from([3,127,35,88,48,221,61,239,167,34,239,26,162,73,214,160,221,187,164,249,144,176,129,117,56,147,63,87,54,64,101,53,66]);
-   
+
    const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
    const compressedPoint = ECPointCompress(u8aPoint.xOctet, u8aPoint.yOctet);
-   
+
    expect(compressedPoint).toEqual(output);
 });
 
 test('key compression (y-coordinate odd)', () => {
    const inputPublicKeyHex = 'f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
    const output = Uint8Array.from([3,249,195,111,137,100,98,51,120,189,192,104,212,188,224,126,209,124,143,164,134,249,172,12,38,19,202,60,140,48,109,123,182]);
- 
+
    const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
    const compressedPoint = ECPointCompress(u8aPoint.xOctet, u8aPoint.yOctet);
 
@@ -317,13 +317,13 @@ test('raw public key as hex string to x,y point with x and y as uint8Arrays', ()
                               126, 209, 124, 143, 164, 134, 249,
                               172,  12,  38,  19, 202,  60, 140,
                               48, 109, 123, 182
-                               ] ) , 
+                               ] ) ,
                     yOctet : Uint8Array.from([
                                28, 211, 103,  23, 184, 172,  94,  79,
                                234, 138, 210, 61, 200, 208, 120,  60,
                                35,  24, 238,  74, 215, 168,  13, 182,
                                224,  2, 106, 208, 176, 114, 162,  79
-                               ] ) 
+                               ] )
                   };
 
      const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
@@ -334,7 +334,7 @@ test('show how to compress a raw public key in hex and return a compressed key i
    const inputPublicKeyHex = 'f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f';
    const output = '03f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6';
    const compresedKey = compresedKeyInHex(inputPublicKeyHex);
-   expect(compresedKey).toEqual(output);   
+   expect(compresedKey).toEqual(output);
 });
 
 test('show how to convert a raw public key in hex and return an uncompressed key in hex', () => {
@@ -370,7 +370,7 @@ test('test null in pubKeyHexToUint8Array', () => {
    const inputPublicKeyHex = null;
    expect(() => {
       pubKeyHexToUint8Array(inputPublicKeyHex);
-   }).toThrowError('input cannot be null or undefined.');   
+   }).toThrowError('input cannot be null or undefined.');
 });
 
 test('test undefined in pubKeyHexToUint8Array', () => {
@@ -391,9 +391,9 @@ test('test an empty string in pubKeyHexToUint8Array', () => {
 
 test('test compresedKeyInHex with an empty string', () => {
    const inputPublicKeyHex = '';
-   const compressedKey = compresedKeyInHex(inputPublicKeyHex);   
+   const compressedKey = compresedKeyInHex(inputPublicKeyHex);
    expect(compressedKey).toBeDefined();
-   expect(compressedKey).not.toBeNull();   
+   expect(compressedKey).not.toBeNull();
 });
 
 test('test compresedKeyInHex with null', () => {
@@ -418,11 +418,11 @@ test('test compresedKeyInHex with undefined', () => {
 // source: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression
 function ECPointCompress( x: Uint8Array, y: Uint8Array )
 {
- 
+
    if(x == null || y == null) {
      throw new TypeError('input cannot be null or undefined.');
     }
-  
+
    const out = new Uint8Array( x.length + 1 );
 
     out[0] = 2 + ( y[ y.length-1 ] & 1 );
@@ -436,7 +436,7 @@ function pubKeyHexToUint8Array(publicKeyHex: string) {
    throw new TypeError('input cannot be null or undefined.');
   }
     if(publicKeyHex.length % 2 == 0) {
-          return u8a.fromString(publicKeyHex,'base16');          	 
+          return u8a.fromString(publicKeyHex,'base16');
       } else {
           return u8a.fromString(('0'+publicKeyHex),'base16');
     }

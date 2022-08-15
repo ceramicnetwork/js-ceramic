@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.6.0-rc.1](/compare/@ceramicnetwork/cli@2.5.1...@ceramicnetwork/cli@2.6.0-rc.1) (2022-08-11)
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag (#2339) df53df4, closes #2339
+* **cli:** Undeprecate read-only CLI commands (#2364) 7db84e0, closes #2364
+* **core:** working implementation of indexable anchors Phase 2 (#2315) 987cd43, closes #2315
+
+
+
+
+
+# [2.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.5.0...@ceramicnetwork/cli@2.6.0-rc.0) (2022-08-10)
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag ([#2339](https://github.com/ceramicnetwork/js-ceramic/issues/2339)) ([df53df4](https://github.com/ceramicnetwork/js-ceramic/commit/df53df49a480884d9d97da452a19a6e96a0633a4))
+* **cli:** Undeprecate read-only CLI commands ([#2364](https://github.com/ceramicnetwork/js-ceramic/issues/2364)) ([7db84e0](https://github.com/ceramicnetwork/js-ceramic/commit/7db84e01f47bb54f811db346bcdf672f29ae7bfc))
+* **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+
+
+## [2.5.1](/compare/@ceramicnetwork/cli@2.5.0...@ceramicnetwork/cli@2.5.1) (2022-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+# [2.5.0](/compare/@ceramicnetwork/cli@2.5.0-rc.1...@ceramicnetwork/cli@2.5.0) (2022-08-08)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [2.5.0-rc.1](/compare/@ceramicnetwork/cli@2.5.0-rc.0...@ceramicnetwork/cli@2.5.0-rc.1) (2022-07-26)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

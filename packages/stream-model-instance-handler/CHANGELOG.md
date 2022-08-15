@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.4.1-rc.0...@ceramicnetwork/stream-model-instance-handler@0.5.0-rc.0) (2022-08-11)
+
+
+### Features
+
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations (#2356) a39d5e2, closes #2356
+
+
+
+
+
+## [0.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0...@ceramicnetwork/stream-model-instance-handler@0.4.1-rc.0) (2022-08-10)
+
+
+### Bug Fixes
+
+* **stream-model-instance-handler,streamid:** Fix test snapshots with new Uint8Array format ([#2349](https://github.com/ceramicnetwork/js-ceramic/issues/2349)) ([8c7f239](https://github.com/ceramicnetwork/js-ceramic/commit/8c7f2398136f799feac9a3ba875d23063793ee9b))
+
+
+
+
+
+# [0.4.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.2...@ceramicnetwork/stream-model-instance-handler@0.4.0) (2022-08-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
 # [0.4.0-rc.2](/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.4.0-rc.2) (2022-07-26)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

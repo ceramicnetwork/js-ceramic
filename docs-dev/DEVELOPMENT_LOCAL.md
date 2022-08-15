@@ -12,12 +12,14 @@ Open the js-ceramic project.  Set the Run/Debug configuration template (under Ru
 ![edit configuration templates](https://user-images.githubusercontent.com/798887/169563176-f6e15e71-8bf3-4f7f-a5d4-ce90732067e1.png)
 
 
-Note this uses the __*dev-unstable*__ network, it is also possible to configure for clay testnet.  The Application parameters used in this example are:
+The Application parameters used in this example are:
 
 ```
 daemon --port 7007 --hostname 0.0.0.0 --network dev-unstable --anchor-service-api https://cas-dev.3boxlabs.com --debug true --ethereum-rpc https://rinkeby.infura.io/v3/b6685df41e1647c4be0046dfa62a020b
 ```
 This configuration will allow running the ceramic daemon from the debugger and setting breakpoints in the daemon.
+
+__*Note*__ that using `--network dev-unstable` will cause your node connecting to unstable development ceramic network. You can also make it connect to clay testnet with `--network clay-testnet` or, if you want your node to be completely isolated from any network, without the need to run a local CAS service, you can also use `--network inmemory`.
 
 
 ## PRE-REQUISITES

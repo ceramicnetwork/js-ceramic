@@ -2,7 +2,7 @@
 
 import varint from "varint"
 import { base58btc } from 'multiformats/bases/base58'
-import * as mapper from "../secp384r1"
+import * as mapper from "../secp384r1.js"
 import * as u8a from 'uint8arrays'
 
 describe('Secp384r1 mapper', () => {
@@ -26,7 +26,7 @@ describe('Secp384r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
-    
+
     it('Secp384r1 mapper successfully resolves the document from did:key from raw public key #3', async () => {
         const id = "zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27";
 
@@ -36,7 +36,7 @@ describe('Secp384r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
-    
+
     it('Secp384r1 mapper successfully resolves the document from did:key from compressed public key', async () => {
         const id = "z82Lm1MpAkeJcix9K8TMiLd5NMAhnwkjjCBeWHXyu3U4oT2MVJJKXkcVBgjGhnLBn2Kaau9"
 
@@ -56,7 +56,7 @@ describe('Secp384r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
-  
+
     it('Secp384r1 mapper successfully resolves the document from did:key from compressed public key #3', async () => {
         const id = "z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA"
 
@@ -66,7 +66,7 @@ describe('Secp384r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
-    
+
     // testing the key from the did:key from the uncompressed public key
     it('successfully resolves the document from did', async () => {
         const id = "z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ"
@@ -77,7 +77,7 @@ describe('Secp384r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
-    
+
     // testing the key from the did:key from the uncompressed public key
     it('successfully resolves the document from did', async () => {
         const id = "z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz";
@@ -88,7 +88,7 @@ describe('Secp384r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
     })
-    
+
 
 
 })
@@ -136,7 +136,7 @@ test('test a uncompressed public key in hex to an x,y point with x, and y url wi
       mapper.pubKeyBytesToXY(publicKey_u8a);
    }).toThrowError('Unexpected pubKeyBytes');
 });
-  
+
 test('test a uncompressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefix that is too long', () => {
    const inputPublicKeyHex = '03041d73367caac24ba6ef7a2cc6b32cb525ef806dbf4a9044507863fbc2e441ad9425f17021104e76637f844db9aec27168d967d6543947d9fbdb82021b9942a0a9f0e48cfd6075e69ae3674f6724368e42561bf73dbf107a0ed17e92858aa36f07';
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
@@ -266,7 +266,7 @@ test('key decompression (y-coordinate odd)', () => {
 test('key decompression (y-coordinate odd) key#2', () => {
 
    const inputCompressedPoint = Uint8Array.from([ 3, 171,  37, 12,  72, 230,  28, 207, 37, 101, 156, 140,  69, 139, 233, 213,  25,  26,  99, 179, 80,  88, 236,  18,  49,  84,  35, 158, 171, 117, 128, 162, 150,  77, 208, 229,  89, 196, 110, 214, 41, 237,  36,  9, 182, 118, 204, 121, 43 ]);
-   
+
    const output = {
         x: 26341583073126796700418388682664298992635319922642610490472596881255947259679994775386951611010846056313433587743019n,
         y: 36342522670550545791098022209848857466288485673789913258992953762740028300348932631529997025438540520232064962412623n

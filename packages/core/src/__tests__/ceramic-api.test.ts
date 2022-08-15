@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, StreamUtils, IpfsApi, TestUtils, CommitType } from '@ceramicnetwork/common'
+import { AnchorStatus, StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -173,8 +173,8 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
 
-      // TODO: NET-1614 Extend with targeted payload comparison
-      const addIndexSpy = jest.spyOn(ceramic._index, 'indexStream')
+      // TODO (NET-1614): Extend with targeted payload comparison
+      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
       expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }

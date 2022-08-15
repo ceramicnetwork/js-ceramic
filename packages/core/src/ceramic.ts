@@ -47,7 +47,6 @@ import * as path from 'path'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { makeIndexApi } from './initialization/make-index-api.js'
-import { RunningState } from './state-management/running-state.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -224,6 +223,7 @@ export class Ceramic implements CeramicApi {
       this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
+    const localIndex = new LocalIndexApi(modules.indexing, this.repository, this._logger)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -231,8 +231,10 @@ export class Ceramic implements CeramicApi {
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
+      indexing: localIndex,
     })
-    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+    // TODO (NET-1687): remove indexing part of refactor to push indexing into state-manager.ts
+    this._index = localIndex
   }
 
   get index(): IndexApi {
@@ -626,38 +628,9 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    await this.indexStreamIfNeeded(stream)
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
-  }
-
-  /**
-   * Helper function to add stream to db index if it has a 'model' in its metadata.
-   * @param stream
-   * @private
-   */
-  private async indexStreamIfNeeded(stream: Stream): Promise<void> {
-    if (!stream.metadata.model) {
-      return
-    }
-
-    const asDate = (unixTimestamp: number | null | undefined) => {
-      return unixTimestamp ? new Date(unixTimestamp * 1000) : null
-    }
-
-    // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
-    const lastAnchor = asDate(stream.state.anchorProof?.blockTimestamp)
-    const firstAnchor = asDate(
-      stream.state.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
-    )
-    const STREAM_CONTENT = {
-      model: stream.metadata.model,
-      streamID: stream.id,
-      controller: stream.metadata.controller,
-      lastAnchor: lastAnchor,
-      firstAnchor: firstAnchor,
-    }
-    await this._index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -696,7 +669,7 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    await this.indexStreamIfNeeded(stream)
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }

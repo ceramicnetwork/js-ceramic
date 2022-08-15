@@ -3,6 +3,7 @@ import type { Knex } from 'knex'
 import { createModelTable } from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Model } from '@ceramicnetwork/stream-model'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 /**
  * List existing mid tables.
@@ -19,11 +20,16 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
 /**
  * Create mid tables and corresponding indexes.
  */
-export async function initTables(dbConnection: Knex, modelsToIndex: Array<StreamID>) {
+export async function initTables(
+  dbConnection: Knex,
+  modelsToIndex: Array<StreamID>,
+  logger: DiagnosticsLogger
+) {
   const existingTables = await listMidTables(dbConnection)
   const expectedTables = modelsToIndex.map(asTableName)
   const tablesToCreate = expectedTables.filter((tableName) => !existingTables.includes(tableName))
   for (const tableName of tablesToCreate) {
+    logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
     await createModelTable(dbConnection, tableName)
   }
 }
@@ -38,7 +44,7 @@ export async function initTables(dbConnection: Knex, modelsToIndex: Array<Stream
 export async function verifyTables(
   dataSource: Knex,
   modelsToIndex: Array<StreamID>,
-  validTableStructure: Object
+  validTableStructure: object
 ) {
   const tables = await listMidTables(dataSource)
   const validSchema = JSON.stringify(validTableStructure)

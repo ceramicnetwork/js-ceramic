@@ -8,7 +8,7 @@ const verifySignature = async (
   pubKey: Uint8Array,
   message: string,
   signature: Uint8Array
-): Promise<Boolean> => {
+): Promise<boolean> => {
   const verified = verify(pubKey, uint8arrays.fromString(message), signature)
   return verified
 }

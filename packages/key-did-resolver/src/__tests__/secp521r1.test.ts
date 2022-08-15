@@ -2,7 +2,7 @@
 
 import varint from "varint"
 import { base58btc } from 'multiformats/bases/base58'
-import * as mapper from "../secp521r1"
+import * as mapper from "../secp521r1.js"
 import * as u8a from 'uint8arrays'
 
 describe('Secp521r1 mapper', () => {
@@ -19,7 +19,7 @@ describe('Secp521r1 mapper', () => {
 
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
-        const id = "z2J9gaYxrKVpdoG9A4gRnmpnRCcxU6agDtFVVBVdn1JedouoZN7SzcyREXXzWgt3gGiwpoHq7K68X4m32D8HgzG8wv3sY5j7"   
+        const id = "z2J9gaYxrKVpdoG9A4gRnmpnRCcxU6agDtFVVBVdn1JedouoZN7SzcyREXXzWgt3gGiwpoHq7K68X4m32D8HgzG8wv3sY5j7"
 	const multiformatPubKey = base58btc.decode(id);
         varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
         const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
@@ -39,7 +39,7 @@ describe('Secp521r1 mapper', () => {
 
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
-        const id = "z2J9gcGTLNfNooB4Mvx7qeEBccSWARJ3y1xjwbMH9A7ra6oq71rD1daVSVm2YmjUZRWJms18QTZXTnhaH5ihiKiVaG52cuAs"   
+        const id = "z2J9gcGTLNfNooB4Mvx7qeEBccSWARJ3y1xjwbMH9A7ra6oq71rD1daVSVm2YmjUZRWJms18QTZXTnhaH5ihiKiVaG52cuAs"
         const multiformatPubKey = base58btc.decode(id);
         varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
         const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
@@ -49,7 +49,7 @@ describe('Secp521r1 mapper', () => {
 
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
-        const id = "z2J9gaZDkUkcV4j5nMPp4dzks3vygMwKRSZWg9j7HNYcR5JLRu361LN6TwrBK3r19VisFYUZEGEXhqqffAprjgmVtCwfCUB1"  
+        const id = "z2J9gaZDkUkcV4j5nMPp4dzks3vygMwKRSZWg9j7HNYcR5JLRu361LN6TwrBK3r19VisFYUZEGEXhqqffAprjgmVtCwfCUB1"
 	const multiformatPubKey = base58btc.decode(id);
         varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
         const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
@@ -57,7 +57,7 @@ describe('Secp521r1 mapper', () => {
         expect(doc).toMatchSnapshot()
      })
 
-    
+
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
         const id = "z2J9gaYd3MzVdZSQDj1zqsxv2tLD5Np3oD7G5F5dHbsF7Sbf1ovGkRfFcaUZMSSDKheREWxapez3vzVwkRYvrSMt4PM4Am1z"
@@ -78,7 +78,7 @@ describe('Secp521r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
      })
-  
+
      // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
         const id = "z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6"
@@ -101,7 +101,7 @@ describe('Secp521r1 mapper', () => {
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
      })
-  
+
 })
 
 test('expect ECPointDecompress to throw an error for undefined', () => {

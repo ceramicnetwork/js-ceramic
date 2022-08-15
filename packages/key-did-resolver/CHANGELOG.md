@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.6...key-did-resolver@2.1.0-rc.0) (2022-08-10)
+
+
+### Features
+
+* **key-did-resolver:** Use upstream bigint-mod-arith package ([#2355](https://github.com/ceramicnetwork/js-ceramic/issues/2355)) ([b0cfa9c](https://github.com/ceramicnetwork/js-ceramic/commit/b0cfa9cd5b3700de98d7cc5bb458ace0eae824d4))
+
+
+
+
+
+## [2.0.6](/compare/key-did-resolver@2.0.6-rc.0...key-did-resolver@2.0.6) (2022-08-08)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
 ## [2.0.6-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@2.0.5...key-did-resolver@2.0.6-rc.0) (2022-07-06)
 
 **Note:** Version bump only for package key-did-resolver
