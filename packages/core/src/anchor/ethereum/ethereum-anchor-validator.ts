@@ -4,7 +4,6 @@ import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
-import { base16 } from 'multiformats/bases/base16'
 import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
@@ -69,13 +68,13 @@ const ANCHOR_CONTRACT_ADDRESSES = {
 
 const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
   const withoutPrefix = txResponse.data.replace(/^(0x0?)/, '')
-  return CID.parse(withoutPrefix, base16)
+  return CID.decode(uint8arrays.fromString(withoutPrefix.slice(1), 'base16'))
 }
 
 const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
   const decodedArgs = iface.decodeFunctionData('anchorDagCbor', txResponse.data)
   const rootCID = decodedArgs[0]
-  const multihash = createMultihash(SHA256_CODE, base16.baseDecode(rootCID.slice(2)))
+  const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootCID.slice(2), 'base16'))
   return CID.create(1, dagCBOR.code, multihash)
 }
 
