@@ -169,7 +169,7 @@ describe('indexStream', () => {
         )
       )
     expect(result.length).toEqual(1)
-    let raw = result[0]
+    const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
     expect(raw.stream_content).toEqual(STREAM_TEST_DATA_PROFILE)
@@ -183,16 +183,14 @@ describe('indexStream', () => {
     expect(raw.dark_mode).toEqual(STREAM_TEST_DATA_PROFILE.settings.dark_mode)
     expect(raw.id).toEqual(STREAM_TEST_DATA_PROFILE.id)
 
-    // create jsonb index
+    // create index on jsonb content
     result = await dbConnection.raw(
       `CREATE INDEX idx_postgres_jsonb ON ${MODELS_TO_INDEX[0]}(stream_id, (stream_content->'settings'->'dark_mode'))`
     )
     expect(result.command).toEqual('CREATE')
 
     // verify index usage
-    await dbConnection.raw(
-      `SET enable_seqscan = off;`
-    )
+    await dbConnection.raw(`SET enable_seqscan = off;`)
     result = await dbConnection.raw(
       `EXPLAIN SELECT *
        FROM ${MODELS_TO_INDEX[0]}
@@ -203,7 +201,7 @@ describe('indexStream', () => {
     expect(result.rows.length).toBeGreaterThan(0)
     expect(result.rows[0]['QUERY PLAN'].includes('idx_postgres_jsonb')).toBeTruthy()
 
-    // test direct object filter access in content (jsonb) through SQL
+    // test direct object filter access in content (jsonb)
     result = await dbConnection
       .from(`${MODELS_TO_INDEX[0]}`)
       .select('*')
