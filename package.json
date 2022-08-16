@@ -1,5 +1,13 @@
 {
   "name": "root",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "scripts": {
     "postinstall": "npx lerna bootstrap --hoist --ci",
     "test": "npx lerna exec npm t",

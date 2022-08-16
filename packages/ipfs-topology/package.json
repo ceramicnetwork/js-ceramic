@@ -6,7 +6,14 @@
     "ipfs",
     "ceramic"
   ],
-  "homepage": "https://ceramic.network",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "license": "(Apache-2.0 OR MIT)",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
