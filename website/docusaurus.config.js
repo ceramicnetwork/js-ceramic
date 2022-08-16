@@ -92,7 +92,7 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Forum',
+                label: 'Form',
                 href: 'https://forum.ceramic.network/',
               },
               {
