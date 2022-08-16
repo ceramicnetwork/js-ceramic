@@ -365,6 +365,7 @@ export class Repository {
       streamID: state$.id,
       controller: state$.value.metadata.controller,
       streamContent: state$.value.content,
+      tip: state$.tip,
       lastAnchor: lastAnchor,
       firstAnchor: firstAnchor,
     }

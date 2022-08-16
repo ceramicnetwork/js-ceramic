@@ -1,11 +1,13 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
+import { CID } from 'multiformats/cid'
 
 export interface IndexStreamArgs {
   readonly streamID: StreamID
   readonly model: StreamID
   readonly controller: string
   readonly streamContent: Record<string, any>
+  readonly tip: CID
   readonly lastAnchor: Date | null
   readonly firstAnchor: Date | null
 }

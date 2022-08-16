@@ -193,10 +193,10 @@ export class StateManager {
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
     const shouldIndex =
       state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
-    await this.indexStreamIfNeeded(state$)
     if (isPinned || shouldIndex) {
       await this.pinStore.add(state$)
     }
+    await this.indexStreamIfNeeded(state$)
   }
 
   publishTip(state$: RunningState): void {

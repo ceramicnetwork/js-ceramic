@@ -9,11 +9,22 @@ import { IndexQueryNotAvailableError } from '../../index-query-not-available.err
 import { listMidTables } from '../init-tables.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { STREAM_TEST_DATA_PROFILE } from './postgres-index-api.fixture.js'
+import { CID } from 'multiformats/cid'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const CONTROLLER = 'did:key:foo'
+const STREAM_TEST_DATA_PROFILE = {
+  id: 'bea4d783-6496-4a28-bf02-6603e56edf0a',
+  name: 'Joeline Bradshaw',
+  address: 'Attitudes Road 5270, Adena, Dominica, 509754',
+  birthDate: '02.02.2009',
+  email: 'zebediah_mundygg3@us.va',
+  settings: {
+    dark_mode: true,
+  },
+}
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let dbConnection: Knex
@@ -136,6 +147,7 @@ describe('indexStream', () => {
     model: MODELS_TO_INDEX[0],
     streamID: StreamID.fromString(STREAM_ID_B),
     streamContent: STREAM_TEST_DATA_PROFILE,
+    tip: FAKE_CID,
     controller: CONTROLLER,
     lastAnchor: null,
   }
@@ -149,18 +161,54 @@ describe('indexStream', () => {
   test('new stream', async () => {
     const now = new Date()
     await indexApi.indexStream(STREAM_CONTENT)
-    const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
+    let result: Array<any> = await dbConnection
+      .from(`${MODELS_TO_INDEX[0]}`)
+      .select(
+        dbConnection.raw(
+          `*, stream_content->'settings'->'dark_mode' AS dark_mode, stream_content->>'id' AS id`
+        )
+      )
     expect(result.length).toEqual(1)
-    const raw = result[0]
+    let raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
     expect(raw.stream_content).toEqual(STREAM_TEST_DATA_PROFILE)
+    expect(raw.tip).toEqual(FAKE_CID.toString())
     expect(raw.last_anchored_at).toBeNull()
     expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)
     const updatedAt = new Date(raw.updated_at)
     expect(closeDates(createdAt, now)).toBeTruthy()
     expect(closeDates(updatedAt, now)).toBeTruthy()
+    expect(raw.dark_mode).toEqual(STREAM_TEST_DATA_PROFILE.settings.dark_mode)
+    expect(raw.id).toEqual(STREAM_TEST_DATA_PROFILE.id)
+
+    // create jsonb index
+    result = await dbConnection.raw(
+      `CREATE INDEX idx_postgres_jsonb ON ${MODELS_TO_INDEX[0]}(stream_id, (stream_content->'settings'->'dark_mode'))`
+    )
+    expect(result.command).toEqual('CREATE')
+
+    // verify index usage
+    await dbConnection.raw(
+      `SET enable_seqscan = off;`
+    )
+    result = await dbConnection.raw(
+      `EXPLAIN SELECT *
+       FROM ${MODELS_TO_INDEX[0]}
+       WHERE stream_id='${STREAM_ID_B}'
+         AND (stream_content->'settings'->>'dark_mode')::BOOLEAN IS true;`
+    )
+    expect(result.command).toEqual('EXPLAIN')
+    expect(result.rows.length).toBeGreaterThan(0)
+    expect(result.rows[0]['QUERY PLAN'].includes('idx_postgres_jsonb')).toBeTruthy()
+
+    // test direct object filter access in content (jsonb) through SQL
+    result = await dbConnection
+      .from(`${MODELS_TO_INDEX[0]}`)
+      .select('*')
+      .whereRaw(`stream_content->'settings'->'dark_mode' = ?`, true)
+    expect(result.length).toEqual(1)
   })
 
   test('override stream', async () => {

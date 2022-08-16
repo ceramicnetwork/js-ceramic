@@ -22,6 +22,12 @@ export const validTableStructure = {
     nullable: false,
     defaultValue: "'{}'::jsonb",
   },
+  tip: {
+    type: 'character varying',
+    maxLength: 255,
+    nullable: false,
+    defaultValue: null,
+  },
   last_anchored_at: {
     type: 'timestamp with time zone',
     maxLength: null,
