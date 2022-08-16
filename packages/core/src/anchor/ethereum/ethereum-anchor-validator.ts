@@ -6,10 +6,10 @@ import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
-import * as dagCBOR from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
 
 const SHA256_CODE = 0x12
+const DAG_CBOR_CODE = 0x71
 
 /**
  * Ethereum network configuration
@@ -75,7 +75,7 @@ const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
   const decodedArgs = iface.decodeFunctionData('anchorDagCbor', txResponse.data)
   const rootCID = decodedArgs[0]
   const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootCID.slice(2), 'base16'))
-  return CID.create(1, dagCBOR.code, multihash)
+  return CID.create(1, DAG_CBOR_CODE, multihash)
 }
 
 /**
