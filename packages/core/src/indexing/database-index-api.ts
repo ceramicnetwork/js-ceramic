@@ -5,7 +5,7 @@ export interface IndexStreamArgs {
   readonly streamID: StreamID
   readonly model: StreamID
   readonly controller: string
-  readonly streamContent: string
+  readonly streamContent: Record<string, any>
   readonly lastAnchor: Date | null
   readonly firstAnchor: Date | null
 }
