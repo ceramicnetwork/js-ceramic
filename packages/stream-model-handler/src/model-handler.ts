@@ -67,11 +67,11 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
-    if (!process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING != 'true') {
       context.loggerProvider
         .getDiagnosticsLogger()
         .err(
-          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_INDEXING environment variable'
+          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_INDEXING environment variable to `true`'
         )
       throw new Error('Indexing is not enabled')
     }
