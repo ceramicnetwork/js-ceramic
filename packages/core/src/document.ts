@@ -378,6 +378,7 @@ class Document extends EventEmitter {
    * Applies the log to the document
    *
    * @param log - Log of commit CIDs
+   * @returns - true if the remote log is applied, false if we stick with the current local log.
    * @private
    */
   async _applyLog (log: Array<CID>): Promise<boolean> {
@@ -400,28 +401,13 @@ class Document extends EventEmitter {
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
       let state: DocState = await this._applyLogToState(canonicalLog)
-      // Compute next transition in parallel
+      // Compute both localState (what we currently have) and remoteState
+      // (what we would get from applying the log).
       const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
       const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
 
       const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
       const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
-
-      if (!isLocalAnchored && !isRemoteAnchored) {
-        // if none of them is anchored, apply the log
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
-        modified = true
-      }
-
-      if (!isLocalAnchored && isRemoteAnchored) {
-        // if the remote state is anchored before the local,
-        // apply the remote log to our local state. Otherwise
-        // keep present state
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
-        modified = true
-      }
 
       if (isLocalAnchored && isRemoteAnchored) {
         // compare anchor proofs if both states are anchored
@@ -433,6 +419,22 @@ class Document extends EventEmitter {
           this._doctype.state = state
           modified = true
         }
+      }
+
+      if (!isLocalAnchored && isRemoteAnchored) {
+        // if the remote state is anchored before the local,
+        // apply the remote log to our local state. Otherwise
+        // keep present state
+        state = await this._applyLogToState(log, cloneDeep(state))
+        this._doctype.state = state
+        modified = true
+      }
+
+      if (!isLocalAnchored && !isRemoteAnchored) {
+        // if none of them is anchored, apply the log
+        state = await this._applyLogToState(log, cloneDeep(state))
+        this._doctype.state = state
+        modified = true
       }
     }
     return modified
