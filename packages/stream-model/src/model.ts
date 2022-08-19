@@ -242,17 +242,6 @@ export class Model extends Stream {
     signer: CeramicSigner,
     content: Partial<ModelDefinition>,
     metadata?: ModelMetadataArgs
-  ): Promise<SignedCommitContainer> {
-    return this._makeRawGenesis(signer, content, metadata)
-  }
-
-  /**
-   * Helper function for _makeGenesis() to allow unit tests to update the commit before it is signed.
-   */
-  private static async _makeRawGenesis(
-    signer: CeramicSigner,
-    content: Partial<ModelDefinition>,
-    metadata?: ModelMetadataArgs
   ): Promise<GenesisCommit> {
     if (content == null) {
       throw new Error(`Genesis content cannot be null`)
@@ -270,7 +259,6 @@ export class Model extends Stream {
    * mutation methods on the instance will throw.
    */
   makeReadOnly() {
-    this.replacePlaceholder = throwReadOnlyError
     this.sync = throwReadOnlyError
     this._isReadOnly = true
   }
