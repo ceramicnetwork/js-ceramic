@@ -46,10 +46,10 @@ export class SqliteIndexApi implements DatabaseIndexApi {
 
     await this.dbConnection(tableName)
       .insert({
-        stream_id: String(args.streamID),
-        controller_did: String(args.controller),
-        stream_content: String(args.streamContent),
-        tip: String(args.tip),
+        stream_id: args.streamID.toString(),
+        controller_did: args.controller.toString(),
+        stream_content: args.streamContent.toString(),
+        tip: args.tip.toString(),
         last_anchored_at: asTimestamp(args.lastAnchor),
         first_anchored_at: asTimestamp(args.firstAnchor),
         created_at: asTimestamp(args.createdAt) || now,

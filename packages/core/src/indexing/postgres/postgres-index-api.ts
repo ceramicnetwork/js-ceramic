@@ -34,10 +34,10 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     // created_at and last_updated_at set by default value
     await this.dbConnection(tableName)
       .insert({
-        stream_id: String(args.streamID),
-        controller_did: String(args.controller),
+        stream_id: args.streamID.toString(),
+        controller_did: args.controller.toString(),
         stream_content: args.streamContent,
-        tip: String(args.tip),
+        tip: args.tip.toString(),
         last_anchored_at: args.lastAnchor,
         first_anchored_at: args.firstAnchor,
         created_at: args.createdAt || this.dbConnection.fn.now(),

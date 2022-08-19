@@ -20,7 +20,7 @@ export const validTableStructure = {
     type: 'jsonb',
     maxLength: null,
     nullable: false,
-    defaultValue: "'{}'::jsonb",
+    defaultValue: null,
   },
   tip: {
     type: 'character varying',

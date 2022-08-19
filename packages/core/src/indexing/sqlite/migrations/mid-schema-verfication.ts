@@ -20,7 +20,7 @@ export const validTableStructure = {
     type: 'varchar',
     maxLength: '255',
     nullable: false,
-    defaultValue: "'{}'",
+    defaultValue: null,
   },
   tip: {
     type: 'varchar',
