@@ -31,7 +31,7 @@
     "eslint-import-resolver-typescript": "^3.4.0",
     "jest": "^28.1.1",
     "jest-resolver-enhanced": "^1.0.1",
-    "lerna": "^4.0.0",
+    "lerna": "^5.4.3",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "typedoc": "^0.23.2",
