@@ -1,6 +1,6 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 
 export interface IndexStreamArgs {
   readonly streamID: StreamID
