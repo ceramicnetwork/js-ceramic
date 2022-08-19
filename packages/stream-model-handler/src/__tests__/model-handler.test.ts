@@ -300,7 +300,7 @@ describe('ModelHandler', () => {
       type: CommitType.GENESIS,
       commit: genesisCommit,
     }
-    let state = await handler.applyCommit(genesisCommitData, context)
+    const state = await handler.applyCommit(genesisCommitData, context)
 
     // apply signed
     const signedCommitData = {
