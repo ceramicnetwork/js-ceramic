@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.4...@ceramicnetwork/stream-tile-handler@2.2.5) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+
 ## [2.2.4](/compare/@ceramicnetwork/stream-tile-handler@2.2.4-rc.2...@ceramicnetwork/stream-tile-handler@2.2.4) (2022-08-08)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

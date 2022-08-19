@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-crust-backend@2.0.9...@ceramicnetwork/pinning-crust-backend@2.0.10) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-crust-backend
+
+
+
+
+
+
 ## [2.0.9](/compare/@ceramicnetwork/pinning-crust-backend@2.0.9-rc.2...@ceramicnetwork/pinning-crust-backend@2.0.9) (2022-08-08)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-crust-backend

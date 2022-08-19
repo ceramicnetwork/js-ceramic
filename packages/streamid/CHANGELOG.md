@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.3.0...@ceramicnetwork/streamid@2.3.1) (2022-08-19)
+
+
+### Bug Fixes
+
+* **stream-model-instance-handler,streamid:** Fix test snapshots with new Uint8Array format ([#2349](https://github.com/ceramicnetwork/js-ceramic/issues/2349)) ([d40a19a](https://github.com/ceramicnetwork/js-ceramic/commit/d40a19acac88b45d6539d94b8039363e0c650b92))
+
+
+
+
+
+
 # [2.3.0](/compare/@ceramicnetwork/streamid@2.3.0-rc.1...@ceramicnetwork/streamid@2.3.0) (2022-08-08)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
