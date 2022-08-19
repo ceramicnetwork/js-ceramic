@@ -97,26 +97,9 @@ export class ModelHandler implements StreamHandler<Model> {
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
-    if (!isSigned) {
-      throw Error('Model genesis commit must be signed')
+    if (isSigned) {
+      throw Error('Model genesis commit can not be signed')
     }
-
-    if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
-      throw new Error('Exactly one controller must be specified')
-    }
-
-    const streamId = await StreamID.fromGenesis('model', commitData.commit)
-    const { controllers, model } = payload.header
-    const controller = controllers[0]
-    const modelStreamID = StreamID.fromBytes(model)
-
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      modelStreamID,
-      streamId
-    )
 
     assertNoExtraKeys(payload.data)
 
@@ -127,21 +110,19 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
-    const metadata = { controllers: [controller], model: modelStreamId }
+    const metadata = { controllers: [], model: modelStreamId }
     const state = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data,
       metadata,
-      signature: SignatureStatus.SIGNED,
+      signature: SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
-    if (state.content.schema) {
-      await this._schemaValidator.validateSchema(state.content.schema)
-      if (state.content.views) {
-        this._viewsValidator.validateViews(state.content.views, state.content.schema)
-      }
+    await this._schemaValidator.validateSchema(state.content.schema)
+    if (state.content.views) {
+      this._viewsValidator.validateViews(state.content.views, state.content.schema)
     }
 
     return state
@@ -159,46 +140,7 @@ export class ModelHandler implements StreamHandler<Model> {
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
-    // Retrieve the payload
-    const payload = commitData.commit
-    StreamUtils.assertCommitLinksToState(state, payload)
-
-    // Verify the signature
-    const metadata = state.metadata
-    const controller = metadata.controllers[0]
-    const model = metadata.model
-    const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
-
-    if (payload.header) {
-      throw new Error(
-        `Updating metadata for Model Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
-          state.metadata
-        )} to ${JSON.stringify(payload.header)}\``
-      )
-    }
-
-    const oldContent: ModelDefinition = state.content
-    if (oldContent.name && oldContent.schema && oldContent.accountRelation) {
-      throw new Error('Cannot update a finalized Model')
-    }
-    const newContent: ModelDefinition = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    // Cannot update a placeholder Model other than to finalize it.
-    Model.assertComplete(newContent, streamId)
-    assertNoExtraKeys(newContent)
-
-    await this._schemaValidator.validateSchema(newContent.schema)
-    if (newContent.views) {
-      this._viewsValidator.validateViews(newContent.views, newContent.schema)
-    }
-
-    const nextState = cloneDeep(state)
-    nextState.signature = SignatureStatus.SIGNED
-    nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
-    nextState.content = newContent
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
-
-    return nextState
+    throw new Error('Cannot update a finalized Model')
   }
 
   /**

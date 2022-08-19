@@ -166,43 +166,6 @@ export class Model extends Stream {
   }
 
   /**
-   * Create an incomplete Model that can be updated later to add the missing required fields
-   * and finalize the Model.  This is useful when there is a circular relationship between multiple
-   * models and so you need to know a Model's StreamID before finalizing it.
-   * @param ceramic
-   * @param content
-   * @param metadata
-   */
-  static async createPlaceholder(
-    ceramic: CeramicApi,
-    content: Partial<ModelDefinition>,
-    metadata?: ModelMetadataArgs
-  ): Promise<Model> {
-    const opts: CreateOpts = {
-      publish: false,
-      anchor: false,
-      pin: false,
-      sync: SyncOptions.NEVER_SYNC,
-      throwOnInvalidCommit: true,
-    }
-    const commit = await Model._makeGenesis(ceramic, content, metadata)
-    return ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
-  }
-
-  /**
-   * Update an existing placeholder Model. Must update the model to its final content, setting
-   * all required fields, finalizing and publishing the model, and preventing all future updates.
-   * @param content - Final content for the Model
-   */
-  async replacePlaceholder(content: ModelDefinition): Promise<void> {
-    Model.assertComplete(content, this.id)
-    const opts: UpdateOpts = { publish: true, anchor: true, pin: true, throwOnInvalidCommit: true }
-    const updateCommit = await this._makeCommit(this.api, content)
-    const updated = await this.api.applyCommit(this.id, updateCommit, opts)
-    this.state$.next(updated.state)
-  }
-
-  /**
    * Asserts that all the required fields for the Model are set, and throws an error if not.
    * @param streamId
    * @param content
@@ -270,36 +233,6 @@ export class Model extends Stream {
   }
 
   /**
-   * Make a commit to update the Model
-   * @param signer - Object containing the DID making (and signing) the commit
-   * @param newContent
-   */
-  private async _makeCommit(
-    signer: CeramicSigner,
-    newContent: ModelDefinition
-  ): Promise<CeramicCommit> {
-    const commit = this._makeRawCommit(newContent)
-    return Model._signDagJWS(signer, commit)
-  }
-
-  /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
-   */
-  private _makeRawCommit(newContent: ModelDefinition): RawCommit {
-    if (newContent == null) {
-      throw new Error(`Cannot set Model content to null`)
-    }
-
-    const patch = jsonpatch.compare(this.content, newContent)
-    return {
-      data: patch,
-      prev: this.tip,
-      id: this.state.log[0].cid,
-    }
-  }
-
-  /**
    * Create genesis commit.
    * @param signer - Object containing the DID making (and signing) the commit
    * @param content - genesis content
@@ -310,8 +243,7 @@ export class Model extends Stream {
     content: Partial<ModelDefinition>,
     metadata?: ModelMetadataArgs
   ): Promise<SignedCommitContainer> {
-    const commit: GenesisCommit = await this._makeRawGenesis(signer, content, metadata)
-    return Model._signDagJWS(signer, commit)
+    return this._makeRawGenesis(signer, content, metadata)
   }
 
   /**
@@ -326,19 +258,7 @@ export class Model extends Stream {
       throw new Error(`Genesis content cannot be null`)
     }
 
-    if (!metadata || !metadata.controller) {
-      if (signer.did) {
-        await _ensureAuthenticated(signer)
-        // When did has a parent, it has a capability, and the did issuer (parent) of the capability
-        // is the stream controller
-        metadata = { controller: signer.did.hasParent ? signer.did.parent : signer.did.id }
-      } else {
-        throw new Error('No controller specified')
-      }
-    }
-
     const header: GenesisHeader = {
-      controllers: [metadata.controller],
       unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
@@ -357,19 +277,5 @@ export class Model extends Stream {
 
   get isReadOnly(): boolean {
     return this._isReadOnly
-  }
-
-  /**
-   * Sign a Model commit with the currently authenticated DID.
-   * @param signer - Object containing the DID to use to sign the commit
-   * @param commit - Commit to be signed
-   * @private
-   */
-  private static async _signDagJWS(
-    signer: CeramicSigner,
-    commit: CeramicCommit
-  ): Promise<SignedCommitContainer> {
-    await _ensureAuthenticated(signer)
-    return signer.did.createDagJWS(commit)
   }
 }
