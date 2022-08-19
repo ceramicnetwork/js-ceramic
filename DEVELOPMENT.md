@@ -55,6 +55,22 @@ This repository contains many different JavaScript packages. The main reason for
 ## Creating a release
 This repo uses lerna to make releases of all packages which have been changed. There are two types of releases that can be made, release candidates and regular releases. Before creating any releases, make sure you have an npm account (you can sign up at https://www.npmjs.com/), have signed into that account on the command line with `npm adduser`, and that the account has been added to the @ceramicnetwork org on npm.
 
+### Validating the release build
+After merging the changes you want to release into the relevant branch (main or release-candidate), you should build and verify the docker image before triggering the release to make sure nothing is broken.
+
+First, install Dagger:
+`curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.2.21 sh`
+
+Then, in js-ceramic root:
+```
+dagger project init
+dagger project update
+dagger project update github.com/3box/pipeline-tools@v0.1.4
+dagger do verify --log-format=plain -p cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
+dagger do testJs --log-format=plain -p cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
+dagger do testGo --log-format=plain -p cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
+```
+
 ### Release candidate
 ```
 export GH_TOKEN=<your github token>       # You need a valid github api token set to create the release on github

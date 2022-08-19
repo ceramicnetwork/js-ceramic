@@ -15,14 +15,15 @@ export async function createCeramic(
   config?: CeramicConfig & { seed?: string }
 ): Promise<Ceramic> {
   const stateStoreDirectory = await tmp.tmpName()
-  const appliedConfig = {
+  const appliedConfig: CeramicConfig = {
     stateStoreDirectory: stateStoreDirectory,
     anchorOnRequest: false,
     streamCacheLimit: 100,
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: []
+      models: [],
+      allowQueriesBeforeHistoricalSync: false,
     },
     ...config,
   }

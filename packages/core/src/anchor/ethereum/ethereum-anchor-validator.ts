@@ -4,8 +4,12 @@ import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
-import { base16 } from 'multiformats/bases/base16'
 import { Interface } from '@ethersproject/abi'
+import { create as createMultihash } from 'multiformats/hashes/digest'
+import { CID } from 'multiformats/cid'
+
+const SHA256_CODE = 0x12
+const DAG_CBOR_CODE = 0x71
 
 /**
  * Ethereum network configuration
@@ -42,26 +46,50 @@ const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
 
-const ABI = ['function anchor(bytes)']
+const ABI = ['function anchorDagCbor(bytes32)']
 
 const iface = new Interface(ABI)
 
-//TODO (NET-1659): Finalize block number once CAS is creating smart contract anchors
+//TODO (NET-1659): Finalize block numbers and smart contract addresses once CAS is creating smart contract anchors
 const BLOCK_THRESHHOLDS = {
   'eip155:1': 1000000000, //mainnet
   'eip155:3': 1000000000, //ropsten
   'eip155:5': 1000000000, //goerli
+  'eip155:100': 1000000000, //gnosis
   'eip155:1337': 1, //ganache
 }
+const ANCHOR_CONTRACT_ADDRESSES = {
+  'eip155:1': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //mainnet
+  'eip155:3': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ropsten
+  'eip155:5': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //goerli
+  'eip155:100': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //gnosis
+  'eip155:1337': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ganache
+}
 
-/*
-type for overall validation result
-*/
-type ValidationResult = {
-  txResponse: TransactionResponse
-  block: Block
-  txValueHexNumber: number
-  rootValueHexNumber: number
+const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
+  const withoutPrefix = txResponse.data.replace(/^(0x0?)/, '')
+  return CID.decode(uint8arrays.fromString(withoutPrefix.slice(1), 'base16'))
+}
+
+const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
+  const decodedArgs = iface.decodeFunctionData('anchorDagCbor', txResponse.data)
+  const rootCID = decodedArgs[0]
+  const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootCID.slice(2), 'base16'))
+  return CID.create(1, DAG_CBOR_CODE, multihash)
+}
+
+/**
+ * Parses the transaction data to recover the CID.
+ * @param version version of the anchor proof. Version 1 anchor proofs are created using the official anchoring smart contract and must be parsed accordingly
+ * @param txResponse the retrieved transaction from the ethereum blockchain
+ * @returns
+ */
+const getCidFromTransaction = (version: number, txResponse: TransactionResponse): CID => {
+  if (version === 1) {
+    return getCidFromV1Transaction(txResponse)
+  } else {
+    return getCidFromV0Transaction(txResponse)
+  }
 }
 
 /**
@@ -178,63 +206,31 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
   }
 
-  /**
-   * Validate version 0 anchor proof on the chain by the reading tx data directly
-   * @param anchorProof - Anchor proof instance
-   */
-  async parseAnchorProofV0(anchorProof: AnchorProof): Promise<ValidationResult> {
-    const decoded = decode(anchorProof.txHash.multihash.bytes)
-    const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
-    const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    const txValueHexNumber = parseInt(transaction.data, 16)
-    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-    return { txResponse: transaction, block, txValueHexNumber, rootValueHexNumber }
-  }
-
-  /**
-   * Validate version 1 anchor proof on the chain by parsing first encoded parameter
-   * @param anchorProof - Anchor proof instance
-   */
-  async parseAnchorProofV1(anchorProof: AnchorProof): Promise<ValidationResult> {
-    const decoded = decode(anchorProof.txHash.multihash.bytes)
-    const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
-    const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    const decodedArgs = iface.decodeFunctionData('anchor', transaction.data)
-    const rootCID = decodedArgs[0]
-    const txValueHexNumber = parseInt(rootCID, 16)
-    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-    return { txResponse: transaction, block, txValueHexNumber, rootValueHexNumber }
-  }
-
-  async parseAnchorProof(anchorProof: AnchorProof): Promise<ValidationResult> {
-    if (anchorProof.version === 1) {
-      return this.parseAnchorProofV1(anchorProof)
-    } else {
-      return this.parseAnchorProofV0(anchorProof)
-    }
-  }
-
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-    const validationResult: ValidationResult = await this.parseAnchorProof(anchorProof)
-    if (validationResult.txValueHexNumber !== validationResult.rootValueHexNumber) {
+    const decoded = decode(anchorProof.txHash.multihash.bytes)
+    const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
+    const [txResponse, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
+    const txCid = getCidFromTransaction(anchorProof.version, txResponse)
+
+    if (!txCid.equals(anchorProof.root)) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
 
-    if (anchorProof.blockNumber !== validationResult.txResponse.blockNumber) {
+    if (anchorProof.blockNumber !== txResponse.blockNumber) {
       throw new Error(
-        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${validationResult.txResponse.blockNumber}`
+        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${txResponse.blockNumber}`
       )
     }
 
-    if (anchorProof.blockTimestamp !== validationResult.block.timestamp) {
+    if (anchorProof.blockTimestamp !== block.timestamp) {
       throw new Error(
-        `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${validationResult.block.timestamp}`
+        `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`
       )
     }
 
     // if the block number is greater than the threshold and the version is 0 or non existent
     if (
-      validationResult.txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId] &&
+      txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId] &&
       (anchorProof.version === 0 || !anchorProof.version)
     ) {
       throw new Error(
@@ -243,7 +239,16 @@ export class EthereumAnchorValidator implements AnchorValidator {
         } must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
       )
     }
-    //TODO (NET-1657): Add check to validateAnchorInclusion for ensuring contract addresses match the official contract address
+
+    if (anchorProof.version === 1 && txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]) {
+      throw new Error(
+        `Anchor was created using address ${
+          txResponse.to
+        }. This is not the official anchoring contract address ${
+          ANCHOR_CONTRACT_ADDRESSES[this._chainId]
+        }`
+      )
+    }
   }
 
   /**

@@ -3,17 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.4.1-rc.1](/compare/@ceramicnetwork/stream-model-handler@0.4.1-rc.0...@ceramicnetwork/stream-model-handler@0.4.1-rc.1) (2022-08-11)
+## [0.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.4.0...@ceramicnetwork/stream-model-handler@0.4.1) (2022-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler
 
-
-
-
-
-## [0.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.4.0...@ceramicnetwork/stream-model-handler@0.4.1-rc.0) (2022-08-10)
-
-**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
 
 
 
