@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
-    "build": "npx tsc -p tsconfig.json",
+    "build": "genversion --es6 src/version.ts && npx tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
