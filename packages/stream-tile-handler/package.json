@@ -31,7 +31,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.4.1",
+    "@ceramicnetwork/common": "^2.5.0-rc.1",
     "@ceramicnetwork/stream-tile": "^2.4.1",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
