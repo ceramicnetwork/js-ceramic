@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.5.2...@ceramicnetwork/stream-tests@2.6.0-rc.0) (2022-08-20)
+
+
+### Features
+
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+
+
+
+
+
+
 ## [2.5.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.5.1...@ceramicnetwork/stream-tests@2.5.2) (2022-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests
