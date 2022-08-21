@@ -31,7 +31,7 @@ export enum AnchorStatus {
 }
 
 export interface CommitHeader {
-  controllers?: Array<string>
+  controllers: Array<string>
   family?: string // deprecated
   model?: Uint8Array // StreamID encoded as byte array
   schema?: string // deprecated

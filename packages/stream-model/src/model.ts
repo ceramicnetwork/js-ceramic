@@ -1,16 +1,13 @@
-import jsonpatch from 'fast-json-patch'
 import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
   LoadOpts,
-  UpdateOpts,
   Stream,
   StreamConstructor,
   StreamStatic,
   SyncOptions,
   CeramicCommit,
   GenesisCommit,
-  RawCommit,
   CeramicApi,
   SignedCommitContainer,
   CeramicSigner,
@@ -242,12 +239,36 @@ export class Model extends Stream {
     signer: CeramicSigner,
     content: Partial<ModelDefinition>,
     metadata?: ModelMetadataArgs
+  ): Promise<SignedCommitContainer> {
+    const commit: GenesisCommit = await this._makeRawGenesis(signer, content, metadata)
+    return Model._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Helper function for _makeGenesis() to allow unit tests to update the commit before it is signed.
+   */
+  private static async _makeRawGenesis(
+    signer: CeramicSigner,
+    content: Partial<ModelDefinition>,
+    metadata?: ModelMetadataArgs
   ): Promise<GenesisCommit> {
     if (content == null) {
       throw new Error(`Genesis content cannot be null`)
     }
 
+    if (!metadata || !metadata.controller) {
+      if (signer.did) {
+        await _ensureAuthenticated(signer)
+        // When did has a parent, it has a capability, and the did issuer (parent) of the capability
+        // is the stream controller
+        metadata = { controller: signer.did.hasParent ? signer.did.parent : signer.did.id }
+      } else {
+        throw new Error('No controller specified')
+      }
+    }
+
     const header: GenesisHeader = {
+      controllers: [metadata.controller],
       unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
@@ -265,5 +286,19 @@ export class Model extends Stream {
 
   get isReadOnly(): boolean {
     return this._isReadOnly
+  }
+
+  /**
+   * Sign a Model commit with the currently authenticated DID.
+   * @param signer - Object containing the DID to use to sign the commit
+   * @param commit - Commit to be signed
+   * @private
+   */
+  private static async _signDagJWS(
+    signer: CeramicSigner,
+    commit: CeramicCommit
+  ): Promise<SignedCommitContainer> {
+    await _ensureAuthenticated(signer)
+    return signer.did.createDagJWS(commit)
   }
 }
