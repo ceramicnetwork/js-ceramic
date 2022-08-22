@@ -9,10 +9,33 @@ import { IndexQueryNotAvailableError } from '../../index-query-not-available.err
 import { listMidTables } from '../init-tables.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
+import { CID } from 'multiformats/cid'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const CONTROLLER = 'did:key:foo'
+const STREAM_TEST_DATA_PROFILE_A = {
+  id: 'bea4d783-6496-4a28-bf02-6603e56edf0a',
+  name: 'Joeline Bradshaw',
+  address: 'Attitudes Road 5270, Adena, Dominica, 509754',
+  birthDate: '02.02.2009',
+  email: 'zebediah_mundygg3@us.va',
+  settings: {
+    dark_mode: true,
+  },
+}
+const STREAM_TEST_DATA_PROFILE_B = {
+  id: '509a7076-b4db-476c-8800-88db91c34796',
+  name: 'Rainier Enciso',
+  address: 'Activation St 7366, Krasnoyarsk, Mauritius, 875222',
+  birthDate: '29.12.1974',
+  email: 'dia_demelodked@toddler.jq',
+  settings: {
+    dark_mode: false,
+  },
+}
+const FAKE_CID_A = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_B = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let dbConnection: Knex
@@ -131,9 +154,19 @@ function closeDates(a: Date, b: Date, deltaS = 1) {
 
 describe('indexStream', () => {
   const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
-  const STREAM_CONTENT = {
+  const STREAM_CONTENT_A = {
     model: MODELS_TO_INDEX[0],
     streamID: StreamID.fromString(STREAM_ID_B),
+    streamContent: STREAM_TEST_DATA_PROFILE_A,
+    tip: FAKE_CID_A,
+    controller: CONTROLLER,
+    lastAnchor: null,
+  }
+  const STREAM_CONTENT_B = {
+    model: MODELS_TO_INDEX[0],
+    streamID: StreamID.fromString(STREAM_ID_A),
+    streamContent: STREAM_TEST_DATA_PROFILE_B,
+    tip: FAKE_CID_B,
     controller: CONTROLLER,
     lastAnchor: null,
   }
@@ -146,12 +179,14 @@ describe('indexStream', () => {
 
   test('new stream', async () => {
     const now = new Date()
-    await indexApi.indexStream(STREAM_CONTENT)
+    await indexApi.indexStream(STREAM_CONTENT_A)
     const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
     expect(result.length).toEqual(1)
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
+    expect(raw.stream_content).toEqual(STREAM_TEST_DATA_PROFILE_A)
+    expect(raw.tip).toEqual(FAKE_CID_A.toString())
     expect(raw.last_anchored_at).toBeNull()
     expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)
@@ -162,10 +197,10 @@ describe('indexStream', () => {
 
   test('override stream', async () => {
     const createTime = new Date()
-    await indexApi.indexStream(STREAM_CONTENT)
+    await indexApi.indexStream(STREAM_CONTENT_A)
     const updateTime = new Date(createTime.valueOf() + 5000)
     const updatedStreamContent = {
-      ...STREAM_CONTENT,
+      ...STREAM_CONTENT_A,
       updatedAt: updateTime,
       lastAnchor: updateTime,
       firstAnchor: updateTime,
@@ -185,6 +220,51 @@ describe('indexStream', () => {
     expect(closeDates(updatedAt, updateTime)).toBeTruthy()
     const createdAt = new Date(raw.created_at)
     expect(closeDates(createdAt, createTime)).toBeTruthy()
+  })
+
+  test('verify jsonb index creation and invocation while querying', async () => {
+    await indexApi.indexStream(STREAM_CONTENT_A)
+
+    // create index on jsonb content and disable seq scans
+    await dbConnection.raw(`SET enable_seqscan = off;`)
+    let result: Array<any> = await dbConnection.raw(
+      `CREATE INDEX idx_postgres_jsonb ON ${STREAM_ID_A}((stream_content->'settings'->'dark_mode'))`
+    )
+    expect(result.command).toEqual('CREATE')
+
+    // query indexed jsonb data
+    result = await dbConnection.raw(
+      `EXPLAIN SELECT *
+       FROM ${MODELS_TO_INDEX[0]}
+       WHERE stream_content->'settings'->'dark_mode' = ?;`,
+      true
+    )
+    expect(result.command).toEqual('EXPLAIN')
+    expect(result.rows.length).toBeGreaterThan(1)
+    expect(result.rows[0]['QUERY PLAN'].includes('idx_postgres_jsonb')).toBeTruthy()
+  })
+
+  test('query and filter jsonb stream content', async () => {
+    await indexApi.indexStream(STREAM_CONTENT_A)
+    await indexApi.indexStream(STREAM_CONTENT_B)
+
+    let result: Array<any> = await dbConnection.select('*').from(`${MODELS_TO_INDEX[0]}`)
+    expect(result.length).toEqual(2)
+
+    // filter content from existing model per controller
+    result = await dbConnection
+      .from(`${MODELS_TO_INDEX[0]}`)
+      .select(
+        dbConnection.raw(
+          `*, stream_content->'settings'->'dark_mode' AS dark_mode, stream_content->>'id' AS id`
+        )
+      )
+      .whereRaw(`stream_content->'settings'->'dark_mode' = ?`, true)
+
+    expect(result.length).toEqual(1)
+    const raw = result[0]
+    expect(raw.dark_mode).toEqual(STREAM_TEST_DATA_PROFILE_A.settings.dark_mode)
+    expect(raw.id).toEqual(STREAM_TEST_DATA_PROFILE_A.id)
   })
 })
 
