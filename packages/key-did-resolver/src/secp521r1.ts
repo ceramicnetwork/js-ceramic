@@ -44,10 +44,10 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * @internal
  */
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
-  if(!nist_weierstrauss.nist_weierstrass_common.testUint8Array(pubKeyBytes)) {
+  if(!nist_weierstrauss.nist_weierstrauss_common.testUint8Array(pubKeyBytes)) {
     throw new TypeError('input must be a Uint8Array');
   }
-  const publicKeyHex = nist_weierstrauss.nist_weierstrass_common.pubKeyBytesToHex(pubKeyBytes);
+  const publicKeyHex = nist_weierstrauss.nist_weierstrauss_common.pubKeyBytesToHex(pubKeyBytes);
 
   // compressed p-521 key, SEC format
   // publicKeyHex.length / 2.0 = 67.0 bytes
@@ -55,7 +55,7 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
   if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = nist_weierstrauss.secp521r1.ECPointDecompress(publicKey);
-      return nist_weierstrauss.nist_weierstrass_common.publicKeyIntToXY(point);
+      return nist_weierstrauss.nist_weierstrauss_common.publicKeyIntToXY(point);
     }
  }
 

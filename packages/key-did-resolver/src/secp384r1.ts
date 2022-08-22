@@ -45,22 +45,22 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * @internal
  */
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
-  if(!nist_weierstrauss.nist_weierstrass_common.testUint8Array(pubKeyBytes)) {
+  if(!nist_weierstrauss.nist_weierstrauss_common.testUint8Array(pubKeyBytes)) {
     throw new TypeError('input must be a Uint8Array');
   }
-  const publicKeyHex = nist_weierstrauss.nist_weierstrass_common.pubKeyBytesToHex(pubKeyBytes);
+  const publicKeyHex = nist_weierstrauss.nist_weierstrauss_common.pubKeyBytesToHex(pubKeyBytes);
   const bytesCount = publicKeyHex.length / 2;
 
   // raw p-384 key
   if(bytesCount == 96) {
-     return nist_weierstrauss.nist_weierstrass_common.publicKeyToXY(publicKeyHex);
+     return nist_weierstrauss.nist_weierstrauss_common.publicKeyToXY(publicKeyHex);
    }
 
   // uncompressed p-384 key, SEC format
   if(bytesCount == 97) {
    if(publicKeyHex.slice(0,2) == '04') {
      const publicKey = publicKeyHex.slice(2);
-     return nist_weierstrauss.nist_weierstrass_common.publicKeyToXY(publicKey);
+     return nist_weierstrauss.nist_weierstrauss_common.publicKeyToXY(publicKey);
    }
   }
 
@@ -69,7 +69,7 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
    if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = nist_weierstrauss.secp384r1.ECPointDecompress(publicKey);
-      return nist_weierstrauss.nist_weierstrass_common.publicKeyIntToXY(point);
+      return nist_weierstrauss.nist_weierstrauss_common.publicKeyIntToXY(point);
     }
   }
 
