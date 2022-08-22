@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.5.0-rc.2...@ceramicnetwork/common@2.5.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.5.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.4.1...@ceramicnetwork/common@2.5.0-rc.2) (2022-08-20)
+
+
+### Features
+
+* **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+
+
+
+
+
+
 ## [2.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.4.0...@ceramicnetwork/common@2.4.1) (2022-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/common

@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.8.0-rc.2...@ceramicnetwork/core@2.8.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.8.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.2...@ceramicnetwork/core@2.8.0-rc.2) (2022-08-20)
+
+
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis ([#2366](https://github.com/ceramicnetwork/js-ceramic/issues/2366)) ([3e53142](https://github.com/ceramicnetwork/js-ceramic/commit/3e531428df28b811687186b6ebd7415a1cd3fec9))
+* **core:** check value of indexing env var ([#2363](https://github.com/ceramicnetwork/js-ceramic/issues/2363)) ([147cebc](https://github.com/ceramicnetwork/js-ceramic/commit/147cebccb8aae66df4aa8c30cb64561c74a1b40d))
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag ([#2339](https://github.com/ceramicnetwork/js-ceramic/issues/2339)) ([df53df4](https://github.com/ceramicnetwork/js-ceramic/commit/df53df49a480884d9d97da452a19a6e96a0633a4))
+* **core:** Add stream from pubsub for UPDATE msg types ([#2317](https://github.com/ceramicnetwork/js-ceramic/issues/2317)) ([413b644](https://github.com/ceramicnetwork/js-ceramic/commit/413b64490cfeb1a8430ecedaaeb55f106e103e2a))
+* **core:** Add tests and validation for anchor smart contract address ([#2367](https://github.com/ceramicnetwork/js-ceramic/issues/2367)) ([936705c](https://github.com/ceramicnetwork/js-ceramic/commit/936705cd5e241dadf101dea20642169822bfd5ff))
+* **core:** parse smart contract tx that anchors a 32 byte hash ([#2379](https://github.com/ceramicnetwork/js-ceramic/issues/2379)) ([0cd3a36](https://github.com/ceramicnetwork/js-ceramic/commit/0cd3a36914216b5b0dee385eb5b54bef280b632b))
+* **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+
+
+
+
+
+
 ## [2.7.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.1...@ceramicnetwork/core@2.7.2) (2022-08-19)
 
 **Note:** Version bump only for package @ceramicnetwork/core
