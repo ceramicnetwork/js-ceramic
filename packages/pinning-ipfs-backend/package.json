@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
-    "ipfs-http-client": "^55.0.0",
+    "ipfs-http-client": "^57.0.3",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
