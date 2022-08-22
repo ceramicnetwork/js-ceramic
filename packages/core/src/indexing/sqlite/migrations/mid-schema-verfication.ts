@@ -8,48 +8,48 @@ export const validTableStructure = {
     type: 'varchar',
     maxLength: '1024',
     nullable: false,
-    defaultValue: null,
+    defaultValue: null
   },
   controller_did: {
     type: 'varchar',
     maxLength: '1024',
     nullable: false,
-    defaultValue: null,
+    defaultValue: null
   },
   stream_content: {
     type: 'varchar',
     maxLength: '255',
     nullable: false,
-    defaultValue: null,
+    defaultValue: null
   },
   tip: {
     type: 'varchar',
     maxLength: '255',
     nullable: false,
-    defaultValue: null,
+    defaultValue: null
   },
   last_anchored_at: {
     type: 'integer',
     maxLength: null,
     nullable: true,
-    defaultValue: null,
+    defaultValue: null
   },
   first_anchored_at: {
     type: 'integer',
     maxLength: null,
     nullable: true,
-    defaultValue: null,
+    defaultValue: null
   },
   created_at: {
     type: 'integer',
     maxLength: null,
     nullable: false,
-    defaultValue: null,
+    defaultValue: null
   },
   updated_at: {
     type: 'integer',
     maxLength: null,
     nullable: false,
-    defaultValue: null,
-  },
+    defaultValue: null
+  }
 }

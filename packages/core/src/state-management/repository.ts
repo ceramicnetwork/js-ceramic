@@ -363,7 +363,7 @@ export class Repository {
     const STREAM_CONTENT = {
       model: state$.value.metadata.model,
       streamID: state$.id,
-      controller: state$.value.metadata.controller,
+      controller: state$.value.metadata.controllers[0],
       streamContent: state$.value.content,
       tip: state$.tip,
       lastAnchor: lastAnchor,
