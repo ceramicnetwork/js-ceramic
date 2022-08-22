@@ -69,6 +69,13 @@ export class InsertionOrder {
   constructor(private readonly dbConnection: Knex) {}
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+    if (query.models.length > 1) {
+      throw new Error(`Queries on multiple models are not yet supported`)
+    }
+    if (query.models.length == 0) {
+      throw new Error(`No model provided for query`)
+    }
+
     const pagination = parsePagination(query)
     const paginationKind = pagination.kind
     switch (paginationKind) {
@@ -126,7 +133,7 @@ export class InsertionOrder {
     query: BaseQuery,
     pagination: ForwardPaginationQuery
   ): Knex.QueryBuilder<unknown, Array<Selected>> {
-    const tableName = asTableName(query.model)
+    const tableName = asTableName(query.models[0])
     let base = this.dbConnection
       .from(tableName)
       .select('stream_id', 'last_anchored_at', 'created_at')
@@ -149,7 +156,7 @@ export class InsertionOrder {
     query: BaseQuery,
     pagination: BackwardPaginationQuery
   ): Knex.QueryBuilder<unknown, Array<Selected>> {
-    const tableName = asTableName(query.model)
+    const tableName = asTableName(query.models[0])
     const limit = pagination.last
     const identity = <T>(a: T) => a
     const base = (

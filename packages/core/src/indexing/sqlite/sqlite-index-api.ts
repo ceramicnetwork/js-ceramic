@@ -63,7 +63,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
     // TODO(NET-1630) Throw if historical indexing is in progress
     if (!this.allowQueriesBeforeHistoricalSync) {
-      throw new IndexQueryNotAvailableError(query.model)
+      throw new IndexQueryNotAvailableError(query.models[0])
     }
     return this.insertionOrder.page(query)
   }

@@ -21,6 +21,8 @@ export class RemoteIndexApi implements IndexApi {
     for (const key in query) {
       queryURL.searchParams.set(key, query[key])
     }
+    const str = queryURL.toString()
+    console.log(str)
     const response = await this._fetchJson(queryURL)
     const edges = response.edges.map((e) => {
       return {

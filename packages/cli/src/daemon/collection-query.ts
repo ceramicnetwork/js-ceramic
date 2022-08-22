@@ -70,7 +70,7 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
   try {
     const pagination = parsePagination(query)
     return {
-      model: StreamID.fromString(query.model),
+      models: query.models.map(StreamID.fromString),
       account: query.account,
       ...pagination,
     }

@@ -110,19 +110,23 @@ describe('Basic end-to-end indexing query test', () => {
     await core.close()
   })
 
-  test('basic query', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
-    // Indexed streams should always get pinned, regardless of the 'pin' flag
-    await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
+  test(
+    'basic query',
+    async () => {
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
+      // Indexed streams should always get pinned, regardless of the 'pin' flag
+      await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
 
-    const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
-    const results = extractDocuments(ceramic, resultObj)
+      const resultObj = await ceramic.index.queryIndex({ models: [model.id, model.id], first: 100 })
+      const results = extractDocuments(ceramic, resultObj)
 
-    expect(results.length).toEqual(1)
-    expect(results[0].id.toString()).toEqual(doc.id.toString())
-    expect(results[0].content).toEqual(doc.content)
-    expect(results[0].state).toEqual(doc.state)
-  })
+      expect(results.length).toEqual(1)
+      expect(results[0].id.toString()).toEqual(doc.id.toString())
+      expect(results[0].content).toEqual(doc.content)
+      expect(results[0].state).toEqual(doc.state)
+    },
+    30 * 1000 * 10
+  ) // todo remove
 
   test('multiple documents - one page', async () => {
     const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
@@ -130,7 +134,7 @@ describe('Basic end-to-end indexing query test', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
     const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
-    const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
+    const resultObj = await ceramic.index.queryIndex({ models: [model.id], first: 100 })
     const results = extractDocuments(ceramic, resultObj)
 
     expect(results.length).toEqual(3)
@@ -150,16 +154,16 @@ describe('Basic end-to-end indexing query test', () => {
     const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
     const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-    const resultObj0 = await ceramic.index.queryIndex({ model: model.id, first: 2 })
+    const resultObj0 = await ceramic.index.queryIndex({ models: [model.id], first: 2 })
     expect(resultObj0.pageInfo.hasNextPage).toBeTruthy()
     const resultObj1 = await ceramic.index.queryIndex({
-      model: model.id,
+      models: [model.id],
       first: 2,
       after: resultObj0.pageInfo.endCursor,
     })
     expect(resultObj1.pageInfo.hasNextPage).toBeTruthy()
     const resultObj2 = await ceramic.index.queryIndex({
-      model: model.id,
+      models: [model.id],
       first: 2,
       after: resultObj1.pageInfo.endCursor,
     })
@@ -192,7 +196,7 @@ describe('Basic end-to-end indexing query test', () => {
 
     console.log(`docIds: [${doc1.id.toString()}, ${doc2.id.toString()}, ${doc3.id.toString()}]`)
 
-    const resultObj = await ceramic.index.queryIndex({ model: model.id, last: 100 })
+    const resultObj = await ceramic.index.queryIndex({ models: [model.id], last: 100 })
     const results = extractDocuments(ceramic, resultObj)
 
     // Using `last` doesn't change the order of documents returned within each page
@@ -213,16 +217,16 @@ describe('Basic end-to-end indexing query test', () => {
     const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
     const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-    const resultObj0 = await ceramic.index.queryIndex({ model: model.id, last: 2 })
+    const resultObj0 = await ceramic.index.queryIndex({ models: [model.id], last: 2 })
     expect(resultObj0.pageInfo.hasPreviousPage).toBeTruthy()
     const resultObj1 = await ceramic.index.queryIndex({
-      model: model.id,
+      models: [model.id],
       last: 2,
       before: resultObj0.pageInfo.startCursor,
     })
     expect(resultObj1.pageInfo.hasPreviousPage).toBeTruthy()
     const resultObj2 = await ceramic.index.queryIndex({
-      model: model.id,
+      models: [model.id],
       last: 2,
       before: resultObj1.pageInfo.startCursor,
     })

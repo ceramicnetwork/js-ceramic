@@ -28,7 +28,7 @@ export type Pagination = ForwardPagination | BackwardPagination
  * Base query to the index. Disregards pagination.
  */
 export interface BaseQuery {
-  readonly model: StreamID | string
+  readonly models: Array<StreamID | string>
   readonly account?: string
 }
 
