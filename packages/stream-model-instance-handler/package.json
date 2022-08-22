@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance-handler",
-  "version": "0.5.0",
+  "version": "0.5.1-rc.0",
   "description": "Ceramic Model Instance Document stream handler",
   "keywords": [
     "ceramic",
@@ -31,9 +31,9 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.5.0",
-    "@ceramicnetwork/stream-model-instance": "^0.4.0",
-    "@ceramicnetwork/streamid": "^2.3.2",
+    "@ceramicnetwork/common": "^2.5.1-rc.0",
+    "@ceramicnetwork/stream-model-instance": "^0.4.1-rc.0",
+    "@ceramicnetwork/streamid": "^2.3.3-rc.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "fast-json-patch": "^3.1.0",
@@ -41,8 +41,8 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.1.6",
-    "@ceramicnetwork/stream-model": "^0.4.2",
+    "@ceramicnetwork/3id-did-resolver": "^2.1.7-rc.0",
+    "@ceramicnetwork/stream-model": "^0.4.3-rc.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
@@ -50,7 +50,7 @@
     "ceramic-cacao": "^1.1.1",
     "did-resolver": "^3.1.5",
     "dids": "^3.2.0",
-    "key-did-resolver": "^2.0.6",
+    "key-did-resolver": "^2.1.1-rc.0",
     "multiformats": "^9.5.8"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
