@@ -24,7 +24,6 @@
     { "path": "./packages/3id-did-resolver" },
     { "path": "./packages/ipfs-daemon" },
     { "path": "./packages/ipfs-topology" },
-    { "path": "./packages/nist-weierstrass" },
     { "path": "./packages/key-did-resolver" },
     { "path": "./packages/http-client" },
     { "path": "./packages/streamid" },
