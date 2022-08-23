@@ -220,12 +220,6 @@ export class Model extends Stream {
     }
 
     const model = await ceramic.loadStream<Model>(streamRef, opts)
-    try {
-      Model.assertComplete(model.content, streamId)
-    } catch (err) {
-      // Add additional context to error message.
-      throw new Error(`Incomplete placeholder Models cannot be loaded: ${err.message}`)
-    }
     return model
   }
 

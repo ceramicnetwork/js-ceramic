@@ -118,6 +118,7 @@ export class ModelHandler implements StreamHandler<Model> {
     )
 
     assertNoExtraKeys(payload.data)
+    Model.assertComplete(payload.data)
 
     const modelStreamId = StreamID.fromBytes(payload.header.model)
     if (!modelStreamId.equals(Model.MODEL)) {
