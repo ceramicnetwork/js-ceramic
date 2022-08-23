@@ -7,7 +7,7 @@ import { Repository } from '../repository.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { RunningState } from '../running-state'
+import { RunningState } from '../running-state.js'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
