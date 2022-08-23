@@ -13,7 +13,11 @@ export class LocalPinApi implements PinApi {
   ) {}
 
   async add(streamId: StreamID, force?: boolean): Promise<void> {
-    await this.repository.load(streamId, { sync: SyncOptions.PREFER_CACHE, pin: true })
+    const state$ = await this.repository.load(streamId, {
+      sync: SyncOptions.PREFER_CACHE,
+      pin: true,
+    })
+    await this.repository.pin(state$, force)
     this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }
 

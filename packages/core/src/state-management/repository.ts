@@ -194,7 +194,9 @@ export class Repository {
       return this.stateManager.verifyLoneGenesis(streamState$)
     })
     await this.handlePinOpts(state$, opts)
-    this.stateManager.markPinnedAndSynced(state$.id)
+    if (opts.pin) {
+      this.stateManager.markPinnedAndSynced(state$.id)
+    }
 
     return state$
   }
