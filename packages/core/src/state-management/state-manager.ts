@@ -89,8 +89,12 @@ export class StateManager {
       { defaultValue: undefined }
     )
     if (state$.isPinned) {
-      this.syncedPinnedStreams.add(state$.id.toString())
+      this.markPinnedAndSynced(state$.id)
     }
+  }
+
+  markPinnedAndSynced(streamId: StreamID): void {
+    this.syncedPinnedStreams.add(streamId.toString())
   }
 
   /**
