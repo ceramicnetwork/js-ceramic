@@ -107,11 +107,7 @@ describe('repository tests', () => {
         ],
         content,
       } as unknown as StreamState
-      const runningState = {
-        id: streamId,
-        value: streamState,
-        state: streamState,
-      } as unknown as RunningState
+      const runningState = new RunningState(streamState, true)
 
       const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
       const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
