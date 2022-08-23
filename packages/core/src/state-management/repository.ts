@@ -180,21 +180,21 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    const state$ = await this.loadingQ.forStream(streamId).run(async () => {
-      const [streamState$, synced] = await this._loadGenesis(streamId)
-      if (opts.sync == SyncOptions.PREFER_CACHE && synced) {
-        return streamState$
+    const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
+      const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+      if (opts.sync == SyncOptions.PREFER_CACHE && alreadySynced) {
+        return [streamState$, alreadySynced]
       }
 
       if (opts.sync == SyncOptions.NEVER_SYNC) {
-        return this.stateManager.verifyLoneGenesis(streamState$)
+        return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
       }
 
       await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
-      return this.stateManager.verifyLoneGenesis(streamState$)
+      return [await this.stateManager.verifyLoneGenesis(streamState$), true]
     })
     await this.handlePinOpts(state$, opts)
-    if (opts.pin) {
+    if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)
     }
 
