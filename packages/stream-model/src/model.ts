@@ -1,16 +1,13 @@
-import jsonpatch from 'fast-json-patch'
 import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
   LoadOpts,
-  UpdateOpts,
   Stream,
   StreamConstructor,
   StreamStatic,
   SyncOptions,
   CeramicCommit,
   GenesisCommit,
-  RawCommit,
   CeramicApi,
   SignedCommitContainer,
   CeramicSigner,
@@ -166,43 +163,6 @@ export class Model extends Stream {
   }
 
   /**
-   * Create an incomplete Model that can be updated later to add the missing required fields
-   * and finalize the Model.  This is useful when there is a circular relationship between multiple
-   * models and so you need to know a Model's StreamID before finalizing it.
-   * @param ceramic
-   * @param content
-   * @param metadata
-   */
-  static async createPlaceholder(
-    ceramic: CeramicApi,
-    content: Partial<ModelDefinition>,
-    metadata?: ModelMetadataArgs
-  ): Promise<Model> {
-    const opts: CreateOpts = {
-      publish: false,
-      anchor: false,
-      pin: false,
-      sync: SyncOptions.NEVER_SYNC,
-      throwOnInvalidCommit: true,
-    }
-    const commit = await Model._makeGenesis(ceramic, content, metadata)
-    return ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
-  }
-
-  /**
-   * Update an existing placeholder Model. Must update the model to its final content, setting
-   * all required fields, finalizing and publishing the model, and preventing all future updates.
-   * @param content - Final content for the Model
-   */
-  async replacePlaceholder(content: ModelDefinition): Promise<void> {
-    Model.assertComplete(content, this.id)
-    const opts: UpdateOpts = { publish: true, anchor: true, pin: true, throwOnInvalidCommit: true }
-    const updateCommit = await this._makeCommit(this.api, content)
-    const updated = await this.api.applyCommit(this.id, updateCommit, opts)
-    this.state$.next(updated.state)
-  }
-
-  /**
    * Asserts that all the required fields for the Model are set, and throws an error if not.
    * @param streamId
    * @param content
@@ -260,43 +220,7 @@ export class Model extends Stream {
     }
 
     const model = await ceramic.loadStream<Model>(streamRef, opts)
-    try {
-      Model.assertComplete(model.content, streamId)
-    } catch (err) {
-      // Add additional context to error message.
-      throw new Error(`Incomplete placeholder Models cannot be loaded: ${err.message}`)
-    }
     return model
-  }
-
-  /**
-   * Make a commit to update the Model
-   * @param signer - Object containing the DID making (and signing) the commit
-   * @param newContent
-   */
-  private async _makeCommit(
-    signer: CeramicSigner,
-    newContent: ModelDefinition
-  ): Promise<CeramicCommit> {
-    const commit = this._makeRawCommit(newContent)
-    return Model._signDagJWS(signer, commit)
-  }
-
-  /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
-   */
-  private _makeRawCommit(newContent: ModelDefinition): RawCommit {
-    if (newContent == null) {
-      throw new Error(`Cannot set Model content to null`)
-    }
-
-    const patch = jsonpatch.compare(this.content, newContent)
-    return {
-      data: patch,
-      prev: this.tip,
-      id: this.state.log[0].cid,
-    }
   }
 
   /**
@@ -350,7 +274,6 @@ export class Model extends Stream {
    * mutation methods on the instance will throw.
    */
   makeReadOnly() {
-    this.replacePlaceholder = throwReadOnlyError
     this.sync = throwReadOnlyError
     this._isReadOnly = true
   }
