@@ -39,7 +39,7 @@
   "dependencies": {
     "@stablelib/ed25519": "^1.0.2",
     "multiformats": "^9.7.1",
-    "nist-weierstrauss": "^0.0.5",
+    "nist-weierstrauss": "^1.0.0",
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
   },
