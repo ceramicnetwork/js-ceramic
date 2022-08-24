@@ -149,7 +149,8 @@ export class Model extends Stream {
     metadata?: ModelMetadataArgs
   ): Promise<Model> {
     Model.assertComplete(content)
-
+    // TODO: Remove 'throwOnInvalidCommit' once the minimum supported Ceramic version includes
+    // the fix from NET-1717
     const opts: CreateOpts = {
       publish: true,
       anchor: true,

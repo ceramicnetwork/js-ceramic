@@ -183,6 +183,22 @@ function validatePort(inPort) {
 }
 
 /**
+ * Adds the internal 'throwOnInvalidCommit' StreamOpts to the options for a given request.
+ * This causes that request to actively throw an error and abort log applicaiton if a commit
+ * is rejected due to conflict resolution. Without this, rejected commits will silently fail
+ * to apply but the state will still be returned successful with whatever commits succeeded.
+ * The default behavior is what we want when loading streams from the network, but when a
+ * client is explicitly trying to author a commit they want to know immediately if the write
+ * is rejected.
+ * @param opts
+ */
+function markShouldRejectConflicts(opts) {
+  if (opts.throwOnInvalidCommit === undefined) {
+    opts.throwOnInvalidCommit = true
+  }
+}
+
+/**
  * Ceramic daemon implementation
  */
 export class CeramicDaemon {
@@ -494,6 +510,7 @@ export class CeramicDaemon {
   async applyCommit(req: Request, res: Response): Promise<void> {
     const { docId, commit, docOpts } = req.body
     const opts = req.body.opts || docOpts
+    markShouldRejectConflicts(opts)
     upconvertLegacySyncOption(opts)
     // The HTTP client generally only calls applyCommit as part of an app-requested update to a
     // stream, so we want to throw an error if applying that commit fails for any reason.

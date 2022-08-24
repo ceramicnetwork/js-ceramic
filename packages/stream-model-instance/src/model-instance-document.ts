@@ -70,6 +70,8 @@ const DEFAULT_DETERMINISTIC_OPTS = {
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
+// TODO: Remove 'throwOnInvalidCommit' once the minimum supported Ceramic version includes
+// the fix from NET-1717
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
