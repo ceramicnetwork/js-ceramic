@@ -1,4 +1,3 @@
-import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
   LoadOpts,
@@ -263,7 +262,6 @@ export class Model extends Stream {
 
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
     return { data: content, header }
