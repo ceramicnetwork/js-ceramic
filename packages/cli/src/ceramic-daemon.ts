@@ -193,9 +193,9 @@ function validatePort(inPort) {
  * @param opts
  */
 function markShouldRejectConflicts(opts) {
-  if (opts.throwOnInvalidCommit === undefined) {
-    opts.throwOnInvalidCommit = true
-  }
+  opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? true
+  opts.throwOnConflict = opts.throwOnConflict ?? true
+  opts.throwIfStale = opts.throwIfStale ?? true
 }
 
 /**

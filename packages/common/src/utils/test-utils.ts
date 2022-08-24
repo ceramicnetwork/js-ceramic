@@ -29,25 +29,25 @@ export class TestUtils {
    * Given a stream and a predicate that operates on the stream state, continuously waits for
    * changes to the stream until the predicate returns true.
    * @param stream
-   * @param timeout - how long to wait for
+   * @param timeoutMs - how long to wait for, in milliseconds
    * @param predicate - function that takes the stream's StreamState as input and returns true when this function can stop waiting
    * @param onFailure - function called if we time out before the predicate becomes true
    */
   static async waitForState(
     stream: Stream,
-    timeout: number,
+    timeoutMs: number,
     predicate: (state: StreamState) => boolean,
-    onFailure: () => void
+    onFailure: (state: StreamState) => void
   ): Promise<void> {
     if (predicate(stream.state)) return
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs))
     // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
     const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
       defaultValue: undefined,
     })
     await Promise.race([timeoutPromise, completionPromise])
     if (!predicate(stream.state)) {
-      onFailure()
+      onFailure(stream.state)
     }
   }
 

@@ -360,14 +360,24 @@ export class ConflictResolution {
       opts
     )
 
+    const conflictingTip = unappliedCommits[unappliedCommits.length - 1].cid
+    const streamId = StreamUtils.streamIdFromState(localState)
+    if (opts.throwIfStale) {
+      // If this tip came from a client-initiated request and it doesn't build off the node's
+      // current local state, that means the client has a stale view of the data.  Even if the new
+      // commit would win the arbitrary conflict resolution with the local state, that just
+      // increases the likelihood of lost writes. Clients should always at least be in sync with
+      // their Ceramic node when authoring new writes.
+      throw new Error(
+        `Commit to stream ${streamId.toString()} rejected because it builds on stale state. Rejected commit CID: ${conflictingTip.toString()}. Current tip: ${tip.toString()}`
+      )
+    }
+
     const selectedState = await pickLogToAccept(localState, remoteState)
     if (selectedState === localState) {
-      if (opts.throwOnInvalidCommit) {
-        const commit = unappliedCommits[unappliedCommits.length - 1].cid
-        const streamId = StreamUtils.streamIdFromState(localState)
-        const tip = localState.log[localState.log.length - 1].cid
+      if (opts.throwOnConflict) {
         throw new Error(
-          `Commit to stream ${streamId.toString()} rejected by conflict resolution. Rejected commit CID: ${commit.toString()}. Current tip: ${tip.toString()}`
+          `Commit to stream ${streamId.toString()} rejected by conflict resolution. Rejected commit CID: ${conflictingTip.toString()}. Current tip: ${tip.toString()}`
         )
       }
       return null
@@ -419,9 +429,9 @@ export class ConflictResolution {
    * Return state at `commitId` version.
    */
   async snapshotAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
-    // Throw if any commit fails to apply as we are trying to load at a specific commit and want
-    // to error if we can't.
-    const opts = { throwOnInvalidCommit: true }
+    // Throw if any commit fails to apply or is rejected due to conflict resolution as we are trying
+    // to load at a specific commit and want to error if we can't.
+    const opts = { throwOnInvalidCommit: true, throwOnConflict: true }
 
     // If 'commit' is ahead of 'initialState', sync state up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit, opts)) || initialState
