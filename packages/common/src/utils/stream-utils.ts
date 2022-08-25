@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash.clonedeep'
-import * as u8a from 'uint8arrays'
+import * as uint8arrays from 'uint8arrays'
 import { toCID } from './cid-utils.js'
 
 import {
@@ -11,10 +11,9 @@ import {
   SignedCommit,
   SignedCommitContainer,
 } from '../index.js'
-import { AnchorStatus, StreamState, LogEntry } from '../stream.js'
+import { AnchorStatus, LogEntry, StreamState } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
-import * as uint8arrays from 'uint8arrays'
 
 const TILE_TYPE_ID = 0
 
@@ -39,9 +38,9 @@ export class StreamUtils {
 
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = cloned.jws.link.toString()
-      cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
+      cloned.linkedBlock = uint8arrays.toString(cloned.linkedBlock, 'base64')
       if (cloned.cacaoBlock) {
-        cloned.cacaoBlock = u8a.toString(cloned.cacaoBlock, 'base64')
+        cloned.cacaoBlock = uint8arrays.toString(cloned.cacaoBlock, 'base64')
       }
       return cloned
     }
@@ -78,9 +77,9 @@ export class StreamUtils {
 
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = toCID(cloned.jws.link)
-      cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
+      cloned.linkedBlock = uint8arrays.fromString(cloned.linkedBlock, 'base64')
       if (cloned.cacaoBlock) {
-        cloned.cacaoBlock = u8a.fromString(cloned.cacaoBlock, 'base64')
+        cloned.cacaoBlock = uint8arrays.fromString(cloned.cacaoBlock, 'base64')
       }
       return cloned
     }
@@ -130,7 +129,7 @@ export class StreamUtils {
       cloned.next.metadata.model = state.next.metadata.model.toString()
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
-      cloned.metadata.unique = u8a.toString(cloned.metadata.unique, 'base64')
+      cloned.metadata.unique = uint8arrays.toString(cloned.metadata.unique, 'base64')
     }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
@@ -167,7 +166,7 @@ export class StreamUtils {
       cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
-      cloned.metadata.unique = u8a.fromString(state.metadata.unique, 'base64')
+      cloned.metadata.unique = uint8arrays.fromString(state.metadata.unique, 'base64')
     }
 
     return cloned
@@ -195,6 +194,10 @@ export class StreamUtils {
       if (!state.log[i].cid.equals(base.log[i].cid)) {
         return false
       }
+    }
+
+    if (state.anchorStatus === AnchorStatus.ANCHORED) {
+      return true
     }
 
     if (state.anchorStatus != base.anchorStatus) {
