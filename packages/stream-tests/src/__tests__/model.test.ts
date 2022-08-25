@@ -71,11 +71,11 @@ describe('Model API http-client tests', () => {
     expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
   })
 
-  test('Models are created uniquely', async () => {
+  test('Models are created deterministically', async () => {
     const model1 = await Model.create(ceramic, FINAL_CONTENT)
     const model2 = await Model.create(ceramic, FINAL_CONTENT)
 
-    expect(model1.id.toString()).not.toEqual(model2.id.toString())
+    expect(model1.id.toString()).toEqual(model2.id.toString())
   })
 
   test('Cannot create incomplete model with create()', async () => {
@@ -106,17 +106,23 @@ describe('Model API multi-node tests', () => {
   let ceramic1: Ceramic
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
-
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
+  }, 12000)
+
+  beforeEach(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
   }, 12000)
 
-  afterAll(async () => {
+  afterEach(async () => {
     await ceramic0.close()
     await ceramic1.close()
+  })
+
+  afterAll(async () => {
     await ipfs0.stop()
     await ipfs1.stop()
   })
