@@ -120,7 +120,7 @@ export class CeramicCliUtils {
     if (process.env.CERAMIC_INDEXING_DB_URI)
       config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
     if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
-      config.metrics.metricsExporterEnabled = Boolean(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
+      config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
     if (process.env.CERAMIC_METRICS_PORT)
       config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
 
