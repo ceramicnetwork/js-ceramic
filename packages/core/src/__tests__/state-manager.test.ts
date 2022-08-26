@@ -6,7 +6,6 @@ import {
   SignatureStatus,
   StreamUtils,
   TestUtils,
-  StreamState,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
@@ -23,7 +22,7 @@ import { from, timer } from 'rxjs'
 import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import cloneDeep from 'lodash.clonedeep'
-import { StateLink } from '../state-management/state-link'
+import { StateLink } from '../state-management/state-link.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
