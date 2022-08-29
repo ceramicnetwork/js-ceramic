@@ -366,8 +366,7 @@ describe('atCommit', () => {
       anchor: false,
       syncTimeoutSeconds: 0,
     })
-    await tile1.update({ abc: 321, def: 456, gh: 987 })
-    await TestUtils.anchorUpdate(ceramic, tile1)
+    await tile1.update({ a: 1 })
 
     // Let's pretend we have a stream in PENDING state
     const pendingState = {
@@ -380,7 +379,7 @@ describe('atCommit', () => {
     // Do not fast-forward the base state: retain PENDING anchor status
     expect(base$.state).toBe(pendingState)
     // The snapshot is reported to be anchored though
-    expect(snapshot.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(snapshot.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
 
   test('commit ahead of current state', async () => {
