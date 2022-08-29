@@ -8,7 +8,6 @@ import {
   LoadOpts,
   PinningOpts,
   PublishOpts,
-  Stream,
   StreamState,
   SyncOptions,
   UpdateOpts,
@@ -177,10 +176,10 @@ export class Repository {
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
    */
-  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    const state$ = await this.loadingQ.forStream(streamId).run(async () => {
+    return this.loadingQ.forStream(streamId).run(async () => {
       const [stream, synced] = await this._loadGenesis(streamId)
       if (opts.sync == SyncOptions.PREFER_CACHE && synced) {
         return stream
@@ -193,8 +192,6 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
       return this.stateManager.verifyLoneGenesis(stream)
     })
-
-    return state$
   }
 
   /**

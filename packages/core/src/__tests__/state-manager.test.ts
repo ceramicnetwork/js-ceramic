@@ -22,6 +22,7 @@ import { from, timer } from 'rxjs'
 import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import cloneDeep from 'lodash.clonedeep'
+import { StateLink } from '../state-management/state-link.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -339,7 +340,6 @@ describe('atCommit', () => {
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
     const stream2 = await TileDocument.load(ceramic, stream1.id)
     const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 })
-    const streamState2Original = cloneDeep(streamState2.state)
     const snapshot = await ceramic2.repository.stateManager.atCommit(streamState2, stream1.commitId)
 
     expect(StreamUtils.statesEqual(snapshot.state, stream1.state))
@@ -348,14 +348,38 @@ describe('atCommit', () => {
       ceramic2._streamHandlers,
       snapshot.value
     )
+
+    // Snapshot is read-only
     await expect(snapshotStream.update({ abc: 1010 })).rejects.toThrow(
       'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
     )
 
-    // Ensure that stateManager.atCommit does not mutate the passed in state object
-    expect(streamState2.state).toEqual(streamState2Original)
+    // We fast-forward streamState2, because the commit is legit
+    expect(streamState2.state).toEqual(stream1.state)
 
     await ceramic2.close()
+  })
+
+  test('return read-only snapshot: do not lose own anchor status', async () => {
+    // Prepare commits to play
+    const tile1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, {
+      anchor: false,
+      syncTimeoutSeconds: 0,
+    })
+    await tile1.update({ a: 1 })
+
+    // Let's pretend we have a stream in PENDING state
+    const pendingState = {
+      ...tile1.state,
+      anchorStatus: AnchorStatus.PENDING,
+    }
+    const base$ = new StateLink(pendingState)
+    // We request a snapshot at the latest commit
+    const snapshot = await ceramic.repository.stateManager.atCommit(base$, tile1.commitId)
+    // Do not fast-forward the base state: retain PENDING anchor status
+    expect(base$.state).toBe(pendingState)
+    // The snapshot is reported to be anchored though
+    expect(snapshot.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
 
   test('commit ahead of current state', async () => {
