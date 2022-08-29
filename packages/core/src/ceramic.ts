@@ -505,7 +505,7 @@ export class Ceramic implements CeramicApi {
         this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
       }
 
-      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING == 'true') {
         this._logger.warn(
           `Warning: indexing and query APIs are experimental and still under active development.  Please do not create Composites, Models, or ModelInstanceDocument streams, or use any of the new GraphQL query APIs on mainnet until they are officially released`
         )
@@ -548,7 +548,7 @@ export class Ceramic implements CeramicApi {
    * as expected.
    */
   async _checkIPFSPersistence(): Promise<void> {
-    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK) {
+    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK == 'true') {
       this._logger.warn(`Skipping IPFS persistence checks`)
       return
     }

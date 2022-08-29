@@ -208,11 +208,6 @@ async function checkSignedCommitMatchesExpectations(
 
   const unpacked = { jws, linkedBlock: payload }
 
-  // Add the 'unique' header field to the data used to generate the expected genesis commit
-  if (unpacked.linkedBlock.header?.unique) {
-    expectedCommit.header['unique'] = unpacked.linkedBlock.header.unique
-  }
-
   const expected = await did.createDagJWS(expectedCommit)
   expect(expected).toBeDefined()
 
@@ -324,11 +319,11 @@ describe('ModelHandler', () => {
     )
   })
 
-  it('creates genesis commits uniquely', async () => {
+  it('creates genesis commits deterministically', async () => {
     const commit1 = await Model._makeGenesis(context.api, FINAL_CONTENT)
     const commit2 = await Model._makeGenesis(context.api, FINAL_CONTENT)
 
-    expect(commit1).not.toEqual(commit2)
+    expect(commit1).toEqual(commit2)
   })
 
   it('applies genesis commit correctly', async () => {
@@ -491,7 +486,6 @@ describe('ModelHandler', () => {
       proof: anchorProof,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
-    delete state.metadata.unique
     expect(state).toMatchSnapshot()
   })
 
@@ -547,8 +541,6 @@ describe('ModelHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 + 60 * 60,
     }
     const state = await handler.applyCommit(genesisCommitData, context)
-    delete state.metadata.unique
-
     expect(state).toMatchSnapshot()
   })
 })

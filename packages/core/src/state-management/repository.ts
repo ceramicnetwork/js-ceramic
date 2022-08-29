@@ -8,7 +8,6 @@ import {
   LoadOpts,
   PinningOpts,
   PublishOpts,
-  Stream,
   StreamState,
   SyncOptions,
   UpdateOpts,
