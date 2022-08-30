@@ -57,7 +57,7 @@ describe('Cross-node indexing and query test', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs1 = await createIPFS()
     ipfs2 = await createIPFS()
