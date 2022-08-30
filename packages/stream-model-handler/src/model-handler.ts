@@ -4,6 +4,7 @@ import {
   CommitData,
   CommitType,
   Context,
+  LogEntry,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
@@ -99,7 +100,6 @@ export class ModelHandler implements StreamHandler<Model> {
       throw Error('Model genesis commit must be signed')
     }
 
-
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
@@ -127,6 +127,13 @@ export class ModelHandler implements StreamHandler<Model> {
       )
     }
 
+    const logEntry: LogEntry = {
+      cid: commitData.cid,
+      type: CommitType.SIGNED,
+    }
+    if (commitData?.capability?.p?.exp) {
+      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+    }
     const metadata = { controllers: [controller], model: modelStreamId }
     const state = {
       type: Model.STREAM_TYPE_ID,
@@ -134,7 +141,7 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [logEntry],
     }
 
     await this._schemaValidator.validateSchema(state.content.schema)

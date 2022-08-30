@@ -115,6 +115,7 @@ export interface LogEntry {
   cid: CID
   type: CommitType
   timestamp?: number
+  expirationTime?: number
 }
 
 /**

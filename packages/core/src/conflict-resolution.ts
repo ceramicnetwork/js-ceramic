@@ -237,6 +237,34 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
   return CommitID.make(stateHolder.id, commitCid)
 }
 
+/**
+ * Takes a StreamState and validates that none of the commits in its log are based on expired CACAOs
+ * @param state
+ */
+function checkForCacaoExpiration(state: StreamState): void {
+  let timestamp = Date.now()
+  let err = null
+  // Iterate from newest to oldest so that we can pick up timestamps from anchor commits.
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const entry = state.log[i]
+    if (entry.timestamp) {
+      timestamp = entry.timestamp
+    }
+    if (entry.expirationTime && entry.expirationTime < timestamp) {
+      err = new Error(
+        `CACAO expired: Commit ${entry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
+          state
+        ).toString()} has a CACAO that expired at ${entry.expirationTime}`
+      )
+      err.expiredCommitCID = entry.cid
+      // Keep iterating through the whole log so that we find the oldest commit that is expired.
+    }
+  }
+  if (err) {
+    throw err
+  }
+}
+
 export class ConflictResolution {
   constructor(
     public anchorValidator: AnchorValidator,
@@ -273,6 +301,24 @@ export class ConflictResolution {
    * that was built thus far is returned, unless 'opts.throwOnInvalidCommit' is true.
    */
   private async applyLogToState<T extends Stream>(
+    handler: StreamHandler<T>,
+    unappliedCommits: CommitData[],
+    state: StreamState | null,
+    breakOnAnchor: boolean,
+    opts: InternalOpts
+  ): Promise<StreamState> {
+    state = await this._applyLogToState_noCacaoVerification(
+      handler,
+      unappliedCommits,
+      state,
+      breakOnAnchor,
+      opts
+    )
+    checkForCacaoExpiration(state)
+    return state
+  }
+
+  private async _applyLogToState_noCacaoVerification<T extends Stream>(
     handler: StreamHandler<T>,
     unappliedCommits: CommitData[],
     state: StreamState | null,

@@ -6,6 +6,7 @@ import {
   CommitData,
   CommitType,
   Context,
+  LogEntry,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
@@ -100,13 +101,20 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error('Exactly one controller must be specified')
     }
 
+    const logEntry: LogEntry = {
+      cid: commitData.cid,
+      type: CommitType.GENESIS,
+    }
+    if (commitData?.capability?.p?.exp) {
+      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+    }
     const state = {
       type: TileDocument.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [logEntry],
     }
 
     if (state.metadata.schema) {
@@ -171,7 +179,14 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
+    const logEntry: LogEntry = {
+      cid: commitData.cid,
+      type: CommitType.SIGNED,
+    }
+    if (commitData?.capability?.p?.exp) {
+      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+    }
+    nextState.log.push(logEntry)
 
     const oldContent = state.next?.content ?? state.content
     const oldMetadata = state.next?.metadata ?? state.metadata

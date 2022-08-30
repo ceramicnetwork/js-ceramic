@@ -9,6 +9,7 @@ import {
   CommitData,
   CommitType,
   Context,
+  LogEntry,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
@@ -119,13 +120,20 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     await this._validateContent(modelStream, payload.data, true)
     await this._validateHeader(modelStream, payload.header)
 
+    const logEntry: LogEntry = {
+      cid: commitData.cid,
+      type: CommitType.SIGNED,
+    }
+    if (commitData?.capability?.p?.exp) {
+      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+    }
     return {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [logEntry],
     }
   }
 
@@ -165,11 +173,19 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const modelStream = await context.api.loadStream<Model>(metadata.model)
     await this._validateContent(modelStream, newContent, false)
 
+    const logEntry: LogEntry = {
+      cid: commitData.cid,
+      type: CommitType.SIGNED,
+    }
+    if (commitData?.capability?.p?.exp) {
+      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+    }
+
     const nextState = cloneDeep(state)
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
     nextState.content = newContent
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
+    nextState.log.push(logEntry)
 
     return nextState
   }

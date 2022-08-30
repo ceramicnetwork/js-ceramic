@@ -179,26 +179,46 @@ export class StateManager {
     // by default swallow and log errors applying commits
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
-    const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
-    if (next) {
-      state$.next(next)
-      this.logger.verbose(
-        `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
-      )
-      await this._updateStateIfPinned(state$)
-      return true
-    } else {
-      return false
+    try {
+      const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
+      if (next) {
+        state$.next(next)
+        this.logger.verbose(
+          `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
+        )
+        await this._updateStateIfPinned(state$)
+        return true
+      } else {
+        return false
+      }
+    } catch (err) {
+      // TODO: Don't use string comparison to check the error message, instead the error should
+      // have a semantically meaningful error code that can be checked.
+      if (err.message.startsWith('CACAO expired:') && err.expiredCommitCID) {
+        // CACAO expiration errors mean the state we have saved locally for this stream may not be
+        // valid.  We need to reload the stream and reset it to only include commits that are still valid.
+        this.logger.warn(
+          `Expired CACAO detected in stream ${state$.id.toString()}. Resetting state to commit ${err.expiredCommitCID.toString()}`
+        )
+        const resetState = await this.conflictResolution.snapshotAtCommit(
+          state$.value,
+          err.expiredCommitCID
+        )
+        state$.next(resetState)
+        await this._updateStateIfPinned(state$, true)
+      }
+
+      throw err
     }
   }
 
-  private async _updateStateIfPinned(state$: RunningState): Promise<void> {
+  private async _updateStateIfPinned(state$: RunningState, force = false): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
     const shouldIndex =
       state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
     if (isPinned || shouldIndex) {
-      await this.pinStore.add(state$)
+      await this.pinStore.add(state$, force)
     }
     await this.indexStreamIfNeeded(state$)
   }
