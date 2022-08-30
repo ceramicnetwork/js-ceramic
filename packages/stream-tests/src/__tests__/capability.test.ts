@@ -38,7 +38,12 @@ const MODEL_DEFINITION_2 = getModelDef('MyModel_2')
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 
-const addCapToDid = async (wallet, didKey, resource) => {
+const addCapToDid = async (wallet, didKey, resource, expired = false) => {
+  const now = new Date()
+  const yesterday = new Date(now.getTime() - 1000 * 60 * 60 * 24)
+  const tomorrow = new Date(now.getTime() + 1000 * 60 * 60 * 24)
+  const recent = new Date(now.getTime() - 1000)
+
   // Create CACAO with did:key as aud
   const siweMessage = new SiweMessage({
     domain: 'service.org',
@@ -48,7 +53,8 @@ const addCapToDid = async (wallet, didKey, resource) => {
     uri: didKey.id,
     version: '1',
     nonce: '23423423',
-    issuedAt: new Date().toISOString(),
+    issuedAt: yesterday.toISOString(),
+    expirationTime: expired ? recent.toISOString() : tomorrow.toISOString(),
     resources: [resource],
   })
   // Sign CACAO with did:pkh
@@ -371,7 +377,7 @@ describe('CACAO Integration test', () => {
 
   describe('Resources using wildcard', () => {
     test('update using capability with wildcard * resource', async () => {
-      // Create a determinstic tiledocument owned by the user
+      // Create a deterministic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testfamily',
@@ -472,6 +478,44 @@ describe('CACAO Integration test', () => {
 
       expect(doc.content).toEqual({ foo: 'bar' })
       expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+    }, 30000)
+  })
+
+  describe('CACAO Expiration', () => {
+    test('Cannot create with expired capability', async () => {
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`, true)
+
+      await expect(
+        TileDocument.create(
+          ceramic,
+          { foo: 'bar' },
+          {
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          },
+          {
+            asDID: didKeyWithCapability,
+            anchor: false,
+            publish: false,
+          }
+        )
+      ).rejects.toThrow(/Capability is expired, cannot create a valid signature/)
+    }, 30000)
+
+    test('Cannot update with expired capability', async () => {
+      const deterministicDocument = await TileDocument.deterministic(ceramic, {
+        deterministic: true,
+        family: 'testfamily',
+        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+      })
+      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`, true)
+
+      await expect(
+        deterministicDocument.update({ foo: 'bar' }, null, {
+          asDID: didKeyWithCapability,
+          anchor: false,
+          publish: false,
+        })
+      ).rejects.toThrow(/Capability is expired, cannot create a valid signature/)
     }, 30000)
   })
 })
