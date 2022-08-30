@@ -176,22 +176,28 @@ export class Repository {
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
    */
-  load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    return this.loadingQ.forStream(streamId).run(async () => {
-      const [stream, synced] = await this._loadGenesis(streamId)
-      if (opts.sync == SyncOptions.PREFER_CACHE && synced) {
-        return stream
+    const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
+      const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+      if (opts.sync == SyncOptions.PREFER_CACHE && alreadySynced) {
+        return [streamState$, alreadySynced]
       }
 
       if (opts.sync == SyncOptions.NEVER_SYNC) {
-        return this.stateManager.verifyLoneGenesis(stream)
+        return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
       }
 
-      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
-      return this.stateManager.verifyLoneGenesis(stream)
+      await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
+      return [await this.stateManager.verifyLoneGenesis(streamState$), true]
     })
+    await this.handlePinOpts(state$, opts)
+    if (synced && state$.isPinned) {
+      this.stateManager.markPinnedAndSynced(state$.id)
+    }
+
+    return state$
   }
 
   /**
