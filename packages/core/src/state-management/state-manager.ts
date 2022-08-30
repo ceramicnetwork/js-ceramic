@@ -14,6 +14,7 @@ import {
   RunningStateLike,
   DiagnosticsLogger,
   StreamUtils,
+  CommitType,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -202,7 +203,7 @@ export class StateManager {
         )
         const resetState = await this.conflictResolution.snapshotAtCommit(
           state$.value,
-          err.expiredCommitCID
+          CommitID.make(state$.id, err.expiredCommitCID)
         )
         state$.next(resetState)
         await this._updateStateIfPinned(state$, true)
