@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
+import { CeramicApi, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -38,17 +38,12 @@ const MODEL_DEFINITION = getModelDef('MyModel')
 const MODEL_DEFINITION_2 = getModelDef('MyModel_2')
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
-
-const fastForwardTime = function () {
-  const now = new Date()
-  const monthInFuture = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 30)
-  jest.useFakeTimers().setSystemTime(monthInFuture)
-}
+const CONTENT2 = { myData: 2 }
 
 const addCapToDid = async (wallet, didKey, resource) => {
   const now = new Date()
-  const yesterday = new Date(now.getTime() - 1000 * 60 * 60 * 24)
-  const tomorrow = new Date(now.getTime() + 1000 * 60 * 60 * 24)
+  const past = new Date(now.getTime() - 1000 * 30)
+  const future = new Date(now.getTime() + 1000 * 30)
 
   // Create CACAO with did:key as aud
   const siweMessage = new SiweMessage({
@@ -59,8 +54,8 @@ const addCapToDid = async (wallet, didKey, resource) => {
     uri: didKey.id,
     version: '1',
     nonce: '23423423',
-    issuedAt: yesterday.toISOString(),
-    expirationTime: tomorrow.toISOString(),
+    issuedAt: past.toISOString(),
+    expirationTime: future.toISOString(),
     resources: [resource],
   })
   // Sign CACAO with did:pkh
@@ -398,6 +393,14 @@ describe('CACAO Integration test', () => {
       })
 
       expect(deterministicDocument.content).toEqual({ foo: 'bar' })
+
+      await deterministicDocument.update({ foo: 'baz' }, null, {
+        asDID: didKeyWithCapability,
+        anchor: false,
+        publish: false,
+      })
+
+      expect(deterministicDocument.content).toEqual({ foo: 'baz' })
     }, 30000)
 
     test('create the c', async () => {
@@ -491,44 +494,89 @@ describe('CACAO Integration test', () => {
     let didKeyWithCapability
     let opts
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
       opts = { anchor: false, publish: false, asDID: didKeyWithCapability }
     })
 
-    afterEach(() => {
-      jest.useRealTimers()
-    })
+    test(
+      'Cannot create with expired capability',
+      async () => {
+        // Sleep until the capability expires.
+        await TestUtils.delay(1000 * 35)
 
-    test('Cannot create with expired capability', async () => {
-      fastForwardTime()
-      await expect(
-        TileDocument.create(
+        await expect(
+          TileDocument.create(
+            ceramic,
+            CONTENT0,
+            {
+              controllers: [`did:pkh:eip155:1:${wallet.address}`],
+            },
+            opts
+          )
+        ).rejects.toThrow(/Capability is expired, cannot create a valid signature/)
+      },
+      1000 * 60
+    )
+
+    test(
+      'Cannot update with expired capability',
+      async () => {
+        const doc = await TileDocument.create(
           ceramic,
-          { foo: 'bar' },
+          CONTENT0,
           {
             controllers: [`did:pkh:eip155:1:${wallet.address}`],
           },
           opts
         )
-      ).rejects.toThrow(/Capability is expired, cannot create a valid signature/)
-    }, 30000)
 
-    test('Cannot update with expired capability', async () => {
-      const deterministicDocument = await TileDocument.deterministic(
-        ceramic,
-        {
-          deterministic: true,
-          family: 'testfamily',
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
-        },
-        opts
-      )
+        // Sleep until the capability expires.
+        await TestUtils.delay(1000 * 35)
 
-      fastForwardTime()
-      await expect(deterministicDocument.update({ foo: 'bar' }, null, opts)).rejects.toThrow(
-        /Capability is expired, cannot create a valid signature/
-      )
-    }, 30000)
+        await expect(doc.update(CONTENT1, null, opts)).rejects.toThrow(
+          /Capability is expired, cannot create a valid signature/
+        )
+      },
+      1000 * 60
+    )
+
+    test(
+      'Update applied with valid capability that later expires without being anchored',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          },
+          { ...opts, anchor: true }
+        )
+
+        await TestUtils.anchorUpdate(ceramic, doc)
+
+        await doc.update(CONTENT1, null, opts)
+
+        expect(doc.state.log.length).toEqual(3)
+
+        // Sleep until the capability used for the first two updates expires.
+        await TestUtils.delay(1000 * 35)
+
+        // Time is now ahead, so the capability used for the first two updates has expired, but we'll
+        // use a new capability so the new update is done with a valid capability.
+        const didKeyWithCurrentCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+        // Even though the capability for this update is valid, it builds on a commit that was
+        // authored with an expired capability and so we should detect that, error, and revert the
+        // state to the genesis state as the genesis state was anchored and so has a timestamp
+        // within the capability's expiration window, while the update commit does not and so is
+        // now expired
+        await doc.update(CONTENT2, null, {
+          ...opts,
+          asDID: didKeyWithCurrentCapability,
+        })
+      },
+      1000 * 60
+    )
   })
 })
