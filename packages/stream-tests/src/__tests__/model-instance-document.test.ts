@@ -46,7 +46,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
     core = await createCeramic(ipfs)
@@ -238,7 +238,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()

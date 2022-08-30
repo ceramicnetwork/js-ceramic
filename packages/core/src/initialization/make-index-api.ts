@@ -28,7 +28,7 @@ export function makeIndexApi(
   network: Networks,
   logger: DiagnosticsLogger
 ): DatabaseIndexApi | undefined {
-  if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING != 'true') {
+  if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
     return undefined
   }
   if (network == Networks.MAINNET || network == Networks.ELP) {

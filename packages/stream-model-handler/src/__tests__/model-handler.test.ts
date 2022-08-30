@@ -226,7 +226,7 @@ describe('ModelHandler', () => {
   let signerUsingOldKey: CeramicSigner
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     const recs: Record<string, any> = {}
     const ipfs = {
