@@ -542,6 +542,45 @@ describe('CACAO Integration test', () => {
     )
 
     test(
+      'Genesis commit applied with valid capability that later expires without being anchored',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          },
+          opts
+        )
+
+        // Sleep until the capability used for the genesis commit expires
+        await TestUtils.delay(1000 * 35)
+
+        // Time is now ahead, so the capability used for the genesis commit has expired, but we'll
+        // use a new capability so the update is done with a valid capability.
+        const didKeyWithCurrentCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+        // Even though the capability for this update is valid, it builds on a commit that was
+        // authored with an expired capability and so we should detect that and error.
+        await expect(
+          doc.update(CONTENT1, null, {
+            ...opts,
+            asDID: didKeyWithCurrentCapability,
+          })
+        ).rejects.toThrow(/CACAO expired/)
+
+        // Update was not applied, but stream handle wasn't reset.
+        expect(doc.content).toEqual(CONTENT0)
+
+        // Sync stream handle with node state and see that state on the node was reset to the
+        // genesis commit.
+        await doc.sync() // todo this should error!  Add tests of loading streams across nodes
+        expect(doc.content).toEqual(CONTENT0)
+      },
+      1000 * 60
+    )
+
+    test(
       'Update applied with valid capability that later expires without being anchored',
       async () => {
         const doc = await TileDocument.create(
@@ -571,10 +610,20 @@ describe('CACAO Integration test', () => {
         // state to the genesis state as the genesis state was anchored and so has a timestamp
         // within the capability's expiration window, while the update commit does not and so is
         // now expired
-        await doc.update(CONTENT2, null, {
-          ...opts,
-          asDID: didKeyWithCurrentCapability,
-        })
+        await expect(
+          doc.update(CONTENT2, null, {
+            ...opts,
+            asDID: didKeyWithCurrentCapability,
+          })
+        ).rejects.toThrow(/CACAO expired/)
+
+        // Update was not applied, but stream handle wasn't reset.
+        expect(doc.content).toEqual(CONTENT1)
+
+        // Sync stream handle with node state and see that state on the node was reset to the
+        // genesis commit.
+        await doc.sync()
+        expect(doc.content).toEqual(CONTENT0)
       },
       1000 * 60
     )

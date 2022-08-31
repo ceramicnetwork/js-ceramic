@@ -14,7 +14,6 @@ import {
   RunningStateLike,
   DiagnosticsLogger,
   StreamUtils,
-  CommitType,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -23,6 +22,7 @@ import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from '
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
+import { StateCache } from './state-cache.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -45,6 +45,8 @@ export class StateManager {
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
    * @param indexStreamIfNeeded - `Repository#indexStreamIfNeeded`
+   * @param _index - handle to the ComposeDB index database
+   * @param inMemoryCache - handle to the in-memory stream cache.  Shared with the Repository.
    */
   constructor(
     private readonly dispatcher: Dispatcher,
@@ -59,7 +61,8 @@ export class StateManager {
       opts?: LoadOpts | CreateOpts
     ) => Promise<RunningState>,
     private readonly indexStreamIfNeeded,
-    private readonly _index: LocalIndexApi | undefined
+    private readonly _index: LocalIndexApi | undefined,
+    private readonly inMemoryCache: StateCache<RunningState>
   ) {}
 
   /**
@@ -195,18 +198,27 @@ export class StateManager {
     } catch (err) {
       // TODO: Don't use string comparison to check the error message, instead the error should
       // have a semantically meaningful error code that can be checked.
-      if (err.message.startsWith('CACAO expired:') && err.expiredCommitCID) {
+      if (err.message.startsWith('CACAO expired:')) {
         // CACAO expiration errors mean the state we have saved locally for this stream may not be
         // valid.  We need to reload the stream and reset it to only include commits that are still valid.
-        this.logger.warn(
-          `Expired CACAO detected in stream ${state$.id.toString()}. Resetting state to commit ${err.expiredCommitCID.toString()}`
-        )
-        const resetState = await this.conflictResolution.snapshotAtCommit(
-          state$.value,
-          CommitID.make(state$.id, err.expiredCommitCID)
-        )
-        state$.next(resetState)
-        await this._updateStateIfPinned(state$, true)
+        if (err.lastValidCommitCid === null) {
+          // The genesis commit was done with an invalid CACAO, so there's no valid state to reset the stream to
+          this.logger.warn(
+            `The genesis commit for Stream ${state$.id.toString()} has an expired CACAO. Discarding all stream state for this stream`
+          )
+          this.inMemoryCache.free(state$.id.toString())
+          // todo: remove stream from index
+        } else {
+          this.logger.warn(
+            `Expired CACAO detected in stream ${state$.id.toString()}. Resetting state to commit ${err.lastValidCommitCid.toString()}`
+          )
+          const resetState = await this.conflictResolution.snapshotAtCommit(
+            state$.value,
+            CommitID.make(state$.id, err.lastValidCommitCid)
+          )
+          state$.next(resetState)
+          await this._updateStateIfPinned(state$, true)
+        }
       }
 
       throw err

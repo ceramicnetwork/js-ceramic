@@ -256,7 +256,7 @@ function checkForCacaoExpiration(state: StreamState): void {
           state
         ).toString()} has a CACAO that expired at ${entry.expirationTime}`
       )
-      err.expiredCommitCID = entry.cid
+      err.lastValidCommitCid = state.log[i - 1]?.cid || null
       // Keep iterating through the whole log so that we find the oldest commit that is expired.
     }
   }

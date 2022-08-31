@@ -107,7 +107,8 @@ export class Repository {
       (streamId, opts) => this.load(streamId, opts),
       // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
       this.indexStreamIfNeeded,
-      deps.indexing
+      deps.indexing,
+      this.inmemory
     )
   }
 
