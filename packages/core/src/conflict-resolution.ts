@@ -1,4 +1,4 @@
-import type { CID } from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 import {
   AnchorProof,
   AnchorStatus,
@@ -207,7 +207,7 @@ export async function fetchLog(
   const nextCommitData = await Utils.getCommitData(dispatcher, cid, stateLog.streamId, timestamp)
   // Update the running timestamp if it was updated via an anchor commit fetch
   timestamp = nextCommitData.timestamp
-  const prevCid: CID = nextCommitData.commit.prev
+  const prevCid: CID = CID.asCID(nextCommitData.commit.prev)
   if (!prevCid) {
     // Someone sent a tip that is a fake log, i.e. a log that at some point does not refer to a previous or genesis
     // commit.
