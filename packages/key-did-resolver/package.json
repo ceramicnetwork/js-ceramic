@@ -1,6 +1,6 @@
 {
   "name": "key-did-resolver",
-  "version": "2.0.6",
+  "version": "2.1.4",
   "description": "Ceramic did:key method resolver",
   "keywords": [
     "ceramic",
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@stablelib/ed25519": "^1.0.2",
-    "multiformats": "^9.7.1",
+    "multiformats": "^9.5.2",
     "nist-weierstrauss": "^1.0.0",
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
