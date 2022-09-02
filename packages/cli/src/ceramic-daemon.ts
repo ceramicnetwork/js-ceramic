@@ -22,7 +22,7 @@ import * as NftDidResolver from 'nft-did-resolver'
 import * as SafeDidResolver from 'safe-did-resolver'
 
 import { DID } from 'dids'
-import cors from 'cors'
+import { cors } from './cors.js'
 import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests.js'

@@ -46,7 +46,6 @@
     "@stablelib/random": "^1.0.1",
     "aws-sdk": "^2.1049.0",
     "commander": "^8.3.0",
-    "cors": "^2.8.5",
     "dag-jose": "^2.0.0",
     "did-resolver": "^3.1.5",
     "dids": "^3.2.0",
@@ -67,7 +66,8 @@
     "safe-did-resolver": "^1.0.0",
     "stream-to-array": "^2.3.0",
     "typedjson": "^1.8.0",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^3.0.0",
+    "vary": "^1.1.2"
   },
   "devDependencies": {
     "@ceramicnetwork/stream-tile-handler": "^2.2.7-rc.0",
@@ -76,6 +76,7 @@
     "@types/levelup": "^5.1.0",
     "@types/node": "^18.0.3",
     "@types/stream-to-array": "^2.3.0",
+    "@types/vary": "^1.1.0",
     "cross-fetch": "^3.1.4",
     "get-port": "^6.0.0",
     "rxjs": "^7.5.2",
