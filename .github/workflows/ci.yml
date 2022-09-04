@@ -4,10 +4,7 @@ on:
   repository_dispatch:
     types: [test-success]
   workflow_dispatch: # manually triggered
-    inputs:
-      branch:
-        description: 'Override branch'
-        required: false
+
 env:
   # Dagger
   DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
@@ -24,7 +21,7 @@ env:
   # Miscellaneous
   RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   STATUS_URL: "https://api.github.com/repos/ceramicnetwork/js-ceramic/statuses/${{ github.event.client_payload.sha || github.sha }}"
-  BRANCH: ${{ github.event.inputs.branch || github.event.client_payload.branch || github.ref_name }}
+  BRANCH: ${{ github.event.client_payload.branch || github.ref_name }}
   SHA: ${{ github.event.client_payload.sha || github.sha }}
 
 jobs:
