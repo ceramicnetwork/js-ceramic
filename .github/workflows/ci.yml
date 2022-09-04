@@ -5,13 +5,16 @@ on:
   repository_dispatch:
     types: [test-success]
   workflow_dispatch: # manually triggered
-
+    inputs:
+      publish:
+        description: 'Force publish image and deploy'
+        required: false
+        default: 'false'
 env:
   # Dagger
   DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
-  DAGGER_VERSION: "0.2.21"
   DAGGER_LOG_FORMAT: "plain"
-  PIPELINE_TOOLS_VER: "0.1.4"
+  PIPELINE_TOOLS_VER: "0.1.5"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -84,18 +87,12 @@ jobs:
             dagger project init
             dagger project update
             dagger project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
-
-            AWS_SCRIPTS=cue.mod/pkg/universe.dagger.io/aws/_scripts
-            AWS_INSTALL="https://raw.githubusercontent.com/dagger/dagger/v${{ env.DAGGER_VERSION }}/pkg/universe.dagger.io/aws/_scripts/install.sh"
-            mkdir -p $AWS_SCRIPTS
-            curl -fsSL $AWS_INSTALL > $AWS_SCRIPTS/install.sh
-            chmod +x $AWS_SCRIPTS/install.sh
       -
         name: Verify Docker image
         run: dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Set publish flag
-        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' }}
+        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' || env.BRANCH == 'develop' || github.event.inputs.publish == 'true' }}
         run: echo "PUBLISH=true" >> $GITHUB_ENV
       -
         name: Get version
@@ -106,9 +103,9 @@ jobs:
         if: ${{ env.PUBLISH == 'true' }}
         run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
-        name: Post deployment event
+        name: Create deployment job
         if: ${{ env.PUBLISH == 'true' }}
-        run: dagger do -l error queue -w "actions:queue:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         name: Login to Amazon ECR
         id: login-ecr
@@ -181,7 +178,6 @@ jobs:
         name: Publish docs
         uses: dagger/dagger-for-github@v3
         with:
-          version: ${{ env.DAGGER_VERSION }}
           cmds: |
             project init
             project update
