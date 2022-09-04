@@ -58,19 +58,16 @@ jobs:
         if: ${{ env.BRANCH == 'main' }}
         run: |
           echo "ENV_TAG=prod" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
         run: |
           echo "ENV_TAG=tnet" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
       -
         name: Set develop branch tag
         if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
       -
         name: Install Dagger
         uses: dagger/dagger-for-github@v3
