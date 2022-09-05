@@ -147,28 +147,41 @@ describe('#load', () => {
   })
 
   describe('sync: SYNC_ALWAYS', () => {
-    test('unpinned', async () => {
-      const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false })
-      const fromMemory = jest.spyOn(repository as any, 'fromMemory')
-      const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
-      const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-      const save = jest.spyOn(repository.pinStore.stateStore, 'save')
-
-      const stream2 = await repository.load(stream1.id, {
-        sync: SyncOptions.SYNC_ALWAYS,
-      })
-      expect(StreamUtils.serializeState(stream1.state)).toEqual(
-        StreamUtils.serializeState(stream2.state)
-      )
-      expect(fromMemory).toBeCalledTimes(0)
-      expect(fromStateStore).toBeCalledTimes(0)
-      expect(fromNetwork).toBeCalledTimes(1)
-      expect(save).toBeCalledTimes(0)
-    })
     describe('pinned', () => {
-      // Do not override state by default
-      test('no pin option', async () => {
-        const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false, pin: true })
+      test('revalidate current state, rewrite', async () => {
+        const stream1 = await TileDocument.create(ceramic, { a: 1 }, null, {
+          anchor: false,
+          pin: true,
+        })
+        await stream1.update({ a: 2 }, null, { anchor: false })
+
+        const fromMemory = jest.spyOn(repository as any, 'fromMemory')
+        fromMemory.mockReturnValueOnce(undefined)
+        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
+        const save = jest.spyOn(repository.pinStore.stateStore, 'save')
+
+        const stream2 = await repository.load(stream1.id, {
+          sync: SyncOptions.SYNC_ALWAYS,
+        })
+        expect(StreamUtils.serializeState(stream1.state)).toEqual(
+          StreamUtils.serializeState(stream2.state)
+        )
+        expect(fromMemory).toBeCalledTimes(1)
+        expect(fromStateStore).toBeCalledTimes(1)
+        expect(fromNetwork).toBeCalledTimes(1)
+        expect(save).toBeCalledTimes(1)
+      })
+    })
+
+    describe('unpinned', () => {
+      test('revalidate current state, do not rewrite', async () => {
+        const stream1 = await TileDocument.create(ceramic, { a: 1 }, null, {
+          anchor: false,
+          pin: false,
+        })
+        await stream1.update({ a: 2 }, null, { anchor: false, pin: false })
+
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
         const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
@@ -180,30 +193,10 @@ describe('#load', () => {
         expect(StreamUtils.serializeState(stream1.state)).toEqual(
           StreamUtils.serializeState(stream2.state)
         )
-        expect(fromMemory).toBeCalledTimes(0)
+        expect(fromMemory).toBeCalledTimes(1)
         expect(fromStateStore).toBeCalledTimes(0)
         expect(fromNetwork).toBeCalledTimes(1)
         expect(save).toBeCalledTimes(0)
-      })
-      // Override current state only if pin: true
-      test('pin: true', async () => {
-        const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false, pin: true })
-        const fromMemory = jest.spyOn(repository as any, 'fromMemory')
-        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
-        const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const save = jest.spyOn(repository.pinStore.stateStore, 'save')
-
-        const stream2 = await repository.load(stream1.id, {
-          sync: SyncOptions.SYNC_ALWAYS,
-          pin: true
-        })
-        expect(StreamUtils.serializeState(stream1.state)).toEqual(
-          StreamUtils.serializeState(stream2.state)
-        )
-        expect(fromMemory).toBeCalledTimes(0)
-        expect(fromStateStore).toBeCalledTimes(0)
-        expect(fromNetwork).toBeCalledTimes(1)
-        expect(save).toBeCalledTimes(1)
       })
     })
   })

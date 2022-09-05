@@ -18,7 +18,7 @@ import {
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
-import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
+import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
@@ -78,16 +78,27 @@ export class StateManager {
    * @param state$
    * @param timeoutMillis
    */
-  async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
+  async sync(state$: RunningState, timeoutMillis: number, hint?: CID): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
-    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
-    await lastValueFrom(
-      tip$.pipe(
-        takeUntil(timer(timeoutMillis)),
-        concatMap((tip) => this._handleTip(state$, tip))
-      ),
-      { defaultValue: undefined }
-    )
+    if (hint) {
+      // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
+      await lastValueFrom(
+        merge(tip$, of(hint)).pipe(
+          takeUntil(timer(timeoutMillis)),
+          concatMap((tip) => this._handleTip(state$, tip))
+        ),
+        { defaultValue: undefined }
+      )
+    } else {
+      // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
+      await lastValueFrom(
+        tip$.pipe(
+          takeUntil(timer(timeoutMillis)),
+          concatMap((tip) => this._handleTip(state$, tip))
+        ),
+        { defaultValue: undefined }
+      )
+    }
     if (state$.isPinned) {
       this.markPinnedAndSynced(state$.id)
     }
