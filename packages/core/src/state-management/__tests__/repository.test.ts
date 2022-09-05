@@ -1,5 +1,12 @@
 import { jest } from '@jest/globals'
-import { StreamUtils, IpfsApi, TestUtils, CommitType, StreamState } from '@ceramicnetwork/common'
+import {
+  StreamUtils,
+  IpfsApi,
+  TestUtils,
+  CommitType,
+  StreamState,
+  SyncOptions,
+} from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -40,7 +47,7 @@ afterEach(async () => {
   await ceramic.close()
 })
 
-describe('load', () => {
+describe('#load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
@@ -137,6 +144,68 @@ describe('load', () => {
 
     // Second time loading from state store it does not need to be synced again
     expect(syncSpy).toBeCalledTimes(1)
+  })
+
+  describe('sync: SYNC_ALWAYS', () => {
+    test('unpinned', async () => {
+      const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false })
+      const fromMemory = jest.spyOn(repository as any, 'fromMemory')
+      const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+      const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
+      const save = jest.spyOn(repository.pinStore.stateStore, 'save')
+
+      const stream2 = await repository.load(stream1.id, {
+        sync: SyncOptions.SYNC_ALWAYS,
+      })
+      expect(StreamUtils.serializeState(stream1.state)).toEqual(
+        StreamUtils.serializeState(stream2.state)
+      )
+      expect(fromMemory).toBeCalledTimes(0)
+      expect(fromStateStore).toBeCalledTimes(0)
+      expect(fromNetwork).toBeCalledTimes(1)
+      expect(save).toBeCalledTimes(0)
+    })
+    describe('pinned', () => {
+      // Do not override state by default
+      test('no pin option', async () => {
+        const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false, pin: true })
+        const fromMemory = jest.spyOn(repository as any, 'fromMemory')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
+        const save = jest.spyOn(repository.pinStore.stateStore, 'save')
+
+        const stream2 = await repository.load(stream1.id, {
+          sync: SyncOptions.SYNC_ALWAYS,
+        })
+        expect(StreamUtils.serializeState(stream1.state)).toEqual(
+          StreamUtils.serializeState(stream2.state)
+        )
+        expect(fromMemory).toBeCalledTimes(0)
+        expect(fromStateStore).toBeCalledTimes(0)
+        expect(fromNetwork).toBeCalledTimes(1)
+        expect(save).toBeCalledTimes(0)
+      })
+      // Override current state only if pin: true
+      test('pin: true', async () => {
+        const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false, pin: true })
+        const fromMemory = jest.spyOn(repository as any, 'fromMemory')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
+        const save = jest.spyOn(repository.pinStore.stateStore, 'save')
+
+        const stream2 = await repository.load(stream1.id, {
+          sync: SyncOptions.SYNC_ALWAYS,
+          pin: true
+        })
+        expect(StreamUtils.serializeState(stream1.state)).toEqual(
+          StreamUtils.serializeState(stream2.state)
+        )
+        expect(fromMemory).toBeCalledTimes(0)
+        expect(fromStateStore).toBeCalledTimes(0)
+        expect(fromNetwork).toBeCalledTimes(1)
+        expect(save).toBeCalledTimes(1)
+      })
+    })
   })
 })
 

@@ -196,7 +196,7 @@ export class Repository {
           return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
         }
         case SyncOptions.SYNC_ALWAYS: {
-          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          const streamState$ = await this.fromNetwork(streamId)
           await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
           return [await this.stateManager.verifyLoneGenesis(streamState$), true]
         }
