@@ -82,6 +82,8 @@ export class StateManager {
    */
   async sync(state$: RunningState, timeoutMillis: number, hint?: CID): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
+    // If a 'hint' is provided we can work on applying it while the tip is
+    // fetched from the network
     const tipSource$ = hint ? merge(tip$, of(hint)) : tip$
     // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
     await lastValueFrom(
