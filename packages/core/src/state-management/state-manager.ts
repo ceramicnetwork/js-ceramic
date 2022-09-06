@@ -75,30 +75,22 @@ export class StateManager {
   /**
    * Takes a stream state that might not contain the complete log (and might in fact contain only the
    * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
-   * @param state$
-   * @param timeoutMillis
+   *
+   * @param state$ - Current stream state.
+   * @param timeoutMillis - How much time do we wait for a response from the network.
+   * @param hint - Tip to try while we are waiting for the network to respond.
    */
   async sync(state$: RunningState, timeoutMillis: number, hint?: CID): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
-    if (hint) {
-      // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
-      await lastValueFrom(
-        merge(tip$, of(hint)).pipe(
-          takeUntil(timer(timeoutMillis)),
-          concatMap((tip) => this._handleTip(state$, tip))
-        ),
-        { defaultValue: undefined }
-      )
-    } else {
-      // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
-      await lastValueFrom(
-        tip$.pipe(
-          takeUntil(timer(timeoutMillis)),
-          concatMap((tip) => this._handleTip(state$, tip))
-        ),
-        { defaultValue: undefined }
-      )
-    }
+    const tipSource$ = hint ? merge(tip$, of(hint)) : tip$
+    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
+    await lastValueFrom(
+      tipSource$.pipe(
+        takeUntil(timer(timeoutMillis)),
+        concatMap((tip) => this._handleTip(state$, tip))
+      ),
+      { defaultValue: undefined }
+    )
     if (state$.isPinned) {
       this.markPinnedAndSynced(state$.id)
     }
@@ -182,11 +174,7 @@ export class StateManager {
    * @returns boolean - whether or not the tip was actually applied
    * @private
    */
-  private async _handleTip(
-    state$: RunningState,
-    cid: CID,
-    opts: InternalOpts = {}
-  ): Promise<boolean> {
+  async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<boolean> {
     // by default swallow and log errors applying commits
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)

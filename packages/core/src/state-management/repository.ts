@@ -200,7 +200,11 @@ export class Repository {
             this.fromNetwork(streamId),
             this.fromMemoryOrStore(streamId),
           ])
-          await this.stateManager.sync(fromNetwork$, opts.syncTimeoutSeconds * 1000, fromMemoryOrStore?.tip)
+          await this.stateManager.sync(
+            fromNetwork$,
+            opts.syncTimeoutSeconds * 1000,
+            fromMemoryOrStore?.tip
+          )
           return [await this.stateManager.verifyLoneGenesis(fromNetwork$), true]
         }
         default:
