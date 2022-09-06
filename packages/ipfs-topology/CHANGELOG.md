@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0-rc.0](/compare/@ceramicnetwork/ipfs-topology@2.1.6-rc.1...@ceramicnetwork/ipfs-topology@2.2.0-rc.0) (2022-09-06)
+
+
+### Features
+
+* **ipfs-topology:** Add bootstrap peers for dev-unstable network (#2419) cf22b93, closes #2419
+
+
+
+
+
 ## [2.1.6-rc.1](/compare/@ceramicnetwork/ipfs-topology@2.1.6-rc.0...@ceramicnetwork/ipfs-topology@2.1.6-rc.1) (2022-09-06)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology

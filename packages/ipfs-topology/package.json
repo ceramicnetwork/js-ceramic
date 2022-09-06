@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "2.1.6-rc.1",
+  "version": "2.2.0-rc.0",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",

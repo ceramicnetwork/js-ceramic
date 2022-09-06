@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0-rc.1](/compare/@ceramicnetwork/stream-tests@2.7.0-rc.0...@ceramicnetwork/stream-tests@2.7.0-rc.1) (2022-09-06)
+
+
+### Features
+
+* Make SYNC_ALWAYS rewrite and revalidate local state (#2410) 24caa20, closes #2410
+
+
+
+
+
 # [2.7.0-rc.0](/compare/@ceramicnetwork/stream-tests@2.6.1-rc.0...@ceramicnetwork/stream-tests@2.7.0-rc.0) (2022-09-06)
 
 

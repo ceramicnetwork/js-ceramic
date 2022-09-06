@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.9.0-rc.0",
+  "version": "2.9.0-rc.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.6.0-rc.0",
-    "@ceramicnetwork/ipfs-topology": "^2.1.6-rc.1",
+    "@ceramicnetwork/ipfs-topology": "^2.2.0-rc.0",
     "@ceramicnetwork/metrics": "^0.0.3",
     "@ceramicnetwork/pinning-aggregation": "^2.0.12-rc.1",
     "@ceramicnetwork/pinning-ipfs-backend": "^2.0.12-rc.1",
@@ -72,7 +72,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.1.7-rc.1",
-    "@ceramicnetwork/ipfs-daemon": "^2.1.4-rc.1",
+    "@ceramicnetwork/ipfs-daemon": "^2.1.4-rc.2",
     "@databases/pg-test": "^3.1.2",
     "@types/node": "^18.0.3",
     "ceramic-cacao": "^1.1.1",
