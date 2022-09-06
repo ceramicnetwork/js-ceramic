@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.11-rc.1](/compare/@ceramicnetwork/blockchain-utils-linking@2.0.11-rc.0...@ceramicnetwork/blockchain-utils-linking@2.0.11-rc.1) (2022-09-06)
+
+
+### Bug Fixes
+
+* **core:** Allow fast-forward of a stream state if newer commit is anchored (#2398) d4085aa, closes #2398
+
+
+
+
+
 ## [2.0.11-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.10...@ceramicnetwork/blockchain-utils-linking@2.0.11-rc.0) (2022-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

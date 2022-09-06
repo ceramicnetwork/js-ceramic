@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.1-rc.1](/compare/@ceramicnetwork/cli@2.6.1-rc.0...@ceramicnetwork/cli@2.6.1-rc.1) (2022-09-06)
+
+
+### Bug Fixes
+
+* evaluate string value of env vars as booleans (#2382) 2837112, closes #2382
+
+
+
+
+
 ## [2.6.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.6.0...@ceramicnetwork/cli@2.6.1-rc.0) (2022-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

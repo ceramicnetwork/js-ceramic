@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0-rc.0](/compare/@ceramicnetwork/stream-tests@2.6.1-rc.0...@ceramicnetwork/stream-tests@2.7.0-rc.0) (2022-09-06)
+
+
+### Features
+
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features (#2405) f0435ac, closes #2405
+* **stream-model:** Only allow genesis commit (#2383) f269217, closes #2383
+* **stream-model:** Remove 'unique' from Model metadata (#2396) 1f0c820, closes #2396
+
+
+
+
+
 ## [2.6.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.6.0...@ceramicnetwork/stream-tests@2.6.1-rc.0) (2022-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

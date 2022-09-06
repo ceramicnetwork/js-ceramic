@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0-rc.0](/compare/@ceramicnetwork/stream-model@0.4.3-rc.0...@ceramicnetwork/stream-model@0.5.0-rc.0) (2022-09-06)
+
+
+### Features
+
+* **stream-model:** Only allow genesis commit (#2383) f269217, closes #2383
+* **stream-model:** Remove 'unique' from Model metadata (#2396) 1f0c820, closes #2396
+
+
+
+
+
 ## [0.4.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@0.4.2...@ceramicnetwork/stream-model@0.4.3-rc.0) (2022-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model

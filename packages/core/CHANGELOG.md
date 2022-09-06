@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.9.0-rc.0](/compare/@ceramicnetwork/core@2.8.1-rc.0...@ceramicnetwork/core@2.9.0-rc.0) (2022-09-06)
+
+
+### Bug Fixes
+
+* **core:** Allow fast-forward of a stream state if newer commit is anchored (#2398) d4085aa, closes #2398
+* **core:** Pinning a stream should mark it as synced (#2394) 8e2fbf6, closes #2394
+* **core:** Use package, not relative path to metrics (#2393) 0d8e50a, closes #2393
+* evaluate string value of env vars as booleans (#2382) 2837112, closes #2382
+
+
+### Features
+
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features (#2405) f0435ac, closes #2405
+
+
+
+
+
 ## [2.8.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.8.0...@ceramicnetwork/core@2.8.1-rc.0) (2022-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/core
