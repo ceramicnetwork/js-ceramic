@@ -81,6 +81,7 @@ export class StateManager {
    * @param hint - Tip to try while we are waiting for the network to respond.
    */
   async sync(state$: RunningState, timeoutMillis: number, hint?: CID): Promise<void> {
+    // Begin querying the network for the tip immediately.
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
     // If a 'hint' is provided we can work on applying it while the tip is
     // fetched from the network
