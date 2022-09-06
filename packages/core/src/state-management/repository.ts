@@ -10,6 +10,7 @@ import {
   PublishOpts,
   StreamState,
   SyncOptions,
+  UnreachableCaseError,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store.js'
@@ -180,17 +181,44 @@ export class Repository {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
     const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
-      const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
-      if (opts.sync == SyncOptions.PREFER_CACHE && alreadySynced) {
-        return [streamState$, alreadySynced]
+      switch (opts.sync) {
+        case SyncOptions.PREFER_CACHE: {
+          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          if (alreadySynced) {
+            return [streamState$, alreadySynced]
+          } else {
+            await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
+            return [await this.stateManager.verifyLoneGenesis(streamState$), true]
+          }
+        }
+        case SyncOptions.NEVER_SYNC: {
+          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
+        }
+        case SyncOptions.SYNC_ALWAYS: {
+          // When SYNC_ALWAYS is provided, we want to reapply and re-validate
+          // the stream state.  We effectively throw out our locally stored state
+          // as its possible that the commits that were used to construct that
+          // state are no longer valid (for example if the CACAOs used to author them
+          // have expired since they were first applied to the cached state object).
+          // But if we were the only node on the network that knew about the most
+          // recent tip, we don't want to totally forget about that, so we pass the tip in 
+          // to `sync` so that it gets considered alongside whatever tip we learn
+          // about from the network.
+          const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
+            this.fromNetwork(streamId),
+            this.fromMemoryOrStore(streamId),
+          ])
+          await this.stateManager.sync(
+            fromNetwork$,
+            opts.syncTimeoutSeconds * 1000,
+            fromMemoryOrStore?.tip
+          )
+          return [await this.stateManager.verifyLoneGenesis(fromNetwork$), true]
+        }
+        default:
+          throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
       }
-
-      if (opts.sync == SyncOptions.NEVER_SYNC) {
-        return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
-      }
-
-      await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
-      return [await this.stateManager.verifyLoneGenesis(streamState$), true]
     })
     await this.handlePinOpts(state$, opts)
     if (synced && state$.isPinned) {
@@ -346,7 +374,6 @@ export class Repository {
 
   /**
    * Helper function to add stream to db index if it has a 'model' in its metadata.
-   * @param state
    * @public
    */
   public async indexStreamIfNeeded(state$: RunningState): Promise<void> {

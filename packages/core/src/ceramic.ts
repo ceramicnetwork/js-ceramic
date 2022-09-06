@@ -23,7 +23,6 @@ import {
   AnchorValidator,
   AnchorStatus,
   IndexApi,
-  CommitType,
   StreamState,
 } from '@ceramicnetwork/common'
 
