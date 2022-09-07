@@ -43,6 +43,10 @@ export class LocalIndexApi implements IndexApi {
     await this.databaseIndexApi.indexStream(args)
   }
 
+  async queryCount(query: BaseQuery): Promise<number> {
+    throw new Error('Not implemented')
+  }
+
   /**
    * Query the index. Ask an indexing database for a list of StreamIDs,
    * and convert them to corresponding StreamState instances via `Repository::streamState`.

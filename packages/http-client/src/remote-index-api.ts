@@ -13,6 +13,10 @@ export class RemoteIndexApi implements IndexApi {
     this._collectionURL = new URL('./collection', apiUrl)
   }
 
+  async queryCount(query: BaseQuery): Promise<number> {
+    throw new Error('Not implemented')
+  }
+
   /**
    * Issue a query to `/collection` endpoint.
    */
