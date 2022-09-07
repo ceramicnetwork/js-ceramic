@@ -75,12 +75,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
     )
   })
 
-  test('verify valid MID pinning options', async () => {
-    await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })).rejects.toThrow(
-      /Invalid stream option passed/
-    )
-  })
-
   test('verifies the content against model schema when updating an MID', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)
@@ -203,8 +197,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('create respects pin flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
-    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()
+    await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })).rejects.toThrow(
+      /Invalid stream option passed/
+    )
   })
 
   test('replace respects anchor flag', async () => {
