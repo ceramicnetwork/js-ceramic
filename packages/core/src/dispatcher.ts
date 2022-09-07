@@ -6,7 +6,6 @@ import {
   ServiceLogger,
   StreamUtils,
   UnreachableCaseError,
-  abortable,
   base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -26,6 +25,7 @@ import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './pubsub/task-queue.js'
 import { Utils } from './utils.js'
+import type { ShutdownSignal } from './shutdown-signal.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -65,7 +65,7 @@ export class Dispatcher {
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
-    private readonly _shutdownSignal: AbortSignal,
+    private readonly _shutdownSignal: ShutdownSignal,
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue(),
     private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
@@ -103,13 +103,13 @@ export class Dispatcher {
         if (cacaoBlock) {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
           const capIPFSUri = decodedProtectedHeader.cap
-          await abortable(this._shutdownSignal, (signal) => {
+          await this._shutdownSignal.abortable((signal) => {
             return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
           })
         }
 
         // put the JWS into the ipfs dag
-        const cid = await abortable(this._shutdownSignal, (signal) => {
+        const cid = await this._shutdownSignal.abortable((signal) => {
           return this._ipfs.dag.put(jws, {
             storeCodec: 'dag-jose',
             hashAlg: 'sha2-256',
@@ -118,14 +118,14 @@ export class Dispatcher {
         })
         // put the payload into the ipfs dag
         const linkCid = jws.link
-        await abortable(this._shutdownSignal, (signal) => {
+        await this._shutdownSignal.abortable((signal) => {
           return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
         })
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
       }
-      const cid = await abortable(this._shutdownSignal, (signal) => {
+      const cid = await this._shutdownSignal.abortable((signal) => {
         return this._ipfs.dag.put(data, { signal: signal })
       })
       await this._restrictCommitSize(cid)
@@ -222,7 +222,7 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await abortable(this._shutdownSignal, (signal) => {
+        dagResult = await this._shutdownSignal.abortable((signal) => {
           return this._ipfs.dag.get(asCid, {
             timeout: this._ipfsTimeout,
             path,
@@ -258,7 +258,7 @@ export class Dispatcher {
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await abortable(this._shutdownSignal, (signal) => {
+    const stat = await this._shutdownSignal.abortable((signal) => {
       return this._ipfs.block.stat(asCid, {
         timeout: this._ipfsTimeout,
         signal: signal,

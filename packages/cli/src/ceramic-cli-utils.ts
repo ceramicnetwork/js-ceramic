@@ -19,6 +19,7 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
+import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -198,6 +199,7 @@ export class CeramicCliUtils {
     const daemon = await CeramicDaemon.create(config)
 
     handleHeapdumpSignal(new URL('./', configFilepath), daemon.diagnosticsLogger)
+    handleSigintSignal(daemon)
     return daemon
   }
 
