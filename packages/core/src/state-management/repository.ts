@@ -202,7 +202,7 @@ export class Repository {
           // state are no longer valid (for example if the CACAOs used to author them
           // have expired since they were first applied to the cached state object).
           // But if we were the only node on the network that knew about the most
-          // recent tip, we don't want to totally forget about that, so we pass the tip in 
+          // recent tip, we don't want to totally forget about that, so we pass the tip in
           // to `sync` so that it gets considered alongside whatever tip we learn
           // about from the network.
           const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
@@ -284,7 +284,11 @@ export class Repository {
   }
 
   async handlePinOpts(state$: RunningState, opts: PinningOpts) {
-    if (opts.pin) {
+    // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
+    const shouldIndex = state$.state.metadata ?
+      state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model) : false
+
+    if (opts.pin || shouldIndex) {
       await this.pin(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
