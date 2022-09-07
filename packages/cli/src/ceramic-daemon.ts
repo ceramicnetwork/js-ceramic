@@ -612,8 +612,7 @@ export class CeramicDaemon {
    * Close Ceramic daemon
    */
   async close(): Promise<void> {
-    await this.ceramic.close()
-    return new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       if (!this.server) resolve()
       this.server.close((err) => {
         if (err) {
@@ -623,5 +622,6 @@ export class CeramicDaemon {
         }
       })
     })
+    await this.ceramic.close()
   }
 }
