@@ -6,6 +6,9 @@ import type { PubsubMessage } from './pubsub-message.js'
 import type { ObservableWithNext } from './observable-with-next.js'
 import { MsgType } from './pubsub-message.js'
 
+// Warnings about rate-limiting appear once per:
+const DEFAULT_WARNINGS_INTERVAL = 30 * 60 * 1000 // 30 minutes
+
 /**
  * The returned Promise resolves when the +subscription+ is done.
  */
@@ -46,11 +49,13 @@ export class PubsubRateLimit
    * @param logger
    * @param queriesPerSecond - Max number of query messages that can be published per second
    *   before they start to queue up.
+   * @param rateLimitWarningsIntervalMs - How much time should pass between two warnings about rate-limiting
    */
   constructor(
     private readonly pubsub: ObservableWithNext<PubsubMessage>,
     private readonly logger: DiagnosticsLogger,
-    private readonly queriesPerSecond: number
+    private readonly queriesPerSecond: number,
+    private readonly rateLimitWarningsIntervalMs: number = DEFAULT_WARNINGS_INTERVAL
   ) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
@@ -59,6 +64,18 @@ export class PubsubRateLimit
     // Limit number of executions by +intervalCap+ in +interval+ milliseconds.
     // Here it is +queriesPerSecond+ per 1000ms = 1 second.
     this.queue = new PQueue({ interval: 1000, intervalCap: queriesPerSecond })
+
+    let lastWarning = 0
+    this.queue.on('add', () => {
+      // If there is a publishing task over the queriesPerSecond limit
+      // And more than this.rateLimitWarningsIntervalMs has passed since the last warning
+      if (this.queue.size > 0 && Date.now() - lastWarning > this.rateLimitWarningsIntervalMs) {
+        this.logger.warn(
+          `More than ${this.queriesPerSecond} query messages published in less than a second. Query messages will be rate limited`
+        )
+        lastWarning = Date.now()
+      }
+    })
 
     this.maxQueuedQueries = queriesPerSecond * 10
 

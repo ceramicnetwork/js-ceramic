@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { empty, fromEvent, merge } from 'rxjs'
+import { empty, fromEvent, merge, Subscription } from 'rxjs'
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
@@ -19,6 +19,14 @@ const PEER_ID = 'PEER_ID'
 const QUERIES_PER_SECOND = 5
 const MAX_QUEUED_QUERIES = QUERIES_PER_SECOND * 10
 const ONE_SECOND = 1000 // in ms
+
+function randomQueryMessage(): QueryMessage {
+  return {
+    typ: MsgType.QUERY,
+    id: random.randomString(16),
+    stream: FAKE_STREAM_ID,
+  }
+}
 
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(ONE_SECOND * 30)
@@ -50,11 +58,7 @@ describe('pubsub with queries rate limited', () => {
   })
 
   test('basic message publishing passes through', async () => {
-    const message = {
-      typ: MsgType.QUERY as MsgType.QUERY,
-      id: random.randomString(32),
-      stream: FAKE_STREAM_ID,
-    }
+    const message = randomQueryMessage()
     // Wait until the message is published
     await whenSubscriptionDone(pubsub.next(message))
     expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message))
@@ -83,13 +87,7 @@ describe('pubsub with queries rate limited', () => {
       times.push(new Date())
       return empty().subscribe()
     })
-    const messages = Array.from({ length: QUERIES_PER_SECOND * batches }).map<QueryMessage>(() => {
-      return {
-        typ: MsgType.QUERY,
-        id: random.randomString(16),
-        stream: FAKE_STREAM_ID,
-      }
-    })
+    const messages = Array.from({ length: QUERIES_PER_SECOND * batches }).map(randomQueryMessage)
     await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
     // Send all the messages using `this.pubsub.next`
     expect(times.length).toEqual(messages.length)
@@ -130,13 +128,7 @@ describe('pubsub with queries rate limited', () => {
       fromEvent(pubsub.queue, 'next')
     ).subscribe(() => queueSizes.push(pubsub.queue.size))
 
-    const messages = Array.from({ length: numMessages }).map<QueryMessage>((_, i) => {
-      return {
-        typ: MsgType.QUERY,
-        id: String(i),
-        stream: FAKE_STREAM_ID,
-      }
-    })
+    const messages = Array.from({ length: numMessages }).map(randomQueryMessage)
 
     // Wait until the messages are submitted
     // No errors expected
@@ -144,5 +136,60 @@ describe('pubsub with queries rate limited', () => {
 
     eventsSubscription.unsubscribe()
     expect(queueSizes.every((s) => s <= MAX_QUEUED_QUERIES)).toBeTruthy()
+  })
+
+  describe('warning is exposed once per interval', () => {
+    const messages = Array.from({ length: QUERIES_PER_SECOND * 3 }).map(randomQueryMessage)
+
+    test('long interval', async () => {
+      const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+      const pubsub = new PubsubRateLimit(
+        vanillaPubsub,
+        diagnosticsLogger,
+        QUERIES_PER_SECOND,
+        30 * 1000
+      )
+      const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
+      await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
+      expect(warnSpy).toBeCalledTimes(1)
+    })
+    test('short interval', async () => {
+      const rateLimitWarningsIntervalMs = 200
+      const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+      const pubsub = new PubsubRateLimit(
+        vanillaPubsub,
+        diagnosticsLogger,
+        QUERIES_PER_SECOND,
+        rateLimitWarningsIntervalMs
+      )
+
+      const warnMock = jest.fn(() => {
+        return new Subscription()
+      })
+      diagnosticsLogger.warn = warnMock
+      // For clarity of the test, we disable processing here
+      pubsub.queue.pause()
+      // One call here
+      const subscriptions = messages.slice(0, 6).map((message) => pubsub.next(message))
+      expect(warnMock).toBeCalledTimes(1)
+      warnMock.mockClear()
+      // Some calls here to demonstrate that warnings are issues if the interval is over
+      const additionalWarnings = 10
+      for (const message of messages.slice(0, additionalWarnings)) {
+        await new Promise((resolve) => setTimeout(resolve, rateLimitWarningsIntervalMs + 10))
+        subscriptions.push(pubsub.next(message))
+      }
+      expect(warnMock).toBeCalledTimes(additionalWarnings)
+      warnMock.mockClear()
+
+      // And if the rate of incoming messages are fast, we issue warnings only after the specified interval
+      const n = 5
+      const betweenMessages = rateLimitWarningsIntervalMs / n
+      for (const message of messages.slice(0, additionalWarnings)) {
+        await new Promise((resolve) => setTimeout(resolve, betweenMessages))
+        subscriptions.push(pubsub.next(message))
+      }
+      expect(warnMock).toBeCalledTimes(Math.floor(additionalWarnings / n))
+    })
   })
 })
