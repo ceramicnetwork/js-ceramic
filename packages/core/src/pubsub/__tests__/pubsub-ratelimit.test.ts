@@ -93,6 +93,8 @@ describe('pubsub with queries rate limited', () => {
     expect(times.length).toEqual(messages.length)
     expect(vanillaPubsub.next).toBeCalledTimes(messages.length)
 
+    // Each chunk length is `QUERIES_PER_SECOND`
+    // Each chunk is expected to contain messages sent during one second
     const perSecondChunks = chunks(times, QUERIES_PER_SECOND)
     // First elements should be more than a second away from each other
     const firstElements = perSecondChunks.map((chunk) => chunk[0])
