@@ -1,8 +1,10 @@
-import { empty, from, Observable, Subscription } from 'rxjs'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { MsgType, PubsubMessage } from './pubsub-message.js'
-import { ObservableWithNext } from './observable-with-next.js'
 import PQueue from 'p-queue'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { empty, from, Observable } from 'rxjs'
+import type { Subscription } from 'rxjs'
+import type { PubsubMessage } from './pubsub-message.js'
+import type { ObservableWithNext } from './observable-with-next.js'
+import { MsgType } from './pubsub-message.js'
 
 /**
  * The returned Promise resolves when the +subscription+ is done.
