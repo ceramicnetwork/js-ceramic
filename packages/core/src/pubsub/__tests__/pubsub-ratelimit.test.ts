@@ -157,8 +157,5 @@ describe('pubsub with queries rate limited', () => {
     eventsSubscription.unsubscribe()
     console.log('q', queueSizes)
     expect(queueSizes.every((s) => s <= MAX_QUEUED_QUERIES)).toBeTruthy()
-
-    // Only up to MAX_QUEUED_QUERIES should actually make it to the underlying pubsub network.
-    // expect(ipfs.pubsub.publish).toBeCalledTimes(MAX_QUEUED_QUERIES)
   })
 })
