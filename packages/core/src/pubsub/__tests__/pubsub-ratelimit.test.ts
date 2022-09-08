@@ -117,10 +117,8 @@ describe('pubsub with queries rate limited', () => {
 
   test('max number of queued queries', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
-    console.log('numMessages', numMessages)
     const original = vanillaPubsub.next.bind(vanillaPubsub)
     vanillaPubsub.next = (message: QueryMessage) => {
-      console.log('next', message.id, new Date())
       return original(message)
     }
 
@@ -145,7 +143,6 @@ describe('pubsub with queries rate limited', () => {
     await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
 
     eventsSubscription.unsubscribe()
-    console.log('q', queueSizes)
     expect(queueSizes.every((s) => s <= MAX_QUEUED_QUERIES)).toBeTruthy()
   })
 })
