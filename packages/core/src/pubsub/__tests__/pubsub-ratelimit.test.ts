@@ -125,69 +125,6 @@ describe('pubsub with queries rate limited', () => {
     }
   })
 
-  test.skip('query messages are rate limited', async () => {
-    const mockNow = jest.spyOn((pubsub as any)._clock, 'now')
-    const numMessages = QUERIES_PER_SECOND * 2
-    const messages = Array.from({ length: numMessages }).map<QueryMessage>(() => {
-      return {
-        typ: MsgType.QUERY,
-        id: random.randomString(16),
-        stream: FAKE_STREAM_ID,
-      }
-    })
-
-    // Fix time so it doesn't progress
-    const startTime = new Date()
-    mockNow.mockReturnValueOnce(startTime)
-    mockNow.mockReturnValueOnce(new Date(startTime.getTime() + 100))
-    mockNow.mockReturnValueOnce(new Date(startTime.getTime() + 200))
-    mockNow.mockReturnValueOnce(new Date(startTime.getTime() + 300))
-    mockNow.mockReturnValueOnce(new Date(startTime.getTime() + 400))
-    mockNow.mockReturnValue(new Date(startTime.getTime() + 500))
-
-    let maxQueriesPerSecondPublished
-    let maxQueriesPerSecondPlusOnePublished
-    const allQueriesPublished = new Promise<void>((resolveAllQueriesPublished) => {
-      maxQueriesPerSecondPublished = new Promise<void>((resolveQueriesPerSecondPublished) => {
-        maxQueriesPerSecondPlusOnePublished = new Promise<void>(
-          (resolveQueriesPerSecondPlusOnePublished) => {
-            let i = 0
-            messages.map((message) => {
-              pubsub.next(message).add(() => {
-                i++
-                if (i == QUERIES_PER_SECOND) {
-                  resolveQueriesPerSecondPublished()
-                }
-                if (i == QUERIES_PER_SECOND + 1) {
-                  resolveQueriesPerSecondPlusOnePublished()
-                }
-                if (i == numMessages) {
-                  resolveAllQueriesPublished()
-                }
-              })
-            })
-          }
-        )
-      })
-    })
-
-    // Without time moving forward, only QUERIES_PER_SECOND queries can be published
-    await maxQueriesPerSecondPublished
-    expect(ipfs.pubsub.publish).toBeCalledTimes(QUERIES_PER_SECOND)
-
-    // Now move time forward enough to let one more message in
-    mockNow.mockReturnValue(new Date(startTime.getTime() + 1000))
-    await maxQueriesPerSecondPlusOnePublished
-    expect(ipfs.pubsub.publish).toBeCalledTimes(QUERIES_PER_SECOND + 1)
-
-    // Now let the remaining messages through
-    mockNow.mockReturnValue(new Date(startTime.getTime() + 5000))
-    await allQueriesPublished
-    expect(ipfs.pubsub.publish).toBeCalledTimes(numMessages)
-
-    mockNow.mockRestore()
-  })
-
   test('max number of queued queries', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
     console.log('numMessages', numMessages)
