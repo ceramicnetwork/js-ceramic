@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.3](/compare/@ceramicnetwork/stream-caip10-link@2.2.3-rc.1...@ceramicnetwork/stream-caip10-link@2.2.3) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
 ## [2.2.3-rc.1](/compare/@ceramicnetwork/stream-caip10-link@2.2.3-rc.0...@ceramicnetwork/stream-caip10-link@2.2.3-rc.1) (2022-09-06)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link

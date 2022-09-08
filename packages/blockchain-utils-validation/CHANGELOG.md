@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.12](/compare/@ceramicnetwork/blockchain-utils-validation@2.0.12-rc.1...@ceramicnetwork/blockchain-utils-validation@2.0.12) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
 ## [2.0.12-rc.1](/compare/@ceramicnetwork/blockchain-utils-validation@2.0.12-rc.0...@ceramicnetwork/blockchain-utils-validation@2.0.12-rc.1) (2022-09-06)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
