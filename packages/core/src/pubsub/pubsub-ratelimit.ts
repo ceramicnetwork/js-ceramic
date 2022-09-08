@@ -33,7 +33,9 @@ export class PubsubRateLimit
   implements ObservableWithNext<PubsubMessage>
 {
   /**
-   * Queue of QueryMessages to publish.
+   * A fixed-size task queue for QUERY message publish tasks. There is a limit to the max number
+   * of QUERY messages that can queue up, after which point publishing new query messages will start
+   * to fail.
    */
   readonly queue: PQueue
 
