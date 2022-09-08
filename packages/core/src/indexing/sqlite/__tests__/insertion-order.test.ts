@@ -3,7 +3,7 @@ import knex, { Knex } from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from '../sqlite-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
-import { chunks } from './chunks.util.js'
+import { chunks } from '../../../__tests__/chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
 

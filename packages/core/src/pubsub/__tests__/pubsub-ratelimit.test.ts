@@ -6,6 +6,7 @@ import * as random from '@stablelib/random'
 import { Pubsub } from '../pubsub.js'
 import { MsgType, QueryMessage, serialize, UpdateMessage } from '../pubsub-message.js'
 import { PubsubRateLimit, whenSubscriptionDone } from '../pubsub-ratelimit.js'
+import { chunks } from '../../__tests__/chunks.util.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
@@ -18,17 +19,6 @@ const PEER_ID = 'PEER_ID'
 const QUERIES_PER_SECOND = 5
 const MAX_QUEUED_QUERIES = QUERIES_PER_SECOND * 10
 const ONE_SECOND = 1000 // in ms
-
-/**
- * Split +array+ into chunks of certain +size+.
- */
-function chunked<A>(array: Array<A>, size: number): Array<Array<A>> {
-  const results: Array<Array<A>> = []
-  for (let i = 0; i < array.length; i += size) {
-    results.push(array.slice(i, i + size))
-  }
-  return results
-}
 
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(ONE_SECOND * 30)
@@ -105,7 +95,7 @@ describe('pubsub with queries rate limited', () => {
     expect(times.length).toEqual(messages.length)
     expect(vanillaPubsub.next).toBeCalledTimes(messages.length)
 
-    const perSecondChunks = chunked(times, QUERIES_PER_SECOND)
+    const perSecondChunks = chunks(times, QUERIES_PER_SECOND)
     // First elements should be more than a second away from each other
     const firstElements = perSecondChunks.map((chunk) => chunk[0])
     for (let i = 1; i < firstElements.length; i++) {
