@@ -1,17 +1,11 @@
 import { jest } from '@jest/globals'
-import { empty, fromEvent, Subscription } from 'rxjs'
+import { empty, fromEvent, merge } from 'rxjs'
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
 import { Pubsub } from '../pubsub.js'
-import {
-  MsgType,
-  PubsubMessage,
-  QueryMessage,
-  serialize,
-  UpdateMessage,
-} from '../pubsub-message.js'
-import { PubsubRateLimit } from '../pubsub-ratelimit.js'
+import { MsgType, QueryMessage, serialize, UpdateMessage } from '../pubsub-message.js'
+import { PubsubRateLimit, whenSubscriptionDone } from '../pubsub-ratelimit.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
@@ -24,14 +18,6 @@ const PEER_ID = 'PEER_ID'
 const QUERIES_PER_SECOND = 5
 const MAX_QUEUED_QUERIES = QUERIES_PER_SECOND * 10
 const ONE_SECOND = 1000 // in ms
-
-/**
- * Wait until the subscription is done
- * @param subscription
- */
-function whenSubscriptionDone(subscription: Subscription): Promise<void> {
-  return new Promise<void>((resolve) => subscription.add(resolve))
-}
 
 /**
  * Split +array+ into chunks of certain +size+.
@@ -97,14 +83,13 @@ describe('pubsub with queries rate limited', () => {
 
   test('rate limiting', async () => {
     const batches = 3
-
     const times = []
-    vanillaPubsub.next = () => {
+
+    vanillaPubsub.next = jest.fn(() => {
       times.push(new Date())
       return empty().subscribe()
-    }
-    const numMessages = QUERIES_PER_SECOND * batches
-    const messages = Array.from({ length: numMessages }).map<QueryMessage>(() => {
+    })
+    const messages = Array.from({ length: QUERIES_PER_SECOND * batches }).map<QueryMessage>(() => {
       return {
         typ: MsgType.QUERY,
         id: random.randomString(16),
@@ -112,8 +97,12 @@ describe('pubsub with queries rate limited', () => {
       }
     })
     await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
+    // Send all the messages using `this.pubsub.next`
+    expect(times.length).toEqual(messages.length)
+    expect(vanillaPubsub.next).toBeCalledTimes(messages.length)
+
     const perSecondChunks = chunked(times, QUERIES_PER_SECOND)
-    // First elements should be more than a second away
+    // First elements should be more than a second away from each other
     const firstElements = perSecondChunks.map((chunk) => chunk[0])
     for (let i = 1; i < firstElements.length; i++) {
       const current = firstElements[i]
@@ -204,13 +193,13 @@ describe('pubsub with queries rate limited', () => {
       return original(message)
     }
 
+    // Note how many messages are waiting in the queue at all times:
+    // when a task is added, and after it finishes
     const queueSizes: Array<number> = []
-    const addEventsSubscription = fromEvent(pubsub.pQueue, 'add').subscribe(() =>
-      queueSizes.push(pubsub.pQueue.size)
-    )
-    const nextEventsSubscription = fromEvent(pubsub.pQueue, 'next').subscribe(() =>
-      queueSizes.push(pubsub.pQueue.size)
-    )
+    const eventsSubscription = merge(
+      fromEvent(pubsub.queue, 'add'),
+      fromEvent(pubsub.queue, 'next')
+    ).subscribe(() => queueSizes.push(pubsub.queue.size))
 
     const messages = Array.from({ length: numMessages }).map<QueryMessage>((_, i) => {
       return {
@@ -224,8 +213,7 @@ describe('pubsub with queries rate limited', () => {
     // No errors expected
     await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
 
-    addEventsSubscription.unsubscribe()
-    nextEventsSubscription.unsubscribe()
+    eventsSubscription.unsubscribe()
     console.log('q', queueSizes)
     expect(queueSizes.every((s) => s <= MAX_QUEUED_QUERIES)).toBeTruthy()
 
