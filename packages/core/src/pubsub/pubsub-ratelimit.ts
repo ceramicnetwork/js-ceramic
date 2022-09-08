@@ -4,6 +4,15 @@ import { TaskQueue } from './task-queue.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ClockSource } from '../clock-source.js'
 import { ObservableWithNext } from './observable-with-next.js'
+import PQueue from 'p-queue'
+
+/**
+ * Wait until the subscription is done
+ * @param subscription
+ */
+function whenSubscriptionDone(subscription: Subscription): Promise<void> {
+  return new Promise<void>((resolve) => subscription.add(resolve))
+}
 
 /**
  * Wraps an instance of Pubsub and rate limits how often QUERY messages can be sent.  There are two
@@ -41,6 +50,8 @@ export class PubsubRateLimit
    */
   private readonly _clock: ClockSource = new ClockSource()
 
+  readonly pQueue: PQueue
+
   /**
    * Constructs a new instance of PubsubRateLimit.
    * @param pubsub - the underlying Pubsub instance to publish messages to.
@@ -56,6 +67,8 @@ export class PubsubRateLimit
     super((subscriber) => {
       pubsub.subscribe(subscriber)
     })
+
+    this.pQueue = new PQueue({ interval: 1000, intervalCap: queriesPerSecond })
 
     this._queryQueue = new TaskQueue((err) => {
       this.logger.err(`Error while publishing pubsub QUERY message: ${err}`)
@@ -74,13 +87,16 @@ export class PubsubRateLimit
   next(message: PubsubMessage): Subscription {
     const maxQueuedQueries = this.queriesPerSecond * 10
     if (message.typ === MsgType.QUERY) {
-      if (this._queryQueue.size >= maxQueuedQueries) {
+      if (this.pQueue.size >= maxQueuedQueries) {
         this.logger.err(
           `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${maxQueuedQueries} queued queries.`
         )
         return empty().subscribe()
       }
-      return from(this._queryQueue.run(this._publishQuery.bind(this, message))).subscribe()
+      console.log('adding', message.id, this.pQueue.size)
+      return from(
+        this.pQueue.add(() => whenSubscriptionDone(this.pubsub.next(message)))
+      ).subscribe()
     } else {
       return this.pubsub.next(message)
     }
