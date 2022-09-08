@@ -55,6 +55,10 @@ describe('pubsub with queries rate limited', () => {
     )
   })
 
+  test('maxQuerySize', () => {
+    expect(pubsub.maxQueuedQueries).toEqual(MAX_QUEUED_QUERIES)
+  })
+
   test('basic message publishing passes through', async () => {
     const message = {
       typ: MsgType.QUERY as MsgType.QUERY,
