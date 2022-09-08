@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals'
+import type { Subscription } from 'rxjs'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
@@ -17,6 +18,14 @@ const PEER_ID = 'PEER_ID'
 const QUERIES_PER_SECOND = 5
 const MAX_QUEUED_QUERIES = QUERIES_PER_SECOND * 10
 
+/**
+ * Wait until the subscription is done
+ * @param subscription
+ */
+function whenSubscriptionDone(subscription: Subscription): Promise<void> {
+  return new Promise<void>((resolve) => subscription.add(resolve))
+}
+
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(1000 * 30)
 
@@ -33,9 +42,9 @@ describe('pubsub with queries rate limited', () => {
       },
       id: jest.fn(async () => ({ id: PEER_ID })),
     }
-    const raw_pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+    const vanillaPubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
     pubsub = new PubsubRateLimit(
-      raw_pubsub,
+      vanillaPubsub,
       new LoggerProvider().getDiagnosticsLogger(),
       QUERIES_PER_SECOND
     )
@@ -47,50 +56,33 @@ describe('pubsub with queries rate limited', () => {
       id: random.randomString(32),
       stream: FAKE_STREAM_ID,
     }
-    const subscription = pubsub.next(message)
-    const messagePublished = new Promise<void>((resolve) => {
-      subscription.add(() => {
-        // Can be replaced with delay, but this is faster.
-        expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message))
-        resolve()
-      })
-    })
-    await messagePublished
+    // Wait until the message is published
+    await whenSubscriptionDone(pubsub.next(message))
+    expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message))
     expect(ipfs.pubsub.publish).toBeCalledTimes(1)
   })
 
   test('Can send many non-query messages without issue', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
-    const messages = [...new Array(numMessages)].map(() => {
+    const messages = Array.from({ length: numMessages }).map(() => {
       return {
-        typ: MsgType.UPDATE as MsgType.UPDATE,
+        typ: MsgType.UPDATE,
         stream: FAKE_STREAM_ID,
         tip: FAKE_STREAM_ID.cid,
       }
     })
-
-    const allMessagesPublished = new Promise<void>((resolve) => {
-      let i = 0
-      messages.map((message) => {
-        pubsub.next(message).add(() => {
-          i++
-          if (i >= numMessages) {
-            resolve()
-          }
-        })
-      })
-    })
-    await allMessagesPublished
+    // Wait until the messages are published
+    await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
     expect(ipfs.pubsub.publish).toBeCalledTimes(numMessages)
   })
 
   test('query messages are rate limited', async () => {
     const mockNow = jest.spyOn(pubsub._clock, 'now')
     const numMessages = QUERIES_PER_SECOND * 2
-    const messages = [...new Array(numMessages).keys()].map((i) => {
+    const messages = Array.from({ length: numMessages }).map(() => {
       return {
-        typ: MsgType.QUERY as MsgType.QUERY,
-        id: i,
+        typ: MsgType.QUERY,
+        id: random.randomString(16),
         stream: FAKE_STREAM_ID,
       }
     })
@@ -149,29 +141,19 @@ describe('pubsub with queries rate limited', () => {
 
   test('max number of queued queries', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
-    const messages = [...new Array(numMessages).keys()].map((i) => {
+    const messages = Array.from({ length: numMessages }).map(() => {
       return {
-        typ: MsgType.QUERY as MsgType.QUERY,
-        id: i,
+        typ: MsgType.QUERY,
+        id: random.randomString(16),
         stream: FAKE_STREAM_ID,
       }
     })
 
-    // All messages should be *submitted* without error
-    const allQueriesPublished = new Promise<void>((resolve) => {
-      let i = 0
-      messages.map((message) => {
-        pubsub.next(message).add(() => {
-          i++
-          if (i >= numMessages) {
-            resolve()
-          }
-        })
-      })
-    })
+    // Wait until the messages are submitted
+    // No errors expected
+    await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
 
     // Only up to MAX_QUEUED_QUERIES should actually make it to the underlying pubsub network.
-    await allQueriesPublished
     expect(ipfs.pubsub.publish).toBeCalledTimes(MAX_QUEUED_QUERIES)
   })
 })
