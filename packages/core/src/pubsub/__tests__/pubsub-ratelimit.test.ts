@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals'
 import type { Subscription } from 'rxjs'
-import { LoggerProvider } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
 import { Pubsub } from '../pubsub.js'
-import { MsgType, serialize } from '../pubsub-message.js'
+import { MsgType, QueryMessage, serialize, UpdateMessage } from '../pubsub-message.js'
 import { PubsubRateLimit } from '../pubsub-ratelimit.js'
 
 const TOPIC = 'test'
@@ -29,8 +29,9 @@ function whenSubscriptionDone(subscription: Subscription): Promise<void> {
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(1000 * 30)
 
-  let ipfs
-  let pubsub
+  let ipfs: IpfsApi
+  let pubsub: PubsubRateLimit
+  let vanillaPubsub: Pubsub
 
   beforeEach(() => {
     ipfs = {
@@ -41,8 +42,8 @@ describe('pubsub with queries rate limited', () => {
         publish: jest.fn(),
       },
       id: jest.fn(async () => ({ id: PEER_ID })),
-    }
-    const vanillaPubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+    } as unknown as IpfsApi
+    vanillaPubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
     pubsub = new PubsubRateLimit(
       vanillaPubsub,
       new LoggerProvider().getDiagnosticsLogger(),
@@ -64,7 +65,7 @@ describe('pubsub with queries rate limited', () => {
 
   test('Can send many non-query messages without issue', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
-    const messages = Array.from({ length: numMessages }).map(() => {
+    const messages = Array.from({ length: numMessages }).map<UpdateMessage>(() => {
       return {
         typ: MsgType.UPDATE,
         stream: FAKE_STREAM_ID,
@@ -77,9 +78,9 @@ describe('pubsub with queries rate limited', () => {
   })
 
   test('query messages are rate limited', async () => {
-    const mockNow = jest.spyOn(pubsub._clock, 'now')
+    const mockNow = jest.spyOn((pubsub as any)._clock, 'now')
     const numMessages = QUERIES_PER_SECOND * 2
-    const messages = Array.from({ length: numMessages }).map(() => {
+    const messages = Array.from({ length: numMessages }).map<QueryMessage>(() => {
       return {
         typ: MsgType.QUERY,
         id: random.randomString(16),
@@ -141,7 +142,7 @@ describe('pubsub with queries rate limited', () => {
 
   test('max number of queued queries', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
-    const messages = Array.from({ length: numMessages }).map(() => {
+    const messages = Array.from({ length: numMessages }).map<QueryMessage>(() => {
       return {
         typ: MsgType.QUERY,
         id: random.randomString(16),
