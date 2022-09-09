@@ -101,7 +101,7 @@ jobs:
         # TODO: Enable this for all envs once Clay and Prod start using CD manager.
         name: Create deployment job
         if: ${{ env.BRANCH == 'develop' }}
-        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         # TODO: Remove this and following step once Clay and Prod start using CD manager.
         name: Login to Amazon ECR
