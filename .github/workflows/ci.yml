@@ -98,19 +98,19 @@ jobs:
         if: ${{ env.PUBLISH == 'true' }}
         run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.BRANCH }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
-        # TODO: Enable this for all envs once Clay and Prod start using CD manager.
+        # TODO: Enable this for all envs once Prod starts using CD manager.
         name: Create deployment job
-        if: ${{ env.BRANCH == 'develop' }}
+        if: ${{ env.BRANCH != 'main' }}
         run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
-        # TODO: Remove this and following step once Clay and Prod start using CD manager.
+        # TODO: Remove this and following step once Prod start using CD manager.
         name: Login to Amazon ECR
         id: login-ecr
-        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' }}
+        if: ${{ env.BRANCH == 'main' }}
         uses: aws-actions/amazon-ecr-login@v1
       -
         name: Publish build event
-        if: ${{ env.BRANCH == 'main' || env.BRANCH == 'release-candidate' }}
+        if: ${{ env.BRANCH == 'main' }}
         run: |
           res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} \
             -H "Content-Type: application/json" \
