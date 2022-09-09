@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0](/compare/@ceramicnetwork/stream-tests@2.7.0-rc.1...@ceramicnetwork/stream-tests@2.7.0) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [2.7.0-rc.1](/compare/@ceramicnetwork/stream-tests@2.7.0-rc.0...@ceramicnetwork/stream-tests@2.7.0-rc.1) (2022-09-06)
 
 
