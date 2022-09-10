@@ -8,9 +8,10 @@ on:
 
 env:
   # Dagger
-  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/ceramic.cue
+  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
+  STATUS_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/status.cue
   DAGGER_LOG_FORMAT: "plain"
-  PIPELINE_TOOLS_VER: "0.1.5"
+  PIPELINE_TOOLS_VER: "0.2.0"
   # Secrets
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -31,24 +32,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Set commit status "pending"
-        run: |
-          res=$(curl \
-            -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ env.GH_TOKEN }}" \
-            ${{ env.STATUS_URL }} \
-            -d '{"state":"pending","target_url":"${{ env.RUN_URL }}","description":"Image verification started","context":"ci/image: verify"}') || exit 1
-          echo $res
-          if [[ $res != *"pending"* ]]; then
-            exit 1
-          fi
-      -
         name: Checkout code
         uses: actions/checkout@v3
         with:
           # Use specified SHA, otherwise use the branch
           ref: ${{ github.event.client_payload.sha || env.BRANCH }}
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Setup Dagger
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+      -
+        name: Set commit status "pending"
+        run: dagger do pending -p ${{ env.STATUS_PLAN }}
       -
         name: Set sha tag
         run: |
@@ -71,17 +73,6 @@ jobs:
         if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
-      -
-        name: Install Dagger
-        uses: dagger/dagger-for-github@v3
-        with:
-          install-only: true
-      -
-        name: Setup Dagger
-        run: |
-            dagger project init
-            dagger project update
-            dagger project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
       -
         name: Verify Docker image
         run: dagger do verify -p ${{ env.DAGGER_PLAN }}
@@ -134,31 +125,11 @@ jobs:
           fi
       -
         name: Set commit status "success"
-        run: |
-          res=$(curl \
-            -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ env.GH_TOKEN }}" \
-            ${{ env.STATUS_URL }} \
-            -d '{"state":"success","target_url":"${{ env.RUN_URL }}","description":"Image verification successful","context":"ci/image: verify"}') || exit 1
-          echo $res
-          if [[ $res != *"success"* ]]; then
-            exit 1
-          fi
+        run: dagger do success -p ${{ env.STATUS_PLAN }}
       -
         name: Set commit status "failure"
         if: ${{ failure() }}
-        run: |
-          res=$(curl \
-            -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ env.GH_TOKEN }}" \
-            ${{ env.STATUS_URL }} \
-            -d '{"state":"failure","target_url":"${{ env.RUN_URL }}","description":"Image verification failed","context":"ci/image: verify"}') || exit 1
-          echo $res
-          if [[ $res != *"failure"* ]]; then
-            exit 1
-          fi
+        run: dagger do failure -p ${{ env.STATUS_PLAN }}
 
   docs:
     name: Publish docs
@@ -178,5 +149,5 @@ jobs:
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools@v${{ env.PIPELINE_TOOLS_VER }}"
+            project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
             do docs -p ${{ env.DAGGER_PLAN }}
