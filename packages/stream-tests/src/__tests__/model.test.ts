@@ -2,14 +2,14 @@ import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
+import { Model } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
-const FINAL_CONTENT = { name: 'myModel', schema: {}, accountRelation: ModelAccountRelation.LIST }
+const FINAL_CONTENT = { name: 'myModel', schema: {}, accountRelation: { type: 'list' } }
 
 describe('Model API http-client tests', () => {
   jest.setTimeout(1000 * 30)

@@ -9,7 +9,7 @@ import { ModelHandler } from '../model-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -79,7 +79,7 @@ const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
 const FINAL_CONTENT: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
+  accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
@@ -110,7 +110,7 @@ const CONTENT_WITH_INVALID_VIEWS: ModelDefinition = {
 
 const CONTENT_WITH_INVALID_SCHEMA = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
+  accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',

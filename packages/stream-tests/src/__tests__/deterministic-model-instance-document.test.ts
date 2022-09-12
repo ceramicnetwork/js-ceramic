@@ -10,14 +10,14 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.SINGLE,
+  accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',

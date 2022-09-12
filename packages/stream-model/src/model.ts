@@ -72,10 +72,7 @@ async function throwReadOnlyError(): Promise<void> {
  * there can be only one instance of this model per account (if a new instance is created it
  * overrides the old one).
  */
-export enum ModelAccountRelation {
-  LIST = 'list',
-  SINGLE = 'single',
-}
+export type ModelAccountRelation = { type: 'list' } | { type: 'single' }
 
 /**
  * Identifies types of properties that are supported as relations by the indexing service.

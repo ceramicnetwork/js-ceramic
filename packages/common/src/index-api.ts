@@ -30,7 +30,7 @@ export type Pagination = ForwardPagination | BackwardPagination
 export type BaseQuery = {
   model: StreamID | string
   account?: string
-  criteria?: Record<string, string>
+  filter?: Record<string, string>
 }
 
 export type IndexQuery = BaseQuery & Pagination

@@ -11,7 +11,7 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -192,7 +192,7 @@ async function checkSignedCommitMatchesExpectations(
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
+  accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
@@ -211,7 +211,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 // Same as MODEL_DEFINITION but uses the SINGLE accountRelation
 const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.SINGLE,
+  accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
