@@ -5,7 +5,6 @@ import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
-import { create as createMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
 
 const SHA256_CODE = 0x12
@@ -66,29 +65,31 @@ const ANCHOR_CONTRACT_ADDRESSES = {
   'eip155:1337': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ganache
 }
 
-const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
+const getHashDigestFromV0Transaction = (txResponse: TransactionResponse): Uint8Array => {
   const withoutPrefix = txResponse.data.replace(/^(0x0?)/, '')
-  return CID.decode(uint8arrays.fromString(withoutPrefix.slice(1), 'base16'))
+  return CID.decode(uint8arrays.fromString(withoutPrefix.slice(1), 'base16')).multihash.digest
 }
 
-const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
+const getHashDigestFromV1Transaction = (txResponse: TransactionResponse): Uint8Array => {
   const decodedArgs = iface.decodeFunctionData('anchorDagCbor', txResponse.data)
   const rootCID = decodedArgs[0]
-  const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootCID.slice(2), 'base16'))
-  return CID.create(1, DAG_CBOR_CODE, multihash)
+  return uint8arrays.fromString(rootCID.slice(2), 'base16')
 }
 
 /**
- * Parses the transaction data to recover the CID.
+ * Parses the transaction data to recover the hash digest of the anchored merkle tree root CID.
  * @param version version of the anchor proof. Version 1 anchor proofs are created using the official anchoring smart contract and must be parsed accordingly
  * @param txResponse the retrieved transaction from the ethereum blockchain
  * @returns
  */
-const getCidFromTransaction = (version: number, txResponse: TransactionResponse): CID => {
+const getHashDigestFromTransaction = (
+  version: number,
+  txResponse: TransactionResponse
+): Uint8Array => {
   if (version === 1) {
-    return getCidFromV1Transaction(txResponse)
+    return getHashDigestFromV1Transaction(txResponse)
   } else {
-    return getCidFromV0Transaction(txResponse)
+    return getHashDigestFromV0Transaction(txResponse)
   }
 }
 
@@ -210,10 +211,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [txResponse, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    const txCid = getCidFromTransaction(anchorProof.version, txResponse)
+    const txHashDigest = getHashDigestFromTransaction(anchorProof.version, txResponse)
 
-    if (!txCid.equals(anchorProof.root)) {
-      throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
+    if (!uint8arrays.equals(txHashDigest, anchorProof.root.multihash.digest)) {
+      throw new Error(`The root CID ${anchorProof.root.toString()} data is not in the transaction`)
     }
 
     if (anchorProof.blockNumber !== txResponse.blockNumber) {
