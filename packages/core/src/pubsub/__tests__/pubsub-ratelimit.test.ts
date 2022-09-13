@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import { empty, fromEvent, merge, Subscription } from 'rxjs'
-import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
 import { Pubsub } from '../pubsub.js'
@@ -117,10 +117,6 @@ describe('pubsub with queries rate limited', () => {
 
   test('max number of queued queries', async () => {
     const numMessages = MAX_QUEUED_QUERIES * 2
-    const original = vanillaPubsub.next.bind(vanillaPubsub)
-    vanillaPubsub.next = (message: QueryMessage) => {
-      return original(message)
-    }
 
     // Note how many messages are waiting in the queue at all times:
     // when a task is added, and after it finishes
@@ -138,6 +134,14 @@ describe('pubsub with queries rate limited', () => {
 
     eventsSubscription.unsubscribe()
     expect(queueSizes.every((s) => s <= MAX_QUEUED_QUERIES)).toBeTruthy()
+    // We send `numMessages = 100` messages. The limit is `MAX_QUEUED_QUERIES = 50`.
+    // We allow `QUERIES_PER_SECOND = 5` messages per second.
+    // The first `QUERIES_PER_SECOND` are processed immediately, as they are under quota.
+    // Then we start to queue up the remaining messages, up to `MAX_QUEUED_QUERIES`.
+    // After the queue is full, we drop the remaining messages.
+    // In total `QUERIES_PER_SECOND + MAX_QUEUED_QUERIES` messages are sent:
+    // the messages that are allowed to be sent this minute, and the queued ones.
+    expect(ipfs.pubsub.publish).toBeCalledTimes(QUERIES_PER_SECOND + MAX_QUEUED_QUERIES)
   })
 
   describe('warning is exposed once per interval', () => {
@@ -156,6 +160,10 @@ describe('pubsub with queries rate limited', () => {
       expect(warnSpy).toBeCalledTimes(1)
     })
     test('short interval', async () => {
+      // We want to prove that warnings are sent once every `rateLimitWarningsIntervalMs`.
+      // The messages are rate-limited **per second**, and we can not change it for test purposes.
+      // Below we first start to queue the messages by sending `QUERIES_PER_SECOND + 1` messages.
+      // First `QUERIES_PER_SECOND` messages are sent this second. Additional one goes to the queue, triggering the warning.
       const rateLimitWarningsIntervalMs = 200
       const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
       const pubsub = new PubsubRateLimit(
@@ -169,29 +177,44 @@ describe('pubsub with queries rate limited', () => {
         return new Subscription()
       })
       diagnosticsLogger.warn = warnMock
-      // For clarity of the test, we disable processing here
+      // For clarity of the test, we disable processing here.
+      // If the queue is running, it is harder to reason about timing of message queueing.
       pubsub.queue.pause()
-      // One call here
-      const subscriptions = messages.slice(0, 6).map((message) => pubsub.next(message))
+
+      // One warning here, because we start populating the queue.
+      const subscriptions = messages
+        .slice(0, QUERIES_PER_SECOND + 1)
+        .map((message) => pubsub.next(message))
       expect(warnMock).toBeCalledTimes(1)
       warnMock.mockClear()
-      // Some calls here to demonstrate that warnings are issues if the interval is over
-      const additionalWarnings = 10
-      for (const message of messages.slice(0, additionalWarnings)) {
-        await new Promise((resolve) => setTimeout(resolve, rateLimitWarningsIntervalMs + 10))
+
+      // Scenario 1: Send a message after `rateLimitWarningsIntervalMs`.
+      // The interval for the warning is over.
+      // Every message now gets into the queue. It triggers the warning.
+      const numMessagesSent = 10
+      for (const message of messages.slice(0, numMessagesSent)) {
+        await TestUtils.delay(rateLimitWarningsIntervalMs + 10)
         subscriptions.push(pubsub.next(message))
       }
-      expect(warnMock).toBeCalledTimes(additionalWarnings)
+      expect(warnMock).toBeCalledTimes(numMessagesSent)
       warnMock.mockClear()
 
-      // And if the rate of incoming messages are fast, we issue warnings only after the specified interval
-      const n = 5
-      const betweenMessages = rateLimitWarningsIntervalMs / n
-      for (const message of messages.slice(0, additionalWarnings)) {
-        await new Promise((resolve) => setTimeout(resolve, betweenMessages))
+      // Scenario 2: Send multiple messages during `rateLimitWarningsIntervalMs` interval.
+      // We should expect only one warning per the interval.
+
+      // This many messages are sent during the interval. Could be any number, 5 is simpler to reason about.
+      const numMessagesPerInterval = 5
+      // We wait `betweenMessages` ms between every message, so that `numMessagesPerInterval` are sent each interval.
+      const betweenMessages = rateLimitWarningsIntervalMs / numMessagesPerInterval
+      for (const message of messages.slice(0, numMessagesSent)) {
+        await TestUtils.delay(betweenMessages)
         subscriptions.push(pubsub.next(message))
       }
-      expect(warnMock).toBeCalledTimes(Math.floor(additionalWarnings / n))
+      // It took us this number of intervals to send all the messages
+      const intervalsElapsed = Math.floor(numMessagesSent / numMessagesPerInterval)
+      // We should expect the warning to be triggered once per interval.
+      expect(warnMock).toBeCalledTimes(intervalsElapsed)
+      subscriptions.map((s) => s.unsubscribe())
     })
   })
 })
