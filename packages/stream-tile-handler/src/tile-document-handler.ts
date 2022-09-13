@@ -100,7 +100,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const entry = { cid: commitData.cid, type: CommitType.SIGNED } as CommitData
+    const entry = { cid: commitData.cid, type: CommitType.GENESIS } as CommitData
     if (commitData.timestamp) entry.timestamp = commitData.timestamp 
     const state = {
       type: TileDocument.STREAM_TYPE_ID,
