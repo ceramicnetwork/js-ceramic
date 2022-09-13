@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@types/varint": "^6.0.0",
-    "did-resolver": "^3.1.5",
+    "did-resolver": "^3.1.5"
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }
