@@ -9,16 +9,16 @@ import { ModelHandler } from '../model-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-import jsonpatch from 'fast-json-patch'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
   Context,
   SignedCommitContainer,
-  TestUtils,
   IpfsApi,
   CeramicSigner,
+  GenesisCommit,
+  RawCommit,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -198,7 +198,7 @@ const rotateKey = (did: DID, rotateDate: string) => {
 async function checkSignedCommitMatchesExpectations(
   did: DID,
   commit: SignedCommitContainer,
-  expectedCommit: Record<string, any>
+  expectedCommit: GenesisCommit | RawCommit
 ) {
   const { jws, linkedBlock } = commit
   expect(jws).toBeDefined()
@@ -207,11 +207,6 @@ async function checkSignedCommitMatchesExpectations(
   const payload = dagCBOR.decode(linkedBlock)
 
   const unpacked = { jws, linkedBlock: payload }
-
-  // Add the 'unique' header field to the data used to generate the expected genesis commit
-  if (unpacked.linkedBlock.header?.unique) {
-    expectedCommit.header['unique'] = unpacked.linkedBlock.header.unique
-  }
 
   const expected = await did.createDagJWS(expectedCommit)
   expect(expected).toBeDefined()
@@ -231,6 +226,8 @@ describe('ModelHandler', () => {
   let signerUsingOldKey: CeramicSigner
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+
     const recs: Record<string, any> = {}
     const ipfs = {
       dag: {
@@ -322,11 +319,11 @@ describe('ModelHandler', () => {
     )
   })
 
-  it('creates genesis commits uniquely', async () => {
+  it('creates genesis commits deterministically', async () => {
     const commit1 = await Model._makeGenesis(context.api, FINAL_CONTENT)
     const commit2 = await Model._makeGenesis(context.api, FINAL_CONTENT)
 
-    expect(commit1).not.toEqual(commit2)
+    expect(commit1).toEqual(commit2)
   })
 
   it('applies genesis commit correctly', async () => {
@@ -343,8 +340,6 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
-    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
-    delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
 
@@ -365,8 +360,6 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     const streamState = await handler.applyCommit(commitData, context)
-    expect(streamState.metadata.unique instanceof Uint8Array).toBeTruthy()
-    delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
 
@@ -412,89 +405,9 @@ describe('ModelHandler', () => {
     )
   })
 
-  it('fails to apply signed commit with invalid schema', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      CONTENT_WITH_INVALID_SCHEMA
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      `Validation Error: data/$defs must be object, data/properties/stringPropName/type must be equal to one of the allowed values, data/properties/stringPropName/type must be array, data/properties/stringPropName/type must match a schema in anyOf, data/required must be array`
-    )
-  })
-
-  it('fails to apply signed commit if views validation fails', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      CONTENT_WITH_INVALID_VIEWS
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /view definition used with a property also present in schema/
+  it('fails to apply signed commit', async () => {
+    await expect(handler.applyCommit({}, context, {})).rejects.toThrow(
+      `Cannot update a finalized Model`
     )
   })
 
@@ -515,256 +428,6 @@ describe('ModelHandler', () => {
       envelope: commit.jws,
     }
     await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
-      `Unexpected key 'foo' found in content for Model Stream`
-    )
-  })
-
-  it('makes signed commit correctly', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-
-    await expect(doc._makeCommit({} as CeramicApi, FINAL_CONTENT)).rejects.toThrow(/No DID/)
-
-    const commit = (await doc._makeCommit(context.api, FINAL_CONTENT)) as SignedCommitContainer
-    const patch = jsonpatch.compare(PLACEHOLDER_CONTENT, FINAL_CONTENT)
-    const expectedCommit = { data: patch, prev: FAKE_CID_1, id: FAKE_CID_1 }
-    await checkSignedCommitMatchesExpectations(did, commit, expectedCommit)
-  })
-
-  it('applies signed commit correctly', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    let state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      FINAL_CONTENT
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    state = await handler.applyCommit(signedCommitData, context, state)
-    delete state.metadata.unique
-    delete state.next.metadata.unique
-    expect(state).toMatchSnapshot()
-  })
-
-  it('applies signed commit with views property correctly', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    let state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    state = await handler.applyCommit(signedCommitData, context, state)
-    delete state.metadata.unique
-    delete state.next.metadata.unique
-    expect(state).toMatchSnapshot()
-  })
-
-  it('incomplete update rejected', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const incompleteFinalConent = { name: 'myModel', schema: {} }
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      incompleteFinalConent
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /missing a 'accountRelation' field/
-    )
-  })
-
-  it('updating existing model fails', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      FINAL_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const updatedContent = {
-      ...FINAL_CONTENT,
-      name: 'updatedName',
-    }
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      updatedContent
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /Cannot update a finalized Model/
-    )
-  })
-
-  it('update rejected that adds unexpected field', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, {
-      ...FINAL_CONTENT,
-      foo: 'bar',
-    })) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       `Unexpected key 'foo' found in content for Model Stream`
     )
   })
@@ -790,136 +453,10 @@ describe('ModelHandler', () => {
     )
   })
 
-  it('throws error if changes metadata', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
-    rawCommit.header = { controllers: [did.id, did.id] }
-    const signedCommit = await Model._signDagJWS(context.api, rawCommit)
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /Updating metadata for Model Streams is not allowed/
-    )
-  })
-
-  it('fails to apply commit with invalid prev link', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
-    rawCommit.prev = FAKE_CID_3
-    const signedCommit = await Model._signDagJWS(context.api, rawCommit)
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /Commit doesn't properly point to previous commit in log/
-    )
-  })
-
-  it('fails to apply commit with invalid id property', async () => {
-    const genesisCommit = (await Model._makeGenesis(
-      context.api,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // apply genesis
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-    }
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const rawCommit = doc._makeRawCommit(FINAL_CONTENT)
-    rawCommit.id = FAKE_CID_3
-    const signedCommit = await Model._signDagJWS(context.api, rawCommit)
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /Invalid genesis CID in commit/
-    )
-  })
-
   it('applies anchor commit correctly', async () => {
     const genesisCommit = (await Model._makeGenesis(
       context.api,
-      PLACEHOLDER_CONTENT
+      FINAL_CONTENT
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -935,27 +472,6 @@ describe('ModelHandler', () => {
     }
     let state = await handler.applyCommit(genesisCommitData, context)
 
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      context.api,
-      FINAL_CONTENT
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    // apply signed
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-    }
-    state = await handler.applyCommit(signedCommitData, context, state)
-
     // apply anchor
     const anchorProof = {
       blockNumber: 123456,
@@ -966,66 +482,11 @@ describe('ModelHandler', () => {
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
-      commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_2 },
+      commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_1 },
       proof: anchorProof,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
-    delete state.metadata.unique
     expect(state).toMatchSnapshot()
-  })
-
-  it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
-    const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-
-    // make and apply genesis with old key
-    const genesisCommit = (await Model._makeGenesis(
-      signerUsingOldKey,
-      PLACEHOLDER_CONTENT
-    )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
-
-    // genesis commit applied one hour before rotation
-    const genesisCommitData = {
-      cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
-      commit: payload,
-      envelope: genesisCommit.jws,
-      timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
-    }
-
-    const state = await handler.applyCommit(genesisCommitData, context)
-
-    rotateKey(did, rotateDate.toISOString())
-
-    // make update with old key
-    const state$ = TestUtils.runningState(state)
-    const doc = new Model(state$, context)
-    const signedCommit = (await doc._makeCommit(
-      signerUsingOldKey,
-      FINAL_CONTENT
-    )) as SignedCommitContainer
-
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
-
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
-
-    const signedCommitData = {
-      cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
-      commit: sPayload,
-      envelope: signedCommit.jws,
-      // 24 hours after rotation
-      timestamp: rotateDate.valueOf() / 1000 + 24 * 60 * 60,
-    }
-
-    // applying a commit made with the old key after rotation
-    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      /invalid_jws: signature authored with a revoked DID version/
-    )
   })
 
   it('fails to apply commit if new key used before rotation', async () => {
@@ -1080,8 +541,6 @@ describe('ModelHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 + 60 * 60,
     }
     const state = await handler.applyCommit(genesisCommitData, context)
-    delete state.metadata.unique
-
     expect(state).toMatchSnapshot()
   })
 })

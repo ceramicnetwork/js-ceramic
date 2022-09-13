@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-validation",
-  "version": "2.0.8-rc.0",
+  "version": "2.0.12",
   "description": "Blockchain utils for validation of linked blockchain accounts",
   "keywords": [
     "ceramic",
@@ -22,7 +22,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -30,8 +30,8 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^2.0.7-rc.0",
-    "@ceramicnetwork/common": "^2.2.2-rc.0",
+    "@ceramicnetwork/blockchain-utils-linking": "^2.0.11",
+    "@ceramicnetwork/common": "^2.6.0",
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.1",
     "@ethersproject/wallet": "^5.5.0",
@@ -43,6 +43,7 @@
     "@zondax/filecoin-signing-tools": "^0.18.2",
     "caip": "~1.1.0",
     "cross-fetch": "^3.1.4",
+    "tweetnacl": "^1.0.3",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {

@@ -73,7 +73,6 @@ const waitForAnchor = doc => new Promise(resolve => {
     await doc._syncState(doc.id, { sync: SyncOptions.PREFER_CACHE})
   }, 40000)
   doc.on('change', () => {
-    console.log(new Date(doc.state.anchorScheduledFor))
     console.log(doc.state.anchorStatus)
     if (doc.state.anchorStatus === 3) {
       clearInterval(iid)

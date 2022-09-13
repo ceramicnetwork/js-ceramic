@@ -21,6 +21,8 @@ import {
   TestUtils,
   IpfsApi,
   CeramicSigner,
+  GenesisCommit,
+  RawCommit,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -58,11 +60,15 @@ const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7
 const FAKE_MODEL_ID = StreamID.fromString(
   'kjzl6hvfrbw6cbclh3fplllid7yvf18w05xw41wvuf9b4lk6q9jkq7d1o01wg6v'
 )
+const FAKE_MODEL_ID2 = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5a'
+)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const METADATA = { controller: DID_ID, model: FAKE_MODEL_ID }
+const DETERMINISTIC_METADATA = { controller: DID_ID, model: FAKE_MODEL_ID2, deterministic: true }
 
 const jwsForVersion0 = {
   payload: 'bbbb',
@@ -159,7 +165,7 @@ const rotateKey = (did: DID, rotateDate: string) => {
 async function checkSignedCommitMatchesExpectations(
   did: DID,
   commit: SignedCommitContainer,
-  expectedCommit: Record<string, any>
+  expectedCommit: GenesisCommit | RawCommit
 ) {
   const { jws, linkedBlock } = commit
   expect(jws).toBeDefined()
@@ -202,6 +208,25 @@ const MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
+// Same as MODEL_DEFINITION but uses the SINGLE accountRelation
+const MODEL_DEFINITION_SINGLE: ModelDefinition = {
+  name: 'MyModel',
+  accountRelation: ModelAccountRelation.SINGLE,
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'integer',
+        maximum: 100,
+        minimum: 0,
+      },
+    },
+    required: ['myData'],
+  },
+}
+
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
@@ -210,6 +235,8 @@ describe('ModelInstanceDocumentHandler', () => {
   let signerUsingOldKey: CeramicSigner
 
   beforeAll(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+
     const recs: Record<string, any> = {}
     const ipfs = {
       dag: {
@@ -246,6 +273,10 @@ describe('ModelInstanceDocumentHandler', () => {
         if (streamId.toString() === FAKE_MODEL_ID.toString()) {
           return {
             content: MODEL_DEFINITION,
+          }
+        } else if (streamId.toString() === FAKE_MODEL_ID2.toString()) {
+          return {
+            content: MODEL_DEFINITION_SINGLE,
           }
         } else {
           throw new Error(
@@ -295,13 +326,13 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
       model: FAKE_MODEL_ID,
     })
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
-      data: null,
+      data: CONTENT0,
       header: { controllers: [METADATA.controller], model: METADATA.model.bytes },
     }
 
@@ -319,6 +350,20 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit2 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
 
     expect(commit1).not.toEqual(commit2)
+    expect(StreamUtils.isSignedCommitContainer(commit1)).toBeTruthy()
+  })
+
+  it('Can create deterministic genesis commit', async () => {
+    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...METADATA,
+      deterministic: true,
+    })
+    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...METADATA,
+      deterministic: true,
+    })
+    expect(commit1).toEqual(commit2)
+    expect(StreamUtils.isSignedCommitContainer(commit1)).toBeFalsy()
   })
 
   it('applies genesis commit correctly', async () => {
@@ -341,6 +386,107 @@ describe('ModelInstanceDocumentHandler', () => {
     const streamState = await handler.applyCommit(commitData, context)
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
+  })
+
+  it('genesis commit with content must be signed', async () => {
+    const commit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      DETERMINISTIC_METADATA
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /ModelInstanceDocument genesis commit with content must be signed/
+    )
+  })
+
+  it('applies deterministic genesis commit correctly', async () => {
+    const commit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      DETERMINISTIC_METADATA
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit,
+    }
+    const streamState = await handler.applyCommit(commitData, context)
+    expect(streamState).toMatchSnapshot()
+  })
+
+  it('deterministic genesis commit cannot have content', async () => {
+    const rawCommit = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      DETERMINISTIC_METADATA
+    )
+
+    await context.ipfs.dag.put(rawCommit, FAKE_CID_1)
+    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /Deterministic genesis commits for ModelInstanceDocuments must not have content/
+    )
+  })
+
+  it('MIDs for Models with SINGLE accountRelations must be created deterministically', async () => {
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...DETERMINISTIC_METADATA,
+      deterministic: false,
+    })
+
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /ModelInstanceDocuments for models with SINGLE accountRelations must be created deterministically/
+    )
+  })
+
+  it('MIDs for Models without SINGLE accountRelations must be created uniquely', async () => {
+    const rawCommit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+      ...METADATA,
+      deterministic: true,
+    })
+
+    await context.ipfs.dag.put(rawCommit, FAKE_CID_1)
+    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      /Deterministic ModelInstanceDocuments are only allowed on models that have the SINGLE accountRelation/
+    )
   })
 
   it('model must be a Model streamtype', async () => {
@@ -435,7 +581,6 @@ describe('ModelInstanceDocumentHandler', () => {
     }
     state = await handler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
-    delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
   })
 
@@ -494,7 +639,6 @@ describe('ModelInstanceDocumentHandler', () => {
     }
     const state2 = await handler.applyCommit(signedCommitData_2, context, deepCopy(state1))
     delete state2.metadata.unique
-    delete state2.next.metadata.unique
     expect(state2).toMatchSnapshot()
   })
 
@@ -608,7 +752,8 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const rawCommit = doc._makeRawCommit(CONTENT1)
-    rawCommit.header = { controllers: [did.id, did.id] }
+    const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
+    rawCommit.header = { controllers: [newDid] }
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)

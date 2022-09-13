@@ -6,6 +6,7 @@ import {
   ServiceLogger,
   StreamUtils,
   UnreachableCaseError,
+  base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Repository } from './state-management/repository.js'
@@ -23,7 +24,8 @@ import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './pubsub/task-queue.js'
-import { base64urlToJSON, Utils } from './utils.js'
+import { Utils } from './utils.js'
+import type { ShutdownSignal } from './shutdown-signal.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -63,7 +65,7 @@ export class Dispatcher {
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
-    private readonly _shutdownSignal: AbortSignal,
+    private readonly _shutdownSignal: ShutdownSignal,
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue(),
     private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
@@ -101,23 +103,31 @@ export class Dispatcher {
         if (cacaoBlock) {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
           const capIPFSUri = decodedProtectedHeader.cap
-          await Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, this._shutdownSignal)
+          await this._shutdownSignal.abortable((signal) => {
+            return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
+          })
         }
 
         // put the JWS into the ipfs dag
-        const cid = await this._ipfs.dag.put(jws, {
-          storeCodec: 'dag-jose',
-          hashAlg: 'sha2-256',
-          signal: this._shutdownSignal,
+        const cid = await this._shutdownSignal.abortable((signal) => {
+          return this._ipfs.dag.put(jws, {
+            storeCodec: 'dag-jose',
+            hashAlg: 'sha2-256',
+            signal: signal,
+          })
         })
         // put the payload into the ipfs dag
         const linkCid = jws.link
-        await Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, this._shutdownSignal)
+        await this._shutdownSignal.abortable((signal) => {
+          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
+        })
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
       }
-      const cid = await this._ipfs.dag.put(data, { signal: this._shutdownSignal })
+      const cid = await this._shutdownSignal.abortable((signal) => {
+        return this._ipfs.dag.put(data, { signal: signal })
+      })
       await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
@@ -212,10 +222,12 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._ipfs.dag.get(asCid, {
-          timeout: this._ipfsTimeout,
-          path,
-          signal: this._shutdownSignal,
+        dagResult = await this._shutdownSignal.abortable((signal) => {
+          return this._ipfs.dag.get(asCid, {
+            timeout: this._ipfsTimeout,
+            path,
+            signal: signal,
+          })
         })
       } catch (err) {
         if (
@@ -246,9 +258,11 @@ export class Dispatcher {
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await this._ipfs.block.stat(asCid, {
-      timeout: this._ipfsTimeout,
-      signal: this._shutdownSignal,
+    const stat = await this._shutdownSignal.abortable((signal) => {
+      return this._ipfs.block.stat(asCid, {
+        timeout: this._ipfsTimeout,
+        signal: signal,
+      })
     })
     if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
@@ -306,11 +320,11 @@ export class Dispatcher {
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
-    // TODO(NET-1527) model isn't used in update yet, will be in later versions
     const { stream: streamId, tip, model } = message
+
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
-    this.repository.stateManager.handlePubsubUpdate(streamId, tip)
+    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
     // TODO: Handle 'anchorService' if present in message
   }
 

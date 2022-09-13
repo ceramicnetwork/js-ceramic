@@ -1,4 +1,19 @@
 version: 2.1
+
+parameters:
+  GHA_Event:
+    type: string
+    default: ""
+  GHA_Actor:
+    type: string
+    default: ""
+  GHA_Action:
+    type: string
+    default: ""
+  GHA_Meta:
+    type: string
+    default: ""
+
 orbs:
   node: circleci/node@5.0.0
 
@@ -9,8 +24,8 @@ commands:
       - node/install:
           node-version: "16"
       - node/install-packages
-      - run: npm run lint
       - run: npm run build
+      - run: npm run lint
       - run:
           name: Test
           command: npm run test
@@ -59,6 +74,8 @@ jobs:
 
 workflows:
   build-and-test:
+    # This workflow is set to be triggered conditionally, only when the GitHub Action is triggered.
+    when: << pipeline.parameters.GHA_Event >>
     jobs:
       - with-go-ipfs
       - with-js-ipfs

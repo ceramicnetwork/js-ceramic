@@ -8,29 +8,31 @@ import {base64urlPoint} from 'nist-weierstrauss'
 /**
  * Constructs the document based on the method key
  */
-export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any {
+export function keyToDidDoc(pubKeyBytes: Uint8Array, fingerprint: string): any {
   const did = `did:key:${fingerprint}`
   const keyId = `${did}#${fingerprint}`
-  const key = pubKeyBytesToXY(pubKeyBytes);
+  const key = pubKeyBytesToXY(pubKeyBytes)
   return {
     id: did,
-    verificationMethod: [{
-      id: keyId,
-      type: 'JsonWebKey2020',
-      controller: did,
-       publicKeyJwk: {
-         kty: "EC",
-               crv: "P-384",
-               x: key.xm,
-               y: key.ym,
-       },
-    }],
+    verificationMethod: [
+      {
+        id: keyId,
+        type: 'JsonWebKey2020',
+        controller: did,
+        publicKeyJwk: {
+          kty: 'EC',
+          crv: 'P-384',
+          x: key.xm,
+          y: key.ym,
+        },
+      },
+    ],
     authentication: [keyId],
     assertionMethod: [keyId],
     capabilityDelegation: [keyId],
     capabilityInvocation: [keyId],
   }
-  }
+}
 
 /**
  *
@@ -73,5 +75,5 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
     }
   }
 
-     throw new Error('Unexpected pubKeyBytes');
+  throw new Error('Unexpected pubKeyBytes')
 }

@@ -3,6 +3,7 @@ const registry: Record<string, number | undefined> = {
   'caip10-link': 1,
   model: 2,
   MID: 3,
+  UNLOADABLE: 4,
 }
 
 function codeByName(name: string): number {

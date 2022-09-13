@@ -1,6 +1,44 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { readFile } from 'node:fs/promises'
+import { homedir } from 'os'
+
+/**
+ * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
+ * @param input Relative path.
+ */
+function expandHomedir(input: string): string {
+  return input.replace(/^~\+(?=$|\/|\\)/, process.cwd()).replace(/^~(?=$|\/|\\)/, homedir())
+}
+
+/**
+ * If +input+ path is relative to +configFilepath+, return absolute filepath.
+ *
+ * Includes expansion of `~/` to home directory, and of `~+/` to current working dir. See [[expandHomedir]].
+ * @param input Relative path to resolve.
+ * @param configFilepath Base folder used for path resolution.
+ */
+function expandSinglePath(input: string, configFilepath: URL): string {
+  return new URL(expandHomedir(input), configFilepath).pathname
+}
+
+/**
+ * Resolve relative files used in DaemonConfig using +expandSinglePath+ function.
+ *
+ * Modifies +config+.
+ */
+function expandPaths(config: DaemonConfig, configFilepath: URL): void {
+  if (config.logger?.logDirectory) {
+    config.logger.logDirectory = expandSinglePath(config.logger.logDirectory, configFilepath)
+  }
+  if (config.stateStore?.localDirectory) {
+    config.stateStore.localDirectory = expandSinglePath(
+      config.stateStore.localDirectory,
+      configFilepath
+    )
+  }
+}
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -159,12 +197,32 @@ export class DaemonAnchorConfig {
   ethereumRpcUrl?: string
 }
 
+/**
+ * Configuration options related to Index API.
+ */
 @jsonObject
 @toJson
 export class IndexingConfig {
+  /**
+   * Connection string to a database. Only sqlite and postgres are supported.
+   * Examples:
+   *  - `sqlite:///path/to/database.sqlite`,
+   *  - `postgres:///user:password@host:5432/database`
+   */
   @jsonMember(String)
   db?: string
 
+  /**
+   * Allow serving indexing queries if historical indexing is not done yet.
+   */
+  @jsonMember(Boolean, {
+    name: 'allow-queries-before-historical-sync',
+  })
+  allowQueriesBeforeHistoricalSync?: boolean = false
+
+  /**
+   * Models to index.
+   */
   @jsonArrayMember(StreamID, {
     emitDefaultValue: true,
     deserializer: (arr?: Array<string>) => {
@@ -360,6 +418,13 @@ export class DaemonConfig {
     const jsonObject = JSON.parse(jsonString)
 
     return this.fromObject(jsonObject)
+  }
+
+  static async fromFile(filepath: URL): Promise<DaemonConfig> {
+    const content = await readFile(filepath, { encoding: 'utf8' })
+    const config = DaemonConfig.fromString(content)
+    expandPaths(config, filepath)
+    return config
   }
 
   static fromObject(json: Record<string, any>): DaemonConfig {

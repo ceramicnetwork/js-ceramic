@@ -6,11 +6,10 @@ import type {
   StreamState,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
-import { SyncOptions } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
 import { IndexStreamArgs } from './database-index-api.js'
-import {StreamID} from "@ceramicnetwork/streamid";
+import { StreamID } from '@ceramicnetwork/streamid'
 
 /**
  * API to query an index.
@@ -22,7 +21,11 @@ export class LocalIndexApi implements IndexApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  private _shouldIndexStream(args: StreamID): Boolean {
+  shouldIndexStream(args: StreamID): boolean {
+    if (!this.databaseIndexApi) {
+      return false
+    }
+
     return this.databaseIndexApi.getActiveModelsToIndex().some(function (streamId) {
       return String(streamId) === String(args)
     })
@@ -34,10 +37,10 @@ export class LocalIndexApi implements IndexApi {
    */
   async indexStream(args: IndexStreamArgs): Promise<void> {
     // only index streams with active models in config
-    if (!this._shouldIndexStream(args.model)) {
+    if (!this.shouldIndexStream(args.model)) {
       return
     }
-    this.databaseIndexApi.indexStream(args)
+    await this.databaseIndexApi.indexStream(args)
   }
 
   /**
@@ -49,18 +52,23 @@ export class LocalIndexApi implements IndexApi {
   async queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>> {
     if (this.databaseIndexApi) {
       const page = await this.databaseIndexApi.page(query)
-      const streamStates = await Promise.all(
+      const edges = await Promise.all(
         // For database queries we bypass the stream cache and repository loading queue
-        page.entries.map((streamId) => this.repository.streamState(streamId))
+        page.edges.map(async (edge) => {
+          return {
+            cursor: edge.cursor,
+            node: await this.repository.streamState(edge.node),
+          }
+        })
       )
       return {
-        entries: streamStates,
+        edges: edges,
         pageInfo: page.pageInfo,
       }
     } else {
       this.logger.warn(`Indexing is not configured. Unable to serve query ${JSON.stringify(query)}`)
       return {
-        entries: [],
+        edges: [],
         pageInfo: {
           hasNextPage: false,
           hasPreviousPage: false,

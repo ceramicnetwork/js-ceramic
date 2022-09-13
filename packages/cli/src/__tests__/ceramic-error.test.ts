@@ -4,13 +4,13 @@ import * as tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Ceramic } from '@ceramicnetwork/core'
 import * as random from '@stablelib/random'
-import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon'
+import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon.js'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { makeDID } from './make-did'
+import { makeDID } from './make-did.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as path from 'path'
 import * as fs from 'fs'
-import { DaemonConfig, StateStoreMode } from '../daemon-config'
+import { DaemonConfig, StateStoreMode } from '../daemon-config.js'
 
 const TOPIC = `/${random.randomString(10)}`
 const SEED = 'Hello, crypto!'
@@ -23,7 +23,7 @@ let tmpFolder: tmp.DirectoryResult
 
 function safeRead(filepath: string): string {
   if (fs.existsSync(filepath)) {
-    return fs.readFileSync(filepath).toString()
+    return fs.readFileSync(filepath, 'utf-8')
   } else {
     return ''
   }

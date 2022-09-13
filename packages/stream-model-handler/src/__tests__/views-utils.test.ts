@@ -1,5 +1,5 @@
 import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
-import { ViewsValidation } from '../views-utils'
+import { ViewsValidation } from '../views-utils.js'
 import { ModelViewsDefinition } from '@ceramicnetwork/stream-model'
 
 const SCHEMA: JSONSchema.Object = {

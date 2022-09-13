@@ -1,8 +1,7 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub.js'
 import { deserialize, KeepaliveMessage, MsgType } from '../pubsub-message.js'
-import { delay } from '../../__tests__/delay.js'
 import { PubsubKeepalive } from '../pubsub-keepalive.js'
 import { version } from '../../version.js'
 
@@ -39,7 +38,7 @@ describe('pubsub keepalive', () => {
       maxKeepaliveIntervalTime
     )
     const subscription = pubsubWithKeepalive.subscribe()
-    await delay(maxPubsubIntervalTime * 5)
+    await TestUtils.delay(maxPubsubIntervalTime * 5)
     expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(4)
     for (const call of ipfs.pubsub.publish.mock.calls) {
       expect(call[0]).toEqual(TOPIC)
@@ -75,7 +74,7 @@ describe('pubsub keepalive', () => {
       maxKeepaliveIntervalTime
     )
     const subscription = pubsubWithKeepalive.subscribe()
-    await delay(maxKeepaliveIntervalTime * 10)
+    await TestUtils.delay(maxKeepaliveIntervalTime * 10)
     expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThanOrEqual(5)
     expect(ipfs.pubsub.publish.mock.calls.length).toBeLessThanOrEqual(10)
     for (const call of ipfs.pubsub.publish.mock.calls) {
@@ -112,7 +111,7 @@ describe('pubsub keepalive', () => {
       maxKeepaliveIntervalTime
     )
     const subscription = pubsubWithKeepalive.subscribe()
-    await delay(250)
+    await TestUtils.delay(250)
     expect(ipfs.pubsub.publish.mock.calls.length).toEqual(0)
     subscription.unsubscribe()
   })

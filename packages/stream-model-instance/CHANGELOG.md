@@ -3,6 +3,110 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](/compare/@ceramicnetwork/stream-model-instance@0.4.1-rc.1...@ceramicnetwork/stream-model-instance@0.4.1) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+## [0.4.1-rc.1](/compare/@ceramicnetwork/stream-model-instance@0.4.1-rc.0...@ceramicnetwork/stream-model-instance@0.4.1-rc.1) (2022-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+## [0.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.4.0...@ceramicnetwork/stream-model-instance@0.4.1-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+# [0.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.4.0-rc.1...@ceramicnetwork/stream-model-instance@0.4.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+# [0.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.3.2...@ceramicnetwork/stream-model-instance@0.4.0-rc.1) (2022-08-20)
+
+
+### Features
+
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+
+
+
+
+
+
+## [0.3.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.3.1...@ceramicnetwork/stream-model-instance@0.3.2) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+
+## [0.3.1](/compare/@ceramicnetwork/stream-model-instance@0.3.1-rc.2...@ceramicnetwork/stream-model-instance@0.3.1) (2022-08-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+## [0.3.1-rc.2](/compare/@ceramicnetwork/stream-model-instance@0.3.1-rc.1...@ceramicnetwork/stream-model-instance@0.3.1-rc.2) (2022-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+## [0.3.1-rc.1](/compare/@ceramicnetwork/stream-model-instance@0.3.1-rc.0...@ceramicnetwork/stream-model-instance@0.3.1-rc.1) (2022-07-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+## [0.3.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.3.0...@ceramicnetwork/stream-model-instance@0.3.1-rc.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+# [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.3.0-rc.0...@ceramicnetwork/stream-model-instance@0.3.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+# [0.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.2.2-rc.0...@ceramicnetwork/stream-model-instance@0.3.0-rc.0) (2022-06-30)
+
+
+### Features
+
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+
+
+
+
+
 ## [0.2.2-rc.0](/compare/@ceramicnetwork/stream-model-instance@0.2.1...@ceramicnetwork/stream-model-instance@0.2.2-rc.0) (2022-06-27)
 
 

@@ -68,6 +68,7 @@ export class SchemaValidation {
   })
 
   public async validateSchema(schema: SchemaObject): Promise<void> {
+    if (!schema) throw new Error(`Validation Error: schema must be defined`)
     const isValid = await this._validator.validateSchema(schema)
 
     // Remove schema from the Ajv instance's cache, otherwise the ajv cache grows unbounded

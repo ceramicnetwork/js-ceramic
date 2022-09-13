@@ -1,6 +1,6 @@
 {
   "name": "key-did-resolver",
-  "version": "2.0.4",
+  "version": "2.1.1",
   "description": "Ceramic did:key method resolver",
   "keywords": [
     "ceramic",
@@ -29,7 +29,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@stablelib/ed25519": "^1.0.2",
+    "bigint-mod-arith": "^3.1.0",
     "multiformats": "^9.5.2",
     "nist-weierstrauss": "^1.0.0",
     "uint8arrays": "^3.0.0",

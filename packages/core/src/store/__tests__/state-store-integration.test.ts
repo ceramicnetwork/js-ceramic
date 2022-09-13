@@ -6,6 +6,7 @@ import {
   StreamState,
   IpfsApi,
   SignatureStatus,
+  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
@@ -14,8 +15,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
-import { anchorUpdate } from '../../state-management/__tests__/anchor-update.js'
 import { RunningState } from '../../state-management/running-state.js'
+import { Repository } from '../../state-management/repository.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -27,6 +28,10 @@ const ipfs = {
     add: jest.fn(),
   },
 } as unknown as IpfsApi
+
+const repository = {
+  load: jest.fn(),
+} as unknown as Repository
 
 describe('Level data store', () => {
   let store: PinStore
@@ -43,7 +48,7 @@ describe('Level data store', () => {
 
   beforeEach(async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const storeFactory = new PinStoreFactory(ipfs, {
+    const storeFactory = new PinStoreFactory(ipfs, repository, {
       stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',
@@ -77,7 +82,7 @@ describe('Level data store', () => {
     const ceramic = await createCeramic(realIpfs)
 
     const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
-    await anchorUpdate(ceramic, stream)
+    await TestUtils.anchorUpdate(ceramic, stream)
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add')
     await ceramic.pin.add(stream.id)
@@ -85,7 +90,7 @@ describe('Level data store', () => {
 
     const unpinSpy = jest.spyOn(realIpfs.pin, 'rm')
     await ceramic.pin.rm(stream.id)
-    expect(unpinSpy).toBeCalledTimes(5)
+    expect(unpinSpy).toBeCalledTimes(3) // genesis commit envelope, genesis commit payload, and anchor commit
 
     await ceramic.close()
     await realIpfs.stop()
@@ -129,7 +134,7 @@ describe('Level data store', () => {
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const storeFactoryLocal = new PinStoreFactory(ipfs, {
+    const storeFactoryLocal = new PinStoreFactory(ipfs, repository, {
       stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: 'local',
@@ -142,7 +147,7 @@ describe('Level data store', () => {
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const storeFactoryInMemory = new PinStoreFactory(ipfs, {
+    const storeFactoryInMemory = new PinStoreFactory(ipfs, repository, {
       stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',

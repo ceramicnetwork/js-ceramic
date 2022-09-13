@@ -2,8 +2,10 @@ import { program } from 'commander'
 import pc from 'picocolors'
 
 import { CeramicCliUtils } from '../ceramic-cli-utils.js'
+import { version } from '../version.js'
 
 program
+  .version(version, '-v, -V, --version', 'output the version number')
   .command('daemon')
   .option('--config <path>', 'Path to the Ceramic Daemon config file')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
@@ -137,14 +139,14 @@ program
 
 program
   .command('show <streamId> [<anchor>]')
-  .description(`Show the content of a stream ${pc.red(pc.bold('[Deprecated]'))}`)
+  .description(`Show the content of a stream`)
   .action(async (streamId) => {
     await CeramicCliUtils.show(streamId)
   })
 
 program
   .command('state <streamId> [<anchor>]')
-  .description(`Show the state of a stream ${pc.red(pc.bold('[Deprecated]'))}`)
+  .description(`Show the state of a stream`)
   .action(async (streamId) => {
     await CeramicCliUtils.state(streamId)
   })
@@ -158,7 +160,7 @@ program
 
 program
   .command('commits <streamId>')
-  .description(`List stream commits ${pc.red(pc.bold('[Deprecated]'))}`)
+  .description(`List stream commits`)
   .action(async (streamId) => {
     await CeramicCliUtils.commits(streamId)
   })
@@ -198,21 +200,21 @@ pin.description(`('Ceramic local pinning API ${pc.red(pc.bold('[Deprecated]'))}`
 
 pin
   .command('add <streamId>')
-  .description(`Pin stream ${pc.red(pc.bold('[Deprecated]'))}`)
+  .description(`Pin stream`)
   .action(async (streamId) => {
     await CeramicCliUtils.pinAdd(streamId)
   })
 
 pin
   .command('rm <streamId>')
-  .description(`Unpin stream ${pc.red(pc.bold('[Deprecated]'))}`)
+  .description(`Unpin stream`)
   .action(async (streamId) => {
     await CeramicCliUtils.pinRm(streamId)
   })
 
 pin
   .command('ls [<streamId>]')
-  .description(`List pinned streams ${pc.red(pc.bold('[Deprecated]'))}`)
+  .description(`List pinned streams`)
   .action(async (streamId) => {
     await CeramicCliUtils.pinLs(streamId)
   })

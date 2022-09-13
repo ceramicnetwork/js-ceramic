@@ -63,6 +63,7 @@ export interface AnchorProof {
   blockTimestamp: number
   txHash: CID
   root: CID
+  version?: number
 }
 
 export interface AnchorCommit {
@@ -101,7 +102,6 @@ export interface StreamMetadata {
  */
 export interface StreamNext {
   content?: any
-  controllers?: Array<string>
   metadata?: StreamMetadata
 }
 
@@ -141,12 +141,6 @@ export interface StreamState {
   metadata: StreamMetadata
   signature: SignatureStatus
   anchorStatus: AnchorStatus
-  /**
-   * 'anchorScheduledFor' is not an accurate representation of when the stream will be anchored, and will be removed
-   * in a future version
-   * @deprecated
-   */
-  anchorScheduledFor?: number // only present when anchor status is pending
   anchorProof?: AnchorProof // the anchor proof of the latest anchor, only present when anchor status is anchored
   log: Array<LogEntry>
 }
@@ -180,18 +174,11 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     return this._context.api
   }
 
-  get metadata(): StreamMetadata {
-    const { next, metadata } = this.state$.value
-    return cloneDeep(next?.metadata ?? metadata)
-  }
+  abstract get metadata(): Record<string, any>
 
   get content(): any {
     const { next, content } = this.state$.value
     return cloneDeep(next?.content ?? content)
-  }
-
-  get controllers(): Array<string> {
-    return this.metadata.controllers
   }
 
   get tip(): CID {

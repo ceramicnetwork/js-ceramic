@@ -3,6 +3,179 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.9.0](/compare/@ceramicnetwork/core@2.9.0-rc.1...@ceramicnetwork/core@2.9.0) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.9.0-rc.1](/compare/@ceramicnetwork/core@2.9.0-rc.0...@ceramicnetwork/core@2.9.0-rc.1) (2022-09-06)
+
+
+### Features
+
+* Make SYNC_ALWAYS rewrite and revalidate local state (#2410) 24caa20, closes #2410
+
+
+
+
+
+# [2.9.0-rc.0](/compare/@ceramicnetwork/core@2.8.1-rc.0...@ceramicnetwork/core@2.9.0-rc.0) (2022-09-06)
+
+
+### Bug Fixes
+
+* **core:** Allow fast-forward of a stream state if newer commit is anchored (#2398) d4085aa, closes #2398
+* **core:** Pinning a stream should mark it as synced (#2394) 8e2fbf6, closes #2394
+* **core:** Use package, not relative path to metrics (#2393) 0d8e50a, closes #2393
+* evaluate string value of env vars as booleans (#2382) 2837112, closes #2382
+
+
+### Features
+
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features (#2405) f0435ac, closes #2405
+
+
+
+
+
+## [2.8.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.8.0...@ceramicnetwork/core@2.8.1-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.8.0-rc.2...@ceramicnetwork/core@2.8.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.8.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.2...@ceramicnetwork/core@2.8.0-rc.2) (2022-08-20)
+
+
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis ([#2366](https://github.com/ceramicnetwork/js-ceramic/issues/2366)) ([3e53142](https://github.com/ceramicnetwork/js-ceramic/commit/3e531428df28b811687186b6ebd7415a1cd3fec9))
+* **core:** check value of indexing env var ([#2363](https://github.com/ceramicnetwork/js-ceramic/issues/2363)) ([147cebc](https://github.com/ceramicnetwork/js-ceramic/commit/147cebccb8aae66df4aa8c30cb64561c74a1b40d))
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag ([#2339](https://github.com/ceramicnetwork/js-ceramic/issues/2339)) ([df53df4](https://github.com/ceramicnetwork/js-ceramic/commit/df53df49a480884d9d97da452a19a6e96a0633a4))
+* **core:** Add stream from pubsub for UPDATE msg types ([#2317](https://github.com/ceramicnetwork/js-ceramic/issues/2317)) ([413b644](https://github.com/ceramicnetwork/js-ceramic/commit/413b64490cfeb1a8430ecedaaeb55f106e103e2a))
+* **core:** Add tests and validation for anchor smart contract address ([#2367](https://github.com/ceramicnetwork/js-ceramic/issues/2367)) ([936705c](https://github.com/ceramicnetwork/js-ceramic/commit/936705cd5e241dadf101dea20642169822bfd5ff))
+* **core:** parse smart contract tx that anchors a 32 byte hash ([#2379](https://github.com/ceramicnetwork/js-ceramic/issues/2379)) ([0cd3a36](https://github.com/ceramicnetwork/js-ceramic/commit/0cd3a36914216b5b0dee385eb5b54bef280b632b))
+* **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+
+
+
+
+
+
+## [2.7.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.1...@ceramicnetwork/core@2.7.2) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+
+## [2.7.1](/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.7.1) (2022-08-11)
+
+
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis (#2366) 319adf2, closes #2366
+
+
+
+
+
+# [2.7.0](/compare/@ceramicnetwork/core@2.7.0-rc.2...@ceramicnetwork/core@2.7.0) (2022-08-08)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.7.0-rc.2](/compare/@ceramicnetwork/core@2.7.0-rc.1...@ceramicnetwork/core@2.7.0-rc.2) (2022-07-26)
+
+
+### Bug Fixes
+
+* **core:** Detect model model index table and don't recreate (#2340) cc83b3b, closes #2340
+
+
+### Features
+
+* **core:** Add anchor status for READY requests(#2325) c9d4bbb, closes #2325
+* **core:** MID table schema validation on node startup (#2320) ffdc92b, closes #2320
+* **core:** Pinning a ModelInstanceDocument should also pin its Model (#2319) 6df9ae9, closes #2319
+
+
+
+
+
+# [2.7.0-rc.1](/compare/@ceramicnetwork/core@2.7.0-rc.0...@ceramicnetwork/core@2.7.0-rc.1) (2022-07-14)
+
+
+### Bug Fixes
+
+* **core:** Don't unpin anchor proof, merkle tree, or CACAO when unpinning streams (#2307) 5b9773a, closes #2307
+
+
+### Features
+
+* Add allowQueriesBeforeHistoricalSync flag to config (#2289) cf68d7e, closes #2289
+
+
+
+
+
+# [2.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0...@ceramicnetwork/core@2.7.0-rc.0) (2022-07-06)
+
+
+### Features
+
+* **core,model-handler,model-instance-handler:** Disable indexing and query features by default until they are ready ([#2280](https://github.com/ceramicnetwork/js-ceramic/issues/2280)) ([acb010c](https://github.com/ceramicnetwork/js-ceramic/commit/acb010ccb9ced4b2228f574e4325806a4a2d7241))
+* **core:** Postgres MID table creation and indexing ([#2288](https://github.com/ceramicnetwork/js-ceramic/issues/2288)) ([2406073](https://github.com/ceramicnetwork/js-ceramic/commit/2406073b7b34a080be505f612b1596f8bf866a5b))
+* Store first anchored time in the indexing database ([#2287](https://github.com/ceramicnetwork/js-ceramic/issues/2287)) ([35a7e3e](https://github.com/ceramicnetwork/js-ceramic/commit/35a7e3ee838ae775306e4cd748300e6acf3fb101))
+
+
+
+
+
+# [2.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0-rc.1...@ceramicnetwork/core@2.6.0) (2022-07-06)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.6.0-rc.0...@ceramicnetwork/core@2.6.0-rc.1) (2022-06-30)
+
+
+### Features
+
+* Add a method to CeramicAPI that transforms raw StreamState to an instance of Streamtype ([#2286](https://github.com/ceramicnetwork/js-ceramic/issues/2286)) ([9475ccc](https://github.com/ceramicnetwork/js-ceramic/commit/9475ccc6b1c43ad4c3101bdf77bd98fcea6fedf8))
+* Add edge cursors and use expected order ([#2282](https://github.com/ceramicnetwork/js-ceramic/issues/2282)) ([87d8e3f](https://github.com/ceramicnetwork/js-ceramic/commit/87d8e3fc65b7a1743111b4a1105513fd4e98a42b))
+* Remove AbortController polyfill ([#2278](https://github.com/ceramicnetwork/js-ceramic/issues/2278)) ([65b9bee](https://github.com/ceramicnetwork/js-ceramic/commit/65b9beedafa108c07d4c7080c038061c35b88110))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+
+
+
+
+
 # [2.6.0-rc.0](/compare/@ceramicnetwork/core@2.5.1...@ceramicnetwork/core@2.6.0-rc.0) (2022-06-27)
 
 

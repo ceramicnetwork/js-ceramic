@@ -100,7 +100,7 @@ export class PubsubRateLimit
       if (timeSinceOldestQuery < 1000) {
         // If it's been less than a second since the oldest query, sleep until it's been more than a
         // second
-        this.logger.warn(
+        this.logger.verbose(
           `More than ${this.queriesPerSecond} query messages published in less than a second. Query messages will be rate limited`
         )
         await this._clock.waitUntil(new Date(oldestQuery.getTime() + 1000))

@@ -15,7 +15,7 @@ export class SignatureUtils {
    * @param commitData - Commit to be verified
    * @param did - DID instance
    * @param controller - Stream controller DID value
-   * @param model - model of the stream being updated 
+   * @param model - model of the stream being updated
    * @param streamId - Stream ID for the commit
    * @private
    */
@@ -26,29 +26,34 @@ export class SignatureUtils {
     model: StreamID | null,
     streamId: StreamID
   ): Promise<void> {
-    const cacao = await this._verifyCapabilityAuthz(commitData, streamId, model)
+    try {
+      const cacao = await this._verifyCapabilityAuthz(commitData, streamId, model)
 
-    const atTime = commitData.timestamp ? new Date(commitData.timestamp * 1000) : undefined
-    await did.verifyJWS(commitData.envelope, {
-      atTime: atTime,
-      issuer: controller,
-      disableTimecheck: commitData.disableTimecheck,
-      capability: cacao,
-      revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
-    })
+      const atTime = commitData.timestamp ? new Date(commitData.timestamp * 1000) : undefined
+      await did.verifyJWS(commitData.envelope, {
+        atTime: atTime,
+        issuer: controller,
+        disableTimecheck: commitData.disableTimecheck,
+        capability: cacao,
+        revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
+      })
+    } catch (e: any) {
+      const original = e.message ? e.message : String(e)
+      throw new Error(`Can not verify signature for commit ${commitData.cid}: ${original}`)
+    }
   }
 
   /**
    * Verifies capability attached to a signed commit
    * @param commitData - Commit to be verified
    * @param streamId - Stream ID for the commit
-   * @param model - model of the stream being updated 
+   * @param model - model of the stream being updated
    * @returns Cacao is capability was found and verified, null otherwise
    */
   private static async _verifyCapabilityAuthz(
     commitData: CommitData,
     streamId: StreamID,
-    model: StreamID | null,
+    model: StreamID | null
   ): Promise<Cacao | null> {
     const cacao = commitData.capability
 

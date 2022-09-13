@@ -37,6 +37,7 @@ const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
+const CALLER_NAME = 'js-ceramic'
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -60,7 +61,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
 
   // If desired, enable metrics
   if (opts.metrics?.metricsExporterEnabled) {
-    Metrics.start(opts.metrics)
+    Metrics.start(opts.metrics, CALLER_NAME)
   }
 
   const ceramicConfig: CeramicConfig = {
@@ -477,7 +478,12 @@ export class CeramicDaemon {
     const query = collectionQuery(httpQuery)
     const indexResponse = await this.ceramic.index.queryIndex(query)
     res.json({
-      entries: indexResponse.entries.map(StreamUtils.serializeState),
+      edges: indexResponse.edges.map((e) => {
+        return {
+          cursor: e.cursor,
+          node: StreamUtils.serializeState(e.node),
+        }
+      }),
       pageInfo: indexResponse.pageInfo,
     })
   }
@@ -606,7 +612,7 @@ export class CeramicDaemon {
    * Close Ceramic daemon
    */
   async close(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       if (!this.server) resolve()
       this.server.close((err) => {
         if (err) {
@@ -616,5 +622,6 @@ export class CeramicDaemon {
         }
       })
     })
+    await this.ceramic.close()
   }
 }

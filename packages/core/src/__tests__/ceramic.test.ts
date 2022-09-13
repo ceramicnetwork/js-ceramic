@@ -7,14 +7,13 @@ import {
   SyncOptions,
   GenesisCommit,
   MultiQuery,
+  CeramicApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import { swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
+import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import first from 'it-first'
 
 function createCeramic(
   ipfs: IpfsApi,
@@ -29,11 +28,6 @@ function createCeramic(
 
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
-}
-
-async function isPinned(ceramic: Ceramic, streamId: StreamID): Promise<boolean> {
-  const iterator = await ceramic.pin.ls(streamId)
-  return (await first(iterator)) == streamId.toString()
 }
 
 describe('Ceramic integration', () => {
@@ -64,7 +58,7 @@ describe('Ceramic integration', () => {
 
       const stream1 = await TileDocument.create(ceramic1, { test: 456 })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       // we can't load stream from id since nodes are not connected
       // so we won't find the genesis object from it's CID
@@ -128,7 +122,7 @@ describe('Ceramic integration', () => {
       const stream1 = await TileDocument.create(ceramic1, null, metadata)
       await stream1.update({ test: 321 })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       // Through a different ceramic instance create a new stream with the same contents that will
       // therefore resolve to the same genesis commit and thus the same streamId.  Make sure the new
@@ -140,7 +134,7 @@ describe('Ceramic integration', () => {
 
       await stream1.update({ test: 'abcde' })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       expect(stream1.content).toEqual({ test: 'abcde' })
       await TestUtils.waitForState(
@@ -165,11 +159,11 @@ describe('Ceramic integration', () => {
 
       const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       await stream1.update({ test: 'abcde' })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       const logCommits = await ceramic1.loadStreamCommits(stream1.id)
 
@@ -211,7 +205,7 @@ describe('Ceramic integration', () => {
       })
       expect(stream1).toBeDefined()
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       expect(addSpy1).toBeCalledTimes(1)
       expect(loadSpy1).toBeCalledTimes(2) // once from create, once from applyCommit as part of anchor
@@ -221,7 +215,7 @@ describe('Ceramic integration', () => {
 
       await stream1.update({ test: 'abcde' }, null, { publish: false })
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
       expect(addSpy2).not.toBeCalled()
@@ -255,7 +249,7 @@ describe('Ceramic integration', () => {
       expect(addSpy1).toBeCalledTimes(1)
       expect(stream1).toBeDefined()
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       addSpy1.mockClear()
       loadSpy1.mockClear()
@@ -264,7 +258,7 @@ describe('Ceramic integration', () => {
       expect(loadSpy1).toBeCalledTimes(1)
       expect(addSpy1).toBeCalledTimes(0)
 
-      await anchorUpdate(ceramic1, stream1)
+      await TestUtils.anchorUpdate(ceramic1, stream1)
 
       const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
       expect(addSpy2).not.toBeCalled()
@@ -536,7 +530,7 @@ describe('Ceramic integration', () => {
       const resolvedStream = res[streamID.toString()]
       expect(resolvedStream.content).toEqual({})
       expect(resolvedStream.metadata).toEqual(metadata)
-      const pinned = await isPinned(ceramic2, streamID)
+      const pinned = await TestUtils.isPinned(ceramic2, streamID)
       expect(pinned).toBeTruthy()
 
       await ceramic1.close()
@@ -669,5 +663,27 @@ describe('Ceramic integration', () => {
       await expect(stream.update({ date: 'invalid-date' })).rejects.toThrow()
       await ceramic.close()
     })
+  })
+})
+
+describe('buildStreamFromState', () => {
+  let ipfs: IpfsApi
+  let ceramic: CeramicApi
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
+    await ipfs.stop()
+  })
+
+  test('build instance of Streamtype', async () => {
+    const tile = await TileDocument.create(ceramic, { hello: 'world' })
+    const created = ceramic.buildStreamFromState(tile.state)
+    expect(created).toBeInstanceOf(TileDocument)
+    expect(created.id).toEqual(tile.id)
+    expect(created.content).toEqual(tile.content)
   })
 })

@@ -4,7 +4,12 @@ import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
-import { base16 } from 'multiformats/bases/base16'
+import { Interface } from '@ethersproject/abi'
+import { create as createMultihash } from 'multiformats/hashes/digest'
+import { CID } from 'multiformats/cid'
+
+const SHA256_CODE = 0x12
+const DAG_CBOR_CODE = 0x71
 
 /**
  * Ethereum network configuration
@@ -15,6 +20,7 @@ interface EthNetwork {
   chainId: number
   networkId: number
   type: string
+  endpoint?: string
 }
 
 /**
@@ -25,13 +31,66 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
   'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
   'eip155:4': { network: 'rinkeby', chain: 'ETH', chainId: 4, networkId: 4, type: 'Test' },
   'eip155:5': { network: 'goerli', chain: 'ETH', chainId: 5, networkId: 5, type: 'Test' },
-  'eip155:100': { network: 'mainnet', chain: 'Gnosis', chainId: 100, networkId: 100, type: 'Test' },
+  'eip155:100': {
+    network: 'mainnet',
+    chain: 'Gnosis',
+    chainId: 100,
+    networkId: 100,
+    type: 'Test',
+    endpoint: 'https://rpc.ankr.com/gnosis',
+  },
 }
 
 const BASE_CHAIN_ID = 'eip155'
 const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
+
+const ABI = ['function anchorDagCbor(bytes32)']
+
+const iface = new Interface(ABI)
+
+//TODO (NET-1659): Finalize block numbers and smart contract addresses once CAS is creating smart contract anchors
+const BLOCK_THRESHHOLDS = {
+  'eip155:1': 1000000000, //mainnet
+  'eip155:3': 1000000000, //ropsten
+  'eip155:5': 1000000000, //goerli
+  'eip155:100': 1000000000, //gnosis
+  'eip155:1337': 1000000, //ganache
+}
+const ANCHOR_CONTRACT_ADDRESSES = {
+  'eip155:1': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //mainnet
+  'eip155:3': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ropsten
+  'eip155:5': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //goerli
+  'eip155:100': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //gnosis
+  'eip155:1337': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ganache
+}
+
+const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
+  const withoutPrefix = txResponse.data.replace(/^(0x0?)/, '')
+  return CID.decode(uint8arrays.fromString(withoutPrefix.slice(1), 'base16'))
+}
+
+const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
+  const decodedArgs = iface.decodeFunctionData('anchorDagCbor', txResponse.data)
+  const rootCID = decodedArgs[0]
+  const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootCID.slice(2), 'base16'))
+  return CID.create(1, DAG_CBOR_CODE, multihash)
+}
+
+/**
+ * Parses the transaction data to recover the CID.
+ * @param version version of the anchor proof. Version 1 anchor proofs are created using the official anchoring smart contract and must be parsed accordingly
+ * @param txResponse the retrieved transaction from the ethereum blockchain
+ * @returns
+ */
+const getCidFromTransaction = (version: number, txResponse: TransactionResponse): CID => {
+  if (version === 1) {
+    return getCidFromV1Transaction(txResponse)
+  } else {
+    return getCidFromV0Transaction(txResponse)
+  }
+}
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -77,6 +136,21 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   /**
+   * isoldated method for fetching tx from cache, and if not set
+   **/
+  private async _getTransaction(
+    provider: providers.BaseProvider,
+    txHash: string
+  ): Promise<TransactionResponse> {
+    let tx = this._transactionCache.get(txHash)
+    if (!tx) {
+      tx = await provider.getTransaction(txHash)
+      this._transactionCache.set(txHash, tx)
+    }
+    return tx
+  }
+
+  /**
    * Given a chainId and a transaction hash, loads information from ethereum about the transaction
    * and block the transaction was included in.
    * Testing has shown that when no ethereumRpcEndpoint has been provided and we are therefore using
@@ -93,13 +167,9 @@ export class EthereumAnchorValidator implements AnchorValidator {
   ): Promise<[TransactionResponse, Block]> {
     try {
       // determine network based on a chain ID
-      const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      let transaction = this._transactionCache.get(txHash)
 
-      if (!transaction) {
-        transaction = await provider.getTransaction(txHash)
-        this._transactionCache.set(txHash, transaction)
-      }
+      const provider: providers.BaseProvider = this._getEthProvider(chainId)
+      const transaction: TransactionResponse = await this._getTransaction(provider, txHash)
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
@@ -136,31 +206,47 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
   }
 
-  /**
-   * Validate anchor proof on the chain
-   * @param anchorProof - Anchor proof instance
-   */
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
+    const [txResponse, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
+    const txCid = getCidFromTransaction(anchorProof.version, txResponse)
 
-    const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    const txValueHexNumber = parseInt(transaction.data, 16)
-    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
-
-    if (txValueHexNumber !== rootValueHexNumber) {
+    if (!txCid.equals(anchorProof.root)) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
 
-    if (anchorProof.blockNumber !== transaction.blockNumber) {
+    if (anchorProof.blockNumber !== txResponse.blockNumber) {
       throw new Error(
-        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${transaction.blockNumber}`
+        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${txResponse.blockNumber}`
       )
     }
 
     if (anchorProof.blockTimestamp !== block.timestamp) {
       throw new Error(
         `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`
+      )
+    }
+
+    // if the block number is greater than the threshold and the version is 0 or non existent
+    if (
+      txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId] &&
+      (anchorProof.version === 0 || !anchorProof.version)
+    ) {
+      throw new Error(
+        `Any anchor proofs created after block ${
+          BLOCK_THRESHHOLDS[this._chainId]
+        } must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+      )
+    }
+
+    if (anchorProof.version === 1 && txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]) {
+      throw new Error(
+        `Anchor was created using address ${
+          txResponse.to
+        }. This is not the official anchoring contract address ${
+          ANCHOR_CONTRACT_ADDRESSES[this._chainId]
+        }`
       )
     }
   }
@@ -172,6 +258,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
    */
   private _getEthProvider(chain: string): providers.BaseProvider {
     const fromCache = this.providersCache.get(chain)
+
     if (fromCache) return fromCache
 
     if (!chain.startsWith('eip155')) {
@@ -184,13 +271,15 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    if (this.ethereumRpcEndpoint) {
-      const provider = new providers.JsonRpcProvider(this.ethereumRpcEndpoint)
+    const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
+    const endpoint = this.ethereumRpcEndpoint || ethNetwork?.endpoint
+
+    if (endpoint) {
+      const provider = new providers.JsonRpcProvider(endpoint)
       this.providersCache.set(chain, provider)
       return provider
     }
 
-    const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
     if (ethNetwork == null) {
       throw new Error(`No ethereum provider available for chainId ${chain}`)
     }

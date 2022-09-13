@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash.clonedeep'
-import * as u8a from 'uint8arrays'
+import * as uint8arrays from 'uint8arrays'
 import { toCID } from './cid-utils.js'
 
 import {
@@ -11,7 +11,7 @@ import {
   SignedCommit,
   SignedCommitContainer,
 } from '../index.js'
-import { AnchorStatus, StreamState, LogEntry } from '../stream.js'
+import { AnchorStatus, LogEntry, StreamState } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 
@@ -38,9 +38,9 @@ export class StreamUtils {
 
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = cloned.jws.link.toString()
-      cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
+      cloned.linkedBlock = uint8arrays.toString(cloned.linkedBlock, 'base64')
       if (cloned.cacaoBlock) {
-        cloned.cacaoBlock = u8a.toString(cloned.cacaoBlock, 'base64')
+        cloned.cacaoBlock = uint8arrays.toString(cloned.cacaoBlock, 'base64')
       }
       return cloned
     }
@@ -62,7 +62,7 @@ export class StreamUtils {
     }
 
     if (commit.header?.model) {
-      cloned.header.model = commit.header.model.toString()
+      cloned.header.model = uint8arrays.toString(commit.header.model, 'base64')
     }
 
     return cloned
@@ -77,9 +77,9 @@ export class StreamUtils {
 
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = toCID(cloned.jws.link)
-      cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
+      cloned.linkedBlock = uint8arrays.fromString(cloned.linkedBlock, 'base64')
       if (cloned.cacaoBlock) {
-        cloned.cacaoBlock = u8a.fromString(cloned.cacaoBlock, 'base64')
+        cloned.cacaoBlock = uint8arrays.fromString(cloned.cacaoBlock, 'base64')
       }
       return cloned
     }
@@ -101,7 +101,7 @@ export class StreamUtils {
     }
 
     if (cloned.header?.model) {
-      cloned.header.model = StreamID.fromString(cloned.header.model)
+      cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
     }
 
     return cloned
@@ -118,9 +118,6 @@ export class StreamUtils {
     if (cloned.anchorStatus != null) {
       cloned.anchorStatus = AnchorStatus[cloned.anchorStatus]
     }
-    if (cloned.anchorScheduledFor != null) {
-      cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toISOString()
-    }
     if (cloned.anchorProof != null) {
       cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString()
       cloned.anchorProof.root = cloned.anchorProof.root.toString()
@@ -132,7 +129,7 @@ export class StreamUtils {
       cloned.next.metadata.model = state.next.metadata.model.toString()
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
-      cloned.metadata.unique = u8a.toString(cloned.metadata.unique, 'base64')
+      cloned.metadata.unique = uint8arrays.toString(cloned.metadata.unique, 'base64')
     }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
@@ -158,19 +155,10 @@ export class StreamUtils {
       cloned.anchorProof.root = toCID(cloned.anchorProof.root)
     }
 
-    let showScheduledFor = true
     if (cloned.anchorStatus) {
       cloned.anchorStatus = AnchorStatus[cloned.anchorStatus]
-      showScheduledFor =
-        cloned.anchorStatus !== AnchorStatus.FAILED && cloned.anchorStatus !== AnchorStatus.ANCHORED
     }
-    if (cloned.anchorScheduledFor) {
-      if (showScheduledFor) {
-        cloned.anchorScheduledFor = Date.parse(cloned.anchorScheduledFor) // ISO format of the UTC time
-      } else {
-        delete cloned.anchorScheduledFor
-      }
-    }
+
     if (state.metadata?.model) {
       cloned.metadata.model = StreamID.fromString(state.metadata.model)
     }
@@ -178,7 +166,7 @@ export class StreamUtils {
       cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
-      cloned.metadata.unique = u8a.fromString(state.metadata.unique, 'base64')
+      cloned.metadata.unique = uint8arrays.fromString(state.metadata.unique, 'base64')
     }
 
     return cloned
@@ -208,7 +196,7 @@ export class StreamUtils {
       }
     }
 
-    if (state.anchorStatus != base.anchorStatus) {
+    if (state.log.length === base.log.length && state.anchorStatus != base.anchorStatus) {
       // Re-creating a state object from the exact same set of commits can still lose information,
       // such as whether or not an anchor has been requested.
       return false

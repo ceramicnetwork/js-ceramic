@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import type { Operation } from 'fast-json-patch'
-import * as uint8arrays from 'uint8arrays'
+import * as dagCbor from '@ipld/dag-cbor'
 import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
@@ -23,12 +23,36 @@ import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 /**
  * Arguments used to generate the metadata for Model Instance Documents
  */
-export interface ModelInstanceDocumentMetadata {
+export interface ModelInstanceDocumentMetadataArgs {
   /**
    * The DID that is allowed to author updates to this ModelInstanceDocument
    */
   controller?: string
 
+  /**
+   * The StreamID of the Model that this ModelInstanceDocument belongs to.
+   */
+  model: StreamID
+
+  /**
+   * Whether the stream should be created deterministically or not.  Should only be used for
+   * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
+   */
+  deterministic?: boolean
+}
+
+/**
+ * Metadata for a ModelInstanceDocument
+ */
+export interface ModelInstanceDocumentMetadata {
+  /**
+   * The DID that is allowed to author updates to this ModelInstanceDocument
+   */
+  controller: string
+
+  /**
+   * The StreamID of the Model that this ModelInstanceDocument belongs to.
+   */
   model: StreamID
 }
 
@@ -38,6 +62,12 @@ const DEFAULT_CREATE_OPTS = {
   pin: true,
   sync: SyncOptions.NEVER_SYNC,
   syncTimeoutSeconds: 0,
+}
+const DEFAULT_DETERMINISTIC_OPTS = {
+  anchor: false,
+  publish: false,
+  pin: true,
+  sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
@@ -74,6 +104,11 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     return super.content
   }
 
+  get metadata(): ModelInstanceDocumentMetadata {
+    const metadata = this.state$.value.metadata
+    return { controller: metadata.controllers[0], model: metadata.model }
+  }
+
   /**
    * Creates a Model Instance Document.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
@@ -84,12 +119,35 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   static async create<T>(
     ceramic: CeramicApi,
     content: T | null,
-    metadata: ModelInstanceDocumentMetadata,
+    metadata: ModelInstanceDocumentMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
+    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
+      ModelInstanceDocument.STREAM_TYPE_ID,
+      commit,
+      opts
+    )
+  }
+
+  /**
+   * Creates a deterministic ModelInstanceDocument with a 'single' accountRelation.
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param metadata - Genesis metadata
+   * @param opts - Additional options
+   */
+  static async single<T>(
+    ceramic: CeramicApi,
+    metadata: ModelInstanceDocumentMetadataArgs,
+    opts: CreateOpts = {}
+  ): Promise<ModelInstanceDocument<T>> {
+    opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
+    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    metadata = { ...metadata, deterministic: true }
+
+    const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
@@ -199,8 +257,25 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   private static async _makeGenesis<T>(
     signer: CeramicSigner,
     content: T,
-    metadata: ModelInstanceDocumentMetadata
-  ): Promise<CeramicCommit> {
+    metadata: ModelInstanceDocumentMetadataArgs
+  ): Promise<SignedCommitContainer | GenesisCommit> {
+    const commit = await this._makeRawGenesis(signer, content, metadata)
+    if (metadata.deterministic) {
+      // Check if we can encode it in cbor. Should throw an error when invalid payload.
+      // See https://github.com/ceramicnetwork/ceramic/issues/205 for discussion on why we do this.
+      dagCbor.encode(commit)
+      // No signature needed for deterministic genesis commits (which cannot have content)
+      return commit
+    } else {
+      return ModelInstanceDocument._signDagJWS(signer, commit)
+    }
+  }
+
+  private static async _makeRawGenesis<T>(
+    signer: CeramicSigner,
+    content: T,
+    metadata: ModelInstanceDocumentMetadataArgs
+  ): Promise<GenesisCommit> {
     if (!metadata.model) {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
@@ -216,15 +291,15 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       }
     }
 
-    // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: randomBytes(12),
       model: metadata.model.bytes,
     }
+    if (!metadata.deterministic) {
+      header.unique = randomBytes(12)
+    }
 
-    const commit: GenesisCommit = { data: content, header }
-    return ModelInstanceDocument._signDagJWS(signer, commit)
+    return { data: content, header }
   }
 
   /**

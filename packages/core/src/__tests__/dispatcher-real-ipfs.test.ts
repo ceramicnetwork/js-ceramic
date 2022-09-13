@@ -8,8 +8,8 @@ import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TaskQueue } from '../pubsub/task-queue.js'
-import { delay } from './delay.js'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { ShutdownSignal } from '../shutdown-signal.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -22,7 +22,7 @@ describe('Dispatcher with real ipfs over http', () => {
 
   let dispatcher: Dispatcher
   let ipfsClient: IpfsApi
-  let shutdownController: AbortController
+  let shutdownSignal: ShutdownSignal
 
   beforeAll(async () => {
     ipfsClient = await createIPFS()
@@ -36,7 +36,7 @@ describe('Dispatcher with real ipfs over http', () => {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    shutdownController = new AbortController()
+    shutdownSignal = new ShutdownSignal()
 
     dispatcher = new Dispatcher(
       ipfsClient,
@@ -44,7 +44,7 @@ describe('Dispatcher with real ipfs over http', () => {
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
-      shutdownController.signal,
+      shutdownSignal,
       10,
       new TaskQueue(),
       3000 // time out ipfs.dag.get after 3 seconds
@@ -98,9 +98,9 @@ describe('Dispatcher with real ipfs over http', () => {
     // So we have to add a timeout to make sure an ipfs function is called before the signal is triggered.
     const isJsIpfsNode = Boolean((ipfsClient as any).preload) // Exists on js-ipfs node, and is not present on ipfs-http-client.
     if (isJsIpfsNode) {
-      await delay(1000)
+      await TestUtils.delay(1000)
     }
-    shutdownController.abort()
+    shutdownSignal.abort()
     await expect(getPromise).rejects.toThrow(/aborted/)
   }, 50000)
 })

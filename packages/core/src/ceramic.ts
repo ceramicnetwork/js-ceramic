@@ -1,7 +1,3 @@
-import { polyfillAbortController } from '@ceramicnetwork/common'
-
-polyfillAbortController()
-
 import { Dispatcher } from './dispatcher.js'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
@@ -27,6 +23,7 @@ import {
   AnchorValidator,
   AnchorStatus,
   IndexApi,
+  StreamState,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -49,6 +46,7 @@ import * as path from 'path'
 import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { makeIndexApi } from './initialization/make-index-api.js'
+import { ShutdownSignal } from './shutdown-signal.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -124,7 +122,7 @@ export interface CeramicModules {
   loggerProvider: LoggerProvider
   pinStoreFactory: PinStoreFactory
   repository: Repository
-  shutdownController: AbortController
+  shutdownSignal: ShutdownSignal
   indexing: DatabaseIndexApi | undefined
 }
 
@@ -188,14 +186,14 @@ export class Ceramic implements CeramicApi {
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
-  private readonly _shutdownController: AbortController
+  private readonly _shutdownSignal: ShutdownSignal
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this._shutdownController = modules.shutdownController
+    this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
@@ -225,6 +223,7 @@ export class Ceramic implements CeramicApi {
       this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
+    const localIndex = new LocalIndexApi(modules.indexing, this.repository, this._logger)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -232,8 +231,10 @@ export class Ceramic implements CeramicApi {
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
+      indexing: localIndex,
     })
-    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+    // TODO (NET-1687): remove indexing part of refactor to push indexing into state-manager.ts
+    this._index = localIndex
   }
 
   get index(): IndexApi {
@@ -437,16 +438,16 @@ export class Ceramic implements CeramicApi {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
-    const shutdownController = new AbortController()
+    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions)
+    const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
       networkOptions.pubsubTopic,
       repository,
       logger,
       pubsubLogger,
-      shutdownController.signal,
+      shutdownSignal,
       maxQueriesPerSecond
     )
 
@@ -465,7 +466,7 @@ export class Ceramic implements CeramicApi {
       loggerProvider,
       pinStoreFactory,
       repository,
-      shutdownController,
+      shutdownSignal,
       indexing: indexingApi,
     }
 
@@ -502,6 +503,12 @@ export class Ceramic implements CeramicApi {
 
       if (this._gateway) {
         this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
+      }
+
+      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB == 'true') {
+        this._logger.warn(
+          `Warning: indexing and query APIs are experimental and still under active development.  Please do not create Composites, Models, or ModelInstanceDocument streams, or use any of the new GraphQL query APIs on mainnet until they are officially released`
+        )
       }
 
       if (doPeerDiscovery) {
@@ -541,7 +548,7 @@ export class Ceramic implements CeramicApi {
    * as expected.
    */
   async _checkIPFSPersistence(): Promise<void> {
-    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK) {
+    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK == 'true') {
       this._logger.warn(`Skipping IPFS persistence checks`)
       return
     }
@@ -621,30 +628,9 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    // add stream to MID indexing if model is present
-    if (stream.metadata.model) {
-      await this.addStreamToIndex(stream)
-    }
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
-  }
-
-  /**
-   * Helper function to add stream to db index.
-   * @param stream
-   * @private
-   */
-  private async addStreamToIndex(stream) {
-    const last_anchor_ts = stream.state$.value.metadata.anchorProof
-      ? new Date(stream.state$.value.metadata.anchorProof.blockTimestamp * 1000)
-      : null
-    const STREAM_CONTENT = {
-      model: stream.metadata.model,
-      streamID: stream.id,
-      controller: stream.controllers[0],
-      lastAnchor: last_anchor_ts,
-    }
-    await this._index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -683,10 +669,7 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    // add stream to MID indexing if model is present
-    if (stream.metadata.model) {
-      await this.addStreamToIndex(stream)
-    }
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }
@@ -711,7 +694,6 @@ export class Ceramic implements CeramicApi {
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       const base$ = await this.repository.load(streamRef.baseID, opts)
-      await this.repository.handlePinOpts(base$, opts)
       return streamFromState<T>(
         this.context,
         this._streamHandlers,
@@ -862,11 +844,20 @@ export class Ceramic implements CeramicApi {
   }
 
   /**
+   * Turns +state+ into a Stream instance of the appropriate StreamType.
+   * Does not add the resulting instance to a cache.
+   * @param state StreamState for a stream.
+   */
+  buildStreamFromState<T extends Stream = Stream>(state: StreamState): T {
+    return streamFromState<T>(this.context, this._streamHandlers, state, this.repository.updates$)
+  }
+
+  /**
    * Close Ceramic instance gracefully
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
-    this._shutdownController.abort()
+    this._shutdownSignal.abort()
     await this.dispatcher.close()
     await this.repository.close()
     await this._index.close()

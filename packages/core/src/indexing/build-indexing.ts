@@ -1,7 +1,9 @@
 import type { DatabaseIndexApi } from './database-index-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
+import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import knex from 'knex'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 export type IndexingConfig = {
   /**
@@ -13,6 +15,11 @@ export type IndexingConfig = {
    * List of models to index.
    */
   models: Array<StreamID>
+
+  /**
+   * Allow a query only if historical sync is over.
+   */
+  allowQueriesBeforeHistoricalSync: boolean
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {
@@ -38,12 +45,16 @@ function parseURL(input: string) {
 /**
  * Build DatabaseIndexAPI instance based on passed indexing configuration.
  */
-export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi {
+export function buildIndexing(
+  indexingConfig: IndexingConfig,
+  logger: DiagnosticsLogger
+): DatabaseIndexApi {
   const connectionString = parseURL(indexingConfig.db)
   const protocol = connectionString.protocol.replace(/:$/, '')
   switch (protocol) {
     case 'sqlite':
     case 'sqlite3': {
+      logger.imp('Initializing SQLite connection')
       const dbConnection = knex({
         client: 'sqlite3',
         useNullAsDefault: true,
@@ -51,7 +62,25 @@ export function buildIndexing(indexingConfig: IndexingConfig): DatabaseIndexApi 
           filename: connectionString.pathname,
         },
       })
-      return new SqliteIndexApi(dbConnection, indexingConfig.models)
+      return new SqliteIndexApi(
+        dbConnection,
+        indexingConfig.models,
+        indexingConfig.allowQueriesBeforeHistoricalSync,
+        logger
+      )
+    }
+    case 'postgres': {
+      logger.imp('Initializing PostgreSQL connection')
+      const dataSource = knex({
+        client: 'pg',
+        connection: connectionString.toString(),
+      })
+      return new PostgresIndexApi(
+        dataSource,
+        indexingConfig.models,
+        indexingConfig.allowQueriesBeforeHistoricalSync,
+        logger
+      )
     }
     default:
       throw new UnsupportedDatabaseProtocolError(protocol)

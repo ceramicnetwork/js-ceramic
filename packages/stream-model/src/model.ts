@@ -1,16 +1,12 @@
-import jsonpatch from 'fast-json-patch'
-import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
   LoadOpts,
-  UpdateOpts,
   Stream,
   StreamConstructor,
   StreamStatic,
   SyncOptions,
   CeramicCommit,
   GenesisCommit,
-  RawCommit,
   CeramicApi,
   SignedCommitContainer,
   CeramicSigner,
@@ -26,11 +22,28 @@ import multihashes from 'multihashes'
 /**
  * Arguments used to generate the metadata for Model streams.
  */
+export interface ModelMetadataArgs {
+  /**
+   * The DID that is allowed to author updates to this Model
+   */
+  controller: string
+}
+
+/**
+ * Metadata for a Model Stream
+ */
 export interface ModelMetadata {
   /**
    * The DID that is allowed to author updates to this Model
    */
   controller: string
+
+  /**
+   * The StreamID that all Model streams have as their 'model' for indexing purposes. Note that
+   * this StreamID doesn't refer to a valid Stream and cannot be loaded, it's just a way to index
+   * all Models.
+   */
+  model: StreamID
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
@@ -104,18 +117,23 @@ export class Model extends Stream {
 
   // The hardcoded "model" StreamID that all Model streams have in their metadata. This provides
   // a "model" StreamID that can be indexed to query the set of all published Models.
+  // The StreamID uses the "UNLOADABLE" StreamType, and has string representation: "kh4q0ozorrgaq2mezktnrmdwleo1d"
   static readonly MODEL: StreamID = (function () {
     const data = encode('model-v1')
     const multihash = multihashes.encode(data, 'identity')
     const digest = create(code, multihash)
     const cid = CID.createV1(code, digest)
-    return new StreamID(Model.STREAM_TYPE_ID, cid)
+    return new StreamID('UNLOADABLE', cid)
   })()
 
   private _isReadOnly = false
 
   get content(): ModelDefinition {
     return super.content
+  }
+
+  get metadata(): ModelMetadata {
+    return { controller: this.state$.value.metadata.controllers[0], model: Model.MODEL }
   }
 
   /**
@@ -127,7 +145,7 @@ export class Model extends Stream {
   static async create(
     ceramic: CeramicApi,
     content: ModelDefinition,
-    metadata?: ModelMetadata
+    metadata?: ModelMetadataArgs
   ): Promise<Model> {
     Model.assertComplete(content)
 
@@ -141,43 +159,6 @@ export class Model extends Stream {
     const commit = await Model._makeGenesis(ceramic, content, metadata)
     const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
     return model
-  }
-
-  /**
-   * Create an incomplete Model that can be updated later to add the missing required fields
-   * and finalize the Model.  This is useful when there is a circular relationship between multiple
-   * models and so you need to know a Model's StreamID before finalizing it.
-   * @param ceramic
-   * @param content
-   * @param metadata
-   */
-  static async createPlaceholder(
-    ceramic: CeramicApi,
-    content: Partial<ModelDefinition>,
-    metadata?: ModelMetadata
-  ): Promise<Model> {
-    const opts: CreateOpts = {
-      publish: false,
-      anchor: false,
-      pin: false,
-      sync: SyncOptions.NEVER_SYNC,
-      throwOnInvalidCommit: true,
-    }
-    const commit = await Model._makeGenesis(ceramic, content, metadata)
-    return ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
-  }
-
-  /**
-   * Update an existing placeholder Model. Must update the model to its final content, setting
-   * all required fields, finalizing and publishing the model, and preventing all future updates.
-   * @param content - Final content for the Model
-   */
-  async replacePlaceholder(content: ModelDefinition): Promise<void> {
-    Model.assertComplete(content, this.id)
-    const opts: UpdateOpts = { publish: true, anchor: true, pin: true, throwOnInvalidCommit: true }
-    const updateCommit = await this._makeCommit(this.api, content)
-    const updated = await this.api.applyCommit(this.id, updateCommit, opts)
-    this.state$.next(updated.state)
   }
 
   /**
@@ -238,43 +219,7 @@ export class Model extends Stream {
     }
 
     const model = await ceramic.loadStream<Model>(streamRef, opts)
-    try {
-      Model.assertComplete(model.content, streamId)
-    } catch (err) {
-      // Add additional context to error message.
-      throw new Error(`Incomplete placeholder Models cannot be loaded: ${err.message}`)
-    }
     return model
-  }
-
-  /**
-   * Make a commit to update the Model
-   * @param signer - Object containing the DID making (and signing) the commit
-   * @param newContent
-   */
-  private async _makeCommit(
-    signer: CeramicSigner,
-    newContent: ModelDefinition
-  ): Promise<CeramicCommit> {
-    const commit = this._makeRawCommit(newContent)
-    return Model._signDagJWS(signer, commit)
-  }
-
-  /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
-   */
-  private _makeRawCommit(newContent: ModelDefinition): RawCommit {
-    if (newContent == null) {
-      throw new Error(`Cannot set Model content to null`)
-    }
-
-    const patch = jsonpatch.compare(this.content, newContent)
-    return {
-      data: patch,
-      prev: this.tip,
-      id: this.state.log[0].cid,
-    }
   }
 
   /**
@@ -286,8 +231,20 @@ export class Model extends Stream {
   private static async _makeGenesis(
     signer: CeramicSigner,
     content: Partial<ModelDefinition>,
-    metadata?: ModelMetadata
-  ): Promise<CeramicCommit> {
+    metadata?: ModelMetadataArgs
+  ): Promise<SignedCommitContainer> {
+    const commit: GenesisCommit = await this._makeRawGenesis(signer, content, metadata)
+    return Model._signDagJWS(signer, commit)
+  }
+
+  /**
+   * Helper function for _makeGenesis() to allow unit tests to update the commit before it is signed.
+   */
+  private static async _makeRawGenesis(
+    signer: CeramicSigner,
+    content: Partial<ModelDefinition>,
+    metadata?: ModelMetadataArgs
+  ): Promise<GenesisCommit> {
     if (content == null) {
       throw new Error(`Genesis content cannot be null`)
     }
@@ -303,14 +260,11 @@ export class Model extends Stream {
       }
     }
 
-    // TODO(NET-1464): enable GenesisHeader to receive 'controller' field directly
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
-    const commit: GenesisCommit = { data: content, header }
-    return Model._signDagJWS(signer, commit)
+    return { data: content, header }
   }
 
   /**
@@ -318,7 +272,6 @@ export class Model extends Stream {
    * mutation methods on the instance will throw.
    */
   makeReadOnly() {
-    this.replacePlaceholder = throwReadOnlyError
     this.sync = throwReadOnlyError
     this._isReadOnly = true
   }

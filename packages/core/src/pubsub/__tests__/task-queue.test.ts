@@ -1,17 +1,12 @@
 import { jest } from '@jest/globals'
+import { TestUtils } from '@ceramicnetwork/common'
 import { TaskQueue } from '../task-queue.js'
-
-async function delay(ms: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(() => resolve(), ms)
-  })
-}
 
 test('add synchronously', async () => {
   const tasks = new TaskQueue()
   let n = 0
   tasks.add(async () => {
-    await delay(100)
+    await TestUtils.delay(100)
     n++
   })
   await tasks.onIdle()
@@ -27,11 +22,11 @@ test('common error handler', async () => {
     throw error
   })
   tasks.add(async () => {
-    await delay(300)
+    await TestUtils.delay(300)
     accumulator.push(1)
   })
   tasks.add(async () => {
-    await delay(200)
+    await TestUtils.delay(200)
     throw error
   })
   await tasks.onIdle()
@@ -43,11 +38,11 @@ test('sequential execution', async () => {
   const tasks = new TaskQueue()
   const accumulator = []
   tasks.add(async () => {
-    await delay(300)
+    await TestUtils.delay(300)
     accumulator.push(1)
   })
   tasks.add(async () => {
-    await delay(200)
+    await TestUtils.delay(200)
     accumulator.push(2)
   })
   tasks.add(async () => {
@@ -61,17 +56,17 @@ test('clear', async () => {
   const tasks = new TaskQueue()
   const accumulator = []
   tasks.add(async () => {
-    await delay(300)
+    await TestUtils.delay(300)
     accumulator.push(1)
   })
   tasks.add(async () => {
-    await delay(200)
+    await TestUtils.delay(200)
     accumulator.push(2)
   })
   tasks.add(async () => {
     accumulator.push(3)
   })
-  await delay(200)
+  await TestUtils.delay(200)
   tasks.clear()
   await tasks.onIdle()
   expect(accumulator).toEqual([1])
