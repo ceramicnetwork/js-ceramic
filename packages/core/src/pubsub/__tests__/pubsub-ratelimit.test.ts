@@ -179,6 +179,8 @@ describe('pubsub with queries rate limited', () => {
       diagnosticsLogger.warn = warnMock
       // For clarity of the test, we disable processing here.
       // If the queue is running, it is harder to reason about timing of message queueing.
+      // Now with the queue paused, every message gets into the queue.
+      // It simulates the case of sending speed > rate limit.
       pubsub.queue.pause()
 
       // One warning here, because we start populating the queue.
