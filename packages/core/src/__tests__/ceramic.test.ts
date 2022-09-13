@@ -140,7 +140,12 @@ describe('Ceramic integration', () => {
       await TestUtils.waitForState(
         stream3,
         2000,
-        (state) => StreamUtils.statesEqual(state, stream1.state),
+        (state) => {
+          // The timestamp deleted here will only be present if the log
+          // is synced from the network. Log[1] is a signed commit.
+          delete state.log[1].timestamp
+          return StreamUtils.statesEqual(state, stream1.state)
+	},
         () => {
           throw new Error(`streamtype3.state should equal streamtype1.state`)
         }
@@ -170,6 +175,7 @@ describe('Ceramic integration', () => {
       let stream2 = await TileDocument.createFromGenesis(ceramic2, logCommits[0].value, {
         anchor: false,
         publish: false,
+        sync: 2, // NEVER_SYNC
       })
       for (let i = 1; i < logCommits.length; i++) {
         stream2 = await ceramic2.applyCommit(stream2.id, logCommits[i].value, {
