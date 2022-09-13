@@ -171,7 +171,9 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
+    const entry = { cid: commitData.cid, type: CommitType.SIGNED } as CommitData
+    if (commitData.timestamp) entry.timestamp = commitData.timestamp 
+    nextState.log.push(entry)
 
     const oldContent = state.next?.content ?? state.content
     const oldMetadata = state.next?.metadata ?? state.metadata
