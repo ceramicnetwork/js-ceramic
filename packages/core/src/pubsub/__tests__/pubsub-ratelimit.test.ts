@@ -180,7 +180,7 @@ describe('pubsub with queries rate limited', () => {
       // For clarity of the test, we disable processing here.
       // If the queue is running, it is harder to reason about timing of message queueing.
       // Now with the queue paused, every message gets into the queue.
-      // It simulates the case of sending speed > rate limit.
+      // It simulates the case of sending speed > rate limit, which is what we need to trigger the warning.
       pubsub.queue.pause()
 
       // One warning here, because we start populating the queue.
