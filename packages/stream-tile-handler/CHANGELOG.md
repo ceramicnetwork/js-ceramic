@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.8-rc.0](/compare/@ceramicnetwork/stream-tile-handler@2.2.7...@ceramicnetwork/stream-tile-handler@2.2.8-rc.0) (2022-09-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
 ## [2.2.7](/compare/@ceramicnetwork/stream-tile-handler@2.2.7-rc.1...@ceramicnetwork/stream-tile-handler@2.2.7) (2022-09-08)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
