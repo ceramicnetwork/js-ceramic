@@ -477,11 +477,12 @@ export class CeramicDaemon {
     const httpQuery = parseQueryObject(req.query)
     const query = collectionQuery(httpQuery)
     const indexResponse = await this.ceramic.index.queryIndex(query)
+
     res.json({
       edges: indexResponse.edges.map((e) => {
         return {
           cursor: e.cursor,
-          node: StreamUtils.serializeState(e.node),
+          node: e.node ? StreamUtils.serializeState(e.node) : null,
         }
       }),
       pageInfo: indexResponse.pageInfo,

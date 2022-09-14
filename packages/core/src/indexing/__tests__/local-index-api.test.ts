@@ -68,7 +68,7 @@ describe('with database backend', () => {
     }
     const pageFn = jest.fn(async () => backendPage)
     const streamStateFn = jest.fn(async (streamId: any) => {
-      throw Error(`Can't get the stream state`)
+      return undefined
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
