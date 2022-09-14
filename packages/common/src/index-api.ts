@@ -36,7 +36,7 @@ export interface BaseQuery {
  * API to query an index.
  */
 export interface IndexApi {
-  queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>>
+  queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState | null>>
 }
 
 export type Edge<T> = {

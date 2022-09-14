@@ -49,15 +49,22 @@ export class LocalIndexApi implements IndexApi {
    *
    * We assume that a state store always contains StreamState for an indexed stream.
    */
-  async queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>> {
+  async queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState | null>> {
     if (this.databaseIndexApi) {
       const page = await this.databaseIndexApi.page(query)
       const edges = await Promise.all(
         // For database queries we bypass the stream cache and repository loading queue
         page.edges.map(async (edge) => {
+          let node: StreamState = null
+          try {
+            node = await this.repository.streamState(edge.node)
+          } catch (e) {
+            this.logger.warn(`Cannot get stream state from repository. Unable to serve query ${JSON.stringify(query)}`)
+          }
+
           return {
             cursor: edge.cursor,
-            node: await this.repository.streamState(edge.node),
+            node: node,
           }
         })
       )
