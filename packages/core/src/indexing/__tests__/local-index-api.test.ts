@@ -51,14 +51,14 @@ describe('with database backend', () => {
   })
 
   test('return empty page from the database if cannot retrieve stream state', async () => {
-    const query = { model: 'foo', first: randomInt(100) }
+    const query = { model: 'foo', first: 1 }
     const backendPage: Page<string> = {
-      edges: Array.from({ length: query.first }).map(() => {
-        return {
+      edges: [
+        {
           cursor: randomString(32),
           node: null,
         }
-      }),
+      ],
       pageInfo: {
         hasPreviousPage: false,
         hasNextPage: false,
@@ -89,7 +89,8 @@ describe('with database backend', () => {
     backendPage.edges.forEach((edge) => {
       expect(streamStateFn).toBeCalledWith(edge.node)
     })
-    expect(response.edges.map((e) => e.node.content)).toEqual(backendPage.edges.map((e) => e.node))
+    expect(response.edges.length).toEqual(1)
+    expect(response.edges[0].node).toEqual(null)
   })
 })
 
