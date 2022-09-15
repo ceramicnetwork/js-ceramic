@@ -34,6 +34,8 @@ export interface BaseQuery {
 
 /**
  * API to query an index.
+ *
+ * Returns null, iff the stream state can't be retrieved from the repository.
  */
 export interface IndexApi {
   queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState | null>>
