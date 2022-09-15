@@ -28,6 +28,15 @@ function randomQueryMessage(): QueryMessage {
   }
 }
 
+/**
+ * Wait till start of a second. Simplifies reasoning about timing in the tests below
+ */
+async function startOfASecond() {
+  const now = Date.now()
+  const start = Math.ceil(now / 1000) * 1000
+  await new Promise((resolve) => setTimeout(resolve, start - now))
+}
+
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(ONE_SECOND * 30)
 
@@ -116,6 +125,7 @@ describe('pubsub with queries rate limited', () => {
   })
 
   test('max number of queued queries', async () => {
+    await startOfASecond()
     const numMessages = MAX_QUEUED_QUERIES * 2
 
     // Note how many messages are waiting in the queue at all times:
@@ -160,6 +170,7 @@ describe('pubsub with queries rate limited', () => {
       expect(warnSpy).toBeCalledTimes(1)
     })
     test('short interval', async () => {
+      await startOfASecond()
       // We want to prove that warnings are sent once every `rateLimitWarningsIntervalMs`.
       // The messages are rate-limited **per second**, and we can not change it for test purposes.
       // Below we first start to queue the messages by sending `QUERIES_PER_SECOND + 1` messages.
