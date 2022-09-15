@@ -79,7 +79,7 @@ export type ModelAccountRelation = { type: 'list' } | { type: 'single' }
  *
  * Currently supported types of relation properties:
  * - 'account': references a DID property
- * - 'document': references a SteamID property with associated 'model' the related document must use
+ * - 'document': references a StreamID property with associated 'model' the related document must use
  *
  */
 export type ModelRelationDefinition = { type: 'account' } | { type: 'document'; model: string }
