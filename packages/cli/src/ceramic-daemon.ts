@@ -476,7 +476,7 @@ export class CeramicDaemon {
   async getCollection(req: Request, res: Response): Promise<void> {
     const httpQuery = parseQueryObject(req.query)
     const query = collectionQuery(httpQuery)
-    const indexResponse = await this.ceramic.index.queryIndex(query)
+    const indexResponse = await this.ceramic.index.query(query)
 
     res.json({
       edges: indexResponse.edges.map((e) => {

@@ -91,7 +91,9 @@ export type ModelRelationDefinition = { type: 'account' } | { type: 'document'; 
  */
 export type ModelRelationsDefinition = Record<string, ModelRelationDefinition>
 
-export type ModelDocumentViewDefinition = { type: 'documentAccount' } | { type: 'documentVersion' }
+export type ModelDocumentMetadataViewDefinition =
+  | { type: 'documentAccount' }
+  | { type: 'documentVersion' }
 
 export type ModelRelationViewDefinition =
   | { type: 'relationDocument'; model: string; property: string }
@@ -111,7 +113,7 @@ export type ModelRelationViewDefinition =
  * - 'relationCountFrom': view properties of this type represent the number of inverse relations identified by the given 'model' and 'property' fields
  *
  */
-export type ModelViewDefinition = ModelDocumentViewDefinition | ModelRelationViewDefinition
+export type ModelViewDefinition = ModelDocumentMetadataViewDefinition | ModelRelationViewDefinition
 
 /**
  * A mapping between model's property names and types of view properties
