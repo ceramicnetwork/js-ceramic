@@ -141,7 +141,7 @@ export class StreamUtils {
    * Deserializes stream cloned from over the network transfer. Returns null if given null as a param.
    * @param state - Stream cloned
    */
-  static deserializeState(state: any | null): StreamState | null {
+  static deserializeState(state: any): StreamState | null {
     if (state === null) return null
 
     const cloned = cloneDeep(state)
