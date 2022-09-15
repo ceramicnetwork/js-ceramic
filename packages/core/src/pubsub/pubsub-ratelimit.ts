@@ -71,7 +71,7 @@ export class PubsubRateLimit
     this.queue.on('add', () => {
       // If there is a publishing task over the queriesPerSecond limit
       // And longer than this.rateLimitWarningsIntervalMs has passed since the last warning
-      if (this.queue.size > 0 && Date.now() - lastWarning > this.rateLimitWarningsIntervalMs) {
+      if (this.queue.size > 0 && Date.now() - lastWarning >= this.rateLimitWarningsIntervalMs) {
         this.logger.warn(
           `More than ${this.queriesPerSecond} query messages published in less than a second. Query messages will be rate limited`
         )
