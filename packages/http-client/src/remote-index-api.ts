@@ -1,4 +1,10 @@
-import type { BaseQuery, IndexApi, Page, Pagination, StreamState } from '@ceramicnetwork/common'
+import type {
+  BaseQuery,
+  IndexApi,
+  Page,
+  PaginationQuery,
+  StreamState,
+} from '@ceramicnetwork/common'
 import { StreamUtils, fetchJson } from '@ceramicnetwork/common'
 
 /**
@@ -13,14 +19,14 @@ export class RemoteIndexApi implements IndexApi {
     this._collectionURL = new URL('./collection', apiUrl)
   }
 
-  async queryCount(query: BaseQuery): Promise<number> {
+  async count(query: BaseQuery): Promise<number> {
     throw new Error('Not implemented')
   }
 
   /**
    * Issue a query to `/collection` endpoint.
    */
-  async queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>> {
+  async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
     const queryURL = new URL(this._collectionURL)
     for (const key in query) {
       queryURL.searchParams.set(key, query[key])

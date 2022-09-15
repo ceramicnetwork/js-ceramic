@@ -33,14 +33,16 @@ export type BaseQuery = {
   filter?: Record<string, string>
 }
 
-export type IndexQuery = BaseQuery & Pagination
+export type PaginationQuery = BaseQuery & Pagination
 
 /**
  * API to query an index.
+ *
+ * Returns null, iff the stream state can't be retrieved from the repository.
  */
 export interface IndexApi {
-  queryCount(query: BaseQuery): Promise<number>
-  queryIndex(query: IndexQuery): Promise<Page<StreamState>>
+  count(query: BaseQuery): Promise<number>
+  query(query: PaginationQuery): Promise<Page<StreamState | null>>
 }
 
 export type Edge<T> = {
