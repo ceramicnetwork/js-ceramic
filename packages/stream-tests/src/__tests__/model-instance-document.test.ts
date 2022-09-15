@@ -11,11 +11,13 @@ import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
+const STREAM_ID_A = 'kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -53,7 +55,16 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    daemon = new CeramicDaemon(
+      core,
+      DaemonConfig.fromObject({
+        'http-api': { port},
+        indexing: {
+          models: ['kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'],
+          allowQueriesBeforeHistoricalSync: true,
+        },
+      })
+    )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)
@@ -197,9 +208,17 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('create respects pin flag', async () => {
-    await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })).rejects.toThrow(
-      /Invalid stream option passed/
+    // TODO: doesn't bubble up error - probably needs spyOn logger.error
+    expect(await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })).rejects.toThrow(
+      /Cannot unpin actively indexed stream/
     )
+  })
+
+  test('unpinning indexed stream fails', async () => {
+    // TODO: even though model is passed into the config, it is not actively indexed hence the eror not thrown
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: StreamID.fromString(STREAM_ID_A)})
+    await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
+    await expect(ceramic.pin.rm(doc.id)).rejects.toThrow(/Cannot unpin actively indexed stream/)
   })
 
   test('replace respects anchor flag', async () => {

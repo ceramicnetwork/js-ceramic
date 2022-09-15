@@ -284,13 +284,21 @@ export class Repository {
   }
 
   async handlePinOpts(state$: RunningState, opts: PinningOpts) {
-    // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
-    const shouldIndex = state$.state.metadata ?
-      state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model) : false
+    const shouldIndex = state$.state.metadata
+      ? state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
+      : false
 
-    if (opts.pin || shouldIndex) {
+    if (opts.pin || (opts.pin === undefined && shouldIndex)) {
       await this.pin(state$)
     } else if (opts.pin === false) {
+      if (shouldIndex) {
+        this.logger.err(
+          `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
+            state$.state.metadata.model
+          }`
+        )
+        return false
+      }
       await this.unpin(state$)
     }
   }

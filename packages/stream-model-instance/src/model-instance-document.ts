@@ -126,12 +126,6 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
 
-    if (opts.pin === false) {
-      throw new Error(
-        'Invalid stream option passed ("pin:false"). Model Instance Document streams must be pinned.'
-      )
-    }
-
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
