@@ -142,7 +142,7 @@ export class StreamUtils {
    * @param state - Stream cloned
    */
   static deserializeState(state: any): StreamState | null {
-    if (state === null) return null
+    if (!state) return null
 
     const cloned = cloneDeep(state)
 
