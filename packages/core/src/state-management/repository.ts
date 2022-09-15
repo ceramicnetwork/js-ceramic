@@ -90,7 +90,7 @@ export class Repository {
     return this.#deps.pinStore
   }
 
-  get _index(): LocalIndexApi {
+  get index(): LocalIndexApi {
     return this.#deps.indexing
   }
 
@@ -107,7 +107,7 @@ export class Repository {
       (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts),
       // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
-      this.indexStreamIfNeeded,
+      this.indexStreamIfNeeded.bind(this),
       deps.indexing
     )
   }
@@ -202,7 +202,7 @@ export class Repository {
           // state are no longer valid (for example if the CACAOs used to author them
           // have expired since they were first applied to the cached state object).
           // But if we were the only node on the network that knew about the most
-          // recent tip, we don't want to totally forget about that, so we pass the tip in 
+          // recent tip, we don't want to totally forget about that, so we pass the tip in
           // to `sync` so that it gets considered alongside whatever tip we learn
           // about from the network.
           const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
@@ -400,7 +400,7 @@ export class Repository {
       firstAnchor: firstAnchor,
     }
 
-    await this._index.indexStream(STREAM_CONTENT)
+    await this.index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -440,6 +440,6 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
-    await this._index.close()
+    await this.index.close()
   }
 }

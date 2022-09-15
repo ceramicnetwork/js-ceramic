@@ -11,7 +11,7 @@ import { DID } from 'dids'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config?: CeramicConfig & { seed?: string, anchorOnRequest?: boolean }
+  config?: CeramicConfig & { seed?: string; anchorOnRequest?: boolean }
 ): Promise<Ceramic> {
   const databaseDir = await tmp.dir({ unsafeCleanup: true })
   const databaseUrl = new URL(`sqlite://${databaseDir.path}/ceramic.sqlite`)
@@ -23,6 +23,7 @@ export async function createCeramic(
     indexing: {
       db: databaseUrl.href,
       models: [],
+      allowQueriesBeforeHistoricalSync: false,
     },
     ...config,
   }

@@ -17,6 +17,13 @@ export interface IndexStreamArgs {
  */
 export interface DatabaseIndexApi {
   /**
+   * Prepare the database to begin indexing the given models.  This generally involves creating
+   * the necessary database tables and indexes.
+   * @param models
+   */
+  indexModels(models: Array<StreamID>): Promise<void>
+
+  /**
    * This method inserts the stream if it is not present in the index, or updates
    * the 'content' if the stream already exists in the index.
    * @param args
@@ -32,11 +39,6 @@ export interface DatabaseIndexApi {
    * Query the index.
    */
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>>
-
-  /**
-   * Initialize connection to a database.
-   */
-  init(): Promise<void>
 
   /**
    * Stop connection to a database.

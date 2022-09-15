@@ -10,16 +10,24 @@ import type { DatabaseIndexApi } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
 import { IndexStreamArgs } from './database-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { IndexingConfig } from './build-indexing.js'
+import { makeIndexApi } from '../initialization/make-index-api.js'
+import { Networks } from '@ceramicnetwork/common'
 
 /**
  * API to query an index.
  */
 export class LocalIndexApi implements IndexApi {
+  private readonly databaseIndexApi: DatabaseIndexApi | undefined
+
   constructor(
-    private readonly databaseIndexApi: DatabaseIndexApi | undefined,
+    private readonly indexingConfig: IndexingConfig,
     private readonly repository: Repository,
-    private readonly logger: DiagnosticsLogger
-  ) {}
+    private readonly logger: DiagnosticsLogger,
+    networkName: Networks
+  ) {
+    this.databaseIndexApi = makeIndexApi(indexingConfig, networkName, logger)
+  }
 
   shouldIndexStream(args: StreamID): boolean {
     if (!this.databaseIndexApi) {
@@ -93,7 +101,7 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    await this.databaseIndexApi?.init()
+    await this.databaseIndexApi?.indexModels(this.indexingConfig.models)
   }
 
   async close(): Promise<void> {

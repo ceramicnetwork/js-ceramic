@@ -71,8 +71,8 @@ describe('init', () => {
   describe('create tables', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true, logger)
-      await indexApi.init()
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.indexModels(modelsToIndex)
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
@@ -80,10 +80,10 @@ describe('init', () => {
 
     test('table creation is idempotent', async () => {
       const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true, logger)
-      await indexApi.init()
-      // init again to make sure we don't error trying to re-create the tables
-      await indexApi.init()
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.indexModels(modelsToIndex)
+      // Index the same models again to make sure we don't error trying to re-create the tables
+      await indexApi.indexModels(modelsToIndex)
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
@@ -100,12 +100,12 @@ describe('init', () => {
       }
 
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, modelsToIndex, true, logger)
-      await indexApi.init()
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.indexModels(modelsToIndex)
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
-      await expect(indexApi.verify(INVALID_TABLE_STRUCTURE)).rejects.toThrow(
+      await expect(indexApi.verifyTables(modelsToIndex, INVALID_TABLE_STRUCTURE)).rejects.toThrow(
         /Schema verification failed for index/
       )
     })
@@ -113,16 +113,16 @@ describe('init', () => {
     test('create new table with existing ones', async () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new PostgresIndexApi(dbConnection, modelsA, true, logger)
-      await indexApiA.init()
+      const indexApiA = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApiA.indexModels(modelsA)
       const createdA = await listMidTables(dbConnection)
       const tableNamesA = modelsA.map(asTableName)
       expect(createdA).toEqual(tableNamesA)
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new PostgresIndexApi(dbConnection, modelsB, true, logger)
-      await indexApiB.init()
+      const indexApiB = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApiB.indexModels(modelsB)
       const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map(asTableName)
       createdB.sort()
@@ -137,7 +137,7 @@ describe('close', () => {
     const fauxDbConnection = {
       destroy: jest.fn(),
     } as unknown as Knex
-    const indexApi = new PostgresIndexApi(fauxDbConnection, [], true, logger)
+    const indexApi = new PostgresIndexApi(fauxDbConnection, true, logger)
     await indexApi.close()
     expect(fauxDbConnection.destroy).toBeCalled()
   })
@@ -173,8 +173,8 @@ describe('indexStream', () => {
 
   let indexApi: PostgresIndexApi
   beforeEach(async () => {
-    indexApi = new PostgresIndexApi(dbConnection, MODELS_TO_INDEX, true, logger)
-    await indexApi.init()
+    indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.indexModels(MODELS_TO_INDEX)
   })
 
   test('new stream', async () => {
@@ -272,7 +272,7 @@ describe('page', () => {
   const FAUX_DB_CONNECTION = {} as unknown as Knex
 
   test('call the order if historical sync is allowed', async () => {
-    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, [], true, logger)
+    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger)
     const mockPage = jest.fn(async () => {
       return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
     })
@@ -281,7 +281,7 @@ describe('page', () => {
     expect(mockPage).toBeCalled()
   })
   test('throw if historical sync is not allowed', async () => {
-    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, [], false, logger)
+    const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger)
     await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
       IndexQueryNotAvailableError
     )
