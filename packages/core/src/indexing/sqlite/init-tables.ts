@@ -1,10 +1,10 @@
-import type { StreamID } from '@ceramicnetwork/streamid'
 import type { Knex } from 'knex'
-import { ColumnType, createModelTable } from './migrations/1-create-model-table.js'
+import { ColumnInfo, ColumnType, createModelTable } from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { IndexModelArgs } from '../database-index-api'
+import { RELATION_COLUMN_STRUCTURE } from './migrations/mid-schema-verfication'
 
 /**
  * List existing mid tables.
@@ -16,6 +16,15 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
     .whereIn('type', ['table'])
     .andWhere((q) => q.whereLike('name', 'kjz%').orWhere('name', Model.MODEL.toString()))
   return result.map((r) => r.name)
+}
+
+function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition): Array<ColumnInfo> {
+  if (!relations) {
+    return []
+  }
+  return Object.keys(relations).map((keyName) => {
+    return { name: keyName, type: ColumnType.STRING }
+  })
 }
 
 /**
@@ -33,9 +42,7 @@ export async function initTables(
       continue
     }
     logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-    const relationColumns = Object.keys(modelIndexArgs.relations).map((keyName) => {
-      return { name: keyName, type: ColumnType.STRING }
-    })
+    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     await createModelTable(dbConnection, tableName, relationColumns)
   }
 }
@@ -44,18 +51,28 @@ export async function initTables(
  * Verify mid table validity via passed schema
  * @param dataSource
  * @param modelsToIndex
- * @param validTableStructure
+ * @param baseTableStructure
  */
 // TODO (NET-1635): unify logic between postgres & sqlite
 export async function verifyTables(
   dataSource: Knex,
-  modelsToIndex: Array<StreamID>,
-  validTableStructure: object
+  modelsToIndex: Array<IndexModelArgs>,
+  baseTableStructure: object
 ) {
   const tables = await listMidTables(dataSource)
-  const validSchema = JSON.stringify(validTableStructure)
 
   for (const tableName of tables) {
+    const modelIndexArgs = modelsToIndex.find((model) => tableName == asTableName(model.model))
+    // Clone the baseTableStructure object that has the fields expected for all tables so we can
+    // extend it with the model-specific fields expected
+    const expectedTableStructure = Object.assign({}, baseTableStructure)
+    if (modelIndexArgs.relations) {
+      for (const relation of Object.keys(modelIndexArgs.relations)) {
+        expectedTableStructure[relation] = RELATION_COLUMN_STRUCTURE
+      }
+    }
+
+    const validSchema = JSON.stringify(expectedTableStructure)
     const columns = await dataSource.table(tableName).columnInfo()
     if (validSchema != JSON.stringify(columns)) {
       throw new Error(

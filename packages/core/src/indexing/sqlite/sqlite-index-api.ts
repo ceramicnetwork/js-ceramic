@@ -6,7 +6,7 @@ import { initTables, verifyTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { InsertionOrder } from './insertion-order.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
-import { validTableStructure } from './migrations/mid-schema-verfication.js'
+import { COMMON_TABLE_STRUCTURE } from './migrations/mid-schema-verfication.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -70,14 +70,17 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verifyTables(models: Array<StreamID>, tableStructure = validTableStructure): Promise<void> {
+  async verifyTables(
+    models: Array<IndexModelArgs>,
+    tableStructure = COMMON_TABLE_STRUCTURE
+  ): Promise<void> {
     await verifyTables(this.dbConnection, models, tableStructure)
   }
 
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     const modelStreamIDs = models.map((args) => args.model)
     await initTables(this.dbConnection, models, this.logger)
-    await this.verifyTables(modelStreamIDs)
+    await this.verifyTables(models)
     this.modelsToIndex.push(...modelStreamIDs)
   }
 

@@ -28,7 +28,7 @@ export async function createModelTable(
     for (const column of extraColumns) {
       switch (column.type) {
         case ColumnType.STRING:
-          table.string(column.name).notNullable()
+          table.string(column.name, 1024).notNullable()
           table.index([column.name], `idx_${tableName}_${column.name}`)
           break
         default:

@@ -91,9 +91,9 @@ describe('init', () => {
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
-      await expect(indexApi.verifyTables(modelsToIndex, INVALID_TABLE_STRUCTURE)).rejects.toThrow(
-        /Schema verification failed for index/
-      )
+      await expect(
+        indexApi.verifyTables(modelsToIndexArgs(modelsToIndex), INVALID_TABLE_STRUCTURE)
+      ).rejects.toThrow(/Schema verification failed for index/)
     })
 
     test('create new table with existing ones', async () => {
