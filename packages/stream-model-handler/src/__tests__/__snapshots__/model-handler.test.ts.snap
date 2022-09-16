@@ -9,7 +9,9 @@ Object {
   },
   "anchorStatus": 3,
   "content": Object {
-    "accountRelation": "list",
+    "accountRelation": Object {
+      "type": "list",
+    },
     "name": "MyModel",
     "schema": Object {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -152,7 +154,9 @@ exports[`ModelHandler applies commit made using an old key if it is applied with
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "accountRelation": "list",
+    "accountRelation": Object {
+      "type": "list",
+    },
     "name": "MyModel",
     "schema": Object {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -251,7 +255,9 @@ exports[`ModelHandler applies genesis commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "accountRelation": "list",
+    "accountRelation": Object {
+      "type": "list",
+    },
     "name": "MyModel",
     "schema": Object {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -350,7 +356,9 @@ exports[`ModelHandler applies genesis commits with views properties correctly 1`
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "accountRelation": "list",
+    "accountRelation": Object {
+      "type": "list",
+    },
     "name": "MyModel",
     "schema": Object {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

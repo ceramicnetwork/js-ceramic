@@ -36,7 +36,7 @@ describe('with database backend', () => {
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
     const fauxLogger = {} as DiagnosticsLogger
     const indexApi = new LocalIndexApi(fauxBackend, fauxRepository, fauxLogger)
-    const response = await indexApi.queryIndex(query)
+    const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
     expect(pageFn).toBeCalledWith(query)
@@ -57,7 +57,7 @@ describe('with database backend', () => {
         {
           cursor: randomString(32),
           node: null,
-        }
+        },
       ],
       pageInfo: {
         hasPreviousPage: false,
@@ -75,10 +75,10 @@ describe('with database backend', () => {
     const fauxLogger = {
       warn: jest.fn((content: string | Record<string, unknown> | Error) => {
         console.log(content)
-      })
+      }),
     } as unknown as DiagnosticsLogger
     const indexApi = new LocalIndexApi(fauxBackend, fauxRepository, fauxLogger)
-    const response = await indexApi.queryIndex(query)
+    const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
     expect(fauxLogger.warn).toBeCalledTimes(1)
@@ -101,7 +101,7 @@ describe('without database backend', () => {
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
     const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger)
-    const response = await indexApi.queryIndex({ model: 'foo', first: 5 })
+    const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
       edges: [],

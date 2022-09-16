@@ -47,8 +47,8 @@ afterEach(async () => {
 })
 
 test('model in query', async () => {
-  const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
-  await client.index.queryIndex({
+  const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
+  await client.index.query({
     model: MODEL_STREAM_ID,
     first: 100,
   })
@@ -59,7 +59,7 @@ test('model in query', async () => {
 })
 test('too much entries requested: forward pagination', async () => {
   await expect(
-    client.index.queryIndex({
+    client.index.query({
       model: MODEL_STREAM_ID,
       first: 20000,
     })
@@ -67,7 +67,7 @@ test('too much entries requested: forward pagination', async () => {
 })
 test('too much entries requested: forward pagination', async () => {
   await expect(
-    client.index.queryIndex({
+    client.index.query({
       model: MODEL_STREAM_ID,
       last: 20000,
     })
@@ -75,8 +75,8 @@ test('too much entries requested: forward pagination', async () => {
 })
 test('model, account in query', async () => {
   const account = `did:key:${randomString(10)}`
-  const indexSpy = jest.spyOn(daemon.ceramic.index, 'queryIndex')
-  await client.index.queryIndex({
+  const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
+  await client.index.query({
     model: MODEL_STREAM_ID,
     account: account,
     first: 100,
@@ -91,7 +91,7 @@ test('serialize StreamState', async () => {
   const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
   query.searchParams.set('model', MODEL_STREAM_ID.toString())
   query.searchParams.set('first', '100')
-  const original = daemon.ceramic.index.queryIndex.bind(daemon.ceramic.index)
+  const original = daemon.ceramic.index.query.bind(daemon.ceramic.index)
   const fauxStreamState = {
     type: 0,
     log: [
@@ -102,7 +102,7 @@ test('serialize StreamState', async () => {
     ],
   } as unknown as StreamState
   // Return faux but serializable StreamState
-  daemon.ceramic.index.queryIndex = async () => {
+  daemon.ceramic.index.query = async () => {
     return {
       edges: [
         {
@@ -117,7 +117,7 @@ test('serialize StreamState', async () => {
     }
   }
   // It gets serialized
-  const response = await client.index.queryIndex({
+  const response = await client.index.query({
     model: MODEL_STREAM_ID,
     first: 100,
   })
@@ -125,6 +125,6 @@ test('serialize StreamState', async () => {
   expect(response.edges.length).toEqual(1)
   // Check if it is indeed the same state
   expect(response.edges[0].node).toEqual(fauxStreamState)
-  // Get the original queryIndex method back
-  daemon.ceramic.index.queryIndex = original
+  // Get the original query method back
+  daemon.ceramic.index.query = original
 })

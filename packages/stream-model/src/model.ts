@@ -72,10 +72,33 @@ async function throwReadOnlyError(): Promise<void> {
  * there can be only one instance of this model per account (if a new instance is created it
  * overrides the old one).
  */
-export enum ModelAccountRelation {
-  LIST = 'list',
-  SINGLE = 'single',
-}
+export type ModelAccountRelation = { type: 'list' } | { type: 'single' }
+
+/**
+ * Identifies types of properties that are supported as relations by the indexing service.
+ *
+ * Currently supported types of relation properties:
+ * - 'account': references a DID property
+ * - 'document': references a StreamID property with associated 'model' the related document must use
+ *
+ */
+export type ModelRelationDefinition = { type: 'account' } | { type: 'document'; model: string }
+
+/**
+ * A mapping between model's property names and types of relation properties
+ *
+ * It indicates which properties of a model are relation properties and of what type
+ */
+export type ModelRelationsDefinition = Record<string, ModelRelationDefinition>
+
+export type ModelDocumentMetadataViewDefinition =
+  | { type: 'documentAccount' }
+  | { type: 'documentVersion' }
+
+export type ModelRelationViewDefinition =
+  | { type: 'relationDocument'; model: string; property: string }
+  | { type: 'relationFrom'; model: string; property: string }
+  | { type: 'relationCountFrom'; model: string; property: string }
 
 /**
  * Identifies types of properties that are supported as view properties at DApps' runtime
@@ -85,9 +108,12 @@ export enum ModelAccountRelation {
  * Currently supported types of view properties:
  * - 'documentAccount': view properties of this type have the MID's controller DID as values
  * - 'documentVersion': view properties of this type have the MID's commit ID as values
+ * - 'relationDocument': view properties of this type represent document relations identified by the given 'property' field
+ * - 'relationFrom': view properties of this type represent inverse relations identified by the given 'model' and 'property' fields
+ * - 'relationCountFrom': view properties of this type represent the number of inverse relations identified by the given 'model' and 'property' fields
  *
  */
-export type ModelViewDefinition = { type: 'documentAccount' } | { type: 'documentVersion' }
+export type ModelViewDefinition = ModelDocumentMetadataViewDefinition | ModelRelationViewDefinition
 
 /**
  * A mapping between model's property names and types of view properties
@@ -104,6 +130,7 @@ export interface ModelDefinition {
   description?: string
   schema: JSONSchema.Object
   accountRelation: ModelAccountRelation
+  relations?: ModelRelationsDefinition
   views?: ModelViewsDefinition
 }
 

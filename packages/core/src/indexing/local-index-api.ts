@@ -2,7 +2,7 @@ import type {
   BaseQuery,
   IndexApi,
   Page,
-  Pagination,
+  PaginationQuery,
   StreamState,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
@@ -43,13 +43,17 @@ export class LocalIndexApi implements IndexApi {
     await this.databaseIndexApi.indexStream(args)
   }
 
+  async count(query: BaseQuery): Promise<number> {
+    throw new Error('Not implemented')
+  }
+
   /**
    * Query the index. Ask an indexing database for a list of StreamIDs,
    * and convert them to corresponding StreamState instances via `Repository::streamState`.
    *
    * We assume that a state store always contains StreamState for an indexed stream, but we return null iff it's not to avoid throwing errors at DApps
    */
-  async queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState | null>> {
+  async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
     if (this.databaseIndexApi) {
       const page = await this.databaseIndexApi.page(query)
       const edges = await Promise.all(
