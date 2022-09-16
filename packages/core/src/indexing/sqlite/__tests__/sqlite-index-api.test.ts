@@ -9,6 +9,7 @@ import { asTableName } from '../../as-table-name.util.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
+import { IndexModelArgs } from '../../database-index-api.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -28,6 +29,12 @@ const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let tmpFolder: tmp.DirectoryResult
 let dbConnection: Knex
+
+function modelsToIndexArgs(models: Array<StreamID>): Array<IndexModelArgs> {
+  return models.map((model) => {
+    return { model }
+  })
+}
 
 beforeEach(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
@@ -51,7 +58,7 @@ describe('init', () => {
     test('create new table from scratch', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApi.indexModels(modelsToIndex)
+      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
       expect(created).toEqual(tableNames)
@@ -60,9 +67,9 @@ describe('init', () => {
     test('table creation is idempotent', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApi.indexModels(modelsToIndex)
+      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       // Index the same models again to make sure we don't error trying to re-create the tables
-      await indexApi.indexModels(modelsToIndex)
+      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
       expect(created).toEqual(tableNames)
@@ -80,7 +87,7 @@ describe('init', () => {
 
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApi.indexModels(modelsToIndex)
+      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
@@ -93,7 +100,7 @@ describe('init', () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
       const indexApiA = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApiA.indexModels(modelsA)
+      await indexApiA.indexModels(modelsToIndexArgs(modelsA))
       const createdA = await listMidTables(dbConnection)
       const tableNamesA = modelsA.map((m) => `${m.toString()}`)
       expect(createdA).toEqual(tableNamesA)
@@ -101,7 +108,7 @@ describe('init', () => {
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
       const indexApiB = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApiB.indexModels(modelsB)
+      await indexApiB.indexModels(modelsToIndexArgs(modelsB))
       const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map((m) => `${m.toString()}`)
       expect(createdB).toEqual(tableNamesB)
@@ -144,7 +151,7 @@ describe('indexStream', () => {
   let indexApi: SqliteIndexApi
   beforeEach(async () => {
     indexApi = new SqliteIndexApi(dbConnection, true, logger)
-    await indexApi.indexModels(MODELS_TO_INDEX)
+    await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
   })
 
   test('new stream', async () => {
