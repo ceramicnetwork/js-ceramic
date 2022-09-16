@@ -1,5 +1,5 @@
 # TODO: Remove ECR and build event steps once the new CD flow is fully implemented
-name: Publish Docker image and docs
+name: Dagger CI Workflow
 
 on:
   repository_dispatch:
@@ -92,7 +92,7 @@ jobs:
         # TODO: Enable this for all envs once Prod starts using CD manager.
         name: Create deployment job
         if: ${{ env.BRANCH == 'develop' || env.BRANCH == 'release-candidate' }}
-        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":\"${{ env.ENV_TAG }}\":latest:\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         # TODO: Remove this and following step once Prod start using CD manager.
         name: Login to Amazon ECR
