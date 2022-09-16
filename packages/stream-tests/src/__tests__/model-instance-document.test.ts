@@ -51,25 +51,26 @@ describe('ModelInstanceDocument API http-client tests', () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
-    core = await createCeramic(ipfs)
+    core = await createCeramic(ipfs, {
+      indexing: {
+        models: ['kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'],
+        allowQueriesBeforeHistoricalSync: true,
+      },
+    })
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
     daemon = new CeramicDaemon(
       core,
       DaemonConfig.fromObject({
-        'http-api': { port},
-        indexing: {
-          models: ['kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'],
-          allowQueriesBeforeHistoricalSync: true,
-        },
+        'http-api': { port },
       })
     )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)
 
-    model = await Model.create(ceramic, MODEL_DEFINITION)
+    model = await Model.create(ceramic, MODEL_DEFINITION) // id: 'kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'
     midMetadata = { model: model.id }
   }, 12000)
 
@@ -208,15 +209,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('create respects pin flag', async () => {
-    // TODO: doesn't bubble up error - probably needs spyOn logger.error
-    expect(await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })).rejects.toThrow(
-      /Cannot unpin actively indexed stream/
-    )
+    await expect(
+      ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
+    ).rejects.toThrow(/Cannot unpin actively indexed stream/)
   })
 
   test('unpinning indexed stream fails', async () => {
-    // TODO: even though model is passed into the config, it is not actively indexed hence the eror not thrown
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: StreamID.fromString(STREAM_ID_A)})
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
     await expect(ceramic.pin.rm(doc.id)).rejects.toThrow(/Cannot unpin actively indexed stream/)
   })
@@ -230,7 +229,11 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('replace respects pin flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    const nonIndexedModel = await Model.create(
+      ceramic,
+      Object.assign({}, MODEL_DEFINITION, { name: 'non-indexed' })
+    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: nonIndexedModel.id })
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
     await doc.replace(CONTENT1, { pin: false })
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()

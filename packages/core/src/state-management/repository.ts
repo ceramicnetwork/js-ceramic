@@ -39,6 +39,15 @@ export type RepositoryDependencies = {
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 
+/**
+ * Indicate if the stream should be indexed.
+ */
+function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
+  const model = state$.state.metadata.model
+  if (!model) return false
+  return index.shouldIndexStream(model)
+}
+
 export class Repository {
   /**
    * Serialize loading operations per streamId.
@@ -283,22 +292,10 @@ export class Repository {
     await this.handlePinOpts(state$, opts)
   }
 
-  async handlePinOpts(state$: RunningState, opts: PinningOpts) {
-    const shouldIndex = state$.state.metadata
-      ? state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
-      : false
-
-    if (opts.pin || (opts.pin === undefined && shouldIndex)) {
+  async handlePinOpts(state$: RunningState, opts: PinningOpts): Promise<void> {
+    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this._index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
-      if (shouldIndex) {
-        this.logger.err(
-          `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
-            state$.state.metadata.model
-          }`
-        )
-        return false
-      }
       await this.unpin(state$)
     }
   }
@@ -349,9 +346,18 @@ export class Repository {
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
+    if (shouldIndex(state$, this._index)) {
+      throw new Error(
+        `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
+          state$.state.metadata.model
+        }`
+      )
+    }
+
     if (opts?.publish) {
       this.stateManager.publishTip(state$)
     }
+
     return this.#deps.pinStore.rm(state$)
   }
 
