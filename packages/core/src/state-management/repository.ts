@@ -43,7 +43,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 
  * Indicate if the stream should be indexed.
  */
 function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
-  const model = state$.state.metadata.model
+  const model = state$.state?.metadata?.model
   if (!model) return false
   return index.shouldIndexStream(model)
 }
