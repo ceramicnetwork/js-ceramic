@@ -1,10 +1,19 @@
 import type { Knex } from 'knex'
 import { UnreachableCaseError } from '@ceramicnetwork/common'
 
+/**
+ * The expected type for the data in the column.  For now only supports STRING as the only extra
+ * columns we create are for relations which are always strings.  In the future though we may allow
+ * models to specify arbitrary fields in the content to be indexed, in which case we may want to
+ * support other types as well.
+ */
 export enum ColumnType {
   STRING,
 }
 
+/**
+ * Schema information about extra columns that should be created when creating a model table.
+ */
 export type ColumnInfo = {
   name: string
   type: ColumnType

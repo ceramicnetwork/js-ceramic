@@ -10,7 +10,7 @@ import { listMidTables } from '../init-tables.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
-import { IndexModelArgs } from '../../database-index-api'
+import { IndexModelArgs } from '../../database-index-api.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
