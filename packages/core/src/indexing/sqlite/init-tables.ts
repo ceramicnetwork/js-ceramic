@@ -1,9 +1,10 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { Knex } from 'knex'
-import { createModelTable } from './migrations/1-create-model-table.js'
+import { ColumnType, createModelTable } from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { IndexModelArgs } from '../database-index-api'
 
 /**
  * List existing mid tables.
@@ -22,15 +23,20 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
  */
 export async function initTables(
   dbConnection: Knex,
-  modelsToIndex: Array<StreamID>,
+  modelsToIndex: Array<IndexModelArgs>,
   logger: DiagnosticsLogger
 ) {
   const existingTables = await listMidTables(dbConnection)
-  const expectedTables = modelsToIndex.map(asTableName)
-  const tablesToCreate = expectedTables.filter((tableName) => !existingTables.includes(tableName))
-  for (const tableName of tablesToCreate) {
+  for (const modelIndexArgs of modelsToIndex) {
+    const tableName = asTableName(modelIndexArgs.model)
+    if (existingTables.includes(tableName)) {
+      continue
+    }
     logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-    await createModelTable(dbConnection, tableName)
+    const relationColumns = Object.keys(modelIndexArgs.relations).map((keyName) => {
+      return { name: keyName, type: ColumnType.STRING }
+    })
+    await createModelTable(dbConnection, tableName, relationColumns)
   }
 }
 

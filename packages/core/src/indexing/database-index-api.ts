@@ -1,6 +1,7 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
+import { ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 
 export interface IndexStreamArgs {
   readonly streamID: StreamID
@@ -20,6 +21,7 @@ export interface IndexStreamArgs {
  */
 export interface IndexModelArgs {
   readonly model: StreamID
+  readonly relations?: ModelRelationsDefinition
 }
 
 /**
