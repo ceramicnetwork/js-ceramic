@@ -293,7 +293,7 @@ export class Repository {
   }
 
   async handlePinOpts(state$: RunningState, opts: PinningOpts): Promise<void> {
-    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this._index))) {
+    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
@@ -346,7 +346,7 @@ export class Repository {
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
-    if (shouldIndex(state$, this._index)) {
+    if (shouldIndex(state$, this.index)) {
       throw new Error(
         `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
           state$.state.metadata.model
