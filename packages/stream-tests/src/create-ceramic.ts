@@ -1,3 +1,4 @@
+import mergeOpts from 'merge-options'
 import { CeramicConfig, Ceramic } from '@ceramicnetwork/core'
 import { IpfsApi } from '@ceramicnetwork/common'
 import * as uint8arrays from 'uint8arrays'
@@ -12,21 +13,23 @@ import { DID } from 'dids'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config?: CeramicConfig & { seed?: string }
+  config: CeramicConfig & { seed?: string } = {}
 ): Promise<Ceramic> {
   const stateStoreDirectory = await tmp.tmpName()
-  const appliedConfig: CeramicConfig = {
-    stateStoreDirectory: stateStoreDirectory,
-    anchorOnRequest: false,
-    streamCacheLimit: 100,
-    pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
-    indexing: {
-      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
-      allowQueriesBeforeHistoricalSync: false,
+  const appliedConfig: CeramicConfig = mergeOpts(
+    {
+      stateStoreDirectory: stateStoreDirectory,
+      anchorOnRequest: false,
+      streamCacheLimit: 100,
+      pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
+      indexing: {
+        db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+        models: [],
+        allowQueriesBeforeHistoricalSync: false,
+      },
     },
-    ...config,
-  }
+    config
+  )
   const ceramic = await Ceramic.create(ipfs, appliedConfig)
   const seed = sha256.hash(uint8arrays.fromString(appliedConfig.seed || 'SEED'))
   const provider = new Ed25519Provider(seed)

@@ -157,7 +157,7 @@ describe('Cross-node indexing and query test', () => {
     expect(results.length).toEqual(0)
 
     // Explicitly loading the stream on ceramic2 should add it to the index.
-    const doc2 = await ModelInstanceDocument.load(ceramic2, doc1.id, { pin: false })
+    const doc2 = await ModelInstanceDocument.load(ceramic2, doc1.id)
     expect(doc1.content).toEqual(doc2.content)
     // Indexed streams should always get pinned, regardless of the 'pin' flag
     await expect(TestUtils.isPinned(ceramic2, doc1.id)).toBeTruthy()
