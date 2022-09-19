@@ -99,7 +99,7 @@ export class Repository {
     return this.#deps.pinStore
   }
 
-  get _index(): LocalIndexApi {
+  get index(): LocalIndexApi {
     return this.#deps.indexing
   }
 
@@ -116,7 +116,7 @@ export class Repository {
       (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts),
       // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
-      this.indexStreamIfNeeded,
+      this.indexStreamIfNeeded.bind(this),
       deps.indexing
     )
   }
@@ -418,7 +418,7 @@ export class Repository {
       firstAnchor: firstAnchor,
     }
 
-    await this._index.indexStream(STREAM_CONTENT)
+    await this.index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -458,6 +458,6 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
-    await this._index.close()
+    await this.index.close()
   }
 }

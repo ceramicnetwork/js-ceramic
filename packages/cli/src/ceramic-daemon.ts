@@ -476,12 +476,13 @@ export class CeramicDaemon {
   async getCollection(req: Request, res: Response): Promise<void> {
     const httpQuery = parseQueryObject(req.query)
     const query = collectionQuery(httpQuery)
-    const indexResponse = await this.ceramic.index.queryIndex(query)
+    const indexResponse = await this.ceramic.index.query(query)
+
     res.json({
       edges: indexResponse.edges.map((e) => {
         return {
           cursor: e.cursor,
-          node: StreamUtils.serializeState(e.node),
+          node: e.node ? StreamUtils.serializeState(e.node) : null,
         }
       }),
       pageInfo: indexResponse.pageInfo,
@@ -612,7 +613,7 @@ export class CeramicDaemon {
    * Close Ceramic daemon
    */
   async close(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       if (!this.server) resolve()
       this.server.close((err) => {
         if (err) {
@@ -622,5 +623,6 @@ export class CeramicDaemon {
         }
       })
     })
+    await this.ceramic.close()
   }
 }

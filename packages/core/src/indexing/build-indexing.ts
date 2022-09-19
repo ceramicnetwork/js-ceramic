@@ -64,7 +64,6 @@ export function buildIndexing(
       })
       return new SqliteIndexApi(
         dbConnection,
-        indexingConfig.models,
         indexingConfig.allowQueriesBeforeHistoricalSync,
         logger
       )
@@ -77,7 +76,6 @@ export function buildIndexing(
       })
       return new PostgresIndexApi(
         dataSource,
-        indexingConfig.models,
         indexingConfig.allowQueriesBeforeHistoricalSync,
         logger
       )

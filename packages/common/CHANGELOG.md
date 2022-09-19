@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.6.1-rc.1...@ceramicnetwork/common@2.6.1-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [2.6.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.6.1-rc.0...@ceramicnetwork/common@2.6.1-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [2.6.1-rc.0](/compare/@ceramicnetwork/common@2.6.0...@ceramicnetwork/common@2.6.1-rc.0) (2022-09-13)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.6.0](/compare/@ceramicnetwork/common@2.6.0-rc.0...@ceramicnetwork/common@2.6.0) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 # [2.6.0-rc.0](/compare/@ceramicnetwork/common@2.5.1-rc.0...@ceramicnetwork/common@2.6.0-rc.0) (2022-09-06)
 
 

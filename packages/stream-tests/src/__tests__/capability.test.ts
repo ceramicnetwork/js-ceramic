@@ -14,12 +14,12 @@ import {
   ModelInstanceDocumentMetadata,
 } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 function getModelDef(name: string): ModelDefinition {
   return {
     name: name,
-    accountRelation: ModelAccountRelation.LIST,
+    accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
       type: 'object',

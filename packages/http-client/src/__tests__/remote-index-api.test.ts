@@ -27,7 +27,7 @@ test('model in query', async () => {
   const fauxFetch = jest.fn(async () => EMPTY_RESPONSE) as typeof fetchJson
   const indexApi = new RemoteIndexApi(FAUX_ENDPOINT)
   ;(indexApi as any)._fetchJson = fauxFetch
-  const result = await indexApi.queryIndex({ model: MODEL, first: 5 })
+  const result = await indexApi.query({ model: MODEL, first: 5 })
   expect(result).toEqual(EMPTY_RESPONSE)
   expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/collection?model=${MODEL}&first=5`))
 })
@@ -36,7 +36,7 @@ test('model, account in query', async () => {
   const fauxFetch = jest.fn(async () => EMPTY_RESPONSE) as typeof fetchJson
   const indexApi = new RemoteIndexApi(FAUX_ENDPOINT)
   ;(indexApi as any)._fetchJson = fauxFetch
-  const result = await indexApi.queryIndex({ model: MODEL, account: 'did:key:foo', first: 5 })
+  const result = await indexApi.query({ model: MODEL, account: 'did:key:foo', first: 5 })
   expect(result).toEqual(EMPTY_RESPONSE)
   expect(fauxFetch).toBeCalledWith(
     new URL(
@@ -60,6 +60,6 @@ test('serialize stream state', async () => {
   const fauxFetch = jest.fn(async () => response) as typeof fetchJson
   const indexApi = new RemoteIndexApi(FAUX_ENDPOINT)
   ;(indexApi as any)._fetchJson = fauxFetch
-  const result = await indexApi.queryIndex({ model: MODEL, account: 'did:key:foo', first: 5 })
+  const result = await indexApi.query({ model: MODEL, account: 'did:key:foo', first: 5 })
   expect(result.edges[0].node).toEqual(FAUX_STREAM_STATE)
 })

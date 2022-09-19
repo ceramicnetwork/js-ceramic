@@ -10,7 +10,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
 
@@ -23,7 +23,7 @@ const CONTENT5 = { myData: 5 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
+  accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
@@ -115,7 +115,7 @@ describe('Basic end-to-end indexing query test', () => {
     // Indexed streams should always get pinned, regardless of the 'pin' flag
     await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
 
-    const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
+    const resultObj = await ceramic.index.query({ model: model.id, first: 100 })
     const results = extractDocuments(ceramic, resultObj)
 
     expect(results.length).toEqual(1)
@@ -130,7 +130,7 @@ describe('Basic end-to-end indexing query test', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
     const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
-    const resultObj = await ceramic.index.queryIndex({ model: model.id, first: 100 })
+    const resultObj = await ceramic.index.query({ model: model.id, first: 100 })
     const results = extractDocuments(ceramic, resultObj)
 
     expect(results.length).toEqual(3)
@@ -150,15 +150,15 @@ describe('Basic end-to-end indexing query test', () => {
     const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
     const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-    const resultObj0 = await ceramic.index.queryIndex({ model: model.id, first: 2 })
+    const resultObj0 = await ceramic.index.query({ model: model.id, first: 2 })
     expect(resultObj0.pageInfo.hasNextPage).toBeTruthy()
-    const resultObj1 = await ceramic.index.queryIndex({
+    const resultObj1 = await ceramic.index.query({
       model: model.id,
       first: 2,
       after: resultObj0.pageInfo.endCursor,
     })
     expect(resultObj1.pageInfo.hasNextPage).toBeTruthy()
-    const resultObj2 = await ceramic.index.queryIndex({
+    const resultObj2 = await ceramic.index.query({
       model: model.id,
       first: 2,
       after: resultObj1.pageInfo.endCursor,
@@ -192,7 +192,7 @@ describe('Basic end-to-end indexing query test', () => {
 
     console.log(`docIds: [${doc1.id.toString()}, ${doc2.id.toString()}, ${doc3.id.toString()}]`)
 
-    const resultObj = await ceramic.index.queryIndex({ model: model.id, last: 100 })
+    const resultObj = await ceramic.index.query({ model: model.id, last: 100 })
     const results = extractDocuments(ceramic, resultObj)
 
     // Using `last` doesn't change the order of documents returned within each page
@@ -213,15 +213,15 @@ describe('Basic end-to-end indexing query test', () => {
     const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
     const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-    const resultObj0 = await ceramic.index.queryIndex({ model: model.id, last: 2 })
+    const resultObj0 = await ceramic.index.query({ model: model.id, last: 2 })
     expect(resultObj0.pageInfo.hasPreviousPage).toBeTruthy()
-    const resultObj1 = await ceramic.index.queryIndex({
+    const resultObj1 = await ceramic.index.query({
       model: model.id,
       last: 2,
       before: resultObj0.pageInfo.startCursor,
     })
     expect(resultObj1.pageInfo.hasPreviousPage).toBeTruthy()
-    const resultObj2 = await ceramic.index.queryIndex({
+    const resultObj2 = await ceramic.index.query({
       model: model.id,
       last: 2,
       before: resultObj1.pageInfo.startCursor,

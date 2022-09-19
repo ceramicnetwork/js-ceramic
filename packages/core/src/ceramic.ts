@@ -22,7 +22,6 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
-  IndexApi,
   StreamState,
 } from '@ceramicnetwork/common'
 
@@ -43,9 +42,9 @@ import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-valid
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
-import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
-import { makeIndexApi } from './initialization/make-index-api.js'
+import { ShutdownSignal } from './shutdown-signal.js'
+import { IndexingConfig } from './indexing/build-indexing.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -95,6 +94,8 @@ export interface CeramicConfig {
   loggerProvider?: LoggerProvider
   gateway?: boolean
 
+  indexing?: IndexingConfig
+
   networkName?: string
   pubsubTopic?: string
 
@@ -121,8 +122,7 @@ export interface CeramicModules {
   loggerProvider: LoggerProvider
   pinStoreFactory: PinStoreFactory
   repository: Repository
-  shutdownController: AbortController
-  indexing: DatabaseIndexApi | undefined
+  shutdownSignal: ShutdownSignal
 }
 
 /**
@@ -132,6 +132,7 @@ export interface CeramicModules {
  */
 export interface CeramicParameters {
   gateway: boolean
+  indexingConfig: IndexingConfig
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
@@ -178,21 +179,20 @@ export class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _index: LocalIndexApi
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
-  private readonly _shutdownController: AbortController
+  private readonly _shutdownSignal: ShutdownSignal
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this._shutdownController = modules.shutdownController
+    this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
@@ -222,7 +222,12 @@ export class Ceramic implements CeramicApi {
       this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
-    const localIndex = new LocalIndexApi(modules.indexing, this.repository, this._logger)
+    const localIndex = new LocalIndexApi(
+      params.indexingConfig,
+      this.repository,
+      this._logger,
+      params.networkOptions.name
+    )
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -232,12 +237,10 @@ export class Ceramic implements CeramicApi {
       conflictResolution: conflictResolution,
       indexing: localIndex,
     })
-    // TODO (NET-1687): remove indexing part of refactor to push indexing into state-manager.ts
-    this._index = localIndex
   }
 
-  get index(): IndexApi {
-    return this._index
+  get index(): LocalIndexApi {
+    return this.repository.index
   }
 
   /**
@@ -376,7 +379,6 @@ export class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
     const networkOptions = Ceramic._generateNetworkOptions(config)
-    const indexingApi = makeIndexApi(config.indexing, networkOptions.name, logger)
 
     let anchorService = null
     if (!config.gateway) {
@@ -439,19 +441,20 @@ export class Ceramic implements CeramicApi {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions)
-    const shutdownController = new AbortController()
+    const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
       networkOptions.pubsubTopic,
       repository,
       logger,
       pubsubLogger,
-      shutdownController.signal,
+      shutdownSignal,
       maxQueriesPerSecond
     )
 
     const params: CeramicParameters = {
       gateway: config.gateway,
+      indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
     }
@@ -465,8 +468,7 @@ export class Ceramic implements CeramicApi {
       loggerProvider,
       pinStoreFactory,
       repository,
-      shutdownController,
-      indexing: indexingApi,
+      shutdownSignal,
     }
 
     return [modules, params]
@@ -525,7 +527,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this._index.init()
+      await this.index.init()
 
       await this._startupChecks()
     } catch (err) {
@@ -856,10 +858,9 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
-    this._shutdownController.abort()
+    this._shutdownSignal.abort()
     await this.dispatcher.close()
     await this.repository.close()
-    await this._index.close()
     this._ipfsTopology.stop()
     this._logger.imp('Ceramic instance closed successfully')
   }

@@ -10,6 +10,7 @@ import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
+import { ShutdownSignal } from '../shutdown-signal.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -65,7 +66,7 @@ describe('Dispatcher with mock ipfs', () => {
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
-      new AbortController().signal,
+      new ShutdownSignal(),
       10
     )
   })
