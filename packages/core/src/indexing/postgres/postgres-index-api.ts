@@ -7,6 +7,7 @@ import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { validTableStructure } from './migrations/mid-schema-verification.js'
+import { createModelIndexTable } from './migrations/1-create-model-table.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
@@ -64,6 +65,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   }
 
   async indexModels(models: Array<StreamID>): Promise<void> {
+    await createModelIndexTable(this.dbConnection)
     await initTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
     this.modelsToIndex.push(...models)

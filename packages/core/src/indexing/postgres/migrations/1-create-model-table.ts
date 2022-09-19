@@ -38,3 +38,23 @@ export async function createModelTable(dataSource: Knex, tableName: string) {
     )
   })
 }
+
+export async function createModelIndexTable(dataSource: Knex) {
+  await dataSource.schema.createTableIfNotExists('ceramic_models', function (table) {
+    // create indexing configuration table
+    table.increments('index_id')
+    table.string('model', 1024).notNullable()
+    table.boolean('is_indexed').notNullable().defaultTo(true)
+    table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
+    table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
+    table.string('updated_by', 1024).notNullable()
+
+    table.index(
+      ['model', 'is_indexed'],
+      `idx_ceramic_models_model_is_indexed`,
+      {
+        storageEngineIndexType: 'hash',
+      }
+    )
+  })
+}
