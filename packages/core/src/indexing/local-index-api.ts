@@ -26,6 +26,14 @@ export class LocalIndexApi implements IndexApi {
     private readonly logger: DiagnosticsLogger,
     networkName: Networks
   ) {
+    // the '?' is here, because we're passing `unknown` as the indexingConfig in tests. refactor the tests maybe?
+    if (indexingConfig?.models !== undefined) {
+      // TODO: Update the log once admin API is implemented
+      logger.warn(`
+      Passing stream IDs to be indexed via indexing config is deprecated and will soon be removed as an option.
+      Instead, you will be configuring your index via the @composedb/cli commands (see documentation at https://composedb.js.org).
+      `)
+    }
     this.databaseIndexApi = makeIndexApi(indexingConfig, networkName, logger)
   }
 
@@ -107,7 +115,10 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    return this.indexModels(this.indexingConfig.models)
+    if (this.indexingConfig.models) {
+      return this.indexModels(this.indexingConfig.models)
+    }
+    return
   }
 
   async close(): Promise<void> {

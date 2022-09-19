@@ -35,14 +35,15 @@ describe('with database backend', () => {
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
-    const fauxLogger = {} as DiagnosticsLogger
-
+    const warnFn = jest.fn()
+    const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
     const indexApi = new LocalIndexApi(
       undefined as IndexingConfig,
       fauxRepository,
       fauxLogger,
       Networks.INMEMORY
     )
+    // @ts-ignore
     indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -80,17 +81,16 @@ describe('with database backend', () => {
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
-    const fauxLogger = {
-      warn: jest.fn((content: string | Record<string, unknown> | Error) => {
-        console.log(content)
-      }),
-    } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger)
+    const warnFn = jest.fn()
+    const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
+    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger, Networks.INMEMORY)
+    // @ts-ignore
     indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
-    expect(fauxLogger.warn).toBeCalledTimes(1)
+    // One warning about finding a null stream state when querying index
+    expect(warnFn).toBeCalledTimes(1)
     expect(pageFn).toBeCalledWith(query)
     // We pass pageInfo through
     expect(response.pageInfo).toEqual(backendPage.pageInfo)
@@ -109,7 +109,7 @@ describe('without database backend', () => {
     const fauxRepository = {} as unknown as Repository
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger)
+    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
@@ -120,6 +120,7 @@ describe('without database backend', () => {
       },
     })
     // Log a warning
+    // One warning about the lack of db backend
     expect(warnFn).toBeCalledTimes(1)
   })
 })
