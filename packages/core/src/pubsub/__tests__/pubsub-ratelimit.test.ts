@@ -7,7 +7,7 @@ import { Pubsub } from '../pubsub.js'
 import { MsgType, QueryMessage, serialize, UpdateMessage } from '../pubsub-message.js'
 import { PubsubRateLimit } from '../pubsub-ratelimit.js'
 import { chunks } from '../../__tests__/chunks.util.js'
-import { whenSubscriptionDone } from 'core/src/__tests__/when-subscription-done.util.js'
+import { whenSubscriptionDone } from '../../__tests__/when-subscription-done.util.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
