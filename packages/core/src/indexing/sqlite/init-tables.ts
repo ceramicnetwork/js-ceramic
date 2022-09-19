@@ -61,6 +61,7 @@ export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexM
 
   for (const tableName of tables) {
     const modelIndexArgs = modelsToIndex.find((model) => tableName == asTableName(model.model))
+
     // Clone the COMMON_TABLE_STRUCTURE object that has the fields expected for all tables so we can
     // extend it with the model-specific fields expected
     const expectedTableStructure = Object.assign({}, COMMON_TABLE_STRUCTURE)
@@ -69,8 +70,8 @@ export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexM
         expectedTableStructure[relation] = RELATION_COLUMN_STRUCTURE
       }
     }
-
     const validSchema = JSON.stringify(expectedTableStructure)
+
     const columns = await dataSource.table(tableName).columnInfo()
     if (validSchema != JSON.stringify(columns)) {
       throw new Error(

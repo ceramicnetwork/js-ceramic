@@ -11,6 +11,10 @@ import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { IndexModelArgs } from '../../database-index-api.js'
+import {
+  COMMON_TABLE_STRUCTURE,
+  RELATION_COLUMN_STRUCTURE,
+} from '../migrations/mid-schema-verification.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -77,12 +81,43 @@ afterAll(async () => {
 describe('init', () => {
   describe('create tables', () => {
     test('create new table from scratch', async () => {
-      const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
-      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+      await indexApi.indexModels(modelsToIndexArgs([modelToIndex]))
       const created = await listMidTables(dbConnection)
-      const tableNames = modelsToIndex.map(asTableName)
+      const tableName = asTableName(modelToIndex)
+      expect(created.length).toEqual(1)
+      expect(created[0]).toEqual(tableName)
+
+      // Built-in table verification should pass
+      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
+
+      // Also manually check table structure
+      const columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
+      expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
+    })
+
+    test('create new table with relations', async () => {
+      const indexModelsArgs: Array<IndexModelArgs> = [
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          relations: { fooRelation: { type: 'account' } },
+        },
+      ]
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.indexModels(indexModelsArgs)
+      const created = await listMidTables(dbConnection)
+      const tableNames = indexModelsArgs.map((args) => `${asTableName(args.model)}`)
       expect(created).toEqual(tableNames)
+
+      await expect(indexApi.verifyTables(indexModelsArgs)).resolves.not.toThrow()
+
+      // Also manually check table structure
+      const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
+      const expectedTableStructure = Object.assign({}, COMMON_TABLE_STRUCTURE, {
+        fooRelation: RELATION_COLUMN_STRUCTURE,
+      })
+      expect(JSON.stringify(columns)).toEqual(JSON.stringify(expectedTableStructure))
     })
 
     test('table creation is idempotent', async () => {
@@ -94,27 +129,6 @@ describe('init', () => {
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
       expect(created).toEqual(tableNames)
-    })
-
-    test('create new table from scratch but fail table validation', async () => {
-      const INVALID_TABLE_STRUCTURE = {
-        stream_id: {
-          type: 'character varying',
-          maxLength: 254,
-          nullable: false,
-          defaultValue: null,
-        },
-      }
-
-      const modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
-      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-      const created = await listMidTables(dbConnection)
-      const tableNames = modelsToIndex.map(asTableName)
-      expect(created).toEqual(tableNames)
-      await expect(indexApi.verifyTables(modelsToIndex, INVALID_TABLE_STRUCTURE)).rejects.toThrow(
-        /Schema verification failed for index/
-      )
     })
 
     test('create new table with existing ones', async () => {
@@ -135,6 +149,107 @@ describe('init', () => {
       createdB.sort()
       tableNamesB.sort()
       expect(createdB).toEqual(tableNamesB)
+    })
+  })
+
+  describe('table validation tests', () => {
+    /**
+     * This test exists mostly to validate the rest of the validation tests.
+     * Those tests test that validation fails in certain cases by changing one thing
+     * off from what we expect to pass validation.  This test confirms that we are in fact
+     * creating tables in this unit test in the correct way that could pass validation if not
+     * for the intentional changes we make in the following test.
+     *
+     * NOTE: If this test ever fails and needs updating, update the other validation tests
+     * as well to make sure that validation is failing for the reason we expect.
+     */
+    test('Can manually create table that passes validation', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(modelToIndex)
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(tableName, (table) => {
+        // create unique index name <64 chars that are still capable of being referenced to MID table
+        const indexName = tableName.substring(tableName.length - 10)
+
+        table
+          .string('stream_id')
+          .primary(`idx_${indexName}_pkey`)
+          .unique(`constr_${indexName}_unique`)
+        table.string('controller_did', 1024).notNullable()
+        table.jsonb('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.dateTime('last_anchored_at').nullable()
+        table.dateTime('first_anchored_at').nullable()
+        table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+        table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+      })
+
+      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
+    })
+
+    test('Fail table validation', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(modelToIndex)
+
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(tableName, (table) => {
+        // create unique index name <64 chars that are still capable of being referenced to MID table
+        const indexName = tableName.substring(tableName.length - 10)
+
+        table
+          .string('stream_id')
+          .primary(`idx_${indexName}_pkey`)
+          .unique(`constr_${indexName}_unique`)
+        table.string('controller_did', 1024).notNullable()
+        table.jsonb('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.dateTime('last_anchored_at').nullable()
+        table.dateTime('first_anchored_at').nullable()
+        table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+      })
+
+      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).rejects.toThrow(
+        /Schema verification failed for index/
+      )
+    })
+
+    test('Fail table validation if relation column missing', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(modelToIndex)
+      const indexModelsArgs: Array<IndexModelArgs> = [
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          relations: { fooRelation: { type: 'account' } },
+        },
+      ]
+
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(tableName, (table) => {
+        // create unique index name <64 chars that are still capable of being referenced to MID table
+        const indexName = tableName.substring(tableName.length - 10)
+
+        table
+          .string('stream_id')
+          .primary(`idx_${indexName}_pkey`)
+          .unique(`constr_${indexName}_unique`)
+        table.string('controller_did', 1024).notNullable()
+        table.jsonb('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.dateTime('last_anchored_at').nullable()
+        table.dateTime('first_anchored_at').nullable()
+        table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+        table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+      })
+
+      await expect(indexApi.verifyTables(indexModelsArgs)).rejects.toThrow(
+        /Schema verification failed for index/
+      )
     })
   })
 })

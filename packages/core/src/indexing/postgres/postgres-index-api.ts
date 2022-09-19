@@ -6,7 +6,6 @@ import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
-import { validTableStructure } from './migrations/mid-schema-verification.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
@@ -59,14 +58,14 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verifyTables(models: Array<StreamID>, tableStructure = validTableStructure): Promise<void> {
-    await verifyTables(this.dbConnection, models, tableStructure)
+  async verifyTables(models: Array<IndexModelArgs>): Promise<void> {
+    await verifyTables(this.dbConnection, models)
   }
 
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
+    await initTables(this.dbConnection, models, this.logger)
+    await this.verifyTables(models)
     const modelStreamIDs = models.map((args) => args.model)
-    await initTables(this.dbConnection, modelStreamIDs, this.logger)
-    await this.verifyTables(modelStreamIDs)
     this.modelsToIndex.push(...modelStreamIDs)
   }
 

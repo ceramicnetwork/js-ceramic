@@ -110,6 +110,55 @@ describe('init', () => {
       expect(created).toEqual(tableNames)
     })
 
+    test('create new table with existing ones', async () => {
+      // First init with one model
+      const modelsA = [StreamID.fromString(STREAM_ID_A)]
+      const indexApiA = new SqliteIndexApi(dbConnection, true, logger)
+      await indexApiA.indexModels(modelsToIndexArgs(modelsA))
+      const createdA = await listMidTables(dbConnection)
+      const tableNamesA = modelsA.map((m) => `${m.toString()}`)
+      expect(createdA).toEqual(tableNamesA)
+
+      // Next add another one
+      const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
+      const indexApiB = new SqliteIndexApi(dbConnection, true, logger)
+      await indexApiB.indexModels(modelsToIndexArgs(modelsB))
+      const createdB = await listMidTables(dbConnection)
+      const tableNamesB = modelsB.map((m) => `${m.toString()}`)
+      expect(createdB).toEqual(tableNamesB)
+    })
+  })
+
+  describe('table validation tests', () => {
+    /**
+     * This test exists mostly to validate the rest of the validation tests.
+     * Those tests test that validation fails in certain cases by changing one thing
+     * off from what we expect to pass validation.  This test confirms that we are in fact
+     * creating tables in this unit test in the correct way that could pass validation if not
+     * for the intentional changes we make in the following test.
+     *
+     * NOTE: If this test ever fails and needs updating, update the other validation tests
+     * as well to make sure that validation is failing for the reason we expect.
+     */
+    test('Can manually create table that passes validation', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(asTableName(modelToIndex), (table) => {
+        table.string('stream_id', 1024).primary().unique().notNullable()
+        table.string('controller_did', 1024).notNullable()
+        table.string('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.integer('last_anchored_at').nullable()
+        table.integer('first_anchored_at').nullable()
+        table.integer('created_at').notNullable()
+        table.integer('updated_at').notNullable()
+      })
+
+      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
+    })
+
     test('Fail table validation', async () => {
       const modelToIndex = StreamID.fromString(STREAM_ID_A)
       const indexApi = new SqliteIndexApi(dbConnection, true, logger)
@@ -130,22 +179,32 @@ describe('init', () => {
       )
     })
 
-    test('create new table with existing ones', async () => {
-      // First init with one model
-      const modelsA = [StreamID.fromString(STREAM_ID_A)]
-      const indexApiA = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApiA.indexModels(modelsToIndexArgs(modelsA))
-      const createdA = await listMidTables(dbConnection)
-      const tableNamesA = modelsA.map((m) => `${m.toString()}`)
-      expect(createdA).toEqual(tableNamesA)
+    test('Fail table validation if relation column missing', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const indexModelsArgs: Array<IndexModelArgs> = [
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          relations: { fooRelation: { type: 'account' } },
+        },
+      ]
 
-      // Next add another one
-      const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
-      const indexApiB = new SqliteIndexApi(dbConnection, true, logger)
-      await indexApiB.indexModels(modelsToIndexArgs(modelsB))
-      const createdB = await listMidTables(dbConnection)
-      const tableNamesB = modelsB.map((m) => `${m.toString()}`)
-      expect(createdB).toEqual(tableNamesB)
+      const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(asTableName(modelToIndex), (table) => {
+        table.string('stream_id', 1024).primary().unique().notNullable()
+        table.string('controller_did', 1024).notNullable()
+        table.string('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.integer('last_anchored_at').nullable()
+        table.integer('first_anchored_at').nullable()
+        table.integer('created_at').notNullable()
+        table.integer('updated_at').notNullable()
+      })
+
+      await expect(indexApi.verifyTables(indexModelsArgs)).rejects.toThrow(
+        /Schema verification failed for index/
+      )
     })
   })
 })

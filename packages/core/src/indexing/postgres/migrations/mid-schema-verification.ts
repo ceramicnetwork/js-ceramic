@@ -1,9 +1,19 @@
 /**
- * Valid Postgres table structure for mid tables
- * Used to verify table integrity during node startup
+ * Expected Postgres structure for columns for relations.
+ * Used to verify table integrity during node startup and after indexing a new model.
  */
+export const RELATION_COLUMN_STRUCTURE = {
+  type: 'character varying',
+  maxLength: 1024,
+  nullable: false,
+  defaultValue: null,
+}
 
-export const validTableStructure = {
+/**
+ * Valid Postgres table structure for mid tables
+ * Used to verify table integrity during node startup and after indexing a new model
+ */
+export const COMMON_TABLE_STRUCTURE = {
   stream_id: {
     type: 'character varying',
     maxLength: 255,

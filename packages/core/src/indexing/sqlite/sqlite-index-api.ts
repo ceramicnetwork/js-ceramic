@@ -74,9 +74,9 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
-    const modelStreamIDs = models.map((args) => args.model)
     await initTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
+    const modelStreamIDs = models.map((args) => args.model)
     this.modelsToIndex.push(...modelStreamIDs)
   }
 
