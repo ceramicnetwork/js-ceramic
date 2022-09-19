@@ -4,7 +4,8 @@ import type { Repository } from '../../state-management/repository.js'
 import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
 import { LocalIndexApi } from '../local-index-api.js'
-import { LogStyle } from '@ceramicnetwork/common'
+import { Networks } from '@ceramicnetwork/common'
+import { IndexingConfig } from '../build-indexing.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
@@ -35,7 +36,14 @@ describe('with database backend', () => {
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
     const fauxLogger = {} as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(fauxBackend, fauxRepository, fauxLogger)
+
+    const indexApi = new LocalIndexApi(
+      undefined as IndexingConfig,
+      fauxRepository,
+      fauxLogger,
+      Networks.INMEMORY
+    )
+    indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
@@ -77,7 +85,8 @@ describe('with database backend', () => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(fauxBackend, fauxRepository, fauxLogger)
+    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger)
+    indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)

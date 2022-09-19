@@ -1,6 +1,7 @@
 import { IpfsApi } from '@ceramicnetwork/common'
 import { Ceramic } from '@ceramicnetwork/core'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 export async function makeCeramicCore(
   ipfs: IpfsApi,
@@ -13,7 +14,8 @@ export async function makeCeramicCore(
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: modelsToIndex,
+      models: modelsToIndex.map(StreamID.fromString),
+      allowQueriesBeforeHistoricalSync: true,
     },
   })
 

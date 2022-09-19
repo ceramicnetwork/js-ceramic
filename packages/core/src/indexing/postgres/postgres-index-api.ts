@@ -10,9 +10,10 @@ import { validTableStructure } from './migrations/mid-schema-verification.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
+  readonly modelsToIndex: Array<StreamID> = []
+
   constructor(
     private readonly dbConnection: Knex,
-    readonly modelsToIndex: Array<StreamID>,
     private readonly allowQueriesBeforeHistoricalSync: boolean,
     private readonly logger: DiagnosticsLogger
   ) {
@@ -58,13 +59,14 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verify(validTableStructure: object): Promise<void> {
-    await verifyTables(this.dbConnection, this.modelsToIndex, validTableStructure)
+  async verifyTables(models: Array<StreamID>, tableStructure = validTableStructure): Promise<void> {
+    await verifyTables(this.dbConnection, models, tableStructure)
   }
 
-  async init(): Promise<void> {
-    await initTables(this.dbConnection, this.modelsToIndex, this.logger)
-    await this.verify(validTableStructure)
+  async indexModels(models: Array<StreamID>): Promise<void> {
+    await initTables(this.dbConnection, models, this.logger)
+    await this.verifyTables(models)
+    this.modelsToIndex.push(...models)
   }
 
   async close(): Promise<void> {
