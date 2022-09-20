@@ -55,6 +55,37 @@ export interface CeramicSigner extends CeramicCommon {
 }
 
 /**
+ * Describes Ceramic Admin API functionality
+ */
+export interface AdminApi {
+  /**
+   * List indexed model streams
+   */
+  getModelsFromIndex(): Promise<Array<Stream>>
+
+  /**
+   * Adds model streams to index
+   *
+   * @param modelsIDs - array of model stream IDs to add to index
+   */
+  addModelsToIndex(modelsIDs: Array<StreamID>): Promise<void>
+
+  /**
+   * Removes model streams from index
+   *
+   * @param modelsIDs - array of model stream IDs to remove from index
+   */
+  removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void>
+
+  /**
+   * Replaces model streams in index with given model streams
+   *
+   * @param modelsIDs - array of model stream IDs to put in the index instead of the previous ones
+   */
+  replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void>
+}
+
+/**
  * Describes Ceramic node API
  */
 export interface CeramicApi extends CeramicSigner {
@@ -62,6 +93,8 @@ export interface CeramicApi extends CeramicSigner {
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
   readonly index: IndexApi
+
+  readonly admin: AdminApi
 
   /**
    * Register Stream handler

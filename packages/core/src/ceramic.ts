@@ -22,7 +22,7 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
-  StreamState,
+  StreamState, AdminApi
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -34,6 +34,7 @@ import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.
 
 import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
+import { LocalAdminApi } from './local-admin-api'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
@@ -175,6 +176,7 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly pin: PinApi
+  public readonly admin: AdminApi
   readonly repository: Repository
 
   readonly _streamHandlers: HandlersMap
@@ -195,6 +197,7 @@ export class Ceramic implements CeramicApi {
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
+    this.admin = this._buildAdminApi()
     this._anchorValidator = modules.anchorValidator
 
     this._gateway = params.gateway
@@ -268,6 +271,10 @@ export class Ceramic implements CeramicApi {
 
   private _buildPinApi(): PinApi {
     return new LocalPinApi(this.repository, this._logger)
+  }
+
+  private _buildAdminApi(): AdminApi {
+    return new LocalAdminApi(this.repository, this._logger)
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {

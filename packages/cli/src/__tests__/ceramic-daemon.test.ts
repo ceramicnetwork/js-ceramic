@@ -633,7 +633,7 @@ describe('Ceramic interop: core <> http-client', () => {
   describe('admin api', () => {
     it('admin models API CRUD test', async () => {
       // TODO: Implement this test using the highest-level interface once it's ready
-      
+
 
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`)).rejects.toThrow(
         /Get Indexed Models Not Implemented/
