@@ -39,7 +39,7 @@
     "@ceramicnetwork/streamid": "^2.3.4-rc.0",
     "@stablelib/random": "^1.0.1",
     "caip": "~1.1.0",
-    "ceramic-cacao": "^1.1.1",
+    "ceramic-cacao": "^1.4.0",
     "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
     "it-first": "^1.0.7",
