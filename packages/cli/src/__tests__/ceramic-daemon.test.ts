@@ -636,19 +636,34 @@ describe('Ceramic interop: core <> http-client', () => {
 
 
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`)).rejects.toThrow(
-        /Get Indexed Models Not Implemented/
+        /Getting models from index not implemented in local admin api/
       )
 
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, { method:'POST' })).rejects.toThrow(
-        /Add Indexed Models Not Implemented/
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+        {
+          method:'POST',
+          body: { models: ["kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"] } // hard-coded model id for now
+        })
+      ).rejects.toThrow(
+        /Adding models to index not implemented in local admin api/
       )
 
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, { method:'PUT' })).rejects.toThrow(
-        /Replace Indexed Models Not Implemented/
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+        {
+          method:'PUT',
+          body: { models: ["kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"] } // hard-coded model id for now
+        })
+      ).rejects.toThrow(
+        /Replacing models in index not implemented in local admin api/
       )
 
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, { method:'DELETE' })).rejects.toThrow(
-        /Delete Indexed Models Not Implemented/
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+        {
+          method:'DELETE',
+          body: { models: ["kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"] } // hard-coded model id for now
+        })
+      ).rejects.toThrow(
+        /Removing models from index not implemented in local admin api/
       )
     })
   })

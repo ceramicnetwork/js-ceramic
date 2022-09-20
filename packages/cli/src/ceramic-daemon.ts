@@ -496,27 +496,28 @@ export class CeramicDaemon {
   }
 
   async getModelsFromIndex(req: Request, res: Response): Promise<void> {
-    // TODO: Implement
-    throw Error('Get Indexed Models Not Implemented')
-    return
+    const indexedModelStreams = await this.ceramic.admin.getModelsFromIndex()
+    res.json({
+      models: indexedModelStreams.map(modelStream => StreamUtils.serializeState(modelStream.state))
+    })
   }
 
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    // TODO: Implement
-    throw Error('Add Indexed Models Not Implemented')
-    return
+    const modelIDStrings = req.body.models as Array<string>
+    await this.ceramic.admin.addModelsToIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+    res.status(200)
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    // TODO: Implement
-    throw Error('Delete Indexed Models Not Implemented')
-    return
+    const modelIDStrings = req.body.models as Array<string>
+    await this.ceramic.admin.removeModelsFromIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+    res.status(200)
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    // TODO: Implement
-    throw Error('Replace Indexed Models Not Implemented')
-    return
+    const modelIDStrings = req.body.models as Array<string>
+    await this.ceramic.admin.replaceModelsInIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+    res.status(200)
   }
 
   /**
