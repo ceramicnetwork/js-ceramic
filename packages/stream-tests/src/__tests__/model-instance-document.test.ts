@@ -70,7 +70,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     midMetadata = { model: model.id }
-    core.index.indexModels([model.id])
+    await core.index.indexModels([model.id])
   }, 12000)
 
   afterAll(async () => {
