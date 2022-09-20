@@ -46,7 +46,7 @@
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/node": "^18.0.3",
-    "ceramic-cacao": "^1.1.1",
+    "ceramic-cacao": "^1.4.0",
     "did-resolver": "^3.1.5",
     "dids": "^3.2.0",
     "fast-json-patch": "^3.1.0",
