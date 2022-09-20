@@ -16,7 +16,6 @@ const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
-const STREAM_ID_A = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -52,7 +51,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ipfs = await createIPFS()
     core = await createCeramic(ipfs, {
       indexing: {
-        models: [STREAM_ID_A],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
@@ -71,6 +70,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     midMetadata = { model: model.id }
+    core.index.indexModels([model.id])
   }, 12000)
 
   afterAll(async () => {
