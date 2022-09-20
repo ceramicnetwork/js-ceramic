@@ -10,12 +10,13 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const CONTENT3 = { myData: 3 }
+const STREAM_ID_A = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -51,7 +52,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ipfs = await createIPFS()
     core = await createCeramic(ipfs, {
       indexing: {
-        models: ['kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'],
+        models: [STREAM_ID_A],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
@@ -68,7 +69,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)
 
-    model = await Model.create(ceramic, MODEL_DEFINITION) // id: 'kjzl6hvfrbw6c804jjinln9yy72fsft1y5pna6rl2xthwdi0nbsj1s6cmly83uk'
+    model = await Model.create(ceramic, MODEL_DEFINITION)
     midMetadata = { model: model.id }
   }, 12000)
 
