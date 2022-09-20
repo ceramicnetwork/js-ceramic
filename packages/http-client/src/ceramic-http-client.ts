@@ -29,7 +29,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { RemotePinApi } from './remote-pin-api.js'
 import { RemoteIndexApi } from './remote-index-api.js'
-import { RemoteAdminApi } from './remote-admin-api'
+import { RemoteAdminApi } from './remote-admin-api.js'
 
 const API_PATH = '/api/v0/'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -93,7 +93,7 @@ export class CeramicClient implements CeramicApi {
 
     this.pin = new RemotePinApi(this._apiUrl)
     this.index = new RemoteIndexApi(this._apiUrl)
-    this.admin = new RemoteAdminApi(this._apiUrl)
+    this.admin = new RemoteAdminApi(this.context, this._apiUrl)
 
     this._streamConstructors = {
       [Caip10Link.STREAM_TYPE_ID]: Caip10Link,
