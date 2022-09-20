@@ -626,5 +626,30 @@ describe('Ceramic interop: core <> http-client', () => {
       await client.pin.add(docA.id, true)
       expect(pinSpy).toBeCalledTimes(4)
     })
+
+
+  })
+
+  describe('admin api', () => {
+    it('admin models API CRUD test', async () => {
+      // TODO: Implement this test using the highest-level interface once it's ready
+      
+
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`)).rejects.toThrow(
+        /Get Indexed Models Not Implemented/
+      )
+
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, { method:'POST' })).rejects.toThrow(
+        /Add Indexed Models Not Implemented/
+      )
+
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, { method:'PUT' })).rejects.toThrow(
+        /Replace Indexed Models Not Implemented/
+      )
+
+      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, { method:'DELETE' })).rejects.toThrow(
+        /Delete Indexed Models Not Implemented/
+      )
+    })
   })
 })

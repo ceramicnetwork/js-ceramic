@@ -496,22 +496,26 @@ export class CeramicDaemon {
   }
 
   async getModelsFromIndex(req: Request, res: Response): Promise<void> {
-    throw Error('Not Implemented')
+    // TODO: Implement
+    throw Error('Get Indexed Models Not Implemented')
     return
   }
 
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    throw Error('Not Implemented')
+    // TODO: Implement
+    throw Error('Add Indexed Models Not Implemented')
     return
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    throw Error('Not Implemented')
+    // TODO: Implement
+    throw Error('Delete Indexed Models Not Implemented')
     return
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    throw Error('Not Implemented')
+    // TODO: Implement
+    throw Error('Replace Indexed Models Not Implemented')
     return
   }
 
