@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.10.0-rc.3](/compare/@ceramicnetwork/core@2.10.0-rc.2...@ceramicnetwork/core@2.10.0-rc.3) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+* Rate-limit a warning about messages over a rate-limit (#2424) 0b51309, closes #2424
+
+
+
+
+
 # [2.10.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.10.0-rc.1...@ceramicnetwork/core@2.10.0-rc.2) (2022-09-15)
 
 **Note:** Version bump only for package @ceramicnetwork/core
