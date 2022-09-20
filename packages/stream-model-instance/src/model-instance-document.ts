@@ -125,6 +125,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
+
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,

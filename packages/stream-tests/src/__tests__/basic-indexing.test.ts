@@ -111,7 +111,7 @@ describe('Basic end-to-end indexing query test', () => {
   })
 
   test('basic query', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     // Indexed streams should always get pinned, regardless of the 'pin' flag
     await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
 
