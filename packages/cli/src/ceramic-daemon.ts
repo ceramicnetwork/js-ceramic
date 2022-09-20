@@ -274,6 +274,7 @@ export class CeramicDaemon {
     const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -284,6 +285,7 @@ export class CeramicDaemon {
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
     baseRouter.use('/collection', collectionRouter)
+    baseRouter.use('/admin/models', adminModelRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -296,6 +298,10 @@ export class CeramicDaemon {
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
+    adminModelRouter.getAsync('/', this.getModelsFromIndex.bind(this))
+    adminModelRouter.postAsync('/', this.addModelsToIndex.bind(this))
+    adminModelRouter.deleteAsync('/', this.removeModelsFromIndex.bind(this))
+    adminModelRouter.putAsync('/', this.replaceModelsInIndex.bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -487,6 +493,26 @@ export class CeramicDaemon {
       }),
       pageInfo: indexResponse.pageInfo,
     })
+  }
+
+  async getModelsFromIndex(req: Request, res: Response): Promise<void> {
+    throw Error('Not Implemented')
+    return
+  }
+
+  async addModelsToIndex(req: Request, res: Response): Promise<void> {
+    throw Error('Not Implemented')
+    return
+  }
+
+  async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
+    throw Error('Not Implemented')
+    return
+  }
+
+  async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
+    throw Error('Not Implemented')
+    return
   }
 
   /**
