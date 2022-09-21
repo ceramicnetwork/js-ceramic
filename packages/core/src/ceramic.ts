@@ -22,7 +22,9 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
-  StreamState, AdminApi
+  StreamState,
+  AdminApi,
+  
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
