@@ -298,7 +298,7 @@ export class CeramicDaemon {
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
-    adminModelRouter.getAsync('/', this.getModelsFromIndex.bind(this))
+    adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.addModelsToIndex.bind(this))
     adminModelRouter.deleteAsync('/', this.removeModelsFromIndex.bind(this))
     adminModelRouter.putAsync('/', this.replaceModelsInIndex.bind(this))
@@ -495,8 +495,8 @@ export class CeramicDaemon {
     })
   }
 
-  async getModelsFromIndex(req: Request, res: Response): Promise<void> {
-    const indexedModelStreams = await this.ceramic.admin.getModelsFromIndex()
+  async getIndexedModels(req: Request, res: Response): Promise<void> {
+    const indexedModelStreams = await this.ceramic.admin.getIndexedModels()
     res.json({
       models: indexedModelStreams.map(modelStream => StreamUtils.serializeState(modelStream.state))
     })
