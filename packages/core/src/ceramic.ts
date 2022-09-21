@@ -24,7 +24,7 @@ import {
   AnchorStatus,
   StreamState,
   AdminApi,
-  
+
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'

@@ -2,6 +2,7 @@ import { AdminApi, fetchJson, Stream, StreamState, StreamUtils, Context } from '
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Document } from './document.js'
 import { Model } from '@ceramicnetwork/stream-model'
+import { DEFAULT_CLIENT_CONFIG } from './ceramic-http-client.js'
 
 /**
  * AdminApi for Ceramic http client.
@@ -31,7 +32,7 @@ export class RemoteAdminApi implements AdminApi {
     const response= await fetchJson(this.getUrl())
     return response.models.map((modelStreamState: StreamState) => {
       return new Model(
-        new Document(StreamUtils.deserializeState(modelStreamState), this._apiUrl, 1000000),
+        new Document(StreamUtils.deserializeState(modelStreamState), this._apiUrl, DEFAULT_CLIENT_CONFIG.syncInterval),
         this._context) as Stream
     })
   }
