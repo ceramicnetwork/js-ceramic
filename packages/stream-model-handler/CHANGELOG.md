@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](/compare/@ceramicnetwork/stream-model-handler@0.6.0-rc.0...@ceramicnetwork/stream-model-handler@0.6.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
 # [0.6.0-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.5.1-rc.2...@ceramicnetwork/stream-model-handler@0.6.0-rc.0) (2022-09-20)
 
 
