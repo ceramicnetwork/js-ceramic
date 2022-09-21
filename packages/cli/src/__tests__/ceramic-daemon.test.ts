@@ -666,5 +666,70 @@ describe('Ceramic interop: core <> http-client', () => {
         /Removing models from index not implemented in local admin api/
       )
     })
+
+    describe('admin models API validation test', () => {
+      it('No models for POST', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method:'POST'
+          })
+        ).rejects.toThrow(
+          /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        )
+      })
+
+      it('Empty models for POST', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method:'POST',
+            body: { models: [] }
+          })
+        ).rejects.toThrow(
+          /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        )
+      })
+
+      it('No models for DELETE', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method:'DELETE'
+          })
+        ).rejects.toThrow(
+          /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        )
+      })
+
+      it('Empty models for DELETE', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method:'DELETE',
+            body: { models: [] }
+          })
+        ).rejects.toThrow(
+          /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        )
+      })
+
+      it('No models for PUT', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method:'PUT'
+          })
+        ).rejects.toThrow(
+          /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        )
+      })
+
+      it('Empty models for PUT', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method:'PUT',
+            body: { models: [] }
+          })
+        ).rejects.toThrow(
+          /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        )
+      })
+    })
   })
 })

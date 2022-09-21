@@ -502,22 +502,52 @@ export class CeramicDaemon {
     })
   }
 
+  private  _validateModelIDStrings(
+    modelIDStrings: any
+  ): {
+    modelIDStrings?: Array<string>,
+    error?: string
+  } {
+    const cast = modelIDStrings as Array<string>
+    let error = undefined
+    if (!cast || cast.length === 0) {
+      error = 'The `models` parameter is required and it has to be an array containing at least one model stream id'
+    }
+
+    return {
+      modelIDStrings: error ?? cast,
+      error: error,
+    }
+  }
+
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    const modelIDStrings = req.body.models as Array<string>
-    await this.ceramic.admin.addModelsToIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-    res.status(200)
+    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    if (error) {
+      res.status(422).json({ error: error })
+    } else {
+      await this.ceramic.admin.addModelsToIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      res.status(200)
+    }
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    const modelIDStrings = req.body.models as Array<string>
-    await this.ceramic.admin.removeModelsFromIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-    res.status(200)
+    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    if (error) {
+      res.status(422).json({ error: error })
+    } else {
+      await this.ceramic.admin.removeModelsFromIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      res.status(200)
+    }
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    const modelIDStrings = req.body.models as Array<string>
-    await this.ceramic.admin.replaceModelsInIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-    res.status(200)
+    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    if (error) {
+      res.status(422).json({ error: error })
+    } else {
+      await this.ceramic.admin.replaceModelsInIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      res.status(200)
+    }
   }
 
   /**
