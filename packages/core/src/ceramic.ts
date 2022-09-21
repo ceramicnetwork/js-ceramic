@@ -224,7 +224,9 @@ export class Ceramic implements CeramicApi {
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
       params.indexingConfig,
+      this.context,
       this.repository,
+      this._streamHandlers,
       this._logger,
       params.networkOptions.name
     )

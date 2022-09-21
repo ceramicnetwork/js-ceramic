@@ -5,14 +5,18 @@ import type {
   PaginationQuery,
   StreamState,
   DiagnosticsLogger,
+  Context,
 } from '@ceramicnetwork/common'
-import type { DatabaseIndexApi } from './database-index-api.js'
+import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
 import { IndexStreamArgs } from './database-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { IndexingConfig } from './build-indexing.js'
 import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
+import { Model } from '@ceramicnetwork/stream-model'
+import { streamFromState } from '../state-management/stream-from-state.js'
+import { HandlersMap } from '../handlers-map.js'
 
 /**
  * API to query an index.
@@ -22,7 +26,9 @@ export class LocalIndexApi implements IndexApi {
 
   constructor(
     private readonly indexingConfig: IndexingConfig,
+    private readonly context: Context,
     private readonly repository: Repository,
+    private readonly streamHandlers: HandlersMap,
     private readonly logger: DiagnosticsLogger,
     networkName: Networks
   ) {
@@ -101,14 +107,26 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async indexModels(models: Array<StreamID>): Promise<void> {
-    // TODO: Load model StreamIDs, extract relations and pass those arguments down into the
-    //  DatabaseIndexAPI so the necessary columns get built for the relations
-    const indexModelArgs = []
-    for (const model of models) {
-      const args = { model }
-      indexModelArgs.push(args)
+    const indexModelsArgs = []
+    for (const modelStreamId of models) {
+      if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
+        throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
+      }
+
+      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
+
+      const indexModelArgs: IndexModelArgs = { model: modelStreamId }
+      if (modelStreamId.type == Model.STREAM_TYPE_ID) {
+        const modelState = await this.repository.load(modelStreamId, {})
+        const model = streamFromState<Model>(this.context, this.streamHandlers, modelState.value)
+        if (model.content.relations) {
+          indexModelArgs.relations = model.content.relations
+        }
+      }
+
+      indexModelsArgs.push(indexModelArgs)
     }
-    await this.databaseIndexApi?.indexModels(indexModelArgs)
+    await this.databaseIndexApi?.indexModels(indexModelsArgs)
   }
 
   async init(): Promise<void> {
