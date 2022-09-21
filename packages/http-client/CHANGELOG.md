@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0](/compare/@ceramicnetwork/http-client@2.4.0-rc.0...@ceramicnetwork/http-client@2.4.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.4.0-rc.0](/compare/@ceramicnetwork/http-client@2.3.5-rc.2...@ceramicnetwork/http-client@2.4.0-rc.0) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
 ## [2.3.5-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.3.5-rc.1...@ceramicnetwork/http-client@2.3.5-rc.2) (2022-09-15)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

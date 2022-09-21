@@ -29,7 +29,11 @@ beforeEach(async () => {
     },
   })
   const indexAPI = new SqliteIndexApi(dbConnection, true, logger)
-  await indexAPI.indexModels(MODELS_TO_INDEX)
+  await indexAPI.indexModels(
+    MODELS_TO_INDEX.map((model) => {
+      return { model }
+    })
+  )
   order = new InsertionOrder(dbConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
   // The responses in the tests below are ok if they are in the same order as in the CSV.

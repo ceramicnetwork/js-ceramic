@@ -1,6 +1,7 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
+import { ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 
 export interface IndexStreamArgs {
   readonly streamID: StreamID
@@ -13,6 +14,17 @@ export interface IndexStreamArgs {
 }
 
 /**
+ * Arguments for telling the index database that it should be ready to index streams of a new model.
+ * Should include everything necessary for the database to start receiving `indexStream` calls with
+ * MIDs belonging to the model.  This likely involves setting up the necessary database tables with
+ * whatever columns, indexes, etc are needed.
+ */
+export interface IndexModelArgs {
+  readonly model: StreamID
+  readonly relations?: ModelRelationsDefinition
+}
+
+/**
  * Interface for an index backend.
  */
 export interface DatabaseIndexApi {
@@ -21,7 +33,7 @@ export interface DatabaseIndexApi {
    * the necessary database tables and indexes.
    * @param models
    */
-  indexModels(models: Array<StreamID>): Promise<void>
+  indexModels(models: Array<IndexModelArgs>): Promise<void>
 
   /**
    * This method inserts the stream if it is not present in the index, or updates

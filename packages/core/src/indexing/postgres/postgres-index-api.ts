@@ -1,13 +1,11 @@
 import { StreamID } from 'streamid/lib/stream-id.js'
 import type { BaseQuery, Pagination, Page, DiagnosticsLogger } from '@ceramicnetwork/common'
-import type { DatabaseIndexApi, IndexStreamArgs } from '../database-index-api.js'
+import type { DatabaseIndexApi, IndexModelArgs, IndexStreamArgs } from '../database-index-api.js'
 import { initTables, verifyTables } from './init-tables.js'
 import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
-import { validTableStructure } from './migrations/mid-schema-verification.js'
-import { createModelIndexTable } from './migrations/1-create-model-table.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
@@ -60,15 +58,16 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     return this.insertionOrder.page(query)
   }
 
-  async verifyTables(models: Array<StreamID>, tableStructure = validTableStructure): Promise<void> {
-    await verifyTables(this.dbConnection, models, tableStructure)
+  async verifyTables(models: Array<IndexModelArgs>): Promise<void> {
+    await verifyTables(this.dbConnection, models)
   }
 
-  async indexModels(models: Array<StreamID>): Promise<void> {
+  async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await createModelIndexTable(this.dbConnection)
     await initTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
-    this.modelsToIndex.push(...models)
+    const modelStreamIDs = models.map((args) => args.model)
+    this.modelsToIndex.push(...modelStreamIDs)
   }
 
   async close(): Promise<void> {

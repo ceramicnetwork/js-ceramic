@@ -35,15 +35,14 @@ describe('with database backend', () => {
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
-    const warnFn = jest.fn()
-    const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
+    const fauxLogger = {} as DiagnosticsLogger
+
     const indexApi = new LocalIndexApi(
       undefined as IndexingConfig,
       fauxRepository,
       fauxLogger,
       Networks.INMEMORY
     )
-    // @ts-ignore
     indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -81,10 +80,12 @@ describe('with database backend', () => {
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
-    const warnFn = jest.fn()
-    const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger, Networks.INMEMORY)
-    // @ts-ignore
+    const fauxLogger = {
+      warn: jest.fn((content: string | Record<string, unknown> | Error) => {
+        console.log(content)
+      }),
+    } as unknown as DiagnosticsLogger
+    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger)
     indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
