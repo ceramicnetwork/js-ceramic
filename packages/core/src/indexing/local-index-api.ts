@@ -30,7 +30,7 @@ export class LocalIndexApi implements IndexApi {
     if (indexingConfig?.models !== undefined) {
       // TODO: Update the log once admin API is implemented
       logger.warn(`
-      Passing stream IDs to be indexed via indexing config is deprecated and will soon be removed as an option.
+      Passing the list of Model StreamIDs to be indexed the config file's 'indexing.models' field is deprecated and will soon be removed as an option.
       Instead, you will be configuring your index via the @composedb/cli commands (see documentation at https://composedb.js.org).
       `)
     }
