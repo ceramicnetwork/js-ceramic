@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0](/compare/@ceramicnetwork/common@2.7.0-rc.0...@ceramicnetwork/common@2.7.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 # [2.7.0-rc.0](/compare/@ceramicnetwork/common@2.6.1-rc.2...@ceramicnetwork/common@2.7.0-rc.0) (2022-09-20)
 
 
