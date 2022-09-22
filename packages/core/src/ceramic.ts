@@ -36,7 +36,7 @@ import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.
 
 import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
-import { LocalAdminApi } from './local-admin-api'
+import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
