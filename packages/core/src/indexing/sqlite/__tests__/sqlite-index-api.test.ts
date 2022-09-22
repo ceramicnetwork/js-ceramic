@@ -78,7 +78,7 @@ describe('init', () => {
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
-      columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
+      columns = await dbConnection.table(asTableName('ceramic_models')).columnInfo()
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
     })
 
