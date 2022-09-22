@@ -59,7 +59,7 @@ Run on [Clayground](https://github.com/ceramicnetwork/clayground) (full environm
 
 Import this [Postman Collection](postman_collection.json) of queries to see a sample of API calls that can be used to exercise and explore common endpoints.
 
-By default the collection connects to the public dev network, but you can easily overwrite the local variables to point to your locally running deamon by updating `ceramic_hostname` to `http://localhost:7007`.
+By default the collection connects to the public dev network, but you can easily overwrite the local variables to point to your locally running daemon by updating `ceramic_hostname` to `http://localhost:7007`.
 
 
 ## PACKAGES OVERVIEW
