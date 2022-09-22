@@ -1,13 +1,13 @@
-import { AdminApi, DiagnosticsLogger, Stream } from '@ceramicnetwork/common/lib'
-import { Repository } from './state-management/repository.js'
+import { AdminApi, DiagnosticsLogger } from '@ceramicnetwork/common/lib'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { LocalIndexApi } from './indexing/local-index-api.js'
 
 /**
  * AdminApi for Ceramic core.
  */
 export class LocalAdminApi implements AdminApi {
   constructor(
-    private readonly repository: Repository,
+    private readonly indexApi: LocalIndexApi,
     private readonly logger: DiagnosticsLogger
   ) {}
 

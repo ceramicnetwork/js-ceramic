@@ -199,7 +199,6 @@ export class Ceramic implements CeramicApi {
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
-    this.admin = this._buildAdminApi()
     this._anchorValidator = modules.anchorValidator
 
     this._gateway = params.gateway
@@ -233,6 +232,7 @@ export class Ceramic implements CeramicApi {
       this._logger,
       params.networkOptions.name
     )
+    this.admin = this._buildAdminApi(localIndex, this._logger)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -275,9 +275,11 @@ export class Ceramic implements CeramicApi {
     return new LocalPinApi(this.repository, this._logger)
   }
 
-  private _buildAdminApi(): AdminApi {
-    return new LocalAdminApi(this.repository, this._logger)
+  private _buildAdminApi(indexApi: LocalIndexApi, logger: DiagnosticsLogger): AdminApi {
+    return new LocalAdminApi(indexApi, logger)
   }
+
+  
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
     const networkName = config.networkName || DEFAULT_NETWORK
