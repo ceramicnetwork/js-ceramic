@@ -36,9 +36,11 @@ test('re-request an anchor till get a response', async () => {
   const common = await import('@ceramicnetwork/common')
   const eas = await import('../ethereum-anchor-service.js')
   const loggerProvider = new common.LoggerProvider()
+  const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
+  const errSpy = jest.spyOn(diagnosticsLogger, 'err')
   const anchorService = new eas.EthereumAnchorService(
     'http://example.com',
-    loggerProvider.getDiagnosticsLogger(),
+    diagnosticsLogger,
     100
   )
   let lastResponse: any
@@ -52,4 +54,5 @@ test('re-request an anchor till get a response', async () => {
     })
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
+  expect(errSpy).toBeCalledTimes(3)
 })

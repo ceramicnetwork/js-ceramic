@@ -21,7 +21,7 @@ interface CidAndStream {
   readonly streamId: StreamID
 }
 
-const POLL_INTERVAL = 60_000 // 60 seconds
+const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
 
 /**
@@ -41,7 +41,7 @@ export class EthereumAnchorService implements AnchorService {
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    pollInterval: number = POLL_INTERVAL
+    pollInterval: number = DEFAULT_POLL_INTERVAL
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
@@ -132,7 +132,10 @@ export class EthereumAnchorService implements AnchorService {
       )
     ).pipe(
       retry({
-        delay: this.pollInterval,
+        delay: (error) => {
+          this._logger.err(new Error(`Can not connect to CAS: ${error.message}`))
+          return interval(this.pollInterval)
+        },
       }),
       map((response) => {
         return this.parseResponse(cidStreamPair, response)
