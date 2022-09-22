@@ -100,6 +100,10 @@ export class LocalIndexApi implements IndexApi {
     }
   }
 
+  indexedModels(): Array<StreamID> {
+    return this.databaseIndexApi?.getActiveModelsToIndex()
+  }
+
   async indexModels(models: Array<StreamID>): Promise<void> {
     // TODO: Load model StreamIDs, extract relations and pass those arguments down into the
     //  DatabaseIndexAPI so the necessary columns get built for the relations
