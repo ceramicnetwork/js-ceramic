@@ -49,7 +49,7 @@
     "cors": "^2.8.5",
     "dag-jose": "^2.0.0",
     "did-resolver": "^3.1.5",
-    "dids": "^3.2.0",
+    "dids": "^3.4.0",
     "ethr-did-resolver": "^5.0.3",
     "express": "^4.17.2",
     "ipfs-http-client": "^55.0.0",
