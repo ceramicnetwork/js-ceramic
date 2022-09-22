@@ -15,7 +15,7 @@ parameters:
     default: ""
 
 orbs:
-  node: circleci/node@5.0.2
+  node: circleci/node@5.0.0
 
 commands:
   build-and-test:
