@@ -6,7 +6,7 @@ import { randomString } from '@stablelib/random'
 import { LocalIndexApi } from '../local-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { IndexingConfig } from '../build-indexing.js'
-import { HandlersMap } from '../../handlers-map'
+import { HandlersMap } from '../../handlers-map.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
