@@ -221,13 +221,10 @@ export class IndexingConfig {
   allowQueriesBeforeHistoricalSync = false
 
   /**
-   * @deprecated
-   * 
    * Models to index.
    */
-    // TODO: Remove when Admin API is implemented
   @jsonArrayMember(StreamID, {
-    emitDefaultValue: false,
+    emitDefaultValue: true,
     deserializer: (arr?: Array<string>) => {
       if (!arr) return arr
       return arr.map(StreamID.fromString)
@@ -237,7 +234,7 @@ export class IndexingConfig {
       return arr.map((s) => s.toString())
     },
   })
-  models?: StreamID[]
+  models: StreamID[]
 }
 
 @jsonObject
