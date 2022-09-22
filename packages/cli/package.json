@@ -70,6 +70,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
+    "@ceramicnetwork/stream-model": "^0.6.0",
     "@ceramicnetwork/stream-tile-handler": "^2.2.8",
     "@stablelib/sha256": "^1.0.1",
     "@types/express": "^4.17.13",

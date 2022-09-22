@@ -13,7 +13,6 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
-import { StreamID } from '@ceramicnetwork/streamid'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
