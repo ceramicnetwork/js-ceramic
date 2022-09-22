@@ -53,6 +53,11 @@ export interface DatabaseIndexApi {
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>>
 
   /**
+   * Run Compose DB config/startup operations
+   */
+  init(): Promise<void>
+
+  /**
    * Stop connection to a database.
    */
   close(): Promise<void>

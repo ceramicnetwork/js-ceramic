@@ -1,4 +1,9 @@
-import { ColumnInfo, ColumnType, createModelTable } from './migrations/1-create-model-table.js'
+import {
+  ColumnInfo,
+  ColumnType,
+  createConfigTable,
+  createModelTable,
+} from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
@@ -6,8 +11,9 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { IndexModelArgs } from '../database-index-api.js'
 import {
   COMMON_TABLE_STRUCTURE,
+  CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
   RELATION_COLUMN_STRUCTURE,
-} from './migrations/mid-schema-verification.js'
+} from './migrations/cdb-schema-verification.js'
 
 /**
  * List existing mid tables.
@@ -25,6 +31,11 @@ export async function listMidTables(dataSource: Knex): Promise<Array<string>> {
   return midTables
 }
 
+export async function listConfigTables(): Promise<Array<any>> {
+  // TODO (CDB-1852): extend with ceramic_auth
+  return [{ tableName: 'ceramic_models', validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
+}
+
 function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition): Array<ColumnInfo> {
   if (!relations) {
     return []
@@ -35,9 +46,23 @@ function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition):
 }
 
 /**
+ * Create Compose DB config tables
+ */
+export async function initConfigTables(dataSource: Knex, logger: DiagnosticsLogger) {
+  const configTables = await listConfigTables()
+  for (const table of configTables) {
+    const exists = await dataSource.schema.hasTable(table.tableName)
+    if (!exists) {
+      logger.imp(`Creating Compose DB config table: ${table.tableName}`)
+      await createConfigTable(dataSource, table.tableName)
+    }
+  }
+}
+
+/**
  * Create mid tables and corresponding indexes
  */
-export async function initTables(
+export async function initMidTables(
   dataSource: Knex,
   modelsToIndex: Array<IndexModelArgs>,
   logger: DiagnosticsLogger
@@ -52,7 +77,7 @@ export async function initTables(
 
     const exists = await dataSource.schema.hasTable(tableName)
     if (!exists) {
-      logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
+      logger.imp(`Creating Compose DB Indexing table for model: ${tableName}`)
       const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
       await createModelTable(dataSource, tableName, relationColumns)
     }
@@ -66,6 +91,21 @@ export async function initTables(
  */
 // TODO (NET-1635): unify logic between postgres & sqlite
 export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
+  // Verify Compose DB Config tables
+  const configTables = await listConfigTables()
+  for (const table of configTables) {
+    const columns = await dataSource.table(table.tableName).columnInfo()
+    const validSchema = JSON.stringify(table.validSchema)
+
+    if (validSchema != JSON.stringify(columns)) {
+      throw new Error(
+        `Schema verification failed for config table: ${table.tableName}. Please make sure node has been setup correctly.`
+      )
+      process.exit(-1)
+    }
+  }
+
+  // Verify indexed MID tables
   const tables = await listMidTables(dataSource)
 
   for (const tableName of tables) {

@@ -30,6 +30,7 @@ beforeEach(async () => {
     connection: process.env.DATABASE_URL,
   })
   const indexAPI = new PostgresIndexApi(dbConnection, true, logger)
+  await indexAPI.init()
   await indexAPI.indexModels(
     MODELS_TO_INDEX.map((model) => {
       return { model }

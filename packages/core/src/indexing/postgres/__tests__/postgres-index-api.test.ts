@@ -14,7 +14,8 @@ import { IndexModelArgs } from '../../database-index-api.js'
 import {
   COMMON_TABLE_STRUCTURE,
   RELATION_COLUMN_STRUCTURE,
-} from '../migrations/mid-schema-verification.js'
+  CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
+} from '../migrations/cdb-schema-verification.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -83,6 +84,7 @@ describe('init', () => {
     test('create new table from scratch', async () => {
       const modelToIndex = StreamID.fromString(STREAM_ID_A)
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs([modelToIndex]))
       const created = await listMidTables(dbConnection)
       const tableName = asTableName(modelToIndex)
@@ -92,9 +94,13 @@ describe('init', () => {
       // Built-in table verification should pass
       await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
 
-      // Also manually check table structure
-      const columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
+      // Also manually check MID table structure
+      let columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
+
+      // Also manually check config table structure
+      columns = await dbConnection.table(asTableName('ceramic_models')).columnInfo()
+      expect(JSON.stringify(columns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
     })
 
     test('create new table with relations', async () => {
@@ -105,6 +111,7 @@ describe('init', () => {
         },
       ]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.init()
       await indexApi.indexModels(indexModelsArgs)
       const created = await listMidTables(dbConnection)
       const tableNames = indexModelsArgs.map((args) => `${asTableName(args.model)}`)
@@ -123,6 +130,7 @@ describe('init', () => {
     test('table creation is idempotent', async () => {
       const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       // Index the same models again to make sure we don't error trying to re-create the tables
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
@@ -135,6 +143,7 @@ describe('init', () => {
       // First init with one model
       const modelsA = [StreamID.fromString(STREAM_ID_A)]
       const indexApiA = new PostgresIndexApi(dbConnection, true, logger)
+      await indexApiA.init()
       await indexApiA.indexModels(modelsToIndexArgs(modelsA))
       const createdA = await listMidTables(dbConnection)
       const tableNamesA = modelsA.map(asTableName)
@@ -296,6 +305,7 @@ describe('indexStream', () => {
   let indexApi: PostgresIndexApi
   beforeEach(async () => {
     indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
     await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
   })
 
