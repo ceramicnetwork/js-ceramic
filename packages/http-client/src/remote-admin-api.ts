@@ -1,19 +1,16 @@
 import { AdminApi, fetchJson, Stream, StreamState, StreamUtils, Context } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Document } from './document.js'
-import { Model } from '@ceramicnetwork/stream-model'
-import { DEFAULT_CLIENT_CONFIG } from './ceramic-http-client.js'
 
 /**
  * AdminApi for Ceramic http client.
  */
 export class RemoteAdminApi implements AdminApi {
+  // Stored as a member to make it easier to inject a mock in unit tests
+  private readonly _fetchJson: typeof fetchJson = fetchJson
   readonly baseURL = './admin/models'
 
   constructor(
-    private readonly _context: Context,
-    private readonly _apiUrl: URL,
-
+    private readonly _apiUrl: URL
   ) {}
 
   private getUrl(): URL {
@@ -21,31 +18,31 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async addModelsToIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    await fetchJson(this.getUrl(), {
+    await this._fetchJson(this.getUrl(), {
       method: 'post',
-      body: { models: modelsIDs },
+      body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
     // TODO: Is this the simplest way to deserialize and return a stream id?
-    const response= await fetchJson(this.getUrl())
+    const response= await this._fetchJson(this.getUrl())
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
     })
   }
 
   async removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    await fetchJson(this.getUrl(), {
+    await this._fetchJson(this.getUrl(), {
       method: 'delete',
-      body: { models: modelsIDs },
+      body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
   }
 
   async replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    await fetchJson(this.getUrl(), {
+    await this._fetchJson(this.getUrl(), {
       method: 'put',
-      body: { models: modelsIDs },
+      body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
   }
 }
