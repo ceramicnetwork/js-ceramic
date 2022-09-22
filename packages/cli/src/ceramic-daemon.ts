@@ -496,9 +496,9 @@ export class CeramicDaemon {
   }
 
   async getIndexedModels(req: Request, res: Response): Promise<void> {
-    const indexedModelStreams = await this.ceramic.admin.getIndexedModels()
+    const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
     res.json({
-      models: indexedModelStreams.map(modelStream => StreamUtils.serializeState(modelStream.state))
+      models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString)
     })
   }
 

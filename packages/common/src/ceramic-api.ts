@@ -61,7 +61,7 @@ export interface AdminApi {
   /**
    * List indexed model streams
    */
-  getIndexedModels(): Promise<Array<Stream>>
+  getIndexedModels(): Promise<Array<StreamID>>
 
   /**
    * Adds model streams to index

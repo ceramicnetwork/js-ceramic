@@ -16,7 +16,7 @@ export class LocalAdminApi implements AdminApi {
     return
   }
 
-  getIndexedModels(): Promise<Array<Stream>> {
+  getIndexedModels(): Promise<Array<StreamID>> {
     throw Error('Getting models from index not implemented in local admin api')
     return
   }

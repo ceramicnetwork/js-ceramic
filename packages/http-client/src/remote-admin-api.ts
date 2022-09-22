@@ -27,13 +27,11 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async getIndexedModels(): Promise<Array<Stream>> {
-    // TODO: Is this the simplest way to deserialize and return a stream? Should this operate on StreamStates rather than streams?
+  async getIndexedModels(): Promise<Array<StreamID>> {
+    // TODO: Is this the simplest way to deserialize and return a stream id?
     const response= await fetchJson(this.getUrl())
-    return response.models.map((modelStreamState: StreamState) => {
-      return new Model(
-        new Document(StreamUtils.deserializeState(modelStreamState), this._apiUrl, DEFAULT_CLIENT_CONFIG.syncInterval),
-        this._context) as Stream
+    return response.models.map((modelStreamIDString: string) => {
+      return StreamID.fromString(modelStreamIDString)
     })
   }
 
