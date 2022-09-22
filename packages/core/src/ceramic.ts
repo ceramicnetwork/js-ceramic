@@ -279,7 +279,7 @@ export class Ceramic implements CeramicApi {
     return new LocalAdminApi(indexApi, logger)
   }
 
-  
+
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
     const networkName = config.networkName || DEFAULT_NETWORK

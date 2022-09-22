@@ -33,13 +33,18 @@ describe('Ceramic interop: core <> http-client', () => {
   let core: Ceramic
   let daemon: CeramicDaemon
   let client: CeramicClient
+  let originalEnvVarVal: string | undefined
 
   beforeAll(async () => {
+    // FIXME: How should we be setting up this env var properly?
+    originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
   })
 
   beforeEach(async () => {
@@ -634,36 +639,33 @@ describe('Ceramic interop: core <> http-client', () => {
     it('admin models API CRUD test', async () => {
       // TODO: Implement this test using the highest-level interface once it's ready
 
+      const exampleModelStreamId = "kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"
+      const adminURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
 
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`)).rejects.toThrow(
-        /Getting models from index not implemented in local admin api/
+      const getResult = await fetchJson(adminURLString)
+      expect(getResult.models).toEqual([])
+
+      const postResult = await fetchJson(adminURLString, {
+        method:'POST',
+        body: {  models: [exampleModelStreamId] }
+      })
+      expect(postResult.result).toEqual('success')
+
+      const newGetResult = await fetchJson(adminURLString)
+      expect(newGetResult.models).toEqual([exampleModelStreamId])
+
+      await expect(fetchJson(adminURLString, {
+        method:'PUT',
+        body: { models: [exampleModelStreamId] }
+      })).rejects.toThrow(
+        /Replacing models in index not implemented in database api/
       )
 
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          method:'POST',
-          body: { models: ["kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"] } // hard-coded model id for now
-        })
-      ).rejects.toThrow(
-        /Adding models to index not implemented in local admin api/
-      )
-
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          method:'PUT',
-          body: { models: ["kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"] } // hard-coded model id for now
-        })
-      ).rejects.toThrow(
-        /Replacing models in index not implemented in local admin api/
-      )
-
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          method:'DELETE',
-          body: { models: ["kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"] } // hard-coded model id for now
-        })
-      ).rejects.toThrow(
-        /Removing models from index not implemented in local admin api/
+      await expect(fetchJson(adminURLString, {
+        method:'DELETE',
+        body: { models: [exampleModelStreamId] }
+      })).rejects.toThrow(
+        /Removing models from index not implemented in database api/
       )
     })
 

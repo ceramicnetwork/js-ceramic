@@ -1,4 +1,4 @@
-import { AdminApi, DiagnosticsLogger } from '@ceramicnetwork/common/lib'
+import { AdminApi, DiagnosticsLogger, LogStyle } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 
@@ -11,25 +11,23 @@ export class LocalAdminApi implements AdminApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  addModelsToIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    throw Error('Adding models to index not implemented in local admin api')
-    return
+  async addModelsToIndex(modelsIDs: Array<StreamID>): Promise<void> {
+    this.logger.log(LogStyle.info, `Local Admin Api will add model ids to index ${modelsIDs}`)
+    await this.indexApi.indexModels(modelsIDs)
+    this.logger.log(LogStyle.info, `Local Admin Api did add model ids to index ${modelsIDs}`)
   }
 
   getIndexedModels(): Promise<Array<StreamID>> {
-    throw Error('Getting models from index not implemented in local admin api')
-    return
+    return Promise.resolve(this.indexApi.indexedModels() ?? [])
   }
 
   removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    throw Error('Removing models from index not implemented in local admin api')
+    throw Error('Removing models from index not implemented in database api')
     return
-
-
   }
 
   replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    throw Error('Replacing models in index not implemented in local admin api')
+    throw Error('Replacing models in index not implemented in database api')
     return
   }
 }

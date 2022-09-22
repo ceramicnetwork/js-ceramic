@@ -9,9 +9,10 @@ import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
+  LogStyle,
   MultiQuery,
   StreamUtils,
-  SyncOptions,
+  SyncOptions
 } from '@ceramicnetwork/common'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -498,7 +499,7 @@ export class CeramicDaemon {
   async getIndexedModels(req: Request, res: Response): Promise<void> {
     const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
     res.json({
-      models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString)
+      models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
     })
   }
 
@@ -526,7 +527,7 @@ export class CeramicDaemon {
       res.status(422).json({ error: error })
     } else {
       await this.ceramic.admin.addModelsToIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-      res.status(200)
+      res.status(200).json({ result: 'success' })
     }
   }
 
@@ -536,7 +537,7 @@ export class CeramicDaemon {
       res.status(422).json({ error: error })
     } else {
       await this.ceramic.admin.removeModelsFromIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-      res.status(200)
+      res.status(200).json({ result: 'success' })
     }
   }
 
@@ -546,7 +547,7 @@ export class CeramicDaemon {
       res.status(422).json({ error: error })
     } else {
       await this.ceramic.admin.replaceModelsInIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-      res.status(200)
+      res.status(200).json({ result: 'success' })
     }
   }
 
