@@ -100,12 +100,14 @@ export class PostgresIndexApi implements DatabaseIndexApi {
         }
       }))
       .onConflict('model')
+      
       .merge({
         updated_at: this.dbConnection.fn.now(),
         is_indexed: false,
         updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
       })
-    this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !models.includes(modelStreamID))
+    const modelsAsStrings = models.map(streamID => streamID.toString())
+    this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !modelsAsStrings.includes(modelStreamID.toString()))
   }
 
   async init(): Promise<void> {

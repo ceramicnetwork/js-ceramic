@@ -70,6 +70,7 @@ afterEach(async () => {
 })
 
 export async function dropTables() {
+  await dbConnection.schema.dropTableIfExists(INDEXED_MODEL_CONFIG_TABLE_NAME)
   await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
   await dbConnection.schema.dropTableIfExists(STREAM_ID_A)
   await dbConnection.schema.dropTableIfExists(STREAM_ID_B)
@@ -296,11 +297,11 @@ describe('indexModels', () => {
     ).toEqual([
       {
         "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        "is_indexed": true
       },
       {
         "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
+        "is_indexed": true
       }
     ])
   })
@@ -318,11 +319,11 @@ describe('indexModels', () => {
     ).toEqual([
       {
         "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 0
+        "is_indexed": false
       },
       {
         "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
+        "is_indexed": true
       }
     ])
   })
@@ -339,11 +340,11 @@ describe('indexModels', () => {
     ).toEqual([
       {
         "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        "is_indexed": true
       },
       {
         "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
+        "is_indexed": true
       }
     ])
 
@@ -355,11 +356,11 @@ describe('indexModels', () => {
     ).toEqual([
       {
         "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 0
+        "is_indexed": false
       },
       {
         "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
+        "is_indexed": true
       }
     ])
 
@@ -370,11 +371,11 @@ describe('indexModels', () => {
     ).toEqual([
       {
         "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        "is_indexed": true
       },
       {
         "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
+        "is_indexed": true
       }
     ])
   })

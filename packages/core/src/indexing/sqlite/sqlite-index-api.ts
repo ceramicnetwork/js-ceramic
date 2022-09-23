@@ -101,7 +101,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
     if (models.length === 0) return
-    
+
     const now = asTimestamp(new Date())
     // FIXME: populate the updated_by field properly when auth is implemented
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
