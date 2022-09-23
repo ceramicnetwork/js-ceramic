@@ -284,6 +284,23 @@ describe('indexModels', () => {
       }
     ])
   })
+
+  test('modelsToIndex is properly populated after init()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+
+    const anotherIndexApi = new SqliteIndexApi(dbConnection, true, logger)
+    console.log('CREATING ANOTHER API')
+    await anotherIndexApi.init()
+
+    expect(anotherIndexApi.getActiveModelsToIndex().sort())
+      .toEqual([
+        StreamID.fromString("kh4q0ozorrgaq2mezktnrmdwleo1d"),
+        StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")
+      ])
+  })
 })
 
 describe('indexStream', () => {

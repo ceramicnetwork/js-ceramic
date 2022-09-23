@@ -307,8 +307,7 @@ describe('indexModels', () => {
 
   test('updates the INDEXED_MODEL_CONFIG_TABLE_NAME table on stopIndexingModels()', async () => {
     const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
-    const indexApi = new PostgresIndexApi
-    (dbConnection, true, logger)
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
     await indexApi.init()
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
     await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
@@ -327,6 +326,25 @@ describe('indexModels', () => {
       }
     ])
   })
+
+
+  test('modelsToIndex is properly populated after init()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+
+    const anotherIndexApi = new PostgresIndexApi(dbConnection, true, logger)
+    console.log('CREATING ANOTHER API')
+    await anotherIndexApi.init()
+
+    expect(anotherIndexApi.getActiveModelsToIndex().sort())
+      .toEqual([
+        StreamID.fromString("kh4q0ozorrgaq2mezktnrmdwleo1d"),
+        StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")
+      ])
+  })
+
 })
 
 describe('indexStream', () => {

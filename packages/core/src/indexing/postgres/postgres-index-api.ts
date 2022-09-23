@@ -10,7 +10,7 @@ import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
-  readonly modelsToIndex: Array<StreamID> = []
+  private modelsToIndex: Array<StreamID> = []
 
   constructor(
     private readonly dbConnection: Knex,
@@ -98,23 +98,19 @@ export class PostgresIndexApi implements DatabaseIndexApi {
         is_indexed: false,
         updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
       })
-    for (let i = this.modelsToIndex.length - 1; i >= 0; i--) {
-      if (models.includes(this.modelsToIndex[i])) {
-        this.modelsToIndex.splice(i, 1)
-      }
-    }
+    this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !models.includes(modelStreamID))
   }
 
   async init(): Promise<void> {
     await initConfigTables(this.dbConnection, this.logger)
-    this.modelsToIndex.concat(
-      (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-          .select('model')
-          .where({
-            is_indexed: true
-          })
-      ).map(result => { return StreamID.fromString(result.model) })
-    )
+    this.modelsToIndex = (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model')
+        .where({
+          is_indexed: true
+        })
+    ).map(result => {
+      return StreamID.fromString(result.model)
+    })
   }
 
   async close(): Promise<void> {
