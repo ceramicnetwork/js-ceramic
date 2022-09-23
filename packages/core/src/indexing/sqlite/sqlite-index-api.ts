@@ -76,6 +76,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
+    if (models.length === 0) return
+
     await initMidTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
     const now = asTimestamp(new Date())
@@ -98,6 +100,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+    if (models.length === 0) return
+    
     const now = asTimestamp(new Date())
     // FIXME: populate the updated_by field properly when auth is implemented
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)

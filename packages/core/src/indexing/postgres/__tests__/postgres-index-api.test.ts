@@ -408,7 +408,6 @@ describe('indexModels', () => {
     ])
   })
 
-  
   test('modelsToIndex is properly updated after stopIndexingModels()', async () => {
     const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
     const indexApi = new PostgresIndexApi(dbConnection, true, logger)
