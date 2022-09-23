@@ -81,7 +81,7 @@ export async function createConfigTable(dataSource: Knex, tableName: string) {
       await dataSource.schema.createTable(tableName, function (table) {
         // create model indexing configuration table
         table.bigIncrements('index_id')
-        table.string('model', 1024).notNullable()
+        table.string('model', 1024).unique().notNullable()
         table.boolean('is_indexed').notNullable().defaultTo(true)
         table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
