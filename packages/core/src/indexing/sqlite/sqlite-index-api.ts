@@ -90,6 +90,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
       .onConflict('model')
       .merge({
         updated_at: now,
+        is_indexed: true,
+        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
       })
     const modelStreamIDs = models.map((args) => args.model)
     this.modelsToIndex.push(...modelStreamIDs)
@@ -112,7 +114,9 @@ export class SqliteIndexApi implements DatabaseIndexApi {
         is_indexed: false,
         updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
       })
-    this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !models.includes(modelStreamID))
+
+    const modelsAsStrings = models.map(streamID => streamID.toString())
+    this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !modelsAsStrings.includes(modelStreamID.toString()))
   }
 
   async init(): Promise<void> {

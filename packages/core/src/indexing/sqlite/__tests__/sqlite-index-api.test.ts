@@ -285,6 +285,58 @@ describe('indexModels', () => {
     ])
   })
 
+  test('re-indexing models', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": 1
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": 1
+      }
+    ])
+
+
+    await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": 0
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": 1
+      }
+    ])
+
+    await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": 1
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": 1
+      }
+    ])
+  })
+
   test('modelsToIndex is properly populated after init()', async () => {
     const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
     const indexApi = new SqliteIndexApi(dbConnection, true, logger)
@@ -292,14 +344,40 @@ describe('indexModels', () => {
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
     const anotherIndexApi = new SqliteIndexApi(dbConnection, true, logger)
-    console.log('CREATING ANOTHER API')
     await anotherIndexApi.init()
 
-    expect(anotherIndexApi.getActiveModelsToIndex().sort())
+    expect(anotherIndexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort())
       .toEqual([
-        StreamID.fromString("kh4q0ozorrgaq2mezktnrmdwleo1d"),
-        StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")
+        "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
       ])
+  })
+
+  test('modelsToIndex is properly updated after indexModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    expect(indexApi.getActiveModelsToIndex()).toEqual([])
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
+      "kh4q0ozorrgaq2mezktnrmdwleo1d",
+      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    ])
+  })
+
+  test('modelsToIndex is properly updated after stopIndexingModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
+      "kh4q0ozorrgaq2mezktnrmdwleo1d",
+      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    ])
+    await indexApi.stopIndexingModels([StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")])
+    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString())).toEqual([
+      "kh4q0ozorrgaq2mezktnrmdwleo1d"
+    ])
   })
 })
 

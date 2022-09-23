@@ -110,6 +110,10 @@ export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexM
 
   for (const tableName of tables) {
     const modelIndexArgs = modelsToIndex.find((model) => tableName == asTableName(model.model))
+    if (!modelIndexArgs) {
+      // FIXME: This means that there's is a table for a model that is no longer indexed. Should this table have been deleted?
+      continue
+    }
 
     // Clone the COMMON_TABLE_STRUCTURE object that has the fields expected for all tables so we can
     // extend it with the model-specific fields expected

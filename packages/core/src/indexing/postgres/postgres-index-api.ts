@@ -77,7 +77,10 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       .onConflict('model')
       .merge({
         updated_at: this.dbConnection.fn.now(),
+        is_indexed: true,
+        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
       })
+
     const modelStreamIDs = models.map((args) => args.model)
     this.modelsToIndex.push(...modelStreamIDs)
   }
