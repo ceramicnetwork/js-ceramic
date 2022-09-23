@@ -69,6 +69,16 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     this.modelsToIndex.push(...modelStreamIDs)
   }
 
+  async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+    // TODO: update mid tables to set is_indexed=false for models
+    // TODO: this.verifyTables(??) ??
+    for (let i = this.modelsToIndex.length - 1; i >= 0; i--) {
+      if (models.includes(this.modelsToIndex[i])) {
+        this.modelsToIndex.splice(i, 1)
+      }
+    }
+  }
+
   async init(): Promise<void> {
     await initConfigTables(this.dbConnection, this.logger)
   }

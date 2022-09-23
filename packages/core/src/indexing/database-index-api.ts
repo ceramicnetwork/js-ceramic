@@ -36,6 +36,13 @@ export interface DatabaseIndexApi {
   indexModels(models: Array<IndexModelArgs>): Promise<void>
 
   /**
+   * Update the database to mark a list of models as no longer indexed.
+   *
+   * @param models
+   */
+  stopIndexingModels(models: Array<StreamID>): Promise<void>
+
+  /**
    * This method inserts the stream if it is not present in the index, or updates
    * the 'content' if the stream already exists in the index.
    * @param args
