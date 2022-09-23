@@ -79,7 +79,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     await this.verifyTables(models)
     const now = asTimestamp(new Date())
     // FIXME: populate the updated_by field properly when auth is implemented
-    this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
       .insert(models.map(indexModelArgs => {
         return {
           model: indexModelArgs.model,
@@ -97,7 +97,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
     const now = asTimestamp(new Date())
     // FIXME: populate the updated_by field properly when auth is implemented
-    this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
       .insert(models.map(model => {
         return {
           model: model.toString(),
@@ -108,6 +108,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
       .onConflict('model')
       .merge({
         updated_at: now,
+        is_indexed: false,
         updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
       })
     for (let i = this.modelsToIndex.length - 1; i >= 0; i--) {
@@ -124,8 +125,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
         .select('model')
         .where({
           is_indexed: true
-        }) as Array<string>
-      ).map(modelIDString => { return StreamID.fromString(modelIDString) })
+        })
+      ).map(result => { return StreamID.fromString(result.model) })
     )
   }
 
