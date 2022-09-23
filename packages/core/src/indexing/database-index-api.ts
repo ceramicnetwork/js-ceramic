@@ -3,6 +3,8 @@ import type { BaseQuery, Pagination, Page } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
 import { ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 
+export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
+
 export interface IndexStreamArgs {
   readonly streamID: StreamID
   readonly model: StreamID

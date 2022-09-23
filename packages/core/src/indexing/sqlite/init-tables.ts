@@ -8,7 +8,7 @@ import {
 import { asTableName } from '../as-table-name.util.js'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { IndexModelArgs } from '../database-index-api.js'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from '../database-index-api.js'
 import {
   COMMON_TABLE_STRUCTURE,
   RELATION_COLUMN_STRUCTURE,
@@ -29,7 +29,7 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
 
 export async function listConfigTables(): Promise<Array<any>> {
   // TODO (CDB-1852): extend with ceramic_auth
-  return [{ tableName: 'ceramic_models', validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
+  return [{ tableName: INDEXED_MODEL_CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
 }
 
 function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition): Array<ColumnInfo> {

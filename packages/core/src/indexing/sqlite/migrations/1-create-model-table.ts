@@ -1,5 +1,6 @@
 import type { Knex } from 'knex'
 import { UnreachableCaseError } from '@ceramicnetwork/common'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../database-index-api.js'
 
 /**
  * The expected type for the data in the column.  For now only supports STRING as the only extra
@@ -59,7 +60,7 @@ export async function createModelTable(
 
 export async function createConfigTable(dataSource: Knex, tableName: string) {
   switch (tableName) {
-    case 'ceramic_models':
+    case INDEXED_MODEL_CONFIG_TABLE_NAME:
       await dataSource.schema.createTable(tableName, function (table) {
         // create model indexing configuration table
         table.bigIncrements('index_id')

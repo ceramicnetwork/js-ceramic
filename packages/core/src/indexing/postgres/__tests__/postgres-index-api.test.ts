@@ -10,7 +10,7 @@ import { listMidTables } from '../init-tables.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
-import { IndexModelArgs } from '../../database-index-api.js'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from '../../database-index-api.js'
 import {
   COMMON_TABLE_STRUCTURE,
   RELATION_COLUMN_STRUCTURE,
@@ -99,7 +99,7 @@ describe('init', () => {
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
-      columns = await dbConnection.table(asTableName('ceramic_models')).columnInfo()
+      columns = await dbConnection.table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME)).columnInfo()
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
     })
 
