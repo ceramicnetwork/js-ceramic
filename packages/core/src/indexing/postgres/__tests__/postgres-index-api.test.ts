@@ -438,6 +438,7 @@ describe('indexStream', () => {
     tip: FAKE_CID_A,
     controller: CONTROLLER,
     lastAnchor: null,
+    firstAnchor: null,
   }
   const STREAM_CONTENT_B = {
     model: MODELS_TO_INDEX[0],
@@ -446,6 +447,7 @@ describe('indexStream', () => {
     tip: FAKE_CID_B,
     controller: CONTROLLER,
     lastAnchor: null,
+    firstAnchor: null,
   }
 
   let indexApi: PostgresIndexApi
@@ -505,7 +507,7 @@ describe('indexStream', () => {
 
     // create index on jsonb content and disable seq scans
     await dbConnection.raw(`SET enable_seqscan = off;`)
-    let result: Array<any> = await dbConnection.raw(
+    let result = await dbConnection.raw(
       `CREATE INDEX idx_postgres_jsonb ON ${STREAM_ID_A}((stream_content->'settings'->'dark_mode'))`
     )
     expect(result.command).toEqual('CREATE')
