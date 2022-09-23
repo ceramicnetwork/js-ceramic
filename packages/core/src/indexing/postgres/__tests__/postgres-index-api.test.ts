@@ -387,7 +387,6 @@ describe('indexModels', () => {
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
     const anotherIndexApi = new PostgresIndexApi(dbConnection, true, logger)
-    console.log('CREATING ANOTHER API')
     await anotherIndexApi.init()
 
     expect(anotherIndexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort())
