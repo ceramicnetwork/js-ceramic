@@ -283,6 +283,52 @@ function closeDates(a: Date, b: Date, deltaS = 1) {
   return Math.abs(aSeconds - bSeconds) <= deltaS
 }
 
+describe('indexModels', () => {
+  test('populates the INDEXED_MODEL_CONFIG_TABLE_NAME table on indexModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": 1
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": 1
+      }
+    ])
+  })
+
+  test('updates the INDEXED_MODEL_CONFIG_TABLE_NAME table on stopIndexingModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi
+    (dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": 0
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": 1
+      }
+    ])
+  })
+})
+
 describe('indexStream', () => {
   const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
   const STREAM_CONTENT_A = {
