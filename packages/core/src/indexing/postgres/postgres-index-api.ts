@@ -70,7 +70,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
       .insert(models.map(indexModelArgs => {
         return {
-          model: indexModelArgs.model,
+          model: indexModelArgs.model.toString(),
           updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
         }
       }))
