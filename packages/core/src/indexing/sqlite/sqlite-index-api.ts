@@ -19,6 +19,7 @@ export function asTimestamp(input: Date | null | undefined): number | null {
   }
 }
 
+
 export class SqliteIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
   readonly modelsToIndex: Array<StreamID> = []

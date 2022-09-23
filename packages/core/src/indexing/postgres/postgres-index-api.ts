@@ -1,4 +1,4 @@
-import { StreamID } from 'streamid/lib/stream-id.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page, DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs, IndexStreamArgs } from '../database-index-api.js'
 import { initConfigTables, initMidTables, verifyTables } from './init-tables.js'
@@ -6,6 +6,7 @@ import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
@@ -65,13 +66,38 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await initMidTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
+    // FIXME: populate the updated_by field properly when auth is implemented
+    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .insert(models.map(indexModelArgs => {
+        return {
+          model: indexModelArgs.model,
+          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        }
+      }))
+      .onConflict('model')
+      .merge({
+        updated_at: this.dbConnection.fn.now(),
+      })
     const modelStreamIDs = models.map((args) => args.model)
     this.modelsToIndex.push(...modelStreamIDs)
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
-    // TODO: update mid tables to set is_indexed=false for models
-    // TODO: this.verifyTables(??) ??
+    // FIXME: populate the updated_by field properly when auth is implemented
+    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .insert(models.map(model => {
+        return {
+          model: model.toString(),
+          is_indexed: false,
+          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        }
+      }))
+      .onConflict('model')
+      .merge({
+        updated_at: this.dbConnection.fn.now(),
+        is_indexed: false,
+        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+      })
     for (let i = this.modelsToIndex.length - 1; i >= 0; i--) {
       if (models.includes(this.modelsToIndex[i])) {
         this.modelsToIndex.splice(i, 1)
@@ -81,6 +107,14 @@ export class PostgresIndexApi implements DatabaseIndexApi {
 
   async init(): Promise<void> {
     await initConfigTables(this.dbConnection, this.logger)
+    this.modelsToIndex.concat(
+      (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+          .select('model')
+          .where({
+            is_indexed: true
+          })
+      ).map(result => { return StreamID.fromString(result.model) })
+    )
   }
 
   async close(): Promise<void> {
