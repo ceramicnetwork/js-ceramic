@@ -1,4 +1,4 @@
-import type { StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Pagination, Page, DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Knex } from 'knex'
 import type { DatabaseIndexApi, IndexModelArgs, IndexStreamArgs } from '../database-index-api.js'
@@ -77,13 +77,39 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await initMidTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
+    const now = asTimestamp(new Date())
+    // FIXME: populate the updated_by field properly when auth is implemented
+    this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .insert(models.map(indexModelArgs => {
+        return {
+          model: indexModelArgs.model,
+          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        }
+      }))
+      .onConflict('model')
+      .merge({
+        updated_at: now,
+      })
     const modelStreamIDs = models.map((args) => args.model)
     this.modelsToIndex.push(...modelStreamIDs)
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
-    // TODO: update config tables to set is_indexed=false for models
-    // TODO: this.verifyTables(??) ??
+    const now = asTimestamp(new Date())
+    // FIXME: populate the updated_by field properly when auth is implemented
+    this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .insert(models.map(model => {
+        return {
+          model: model.toString(),
+          is_indexed: false,
+          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        }
+      }))
+      .onConflict('model')
+      .merge({
+        updated_at: now,
+        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+      })
     for (let i = this.modelsToIndex.length - 1; i >= 0; i--) {
       if (models.includes(this.modelsToIndex[i])) {
         this.modelsToIndex.splice(i, 1)
@@ -93,6 +119,14 @@ export class SqliteIndexApi implements DatabaseIndexApi {
 
   async init(): Promise<void> {
     await initConfigTables(this.dbConnection, this.logger)
+    this.modelsToIndex.concat(
+      (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model')
+        .where({
+          is_indexed: true
+        }) as Array<string>
+      ).map(modelIDString => { return StreamID.fromString(modelIDString) })
+    )
   }
 
   async close(): Promise<void> {
