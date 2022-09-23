@@ -115,6 +115,10 @@ export class LocalIndexApi implements IndexApi {
     await this.databaseIndexApi?.indexModels(indexModelArgs)
   }
 
+  async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+    await this.databaseIndexApi?.stopIndexingModels(models)
+  }
+
   async init(): Promise<void> {
     await this.databaseIndexApi?.init()
     return this.indexModels(this.indexingConfig.models)

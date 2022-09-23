@@ -654,19 +654,22 @@ describe('Ceramic interop: core <> http-client', () => {
       const newGetResult = await fetchJson(adminURLString)
       expect(newGetResult.models).toEqual([exampleModelStreamId])
 
-      await expect(fetchJson(adminURLString, {
+      const differentExampleStreamId = "kjzl6hvfrbw6ca7nidsnrv78x7r4xt0xki71nvwe4j5a3s9wgou8yu3aj8cz38e"
+      const putResult = await fetchJson(adminURLString, {
         method:'PUT',
-        body: { models: [exampleModelStreamId] }
-      })).rejects.toThrow(
-        /Replacing models in index not implemented in database api/
-      )
+        body: {  models: [differentExampleStreamId] }
+      })
+      expect(putResult.result).toEqual('success')
+      const getResultAfterPut = await fetchJson(adminURLString)
+      expect(getResultAfterPut.models).toEqual([differentExampleStreamId])
 
-      await expect(fetchJson(adminURLString, {
+      const deleteResult = await fetchJson(adminURLString, {
         method:'DELETE',
-        body: { models: [exampleModelStreamId] }
-      })).rejects.toThrow(
-        /Removing models from index not implemented in database api/
-      )
+        body: {  models: [differentExampleStreamId] }
+      })
+      expect(deleteResult.result).toEqual('success')
+      const getResultAfterDelete = await fetchJson(adminURLString)
+      expect(getResultAfterDelete.models).toEqual([])
     })
 
     describe('admin models API validation test', () => {

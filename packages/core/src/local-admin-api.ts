@@ -21,13 +21,17 @@ export class LocalAdminApi implements AdminApi {
     return Promise.resolve(this.indexApi.indexedModels() ?? [])
   }
 
-  removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    throw Error('Removing models from index not implemented in database api')
-    return
+  async removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void> {
+    this.logger.log(LogStyle.info, `Local Admin Api will remove model ids to index ${modelsIDs}`)
+    await this.indexApi.stopIndexingModels(modelsIDs)
+    this.logger.log(LogStyle.info, `Local Admin Api did remove model ids to index ${modelsIDs}`)
   }
 
-  replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void> {
-    throw Error('Replacing models in index not implemented in database api')
-    return
+  async replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void> {
+    this.logger.log(LogStyle.info, `Local Admin Api will replace model ids to index ${modelsIDs}`)
+    // TODO: Is this done in a single transaction? If not, it should be.
+    await this.indexApi.stopIndexingModels(this.indexApi.indexedModels())
+    await this.indexApi.indexModels(modelsIDs)
+    this.logger.log(LogStyle.info, `Local Admin Api did replace model ids to index ${modelsIDs}`)
   }
 }
