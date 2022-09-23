@@ -16,6 +16,7 @@ import {
   RELATION_COLUMN_STRUCTURE,
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verification.js'
+import { readCsvFixture } from './read-csv-fixture.util.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -205,7 +206,7 @@ describe('init', () => {
       const tableName = asTableName(modelToIndex)
 
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
-      indexApi.init()
+      await indexApi.init()
 
       // Create the table in the database with all expected fields but one (leaving off 'updated_at')
       await dbConnection.schema.createTable(tableName, (table) => {
@@ -240,7 +241,7 @@ describe('init', () => {
       ]
 
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
-      indexApi.init()
+      await indexApi.init()
 
       // Create the table in the database with all expected fields but one (leaving off 'updated_at')
       await dbConnection.schema.createTable(tableName, (table) => {
@@ -562,5 +563,30 @@ describe('page', () => {
     await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
       IndexQueryNotAvailableError
     )
+  })
+})
+
+describe('count', () => {
+  const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+  const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
+  const MODEL = MODELS_TO_INDEX[0]
+
+  test('all', async () => {
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.indexModels(
+      MODELS_TO_INDEX.map((m) => {
+        return { model: m }
+      })
+    )
+    const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
+    for (const row of rows) {
+      await indexApi.indexStream(row)
+    }
+    // all
+    await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+    // by account
+    const account = 'did:key:blah'
+    const expected = rows.filter((r) => r.controller === account).length
+    await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
   })
 })

@@ -76,7 +76,7 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async count(query: BaseQuery): Promise<number> {
-    throw new Error('Not implemented')
+    return this.databaseIndexApi.count(query)
   }
 
   /**

@@ -157,4 +157,20 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   async close(): Promise<void> {
     await this.dbConnection.destroy()
   }
+
+  async count(query: BaseQuery): Promise<number> {
+    const tableName = asTableName(query.model)
+    let dbQuery = this.dbConnection(tableName).count('*')
+    if (query.account) {
+      dbQuery = dbQuery.where({ controller_did: query.account })
+    }
+    if (query.filter) {
+      for (const [key, value] of Object.entries(query.filter)) {
+        const filterObj = {}
+        filterObj[key] = value
+        dbQuery = dbQuery.andWhere(filterObj)
+      }
+    }
+    return dbQuery.then((response) => Number(response[0]['count']))
+  }
 }
