@@ -21,6 +21,9 @@ export function asTimestamp(input: Date | null | undefined): number | null {
 export class SqliteIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
   readonly modelsToIndex: Array<StreamID> = []
+  // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
+  // indexed
+  readonly modelsIndexedFields = new Map<string, Array<string>>()
 
   constructor(
     private readonly dbConnection: Knex,
@@ -43,17 +46,22 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     const tableName = asTableName(args.model)
     const now = asTimestamp(new Date())
 
+    const indexedData = {
+      stream_id: args.streamID.toString(),
+      controller_did: args.controller.toString(),
+      stream_content: args.streamContent.toString(),
+      tip: args.tip.toString(),
+      last_anchored_at: asTimestamp(args.lastAnchor),
+      first_anchored_at: asTimestamp(args.firstAnchor),
+      created_at: asTimestamp(args.createdAt) || now,
+      updated_at: asTimestamp(args.updatedAt) || now,
+    }
+    for (const field of this.modelsIndexedFields.get(args.model.toString()) ?? []) {
+      indexedData[field] = args.streamContent[field]
+    }
+
     await this.dbConnection(tableName)
-      .insert({
-        stream_id: args.streamID.toString(),
-        controller_did: args.controller.toString(),
-        stream_content: args.streamContent.toString(),
-        tip: args.tip.toString(),
-        last_anchored_at: asTimestamp(args.lastAnchor),
-        first_anchored_at: asTimestamp(args.firstAnchor),
-        created_at: asTimestamp(args.createdAt) || now,
-        updated_at: asTimestamp(args.updatedAt) || now,
-      })
+      .insert(indexedData)
       .onConflict('stream_id')
       .merge({
         last_anchored_at: asTimestamp(args.lastAnchor),
@@ -76,8 +84,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await initTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
-    const modelStreamIDs = models.map((args) => args.model)
-    this.modelsToIndex.push(...modelStreamIDs)
   }
 
   async close(): Promise<void> {

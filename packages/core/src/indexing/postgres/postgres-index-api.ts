@@ -10,6 +10,9 @@ import { IndexQueryNotAvailableError } from '../index-query-not-available.error.
 export class PostgresIndexApi implements DatabaseIndexApi {
   readonly insertionOrder: InsertionOrder
   readonly modelsToIndex: Array<StreamID> = []
+  // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
+  // indexed
+  readonly modelsIndexedFields = new Map<string, Array<string>>()
 
   constructor(
     private readonly dbConnection: Knex,
@@ -32,17 +35,22 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     const tableName = asTableName(args.model)
 
     // created_at and last_updated_at set by default value
+    const indexedData = {
+      stream_id: args.streamID.toString(),
+      controller_did: args.controller.toString(),
+      stream_content: args.streamContent,
+      tip: args.tip.toString(),
+      last_anchored_at: args.lastAnchor,
+      first_anchored_at: args.firstAnchor,
+      created_at: args.createdAt || this.dbConnection.fn.now(),
+      updated_at: args.updatedAt || this.dbConnection.fn.now(),
+    }
+    for (const field of this.modelsIndexedFields.get(args.model.toString()) ?? []) {
+      indexedData[field] = args.streamContent[field]
+    }
+
     await this.dbConnection(tableName)
-      .insert({
-        stream_id: args.streamID.toString(),
-        controller_did: args.controller.toString(),
-        stream_content: args.streamContent,
-        tip: args.tip.toString(),
-        last_anchored_at: args.lastAnchor,
-        first_anchored_at: args.firstAnchor,
-        created_at: args.createdAt || this.dbConnection.fn.now(),
-        updated_at: args.updatedAt || this.dbConnection.fn.now(),
-      })
+      .insert(indexedData)
       .onConflict('stream_id')
       .merge({
         last_anchored_at: args.lastAnchor,
@@ -65,8 +73,12 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await initTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
-    const modelStreamIDs = models.map((args) => args.model)
-    this.modelsToIndex.push(...modelStreamIDs)
+    for (const modelArgs of models) {
+      this.modelsToIndex.push(modelArgs.model)
+      if (modelArgs.relations) {
+        this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
+      }
+    }
   }
 
   async close(): Promise<void> {
