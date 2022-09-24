@@ -29,7 +29,7 @@ export class RemoteIndexApi implements IndexApi {
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
     const queryURL = new URL(this._collectionURL)
-    serializeObjectToSearchParams(queryURL, { ...query, model: query.model.toString() }) // todo why did this become necessary?
+    serializeObjectToSearchParams(queryURL, query)
 
     const response = await this._fetchJson(queryURL)
     const edges = response.edges.map((e) => {

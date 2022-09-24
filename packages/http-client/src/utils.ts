@@ -15,7 +15,9 @@ export function serializeObjectToSearchParams(
   queryObject: Record<string, any>
 ): void {
   for (const [key, value] of Object.entries(queryObject)) {
-    if (typeof value == 'object') {
+    if (StreamID.isInstance(value)) {
+      queryURL.searchParams.set(key, value.toString())
+    } else if (typeof value == 'object') {
       queryURL.searchParams.set(key, JSON.stringify(value))
     } else {
       queryURL.searchParams.set(key, value)
