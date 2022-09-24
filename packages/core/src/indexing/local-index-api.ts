@@ -100,7 +100,11 @@ export class LocalIndexApi implements IndexApi {
     }
   }
 
-  async indexModels(models: Array<StreamID>): Promise<void> {
+  async indexModels(models: Array<StreamID> | null): Promise<void> {
+    if (!models) {
+      return
+    }
+
     // TODO: Load model StreamIDs, extract relations and pass those arguments down into the
     //  DatabaseIndexAPI so the necessary columns get built for the relations
     const indexModelArgs = []
@@ -112,8 +116,12 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
+    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
+      return
+    }
+
     await this.databaseIndexApi?.init()
-    return this.indexModels(this.indexingConfig.models)
+    return this.indexModels(this.indexingConfig?.models)
   }
 
   async close(): Promise<void> {
