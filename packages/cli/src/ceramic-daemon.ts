@@ -25,6 +25,7 @@ import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync } from '@awaitjs/express'
+import { instrumentRequests } from './daemon/instrument-requests.js'
 import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
@@ -206,6 +207,8 @@ export class CeramicDaemon {
         maxAge: 7200, // 2 hours
       })
     )
+
+    this.app.use(instrumentRequests)
 
     this.app.use(logRequests(ceramic.loggerProvider))
 

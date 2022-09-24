@@ -106,7 +106,11 @@ export class LocalIndexApi implements IndexApi {
     }
   }
 
-  async indexModels(models: Array<StreamID>): Promise<void> {
+  async indexModels(models: Array<StreamID> | null): Promise<void> {
+    if (!models) {
+      return
+    }
+
     const indexModelsArgs = []
     for (const modelStreamId of models) {
       if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
@@ -130,7 +134,11 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    return this.indexModels(this.indexingConfig.models)
+    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
+      return
+    }
+
+    return this.indexModels(this.indexingConfig?.models)
   }
 
   async close(): Promise<void> {
