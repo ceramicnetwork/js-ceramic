@@ -13,7 +13,7 @@ import {
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import { serializeObjectToSearchParams } from './utils'
+import { serializeObjectToSearchParams } from './utils.js'
 
 export class Document extends Observable<StreamState> implements RunningStateLike {
   private readonly state$: StreamStateSubject
