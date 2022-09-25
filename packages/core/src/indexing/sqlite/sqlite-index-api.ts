@@ -84,6 +84,12 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await initTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
+    for (const modelArgs of models) {
+      this.modelsToIndex.push(modelArgs.model)
+      if (modelArgs.relations) {
+        this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
+      }
+    }
   }
 
   async close(): Promise<void> {
