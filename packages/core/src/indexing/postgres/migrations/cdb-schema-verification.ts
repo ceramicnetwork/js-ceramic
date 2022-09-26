@@ -69,12 +69,6 @@ export const COMMON_TABLE_STRUCTURE = {
  * Used to verify table integrity during node startup and after indexing a new model
  */
 export const CONFIG_TABLE_MODEL_INDEX_STRUCTURE = {
-  index_id: {
-    type: 'bigint',
-    maxLength: null,
-    nullable: false,
-    defaultValue: "nextval('ceramic_models_index_id_seq'::regclass)",
-  },
   model: {
     type: 'character varying',
     maxLength: 1024,

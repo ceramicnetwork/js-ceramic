@@ -27,7 +27,7 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
   return result.map((r) => r.name)
 }
 
-export async function listConfigTables(): Promise<Array<any>> {
+export async function listConfigTables(): Promise<Array<{ tableName; validSchema }>> {
   // TODO (CDB-1852): extend with ceramic_auth
   return [{ tableName: INDEXED_MODEL_CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
 }
@@ -76,13 +76,11 @@ export async function initMidTables(
 }
 
 /**
- * Verify mid table validity via passed schema
+ * Compose DB configuration table schema verification
  * @param dataSource
  * @param modelsToIndex
  */
-// TODO (NET-1635): unify logic between postgres & sqlite
-export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
-  // Verify Compose DB Config tables
+async function _verifyConfigTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
   const configTables = await listConfigTables()
   for (const table of configTables) {
     const columns = await dataSource.table(table.tableName).columnInfo()
@@ -95,8 +93,14 @@ export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexM
       process.exit(-1)
     }
   }
+}
 
-  // Verify indexed MID tables
+/**
+ * Compose DB Model Instance Document table schema verification
+ * @param dataSource
+ * @param modelsToIndex
+ */
+async function _verifyMidTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
   const tables = await listMidTables(dataSource)
 
   for (const tableName of tables) {
@@ -123,4 +127,15 @@ export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexM
       )
     }
   }
+}
+
+/**
+ * Public function to run table schema verification helpers
+ * @param dataSource
+ * @param modelsToIndex
+ */
+// TODO (NET-1635): unify logic between postgres & sqlite
+export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
+  await _verifyConfigTables(dataSource, modelsToIndex)
+  await _verifyMidTables(dataSource, modelsToIndex)
 }
