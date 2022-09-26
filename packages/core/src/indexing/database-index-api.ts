@@ -20,8 +20,8 @@ export interface IndexStreamArgs {
  * whatever columns, indexes, etc are needed.
  */
 export interface IndexModelArgs {
-  model: StreamID
-  relations?: ModelRelationsDefinition
+  readonly model: StreamID
+  readonly relations?: ModelRelationsDefinition
 }
 
 /**
