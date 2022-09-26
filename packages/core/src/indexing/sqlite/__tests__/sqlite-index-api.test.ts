@@ -75,11 +75,11 @@ describe('init', () => {
 
       // Also manually check MID table structure
       const midColumns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
-      expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
+      expect(JSON.stringify(midColumns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
       const configTableColumns = await dbConnection.table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME)).columnInfo()
-      expect(JSON.stringify(columns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
+      expect(JSON.stringify(configTableColumns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
     })
 
     test('create new table with relations', async () => {
