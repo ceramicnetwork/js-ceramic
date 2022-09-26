@@ -29,26 +29,80 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     return this.modelsToIndex
   }
 
-  async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
-    const tableName = asTableName(args.model)
+  private async getIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+    return (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model')
+        .where({
+          is_indexed: true
+        })
+    ).map(result => {
+      return StreamID.fromString(result.model)
+    })
+  }
 
+  private async indexDocumentInDatabase(tableName: string, indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
     // created_at and last_updated_at set by default value
     await this.dbConnection(tableName)
       .insert({
-        stream_id: args.streamID.toString(),
-        controller_did: args.controller.toString(),
-        stream_content: args.streamContent,
-        tip: args.tip.toString(),
-        last_anchored_at: args.lastAnchor,
-        first_anchored_at: args.firstAnchor,
-        created_at: args.createdAt || this.dbConnection.fn.now(),
-        updated_at: args.updatedAt || this.dbConnection.fn.now(),
+        stream_id: indexingArgs.streamID.toString(),
+        controller_did: indexingArgs.controller.toString(),
+        stream_content: indexingArgs.streamContent,
+        tip: indexingArgs.tip.toString(),
+        last_anchored_at: indexingArgs.lastAnchor,
+        first_anchored_at: indexingArgs.firstAnchor,
+        created_at: indexingArgs.createdAt || this.dbConnection.fn.now(),
+        updated_at: indexingArgs.updatedAt || this.dbConnection.fn.now(),
       })
       .onConflict('stream_id')
       .merge({
-        last_anchored_at: args.lastAnchor,
-        updated_at: args.updatedAt || this.dbConnection.fn.now(),
+        last_anchored_at: indexingArgs.lastAnchor,
+        updated_at: indexingArgs.updatedAt || this.dbConnection.fn.now(),
       })
+  }
+
+  private async indexModelsInDatabase(models: Array<IndexModelArgs>): Promise<void> {
+    if (models.length === 0) return
+    await initMidTables(this.dbConnection, models, this.logger)
+    await this.verifyTables(models)
+    //
+    // : CDB-1866 - populate the updated_by field properly when auth is implemented
+    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .insert(models.map(indexModelArgs => {
+        return {
+          model: indexModelArgs.model.toString(),
+          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        }
+      }))
+      .onConflict('model')
+      .merge({
+        updated_at: this.dbConnection.fn.now(),
+        is_indexed: true,
+        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+      })
+  }
+
+  private async stopIndexingModelsInDatabase(models: Array<StreamID>): Promise<void> {
+    if (models.length === 0) return
+    // FIXME: CDB-1866 - populate the updated_by field properly when auth is implemented
+    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .insert(models.map(model => {
+        return {
+          model: model.toString(),
+          is_indexed: false,
+          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        }
+      }))
+      .onConflict('model')
+      .merge({
+        updated_at: this.dbConnection.fn.now(),
+        is_indexed: false,
+        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+      })
+  }
+
+  async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
+    const tableName = asTableName(args.model)
+    await this.indexDocumentInDatabase(tableName, args)
   }
 
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
@@ -64,62 +118,20 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   }
 
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
-    if (models.length === 0) return
-
-    await initMidTables(this.dbConnection, models, this.logger)
-    await this.verifyTables(models)
-    // FIXME: populate the updated_by field properly when auth is implemented
-    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .insert(models.map(indexModelArgs => {
-        return {
-          model: indexModelArgs.model.toString(),
-          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
-        }
-      }))
-      .onConflict('model')
-      .merge({
-        updated_at: this.dbConnection.fn.now(),
-        is_indexed: true,
-        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
-      })
-
+    await this.indexModelsInDatabase(models)
     const modelStreamIDs = models.map((args) => args.model)
     this.modelsToIndex.push(...modelStreamIDs)
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
-    if (models.length === 0) return
-
-    // FIXME: populate the updated_by field properly when auth is implemented
-    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .insert(models.map(model => {
-        return {
-          model: model.toString(),
-          is_indexed: false,
-          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
-        }
-      }))
-      .onConflict('model')
-      
-      .merge({
-        updated_at: this.dbConnection.fn.now(),
-        is_indexed: false,
-        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
-      })
+    await this.stopIndexingModelsInDatabase(models)
     const modelsAsStrings = models.map(streamID => streamID.toString())
     this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !modelsAsStrings.includes(modelStreamID.toString()))
   }
 
   async init(): Promise<void> {
     await initConfigTables(this.dbConnection, this.logger)
-    this.modelsToIndex = (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-        .select('model')
-        .where({
-          is_indexed: true
-        })
-    ).map(result => {
-      return StreamID.fromString(result.model)
-    })
+    this.modelsToIndex = await this.getIndexedModelsFromDatabase()
   }
 
   async close(): Promise<void> {
