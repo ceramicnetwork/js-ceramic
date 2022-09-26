@@ -111,7 +111,7 @@ export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexM
   for (const tableName of tables) {
     const modelIndexArgs = modelsToIndex.find((model) => tableName == asTableName(model.model))
     if (!modelIndexArgs) {
-      // FIXME: This means that there's is a table for a model that is no longer indexed. Should this table have been deleted?
+      // TODO: CDB-1869 - This means that there's is a table for a model that is no longer indexed. Should this table have been deleted?
       continue
     }
 
