@@ -69,12 +69,6 @@ export const COMMON_TABLE_STRUCTURE = {
  * Used to verify table integrity during node startup and after indexing a new model
  */
 export const CONFIG_TABLE_MODEL_INDEX_STRUCTURE = {
-  index_id: {
-    type: 'integer',
-    maxLength: null,
-    nullable: false,
-    defaultValue: null,
-  },
   model: {
     type: 'varchar',
     maxLength: '1024',

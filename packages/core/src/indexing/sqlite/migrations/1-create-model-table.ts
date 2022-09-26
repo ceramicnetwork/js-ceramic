@@ -63,18 +63,13 @@ export async function createConfigTable(dataSource: Knex, tableName: string) {
     case INDEXED_MODEL_CONFIG_TABLE_NAME:
       await dataSource.schema.createTable(tableName, function (table) {
         // create model indexing configuration table
-        table.bigIncrements('index_id')
-        table.string('model', 1024).unique().notNullable()
+        table.string('model', 1024).unique().notNullable().primary()
         table.boolean('is_indexed').notNullable().defaultTo(true)
         table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
         table.string('updated_by', 1024).notNullable()
 
-        table.index(['model'], `idx_ceramic_models_model`, {
-          storageEngineIndexType: 'hash',
-        })
-
-        table.index(['model', 'is_indexed'], `idx_ceramic_models_model_is_indexed`, {
+        table.index(['is_indexed'], `idx_ceramic_is_indexed`, {
           storageEngineIndexType: 'hash',
         })
       })

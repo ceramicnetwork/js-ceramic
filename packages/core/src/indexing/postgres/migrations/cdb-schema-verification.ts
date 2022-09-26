@@ -69,40 +69,34 @@ export const COMMON_TABLE_STRUCTURE = {
  * Used to verify table integrity during node startup and after indexing a new model
  */
 export const CONFIG_TABLE_MODEL_INDEX_STRUCTURE = {
-  index_id: {
-    type: 'bigint',
-    maxLength: null,
-    nullable: false,
-    defaultValue: "nextval('ceramic_models_index_id_seq'::regclass)"
-  },
   model: {
     type: 'character varying',
     maxLength: 1024,
     nullable: false,
-    defaultValue: null
+    defaultValue: null,
   },
   is_indexed: {
     type: 'boolean',
     maxLength: null,
     nullable: false,
-    defaultValue: 'true'
+    defaultValue: 'true',
   },
   created_at: {
     type: 'timestamp with time zone',
     maxLength: null,
     nullable: false,
-    defaultValue: 'CURRENT_TIMESTAMP'
+    defaultValue: 'CURRENT_TIMESTAMP',
   },
   updated_at: {
     type: 'timestamp with time zone',
     maxLength: null,
     nullable: false,
-    defaultValue: 'CURRENT_TIMESTAMP'
+    defaultValue: 'CURRENT_TIMESTAMP',
   },
   updated_by: {
     type: 'character varying',
     maxLength: 1024,
     nullable: false,
-    defaultValue: null
-  }
+    defaultValue: null,
+  },
 }
