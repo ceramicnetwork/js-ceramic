@@ -74,7 +74,7 @@ describe('init', () => {
       await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
 
       // Also manually check MID table structure
-      let columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
+      const midColumns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
