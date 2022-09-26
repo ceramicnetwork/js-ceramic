@@ -25,7 +25,7 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
-    // TODO: Is this the simplest way to deserialize and return a stream id?
+    
     const response= await this._fetchJson(this.getUrl())
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
