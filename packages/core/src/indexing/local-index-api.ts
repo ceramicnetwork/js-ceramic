@@ -5,7 +5,6 @@ import type {
   PaginationQuery,
   StreamState,
   DiagnosticsLogger,
-  Context,
 } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
@@ -16,7 +15,6 @@ import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
 import { streamFromState } from '../state-management/stream-from-state.js'
-import { HandlersMap } from '../handlers-map.js'
 
 /**
  * API to query an index.
@@ -26,9 +24,7 @@ export class LocalIndexApi implements IndexApi {
 
   constructor(
     private readonly indexingConfig: IndexingConfig,
-    private readonly context: Context,
     private readonly repository: Repository,
-    private readonly streamHandlers: HandlersMap,
     private readonly logger: DiagnosticsLogger,
     networkName: Networks
   ) {
@@ -122,9 +118,10 @@ export class LocalIndexApi implements IndexApi {
       const indexModelArgs: IndexModelArgs = { model: modelStreamId }
       if (modelStreamId.type == Model.STREAM_TYPE_ID) {
         const modelState = await this.repository.load(modelStreamId, {})
-        const model = streamFromState<Model>(this.context, this.streamHandlers, modelState.value)
-        if (model.content.relations) {
-          indexModelArgs.relations = model.content.relations
+        const relations =
+          modelState.state.next?.content.relations ?? modelState.state.content.relations
+        if (relations) {
+          indexModelArgs.relations = relations
         }
       }
 
