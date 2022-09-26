@@ -73,36 +73,36 @@ export const CONFIG_TABLE_MODEL_INDEX_STRUCTURE = {
     type: 'bigint',
     maxLength: null,
     nullable: false,
-    defaultValue: "nextval('ceramic_models_index_id_seq'::regclass)"
+    defaultValue: "nextval('ceramic_models_index_id_seq'::regclass)",
   },
   model: {
     type: 'character varying',
     maxLength: 1024,
     nullable: false,
-    defaultValue: null
+    defaultValue: null,
   },
   is_indexed: {
     type: 'boolean',
     maxLength: null,
     nullable: false,
-    defaultValue: 'true'
+    defaultValue: 'true',
   },
   created_at: {
     type: 'timestamp with time zone',
     maxLength: null,
     nullable: false,
-    defaultValue: 'CURRENT_TIMESTAMP'
+    defaultValue: 'CURRENT_TIMESTAMP',
   },
   updated_at: {
     type: 'timestamp with time zone',
     maxLength: null,
     nullable: false,
-    defaultValue: 'CURRENT_TIMESTAMP'
+    defaultValue: 'CURRENT_TIMESTAMP',
   },
   updated_by: {
     type: 'character varying',
     maxLength: 1024,
     nullable: false,
-    defaultValue: null
-  }
+    defaultValue: null,
+  },
 }
