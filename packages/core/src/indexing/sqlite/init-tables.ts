@@ -16,6 +16,14 @@ import {
 } from './migrations/cdb-schema-verfication.js'
 
 /**
+ * Compose DB Config Table Type
+ */
+type ConfigTable = {
+  readonly tableName: string
+  readonly validSchema: object
+}
+
+/**
  * List existing mid tables.
  */
 export async function listMidTables(dbConnection: Knex): Promise<Array<string>> {
@@ -27,7 +35,7 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
   return result.map((r) => r.name)
 }
 
-export async function listConfigTables(): Promise<Array<{ tableName; validSchema }>> {
+export async function listConfigTables(): Promise<Array<ConfigTable>> {
   // TODO (CDB-1852): extend with ceramic_auth
   return [{ tableName: 'ceramic_models', validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
 }
