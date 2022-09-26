@@ -120,6 +120,7 @@ export class LocalIndexApi implements IndexApi {
       return
     }
 
+    await this.databaseIndexApi?.init()
     return this.indexModels(this.indexingConfig?.models)
   }
 

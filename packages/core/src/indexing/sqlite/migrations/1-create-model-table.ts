@@ -1,5 +1,6 @@
 import type { Knex } from 'knex'
 import { UnreachableCaseError } from '@ceramicnetwork/common'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../database-index-api.js'
 
 /**
  * The expected type for the data in the column.  For now only supports STRING as the only extra
@@ -55,4 +56,26 @@ export async function createModelTable(
       `idx_${tableName}_first_anchored_at_created_at`
     )
   })
+}
+
+export async function createConfigTable(dataSource: Knex, tableName: string) {
+  switch (tableName) {
+    case INDEXED_MODEL_CONFIG_TABLE_NAME:
+      await dataSource.schema.createTable(tableName, function (table) {
+        // create model indexing configuration table
+        table.string('model', 1024).unique().notNullable().primary()
+        table.boolean('is_indexed').notNullable().defaultTo(true)
+        table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
+        table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
+        table.string('updated_by', 1024).notNullable()
+
+        table.index(['is_indexed'], `idx_ceramic_is_indexed`, {
+          storageEngineIndexType: 'hash',
+        })
+      })
+      break
+    default:
+      throw new Error(`Invalid config table creation requested: ${tableName}`)
+      process.exit(-1)
+  }
 }

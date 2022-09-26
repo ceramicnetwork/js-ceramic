@@ -29,6 +29,7 @@ beforeEach(async () => {
     },
   })
   const indexAPI = new SqliteIndexApi(dbConnection, true, logger)
+  await indexAPI.init()
   await indexAPI.indexModels(
     MODELS_TO_INDEX.map((model) => {
       return { model }

@@ -32,8 +32,8 @@ export function makeIndexApi(
     return undefined
   }
   if (network == Networks.MAINNET || network == Networks.ELP) {
-    // TODO enable ComposeDB on mainnet once mainnet anchors are indexable.
-    throw new Error(`ComposeDB indexing features are not yet supported on mainnet`)
+    // TODO enable Compose DB on mainnet once mainnet anchors are indexable.
+    throw new Error(`Compose DB indexing features are not yet supported on mainnet`)
   }
   if (!indexingConfig) {
     logger.warn(`Indexing is not configured. Please add the indexing settings to your config file`)
