@@ -141,6 +141,6 @@ async function _verifyMidTables(dataSource: Knex, modelsToIndex: Array<IndexMode
  */
 // TODO (NET-1635): unify logic between postgres & sqlite
 export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
-  _verifyConfigTables(dataSource, modelsToIndex)
-  _verifyMidTables(dataSource, modelsToIndex)
+  await _verifyConfigTables(dataSource, modelsToIndex)
+  await _verifyMidTables(dataSource, modelsToIndex)
 }
