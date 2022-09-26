@@ -73,30 +73,30 @@ export const CONFIG_TABLE_MODEL_INDEX_STRUCTURE = {
     type: 'character varying',
     maxLength: 1024,
     nullable: false,
-    defaultValue: null
+    defaultValue: null,
   },
   is_indexed: {
     type: 'boolean',
     maxLength: null,
     nullable: false,
-    defaultValue: 'true'
+    defaultValue: 'true',
   },
   created_at: {
     type: 'timestamp with time zone',
     maxLength: null,
     nullable: false,
-    defaultValue: 'CURRENT_TIMESTAMP'
+    defaultValue: 'CURRENT_TIMESTAMP',
   },
   updated_at: {
     type: 'timestamp with time zone',
     maxLength: null,
     nullable: false,
-    defaultValue: 'CURRENT_TIMESTAMP'
+    defaultValue: 'CURRENT_TIMESTAMP',
   },
   updated_by: {
     type: 'character varying',
     maxLength: 1024,
     nullable: false,
-    defaultValue: null
-  }
+    defaultValue: null,
+  },
 }

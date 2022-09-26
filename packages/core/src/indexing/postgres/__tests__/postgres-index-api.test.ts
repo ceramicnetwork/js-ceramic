@@ -10,7 +10,7 @@ import { listMidTables } from '../init-tables.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
-import { IndexModelArgs } from '../../database-index-api.js'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from '../../database-index-api.js'
 import {
   COMMON_TABLE_STRUCTURE,
   RELATION_COLUMN_STRUCTURE,
@@ -70,6 +70,7 @@ afterEach(async () => {
 })
 
 export async function dropTables() {
+  await dbConnection.schema.dropTableIfExists(INDEXED_MODEL_CONFIG_TABLE_NAME)
   await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
   await dbConnection.schema.dropTableIfExists(STREAM_ID_A)
   await dbConnection.schema.dropTableIfExists(STREAM_ID_B)
@@ -99,7 +100,7 @@ describe('init', () => {
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
-      columns = await dbConnection.table(asTableName('ceramic_models')).columnInfo()
+      columns = await dbConnection.table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME)).columnInfo()
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
     })
 
@@ -176,6 +177,7 @@ describe('init', () => {
       const modelToIndex = StreamID.fromString(STREAM_ID_A)
       const tableName = asTableName(modelToIndex)
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      indexApi.init()
 
       // Create the table in the database with all expected fields but one (leaving off 'updated_at')
       await dbConnection.schema.createTable(tableName, (table) => {
@@ -203,6 +205,7 @@ describe('init', () => {
       const tableName = asTableName(modelToIndex)
 
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      indexApi.init()
 
       // Create the table in the database with all expected fields but one (leaving off 'updated_at')
       await dbConnection.schema.createTable(tableName, (table) => {
@@ -237,6 +240,7 @@ describe('init', () => {
       ]
 
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+      indexApi.init()
 
       // Create the table in the database with all expected fields but one (leaving off 'updated_at')
       await dbConnection.schema.createTable(tableName, (table) => {
@@ -282,6 +286,147 @@ function closeDates(a: Date, b: Date, deltaS = 1) {
   const bSeconds = b.getSeconds()
   return Math.abs(aSeconds - bSeconds) <= deltaS
 }
+
+describe('indexModels', () => {
+  test('populates the INDEXED_MODEL_CONFIG_TABLE_NAME table on indexModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": true
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": true
+      }
+    ])
+  })
+
+  test('updates the INDEXED_MODEL_CONFIG_TABLE_NAME table on stopIndexingModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": false
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": true
+      }
+    ])
+  })
+
+  test('re-indexing models', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": true
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": true
+      }
+    ])
+
+
+    await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": false
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": true
+      }
+    ])
+
+    await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
+    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+      .select('model', 'is_indexed')
+      .orderBy('model', 'desc')
+    ).toEqual([
+      {
+        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
+        "is_indexed": true
+      },
+      {
+        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "is_indexed": true
+      }
+    ])
+  })
+
+  test('modelsToIndex is properly populated after init()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+
+    const anotherIndexApi = new PostgresIndexApi(dbConnection, true, logger)
+    console.log('CREATING ANOTHER API')
+    await anotherIndexApi.init()
+
+    expect(anotherIndexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort())
+      .toEqual([
+        "kh4q0ozorrgaq2mezktnrmdwleo1d",
+        "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+      ])
+  })
+
+  test('modelsToIndex is properly updated after indexModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    expect(indexApi.getActiveModelsToIndex()).toEqual([])
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
+      "kh4q0ozorrgaq2mezktnrmdwleo1d",
+      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    ])
+  })
+
+  test('modelsToIndex is properly updated after stopIndexingModels()', async () => {
+    const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
+      "kh4q0ozorrgaq2mezktnrmdwleo1d",
+      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    ])
+    await indexApi.stopIndexingModels([StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")])
+    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString())).toEqual([
+      "kh4q0ozorrgaq2mezktnrmdwleo1d"
+    ])
+  })
+})
 
 describe('indexStream', () => {
   const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
