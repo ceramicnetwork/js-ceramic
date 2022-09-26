@@ -31,7 +31,7 @@ import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
-import { collectionQuery } from './daemon/collection-query.js'
+import { collectionQuery, countQuery } from './daemon/collection-queries.js'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
@@ -302,6 +302,7 @@ export class CeramicDaemon {
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
+    collectionRouter.getAsync('/count', this.getCollectionCount.bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -476,6 +477,13 @@ export class CeramicDaemon {
       docId: streamId.toString(),
       commits: serializedCommits,
     })
+  }
+
+  async getCollectionCount(req: Request, res: Response): Promise<void> {
+    const httpQuery = parseQueryObject(req.query)
+    const query = countQuery(httpQuery)
+    const count = await this.ceramic.index.count(query)
+    res.json(count)
   }
 
   async getCollection(req: Request, res: Response): Promise<void> {

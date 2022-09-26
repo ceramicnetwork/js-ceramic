@@ -17,11 +17,15 @@ export class RemoteIndexApi implements IndexApi {
   private readonly _collectionURL: URL
 
   constructor(apiUrl: URL) {
-    this._collectionURL = new URL('./collection', apiUrl)
+    this._collectionURL = new URL('./collection/', apiUrl)
   }
 
   async count(query: BaseQuery): Promise<number> {
-    throw new Error('Not implemented')
+    const queryURL = new URL('./count', this._collectionURL)
+    for (const key in query) {
+      queryURL.searchParams.set(key, query[key])
+    }
+    return this._fetchJson(queryURL)
   }
 
   /**
