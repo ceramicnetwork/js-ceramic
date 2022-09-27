@@ -348,6 +348,12 @@ export class DaemonMetricsConfig {
 @toJson
 export class DaemonConfig {
   /**
+   * An array of DIDs with access to Admin API (represented as strings)
+   */
+  @jsonArrayMember(String, { name: 'admin-dids' })
+  adminDids: Array<string>
+
+  /**
    * Options related to anchoring
    */
   @jsonMember(DaemonAnchorConfig)

@@ -566,16 +566,14 @@ export class CeramicDaemon {
     }
   }
 
-  private async _validateAdminModelsMutationRequest(
-    req: Request
-  ): Promise<{
-    actingDid?: string,
-    modelIDStrings?: Array<string>,
-    error?: string
-  }> {
+  private async _processAdminModelsMutationRequest(
+    req: Request,
+    res: Response,
+    successCallback: (actingDid: string, modelIDs: Array<StreamID>) => Promise<void>
+  ): Promise<void> {
     const modelsValidation = this._validateModelIDStrings(req.body.models)
     if (modelsValidation.error) {
-      return { error: modelsValidation.error }
+      res.status(422).json({ error: modelsValidation.error })
     } else {
       const authHeaderValidation = await this._validateDIDJWSAuthHeader(
         req.baseUrl,
@@ -583,11 +581,14 @@ export class CeramicDaemon {
         modelsValidation.modelIDStrings
       )
       if (authHeaderValidation.error) {
-        return { error: authHeaderValidation.error }
+        res.status(422).json({ error: authHeaderValidation.error })
       } else {
-        return {
-          actingDid: authHeaderValidation.kid,
-          modelIDStrings: modelsValidation.modelIDStrings
+        try {
+          const modelIDs = modelsValidation.modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
+          await successCallback(authHeaderValidation.kid, modelIDs)
+          res.status(200).json({ result: 'success' })
+        } catch (e) {
+          res.status(401).json({ error: e.message })
         }
       }
     }
@@ -598,49 +599,27 @@ export class CeramicDaemon {
     if (authHeaderValidation.error) {
       res.status(401).json({ error: authHeaderValidation.error })
     } else {
-      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid)
-      res.json({
-        models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
-      })
+      try {
+        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid)
+        res.json({
+          models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
+        })
+      } catch (e) {
+        res.status(401).json({ error: e.message })
+      }
     }
   }
 
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    const { actingDid, modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
-    if (error) {
-      res.status(422).json({ error: error })
-    } else {
-      await this.ceramic.admin.addModelsToIndex(
-        actingDid,
-        modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
-      )
-      res.status(200).json({ result: 'success' })
-    }
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.addModelsToIndex.bind(this.ceramic.admin))
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    const { actingDid, modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
-    if (error) {
-      res.status(422).json({ error: error })
-    } else {
-      await this.ceramic.admin.removeModelsFromIndex(
-        actingDid,
-        modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
-      )
-      res.status(200).json({ result: 'success' })
-    }
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.removeModelsFromIndex.bind(this.ceramic.admin))
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    const { actingDid, modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
-    if (error) {
-      res.status(422).json({ error: error })
-    } else {
-      await this.ceramic.admin.replaceModelsInIndex(
-        actingDid, modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
-      )
-      res.status(200).json({ result: 'success' })
-    }
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.replaceModelsInIndex.bind(this.ceramic.admin))
   }
 
   /**

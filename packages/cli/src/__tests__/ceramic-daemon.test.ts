@@ -26,7 +26,8 @@ import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { DID } from 'dids'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
-import { randomBytes } from '@stablelib/random'
+import * as sha256 from '@stablelib/sha256'
+import * as uint8arrays from 'uint8arrays'
 
 const seed = 'SEED'
 
@@ -655,11 +656,11 @@ describe('Ceramic interop: core <> http-client', () => {
     }
 
     beforeAll(async () => {
-      const seed = randomBytes(32)
-      const provider = new Ed25519Provider(seed)
-      const newDid = new DID({ provider, resolver: KeyResolver.getResolver() })
-      await newDid.authenticate()
-      did = newDid
+      const digest = sha256.hash(uint8arrays.fromString(seed))
+      const provider = new Ed25519Provider(digest)
+      const adminDid = new DID({ provider, resolver: KeyResolver.getResolver() })
+      await adminDid.authenticate()
+      did = adminDid
     })
 
     it('admin models API CRUD test', async () => {

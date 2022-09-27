@@ -87,6 +87,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
  * Ceramic configuration
  */
 export interface CeramicConfig {
+  adminDids?: Array<string>
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
   stateStoreDirectory?: string
@@ -134,6 +135,7 @@ export interface CeramicModules {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicParameters {
+  adminDids?: Array<string>
   gateway: boolean
   indexingConfig: IndexingConfig
   networkOptions: CeramicNetworkOptions
@@ -232,7 +234,7 @@ export class Ceramic implements CeramicApi {
       this._logger,
       params.networkOptions.name
     )
-    this.admin = this._buildAdminApi([], localIndex, this._logger)
+    this.admin = this._buildAdminApi(params.adminDids, localIndex, this._logger)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -462,6 +464,7 @@ export class Ceramic implements CeramicApi {
     )
 
     const params: CeramicParameters = {
+      adminDids: config.adminDids,
       gateway: config.gateway,
       indexingConfig: config.indexing,
       networkOptions,
@@ -490,7 +493,6 @@ export class Ceramic implements CeramicApi {
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
     const [modules, params] = await Ceramic._processConfig(ipfs, config)
-
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
