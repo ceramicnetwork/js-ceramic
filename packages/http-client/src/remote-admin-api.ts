@@ -20,7 +20,7 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   private async buildAuthorizationHeader(modelsIDs?: Array<StreamID>): Promise<string> {
-    const body = modelsIDs ? modelsIDs.map(streamID => streamID.toString()) : undefined
+    const body = modelsIDs ? { models: modelsIDs.map(streamID => streamID.toString()) } : undefined
     const jws = await this._context.did.createJWS({
       timestamp: Date.now(),
       requestPath: this._apiUrl.pathname,

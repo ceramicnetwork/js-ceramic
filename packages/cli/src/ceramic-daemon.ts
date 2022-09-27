@@ -499,13 +499,6 @@ export class CeramicDaemon {
     })
   }
 
-  async getIndexedModels(req: Request, res: Response): Promise<void> {
-    const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
-    res.json({
-      models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
-    })
-  }
-
   private  _validateModelIDStrings(
     modelIDStrings: any
   ): {
@@ -524,8 +517,93 @@ export class CeramicDaemon {
     }
   }
 
+  private async _parseDidJWSAuthHeader(
+    authHeader: string | undefined
+  ): Promise<{ kid: string, requestPath: string, timestamp: number, forModels: Array<string> }> {
+    const jwsString = authHeader.split("Authorization: Basic ")[1]
+    const result = await this.ceramic.did.verifyJWS(jwsString)
+    return {
+      kid: result.kid,
+      requestPath: result.payload.requestPath,
+      timestamp: result.payload.timestamp,
+      forModels: result.payload.requestBody ? result.payload.requestBody.models : undefined,
+    }
+  }
+
+  private _compareStringArrays(left: Array<string>, right: Array<string>): boolean {
+    return left.length === right.length && left.every((value, index) => value === right[index])
+  }
+
+  private async _validateDIDJWSAuthHeader(
+    basePath: string,
+    authHeader: string | undefined,
+    forModels?: Array<string>
+  ): Promise<{ status: string, error?: string }> {
+    const errorResult = { status: 'error', error: 'Missing or invalid authorization signature' }
+    let parsedJWS
+    try {
+      parsedJWS = await this._parseDidJWSAuthHeader(authHeader)
+    } catch (e) {
+      console.error(e)
+      return errorResult
+    }
+    const fiveMin = 1000 * 60 * 5 // 5 min
+
+    if (
+      parsedJWS.kid.endsWith('') && // FIXME: Check if kid end with something that is one of the admin dids
+      parsedJWS.requestPath === basePath &&
+      parsedJWS.timestamp > (Date.now() - fiveMin)
+    ) {
+      if (forModels) {
+        if (!this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
+          return errorResult
+        }
+      } else if (parsedJWS.forModels) {
+        return errorResult
+      }
+      return { status: 'success' }
+    } else {
+      return errorResult
+    }
+  }
+
+  private async _validateAdminModelsMutationRequest(
+    req: Request
+  ): Promise<{
+    modelIDStrings?: Array<string>,
+    error?: string
+  }> {
+    const modelsValidation = this._validateModelIDStrings(req.body.models)
+    if (modelsValidation.error) {
+      return { error: modelsValidation.error }
+    } else {
+      const authHeaderValidation = await this._validateDIDJWSAuthHeader(
+        req.baseUrl,
+        req.headers.authorization,
+        modelsValidation.modelIDStrings
+      )
+      if (authHeaderValidation.error) {
+        return { error: authHeaderValidation.error }
+      } else {
+        return { modelIDStrings: modelsValidation.modelIDStrings }
+      }
+    }
+  }
+
+  async getIndexedModels(req: Request, res: Response): Promise<void> {
+    const authHeaderValidation = await this._validateDIDJWSAuthHeader(req.baseUrl, req.headers.authorization)
+    if (authHeaderValidation.error) {
+      res.status(401).json({ error: authHeaderValidation.error })
+    } else {
+      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+      res.json({
+        models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
+      })
+    }
+  }
+
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    const { modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
     if (error) {
       res.status(422).json({ error: error })
     } else {
@@ -535,7 +613,7 @@ export class CeramicDaemon {
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    const { modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
     if (error) {
       res.status(422).json({ error: error })
     } else {
@@ -545,7 +623,7 @@ export class CeramicDaemon {
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    const { modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
     if (error) {
       res.status(422).json({ error: error })
     } else {

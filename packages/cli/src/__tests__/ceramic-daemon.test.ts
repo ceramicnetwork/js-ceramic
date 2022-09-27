@@ -23,6 +23,10 @@ import { makeDID } from './make-did.js'
 import fetch from 'cross-fetch'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
+import { DID } from 'dids'
+import { Ed25519Provider } from 'key-did-provider-ed25519'
+import KeyResolver from 'key-did-resolver'
+import { randomBytes } from '@stablelib/random'
 
 const seed = 'SEED'
 
@@ -636,46 +640,141 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   describe('admin api', () => {
-    it('admin models API CRUD test', async () => {
-      // TODO: Implement this test using the highest-level interface once it's ready
+    let did: DID
 
+    async function buildAuthorizationHeader(models?: Array<string>): Promise<string> {
+      const body = models ? { models: models } : undefined
+
+      const jws = await did.createJWS({
+        timestamp: Date.now(),
+        requestPath: '/api/v0/admin/models',
+        requestBody: body
+      })
+      const jwsString = `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
+      return `Authorization: Basic ${jwsString}`
+    }
+
+    beforeAll(async () => {
+      const seed = randomBytes(32)
+      const provider = new Ed25519Provider(seed)
+      const newDid = new DID({ provider, resolver: KeyResolver.getResolver() })
+      await newDid.authenticate()
+      did = newDid
+    })
+
+    it('admin models API CRUD test', async () => {
       const exampleModelStreamId = "kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"
       const adminURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
 
-      const getResult = await fetchJson(adminURLString)
+      const getResult = await fetchJson(adminURLString,
+        {
+          headers: {
+            authorization: await buildAuthorizationHeader()
+          }
+        })
       expect(getResult.models).toEqual([])
 
       const postResult = await fetchJson(adminURLString, {
+        headers: {
+          authorization: await buildAuthorizationHeader([exampleModelStreamId])
+        },
         method:'POST',
         body: {  models: [exampleModelStreamId] }
       })
       expect(postResult.result).toEqual('success')
 
-      const newGetResult = await fetchJson(adminURLString)
+      const newGetResult = await fetchJson(adminURLString,
+        {
+          headers: {
+            authorization: await buildAuthorizationHeader()
+          }
+        })
       expect(newGetResult.models).toEqual([exampleModelStreamId])
 
       const differentExampleStreamId = "kjzl6hvfrbw6ca7nidsnrv78x7r4xt0xki71nvwe4j5a3s9wgou8yu3aj8cz38e"
       const putResult = await fetchJson(adminURLString, {
+        headers: {
+          authorization: await buildAuthorizationHeader([differentExampleStreamId])
+        },
         method:'PUT',
         body: {  models: [differentExampleStreamId] }
       })
       expect(putResult.result).toEqual('success')
-      const getResultAfterPut = await fetchJson(adminURLString)
+
+      const getResultAfterPut = await fetchJson(adminURLString,
+        {
+          headers: {
+            authorization: await buildAuthorizationHeader()
+          }
+        })
       expect(getResultAfterPut.models).toEqual([differentExampleStreamId])
 
       const deleteResult = await fetchJson(adminURLString, {
+        headers: {
+          authorization: await buildAuthorizationHeader([differentExampleStreamId])
+        },
         method:'DELETE',
         body: {  models: [differentExampleStreamId] }
       })
       expect(deleteResult.result).toEqual('success')
-      const getResultAfterDelete = await fetchJson(adminURLString)
+      const getResultAfterDelete = await fetchJson(adminURLString,
+        {
+          headers: {
+            authorization: await buildAuthorizationHeader()
+          }
+        })
       expect(getResultAfterDelete.models).toEqual([])
     })
 
     describe('admin models API validation test', () => {
+      const exampleModelStreamId = "kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"
+
+      it('No authorization for GET', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`)
+        ).rejects.toThrow(
+          /Missing or invalid authorization signature/
+        )
+      })
+
+      it('No authorization for POST', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+            {
+              method: 'POST',
+              body: {  models: [exampleModelStreamId] }
+            }),
+        ).rejects.toThrow(
+          /Missing or invalid authorization signature/
+        )
+      })
+
+      it('No authorization for PUT', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method: 'PUT',
+            body: {  models: [exampleModelStreamId] }
+          }),
+        ).rejects.toThrow(
+          /Missing or invalid authorization signature/
+        )
+      })
+
+      it('No authorization for DELETE', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            method: 'DELETE',
+            body: {  models: [exampleModelStreamId] }
+          }),
+        ).rejects.toThrow(
+          /Missing or invalid authorization signature/
+        )
+      })
+
       it('No models for POST', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
+            headers: {
+              authorization: await buildAuthorizationHeader()
+            },
             method:'POST'
           })
         ).rejects.toThrow(
@@ -686,6 +785,9 @@ describe('Ceramic interop: core <> http-client', () => {
       it('Empty models for POST', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
+            headers: {
+              authorization: await buildAuthorizationHeader([])
+            },
             method:'POST',
             body: { models: [] }
           })
@@ -697,6 +799,9 @@ describe('Ceramic interop: core <> http-client', () => {
       it('No models for DELETE', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
+            headers: {
+              authorization: await buildAuthorizationHeader()
+            },
             method:'DELETE'
           })
         ).rejects.toThrow(
@@ -707,6 +812,9 @@ describe('Ceramic interop: core <> http-client', () => {
       it('Empty models for DELETE', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
+            headers: {
+              authorization: await buildAuthorizationHeader([])
+            },
             method:'DELETE',
             body: { models: [] }
           })
@@ -718,6 +826,9 @@ describe('Ceramic interop: core <> http-client', () => {
       it('No models for PUT', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
+            headers: {
+              authorization: await buildAuthorizationHeader()
+            },
             method:'PUT'
           })
         ).rejects.toThrow(
@@ -728,6 +839,9 @@ describe('Ceramic interop: core <> http-client', () => {
       it('Empty models for PUT', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
+            headers: {
+              authorization: await buildAuthorizationHeader([])
+            },
             method:'PUT',
             body: { models: [] }
           })
