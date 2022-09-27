@@ -1,6 +1,6 @@
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Context, fetchJson, TestUtils } from '@ceramicnetwork/common'
+import { fetchJson, TestUtils } from '@ceramicnetwork/common'
 import { RemoteAdminApi } from '../remote-admin-api.js'
 import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
@@ -16,37 +16,37 @@ const GET_RESPONSE = {
   models: [MODEL.toString()]
 }
 
-let FAUX_CONTEXT: Context
+let did: DID
 
 beforeAll(async () => {
   const seed = randomBytes(32)
   const provider = new Ed25519Provider(seed)
-  const did = new DID({ provider, resolver: KeyResolver.getResolver() })
-  await did.authenticate()
-  FAUX_CONTEXT = { did: did } as Context
+  const actingDid = new DID({ provider, resolver: KeyResolver.getResolver() })
+  await actingDid.authenticate()
+  did = actingDid
 })
 
 test('getIndexedModels()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, FAUX_CONTEXT)
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
   adminApi.buildAuthorizationHeader = (): string => {
     return '<FAKE AUTH HEADER>'
   }
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.getIndexedModels()
+  await adminApi.getIndexedModels(did)
   expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization:": "Basic <FAKE AUTH HEADER>"}})
 })
 
 test('addModelsToIndex()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, FAUX_CONTEXT)
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
   adminApi.buildAuthorizationHeader = (): string => {
     return '<FAKE AUTH HEADER>'
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.addModelsToIndex([MODEL])
+  await adminApi.addModelsToIndex(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
@@ -58,14 +58,14 @@ test('addModelsToIndex()', async () => {
 })
 
 test('removeModelsFromIndex()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, FAUX_CONTEXT)
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
   adminApi.buildAuthorizationHeader = (): string => {
     return '<FAKE AUTH HEADER>'
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.removeModelsFromIndex([MODEL])
+  await adminApi.removeModelsFromIndex(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
@@ -77,14 +77,14 @@ test('removeModelsFromIndex()', async () => {
 })
 
 test('replaceModelsInIndex()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, FAUX_CONTEXT)
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
   adminApi.buildAuthorizationHeader = (): string => {
     return '<FAKE AUTH HEADER>'
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.replaceModelsInIndex([MODEL])
+  await adminApi.replaceModelsInIndex(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {

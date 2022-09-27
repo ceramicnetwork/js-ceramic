@@ -538,7 +538,7 @@ export class CeramicDaemon {
     basePath: string,
     authHeader: string | undefined,
     forModels?: Array<string>
-  ): Promise<{ status: string, error?: string }> {
+  ): Promise<{ kid?: string, error?: string }> {
     const errorResult = { status: 'error', error: 'Missing or invalid authorization signature' }
     let parsedJWS
     try {
@@ -550,7 +550,6 @@ export class CeramicDaemon {
     const fiveMin = 1000 * 60 * 5 // 5 min
 
     if (
-      parsedJWS.kid.endsWith('') && // FIXME: Check if kid end with something that is one of the admin dids
       parsedJWS.requestPath === basePath &&
       parsedJWS.timestamp > (Date.now() - fiveMin)
     ) {
@@ -561,7 +560,7 @@ export class CeramicDaemon {
       } else if (parsedJWS.forModels) {
         return errorResult
       }
-      return { status: 'success' }
+      return { kid: parsedJWS.kid }
     } else {
       return errorResult
     }
@@ -570,6 +569,7 @@ export class CeramicDaemon {
   private async _validateAdminModelsMutationRequest(
     req: Request
   ): Promise<{
+    actingDid?: string,
     modelIDStrings?: Array<string>,
     error?: string
   }> {
@@ -585,7 +585,10 @@ export class CeramicDaemon {
       if (authHeaderValidation.error) {
         return { error: authHeaderValidation.error }
       } else {
-        return { modelIDStrings: modelsValidation.modelIDStrings }
+        return {
+          actingDid: authHeaderValidation.kid,
+          modelIDStrings: modelsValidation.modelIDStrings
+        }
       }
     }
   }
@@ -595,7 +598,7 @@ export class CeramicDaemon {
     if (authHeaderValidation.error) {
       res.status(401).json({ error: authHeaderValidation.error })
     } else {
-      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid)
       res.json({
         models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
       })
@@ -603,31 +606,39 @@ export class CeramicDaemon {
   }
 
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
+    const { actingDid, modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
     if (error) {
       res.status(422).json({ error: error })
     } else {
-      await this.ceramic.admin.addModelsToIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      await this.ceramic.admin.addModelsToIndex(
+        actingDid,
+        modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
+      )
       res.status(200).json({ result: 'success' })
     }
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
+    const { actingDid, modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
     if (error) {
       res.status(422).json({ error: error })
     } else {
-      await this.ceramic.admin.removeModelsFromIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      await this.ceramic.admin.removeModelsFromIndex(
+        actingDid,
+        modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
+      )
       res.status(200).json({ result: 'success' })
     }
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
+    const { actingDid, modelIDStrings, error } = await this._validateAdminModelsMutationRequest(req)
     if (error) {
       res.status(422).json({ error: error })
     } else {
-      await this.ceramic.admin.replaceModelsInIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      await this.ceramic.admin.replaceModelsInIndex(
+        actingDid, modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
+      )
       res.status(200).json({ result: 'success' })
     }
   }

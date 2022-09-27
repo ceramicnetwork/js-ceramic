@@ -275,8 +275,8 @@ export class Ceramic implements CeramicApi {
     return new LocalPinApi(this.repository, this._logger)
   }
 
-  private _buildAdminApi(indexApi: LocalIndexApi, logger: DiagnosticsLogger): AdminApi {
-    return new LocalAdminApi(indexApi, logger)
+  private _buildAdminApi(adminDids: Array<string>, indexApi: LocalIndexApi, logger: DiagnosticsLogger): AdminApi {
+    return new LocalAdminApi(adminDids, indexApi, logger)
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
