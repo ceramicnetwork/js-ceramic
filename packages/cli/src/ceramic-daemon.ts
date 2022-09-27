@@ -381,8 +381,7 @@ export class CeramicDaemon {
   }
 
   /**
-   * Create document from genesis commit
-   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   * Request stream to be anchored
    */
   async requestAnchor(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid)
