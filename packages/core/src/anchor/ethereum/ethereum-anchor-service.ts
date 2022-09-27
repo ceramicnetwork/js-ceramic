@@ -133,7 +133,7 @@ export class EthereumAnchorService implements AnchorService {
     ).pipe(
       retry({
         delay: (error) => {
-          this._logger.err(new Error(`Can not connect to CAS: ${error.message}`))
+          this._logger.err(new Error(`Error connecting to CAS while attempting to anchor ${cidStreamPair.streaMid.toString()} at commit ${cidStreamPair.cid.toString()}: ${error.message}`))
           return interval(this.pollInterval)
         },
       }),
