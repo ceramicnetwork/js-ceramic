@@ -6,6 +6,7 @@ import type {
   StreamState,
 } from '@ceramicnetwork/common'
 import { StreamUtils, fetchJson } from '@ceramicnetwork/common'
+import { serializeObjectToSearchParams } from './utils.js'
 
 /**
  * IndexAPI implementation on top of HTTP endpoint.
@@ -28,9 +29,8 @@ export class RemoteIndexApi implements IndexApi {
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
     const queryURL = new URL(this._collectionURL)
-    for (const key in query) {
-      queryURL.searchParams.set(key, query[key])
-    }
+    serializeObjectToSearchParams(queryURL, query)
+
     const response = await this._fetchJson(queryURL)
     const edges = response.edges.map((e) => {
       return {

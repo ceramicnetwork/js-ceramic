@@ -13,6 +13,7 @@ import {
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { serializeObjectToSearchParams } from './utils.js'
 
 export class Document extends Observable<StreamState> implements RunningStateLike {
   private readonly state$: StreamStateSubject
@@ -109,9 +110,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     opts: LoadOpts
   ): Promise<StreamState> {
     const url = new URL(`./streams/${streamId}`, apiUrl)
-    for (const key in opts) {
-      url.searchParams.set(key, opts[key])
-    }
+    serializeObjectToSearchParams(url, opts)
     const { state } = await fetchJson(url)
     return state
   }

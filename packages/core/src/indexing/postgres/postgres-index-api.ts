@@ -9,8 +9,11 @@ import { IndexQueryNotAvailableError } from '../index-query-not-available.error.
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
-  readonly insertionOrder: InsertionOrder
+  private readonly insertionOrder: InsertionOrder
   private modelsToIndex: Array<StreamID> = []
+  // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
+  // indexed
+  private readonly modelsIndexedFields = new Map<string, Array<string>>()
 
   constructor(
     private readonly dbConnection: Knex,
@@ -30,29 +33,36 @@ export class PostgresIndexApi implements DatabaseIndexApi {
   }
 
   private async getIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
-    return (await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-        .select('model')
-        .where({
-          is_indexed: true
-        })
-    ).map(result => {
+    return (
+      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
+        is_indexed: true,
+      })
+    ).map((result) => {
       return StreamID.fromString(result.model)
     })
   }
 
-  private async indexDocumentInDatabase(tableName: string, indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
+  private async indexDocumentInDatabase(
+    tableName: string,
+    indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
+  ): Promise<void> {
     // created_at and last_updated_at set by default value
+    const indexedData = {
+      stream_id: indexingArgs.streamID.toString(),
+      controller_did: indexingArgs.controller.toString(),
+      stream_content: indexingArgs.streamContent,
+      tip: indexingArgs.tip.toString(),
+      last_anchored_at: indexingArgs.lastAnchor,
+      first_anchored_at: indexingArgs.firstAnchor,
+      created_at: indexingArgs.createdAt || this.dbConnection.fn.now(),
+      updated_at: indexingArgs.updatedAt || this.dbConnection.fn.now(),
+    }
+    for (const field of this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []) {
+      indexedData[field] = indexingArgs.streamContent[field]
+    }
+
     await this.dbConnection(tableName)
-      .insert({
-        stream_id: indexingArgs.streamID.toString(),
-        controller_did: indexingArgs.controller.toString(),
-        stream_content: indexingArgs.streamContent,
-        tip: indexingArgs.tip.toString(),
-        last_anchored_at: indexingArgs.lastAnchor,
-        first_anchored_at: indexingArgs.firstAnchor,
-        created_at: indexingArgs.createdAt || this.dbConnection.fn.now(),
-        updated_at: indexingArgs.updatedAt || this.dbConnection.fn.now(),
-      })
+      .insert(indexedData)
       .onConflict('stream_id')
       .merge({
         last_anchored_at: indexingArgs.lastAnchor,
@@ -67,17 +77,19 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     //
     // : CDB-1866 - populate the updated_by field properly when auth is implemented
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .insert(models.map(indexModelArgs => {
-        return {
-          model: indexModelArgs.model.toString(),
-          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
-        }
-      }))
+      .insert(
+        models.map((indexModelArgs) => {
+          return {
+            model: indexModelArgs.model.toString(),
+            updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+          }
+        })
+      )
       .onConflict('model')
       .merge({
         updated_at: this.dbConnection.fn.now(),
         is_indexed: true,
-        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
       })
   }
 
@@ -85,18 +97,20 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     if (models.length === 0) return
     // FIXME: CDB-1866 - populate the updated_by field properly when auth is implemented
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .insert(models.map(model => {
-        return {
-          model: model.toString(),
-          is_indexed: false,
-          updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
-        }
-      }))
+      .insert(
+        models.map((model) => {
+          return {
+            model: model.toString(),
+            is_indexed: false,
+            updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+          }
+        })
+      )
       .onConflict('model')
       .merge({
         updated_at: this.dbConnection.fn.now(),
         is_indexed: false,
-        updated_by: "<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>"
+        updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
       })
   }
 
@@ -119,14 +133,20 @@ export class PostgresIndexApi implements DatabaseIndexApi {
 
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await this.indexModelsInDatabase(models)
-    const modelStreamIDs = models.map((args) => args.model)
-    this.modelsToIndex.push(...modelStreamIDs)
+    for (const modelArgs of models) {
+      this.modelsToIndex.push(modelArgs.model)
+      if (modelArgs.relations) {
+        this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
+      }
+    }
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
     await this.stopIndexingModelsInDatabase(models)
-    const modelsAsStrings = models.map(streamID => streamID.toString())
-    this.modelsToIndex = this.modelsToIndex.filter(modelStreamID => !modelsAsStrings.includes(modelStreamID.toString()))
+    const modelsAsStrings = models.map((streamID) => streamID.toString())
+    this.modelsToIndex = this.modelsToIndex.filter(
+      (modelStreamID) => !modelsAsStrings.includes(modelStreamID.toString())
+    )
   }
 
   async init(): Promise<void> {

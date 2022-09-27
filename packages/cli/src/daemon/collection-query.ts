@@ -72,6 +72,7 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
     return {
       model: StreamID.fromString(query.model),
       account: query.account,
+      filter: query.filter,
       ...pagination,
     }
   } catch (e) {

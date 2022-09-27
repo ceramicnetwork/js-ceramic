@@ -93,7 +93,10 @@ function parseQueryObject(opts: Record<string, any>): Record<string, string | bo
   const typedOpts = {}
   for (const [key, value] of Object.entries(opts)) {
     if (typeof value == 'string') {
-      if (value === 'true') {
+      if (value[0] == '{') {
+        // value is a sub-object
+        typedOpts[key] = parseQueryObject(JSON.parse(value))
+      } else if (value === 'true') {
         typedOpts[key] = true
       } else if (value === 'false') {
         typedOpts[key] = false

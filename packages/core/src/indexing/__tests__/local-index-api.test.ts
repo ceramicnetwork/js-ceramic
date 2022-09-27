@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
 import type { Repository } from '../../state-management/repository.js'
-import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
+import type { Context, DiagnosticsLogger, Page } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
 import { LocalIndexApi } from '../local-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { IndexingConfig } from '../build-indexing.js'
+import { HandlersMap } from '../../handlers-map.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
@@ -85,7 +86,6 @@ describe('with database backend', () => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-
     const indexApi = new LocalIndexApi(
       undefined as IndexingConfig,
       fauxRepository,
@@ -117,6 +117,7 @@ describe('without database backend', () => {
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
 
     const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
