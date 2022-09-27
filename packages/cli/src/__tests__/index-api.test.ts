@@ -76,7 +76,7 @@ test('count', async () => {
   const returnCount = Math.random()
   indexSpy.mockReturnValueOnce(Promise.resolve(returnCount))
   const query = {
-    model: MODEL_STREAM_ID,
+    model: modelStreamId,
   }
   const result = await client.index.count(query)
   expect(result).toEqual(returnCount)
