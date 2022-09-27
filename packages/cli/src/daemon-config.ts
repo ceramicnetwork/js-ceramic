@@ -347,6 +347,9 @@ export class DaemonMetricsConfig {
 @jsonObject
 @toJson
 export class DaemonConfig {
+  @jsonArrayMember(String, { name: 'admin-dids' })
+  adminDids: Array<string>
+
   /**
    * Options related to anchoring
    */
