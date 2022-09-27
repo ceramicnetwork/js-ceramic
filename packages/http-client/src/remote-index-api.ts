@@ -25,7 +25,8 @@ export class RemoteIndexApi implements IndexApi {
     for (const key in query) {
       queryURL.searchParams.set(key, query[key])
     }
-    return this._fetchJson(queryURL)
+    const response = await this._fetchJson(queryURL)
+    return response.count
   }
 
   /**

@@ -483,7 +483,9 @@ export class CeramicDaemon {
     const httpQuery = parseQueryObject(req.query)
     const query = countQuery(httpQuery)
     const count = await this.ceramic.index.count(query)
-    res.json(count)
+    res.json({
+      count: count,
+    })
   }
 
   async getCollection(req: Request, res: Response): Promise<void> {
