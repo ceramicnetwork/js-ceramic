@@ -29,7 +29,7 @@ export class RemoteAdminApi implements AdminApi {
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
   }
 
-  async addModelsToIndex(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+  async startIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getUrl(), {
       headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, modelsIDs)}` },
       method: 'post',
@@ -44,10 +44,9 @@ export class RemoteAdminApi implements AdminApi {
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
     })
-
   }
 
-  async removeModelsFromIndex(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getUrl(), {
       headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, modelsIDs)}` },
       method: 'delete',
@@ -55,7 +54,7 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async replaceModelsInIndex(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+  async replaceIndexedModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getUrl(), {
       headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, modelsIDs)}` },
       method: 'put',

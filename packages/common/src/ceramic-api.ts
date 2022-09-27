@@ -71,7 +71,7 @@ export interface AdminApi {
    * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to add to index
    */
-  addModelsToIndex(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
+  startIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 
   /**
    * Removes model streams from index
@@ -79,7 +79,7 @@ export interface AdminApi {
    * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to remove from index
    */
-  removeModelsFromIndex(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
+  stopIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 
   /**
    * Replaces model streams in index with given model streams
@@ -87,7 +87,7 @@ export interface AdminApi {
    * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to put in the index instead of the previous ones
    */
-  replaceModelsInIndex(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
+  replaceIndexedModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 }
 
 /**

@@ -19,7 +19,7 @@ export class LocalAdminApi implements AdminApi {
     }
   }
 
-  async addModelsToIndex(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async startIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
     this.logger.log(LogStyle.info, `Local Admin Api will add model ids to index ${modelsIDs}`)
     await this.indexApi.indexModels(modelsIDs)
@@ -31,14 +31,14 @@ export class LocalAdminApi implements AdminApi {
     return Promise.resolve(this.indexApi.indexedModels() ?? [])
   }
 
-  async removeModelsFromIndex(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
     this.logger.log(LogStyle.info, `Local Admin Api will remove model ids to index ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)
     this.logger.log(LogStyle.info, `Local Admin Api did remove model ids to index ${modelsIDs}`)
   }
 
-  async replaceModelsInIndex(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async replaceIndexedModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
     this.logger.log(LogStyle.info, `Local Admin Api will replace model ids to index ${modelsIDs}`)
     // TODO: Is this done in a single transaction? If not, it should be.

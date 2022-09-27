@@ -46,7 +46,7 @@ test('addModelsToIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.addModelsToIndex(did, [MODEL])
+  await adminApi.startIndexingModels(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
@@ -65,7 +65,7 @@ test('removeModelsFromIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.removeModelsFromIndex(did, [MODEL])
+  await adminApi.stopIndexingModels(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
@@ -84,7 +84,7 @@ test('replaceModelsInIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.replaceModelsInIndex(did, [MODEL])
+  await adminApi.replaceIndexedModels(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {

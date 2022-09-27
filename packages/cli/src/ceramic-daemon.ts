@@ -611,15 +611,15 @@ export class CeramicDaemon {
   }
 
   async addModelsToIndex(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.addModelsToIndex.bind(this.ceramic.admin))
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin))
   }
 
   async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.removeModelsFromIndex.bind(this.ceramic.admin))
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin))
   }
 
   async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.replaceModelsInIndex.bind(this.ceramic.admin))
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.replaceIndexedModels.bind(this.ceramic.admin))
   }
 
   /**
