@@ -551,7 +551,7 @@ export class CeramicDaemon {
 
     if (
       parsedJWS.requestPath === basePath &&
-      parsedJWS.timestamp > (Date.now() - fiveMin)
+      parsedJWS.timestamp > (new Date().getTime() - fiveMin)
     ) {
       if (forModels) {
         if (!this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
