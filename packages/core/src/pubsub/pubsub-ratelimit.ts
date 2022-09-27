@@ -5,16 +5,10 @@ import type { Subscription } from 'rxjs'
 import type { PubsubMessage } from './pubsub-message.js'
 import type { ObservableWithNext } from './observable-with-next.js'
 import { MsgType } from './pubsub-message.js'
+import { whenSubscriptionDone } from '../__tests__/when-subscription-done.util.js'
 
 // Warnings about rate-limiting appear once per:
 const DEFAULT_WARNINGS_INTERVAL = 30 * 60 * 1000 // 30 minutes
-
-/**
- * The returned Promise resolves when the +subscription+ is done.
- */
-export function whenSubscriptionDone(subscription: Subscription): Promise<void> {
-  return new Promise<void>((resolve) => subscription.add(resolve))
-}
 
 /**
  * Wraps an instance of Pubsub and rate limits how often QUERY messages can be sent.  There are two

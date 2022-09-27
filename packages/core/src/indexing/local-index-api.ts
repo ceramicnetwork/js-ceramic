@@ -16,7 +16,29 @@ import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
 import { streamFromState } from '../state-management/stream-from-state.js'
-import { HandlersMap } from '../handlers-map.js'
+
+/**
+ * Takes a Model StreamID, loads it, and returns the IndexModelArgs necessary to prepare the
+ * database for indexing that model.
+ */
+async function _getIndexModelArgs(
+  modelStreamId: StreamID,
+  repository: Repository
+): Promise<IndexModelArgs> {
+  if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
+    throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
+  }
+
+  if (modelStreamId.type == Model.STREAM_TYPE_ID) {
+    const modelState = await repository.load(modelStreamId, {})
+    const relations = modelState.state.next?.content.relations ?? modelState.state.content.relations
+    if (relations) {
+      return { model: modelStreamId, relations }
+    }
+  }
+
+  return { model: modelStreamId }
+}
 
 /**
  * API to query an index.
@@ -26,9 +48,7 @@ export class LocalIndexApi implements IndexApi {
 
   constructor(
     private readonly indexingConfig: IndexingConfig,
-    private readonly context: Context,
     private readonly repository: Repository,
-    private readonly streamHandlers: HandlersMap,
     private readonly logger: DiagnosticsLogger,
     networkName: Networks
   ) {
@@ -113,22 +133,9 @@ export class LocalIndexApi implements IndexApi {
 
     const indexModelsArgs = []
     for (const modelStreamId of models) {
-      if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
-        throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
-      }
-
-      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
-
-      const indexModelArgs: IndexModelArgs = { model: modelStreamId }
-      if (modelStreamId.type == Model.STREAM_TYPE_ID) {
-        const modelState = await this.repository.load(modelStreamId, {})
-        const model = streamFromState<Model>(this.context, this.streamHandlers, modelState.value)
-        if (model.content.relations) {
-          indexModelArgs.relations = model.content.relations
-        }
-      }
-
+      const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
       indexModelsArgs.push(indexModelArgs)
+      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
     }
     await this.databaseIndexApi?.indexModels(indexModelsArgs)
   }
@@ -138,6 +145,7 @@ export class LocalIndexApi implements IndexApi {
       return
     }
 
+    await this.databaseIndexApi?.init()
     return this.indexModels(this.indexingConfig?.models)
   }
 

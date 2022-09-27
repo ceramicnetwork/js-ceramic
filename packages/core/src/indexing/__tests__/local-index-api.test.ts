@@ -37,14 +37,10 @@ describe('with database backend', () => {
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
     const fauxRepository = { streamState: streamStateFn } as unknown as Repository
     const fauxLogger = {} as DiagnosticsLogger
-    const fauxContext = {} as Context
-    const streamHandlers = new HandlersMap(fauxLogger)
 
     const indexApi = new LocalIndexApi(
       undefined as IndexingConfig,
-      fauxContext,
       fauxRepository,
-      streamHandlers,
       fauxLogger,
       Networks.INMEMORY
     )
@@ -90,14 +86,9 @@ describe('with database backend', () => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const fauxContext = {} as Context
-    const streamHandlers = new HandlersMap(fauxLogger)
-
     const indexApi = new LocalIndexApi(
       undefined as IndexingConfig,
-      fauxContext,
       fauxRepository,
-      streamHandlers,
       fauxLogger,
       Networks.INMEMORY
     )
@@ -124,17 +115,9 @@ describe('without database backend', () => {
     const fauxRepository = {} as unknown as Repository
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const fauxContext = {} as Context
-    const streamHandlers = new HandlersMap(fauxLogger)
 
-    const indexApi = new LocalIndexApi(
-      undefined,
-      fauxContext,
-      fauxRepository,
-      streamHandlers,
-      fauxLogger,
-      Networks.INMEMORY
-    )
+    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
