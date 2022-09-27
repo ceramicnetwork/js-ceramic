@@ -5,7 +5,6 @@ import type {
   PaginationQuery,
   StreamState,
   DiagnosticsLogger,
-  Context,
 } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
@@ -15,7 +14,6 @@ import { IndexingConfig } from './build-indexing.js'
 import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
-import { streamFromState } from '../state-management/stream-from-state.js'
 
 /**
  * Takes a Model StreamID, loads it, and returns the IndexModelArgs necessary to prepare the
