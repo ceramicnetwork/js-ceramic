@@ -21,10 +21,7 @@ export class RemoteIndexApi implements IndexApi {
   }
 
   async count(query: BaseQuery): Promise<number> {
-    const queryURL = new URL('./count', this._collectionURL)
-    for (const key in query) {
-      queryURL.searchParams.set(key, query[key])
-    }
+    const queryURL = serializeObjectToSearchParams(new URL('./count', this._collectionURL), query)
     const response = await this._fetchJson(queryURL)
     return response.count
   }
@@ -33,8 +30,7 @@ export class RemoteIndexApi implements IndexApi {
    * Issue a query to `/collection` endpoint.
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
-    const queryURL = new URL(this._collectionURL)
-    serializeObjectToSearchParams(queryURL, query)
+    const queryURL = serializeObjectToSearchParams(new URL(this._collectionURL), query)
 
     const response = await this._fetchJson(queryURL)
     const edges = response.edges.map((e) => {
