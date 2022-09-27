@@ -22,9 +22,9 @@ export class PostgresIndexApi implements DatabaseIndexApi {
 
   public getActiveModelsToIndex(): Array<StreamID> {
     /**
-     * Helper function to return array of active models that are currently being indexed by node
-     * as defined in the config file.
-     * TODO (NET-1634): extend to runtime check once adminAPI unlocks to add and load models on the fly
+     * Helper function to return array of active models that are currently being indexed.
+     * This variable is automatically populated during node startup & updated with Admin API
+     * add & delete operations.
      */
     return this.modelsToIndex
   }
