@@ -1,12 +1,10 @@
 import { IpfsApi } from '@ceramicnetwork/common'
 import { Ceramic } from '@ceramicnetwork/core'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
-import { StreamID } from '@ceramicnetwork/streamid'
 
 export async function makeCeramicCore(
   ipfs: IpfsApi,
-  stateStoreDirectory: string,
-  modelsToIndex: Array<string> = []
+  stateStoreDirectory: string
 ): Promise<Ceramic> {
   const core = await Ceramic.create(ipfs, {
     pubsubTopic: '/ceramic',
@@ -14,7 +12,7 @@ export async function makeCeramicCore(
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: modelsToIndex.map(StreamID.fromString),
+      models: [],
       allowQueriesBeforeHistoricalSync: true,
     },
   })

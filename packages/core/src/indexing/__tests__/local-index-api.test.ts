@@ -85,7 +85,13 @@ describe('with database backend', () => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger)
+
+    const indexApi = new LocalIndexApi(
+      undefined as IndexingConfig,
+      fauxRepository,
+      fauxLogger,
+      Networks.INMEMORY
+    )
     indexApi.databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -109,7 +115,8 @@ describe('without database backend', () => {
     const fauxRepository = {} as unknown as Repository
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger)
+
+    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({

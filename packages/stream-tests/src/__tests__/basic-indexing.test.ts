@@ -39,6 +39,27 @@ const MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
+// The model above will always result in this StreamID when created with the fixed did:key
+// controller used by the test.
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
+
+const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
+  name: 'MyModel',
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'string',
+      },
+    },
+    required: ['myData'],
+  },
+  relations: { myData: { type: 'document', model: MODEL_STREAM_ID } },
+}
+
 const extractStreamStates = function (page: Page<StreamState>): Array<StreamState> {
   return page.edges.map((edge) => edge.node)
 }
@@ -62,28 +83,10 @@ describe('Basic end-to-end indexing query test', () => {
   let ceramic: CeramicClient
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let modelWithRelation: Model
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     ipfs = await createIPFS()
-
-    port = await getPort()
-    const apiUrl = 'http://localhost:' + port
-
-    // Temporarily start a Ceramic node and use it to create the Model that will be used in the
-    // rest of the tests.
-    core = await createCeramic(ipfs)
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
-    await daemon.listen()
-    ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
-
-    model = await Model.create(ceramic, MODEL_DEFINITION)
-    midMetadata = { model: model.id }
-
-    await daemon.close()
-    await core.close()
   })
 
   afterAll(async () => {
@@ -91,17 +94,31 @@ describe('Basic end-to-end indexing query test', () => {
   })
 
   beforeEach(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+
     const indexingDirectory = await tmp.tmpName()
     await fs.mkdir(indexingDirectory)
     core = await createCeramic(ipfs, {
       indexing: {
         db: `sqlite://${indexingDirectory}/ceramic.sqlite`,
-        models: [model.id.toString()],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
+
+    port = await getPort()
+    const apiUrl = 'http://localhost:' + port
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
+    ceramic = new CeramicClient(apiUrl)
+    ceramic.did = core.did
+
+    model = await Model.create(ceramic, MODEL_DEFINITION)
+    expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
+    midMetadata = { model: model.id }
+    modelWithRelation = await Model.create(ceramic, MODEL_WITH_RELATION_DEFINITION)
+
+    await core.index.indexModels([model.id, modelWithRelation.id])
   }, 30 * 1000)
 
   afterEach(async () => {
