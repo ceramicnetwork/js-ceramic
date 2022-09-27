@@ -554,7 +554,7 @@ export class CeramicDaemon {
       parsedJWS.timestamp > (new Date().getTime() - fiveMin)
     ) {
       if (forModels) {
-        if (!this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
+        if (!parsedJWS.forModels || !this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
           return errorResult
         }
       } else if (parsedJWS.forModels) {
