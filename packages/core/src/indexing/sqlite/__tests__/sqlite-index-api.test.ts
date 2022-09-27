@@ -79,8 +79,12 @@ describe('init', () => {
       expect(JSON.stringify(midColumns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
-      const configTableColumns = await dbConnection.table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME)).columnInfo()
-      expect(JSON.stringify(configTableColumns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
+      const configTableColumns = await dbConnection
+        .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
+        .columnInfo()
+      expect(JSON.stringify(configTableColumns)).toEqual(
+        JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE)
+      )
     })
 
     test('create new table with relations', async () => {
@@ -249,18 +253,19 @@ describe('indexModels', () => {
     await indexApi.init()
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 1,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
   })
 
@@ -271,18 +276,19 @@ describe('indexModels', () => {
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
     await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
 
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 0
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 0,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
   })
 
@@ -292,49 +298,51 @@ describe('indexModels', () => {
     await indexApi.init()
 
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 1,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
 
-
     await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 0
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 0,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
 
     await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 1,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
   })
 
@@ -347,11 +355,15 @@ describe('indexModels', () => {
     const anotherIndexApi = new SqliteIndexApi(dbConnection, true, logger)
     await anotherIndexApi.init()
 
-    expect(anotherIndexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort())
-      .toEqual([
-        "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
-      ])
+    expect(
+      anotherIndexApi
+        .getActiveModelsToIndex()
+        .map((streamID) => streamID.toString())
+        .sort()
+    ).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+    ])
   })
 
   test('modelsToIndex is properly updated after indexModels()', async () => {
@@ -360,9 +372,14 @@ describe('indexModels', () => {
     await indexApi.init()
     expect(indexApi.getActiveModelsToIndex()).toEqual([])
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
-      "kh4q0ozorrgaq2mezktnrmdwleo1d",
-      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    expect(
+      indexApi
+        .getActiveModelsToIndex()
+        .map((streamID) => streamID.toString())
+        .sort()
+    ).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
     ])
   })
 
@@ -371,13 +388,20 @@ describe('indexModels', () => {
     const indexApi = new SqliteIndexApi(dbConnection, true, logger)
     await indexApi.init()
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
-      "kh4q0ozorrgaq2mezktnrmdwleo1d",
-      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    expect(
+      indexApi
+        .getActiveModelsToIndex()
+        .map((streamID) => streamID.toString())
+        .sort()
+    ).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
     ])
-    await indexApi.stopIndexingModels([StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")])
-    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString())).toEqual([
-      "kh4q0ozorrgaq2mezktnrmdwleo1d"
+    await indexApi.stopIndexingModels([
+      StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
+    ])
+    expect(indexApi.getActiveModelsToIndex().map((streamID) => streamID.toString())).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
     ])
   })
 })
@@ -473,6 +497,7 @@ describe('count', () => {
 
   test('all', async () => {
     const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+    await indexApi.init()
     await indexApi.indexModels(
       MODELS_TO_INDEX.map((m) => {
         return { model: m }
