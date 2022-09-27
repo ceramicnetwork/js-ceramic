@@ -13,6 +13,7 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -42,6 +43,11 @@ const MODEL_DEFINITION: ModelDefinition = {
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
 const MODEL_STREAM_ID = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
+
+// StreamID for a model that isn't indexed by the node
+const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtr'
+)
 
 const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -141,6 +147,12 @@ describe('Basic end-to-end indexing query test', () => {
     expect(results[0].id.toString()).toEqual(doc.id.toString())
     expect(results[0].content).toEqual(doc.content)
     expect(results[0].state).toEqual(doc.state)
+  })
+
+  test("query a model that isn't indexed", async () => {
+    await expect(
+      ceramic.index.query({ model: UNINDEXED_MODEL_STREAM_ID, first: 100 })
+    ).rejects.toThrow(/is not indexed on this node/)
   })
 
   test('multiple documents - one page', async () => {
