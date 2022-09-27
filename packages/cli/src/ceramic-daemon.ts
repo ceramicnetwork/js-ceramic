@@ -502,7 +502,7 @@ export class CeramicDaemon {
   async getIndexedModels(req: Request, res: Response): Promise<void> {
     const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
     res.json({
-      models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
+      models: indexedModelStreamIDs.map(String)
     })
   }
 
@@ -529,7 +529,7 @@ export class CeramicDaemon {
     if (error) {
       res.status(422).json({ error: error })
     } else {
-      await this.ceramic.admin.addModelsToIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      await this.ceramic.admin.startIndexingModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
       res.status(200).json({ result: 'success' })
     }
   }
@@ -539,7 +539,7 @@ export class CeramicDaemon {
     if (error) {
       res.status(422).json({ error: error })
     } else {
-      await this.ceramic.admin.removeModelsFromIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      await this.ceramic.admin.stopIndexingModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
       res.status(200).json({ result: 'success' })
     }
   }
@@ -549,7 +549,7 @@ export class CeramicDaemon {
     if (error) {
       res.status(422).json({ error: error })
     } else {
-      await this.ceramic.admin.replaceModelsInIndex(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      await this.ceramic.admin.replaceIndexedModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
       res.status(200).json({ result: 'success' })
     }
   }

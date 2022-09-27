@@ -17,7 +17,7 @@ export class RemoteAdminApi implements AdminApi {
     return new URL(this.baseURL, this._apiUrl)
   }
 
-  async addModelsToIndex(modelsIDs: Array<StreamID>): Promise<void> {
+  async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getUrl(), {
       method: 'post',
       body: { models: modelsIDs.map(modelID => modelID.toString()) },
@@ -25,21 +25,21 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
-    
+
     const response= await this._fetchJson(this.getUrl())
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
     })
   }
 
-  async removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getUrl(), {
       method: 'delete',
       body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
   }
 
-  async replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void> {
+  async replaceIndexedModels(modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getUrl(), {
       method: 'put',
       body: { models: modelsIDs.map(modelID => modelID.toString()) },

@@ -68,21 +68,21 @@ export interface AdminApi {
    *
    * @param modelsIDs - array of model stream IDs to add to index
    */
-  addModelsToIndex(modelsIDs: Array<StreamID>): Promise<void>
+  startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
 
   /**
    * Removes model streams from index
    *
    * @param modelsIDs - array of model stream IDs to remove from index
    */
-  removeModelsFromIndex(modelsIDs: Array<StreamID>): Promise<void>
+  stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
 
   /**
    * Replaces model streams in index with given model streams
    *
    * @param modelsIDs - array of model stream IDs to put in the index instead of the previous ones
    */
-  replaceModelsInIndex(modelsIDs: Array<StreamID>): Promise<void>
+  replaceIndexedModels(modelsIDs: Array<StreamID>): Promise<void>
 }
 
 /**
