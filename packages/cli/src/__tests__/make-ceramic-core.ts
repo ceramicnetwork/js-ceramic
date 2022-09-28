@@ -9,7 +9,7 @@ export async function makeCeramicCore(
   modelsToIndex: Array<string> = []
 ): Promise<Ceramic> {
   const core = await Ceramic.create(ipfs, {
-    adminDids: ['did:key:z6MktCFRcwLRFQA9WbeDRM7W7kbBdZTHQ2xnPgyxZLq1gCpK'],
+    adminDids: ['did:key:z6MkgwMzPmLuvUiWsQfyQeGpNRRNkLyCB5cL96fPshy1DKJd'],
     pubsubTopic: '/ceramic',
     stateStoreDirectory,
     anchorOnRequest: false,
