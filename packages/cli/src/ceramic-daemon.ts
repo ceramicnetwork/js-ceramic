@@ -548,7 +548,6 @@ export class CeramicDaemon {
     try {
       parsedJWS = await this._parseDidJWSAuthHeader(authHeader)
     } catch (e) {
-      console.error(e)
       return { error: `Error while processing the authorization header ${e.message}` }
     }
     const now = new Date().getTime()
