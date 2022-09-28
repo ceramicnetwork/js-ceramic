@@ -644,11 +644,11 @@ describe('Ceramic interop: core <> http-client', () => {
     let adminDid: DID
     let nonAdminDid: DID
 
-    async function buildAuthorizationHeader(did: DID, models?: Array<string>): Promise<string> {
+    async function buildAuthorizationHeader(did: DID, outdated = false, models?: Array<string>): Promise<string> {
       const body = models ? { models: models } : undefined
-
+      const fiveMinsOneSec = 1000 * 60 * 5 + 1
       const jws = await did.createJWS({
-        timestamp: Date.now(),
+        timestamp: (new Date()).getTime() - (outdated ? fiveMinsOneSec : 0),
         requestPath: '/api/v0/admin/models',
         requestBody: body
       })
@@ -684,7 +684,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
       const postResult = await fetchJson(adminURLString, {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, [exampleModelStreamId])
+          authorization: await buildAuthorizationHeader(adminDid, false, [exampleModelStreamId])
         },
         method:'POST',
         body: {  models: [exampleModelStreamId] }
@@ -702,7 +702,7 @@ describe('Ceramic interop: core <> http-client', () => {
       const differentExampleStreamId = "kjzl6hvfrbw6ca7nidsnrv78x7r4xt0xki71nvwe4j5a3s9wgou8yu3aj8cz38e"
       const putResult = await fetchJson(adminURLString, {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, [differentExampleStreamId])
+          authorization: await buildAuthorizationHeader(adminDid, false, [differentExampleStreamId])
         },
         method:'PUT',
         body: {  models: [differentExampleStreamId] }
@@ -719,7 +719,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
       const deleteResult = await fetchJson(adminURLString, {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, [differentExampleStreamId])
+          authorization: await buildAuthorizationHeader(adminDid, false, [differentExampleStreamId])
         },
         method:'DELETE',
         body: {  models: [differentExampleStreamId] }
@@ -753,7 +753,7 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             headers: {
-              authorization: await buildAuthorizationHeader(nonAdminDid, [exampleModelStreamId])
+              authorization: await buildAuthorizationHeader(nonAdminDid, false, [exampleModelStreamId])
             },
             method: 'POST',
             body: {  models: [exampleModelStreamId] }
@@ -767,7 +767,7 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             headers: {
-              authorization: await buildAuthorizationHeader(nonAdminDid, [exampleModelStreamId])
+              authorization: await buildAuthorizationHeader(nonAdminDid, false, [exampleModelStreamId])
             },
             method: 'PUT',
             body: {  models: [exampleModelStreamId] }
@@ -781,7 +781,7 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             headers: {
-              authorization: await buildAuthorizationHeader(nonAdminDid, [exampleModelStreamId])
+              authorization: await buildAuthorizationHeader(nonAdminDid, false, [exampleModelStreamId])
             },
             method: 'DELETE',
             body: {  models: [exampleModelStreamId] }
@@ -794,7 +794,7 @@ describe('Ceramic interop: core <> http-client', () => {
       it('No authorization for GET', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`)
         ).rejects.toThrow(
-          /Missing or invalid authorization signature/
+          /Missing authorization header/
         )
       })
 
@@ -805,7 +805,7 @@ describe('Ceramic interop: core <> http-client', () => {
               body: {  models: [exampleModelStreamId] }
             }),
         ).rejects.toThrow(
-          /Missing or invalid authorization signature/
+          /Missing authorization header/
         )
       })
 
@@ -816,7 +816,7 @@ describe('Ceramic interop: core <> http-client', () => {
             body: {  models: [exampleModelStreamId] }
           }),
         ).rejects.toThrow(
-          /Missing or invalid authorization signature/
+          /Missing authorization header/
         )
       })
 
@@ -827,9 +827,64 @@ describe('Ceramic interop: core <> http-client', () => {
             body: {  models: [exampleModelStreamId] }
           }),
         ).rejects.toThrow(
-          /Missing or invalid authorization signature/
+          /Missing authorization header/
         )
       })
+
+      it('Outdated authorization header for GET', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            headers: {
+              authorization: await buildAuthorizationHeader(nonAdminDid, true)
+            }
+          }),
+        ).rejects.toThrow(
+          /The authorization header contains a timestamp that is too old/
+        )
+      })
+
+      it('Outdated authorization header for POST', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            headers: {
+              authorization: await buildAuthorizationHeader(nonAdminDid, true, [exampleModelStreamId])
+            },
+            method: 'POST',
+            body: {  models: [exampleModelStreamId] }
+          }),
+        ).rejects.toThrow(
+          /The authorization header contains a timestamp that is too old/
+        )
+      })
+
+      it('Outdated authorization header for PUT', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            headers: {
+              authorization: await buildAuthorizationHeader(nonAdminDid, true, [exampleModelStreamId])
+            },
+            method: 'PUT',
+            body: {  models: [exampleModelStreamId] }
+          }),
+        ).rejects.toThrow(
+          /The authorization header contains a timestamp that is too old/
+        )
+      })
+
+      it('Outdated authorization header for DELETE', async () => {
+        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
+          {
+            headers: {
+              authorization: await buildAuthorizationHeader(nonAdminDid, true, [exampleModelStreamId])
+            },
+            method: 'DELETE',
+            body: {  models: [exampleModelStreamId] }
+          }),
+        ).rejects.toThrow(
+          /The authorization header contains a timestamp that is too old/
+        )
+      })
+
 
       it('No models for POST', async () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
@@ -848,7 +903,7 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             headers: {
-              authorization: await buildAuthorizationHeader(adminDid, [])
+              authorization: await buildAuthorizationHeader(adminDid, false,[])
             },
             method:'POST',
             body: { models: [] }
@@ -875,7 +930,7 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             headers: {
-              authorization: await buildAuthorizationHeader(adminDid, [])
+              authorization: await buildAuthorizationHeader(adminDid, false,[])
             },
             method:'DELETE',
             body: { models: [] }
@@ -902,7 +957,7 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             headers: {
-              authorization: await buildAuthorizationHeader(adminDid, [])
+              authorization: await buildAuthorizationHeader(adminDid, false,[])
             },
             method:'PUT',
             body: { models: [] }

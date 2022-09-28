@@ -542,13 +542,14 @@ export class CeramicDaemon {
     authHeader: string | undefined,
     forModels?: Array<string>
   ): Promise<{ kid?: string, error?: string }> {
-    const errorResult = { status: 'error', error: 'Missing or invalid authorization signature' }
+    if (!authHeader) return { error: `Missing authorization header` }
+
     let parsedJWS
     try {
       parsedJWS = await this._parseDidJWSAuthHeader(authHeader)
     } catch (e) {
       console.error(e)
-      return errorResult
+      return { error: `Error while processing the authorization header ${e.message}` }
     }
     const fiveMin = 1000 * 60 * 5 // 5 min
 
@@ -557,15 +558,19 @@ export class CeramicDaemon {
       parsedJWS.timestamp > (new Date().getTime() - fiveMin)
     ) {
       if (forModels) {
-        if (!parsedJWS.forModels || !this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
-          return errorResult
+        if (!parsedJWS.forModels) {
+          return { error: `The authorization header is missing models matching the request parameters`}
+        } else if (!this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
+          return { error: `The authorization header contains a different list of models than the request parameter`}
         }
       } else if (parsedJWS.forModels) {
-        return errorResult
+        return { error: 'The authorization header contains unnecessary models' }
       }
       return { kid: parsedJWS.kid }
+    } else if (parsedJWS.timestamp <= (new Date().getTime() - fiveMin)) {
+      return { error: 'The authorization header contains a timestamp that is too old' }
     } else {
-      return errorResult
+      return { error: `The authorization header contains a request path that doesn't match the request`}
     }
   }
 
