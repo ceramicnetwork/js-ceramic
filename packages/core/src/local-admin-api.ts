@@ -14,7 +14,6 @@ export class LocalAdminApi implements AdminApi {
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     this.logger.log(LogStyle.info, `Adding models to index: ${modelsIDs}`)
     await this.indexApi.indexModels(modelsIDs)
-    this.logger.log(LogStyle.info, `Local Admin Api did add model ids to index ${modelsIDs}`)
   }
 
   getIndexedModels(): Promise<Array<StreamID>> {
