@@ -303,9 +303,10 @@ export class CeramicDaemon {
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
-    adminModelRouter.postAsync('/', this.addModelsToIndex.bind(this))
-    adminModelRouter.deleteAsync('/', this.removeModelsFromIndex.bind(this))
-    adminModelRouter.putAsync('/', this.replaceModelsInIndex.bind(this))
+    adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
+    adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+    adminModelRouter.putAsync('/', this.replaceIndexedModels
+      .bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -524,7 +525,7 @@ export class CeramicDaemon {
     }
   }
 
-  async addModelsToIndex(req: Request, res: Response): Promise<void> {
+  async startIndexingModels(req: Request, res: Response): Promise<void> {
     const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
     if (error) {
       res.status(422).json({ error: error })
@@ -534,7 +535,7 @@ export class CeramicDaemon {
     }
   }
 
-  async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
+  async stopIndexingModels(req: Request, res: Response): Promise<void> {
     const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
     if (error) {
       res.status(422).json({ error: error })
@@ -544,7 +545,7 @@ export class CeramicDaemon {
     }
   }
 
-  async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
+  async replaceIndexedModels(req: Request, res: Response): Promise<void> {
     const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
     if (error) {
       res.status(422).json({ error: error })
