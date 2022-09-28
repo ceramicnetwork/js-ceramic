@@ -9,7 +9,6 @@ import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
-  LogStyle,
   MultiQuery,
   StreamUtils,
   SyncOptions
@@ -41,6 +40,7 @@ const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
 const CALLER_NAME = 'js-ceramic'
+const ADMIN_API_AUTHORIZATION_TIMEOUT = 1000 * 60 * 5 // 5 min
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -551,11 +551,10 @@ export class CeramicDaemon {
       console.error(e)
       return { error: `Error while processing the authorization header ${e.message}` }
     }
-    const fiveMin = 1000 * 60 * 5 // 5 min
-
+    const now = new Date().getTime()
     if (
       parsedJWS.requestPath === basePath &&
-      parsedJWS.timestamp > (new Date().getTime() - fiveMin)
+      parsedJWS.timestamp > (now - ADMIN_API_AUTHORIZATION_TIMEOUT)
     ) {
       if (forModels) {
         if (!parsedJWS.forModels) {
@@ -567,7 +566,7 @@ export class CeramicDaemon {
         return { error: 'The authorization header contains unnecessary models' }
       }
       return { kid: parsedJWS.kid }
-    } else if (parsedJWS.timestamp <= (new Date().getTime() - fiveMin)) {
+    } else if (parsedJWS.timestamp <= (now - ADMIN_API_AUTHORIZATION_TIMEOUT)) {
       return { error: 'The authorization header contains a timestamp that is too old' }
     } else {
       return { error: `The authorization header contains a request path that doesn't match the request`}
