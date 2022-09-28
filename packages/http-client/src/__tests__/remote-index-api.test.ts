@@ -29,7 +29,7 @@ test('model in query', async () => {
   ;(indexApi as any)._fetchJson = fauxFetch
   const result = await indexApi.query({ model: MODEL, first: 5 })
   expect(result).toEqual(EMPTY_RESPONSE)
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/collection/?model=${MODEL}&first=5`))
+  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/collection?model=${MODEL}&first=5`))
 })
 
 test('model, account in query', async () => {
@@ -40,7 +40,7 @@ test('model, account in query', async () => {
   expect(result).toEqual(EMPTY_RESPONSE)
   expect(fauxFetch).toBeCalledWith(
     new URL(
-      `https://example.com/collection/?model=${MODEL}&account=${encodeURIComponent(
+      `https://example.com/collection?model=${MODEL}&account=${encodeURIComponent(
         'did:key:foo'
       )}&first=5`
     )
