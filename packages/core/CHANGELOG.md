@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.11.0-rc.0](/compare/@ceramicnetwork/core@2.10.0...@ceramicnetwork/core@2.11.0-rc.0) (2022-09-28)
+
+
+### Bug Fixes
+
+* **core:** Don't fail to start up if indexing section is missing from config file (#2454) fb4936e, closes #2454
+
+
+### Features
+
+* `count` endpoint (#2463) 6556596, closes #2463
+* Ceramic asks CAS to anchor indefinitely until some ok response (#2441) 18150a9, closes #2441
+* **core:** Add functionality for building tables with columns for relations (#2435) 1da2e65, closes #2435
+* **core:** Extract relation fields from MIDs and add to database, plus add filter capability to queries (#2455) fbe04b5, closes #2455
+* **core:** implement `ceramic_models` indexing config table (#2449) 33e3c09, closes #2449
+* **core:** Load Model relations when indexing a new Model (#2447) 3c87ea7, closes #2447
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
 # [2.10.0](/compare/@ceramicnetwork/core@2.10.0-rc.3...@ceramicnetwork/core@2.10.0) (2022-09-21)
 
 **Note:** Version bump only for package @ceramicnetwork/core

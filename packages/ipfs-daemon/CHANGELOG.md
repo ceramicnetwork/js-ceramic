@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.6-rc.0](/compare/@ceramicnetwork/ipfs-daemon@2.1.5...@ceramicnetwork/ipfs-daemon@2.1.6-rc.0) (2022-09-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
 ## [2.1.5](/compare/@ceramicnetwork/ipfs-daemon@2.1.5-rc.3...@ceramicnetwork/ipfs-daemon@2.1.5) (2022-09-21)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
