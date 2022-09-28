@@ -67,6 +67,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   }
 
   const ceramicConfig: CeramicConfig = {
+    adminDids: opts.node.adminDids,
     loggerProvider,
     gateway: opts.node.gateway || false,
     anchorServiceUrl: opts.anchor.anchorServiceUrl,
