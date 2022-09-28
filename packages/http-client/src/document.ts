@@ -109,8 +109,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     apiUrl: URL | string,
     opts: LoadOpts
   ): Promise<StreamState> {
-    const url = new URL(`./streams/${streamId}`, apiUrl)
-    serializeObjectToSearchParams(url, opts)
+    const url = serializeObjectToSearchParams(new URL(`./streams/${streamId}`, apiUrl), opts)
     const { state } = await fetchJson(url)
     return state
   }

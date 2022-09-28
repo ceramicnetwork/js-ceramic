@@ -44,7 +44,7 @@ describe('with database backend', () => {
       fauxLogger,
       Networks.INMEMORY
     )
-    indexApi.databaseIndexApi = fauxBackend
+    ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
@@ -92,7 +92,7 @@ describe('with database backend', () => {
       fauxLogger,
       Networks.INMEMORY
     )
-    indexApi.databaseIndexApi = fauxBackend
+    ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
@@ -115,7 +115,6 @@ describe('without database backend', () => {
     const fauxRepository = {} as unknown as Repository
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-
     const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
 
     const response = await indexApi.query({ model: 'foo', first: 5 })
@@ -130,4 +129,19 @@ describe('without database backend', () => {
     // Log a warning
     expect(warnFn).toBeCalledTimes(1)
   })
+})
+
+test('count', async () => {
+  const fauxRepository = {} as unknown as Repository
+  const warnFn = jest.fn()
+  const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
+  const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+  const expected = Math.random()
+  const countFn = jest.fn(() => expected)
+  const fauxBackend = { count: countFn } as unknown as DatabaseIndexApi
+  ;(indexApi as any).databaseIndexApi = fauxBackend
+  const query = { model: 'modelId' }
+  const actual = await indexApi.count(query)
+  expect(actual).toEqual(expected)
+  expect(countFn).toBeCalledWith(query)
 })

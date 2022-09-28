@@ -57,6 +57,11 @@ export interface DatabaseIndexApi {
   getActiveModelsToIndex(): Array<StreamID>
 
   /**
+   * Return number of suitable indexed records.
+   */
+  count(query: BaseQuery): Promise<number>
+
+  /**
    * Query the index.
    */
   page(query: BaseQuery & Pagination): Promise<Page<StreamID>>

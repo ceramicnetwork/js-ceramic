@@ -62,7 +62,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     const indexedData = {
       stream_id: indexingArgs.streamID.toString(),
       controller_did: indexingArgs.controller.toString(),
-      stream_content: indexingArgs.streamContent.toString(),
+      stream_content: JSON.stringify(indexingArgs.streamContent),
       tip: indexingArgs.tip.toString(),
       last_anchored_at: asTimestamp(indexingArgs.lastAnchor),
       first_anchored_at: asTimestamp(indexingArgs.firstAnchor),
@@ -171,5 +171,21 @@ export class SqliteIndexApi implements DatabaseIndexApi {
 
   async close(): Promise<void> {
     await this.dbConnection.destroy()
+  }
+
+  async count(query: BaseQuery): Promise<number> {
+    const tableName = asTableName(query.model)
+    let dbQuery = this.dbConnection(tableName).count('*')
+    if (query.account) {
+      dbQuery = dbQuery.where({ controller_did: query.account })
+    }
+    if (query.filter) {
+      for (const [key, value] of Object.entries(query.filter)) {
+        const filterObj = {}
+        filterObj[key] = value
+        dbQuery = dbQuery.andWhere(filterObj)
+      }
+    }
+    return dbQuery.then((response) => Number(response[0]['count(*)']))
   }
 }

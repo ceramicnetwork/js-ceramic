@@ -71,6 +71,18 @@ afterEach(async () => {
   await tmpFolder.cleanup()
 })
 
+test('count', async () => {
+  const indexSpy = jest.spyOn(daemon.ceramic.index, 'count')
+  const returnCount = Math.random()
+  indexSpy.mockReturnValueOnce(Promise.resolve(returnCount))
+  const query = {
+    model: modelStreamId,
+  }
+  const result = await client.index.count(query)
+  expect(result).toEqual(returnCount)
+  expect(indexSpy).toBeCalled()
+})
+
 test('model in query', async () => {
   const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
   await client.index.query({

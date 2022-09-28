@@ -6,14 +6,12 @@ export function typeStreamID(streamId: StreamID | string): StreamID {
 
 /**
  * Takes an object and query URL and serialized the query object into the searchParams of the
- * queryUrl so it can be sent as part of a GET query
- * @param queryURL
- * @param queryObject
+ * queryUrl, so it can be sent as part of a GET query
  */
 export function serializeObjectToSearchParams(
   queryURL: URL,
   queryObject: Record<string, any>
-): void {
+): URL {
   for (const [key, value] of Object.entries(queryObject)) {
     if (StreamID.isInstance(value)) {
       queryURL.searchParams.set(key, value.toString())
@@ -23,4 +21,5 @@ export function serializeObjectToSearchParams(
       queryURL.searchParams.set(key, value)
     }
   }
+  return queryURL
 }

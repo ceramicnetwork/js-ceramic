@@ -15,11 +15,12 @@ import {
   RELATION_COLUMN_STRUCTURE,
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verfication.js'
+import { readCsvFixture } from './read-csv-fixture.util.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const CONTROLLER = 'did:key:foo'
-const STREAM_TEST_DATA_PROFILE = JSON.stringify({
+const STREAM_TEST_DATA_PROFILE = {
   id: 'bea4d783-6496-4a28-bf02-6603e56edf0a',
   name: 'Joeline Bradshaw',
   address: 'Attitudes Road 5270, Adena, Dominica, 509754',
@@ -28,7 +29,7 @@ const STREAM_TEST_DATA_PROFILE = JSON.stringify({
   settings: {
     dark_mode: true,
   },
-})
+}
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -78,8 +79,12 @@ describe('init', () => {
       expect(JSON.stringify(midColumns)).toEqual(JSON.stringify(COMMON_TABLE_STRUCTURE))
 
       // Also manually check config table structure
-      const configTableColumns = await dbConnection.table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME)).columnInfo()
-      expect(JSON.stringify(configTableColumns)).toEqual(JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE))
+      const configTableColumns = await dbConnection
+        .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
+        .columnInfo()
+      expect(JSON.stringify(configTableColumns)).toEqual(
+        JSON.stringify(CONFIG_TABLE_MODEL_INDEX_STRUCTURE)
+      )
     })
 
     test('create new table with relations', async () => {
@@ -226,7 +231,7 @@ describe('close', () => {
     const fauxDbConnection = {
       destroy: jest.fn(),
     } as unknown as Knex
-    const indexApi = new SqliteIndexApi(fauxDbConnection, [], true, logger)
+    const indexApi = new SqliteIndexApi(fauxDbConnection, true, logger)
     await indexApi.close()
     expect(fauxDbConnection.destroy).toBeCalled()
   })
@@ -248,18 +253,19 @@ describe('indexModels', () => {
     await indexApi.init()
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 1,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
   })
 
@@ -270,18 +276,19 @@ describe('indexModels', () => {
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
     await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
 
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 0
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 0,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
   })
 
@@ -291,49 +298,51 @@ describe('indexModels', () => {
     await indexApi.init()
 
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 1,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
 
-
     await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 0
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 0,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
 
     await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
-    expect(await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .select('model', 'is_indexed')
-      .orderBy('model', 'desc')
+    expect(
+      await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .select('model', 'is_indexed')
+        .orderBy('model', 'desc')
     ).toEqual([
       {
-        "model": "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd",
-        "is_indexed": 1
+        model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+        is_indexed: 1,
       },
       {
-        "model": "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "is_indexed": 1
-      }
+        model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+        is_indexed: 1,
+      },
     ])
   })
 
@@ -346,11 +355,15 @@ describe('indexModels', () => {
     const anotherIndexApi = new SqliteIndexApi(dbConnection, true, logger)
     await anotherIndexApi.init()
 
-    expect(anotherIndexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort())
-      .toEqual([
-        "kh4q0ozorrgaq2mezktnrmdwleo1d",
-        "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
-      ])
+    expect(
+      anotherIndexApi
+        .getActiveModelsToIndex()
+        .map((streamID) => streamID.toString())
+        .sort()
+    ).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+    ])
   })
 
   test('modelsToIndex is properly updated after indexModels()', async () => {
@@ -359,9 +372,14 @@ describe('indexModels', () => {
     await indexApi.init()
     expect(indexApi.getActiveModelsToIndex()).toEqual([])
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
-      "kh4q0ozorrgaq2mezktnrmdwleo1d",
-      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    expect(
+      indexApi
+        .getActiveModelsToIndex()
+        .map((streamID) => streamID.toString())
+        .sort()
+    ).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
     ])
   })
 
@@ -370,13 +388,20 @@ describe('indexModels', () => {
     const indexApi = new SqliteIndexApi(dbConnection, true, logger)
     await indexApi.init()
     await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString()).sort()).toEqual([
-      "kh4q0ozorrgaq2mezktnrmdwleo1d",
-      "kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd"
+    expect(
+      indexApi
+        .getActiveModelsToIndex()
+        .map((streamID) => streamID.toString())
+        .sort()
+    ).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
     ])
-    await indexApi.stopIndexingModels([StreamID.fromString("kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd")])
-    expect(indexApi.getActiveModelsToIndex().map(streamID => streamID.toString())).toEqual([
-      "kh4q0ozorrgaq2mezktnrmdwleo1d"
+    await indexApi.stopIndexingModels([
+      StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
+    ])
+    expect(indexApi.getActiveModelsToIndex().map((streamID) => streamID.toString())).toEqual([
+      'kh4q0ozorrgaq2mezktnrmdwleo1d',
     ])
   })
 })
@@ -408,7 +433,7 @@ describe('indexStream', () => {
     const raw = result[0]
     expect(raw.stream_id).toEqual(STREAM_ID_B)
     expect(raw.controller_did).toEqual(CONTROLLER)
-    expect(raw.stream_content).toEqual(STREAM_TEST_DATA_PROFILE)
+    expect(raw.stream_content).toEqual(JSON.stringify(STREAM_TEST_DATA_PROFILE))
     expect(raw.last_anchored_at).toBeNull()
     expect(raw.first_anchored_at).toBeNull()
     const createdAt = new Date(raw.created_at)
@@ -462,5 +487,31 @@ describe('page', () => {
     await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
       IndexQueryNotAvailableError
     )
+  })
+})
+
+describe('count', () => {
+  const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+  const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
+  const MODEL = MODELS_TO_INDEX[0]
+
+  test('all', async () => {
+    const indexApi = new SqliteIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(
+      MODELS_TO_INDEX.map((m) => {
+        return { model: m }
+      })
+    )
+    const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
+    for (const row of rows) {
+      await indexApi.indexStream(row)
+    }
+    // all
+    await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+    // by account
+    const account = 'did:key:blah'
+    const expected = rows.filter((r) => r.controller === account).length
+    await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
   })
 })
