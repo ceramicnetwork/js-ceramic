@@ -178,7 +178,7 @@ describe('init', () => {
       const modelToIndex = StreamID.fromString(STREAM_ID_A)
       const tableName = asTableName(modelToIndex)
       const indexApi = new PostgresIndexApi(dbConnection, true, logger)
-      indexApi.init()
+      await indexApi.init()
 
       // Create the table in the database with all expected fields but one (leaving off 'updated_at')
       await dbConnection.schema.createTable(tableName, (table) => {
