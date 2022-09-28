@@ -22,7 +22,7 @@ export class LocalAdminApi implements AdminApi {
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    this.logger.log(LogStyle.info, `Local Admin Api will remove model ids to index ${modelsIDs}`)
+    this.logger.log(LogStyle.info, `Removing models from index: ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)
     this.logger.log(LogStyle.info, `Local Admin Api did remove model ids to index ${modelsIDs}`)
   }
