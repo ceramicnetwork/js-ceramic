@@ -573,6 +573,7 @@ describe('page', () => {
 
   test('call the order if historical sync is allowed', async () => {
     const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger)
+    indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
     const mockPage = jest.fn(async () => {
       return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
     })
@@ -582,6 +583,7 @@ describe('page', () => {
   })
   test('throw if historical sync is not allowed', async () => {
     const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger)
+    indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
     await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
       IndexQueryNotAvailableError
     )

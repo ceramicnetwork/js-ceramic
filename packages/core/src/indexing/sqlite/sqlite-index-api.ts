@@ -139,6 +139,12 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     if (!this.allowQueriesBeforeHistoricalSync) {
       throw new IndexQueryNotAvailableError(query.model)
     }
+    const model = query.model.toString()
+    if (this.modelsToIndex.find((indexedModel) => indexedModel.toString() == model) == undefined) {
+      const err = new Error(`Query failed: Model ${model} is not indexed on this node`)
+      this.logger.warn(err)
+      throw err
+    }
     return this.insertionOrder.page(query)
   }
 
