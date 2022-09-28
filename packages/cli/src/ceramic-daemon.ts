@@ -187,6 +187,26 @@ function validatePort(inPort) {
 }
 
 /**
+ * Contents an authorization header signed by an admin DID
+ */
+type AdminAPIAuthHeaderContents = {
+  kid: string
+  requestPath: string
+  timestamp: number
+  forModels: Array<string>
+}
+
+type AdminApiModelsParamValidationResult = {
+  modelIDStrings?: Array<string>
+  error?: string
+}
+
+type AdminApiAuthHeaderValidationResult = {
+  kid?: string
+  error?: string
+}
+
+/**
  * Ceramic daemon implementation
  */
 export class CeramicDaemon {
@@ -504,10 +524,7 @@ export class CeramicDaemon {
 
   private  _validateModelIDStrings(
     modelIDStrings: any
-  ): {
-    modelIDStrings?: Array<string>,
-    error?: string
-  } {
+  ): AdminApiModelsParamValidationResult {
     const cast = modelIDStrings as Array<string>
     let error = undefined
     if (!cast || cast.length === 0) {
@@ -522,7 +539,7 @@ export class CeramicDaemon {
 
   private async _parseDidJWSAuthHeader(
     authHeader: string | undefined
-  ): Promise<{ kid: string, requestPath: string, timestamp: number, forModels: Array<string> }> {
+  ): Promise<AdminAPIAuthHeaderContents> {
     const jwsString = authHeader.split("Authorization: Basic ")[1]
     const result = await this.ceramic.did.verifyJWS(jwsString)
     return {
@@ -541,7 +558,7 @@ export class CeramicDaemon {
     basePath: string,
     authHeader: string | undefined,
     forModels?: Array<string>
-  ): Promise<{ kid?: string, error?: string }> {
+  ): Promise<AdminApiAuthHeaderValidationResult> {
     if (!authHeader) return { error: `Missing authorization header` }
 
     let parsedJWS
