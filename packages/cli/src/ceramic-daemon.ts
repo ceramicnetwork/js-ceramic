@@ -303,9 +303,10 @@ export class CeramicDaemon {
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
-    adminModelRouter.postAsync('/', this.addModelsToIndex.bind(this))
-    adminModelRouter.deleteAsync('/', this.removeModelsFromIndex.bind(this))
-    adminModelRouter.putAsync('/', this.replaceModelsInIndex.bind(this))
+    adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
+    adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+    adminModelRouter.putAsync('/', this.replaceIndexedModels
+      .bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -610,15 +611,15 @@ export class CeramicDaemon {
     }
   }
 
-  async addModelsToIndex(req: Request, res: Response): Promise<void> {
+  async startIndexingModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin))
   }
 
-  async removeModelsFromIndex(req: Request, res: Response): Promise<void> {
+  async stopIndexingModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin))
   }
 
-  async replaceModelsInIndex(req: Request, res: Response): Promise<void> {
+  async replaceIndexedModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.replaceIndexedModels.bind(this.ceramic.admin))
   }
 

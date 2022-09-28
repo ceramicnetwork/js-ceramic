@@ -21,9 +21,8 @@ export class LocalAdminApi implements AdminApi {
 
   async startIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
-    this.logger.log(LogStyle.info, `Local Admin Api will add model ids to index ${modelsIDs}`)
+    this.logger.log(LogStyle.info, `Adding models to index: ${modelsIDs}`)
     await this.indexApi.indexModels(modelsIDs)
-    this.logger.log(LogStyle.info, `Local Admin Api did add model ids to index ${modelsIDs}`)
   }
 
   getIndexedModels(actingDid: string): Promise<Array<StreamID>> {
@@ -33,17 +32,19 @@ export class LocalAdminApi implements AdminApi {
 
   async stopIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
-    this.logger.log(LogStyle.info, `Local Admin Api will remove model ids to index ${modelsIDs}`)
+    this.logger.log(LogStyle.info, `Removing models from index: ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)
-    this.logger.log(LogStyle.info, `Local Admin Api did remove model ids to index ${modelsIDs}`)
   }
 
   async replaceIndexedModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
-    this.logger.log(LogStyle.info, `Local Admin Api will replace model ids to index ${modelsIDs}`)
+    this.logger.log(LogStyle.info, `Replacing models to index. Currently indexed models: ${this.indexApi.indexedModels()}.  Models to index going forward: ${modelsIDs}`)
     // TODO: Is this done in a single transaction? If not, it should be.
-    await this.indexApi.stopIndexingModels(this.indexApi.indexedModels())
-    await this.indexApi.indexModels(modelsIDs)
+    const indexedModels = await this.getIndexedModels(actingDid)
+    const modelsToStartIndexing = modelsIDs.filter( modelID => indexedModels.every( indexedModelID => !modelID.equals(indexedModelID) ) )
+    const modelsToStopIndexing = indexedModels.filter( indexedModelID => modelsIDs.every( modelID => !indexedModelID.equals(modelID) ) )
+    await this.startIndexingModels(actingDid, modelsToStartIndexing)
+    await  this.stopIndexingModels(actingDid, modelsToStopIndexing)
     this.logger.log(LogStyle.info, `Local Admin Api did replace model ids to index ${modelsIDs}`)
   }
 }
