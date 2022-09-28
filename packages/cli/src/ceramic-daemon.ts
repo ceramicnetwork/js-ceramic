@@ -33,6 +33,7 @@ import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery } from './daemon/collection-query.js'
+import { StatusCodes } from 'http-status-codes';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
@@ -336,7 +337,7 @@ export class CeramicDaemon {
   async healthcheck(req: Request, res: Response): Promise<void> {
     const { checkIpfs } = parseQueryObject(req.query)
     if (checkIpfs === false) {
-      res.status(200).send('Alive!')
+      res.status(StatusCodes.OK).send('Alive!')
       return
     }
 
@@ -344,14 +345,14 @@ export class CeramicDaemon {
     for (let i = 0; i < HEALTHCHECK_RETRIES; i++) {
       try {
         if (await this.ceramic.ipfs.isOnline()) {
-          res.status(200).send('Alive!')
+          res.status(StatusCodes.OK).send('Alive!')
           return
         }
       } catch (e) {
         this.diagnosticsLogger.err(`Error checking IPFS status: ${e}`)
       }
     }
-    res.status(503).send('IPFS unreachable')
+    res.status(StatusCodes.SERVICE_UNAVAILABLE).send('IPFS unreachable')
   }
 
   /**
@@ -575,7 +576,7 @@ export class CeramicDaemon {
   ): Promise<void> {
     const modelsValidation = this._validateModelIDStrings(req.body.models)
     if (modelsValidation.error) {
-      res.status(422).json({ error: modelsValidation.error })
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: modelsValidation.error })
     } else {
       const authHeaderValidation = await this._validateDIDJWSAuthHeader(
         req.baseUrl,
@@ -583,14 +584,14 @@ export class CeramicDaemon {
         modelsValidation.modelIDStrings
       )
       if (authHeaderValidation.error) {
-        res.status(422).json({ error: authHeaderValidation.error })
+        res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: authHeaderValidation.error })
       } else {
         try {
           const modelIDs = modelsValidation.modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
           await successCallback(authHeaderValidation.kid, modelIDs)
-          res.status(200).json({ result: 'success' })
+          res.status(StatusCodes.OK).json({ result: 'success' })
         } catch (e) {
-          res.status(401).json({ error: e.message })
+          res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
         }
       }
     }
@@ -599,7 +600,7 @@ export class CeramicDaemon {
   async getIndexedModels(req: Request, res: Response): Promise<void> {
     const authHeaderValidation = await this._validateDIDJWSAuthHeader(req.baseUrl, req.headers.authorization)
     if (authHeaderValidation.error) {
-      res.status(401).json({ error: authHeaderValidation.error })
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: authHeaderValidation.error })
     } else {
       try {
         const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid)
@@ -607,7 +608,7 @@ export class CeramicDaemon {
           models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
         })
       } catch (e) {
-        res.status(401).json({ error: e.message })
+        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
       }
     }
   }
@@ -736,7 +737,7 @@ export class CeramicDaemon {
   }
 
   async _notSupported(req: Request, res: Response): Promise<void> {
-    res.status(400).json({ error: 'Method not supported by read only Ceramic Gateway' })
+    res.status(StatusCodes.BAD_REQUEST).json({ error: 'Method not supported by read only Ceramic Gateway' })
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {
