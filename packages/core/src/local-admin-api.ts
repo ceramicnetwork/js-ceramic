@@ -15,7 +15,7 @@ export class LocalAdminApi implements AdminApi {
   private verifyActingDid(actingDid: string) {
     if (!this.adminDids || !this.adminDids.some( adminDid => actingDid.startsWith(adminDid) )) {
       this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api from did: ${actingDid}`)
-      throw Error('Unauthorized access')
+      throw Error(`Unauthorized access: DID '${actingDid}' does not have admin access permission to this node`)
     }
   }
 
