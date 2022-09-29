@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
 import type { Repository } from '../../state-management/repository.js'
-import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
+import type { Context, DiagnosticsLogger, Page } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
 import { LocalIndexApi } from '../local-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { IndexingConfig } from '../build-indexing.js'
+import { HandlersMap } from '../../handlers-map.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
@@ -43,7 +44,7 @@ describe('with database backend', () => {
       fauxLogger,
       Networks.INMEMORY
     )
-    indexApi.databaseIndexApi = fauxBackend
+    ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
@@ -85,8 +86,13 @@ describe('with database backend', () => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined as IndexingConfig, fauxRepository, fauxLogger)
-    indexApi.databaseIndexApi = fauxBackend
+    const indexApi = new LocalIndexApi(
+      undefined as IndexingConfig,
+      fauxRepository,
+      fauxLogger,
+      Networks.INMEMORY
+    )
+    ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
     expect(pageFn).toBeCalledTimes(1)
@@ -109,7 +115,8 @@ describe('without database backend', () => {
     const fauxRepository = {} as unknown as Repository
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger)
+    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
     expect(response).toEqual({
@@ -122,4 +129,19 @@ describe('without database backend', () => {
     // Log a warning
     expect(warnFn).toBeCalledTimes(1)
   })
+})
+
+test('count', async () => {
+  const fauxRepository = {} as unknown as Repository
+  const warnFn = jest.fn()
+  const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
+  const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+  const expected = Math.random()
+  const countFn = jest.fn(() => expected)
+  const fauxBackend = { count: countFn } as unknown as DatabaseIndexApi
+  ;(indexApi as any).databaseIndexApi = fauxBackend
+  const query = { model: 'modelId' }
+  const actual = await indexApi.count(query)
+  expect(actual).toEqual(expected)
+  expect(countFn).toBeCalledWith(query)
 })

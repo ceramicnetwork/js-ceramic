@@ -67,9 +67,7 @@ describe('EthereumAnchorValidator Test', () => {
     let ethAnchorValidator: AnchorValidator
 
     beforeEach(async () => {
-      const { EthereumAnchorValidator } = await import(
-        '../../ethereum/ethereum-anchor-validator.js'
-      )
+      const { EthereumAnchorValidator } = await import('../ethereum-anchor-validator.js')
       ethAnchorValidator = new EthereumAnchorValidator('https://test.com', logger)
       await ethAnchorValidator.init(`eip155:${TEST_CHAIN_ID}`)
     })

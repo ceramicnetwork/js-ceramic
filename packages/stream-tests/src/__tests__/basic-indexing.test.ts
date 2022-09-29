@@ -13,6 +13,7 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -39,6 +40,32 @@ const MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
+// The model above will always result in this StreamID when created with the fixed did:key
+// controller used by the test.
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
+
+// StreamID for a model that isn't indexed by the node
+const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtr'
+)
+
+const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
+  name: 'MyModel',
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      linkedDoc: {
+        type: 'string',
+      },
+    },
+    required: ['linkedDoc'],
+  },
+  relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
+}
+
 const extractStreamStates = function (page: Page<StreamState>): Array<StreamState> {
   return page.edges.map((edge) => edge.node)
 }
@@ -62,28 +89,11 @@ describe('Basic end-to-end indexing query test', () => {
   let ceramic: CeramicClient
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let modelWithRelation: Model
+  let midRelationMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     ipfs = await createIPFS()
-
-    port = await getPort()
-    const apiUrl = 'http://localhost:' + port
-
-    // Temporarily start a Ceramic node and use it to create the Model that will be used in the
-    // rest of the tests.
-    core = await createCeramic(ipfs)
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
-    await daemon.listen()
-    ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
-
-    model = await Model.create(ceramic, MODEL_DEFINITION)
-    midMetadata = { model: model.id }
-
-    await daemon.close()
-    await core.close()
   })
 
   afterAll(async () => {
@@ -91,17 +101,32 @@ describe('Basic end-to-end indexing query test', () => {
   })
 
   beforeEach(async () => {
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+
     const indexingDirectory = await tmp.tmpName()
     await fs.mkdir(indexingDirectory)
     core = await createCeramic(ipfs, {
       indexing: {
         db: `sqlite://${indexingDirectory}/ceramic.sqlite`,
-        models: [model.id.toString()],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
+
+    port = await getPort()
+    const apiUrl = 'http://localhost:' + port
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
+    ceramic = new CeramicClient(apiUrl)
+    ceramic.did = core.did
+
+    model = await Model.create(ceramic, MODEL_DEFINITION)
+    expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
+    midMetadata = { model: model.id }
+    modelWithRelation = await Model.create(ceramic, MODEL_WITH_RELATION_DEFINITION)
+    midRelationMetadata = { model: modelWithRelation.id }
+
+    await core.index.indexModels([model.id, modelWithRelation.id])
   }, 30 * 1000)
 
   afterEach(async () => {
@@ -122,6 +147,12 @@ describe('Basic end-to-end indexing query test', () => {
     expect(results[0].id.toString()).toEqual(doc.id.toString())
     expect(results[0].content).toEqual(doc.content)
     expect(results[0].state).toEqual(doc.state)
+  })
+
+  test("query a model that isn't indexed", async () => {
+    await expect(
+      ceramic.index.query({ model: UNINDEXED_MODEL_STREAM_ID, first: 100 })
+    ).rejects.toThrow(/is not indexed on this node/)
   })
 
   test('multiple documents - one page', async () => {
@@ -247,5 +278,52 @@ describe('Basic end-to-end indexing query test', () => {
     expect(results[3].content).toEqual(CONTENT4)
     expect(results[4].id.toString()).toEqual(doc5.id.toString())
     expect(results[4].content).toEqual(CONTENT5)
+  })
+
+  describe('Queries with filters on relations', () => {
+    test(
+      'basic filter',
+      async () => {
+        const referencedDoc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+        const referencedDoc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+
+        const doc0 = await ModelInstanceDocument.create(
+          ceramic,
+          { linkedDoc: referencedDoc0.id.toString() },
+          midRelationMetadata
+        )
+        const doc1 = await ModelInstanceDocument.create(
+          ceramic,
+          { linkedDoc: referencedDoc1.id.toString() },
+          midRelationMetadata
+        )
+
+        const resultObj0 = await ceramic.index.query({
+          model: modelWithRelation.id,
+          first: 100,
+          filter: { linkedDoc: referencedDoc0.id.toString() },
+        })
+        const results0 = extractDocuments(ceramic, resultObj0)
+        expect(results0.length).toEqual(1)
+        expect(results0[0].id.toString()).toEqual(doc0.id.toString())
+        expect(results0[0].content).toEqual(doc0.content)
+        expect(results0[0].state).toEqual(doc0.state)
+
+        const resultObj1 = await ceramic.index.query({
+          model: modelWithRelation.id,
+          first: 100,
+          filter: { linkedDoc: referencedDoc1.id.toString() },
+        })
+        const results1 = extractDocuments(ceramic, resultObj1)
+        expect(results1.length).toEqual(1)
+        expect(results1[0].id.toString()).toEqual(doc1.id.toString())
+        expect(results1[0].content).toEqual(doc1.content)
+        expect(results1[0].state).toEqual(doc1.state)
+
+        // TODO(CDB-1868): add test with filters on relations AND controller
+        // TODO(CDB-1868): add test with filter on multiple relations
+      },
+      1000 * 30
+    )
   })
 })

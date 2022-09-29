@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0-rc.0](/compare/@ceramicnetwork/common@2.7.0...@ceramicnetwork/common@2.8.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
 # [2.7.0](/compare/@ceramicnetwork/common@2.7.0-rc.0...@ceramicnetwork/common@2.7.0) (2022-09-21)
 
 **Note:** Version bump only for package @ceramicnetwork/common

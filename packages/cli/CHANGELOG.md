@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0-rc.0](/compare/@ceramicnetwork/cli@2.7.0...@ceramicnetwork/cli@2.8.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* `count` endpoint (#2463) 6556596, closes #2463
+* **core:** Extract relation fields from MIDs and add to database, plus add filter capability to queries (#2455) fbe04b5, closes #2455
+* **core:** Load Model relations when indexing a new Model (#2447) 3c87ea7, closes #2447
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
 # [2.7.0](/compare/@ceramicnetwork/cli@2.7.0-rc.3...@ceramicnetwork/cli@2.7.0) (2022-09-21)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

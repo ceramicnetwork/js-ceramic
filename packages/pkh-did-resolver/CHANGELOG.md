@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.10-rc.0](/compare/pkh-did-resolver@1.0.9...pkh-did-resolver@1.0.10-rc.0) (2022-09-28)
+
+**Note:** Version bump only for package pkh-did-resolver
+
+
+
+
+
 ## [1.0.9](/compare/pkh-did-resolver@1.0.9-rc.0...pkh-did-resolver@1.0.9) (2022-09-21)
 
 **Note:** Version bump only for package pkh-did-resolver

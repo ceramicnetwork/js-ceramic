@@ -141,7 +141,7 @@ describe('backward pagination', () => {
 
 test('filtered by account', async () => {
   const presentAccount = 'did:key:foo' // We have that in the populated table
-  const absentAccount = 'did:key:blah' // We do not have that in the populated table
+  const absentAccount = 'did:key:absent' // We do not have that in the populated table
   const withPresentAccount = await order.page({
     model: MODEL,
     account: presentAccount,
