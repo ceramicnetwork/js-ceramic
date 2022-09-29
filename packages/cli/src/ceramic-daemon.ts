@@ -42,7 +42,6 @@ const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
 const CALLER_NAME = 'js-ceramic'
-const ADMIN_API_AUTHORIZATION_TIMEOUT = 1000 * 60 * 5 // 5 min
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -194,21 +193,17 @@ function validatePort(inPort) {
 /**
  * Contents an authorization header signed by an admin DID
  */
-type AdminAPIAuthHeaderContents = {
+type AdminAPIJWSContents = {
   kid: string
   code: string
   requestPath: string
-  forModels: Array<string>
+  models: Array<string>
 }
 
-type AdminApiModelsParamValidationResult = {
-  modelIDStrings?: Array<string>
-  error?: string
-}
-
-type AdminApiAuthHeaderValidationResult = {
+type AdminApiJWSValidationResult = {
   kid?: string
   code?: string
+  models?: Array<StreamID>
   error?: string
 }
 
@@ -541,66 +536,43 @@ export class CeramicDaemon {
     })
   }
 
-  private  _validateModelIDStrings(
-    modelIDStrings: any
-  ): AdminApiModelsParamValidationResult {
-    const cast = modelIDStrings as Array<string>
-    let error = undefined
-    if (!cast || cast.length === 0) {
-      error = 'The `models` parameter is required and it has to be an array containing at least one model stream id'
-    }
-
-    return {
-      modelIDStrings: error ?? cast,
-      error: error,
-    }
-  }
-
-  private async _parseDidJWSAuthHeader(
-    authHeader: string | undefined
-  ): Promise<AdminAPIAuthHeaderContents> {
-    const jwsString = authHeader.split("Authorization: Basic ")[1]
-    const result = await this.ceramic.did.verifyJWS(jwsString)
+  private async _parseAdminApiJWS(
+    jws: string | undefined
+  ): Promise<AdminAPIJWSContents> {
+    const result = await this.ceramic.did.verifyJWS(jws)
     return {
       kid: result.kid,
       code: result.payload.code,
       requestPath: result.payload.requestPath,
-      forModels: result.payload.requestBody ? result.payload.requestBody.models : undefined,
+      models: result.payload.requestBody ? result.payload.requestBody.models : undefined,
     }
   }
 
-  private _compareStringArrays(left: Array<string>, right: Array<string>): boolean {
-    return left.length === right.length && left.every((value, index) => value === right[index])
-  }
-
-  private async _validateDIDJWSAuthHeader(
+  private async _validateAdminApiJWS(
     basePath: string,
-    authHeader: string | undefined,
-    forModels?: Array<string>
-  ): Promise<AdminApiAuthHeaderValidationResult> {
-    if (!authHeader) return { error: `Missing authorization header` }
+    jws: string | undefined,
+    shouldContainModels: boolean
+  ): Promise<AdminApiJWSValidationResult> {
+    if (!jws) return { error: `Missing authorization jws` }
 
     let parsedJWS
     try {
-      parsedJWS = await this._parseDidJWSAuthHeader(authHeader)
+      parsedJWS = await this._parseAdminApiJWS(jws)
     } catch (e) {
       return { error: `Error while processing the authorization header ${e.message}` }
     }
-    if (!parsedJWS.code) {
-      return { error: 'Admin code is missing from the authorization header' }
-    } else if (parsedJWS.requestPath === basePath) {
-      if (forModels) {
-        if (!parsedJWS.forModels) {
-          return { error: `The authorization header is missing models matching the request parameters`}
-        } else if (!this._compareStringArrays(forModels.sort(), parsedJWS.forModels.sort())) {
-          return { error: `The authorization header contains a different list of models than the request parameter`}
-        }
-      } else if (parsedJWS.forModels) {
-        return { error: 'The authorization header contains unnecessary models' }
-      }
-      return { kid: parsedJWS.kid, code: parsedJWS.code }
+    if (parsedJWS.requestPath !== basePath) {
+      return { error: `The jws block contains a request path that doesn't match the request`}
+    } else if (!parsedJWS.code) {
+      return { error: 'Admin code is missing from the the jws block' }
+    } else  if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {
+      return { error: `The 'models' parameter is required and it has to be an array containing at least one model stream id`}
     } else {
-      return { error: `The authorization header contains a request path that doesn't match the request`}
+      return {
+        kid: parsedJWS.kid,
+        code: parsedJWS.code,
+        models: parsedJWS.models?.map( modelIDString => StreamID.fromString(modelIDString) )
+      }
     }
   }
 
@@ -609,25 +581,19 @@ export class CeramicDaemon {
     res: Response,
     successCallback: AdminApiModelMutationMethod
   ): Promise<void> {
-    const modelsValidation = this._validateModelIDStrings(req.body.models)
-    if (modelsValidation.error) {
-      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: modelsValidation.error })
+    const jwsValidation = await this._validateAdminApiJWS(
+      req.baseUrl,
+      req.body.jws,
+      true
+    )
+    if (jwsValidation.error) {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
     } else {
-      const authHeaderValidation = await this._validateDIDJWSAuthHeader(
-        req.baseUrl,
-        req.headers.authorization,
-        modelsValidation.modelIDStrings
-      )
-      if (authHeaderValidation.error) {
-        res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: authHeaderValidation.error })
-      } else {
-        try {
-          const modelIDs = modelsValidation.modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
-          await successCallback(authHeaderValidation.kid, authHeaderValidation.code, modelIDs)
-          res.status(StatusCodes.OK).json({ result: 'success' })
-        } catch (e) {
-          res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
-        }
+      try {
+        await successCallback(jwsValidation.kid, jwsValidation.code, jwsValidation.models)
+        res.status(StatusCodes.OK).json({ result: 'success' })
+      } catch (e) {
+        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
       }
     }
   }
@@ -637,12 +603,21 @@ export class CeramicDaemon {
   }
 
   async getIndexedModels(req: Request, res: Response): Promise<void> {
-    const authHeaderValidation = await this._validateDIDJWSAuthHeader(req.baseUrl, req.headers.authorization)
-    if (authHeaderValidation.error) {
-      res.status(StatusCodes.UNAUTHORIZED).json({ error: authHeaderValidation.error })
+    if (!req.headers.authorization) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
+      return
+    }
+    const jwsString = req.headers.authorization.split("Authorization: Basic ")[1]
+    if (!jwsString) {
+      res.status(StatusCodes.BAD_REQUEST).json({ error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'` })
+      return
+    }
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
+    if (jwsValidation.error) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {
       try {
-        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid, authHeaderValidation.code)
+        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid, jwsValidation.code)
         res.json({
           models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
         })

@@ -24,7 +24,7 @@ export class RemoteAdminApi implements AdminApi {
     return new URL(this.modelsPath, this._apiUrl)
   }
 
-  private async buildAuthorizationHeader(actingDid: DID, code: string, modelsIDs?: Array<StreamID>): Promise<string> {
+  private async buildJWS(actingDid: DID, code: string, modelsIDs?: Array<StreamID>): Promise<string> {
     const body = modelsIDs ? { models: modelsIDs.map(streamID => streamID.toString()) } : undefined
     const jws = await actingDid.createJWS({
       code: code,
@@ -36,20 +36,18 @@ export class RemoteAdminApi implements AdminApi {
 
   async generateCode(): Promise<string> {
     return (await this._fetchJson(this.getCodeUrl())).code
-
   }
 
   async startIndexingModels(actingDid: DID, code: string, modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getModelsUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, code, modelsIDs)}` },
       method: 'post',
-      body: { models: modelsIDs.map(modelID => modelID.toString()) },
+      body: { jws: await this.buildJWS(actingDid, code, modelsIDs)},
     })
   }
 
   async getIndexedModels(actingDid: DID, code: string): Promise<Array<StreamID>> {
     const response= await this._fetchJson(this.getModelsUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, code)}` },
+      headers: { 'Authorization:': `Basic ${await this.buildJWS(actingDid, code)}` },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
@@ -58,9 +56,8 @@ export class RemoteAdminApi implements AdminApi {
 
   async stopIndexingModels(actingDid: DID, code: string, modelsIDs: Array<StreamID>): Promise<void> {
     await this._fetchJson(this.getModelsUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, code, modelsIDs)}` },
       method: 'delete',
-      body: { models: modelsIDs.map(modelID => modelID.toString()) },
+      body: { jws: await this.buildJWS(actingDid, code, modelsIDs)},
     })
   }
 }

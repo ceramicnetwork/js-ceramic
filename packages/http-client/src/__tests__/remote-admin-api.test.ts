@@ -29,7 +29,7 @@ beforeAll(async () => {
 
 test('generateCode()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
-  const fauxFetch = jest.fn(async () => { return } ) as typeof fetchJson
+  const fauxFetch = jest.fn(async () => { return { code: '<FAUX_CODE>' } } ) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
   await adminApi.generateCode()
   expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/getCode`))
@@ -38,20 +38,20 @@ test('generateCode()', async () => {
 test('getIndexedModels()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
-  adminApi.buildAuthorizationHeader = (): string => {
-    return '<FAKE AUTH HEADER>'
+  adminApi.buildJWS = (): string => {
+    return '<FAKE JWS>'
   }
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
   await adminApi.getIndexedModels(did, FAUX_ADMIN_CODE)
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization:": "Basic <FAKE AUTH HEADER>"}})
+  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization:": "Basic <FAKE JWS>"}})
 })
 
 test('addModelsToIndex()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
-  adminApi.buildAuthorizationHeader = (): string => {
-    return '<FAKE AUTH HEADER>'
+  adminApi.buildJWS = (): string => {
+    return '<FAKE JWS>'
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
@@ -59,9 +59,8 @@ test('addModelsToIndex()', async () => {
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
-      headers: {"Authorization:": "Basic <FAKE AUTH HEADER>" },
       method: 'post',
-      body: { models: [MODEL.toString()] },
+      body: { jws: "<FAKE JWS>" },
     }
   )
 })
@@ -69,8 +68,8 @@ test('addModelsToIndex()', async () => {
 test('removeModelsFromIndex()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
-  adminApi.buildAuthorizationHeader = (): string => {
-    return '<FAKE AUTH HEADER>'
+  adminApi.buildJWS = (): string => {
+    return '<FAKE JWS>'
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
@@ -78,9 +77,8 @@ test('removeModelsFromIndex()', async () => {
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
-      headers: { "Authorization:": "Basic <FAKE AUTH HEADER>" },
       method: 'delete',
-      body: { models: [MODEL.toString()] },
+      body: { jws: "<FAKE JWS>" },
     }
   )
 })

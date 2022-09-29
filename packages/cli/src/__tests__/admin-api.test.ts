@@ -13,8 +13,10 @@ import { makeDID } from './make-did.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
+import { Model } from '@ceramicnetwork/stream-model'
 
 const seed = 'ADMINSEED'
+const MY_MODEL_1_CONTENT = { name: 'myModel1', schema: {}, accountRelation: { type: 'list' } }
 
 describe('admin api', () => {
   let daemon: CeramicDaemon
@@ -25,49 +27,14 @@ describe('admin api', () => {
   let tmpFolder: tmp.DirectoryResult
   let core: Ceramic
   let client: CeramicClient
+  let exampleModelStreamId: string
 
   beforeAll(async () => {
     // FIXME: How should we be setting up this env var properly?
     originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
-  })
 
-  afterAll(async () => {
-    await ipfs.stop()
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
-  })
-
-  beforeEach(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    core = await makeCeramicCore(ipfs, tmpFolder.path)
-    daemon = await makeCeramicDaemon(core)
-    const apiUrl = `http://localhost:${daemon.port}`
-    client = new CeramicClient(apiUrl, { syncInterval: 500 })
-
-    await core.setDID(makeDID(core, seed))
-    await client.setDID(makeDID(client, seed))
-  })
-
-  afterEach(async () => {
-    await client.close()
-    await daemon.close()
-    await core.close()
-    await tmpFolder.cleanup()
-  })
-
-  async function buildAuthorizationHeader(did: DID, code: string, models?: Array<string>): Promise<string> {
-    const body = models ? { models: models } : undefined
-    const jws = await did.createJWS({
-      code: code,
-      requestPath: '/api/v0/admin/models',
-      requestBody: body
-    })
-    const jwsString = `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
-    return `Authorization: Basic ${jwsString}`
-  }
-
-  beforeAll(async () => {
     const did = new DID({
       provider: new Ed25519Provider(sha256.hash(uint8arrays.fromString(seed))),
       resolver: KeyResolver.getResolver() })
@@ -79,10 +46,41 @@ describe('admin api', () => {
       resolver: KeyResolver.getResolver() })
     await anotherDid.authenticate()
     nonAdminDid = anotherDid
+
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    core = await makeCeramicCore(ipfs, tmpFolder.path)
+    daemon = await makeCeramicDaemon(core)
+    const apiUrl = `http://localhost:${daemon.port}`
+    client = new CeramicClient(apiUrl, { syncInterval: 500 })
+
+    await core.setDID(makeDID(core, seed))
+    await client.setDID(makeDID(client, seed))
+
+    // @ts-ignore
+    const myModel1 = await  Model.create(core, MY_MODEL_1_CONTENT)
+    exampleModelStreamId = myModel1.id.toString()
   })
 
+  afterAll(async () => {
+    await ipfs.stop()
+    await client.close()
+    await daemon.close()
+    await core.close()
+    await tmpFolder.cleanup()
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
+  })
+
+  async function buildJWS(did: DID, code: string, models?: Array<string>): Promise<string> {
+    const body = models ? { models: models } : undefined
+    const jws = await did.createJWS({
+      code: code,
+      requestPath: '/api/v0/admin/models',
+      requestBody: body
+    })
+    return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
+  }
+
   it('admin models API CRUD test', async () => {
-    const exampleModelStreamId = "kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"
     const adminURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
 
     const fetchCode = async (): Promise<string> => {
@@ -92,86 +90,72 @@ describe('admin api', () => {
     const getResult = await fetchJson(adminURLString,
       {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, await fetchCode())
+          authorization: `Authorization: Basic ${await buildJWS(adminDid, await fetchCode())}`
         }
       })
     expect(getResult.models).toEqual([])
 
     const postResult = await fetchJson(adminURLString, {
-      headers: {
-        authorization: await buildAuthorizationHeader(adminDid, await fetchCode(), [exampleModelStreamId])
-      },
       method:'POST',
-      body: {  models: [exampleModelStreamId] }
+      body: {  jws: await buildJWS(adminDid, await fetchCode(), [exampleModelStreamId]) }
     })
     expect(postResult.result).toEqual('success')
 
     const newGetResult = await fetchJson(adminURLString,
       {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, await fetchCode())
+          authorization: `Authorization: Basic ${await buildJWS(adminDid, await fetchCode())}`
         }
       })
     expect(newGetResult.models).toEqual([exampleModelStreamId])
 
     const deleteResult = await fetchJson(adminURLString, {
-      headers: {
-        authorization: await buildAuthorizationHeader(adminDid, await fetchCode(), [exampleModelStreamId])
-      },
       method:'DELETE',
-      body: {  models: [exampleModelStreamId] }
+      body: {  jws: await buildJWS(adminDid, await fetchCode(), [exampleModelStreamId]) }
     })
     expect(deleteResult.result).toEqual('success')
+
     const getResultAfterDelete = await fetchJson(adminURLString,
       {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, await fetchCode())
+          authorization: `Authorization: Basic ${await buildJWS(adminDid, await fetchCode())}`
         }
       })
     expect(getResultAfterDelete.models).toEqual([])
   })
 
   describe('admin models API validation test', () => {
-    const exampleModelStreamId = "kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"
-    const secondExampleModelStreamId = "kjzl6hvfrbw6ca7nidsnrv78x7r4xt0xki71nvwe4j5a3s9wgou8yu3aj8cz38e"
-
     it('No admin code for GET', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
           headers: {
-            authorization: await buildAuthorizationHeader(adminDid, '')
+            authorization: `Authorization: Basic ${await buildJWS(adminDid, '')}`
           }
         }),
       ).rejects.toThrow(
-        /Admin code is missing from the authorization header/
+        /Admin code is missing from the the jws block/
       )
     })
 
     it('No admin code for POST', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, '')
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, '') }
         }),
       ).rejects.toThrow(
-        /Admin code is missing from the authorization header/
+        /Admin code is missing from the the jws block/
       )
     })
 
     it('No admin code for DELETE', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, '')
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, '') }
         }),
       ).rejects.toThrow(
-        /Admin code is missing from the authorization header/
+        /Admin code is missing from the the jws block/
       )
     })
 
@@ -179,7 +163,7 @@ describe('admin api', () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
           headers: {
-            authorization: await buildAuthorizationHeader(adminDid, '1B7F4C45-C0E8-4BF3-88E4-8F7C81AB3BEC')
+            authorization: `Authorization: Basic ${await buildJWS(adminDid, '1B7F4C45-C0E8-4BF3-88E4-8F7C81AB3BEC')}`
           }
         }),
       ).rejects.toThrow(
@@ -190,11 +174,8 @@ describe('admin api', () => {
     it('Arbitrary admin code for POST', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, '1B7F4C45-C0E8-4BF3-88E4-8F7C81AB3BEC', [exampleModelStreamId])
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, '1B7F4C45-C0E8-4BF3-88E4-8F7C81AB3BEC', [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access: invalid\/already used admin code/
@@ -204,11 +185,8 @@ describe('admin api', () => {
     it('Arbitrary admin code for DELETE', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, '1B7F4C45-C0E8-4BF3-88E4-8F7C81AB3BEC', [exampleModelStreamId])
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, '1B7F4C45-C0E8-4BF3-88E4-8F7C81AB3BEC', [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access: invalid\/already used admin code/
@@ -223,7 +201,7 @@ describe('admin api', () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
           headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code)
+            authorization: `Authorization: Basic ${await buildJWS(adminDid, code)}`
           }
         }),
       ).rejects.toThrow(
@@ -238,11 +216,8 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code, [exampleModelStreamId])
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, code, [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access: expired admin code - admin codes are only valid for 60 seconds/
@@ -256,11 +231,8 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code, [exampleModelStreamId])
-          },
           method: 'DELETE',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, code, [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access: expired admin code - admin codes are only valid for 60 seconds/
@@ -272,13 +244,13 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
         headers: {
-          authorization: await buildAuthorizationHeader(adminDid, code)
+          authorization: `Authorization: Basic ${await buildJWS(adminDid, code)}`
         }
       })
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
           headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code)
+            authorization: `Authorization: Basic ${await buildJWS(adminDid, code)}`
           }
         }),
       ).rejects.toThrow(
@@ -291,19 +263,13 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code, [exampleModelStreamId]),
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, code, [exampleModelStreamId]), }
       })
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code, [exampleModelStreamId]),
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, code, [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access: invalid\/already used admin code/
@@ -315,19 +281,13 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code, [exampleModelStreamId]),
-          },
           method: 'DELETE',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, code, [exampleModelStreamId]), }
         })
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code, [exampleModelStreamId]),
-          },
           method: 'DELETE',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(adminDid, code, [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access: invalid\/already used admin code/
@@ -339,7 +299,7 @@ describe('admin api', () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
           headers: {
-            authorization: await buildAuthorizationHeader(nonAdminDid, code)
+            authorization: `Authorization: Basic ${await buildJWS(nonAdminDid, code)}`
           }
         }),
       ).rejects.toThrow(
@@ -351,11 +311,8 @@ describe('admin api', () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(nonAdminDid, code, [exampleModelStreamId])
-          },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(nonAdminDid, code, [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access/
@@ -366,11 +323,8 @@ describe('admin api', () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(nonAdminDid, code, [exampleModelStreamId])
-          },
           method: 'DELETE',
-          body: {  models: [exampleModelStreamId] }
+          body: {  jws: await buildJWS(nonAdminDid, code, [exampleModelStreamId]) }
         }),
       ).rejects.toThrow(
         /Unauthorized access/
@@ -387,22 +341,20 @@ describe('admin api', () => {
     it('No authorization for POST', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          method: 'POST',
-          body: {  models: [exampleModelStreamId] }
+          method: 'POST'
         }),
       ).rejects.toThrow(
-        /Missing authorization header/
+        /Missing authorization jws/
       )
     })
 
     it('No authorization for DELETE', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          method: 'DELETE',
-          body: {  models: [exampleModelStreamId] }
+          method: 'DELETE'
         }),
       ).rejects.toThrow(
-        /Missing authorization header/
+        /Missing authorization jws/
       )
     })
 
@@ -410,13 +362,11 @@ describe('admin api', () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code)
-          },
-          method:'POST'
+          method:'POST',
+          body: { jws: await buildJWS(adminDid, code) }
         })
       ).rejects.toThrow(
-        /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
       )
     })
 
@@ -424,29 +374,11 @@ describe('admin api', () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code,[])
-          },
           method:'POST',
-          body: { models: [] }
+          body: { jws: await buildJWS(adminDid, code, []) }
         })
       ).rejects.toThrow(
-        /The `models` parameter is required and it has to be an array containing at least one model stream id/
-      )
-    })
-
-    it('Wrong models for POST', async () => {
-      const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code,[exampleModelStreamId])
-          },
-          method:'POST',
-          body: { models: [secondExampleModelStreamId] }
-        })
-      ).rejects.toThrow(
-        /The authorization header contains a different list of models than the request parameter/
+        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
       )
     })
 
@@ -454,13 +386,11 @@ describe('admin api', () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code)
-          },
-          method:'DELETE'
+          method:'DELETE',
+          body: { jws: await buildJWS(adminDid, code) }
         })
       ).rejects.toThrow(
-        /The `models` parameter is required and it has to be an array containing at least one model stream id/
+        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
       )
     })
 
@@ -468,29 +398,11 @@ describe('admin api', () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code,[])
-          },
           method:'DELETE',
-          body: { models: [] }
+          body: { jws: await buildJWS(adminDid, code, []) }
         })
       ).rejects.toThrow(
-        /The `models` parameter is required and it has to be an array containing at least one model stream id/
-      )
-    })
-
-    it('Wrong models for DELETE', async () => {
-      const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, code,[exampleModelStreamId])
-          },
-          method:'DELETE',
-          body: { models: [secondExampleModelStreamId] }
-        })
-      ).rejects.toThrow(
-        /The authorization header contains a different list of models than the request parameter/
+        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
       )
     })
   })
