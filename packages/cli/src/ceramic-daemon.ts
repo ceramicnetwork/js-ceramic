@@ -33,7 +33,7 @@ import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
-import { collectionQuery, countQuery } from './daemon/collection-query.js'
+import { collectionQuery, countQuery } from './daemon/collection-queries.js'
 import { StatusCodes } from 'http-status-codes';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
