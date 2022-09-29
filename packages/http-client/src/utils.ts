@@ -12,14 +12,15 @@ export function serializeObjectToSearchParams(
   queryURL: URL,
   queryObject: Record<string, any>
 ): URL {
+  const resultURL = new URL(queryURL)
   for (const [key, value] of Object.entries(queryObject)) {
     if (StreamID.isInstance(value)) {
-      queryURL.searchParams.set(key, value.toString())
+      resultURL.searchParams.set(key, value.toString())
     } else if (typeof value == 'object') {
-      queryURL.searchParams.set(key, JSON.stringify(value))
+      resultURL.searchParams.set(key, JSON.stringify(value))
     } else {
-      queryURL.searchParams.set(key, value)
+      resultURL.searchParams.set(key, value)
     }
   }
-  return queryURL
+  return resultURL
 }
