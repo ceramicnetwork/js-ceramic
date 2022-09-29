@@ -33,7 +33,7 @@ import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
-import { collectionQuery } from './daemon/collection-query.js'
+import { collectionQuery, countQuery } from './daemon/collection-query.js'
 import { StatusCodes } from 'http-status-codes';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
@@ -98,7 +98,10 @@ function parseQueryObject(opts: Record<string, any>): Record<string, string | bo
   const typedOpts = {}
   for (const [key, value] of Object.entries(opts)) {
     if (typeof value == 'string') {
-      if (value === 'true') {
+      if (value[0] == '{') {
+        // value is a sub-object
+        typedOpts[key] = parseQueryObject(JSON.parse(value))
+      } else if (value === 'true') {
         typedOpts[key] = true
       } else if (value === 'false') {
         typedOpts[key] = false
@@ -286,9 +289,9 @@ export class CeramicDaemon {
     }
 
     const ceramic = new Ceramic(modules, params)
-    await ceramic._init(true)
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
-    await ceramic.setDID(did)
+    ceramic.did = did
+    await ceramic._init(true)
 
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
@@ -331,10 +334,12 @@ export class CeramicDaemon {
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
+    collectionRouter.getAsync('/count', this.getCollectionCount.bind(this))
     adminCodesRouter.getAsync('/', this.getAdminCode.bind(this))
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -417,8 +422,7 @@ export class CeramicDaemon {
   }
 
   /**
-   * Create document from genesis commit
-   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   * Request stream to be anchored
    */
   async requestAnchor(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid)
@@ -509,6 +513,15 @@ export class CeramicDaemon {
       streamId: streamId.toString(),
       docId: streamId.toString(),
       commits: serializedCommits,
+    })
+  }
+
+  async getCollectionCount(req: Request, res: Response): Promise<void> {
+    const httpQuery = parseQueryObject(req.query)
+    const query = countQuery(httpQuery)
+    const count = await this.ceramic.index.count(query)
+    res.json({
+      count: count,
     })
   }
 

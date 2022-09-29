@@ -1,4 +1,4 @@
-import { collectionQuery, InvalidPaginationError, parsePagination } from '../collection-query.js'
+import { collectionQuery, InvalidPaginationError, parsePagination } from '../collection-queries.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { TestUtils } from '@ceramicnetwork/common'
 

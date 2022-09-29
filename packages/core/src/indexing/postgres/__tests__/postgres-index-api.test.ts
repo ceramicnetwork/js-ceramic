@@ -16,6 +16,7 @@ import {
   RELATION_COLUMN_STRUCTURE,
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verification.js'
+import { readCsvFixture } from './read-csv-fixture.util.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -456,6 +457,7 @@ describe('indexStream', () => {
     tip: FAKE_CID_A,
     controller: CONTROLLER,
     lastAnchor: null,
+    firstAnchor: null,
   }
   const STREAM_CONTENT_B = {
     model: MODELS_TO_INDEX[0],
@@ -464,6 +466,7 @@ describe('indexStream', () => {
     tip: FAKE_CID_B,
     controller: CONTROLLER,
     lastAnchor: null,
+    firstAnchor: null,
   }
 
   let indexApi: PostgresIndexApi
@@ -523,7 +526,7 @@ describe('indexStream', () => {
 
     // create index on jsonb content and disable seq scans
     await dbConnection.raw(`SET enable_seqscan = off;`)
-    let result: Array<any> = await dbConnection.raw(
+    let result = await dbConnection.raw(
       `CREATE INDEX idx_postgres_jsonb ON ${STREAM_ID_A}((stream_content->'settings'->'dark_mode'))`
     )
     expect(result.command).toEqual('CREATE')
@@ -569,6 +572,7 @@ describe('page', () => {
 
   test('call the order if historical sync is allowed', async () => {
     const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger)
+    indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
     const mockPage = jest.fn(async () => {
       return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
     })
@@ -578,8 +582,35 @@ describe('page', () => {
   })
   test('throw if historical sync is not allowed', async () => {
     const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger)
+    indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
     await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
       IndexQueryNotAvailableError
     )
+  })
+})
+
+describe('count', () => {
+  const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+  const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
+  const MODEL = MODELS_TO_INDEX[0]
+
+  test('all', async () => {
+    const indexApi = new PostgresIndexApi(dbConnection, true, logger)
+    await indexApi.init()
+    await indexApi.indexModels(
+      MODELS_TO_INDEX.map((m) => {
+        return { model: m }
+      })
+    )
+    const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
+    for (const row of rows) {
+      await indexApi.indexStream(row)
+    }
+    // all
+    await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+    // by account
+    const account = 'did:key:blah'
+    const expected = rows.filter((r) => r.controller === account).length
+    await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
   })
 })

@@ -6,13 +6,37 @@ import type {
   StreamState,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
-import type { DatabaseIndexApi } from './database-index-api.js'
+import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
 import type { Repository } from '../state-management/repository.js'
 import { IndexStreamArgs } from './database-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { IndexingConfig } from './build-indexing.js'
 import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
+import { Model } from '@ceramicnetwork/stream-model'
+
+/**
+ * Takes a Model StreamID, loads it, and returns the IndexModelArgs necessary to prepare the
+ * database for indexing that model.
+ */
+async function _getIndexModelArgs(
+  modelStreamId: StreamID,
+  repository: Repository
+): Promise<IndexModelArgs> {
+  if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
+    throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
+  }
+
+  if (modelStreamId.type == Model.STREAM_TYPE_ID) {
+    const modelState = await repository.load(modelStreamId, {})
+    const relations = modelState.state.next?.content.relations ?? modelState.state.content.relations
+    if (relations) {
+      return { model: modelStreamId, relations }
+    }
+  }
+
+  return { model: modelStreamId }
+}
 
 /**
  * API to query an index.
@@ -52,7 +76,7 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async count(query: BaseQuery): Promise<number> {
-    throw new Error('Not implemented')
+    return this.databaseIndexApi.count(query)
   }
 
   /**
@@ -104,16 +128,18 @@ export class LocalIndexApi implements IndexApi {
     return this.databaseIndexApi?.getActiveModelsToIndex()
   }
 
-  async indexModels(models: Array<StreamID> | null | undefined): Promise<void> {
-    if (!models) return
-    // TODO: Load model StreamIDs, extract relations and pass those arguments down into the
-    //  DatabaseIndexAPI so the necessary columns get built for the relations
-    const indexModelArgs = []
-    for (const model of models) {
-      const args = { model }
-      indexModelArgs.push(args)
+  async indexModels(models: Array<StreamID> | null): Promise<void> {
+    if (!models) {
+      return
     }
-    await this.databaseIndexApi?.indexModels(indexModelArgs)
+
+    const indexModelsArgs = []
+    for (const modelStreamId of models) {
+      const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
+      indexModelsArgs.push(indexModelArgs)
+      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
+    }
+    await this.databaseIndexApi?.indexModels(indexModelsArgs)
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {

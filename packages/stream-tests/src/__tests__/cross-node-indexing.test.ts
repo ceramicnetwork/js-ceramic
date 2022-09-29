@@ -83,19 +83,21 @@ describe('Cross-node indexing and query test', () => {
     ceramic1 = await createCeramic(ipfs1, {
       indexing: {
         db: `sqlite://${indexingDirectory1}/ceramic.sqlite`,
-        models: [model.id.toString()],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
+    await ceramic1.index.indexModels([model.id])
     const indexingDirectory2 = await tmp.tmpName()
     await fs.mkdir(indexingDirectory2)
     ceramic2 = await createCeramic(ipfs2, {
       indexing: {
         db: `sqlite://${indexingDirectory2}/ceramic.sqlite`,
-        models: [model.id.toString()],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
+    await ceramic2.index.indexModels([model.id])
   }, 30 * 1000)
 
   afterEach(async () => {
