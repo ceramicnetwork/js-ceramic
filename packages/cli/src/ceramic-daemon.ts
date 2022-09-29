@@ -301,8 +301,10 @@ export class CeramicDaemon {
     nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
-    collectionRouter.getAsync('/', this.getCollection.bind(this))
-    collectionRouter.getAsync('/count', this.getCollectionCount.bind(this))
+    collectionRouter.getAsync('/', this.getCollection_get.bind(this)) // Deprecated
+    collectionRouter.postAsync('/', this.getCollection_post.bind(this))
+    collectionRouter.getAsync('/count', this.getCollectionCount_get.bind(this)) // Deprecated
+    collectionRouter.postAsync('/count', this.getCollectionCount_post.bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -479,21 +481,34 @@ export class CeramicDaemon {
     })
   }
 
-  async getCollectionCount(req: Request, res: Response): Promise<void> {
+  /**
+   * Implementation of collection queries (the 'collection' http endpoint) using the HTTP GET method.
+   * TODO: Remove this once we no longer need to support version 2.4.0 and earlier of the
+   * http-client.
+   */
+  async getCollection_get(req: Request, res: Response): Promise<void> {
     const httpQuery = parseQueryObject(req.query)
-    const query = countQuery(httpQuery)
-    const count = await this.ceramic.index.count(query)
-    res.json({
-      count: count,
-    })
+    const response = await this._getCollection(httpQuery)
+    res.json(response)
   }
 
-  async getCollection(req: Request, res: Response): Promise<void> {
-    const httpQuery = parseQueryObject(req.query)
+  /**
+   * Implementation of collection queries (the 'collection' http endpoint) using the HTTP POST method.
+   */
+  async getCollection_post(req: Request, res: Response): Promise<void> {
+    const httpQuery = req.body
+    const response = await this._getCollection(httpQuery)
+    res.json(response)
+  }
+
+  /**
+   * Helper function for the shared implementation of serving a collection query
+   */
+  async _getCollection(httpQuery: Record<string, any>): Promise<Record<string, any>> {
     const query = collectionQuery(httpQuery)
     const indexResponse = await this.ceramic.index.query(query)
 
-    res.json({
+    return {
       edges: indexResponse.edges.map((e) => {
         return {
           cursor: e.cursor,
@@ -501,7 +516,33 @@ export class CeramicDaemon {
         }
       }),
       pageInfo: indexResponse.pageInfo,
-    })
+    }
+  }
+
+  /**
+   * Implementation of count queries (the 'collection/count' http endpoint) using the HTTP GET method.
+   * TODO: Remove this once we no longer need to support version 2.4.0 and earlier of the
+   * http-client.
+   */
+  async getCollectionCount_get(req: Request, res: Response): Promise<void> {
+    const httpQuery = parseQueryObject(req.query)
+    const response = await this._getCollectionCount(httpQuery)
+    res.json(response)
+  }
+
+  /**
+   * Implementation of count queries (the 'collection/count' http endpoint) using the HTTP POST method.
+   */
+  async getCollectionCount_post(req: Request, res: Response): Promise<void> {
+    const httpQuery = req.body
+    const response = await this._getCollectionCount(httpQuery)
+    res.json(response)
+  }
+
+  async _getCollectionCount(httpQuery: Record<string, any>): Promise<Record<string, any>> {
+    const query = countQuery(httpQuery)
+    const count = await this.ceramic.index.count(query)
+    return { count }
   }
 
   /**
