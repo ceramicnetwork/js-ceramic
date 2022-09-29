@@ -38,6 +38,13 @@ async function startOfASecond() {
   await new Promise((resolve) => setTimeout(resolve, start - now))
 }
 
+/**
+ * Round timestamp to the closest lowest second.
+ */
+function floorSecond(timestamp: Date): number {
+  return Math.floor(timestamp.valueOf() / 1000) * 1000
+}
+
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(ONE_SECOND * 30)
 
@@ -98,6 +105,7 @@ describe('pubsub with queries rate limited', () => {
       return empty().subscribe()
     })
     const messages = Array.from({ length: QUERIES_PER_SECOND * batches }).map(randomQueryMessage)
+
     await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
     // Send all the messages using `this.pubsub.next`
     expect(times.length).toEqual(messages.length)
@@ -111,7 +119,7 @@ describe('pubsub with queries rate limited', () => {
     for (let i = 1; i < firstElements.length; i++) {
       const current = firstElements[i]
       const previous = firstElements[i - 1]
-      const difference = current.valueOf() - previous.valueOf()
+      const difference = floorSecond(current) - floorSecond(previous)
       expect(difference >= ONE_SECOND).toBeTruthy()
     }
     for (const chunk of perSecondChunks) {
