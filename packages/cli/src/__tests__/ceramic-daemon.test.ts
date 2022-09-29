@@ -13,6 +13,7 @@ import {
   GenesisCommit,
   TestUtils,
 } from '@ceramicnetwork/common'
+import { Model } from '@ceramicnetwork/stream-model'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -25,6 +26,8 @@ import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 
 const seed = 'SEED'
+
+const MY_MODEL_1_CONTENT = { name: 'myModel1', schema: {}, accountRelation: { type: 'list' } }
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
@@ -53,7 +56,6 @@ describe('Ceramic interop: core <> http-client', () => {
     daemon = await makeCeramicDaemon(core)
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-
     await core.setDID(makeDID(core, seed))
     await client.setDID(makeDID(client, seed))
   })
@@ -638,9 +640,10 @@ describe('Ceramic interop: core <> http-client', () => {
   describe('admin api', () => {
     it('admin models API CRUD test', async () => {
       // TODO: Implement this test using the highest-level interface once it's ready
-
-      const exampleModelStreamId = "kjzl6hvfrbw6cag2xpszaxtixzk799xcdy6ashjhxhbvl2x0kn1lvfree6u9t2q"
       const adminURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
+      // @ts-ignore
+      const myModel1 = await  Model.create(core, MY_MODEL_1_CONTENT)
+      const exampleModelStreamId = myModel1.id.toString()
 
       const getResult = await fetchJson(adminURLString)
       expect(getResult.models).toEqual([])
