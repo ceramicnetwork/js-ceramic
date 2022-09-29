@@ -275,7 +275,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const endpoint = this.ethereumRpcEndpoint || ethNetwork?.endpoint
 
     if (endpoint) {
-      const provider = new providers.JsonRpcProvider(endpoint)
+      const provider = new providers.StaticJsonRpcProvider(endpoint)
       this.providersCache.set(chain, provider)
       return provider
     }
