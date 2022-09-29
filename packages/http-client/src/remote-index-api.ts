@@ -6,7 +6,7 @@ import type {
   StreamState,
 } from '@ceramicnetwork/common'
 import { StreamUtils, fetchJson } from '@ceramicnetwork/common'
-import { serializeObjectForHttpPost } from './utils'
+import { serializeObjectForHttpPost } from './utils.js'
 
 /**
  * IndexAPI implementation on top of HTTP endpoint.
