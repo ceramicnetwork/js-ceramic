@@ -327,8 +327,6 @@ export class CeramicDaemon {
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
-    adminModelRouter.putAsync('/', this.replaceIndexedModels
-      .bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -639,10 +637,6 @@ export class CeramicDaemon {
 
   async stopIndexingModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin))
-  }
-
-  async replaceIndexedModels(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.replaceIndexedModels.bind(this.ceramic.admin))
   }
 
   /**

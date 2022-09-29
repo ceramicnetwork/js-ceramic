@@ -79,15 +79,8 @@ export interface AdminApi {
    * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to remove from index
    */
-  stopIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 
-  /**
-   * Replaces model streams in index with given model streams
-   *
-   * @param actingDid - did that performs the operation
-   * @param modelsIDs - array of model stream IDs to put in the index instead of the previous ones
-   */
-  replaceIndexedModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
+  stopIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 }
 
 /**

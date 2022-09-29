@@ -35,16 +35,4 @@ export class LocalAdminApi implements AdminApi {
     this.logger.log(LogStyle.info, `Removing models from index: ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)
   }
-
-  async replaceIndexedModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
-    this.verifyActingDid(actingDid)
-    this.logger.log(LogStyle.info, `Replacing models to index. Currently indexed models: ${this.indexApi.indexedModels()}.  Models to index going forward: ${modelsIDs}`)
-    // TODO: Is this done in a single transaction? If not, it should be.
-    const indexedModels = await this.getIndexedModels(actingDid)
-    const modelsToStartIndexing = modelsIDs.filter( modelID => indexedModels.every( indexedModelID => !modelID.equals(indexedModelID) ) )
-    const modelsToStopIndexing = indexedModels.filter( indexedModelID => modelsIDs.every( modelID => !indexedModelID.equals(modelID) ) )
-    await this.startIndexingModels(actingDid, modelsToStartIndexing)
-    await  this.stopIndexingModels(actingDid, modelsToStopIndexing)
-    this.logger.log(LogStyle.info, `Local Admin Api did replace model ids to index ${modelsIDs}`)
-  }
 }

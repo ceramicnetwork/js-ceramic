@@ -11,7 +11,7 @@ import {
   IpfsApi,
   TimedAbortSignal,
   GenesisCommit,
-  
+
   TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'

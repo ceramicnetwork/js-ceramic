@@ -111,30 +111,12 @@ describe('admin api', () => {
       })
     expect(newGetResult.models).toEqual([exampleModelStreamId])
 
-    const differentExampleStreamId = "kjzl6hvfrbw6ca7nidsnrv78x7r4xt0xki71nvwe4j5a3s9wgou8yu3aj8cz38e"
-    const putResult = await fetchJson(adminURLString, {
-      headers: {
-        authorization: await buildAuthorizationHeader(adminDid, false, [differentExampleStreamId])
-      },
-      method:'PUT',
-      body: {  models: [differentExampleStreamId] }
-    })
-    expect(putResult.result).toEqual('success')
-
-    const getResultAfterPut = await fetchJson(adminURLString,
-      {
-        headers: {
-          authorization: await buildAuthorizationHeader(adminDid)
-        }
-      })
-    expect(getResultAfterPut.models).toEqual([differentExampleStreamId])
-
     const deleteResult = await fetchJson(adminURLString, {
       headers: {
-        authorization: await buildAuthorizationHeader(adminDid, false, [differentExampleStreamId])
+        authorization: await buildAuthorizationHeader(adminDid, false, [exampleModelStreamId])
       },
       method:'DELETE',
-      body: {  models: [differentExampleStreamId] }
+      body: {  models: [exampleModelStreamId] }
     })
     expect(deleteResult.result).toEqual('success')
     const getResultAfterDelete = await fetchJson(adminURLString,
@@ -175,20 +157,6 @@ describe('admin api', () => {
       )
     })
 
-    it('Unauthorised DID for PUT', async () => {
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          headers: {
-            authorization: await buildAuthorizationHeader(nonAdminDid, false, [exampleModelStreamId])
-          },
-          method: 'PUT',
-          body: {  models: [exampleModelStreamId] }
-        }),
-      ).rejects.toThrow(
-        /Unauthorized access/
-      )
-    })
-
     it('Unauthorised DID for DELETE', async () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
@@ -214,17 +182,6 @@ describe('admin api', () => {
       await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
         {
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
-        }),
-      ).rejects.toThrow(
-        /Missing authorization header/
-      )
-    })
-
-    it('No authorization for PUT', async () => {
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          method: 'PUT',
           body: {  models: [exampleModelStreamId] }
         }),
       ).rejects.toThrow(
@@ -262,20 +219,6 @@ describe('admin api', () => {
             authorization: await buildAuthorizationHeader(nonAdminDid, true, [exampleModelStreamId])
           },
           method: 'POST',
-          body: {  models: [exampleModelStreamId] }
-        }),
-      ).rejects.toThrow(
-        /The authorization header contains a timestamp that is too old/
-      )
-    })
-
-    it('Outdated authorization header for PUT', async () => {
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          headers: {
-            authorization: await buildAuthorizationHeader(nonAdminDid, true, [exampleModelStreamId])
-          },
-          method: 'PUT',
           body: {  models: [exampleModelStreamId] }
         }),
       ).rejects.toThrow(
@@ -345,33 +288,6 @@ describe('admin api', () => {
             authorization: await buildAuthorizationHeader(adminDid, false,[])
           },
           method:'DELETE',
-          body: { models: [] }
-        })
-      ).rejects.toThrow(
-        /The `models` parameter is required and it has to be an array containing at least one model stream id/
-      )
-    })
-
-    it('No models for PUT', async () => {
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid)
-          },
-          method:'PUT'
-        })
-      ).rejects.toThrow(
-        /The `models` parameter is required and it has to be an array containing at least one model stream id/
-      )
-    })
-
-    it('Empty models for PUT', async () => {
-      await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-        {
-          headers: {
-            authorization: await buildAuthorizationHeader(adminDid, false,[])
-          },
-          method:'PUT',
           body: { models: [] }
         })
       ).rejects.toThrow(

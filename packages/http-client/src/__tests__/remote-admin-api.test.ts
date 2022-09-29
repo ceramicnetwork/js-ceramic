@@ -75,22 +75,3 @@ test('removeModelsFromIndex()', async () => {
     }
   )
 })
-
-test('replaceModelsInIndex()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
-  // @ts-ignore
-  adminApi.buildAuthorizationHeader = (): string => {
-    return '<FAKE AUTH HEADER>'
-  }
-  const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
-  (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.replaceIndexedModels(did, [MODEL])
-  expect(fauxFetch).toBeCalledWith(
-    new URL(`https://example.com/admin/models`),
-    {
-      headers: { "Authorization:": "Basic <FAKE AUTH HEADER>" },
-      method: 'put',
-      body: { models: [MODEL.toString()] },
-    }
-  )
-})
