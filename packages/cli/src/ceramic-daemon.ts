@@ -1,7 +1,9 @@
 import * as fs from 'fs'
 import express, { Request, Response } from 'express'
-import type { CeramicConfig } from '@ceramicnetwork/core'
-import { Ceramic } from '@ceramicnetwork/core'
+import {
+  Ceramic,
+  CeramicConfig
+} from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { Metrics } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
@@ -203,8 +205,11 @@ type AdminApiModelsParamValidationResult = {
 
 type AdminApiAuthHeaderValidationResult = {
   kid?: string
+  code?: string
   error?: string
 }
+
+type AdminApiModelMutationMethod = (actingDid: string, code: string, modelIDs: Array<StreamID>) => Promise<void>
 
 /**
  * Ceramic daemon implementation
@@ -300,6 +305,7 @@ export class CeramicDaemon {
     const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
@@ -311,6 +317,7 @@ export class CeramicDaemon {
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
     baseRouter.use('/collection', collectionRouter)
+    baseRouter.use('/admin/getCode', adminCodesRouter)
     baseRouter.use('/admin/models', adminModelRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
@@ -324,6 +331,7 @@ export class CeramicDaemon {
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
+    adminCodesRouter.getAsync('/', this.getAdminCode.bind(this))
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
@@ -590,7 +598,7 @@ export class CeramicDaemon {
   private async _processAdminModelsMutationRequest(
     req: Request,
     res: Response,
-    successCallback: (actingDid: string, modelIDs: Array<StreamID>) => Promise<void>
+    successCallback: AdminApiModelMutationMethod
   ): Promise<void> {
     const modelsValidation = this._validateModelIDStrings(req.body.models)
     if (modelsValidation.error) {
@@ -606,7 +614,7 @@ export class CeramicDaemon {
       } else {
         try {
           const modelIDs = modelsValidation.modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) )
-          await successCallback(authHeaderValidation.kid, modelIDs)
+          await successCallback(authHeaderValidation.kid, authHeaderValidation.code, modelIDs)
           res.status(StatusCodes.OK).json({ result: 'success' })
         } catch (e) {
           res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
@@ -615,13 +623,17 @@ export class CeramicDaemon {
     }
   }
 
+  async getAdminCode(req: Request, res: Response): Promise<void> {
+    res.json({'code': await this.ceramic.admin.generateCode()})
+  }
+
   async getIndexedModels(req: Request, res: Response): Promise<void> {
     const authHeaderValidation = await this._validateDIDJWSAuthHeader(req.baseUrl, req.headers.authorization)
     if (authHeaderValidation.error) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: authHeaderValidation.error })
     } else {
       try {
-        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid)
+        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(authHeaderValidation.kid, authHeaderValidation.code)
         res.json({
           models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
         })

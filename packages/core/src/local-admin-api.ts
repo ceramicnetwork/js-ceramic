@@ -19,18 +19,26 @@ export class LocalAdminApi implements AdminApi {
     }
   }
 
-  async startIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async generateCode(): Promise<string> {
+    // FIXME: Return a random code, store it in memory with the current timestamp
+    return '<random-code>'
+  }
+
+  async startIndexingModels(actingDid: string, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+    // FIXME: Use code to authorize
     this.verifyActingDid(actingDid)
     this.logger.log(LogStyle.info, `Adding models to index: ${modelsIDs}`)
     await this.indexApi.indexModels(modelsIDs)
   }
 
-  getIndexedModels(actingDid: string): Promise<Array<StreamID>> {
+  getIndexedModels(actingDid: string, code: string): Promise<Array<StreamID>> {
+    // FIXME: Use code to authorize
     this.verifyActingDid(actingDid)
     return Promise.resolve(this.indexApi.indexedModels() ?? [])
   }
 
-  async stopIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(actingDid: string, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+    // FIXME: Use code to authorize
     this.verifyActingDid(actingDid)
     this.logger.log(LogStyle.info, `Removing models from index: ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)

@@ -8,6 +8,7 @@ import KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
+const FAUX_ADMIN_CODE = '<FAUX-ADMIN-CODE>'
 const MODEL = new StreamID(1, TestUtils.randomCID())
 const SUCCESS_RESPONSE = {
   result: 'success'
@@ -34,7 +35,7 @@ test('getIndexedModels()', async () => {
   }
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.getIndexedModels(did)
+  await adminApi.getIndexedModels(did, FAUX_ADMIN_CODE)
   expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization:": "Basic <FAKE AUTH HEADER>"}})
 })
 
@@ -46,7 +47,7 @@ test('addModelsToIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.startIndexingModels(did, [MODEL])
+  await adminApi.startIndexingModels(did, FAUX_ADMIN_CODE, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
@@ -65,7 +66,7 @@ test('removeModelsFromIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.stopIndexingModels(did, [MODEL])
+  await adminApi.stopIndexingModels(did, FAUX_ADMIN_CODE, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {

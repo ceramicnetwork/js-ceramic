@@ -9,17 +9,23 @@ export class RemoteAdminApi implements AdminApi {
   // Stored as a member to make it easier to inject a mock in unit tests
   private readonly _fetchJson: typeof fetchJson = fetchJson
 
-  readonly baseURL = './admin/models'
+  readonly modelsPath = './admin/models'
+  readonly getCodePath = './admin/getCode'
 
   constructor(
     private readonly _apiUrl: URL
   ) {}
 
-  private getUrl(): URL {
-    return new URL(this.baseURL, this._apiUrl)
+  private getCodeUrl(): URL {
+    return new URL(this.getCodePath, this._apiUrl)
   }
 
-  private async buildAuthorizationHeader(actingDid: DID, modelsIDs?: Array<StreamID>): Promise<string> {
+  private getModelsUrl(): URL {
+    return new URL(this.modelsPath, this._apiUrl)
+  }
+
+  private async buildAuthorizationHeader(actingDid: DID, code: string, modelsIDs?: Array<StreamID>): Promise<string> {
+    // FIXME: use code in the header, instead of timestamp
     const body = modelsIDs ? { models: modelsIDs.map(streamID => streamID.toString()) } : undefined
     const jws = await actingDid.createJWS({
       timestamp: new Date().getTime(),
@@ -29,26 +35,31 @@ export class RemoteAdminApi implements AdminApi {
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
   }
 
-  async startIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
-    await this._fetchJson(this.getUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, modelsIDs)}` },
+  async generateCode(): Promise<string> {
+    return (await this._fetchJson(this.getCodeUrl())).code
+
+  }
+
+  async startIndexingModels(actingDid: DID, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+    await this._fetchJson(this.getModelsUrl(), {
+      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, code, modelsIDs)}` },
       method: 'post',
       body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
   }
 
-  async getIndexedModels(actingDid: DID): Promise<Array<StreamID>> {
-    const response= await this._fetchJson(this.getUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid)}` },
+  async getIndexedModels(actingDid: DID, code: string): Promise<Array<StreamID>> {
+    const response= await this._fetchJson(this.getModelsUrl(), {
+      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, code)}` },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
     })
   }
 
-  async stopIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
-    await this._fetchJson(this.getUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, modelsIDs)}` },
+  async stopIndexingModels(actingDid: DID, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+    await this._fetchJson(this.getModelsUrl(), {
+      headers: { 'Authorization:': `Basic ${await this.buildAuthorizationHeader(actingDid, code, modelsIDs)}` },
       method: 'delete',
       body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
