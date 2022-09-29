@@ -39,10 +39,11 @@ async function startOfASecond() {
 }
 
 /**
- * Round timestamp to the closest lowest second.
+ * Indicate if difference between `a` and `b` is less than `grace`.
  */
-function floorSecond(timestamp: Date): number {
-  return Math.floor(timestamp.valueOf() / 1000) * 1000
+function areClose(a: number, b: number, grace: number): boolean {
+  const difference = Math.abs(a - b)
+  return difference <= grace
 }
 
 describe('pubsub with queries rate limited', () => {
@@ -119,8 +120,10 @@ describe('pubsub with queries rate limited', () => {
     for (let i = 1; i < firstElements.length; i++) {
       const current = firstElements[i]
       const previous = firstElements[i - 1]
-      const difference = floorSecond(current) - floorSecond(previous)
-      expect(difference >= ONE_SECOND).toBeTruthy()
+      const difference = current.valueOf() - previous.valueOf()
+      // because sleep intervals aren't perfectly reliable and can be off by a millisecond or two, we
+      // give a 10 millisecond "buffer" to the time comparison to prevent the test from failing sporadically.
+      expect(areClose(difference, ONE_SECOND, 10)).toBeTruthy()
     }
     for (const chunk of perSecondChunks) {
       // Each chunk contains at most QUERIES_PER_SECOND elements
