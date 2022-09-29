@@ -1,16 +1,42 @@
 import { AdminApi, DiagnosticsLogger, LogStyle } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
+import crypto from 'crypto'
+
+// TODO: Expose this as a config option?
+const ADMIN_API_AUTHORIZATION_TIMEOUT = 1000 * 60 * 1 // 1 min
+
+type AdminCode = string
+type Timestamp = number
+
+type AdminCodeCache = {
+  [key: AdminCode]: Timestamp
+}
 
 /**
  * AdminApi for Ceramic core.
  */
 export class LocalAdminApi implements AdminApi {
+  private readonly codeCache: AdminCodeCache = {} as AdminCodeCache
+
   constructor(
     private readonly adminDids: Array<string> | undefined,
     private readonly indexApi: LocalIndexApi,
     private readonly logger: DiagnosticsLogger
   ) {}
+
+  private verifyAndDiscardCode(code: string) {
+    const now = (new Date).getTime()
+    if (!this.codeCache[code]) {
+      this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with admin code missing from registry`)
+      throw Error(`Unauthorized access: invalid/already used admin code`)
+    } else if (now - this.codeCache[code] > ADMIN_API_AUTHORIZATION_TIMEOUT) {
+      this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with expired admin code`)
+      throw Error(`Unauthorized access: expired admin code - admin codes are only valid for ${ADMIN_API_AUTHORIZATION_TIMEOUT / 1000} seconds`)
+    } else {
+      delete this.codeCache[code]
+    }
+  }
 
   private verifyActingDid(actingDid: string) {
     if (!this.adminDids || !this.adminDids.some( adminDid => actingDid.startsWith(adminDid) )) {
@@ -20,26 +46,31 @@ export class LocalAdminApi implements AdminApi {
   }
 
   async generateCode(): Promise<string> {
-    // FIXME: Return a random code, store it in memory with the current timestamp
-    return '<random-code>'
+    const newCode = crypto.randomUUID()
+    const now = (new Date).getTime()
+    this.codeCache[newCode] = now
+    return newCode
   }
 
   async startIndexingModels(actingDid: string, code: string, modelsIDs: Array<StreamID>): Promise<void> {
-    // FIXME: Use code to authorize
     this.verifyActingDid(actingDid)
+    // Discard the code after verifying the admin did, so that the code may still be used, if there was a mistake with the did
+    this.verifyAndDiscardCode(code)
     this.logger.log(LogStyle.info, `Adding models to index: ${modelsIDs}`)
     await this.indexApi.indexModels(modelsIDs)
   }
 
   getIndexedModels(actingDid: string, code: string): Promise<Array<StreamID>> {
-    // FIXME: Use code to authorize
     this.verifyActingDid(actingDid)
+    // Discard the code after verifying the admin did, so that the code may still be used, if there was a mistake with the did
+    this.verifyAndDiscardCode(code)
     return Promise.resolve(this.indexApi.indexedModels() ?? [])
   }
 
   async stopIndexingModels(actingDid: string, code: string, modelsIDs: Array<StreamID>): Promise<void> {
-    // FIXME: Use code to authorize
     this.verifyActingDid(actingDid)
+    // Discard the code after verifying the admin did, so that the code may still be used, if there was a mistake with the did
+    this.verifyAndDiscardCode(code)
     this.logger.log(LogStyle.info, `Removing models from index: ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)
   }

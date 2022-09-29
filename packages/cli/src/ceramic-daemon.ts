@@ -193,8 +193,8 @@ function validatePort(inPort) {
  */
 type AdminAPIAuthHeaderContents = {
   kid: string
+  code: string
   requestPath: string
-  timestamp: number
   forModels: Array<string>
 }
 
@@ -550,8 +550,8 @@ export class CeramicDaemon {
     const result = await this.ceramic.did.verifyJWS(jwsString)
     return {
       kid: result.kid,
+      code: result.payload.code,
       requestPath: result.payload.requestPath,
-      timestamp: result.payload.timestamp,
       forModels: result.payload.requestBody ? result.payload.requestBody.models : undefined,
     }
   }
@@ -573,11 +573,9 @@ export class CeramicDaemon {
     } catch (e) {
       return { error: `Error while processing the authorization header ${e.message}` }
     }
-    const now = new Date().getTime()
-    if (
-      parsedJWS.requestPath === basePath &&
-      parsedJWS.timestamp > (now - ADMIN_API_AUTHORIZATION_TIMEOUT)
-    ) {
+    if (!parsedJWS.code) {
+      return { error: 'Admin code is missing from the authorization header' }
+    } else if (parsedJWS.requestPath === basePath) {
       if (forModels) {
         if (!parsedJWS.forModels) {
           return { error: `The authorization header is missing models matching the request parameters`}
@@ -587,9 +585,7 @@ export class CeramicDaemon {
       } else if (parsedJWS.forModels) {
         return { error: 'The authorization header contains unnecessary models' }
       }
-      return { kid: parsedJWS.kid }
-    } else if (parsedJWS.timestamp <= (now - ADMIN_API_AUTHORIZATION_TIMEOUT)) {
-      return { error: 'The authorization header contains a timestamp that is too old' }
+      return { kid: parsedJWS.kid, code: parsedJWS.code }
     } else {
       return { error: `The authorization header contains a request path that doesn't match the request`}
     }

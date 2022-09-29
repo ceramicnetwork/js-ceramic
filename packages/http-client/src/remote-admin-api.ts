@@ -25,10 +25,9 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   private async buildAuthorizationHeader(actingDid: DID, code: string, modelsIDs?: Array<StreamID>): Promise<string> {
-    // FIXME: use code in the header, instead of timestamp
     const body = modelsIDs ? { models: modelsIDs.map(streamID => streamID.toString()) } : undefined
     const jws = await actingDid.createJWS({
-      timestamp: new Date().getTime(),
+      code: code,
       requestPath: this._apiUrl.pathname,
       requestBody: body
     })

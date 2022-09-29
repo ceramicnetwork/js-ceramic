@@ -27,6 +27,14 @@ beforeAll(async () => {
   did = actingDid
 })
 
+test('generateCode()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
+  const fauxFetch = jest.fn(async () => { return } ) as typeof fetchJson
+  (adminApi as any)._fetchJson = fauxFetch
+  await adminApi.generateCode()
+  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/getCode`))
+})
+
 test('getIndexedModels()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
