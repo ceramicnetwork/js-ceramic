@@ -38,11 +38,4 @@ export class RemoteAdminApi implements AdminApi {
       body: { models: modelsIDs.map(modelID => modelID.toString()) },
     })
   }
-
-  async replaceIndexedModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await this._fetchJson(this.getUrl(), {
-      method: 'put',
-      body: { models: modelsIDs.map(modelID => modelID.toString()) },
-    })
-  }
 }

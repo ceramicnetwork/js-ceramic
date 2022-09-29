@@ -654,18 +654,9 @@ describe('Ceramic interop: core <> http-client', () => {
       const newGetResult = await fetchJson(adminURLString)
       expect(newGetResult.models).toEqual([exampleModelStreamId])
 
-      const differentExampleStreamId = "kjzl6hvfrbw6ca7nidsnrv78x7r4xt0xki71nvwe4j5a3s9wgou8yu3aj8cz38e"
-      const putResult = await fetchJson(adminURLString, {
-        method:'PUT',
-        body: {  models: [differentExampleStreamId] }
-      })
-      expect(putResult.result).toEqual('success')
-      const getResultAfterPut = await fetchJson(adminURLString)
-      expect(getResultAfterPut.models).toEqual([differentExampleStreamId])
-
       const deleteResult = await fetchJson(adminURLString, {
         method:'DELETE',
-        body: {  models: [differentExampleStreamId] }
+        body: {  models: [exampleModelStreamId] }
       })
       expect(deleteResult.result).toEqual('success')
       const getResultAfterDelete = await fetchJson(adminURLString)
@@ -708,27 +699,6 @@ describe('Ceramic interop: core <> http-client', () => {
         await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
           {
             method:'DELETE',
-            body: { models: [] }
-          })
-        ).rejects.toThrow(
-          /The `models` parameter is required and it has to be an array containing at least one model stream id/
-        )
-      })
-
-      it('No models for PUT', async () => {
-        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-          {
-            method:'PUT'
-          })
-        ).rejects.toThrow(
-          /The `models` parameter is required and it has to be an array containing at least one model stream id/
-        )
-      })
-
-      it('Empty models for PUT', async () => {
-        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-          {
-            method:'PUT',
             body: { models: [] }
           })
         ).rejects.toThrow(

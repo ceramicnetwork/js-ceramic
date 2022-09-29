@@ -47,17 +47,3 @@ test('removeModelsFromIndex()', async () => {
     }
   )
 })
-
-test('replaceModelsInIndex()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
-  const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
-  (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.replaceIndexedModels([MODEL])
-  expect(fauxFetch).toBeCalledWith(
-    new URL(`https://example.com/admin/models`),
-    {
-      method: 'put',
-      body: { models: [MODEL.toString()] },
-    }
-  )
-})

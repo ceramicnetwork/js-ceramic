@@ -305,8 +305,6 @@ export class CeramicDaemon {
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
-    adminModelRouter.putAsync('/', this.replaceIndexedModels
-      .bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -541,16 +539,6 @@ export class CeramicDaemon {
       res.status(422).json({ error: error })
     } else {
       await this.ceramic.admin.stopIndexingModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
-      res.status(200).json({ result: 'success' })
-    }
-  }
-
-  async replaceIndexedModels(req: Request, res: Response): Promise<void> {
-    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
-    if (error) {
-      res.status(422).json({ error: error })
-    } else {
-      await this.ceramic.admin.replaceIndexedModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
       res.status(200).json({ result: 'success' })
     }
   }
