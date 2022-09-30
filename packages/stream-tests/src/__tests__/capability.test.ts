@@ -6,7 +6,7 @@ import { Wallet } from 'ethers'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
-import { Cacao, SiweMessage } from 'ceramic-cacao'
+import { Cacao, SiweMessage } from '@didtools/cacao'
 import MockDate from 'mockdate'
 import { createCeramic } from '../create-ceramic.js'
 import {
