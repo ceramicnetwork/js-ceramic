@@ -10,7 +10,7 @@ import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
-  LoggerProvider,
+  LoggerProvider, LogStyle,
   MultiQuery,
   StreamUtils,
   SyncOptions
@@ -35,8 +35,7 @@ import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
 import { StatusCodes } from 'http-status-codes';
-import { RemoteAdminApi } from '@ceramicnetwork/http-client/lib/remote-admin-api'
-import { LocalAdminApi } from '@ceramicnetwork/core/lib/local-admin-api'
+import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
@@ -44,6 +43,15 @@ const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
 const CALLER_NAME = 'js-ceramic'
+
+const ADMIN_CODE_EXPIRATION_TIMEOUT = 1000 * 60 * 1 // 1 min
+
+type AdminCode = string
+type Timestamp = number
+
+type AdminCodeCache = {
+  [key: AdminCode]: Timestamp
+}
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -221,6 +229,8 @@ export class CeramicDaemon {
   public hostname: string
   public port: number
 
+  private readonly adminCodeCache: AdminCodeCache = {} as AdminCodeCache
+
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
     this.port = validatePort(this.opts.httpApi?.port) || DEFAULT_PORT
@@ -355,6 +365,26 @@ export class CeramicDaemon {
 
       documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this._notSupported.bind(this)) // Deprecated
+    }
+  }
+
+  async generateAdminCode(): Promise<string> {
+    const newCode = crypto.randomUUID()
+    const now = (new Date).getTime()
+    this.adminCodeCache[newCode] = now
+    return newCode
+  }
+
+  verifyAndDiscardAdminCode(code: string) {
+    const now = (new Date).getTime()
+    if (!this.adminCodeCache[code]) {
+      this.diagnosticsLogger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with admin code missing from registry`)
+      throw Error(`Unauthorized access: invalid/already used admin code`)
+    } else if (now - this.adminCodeCache[code] > ADMIN_CODE_EXPIRATION_TIMEOUT) {
+      this.diagnosticsLogger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with expired admin code`)
+      throw Error(`Unauthorized access: expired admin code - admin codes are only valid for ${ADMIN_CODE_EXPIRATION_TIMEOUT / 1000} seconds`)
+    } else {
+      delete this.adminCodeCache[code]
     }
   }
 
@@ -592,8 +622,7 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
     } else {
       try {
-        // TODO: How can we not have the jws code validation from in CeramicApi interface and not do castings like this?
-        (this.ceramic.admin as LocalAdminApi).verifyAndDiscardCode(jwsValidation.code)
+        this.verifyAndDiscardAdminCode(jwsValidation.code)
         await successCallback(jwsValidation.kid, jwsValidation.models)
         res.status(StatusCodes.OK).json({ result: 'success' })
       } catch (e) {
@@ -603,7 +632,7 @@ export class CeramicDaemon {
   }
 
   async getAdminCode(req: Request, res: Response): Promise<void> {
-    res.json({'code': await (this.ceramic.admin as LocalAdminApi).generateCode()})
+    res.json({'code': await this.generateAdminCode()})
   }
 
   async getIndexedModels(req: Request, res: Response): Promise<void> {
@@ -621,8 +650,7 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {
       try {
-        // TODO: How can we not have the jws code validation from in CeramicApi interface and not do castings like this?
-        (this.ceramic.admin as LocalAdminApi).verifyAndDiscardCode(jwsValidation.code)
+        this.verifyAndDiscardAdminCode(jwsValidation.code)
         const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid)
         res.json({
           models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
