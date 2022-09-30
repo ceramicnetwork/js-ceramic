@@ -272,6 +272,12 @@ export class DaemonDidResolversConfig {
 @toJson
 export class DaemonCeramicNodeConfig {
   /**
+   * An array of DIDs with access to Admin API (represented as strings)
+   */
+  @jsonArrayMember(String, { name: 'admin-dids' })
+  adminDids: Array<string>
+
+  /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
   @jsonMember(Boolean)

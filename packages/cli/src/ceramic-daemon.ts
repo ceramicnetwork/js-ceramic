@@ -1,7 +1,9 @@
 import * as fs from 'fs'
 import express, { Request, Response } from 'express'
-import type { CeramicConfig } from '@ceramicnetwork/core'
-import { Ceramic } from '@ceramicnetwork/core'
+import {
+  Ceramic,
+  CeramicConfig
+} from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { Metrics } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
@@ -9,9 +11,10 @@ import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
+  LogStyle,
   MultiQuery,
   StreamUtils,
-  SyncOptions,
+  SyncOptions
 } from '@ceramicnetwork/common'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -32,6 +35,8 @@ import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
+import { StatusCodes } from 'http-status-codes';
+import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
@@ -39,6 +44,15 @@ const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const HEALTHCHECK_RETRIES = 3
 const CALLER_NAME = 'js-ceramic'
+
+const ADMIN_CODE_EXPIRATION_TIMEOUT = 1000 * 60 * 1 // 1 min
+
+type AdminCode = string
+type Timestamp = number
+
+type AdminCodeCache = {
+  [key: AdminCode]: Timestamp
+}
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -66,6 +80,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   }
 
   const ceramicConfig: CeramicConfig = {
+    adminDids: opts.node.adminDids,
     loggerProvider,
     gateway: opts.node.gateway || false,
     anchorServiceUrl: opts.anchor.anchorServiceUrl,
@@ -187,6 +202,25 @@ function validatePort(inPort) {
 }
 
 /**
+ * Contents an authorization header signed by an admin DID
+ */
+type AdminAPIJWSContents = {
+  kid: string
+  code: string
+  requestPath: string
+  models: Array<string>
+}
+
+type AdminApiJWSValidationResult = {
+  kid?: string
+  code?: string
+  models?: Array<StreamID>
+  error?: string
+}
+
+type AdminApiModelMutationMethod = (actingDid: string, modelIDs: Array<StreamID>) => Promise<void>
+
+/**
  * Ceramic daemon implementation
  */
 export class CeramicDaemon {
@@ -195,6 +229,8 @@ export class CeramicDaemon {
   readonly diagnosticsLogger: DiagnosticsLogger
   public hostname: string
   public port: number
+
+  private readonly adminCodeCache: AdminCodeCache = {} as AdminCodeCache
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
@@ -280,6 +316,8 @@ export class CeramicDaemon {
     const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -290,6 +328,8 @@ export class CeramicDaemon {
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
     baseRouter.use('/collection', collectionRouter)
+    baseRouter.use('/admin/getCode', adminCodesRouter)
+    baseRouter.use('/admin/models', adminModelRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -305,6 +345,10 @@ export class CeramicDaemon {
     collectionRouter.postAsync('/', this.getCollection_post.bind(this))
     collectionRouter.getAsync('/count', this.getCollectionCount_get.bind(this)) // Deprecated
     collectionRouter.postAsync('/count', this.getCollectionCount_post.bind(this))
+    adminCodesRouter.getAsync('/', this.getAdminCode.bind(this))
+    adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
+    adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
+    adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -326,6 +370,26 @@ export class CeramicDaemon {
     }
   }
 
+  async generateAdminCode(): Promise<string> {
+    const newCode = crypto.randomUUID()
+    const now = (new Date).getTime()
+    this.adminCodeCache[newCode] = now
+    return newCode
+  }
+
+  verifyAndDiscardAdminCode(code: string) {
+    const now = (new Date).getTime()
+    if (!this.adminCodeCache[code]) {
+      this.diagnosticsLogger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with admin code missing from registry`)
+      throw Error(`Unauthorized access: invalid/already used admin code`)
+    } else if (now - this.adminCodeCache[code] > ADMIN_CODE_EXPIRATION_TIMEOUT) {
+      this.diagnosticsLogger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with expired admin code`)
+      throw Error(`Unauthorized access: expired admin code - admin codes are only valid for ${ADMIN_CODE_EXPIRATION_TIMEOUT / 1000} seconds`)
+    } else {
+      delete this.adminCodeCache[code]
+    }
+  }
+
   /**
    * Checks for availability of subsystems that Ceramic depends on (e.g. IPFS)
    * @dev Only checking for IPFS right now but checks for other subsystems can go here in the future
@@ -333,7 +397,7 @@ export class CeramicDaemon {
   async healthcheck(req: Request, res: Response): Promise<void> {
     const { checkIpfs } = parseQueryObject(req.query)
     if (checkIpfs === false) {
-      res.status(200).send('Alive!')
+      res.status(StatusCodes.OK).send('Alive!')
       return
     }
 
@@ -341,14 +405,14 @@ export class CeramicDaemon {
     for (let i = 0; i < HEALTHCHECK_RETRIES; i++) {
       try {
         if (await this.ceramic.ipfs.isOnline()) {
-          res.status(200).send('Alive!')
+          res.status(StatusCodes.OK).send('Alive!')
           return
         }
       } catch (e) {
         this.diagnosticsLogger.err(`Error checking IPFS status: ${e}`)
       }
     }
-    res.status(503).send('IPFS unreachable')
+    res.status(StatusCodes.SERVICE_UNAVAILABLE).send('IPFS unreachable')
   }
 
   /**
@@ -545,6 +609,107 @@ export class CeramicDaemon {
     return { count }
   }
 
+  private async _parseAdminApiJWS(
+    jws: string | undefined
+  ): Promise<AdminAPIJWSContents> {
+    const result = await this.ceramic.did.verifyJWS(jws)
+    return {
+      kid: result.kid,
+      code: result.payload.code,
+      requestPath: result.payload.requestPath,
+      models: result.payload.requestBody ? result.payload.requestBody.models : undefined,
+    }
+  }
+
+  private async _validateAdminApiJWS(
+    basePath: string,
+    jws: string | undefined,
+    shouldContainModels: boolean
+  ): Promise<AdminApiJWSValidationResult> {
+    if (!jws) return { error: `Missing authorization jws` }
+
+    let parsedJWS
+    try {
+      parsedJWS = await this._parseAdminApiJWS(jws)
+    } catch (e) {
+      return { error: `Error while processing the authorization header ${e.message}` }
+    }
+    if (parsedJWS.requestPath !== basePath) {
+      return { error: `The jws block contains a request path that doesn't match the request`}
+    } else if (!parsedJWS.code) {
+      return { error: 'Admin code is missing from the the jws block' }
+    } else  if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {
+      return { error: `The 'models' parameter is required and it has to be an array containing at least one model stream id`}
+    } else {
+      return {
+        kid: parsedJWS.kid,
+        code: parsedJWS.code,
+        models: parsedJWS.models?.map( modelIDString => StreamID.fromString(modelIDString) )
+      }
+    }
+  }
+
+  private async _processAdminModelsMutationRequest(
+    req: Request,
+    res: Response,
+    successCallback: AdminApiModelMutationMethod
+  ): Promise<void> {
+    const jwsValidation = await this._validateAdminApiJWS(
+      req.baseUrl,
+      req.body.jws,
+      true
+    )
+    if (jwsValidation.error) {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
+    } else {
+      try {
+        this.verifyAndDiscardAdminCode(jwsValidation.code)
+        await successCallback(jwsValidation.kid, jwsValidation.models)
+        res.status(StatusCodes.OK).json({ result: 'success' })
+      } catch (e) {
+        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+      }
+    }
+  }
+
+  async getAdminCode(req: Request, res: Response): Promise<void> {
+    res.json({'code': await this.generateAdminCode()})
+  }
+
+  async getIndexedModels(req: Request, res: Response): Promise<void> {
+    if (!req.headers.authorization) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
+      return
+    }
+    const jwsString = req.headers.authorization.split("Authorization: Basic ")[1]
+    if (!jwsString) {
+      res.status(StatusCodes.BAD_REQUEST).json({ error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'` })
+      return
+    }
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
+    if (jwsValidation.error) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
+    } else {
+      try {
+        this.verifyAndDiscardAdminCode(jwsValidation.code)
+        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid)
+        res.json({
+          models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
+        })
+      } catch (e) {
+        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+      }
+    }
+  }
+
+  async startIndexingModels(req: Request, res: Response): Promise<void> {
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin))
+  }
+
+  async stopIndexingModels(req: Request, res: Response): Promise<void> {
+    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin))
+  }
+
   /**
    * Apply one commit to the existing document
    */
@@ -657,7 +822,7 @@ export class CeramicDaemon {
   }
 
   async _notSupported(req: Request, res: Response): Promise<void> {
-    res.status(400).json({ error: 'Method not supported by read only Ceramic Gateway' })
+    res.status(StatusCodes.BAD_REQUEST).json({ error: 'Method not supported by read only Ceramic Gateway' })
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {

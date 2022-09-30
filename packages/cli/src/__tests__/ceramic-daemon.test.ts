@@ -11,8 +11,10 @@ import {
   IpfsApi,
   TimedAbortSignal,
   GenesisCommit,
+
   TestUtils,
 } from '@ceramicnetwork/common'
+import { Model } from '@ceramicnetwork/stream-model'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -26,6 +28,8 @@ import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 
 const seed = 'SEED'
 
+const MY_MODEL_1_CONTENT = { name: 'myModel1', schema: {}, accountRelation: { type: 'list' } }
+
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
   let ipfs: IpfsApi
@@ -33,13 +37,18 @@ describe('Ceramic interop: core <> http-client', () => {
   let core: Ceramic
   let daemon: CeramicDaemon
   let client: CeramicClient
+  let originalEnvVarVal: string | undefined
 
   beforeAll(async () => {
+    // FIXME: How should we be setting up this env var properly?
+    originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
   })
 
   beforeEach(async () => {
@@ -48,7 +57,6 @@ describe('Ceramic interop: core <> http-client', () => {
     daemon = await makeCeramicDaemon(core)
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-
     await core.setDID(makeDID(core, seed))
     await client.setDID(makeDID(client, seed))
   })
