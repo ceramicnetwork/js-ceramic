@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0-rc.1](/compare/@ceramicnetwork/cli@2.8.0-rc.0...@ceramicnetwork/cli@2.8.0-rc.1) (2022-09-30)
+
+
+### Features
+
+* **cli,http-client:** Use HTTP POST for composedb queries (#2472) 64700c4, closes #2472
+
+
+
+
+
 # [2.8.0-rc.0](/compare/@ceramicnetwork/cli@2.7.0...@ceramicnetwork/cli@2.8.0-rc.0) (2022-09-28)
 
 

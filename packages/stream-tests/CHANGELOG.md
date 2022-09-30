@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.9.0-rc.1](/compare/@ceramicnetwork/stream-tests@2.9.0-rc.0...@ceramicnetwork/stream-tests@2.9.0-rc.1) (2022-09-30)
+
+
+### Features
+
+* **core:** Throw clear error and log warning when querying a model that isn't indexed (#2467) e79f157, closes #2467
+
+
+
+
+
 # [2.9.0-rc.0](/compare/@ceramicnetwork/stream-tests@2.8.0...@ceramicnetwork/stream-tests@2.9.0-rc.0) (2022-09-28)
 
 

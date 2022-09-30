@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.11.0-rc.1](/compare/@ceramicnetwork/core@2.11.0-rc.0...@ceramicnetwork/core@2.11.0-rc.1) (2022-09-30)
+
+
+### Features
+
+* **core:** Throw clear error and log warning when querying a model that isn't indexed (#2467) e79f157, closes #2467
+* Use StaticJsonRpcProvider in EthereumAnchorValidator (#2471) 6c4988f, closes #2471
+
+
+
+
+
 # [2.11.0-rc.0](/compare/@ceramicnetwork/core@2.10.0...@ceramicnetwork/core@2.11.0-rc.0) (2022-09-28)
 
 
