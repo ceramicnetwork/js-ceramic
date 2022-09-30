@@ -34,18 +34,20 @@ export class RemoteAdminApi implements AdminApi {
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
   }
 
-  async generateCode(): Promise<string> {
+  private async generateCode(): Promise<string> {
     return (await this._fetchJson(this.getCodeUrl())).code
   }
 
-  async startIndexingModels(actingDid: DID, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async startIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+    const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
       body: { jws: await this.buildJWS(actingDid, code, modelsIDs)},
     })
   }
 
-  async getIndexedModels(actingDid: DID, code: string): Promise<Array<StreamID>> {
+  async getIndexedModels(actingDid: DID): Promise<Array<StreamID>> {
+    const code = await this.generateCode()
     const response= await this._fetchJson(this.getModelsUrl(), {
       headers: { 'Authorization:': `Basic ${await this.buildJWS(actingDid, code)}` },
     })
@@ -54,7 +56,8 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async stopIndexingModels(actingDid: DID, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+    const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',
       body: { jws: await this.buildJWS(actingDid, code, modelsIDs)},

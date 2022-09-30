@@ -25,19 +25,6 @@ export class LocalAdminApi implements AdminApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  private verifyAndDiscardCode(code: string) {
-    const now = (new Date).getTime()
-    if (!this.codeCache[code]) {
-      this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with admin code missing from registry`)
-      throw Error(`Unauthorized access: invalid/already used admin code`)
-    } else if (now - this.codeCache[code] > ADMIN_API_AUTHORIZATION_TIMEOUT) {
-      this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with expired admin code`)
-      throw Error(`Unauthorized access: expired admin code - admin codes are only valid for ${ADMIN_API_AUTHORIZATION_TIMEOUT / 1000} seconds`)
-    } else {
-      delete this.codeCache[code]
-    }
-  }
-
   private verifyActingDid(actingDid: string) {
     if (!this.adminDids || !this.adminDids.some( adminDid => actingDid.startsWith(adminDid) )) {
       this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api from did: ${actingDid}`)
@@ -52,25 +39,32 @@ export class LocalAdminApi implements AdminApi {
     return newCode
   }
 
-  async startIndexingModels(actingDid: string, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+  verifyAndDiscardCode(code: string) {
+    const now = (new Date).getTime()
+    if (!this.codeCache[code]) {
+      this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with admin code missing from registry`)
+      throw Error(`Unauthorized access: invalid/already used admin code`)
+    } else if (now - this.codeCache[code] > ADMIN_API_AUTHORIZATION_TIMEOUT) {
+      this.logger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with expired admin code`)
+      throw Error(`Unauthorized access: expired admin code - admin codes are only valid for ${ADMIN_API_AUTHORIZATION_TIMEOUT / 1000} seconds`)
+    } else {
+      delete this.codeCache[code]
+    }
+  }
+
+  async startIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
-    // Discard the code after verifying the admin did, so that the code may still be used, if there was a mistake with the did
-    this.verifyAndDiscardCode(code)
     this.logger.log(LogStyle.info, `Adding models to index: ${modelsIDs}`)
     await this.indexApi.indexModels(modelsIDs)
   }
 
-  getIndexedModels(actingDid: string, code: string): Promise<Array<StreamID>> {
+  getIndexedModels(actingDid: string): Promise<Array<StreamID>> {
     this.verifyActingDid(actingDid)
-    // Discard the code after verifying the admin did, so that the code may still be used, if there was a mistake with the did
-    this.verifyAndDiscardCode(code)
     return Promise.resolve(this.indexApi.indexedModels() ?? [])
   }
 
-  async stopIndexingModels(actingDid: string, code: string, modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(actingDid: string, modelsIDs: Array<StreamID>): Promise<void> {
     this.verifyActingDid(actingDid)
-    // Discard the code after verifying the admin did, so that the code may still be used, if there was a mistake with the did
-    this.verifyAndDiscardCode(code)
     this.logger.log(LogStyle.info, `Removing models from index: ${modelsIDs}`)
     await this.indexApi.stopIndexingModels(modelsIDs)
   }

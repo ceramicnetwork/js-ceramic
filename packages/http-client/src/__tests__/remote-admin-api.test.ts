@@ -27,14 +27,6 @@ beforeAll(async () => {
   did = actingDid
 })
 
-test('generateCode()', async () => {
-  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
-  const fauxFetch = jest.fn(async () => { return { code: '<FAUX_CODE>' } } ) as typeof fetchJson
-  (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.generateCode()
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/getCode`))
-})
-
 test('getIndexedModels()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT)
   // @ts-ignore
@@ -43,7 +35,7 @@ test('getIndexedModels()', async () => {
   }
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.getIndexedModels(did, FAUX_ADMIN_CODE)
+  await adminApi.getIndexedModels(did)
   expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization:": "Basic <FAKE JWS>"}})
 })
 
@@ -55,7 +47,7 @@ test('addModelsToIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.startIndexingModels(did, FAUX_ADMIN_CODE, [MODEL])
+  await adminApi.startIndexingModels(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {
@@ -73,7 +65,7 @@ test('removeModelsFromIndex()', async () => {
   }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
-  await adminApi.stopIndexingModels(did, FAUX_ADMIN_CODE, [MODEL])
+  await adminApi.stopIndexingModels(did, [MODEL])
   expect(fauxFetch).toBeCalledWith(
     new URL(`https://example.com/admin/models`),
     {

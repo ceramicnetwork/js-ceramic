@@ -35,6 +35,8 @@ import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
 import { StatusCodes } from 'http-status-codes';
+import { RemoteAdminApi } from '@ceramicnetwork/http-client/lib/remote-admin-api'
+import { LocalAdminApi } from '@ceramicnetwork/core/lib/local-admin-api'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
@@ -207,7 +209,7 @@ type AdminApiJWSValidationResult = {
   error?: string
 }
 
-type AdminApiModelMutationMethod = (actingDid: string, code: string, modelIDs: Array<StreamID>) => Promise<void>
+type AdminApiModelMutationMethod = (actingDid: string, modelIDs: Array<StreamID>) => Promise<void>
 
 /**
  * Ceramic daemon implementation
@@ -590,7 +592,9 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
     } else {
       try {
-        await successCallback(jwsValidation.kid, jwsValidation.code, jwsValidation.models)
+        // TODO: How can we not have the jws code validation from in CeramicApi interface and not do castings like this?
+        (this.ceramic.admin as LocalAdminApi).verifyAndDiscardCode(jwsValidation.code)
+        await successCallback(jwsValidation.kid, jwsValidation.models)
         res.status(StatusCodes.OK).json({ result: 'success' })
       } catch (e) {
         res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
@@ -599,7 +603,7 @@ export class CeramicDaemon {
   }
 
   async getAdminCode(req: Request, res: Response): Promise<void> {
-    res.json({'code': await this.ceramic.admin.generateCode()})
+    res.json({'code': await (this.ceramic.admin as LocalAdminApi).generateCode()})
   }
 
   async getIndexedModels(req: Request, res: Response): Promise<void> {
@@ -617,7 +621,9 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {
       try {
-        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid, jwsValidation.code)
+        // TODO: How can we not have the jws code validation from in CeramicApi interface and not do castings like this?
+        (this.ceramic.admin as LocalAdminApi).verifyAndDiscardCode(jwsValidation.code)
+        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid)
         res.json({
           models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
         })
