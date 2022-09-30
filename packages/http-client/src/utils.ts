@@ -27,6 +27,7 @@ export function serializeObjectToSearchParams(
 
 /**
  * Takes an object and prepares it to be sent via HTTP POST.
+ * Note: only serializes the top level fields currently.
  */
 export function serializeObjectForHttpPost(query: Record<string, any>): Record<string, any> {
   const result = {}
