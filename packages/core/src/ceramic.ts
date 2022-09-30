@@ -276,7 +276,7 @@ export class Ceramic implements CeramicApi {
   private _buildPinApi(): PinApi {
     return new LocalPinApi(this.repository, this._logger)
   }
-  
+
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
     const networkName = config.networkName || DEFAULT_NETWORK
 

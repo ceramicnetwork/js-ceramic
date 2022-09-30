@@ -10,7 +10,8 @@ import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
-  LoggerProvider, LogStyle,
+  LoggerProvider,
+  LogStyle,
   MultiQuery,
   StreamUtils,
   SyncOptions

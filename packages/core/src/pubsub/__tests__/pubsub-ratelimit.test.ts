@@ -38,6 +38,14 @@ async function startOfASecond() {
   await new Promise((resolve) => setTimeout(resolve, start - now))
 }
 
+/**
+ * Indicate if difference between `a` and `b` is less than `grace`.
+ */
+function areClose(a: number, b: number, grace: number): boolean {
+  const difference = Math.abs(a - b)
+  return difference <= grace
+}
+
 describe('pubsub with queries rate limited', () => {
   jest.setTimeout(ONE_SECOND * 30)
 
@@ -98,6 +106,7 @@ describe('pubsub with queries rate limited', () => {
       return empty().subscribe()
     })
     const messages = Array.from({ length: QUERIES_PER_SECOND * batches }).map(randomQueryMessage)
+
     await Promise.all(messages.map((message) => whenSubscriptionDone(pubsub.next(message))))
     // Send all the messages using `this.pubsub.next`
     expect(times.length).toEqual(messages.length)
@@ -112,7 +121,9 @@ describe('pubsub with queries rate limited', () => {
       const current = firstElements[i]
       const previous = firstElements[i - 1]
       const difference = current.valueOf() - previous.valueOf()
-      expect(difference >= ONE_SECOND).toBeTruthy()
+      // because sleep intervals aren't perfectly reliable and can be off by a millisecond or two, we
+      // give a 10 millisecond "buffer" to the time comparison to prevent the test from failing sporadically.
+      expect(areClose(difference, ONE_SECOND, 10)).toBeTruthy()
     }
     for (const chunk of perSecondChunks) {
       // Each chunk contains at most QUERIES_PER_SECOND elements

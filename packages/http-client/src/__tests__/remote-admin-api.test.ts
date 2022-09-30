@@ -8,7 +8,6 @@ import KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
-const FAUX_ADMIN_CODE = '<FAUX-ADMIN-CODE>'
 const MODEL = new StreamID(1, TestUtils.randomCID())
 const SUCCESS_RESPONSE = {
   result: 'success'
