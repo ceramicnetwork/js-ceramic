@@ -50,7 +50,7 @@ jest.unstable_mockModule('@ethersproject/providers', () => {
 
   return {
     ...originalModule,
-    JsonRpcProvider: class {
+    StaticJsonRpcProvider: class {
       constructor() {
         MockJsonRpcProvider.reset()
         return MockJsonRpcProvider
