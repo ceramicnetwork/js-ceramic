@@ -1,4 +1,4 @@
-import type { Cacao } from 'ceramic-cacao'
+import type { Cacao } from '@didtools/cacao'
 import type { DID } from 'dids'
 import type { CommitData } from '../index.js'
 import type { StreamID } from '@ceramicnetwork/streamid'

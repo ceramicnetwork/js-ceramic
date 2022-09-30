@@ -11,7 +11,7 @@ import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { randomString } from '@stablelib/random'
-import { Cacao, SiweMessage } from 'ceramic-cacao'
+import { Cacao, SiweMessage } from '@didtools/cacao'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
