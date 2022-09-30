@@ -14,6 +14,7 @@ import {
 
   TestUtils,
 } from '@ceramicnetwork/common'
+import { Model } from '@ceramicnetwork/stream-model'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -26,6 +27,8 @@ import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 
 const seed = 'SEED'
+
+const MY_MODEL_1_CONTENT = { name: 'myModel1', schema: {}, accountRelation: { type: 'list' } }
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
@@ -54,7 +57,6 @@ describe('Ceramic interop: core <> http-client', () => {
     daemon = await makeCeramicDaemon(core)
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-
     await core.setDID(makeDID(core, seed))
     await client.setDID(makeDID(client, seed))
   })
@@ -632,7 +634,5 @@ describe('Ceramic interop: core <> http-client', () => {
       await client.pin.add(docA.id, true)
       expect(pinSpy).toBeCalledTimes(4)
     })
-
-
   })
 })

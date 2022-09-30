@@ -128,7 +128,7 @@ export class LocalIndexApi implements IndexApi {
     return this.databaseIndexApi?.getActiveModelsToIndex()
   }
 
-  async indexModels(models: Array<StreamID> | null): Promise<void> {
+  async indexModels(models: Array<StreamID> | null | undefined): Promise<void> {
     if (!models) {
       return
     }
