@@ -24,3 +24,19 @@ export function serializeObjectToSearchParams(
   }
   return resultURL
 }
+
+/**
+ * Takes an object and prepares it to be sent via HTTP POST.
+ * Note: only serializes the top level fields currently.
+ */
+export function serializeObjectForHttpPost(query: Record<string, any>): Record<string, any> {
+  const result = {}
+  for (const [key, value] of Object.entries(query)) {
+    if (StreamID.isInstance(value)) {
+      result[key] = value.toString()
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}

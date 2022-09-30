@@ -6,7 +6,7 @@ import type {
   StreamState,
 } from '@ceramicnetwork/common'
 import { StreamUtils, fetchJson } from '@ceramicnetwork/common'
-import { serializeObjectToSearchParams } from './utils.js'
+import { serializeObjectForHttpPost } from './utils.js'
 
 /**
  * IndexAPI implementation on top of HTTP endpoint.
@@ -23,8 +23,10 @@ export class RemoteIndexApi implements IndexApi {
   }
 
   async count(query: BaseQuery): Promise<number> {
-    const queryURL = serializeObjectToSearchParams(this._countURL, query)
-    const response = await this._fetchJson(queryURL)
+    const response = await this._fetchJson(this._countURL, {
+      method: 'POST',
+      body: serializeObjectForHttpPost(query),
+    })
     return response.count
   }
 
@@ -32,9 +34,10 @@ export class RemoteIndexApi implements IndexApi {
    * Issue a query to `/collection` endpoint.
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
-    const queryURL = serializeObjectToSearchParams(this._collectionURL, query)
-
-    const response = await this._fetchJson(queryURL)
+    const response = await this._fetchJson(this._collectionURL, {
+      method: 'POST',
+      body: serializeObjectForHttpPost(query),
+    })
     const edges = response.edges.map((e) => {
       return {
         cursor: e.cursor,
