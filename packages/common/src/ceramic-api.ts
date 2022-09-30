@@ -60,22 +60,27 @@ export interface CeramicSigner extends CeramicCommon {
 export interface AdminApi {
   /**
    * List indexed model streams
+   *
+   * @param actingDid - did that performs the operation
    */
-  getIndexedModels(): Promise<Array<StreamID>>
+  getIndexedModels(actingDid: DID | string): Promise<Array<StreamID>>
 
   /**
    * Adds model streams to index
    *
+   * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to add to index
    */
-  startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+  startIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 
   /**
    * Removes model streams from index
    *
+   * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to remove from index
    */
-  stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  stopIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
 }
 
 /**

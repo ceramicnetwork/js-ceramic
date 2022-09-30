@@ -11,6 +11,7 @@ import {
   IpfsApi,
   TimedAbortSignal,
   GenesisCommit,
+
   TestUtils,
 } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
@@ -632,82 +633,6 @@ describe('Ceramic interop: core <> http-client', () => {
       // Now force re-pin and make sure underlying state and ipfs records get re-pinned
       await client.pin.add(docA.id, true)
       expect(pinSpy).toBeCalledTimes(4)
-    })
-
-
-  })
-
-  describe('admin api', () => {
-    it('admin models API CRUD test', async () => {
-      // TODO: Implement this test using the highest-level interface once it's ready
-      const adminURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
-      // @ts-ignore
-      const myModel1 = await  Model.create(core, MY_MODEL_1_CONTENT)
-      const exampleModelStreamId = myModel1.id.toString()
-
-      const getResult = await fetchJson(adminURLString)
-      expect(getResult.models).toEqual([])
-
-      const postResult = await fetchJson(adminURLString, {
-        method:'POST',
-        body: {  models: [exampleModelStreamId] }
-      })
-      expect(postResult.result).toEqual('success')
-
-      const newGetResult = await fetchJson(adminURLString)
-      expect(newGetResult.models).toEqual([exampleModelStreamId])
-
-      const deleteResult = await fetchJson(adminURLString, {
-        method:'DELETE',
-        body: {  models: [exampleModelStreamId] }
-      })
-      expect(deleteResult.result).toEqual('success')
-      const getResultAfterDelete = await fetchJson(adminURLString)
-      expect(getResultAfterDelete.models).toEqual([])
-    })
-
-    describe('admin models API validation test', () => {
-      it('No models for POST', async () => {
-        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-          {
-            method:'POST'
-          })
-        ).rejects.toThrow(
-          /The `models` parameter is required and it has to be an array containing at least one model stream id/
-        )
-      })
-
-      it('Empty models for POST', async () => {
-        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-          {
-            method:'POST',
-            body: { models: [] }
-          })
-        ).rejects.toThrow(
-          /The `models` parameter is required and it has to be an array containing at least one model stream id/
-        )
-      })
-
-      it('No models for DELETE', async () => {
-        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-          {
-            method:'DELETE'
-          })
-        ).rejects.toThrow(
-          /The `models` parameter is required and it has to be an array containing at least one model stream id/
-        )
-      })
-
-      it('Empty models for DELETE', async () => {
-        await expect(fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`,
-          {
-            method:'DELETE',
-            body: { models: [] }
-          })
-        ).rejects.toThrow(
-          /The `models` parameter is required and it has to be an array containing at least one model stream id/
-        )
-      })
     })
   })
 })
