@@ -124,7 +124,11 @@ export class LocalIndexApi implements IndexApi {
     }
   }
 
-  async indexModels(models: Array<StreamID> | null): Promise<void> {
+  indexedModels(): Array<StreamID> {
+    return this.databaseIndexApi?.getActiveModelsToIndex()
+  }
+
+  async indexModels(models: Array<StreamID> | null | undefined): Promise<void> {
     if (!models) {
       return
     }
@@ -136,6 +140,10 @@ export class LocalIndexApi implements IndexApi {
       this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
     }
     await this.databaseIndexApi?.indexModels(indexModelsArgs)
+  }
+
+  async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+    await this.databaseIndexApi?.stopIndexingModels(models)
   }
 
   async init(): Promise<void> {

@@ -9,9 +9,10 @@ import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
+  LogStyle,
   MultiQuery,
   StreamUtils,
-  SyncOptions,
+  SyncOptions
 } from '@ceramicnetwork/common'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -280,6 +281,7 @@ export class CeramicDaemon {
     const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -290,6 +292,7 @@ export class CeramicDaemon {
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
     baseRouter.use('/collection', collectionRouter)
+    baseRouter.use('/admin/models', adminModelRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -303,6 +306,10 @@ export class CeramicDaemon {
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection.bind(this))
     collectionRouter.getAsync('/count', this.getCollectionCount.bind(this))
+    adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
+    adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
+    adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -502,6 +509,51 @@ export class CeramicDaemon {
       }),
       pageInfo: indexResponse.pageInfo,
     })
+  }
+
+  async getIndexedModels(req: Request, res: Response): Promise<void> {
+    const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+    res.json({
+      models: indexedModelStreamIDs.map(String)
+    })
+  }
+
+  private  _validateModelIDStrings(
+    modelIDStrings: any
+  ): {
+    modelIDStrings?: Array<string>,
+    error?: string
+  } {
+    const cast = modelIDStrings as Array<string>
+    let error = undefined
+    if (!cast || cast.length === 0) {
+      error = 'The `models` parameter is required and it has to be an array containing at least one model stream id'
+    }
+
+    return {
+      modelIDStrings: error ?? cast,
+      error: error,
+    }
+  }
+
+  async startIndexingModels(req: Request, res: Response): Promise<void> {
+    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    if (error) {
+      res.status(422).json({ error: error })
+    } else {
+      await this.ceramic.admin.startIndexingModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      res.status(200).json({ result: 'success' })
+    }
+  }
+
+  async stopIndexingModels(req: Request, res: Response): Promise<void> {
+    const { modelIDStrings, error } = this._validateModelIDStrings(req.body.models)
+    if (error) {
+      res.status(422).json({ error: error })
+    } else {
+      await this.ceramic.admin.stopIndexingModels(modelIDStrings.map( modelIDString => StreamID.fromString(modelIDString) ))
+      res.status(200).json({ result: 'success' })
+    }
   }
 
   /**
