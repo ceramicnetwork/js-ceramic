@@ -92,8 +92,6 @@ export interface CeramicApi extends CeramicSigner {
 
   readonly index: IndexApi
 
-  readonly admin: AdminApi
-
   /**
    * Register Stream handler
    * @param streamHandler - StreamHandler instance

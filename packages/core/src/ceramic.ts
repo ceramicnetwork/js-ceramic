@@ -23,8 +23,6 @@ import {
   AnchorValidator,
   AnchorStatus,
   StreamState,
-  AdminApi,
-
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -180,7 +178,7 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly pin: PinApi
-  public readonly admin: AdminApi
+  public readonly admin: LocalAdminApi
   readonly repository: Repository
 
   readonly _streamHandlers: HandlersMap
