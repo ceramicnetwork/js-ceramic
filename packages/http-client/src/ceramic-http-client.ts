@@ -20,7 +20,6 @@ import {
   AnchorStatus,
   IndexApi,
   StreamState,
-  AdminApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -75,7 +74,7 @@ export class CeramicClient implements CeramicApi {
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
-  public readonly admin: AdminApi
+  public readonly admin: RemoteAdminApi
   public readonly index: IndexApi
   public readonly context: Context
 
