@@ -35,7 +35,7 @@ test('getIndexedModels()', async () => {
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
   (adminApi as any)._fetchJson = fauxFetch
   await adminApi.getIndexedModels(did)
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization:": "Basic <FAKE JWS>"}})
+  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {"headers": {"Authorization": "Basic <FAKE JWS>"}})
 })
 
 test('addModelsToIndex()', async () => {
