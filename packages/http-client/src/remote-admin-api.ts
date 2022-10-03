@@ -12,7 +12,7 @@ export class RemoteAdminApi implements AdminApi {
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
 
-  constructor(private readonly _apiUrl: URL) {}
+  constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
 
   private getCodeUrl(): URL {
     return new URL(this.getCodePath, this._apiUrl)
@@ -42,29 +42,29 @@ export class RemoteAdminApi implements AdminApi {
     return (await this._fetchJson(this.getCodeUrl())).code
   }
 
-  async startIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+  async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
-      body: { jws: await this.buildJWS(actingDid, code, modelsIDs) },
+      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
     })
   }
 
-  async getIndexedModels(actingDid: DID): Promise<Array<StreamID>> {
+  async getIndexedModels(): Promise<Array<StreamID>> {
     const code = await this.generateCode()
     const response = await this._fetchJson(this.getModelsUrl(), {
-      headers: { Authorization: `Basic ${await this.buildJWS(actingDid, code)}` },
+      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code)}` },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
     })
   }
 
-  async stopIndexingModels(actingDid: DID, modelsIDs: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',
-      body: { jws: await this.buildJWS(actingDid, code, modelsIDs) },
+      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
     })
   }
 }

@@ -77,7 +77,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   }
 
   const ceramicConfig: CeramicConfig = {
-    adminDids: opts.node.adminDids,
     loggerProvider,
     gateway: opts.node.gateway || false,
     anchorServiceUrl: opts.anchor.anchorServiceUrl,
@@ -215,7 +214,7 @@ type AdminApiJWSValidationResult = {
   error?: string
 }
 
-type AdminApiModelMutationMethod = (actingDid: string, modelIDs: Array<StreamID>) => Promise<void>
+type AdminApiModelMutationMethod = (modelIDs: Array<StreamID>) => Promise<void>
 
 /**
  * Ceramic daemon implementation
@@ -226,6 +225,7 @@ export class CeramicDaemon {
   readonly diagnosticsLogger: DiagnosticsLogger
   public hostname: string
   public port: number
+  private readonly adminDids: Array<string>
 
   private readonly adminCodeCache: AdminCodeCache = {} as AdminCodeCache
 
@@ -233,6 +233,7 @@ export class CeramicDaemon {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
     this.port = validatePort(this.opts.httpApi?.port) || DEFAULT_PORT
     this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
+    this.adminDids = this.opts.httpApi?.adminDids || []
 
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
@@ -374,7 +375,7 @@ export class CeramicDaemon {
     return newCode
   }
 
-  verifyAndDiscardAdminCode(code: string) {
+  _verifyAndDiscardAdminCode(code: string) {
     const now = new Date().getTime()
     if (!this.adminCodeCache[code]) {
       this.diagnosticsLogger.log(
@@ -656,23 +657,44 @@ export class CeramicDaemon {
     }
   }
 
+  /**
+   * Checks that the given DID that is being used for a request to an AdminAPI endpoint is actually
+   * configured as an Admin DID for this node, and throws if not.
+   */
+  private _verifyActingDid(actingDid: string) {
+    if (!this.adminDids.some((adminDid) => actingDid.startsWith(adminDid))) {
+      this.diagnosticsLogger.verbose(
+        `Unauthorized access attempt to Admin Api from did: ${actingDid}`
+      )
+      throw Error(
+        `Unauthorized access: DID '${actingDid}' does not have admin access permission to this node`
+      )
+    }
+  }
+
   private async _processAdminModelsMutationRequest(
     req: Request,
     res: Response,
     successCallback: AdminApiModelMutationMethod
   ): Promise<void> {
+    // Parse request
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws, true)
     if (jwsValidation.error) {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
-    } else {
-      try {
-        this.verifyAndDiscardAdminCode(jwsValidation.code)
-        await successCallback(jwsValidation.kid, jwsValidation.models)
-        res.status(StatusCodes.OK).json({ result: 'success' })
-      } catch (e) {
-        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
-      }
+      return
     }
+
+    // Authorize request
+    try {
+      this._verifyAndDiscardAdminCode(jwsValidation.code)
+      this._verifyActingDid(jwsValidation.kid)
+    } catch (e) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+    }
+
+    // Process request
+    await successCallback(jwsValidation.models)
+    res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
   async getAdminCode(req: Request, res: Response): Promise<void> {
@@ -686,11 +708,9 @@ export class CeramicDaemon {
     }
     const jwsString = req.headers.authorization.split('Basic ')[1]
     if (!jwsString) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({
-          error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'`,
-        })
+      res.status(StatusCodes.BAD_REQUEST).json({
+        error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'`,
+      })
       return
     }
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
@@ -698,8 +718,9 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {
       try {
-        this.verifyAndDiscardAdminCode(jwsValidation.code)
-        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid)
+        this._verifyAndDiscardAdminCode(jwsValidation.code)
+        this._verifyActingDid(jwsValidation.kid)
+        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
         res.json({
           models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
         })

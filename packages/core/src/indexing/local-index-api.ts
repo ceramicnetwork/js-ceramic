@@ -143,6 +143,7 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+    this.logger.imp(`Stopping indexing for Models: ${models.map(String).join(',')}`)
     await this.databaseIndexApi?.stopIndexingModels(models)
   }
 

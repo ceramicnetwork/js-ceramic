@@ -51,12 +51,14 @@ describe('admin api', () => {
 
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path)
-    daemon = await makeCeramicDaemon(core)
+    daemon = await makeCeramicDaemon(core, {
+      'http-api': { 'admin-dids': [adminDid.id.toString()] },
+    })
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
-    await core.setDID(makeDID(core, seed))
-    await client.setDID(makeDID(client, seed))
+    core.did = makeDID(core, seed)
+    client.did = makeDID(client, seed)
 
     // @ts-ignore
     const myModel1 = await Model.create(core, MY_MODEL_1_CONTENT)
