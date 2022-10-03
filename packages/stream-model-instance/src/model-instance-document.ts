@@ -281,19 +281,20 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
 
-    if (!metadata.controller) {
+    let controller = metadata.controller
+    if (!controller) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        metadata.controller = signer.did.hasParent ? signer.did.parent : signer.did.id
+        controller = signer.did.hasParent ? signer.did.parent : signer.did.id
       } else {
         throw new Error('No controller specified')
       }
     }
 
     const header: GenesisHeader = {
-      controllers: [metadata.controller],
+      controllers: [controller],
       model: metadata.model.bytes,
     }
     if (!metadata.deterministic) {
