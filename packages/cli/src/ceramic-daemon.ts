@@ -681,7 +681,7 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
       return
     }
-    const jwsString = req.headers.authorization.split("Authorization: Basic ")[1]
+    const jwsString = req.headers.authorization.split("Basic ")[1]
     if (!jwsString) {
       res.status(StatusCodes.BAD_REQUEST).json({ error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'` })
       return

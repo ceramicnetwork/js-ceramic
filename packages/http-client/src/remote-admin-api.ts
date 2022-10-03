@@ -28,7 +28,7 @@ export class RemoteAdminApi implements AdminApi {
     const body = modelsIDs ? { models: modelsIDs.map(streamID => streamID.toString()) } : undefined
     const jws = await actingDid.createJWS({
       code: code,
-      requestPath: this._apiUrl.pathname,
+      requestPath: this.getModelsUrl().pathname,
       requestBody: body
     })
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
@@ -49,7 +49,7 @@ export class RemoteAdminApi implements AdminApi {
   async getIndexedModels(actingDid: DID): Promise<Array<StreamID>> {
     const code = await this.generateCode()
     const response= await this._fetchJson(this.getModelsUrl(), {
-      headers: { 'Authorization:': `Basic ${await this.buildJWS(actingDid, code)}` },
+      headers: { 'Authorization': `Basic ${await this.buildJWS(actingDid, code)}` },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
