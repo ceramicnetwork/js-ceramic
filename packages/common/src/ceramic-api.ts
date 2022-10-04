@@ -60,27 +60,23 @@ export interface CeramicSigner extends CeramicCommon {
 export interface AdminApi {
   /**
    * List indexed model streams
-   *
-   * @param actingDid - did that performs the operation
    */
-  getIndexedModels(actingDid: DID | string): Promise<Array<StreamID>>
+  getIndexedModels(): Promise<Array<StreamID>>
 
   /**
    * Adds model streams to index
    *
-   * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to add to index
    */
-  startIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
+  startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
 
   /**
    * Removes model streams from index
    *
-   * @param actingDid - did that performs the operation
    * @param modelsIDs - array of model stream IDs to remove from index
    */
 
-  stopIndexingModels(actingDid: DID | string, modelsIDs: Array<StreamID>): Promise<void>
+  stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
 }
 
 /**
@@ -91,6 +87,8 @@ export interface CeramicApi extends CeramicSigner {
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
   readonly index: IndexApi
+
+  readonly admin: AdminApi
 
   /**
    * Register Stream handler

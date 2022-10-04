@@ -153,6 +153,12 @@ export class DaemonHTTPApiConfig {
     },
   })
   corsAllowedOrigins?: RegExp[]
+
+  /**
+   * An array of DIDs with access to Admin API (represented as strings)
+   */
+  @jsonArrayMember(String, { name: 'admin-dids' })
+  adminDids?: Array<string>
 }
 
 /**
@@ -271,12 +277,6 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-  /**
-   * An array of DIDs with access to Admin API (represented as strings)
-   */
-  @jsonArrayMember(String, { name: 'admin-dids' })
-  adminDids: Array<string>
-
   /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
