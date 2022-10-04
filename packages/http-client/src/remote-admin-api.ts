@@ -13,7 +13,6 @@ export class RemoteAdminApi implements AdminApi {
   readonly getCodePath = './admin/getCode'
 
   constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
-
   private getCodeUrl(): URL {
     return new URL(this.getCodePath, this._apiUrl)
   }
