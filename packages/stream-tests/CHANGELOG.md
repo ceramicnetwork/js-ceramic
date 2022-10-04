@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.9.0-rc.2](/compare/@ceramicnetwork/stream-tests@2.9.0-rc.1...@ceramicnetwork/stream-tests@2.9.0-rc.2) (2022-10-04)
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
 # [2.9.0-rc.1](/compare/@ceramicnetwork/stream-tests@2.9.0-rc.0...@ceramicnetwork/stream-tests@2.9.0-rc.1) (2022-09-30)
 
 

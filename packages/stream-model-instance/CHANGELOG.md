@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.3-rc.2](/compare/@ceramicnetwork/stream-model-instance@0.4.3-rc.1...@ceramicnetwork/stream-model-instance@0.4.3-rc.2) (2022-10-04)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
 ## [0.4.3-rc.1](/compare/@ceramicnetwork/stream-model-instance@0.4.3-rc.0...@ceramicnetwork/stream-model-instance@0.4.3-rc.1) (2022-09-30)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance
