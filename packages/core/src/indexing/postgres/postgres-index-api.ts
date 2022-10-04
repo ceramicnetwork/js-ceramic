@@ -119,18 +119,44 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     await this.indexDocumentInDatabase(tableName, args)
   }
 
-  async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+  /**
+   * Ensures that the given model StreamID can be queried and throws if not.
+   */
+  assertModelQueryable(modelStreamId: StreamID | string): void {
     // TODO(NET-1630) Throw if historical indexing is in progress
     if (!this.allowQueriesBeforeHistoricalSync) {
-      throw new IndexQueryNotAvailableError(query.model)
+      throw new IndexQueryNotAvailableError(modelStreamId)
     }
-    const model = query.model.toString()
+
+    const model = modelStreamId.toString()
     if (this.modelsToIndex.find((indexedModel) => indexedModel.toString() == model) == undefined) {
       const err = new Error(`Query failed: Model ${model} is not indexed on this node`)
-      this.logger.warn(err)
+      this.logger.debug(err)
       throw err
     }
+  }
+
+  async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+    this.assertModelQueryable(query.model)
     return this.insertionOrder.page(query)
+  }
+
+  async count(query: BaseQuery): Promise<number> {
+    this.assertModelQueryable(query.model)
+
+    const tableName = asTableName(query.model)
+    let dbQuery = this.dbConnection(tableName).count('*')
+    if (query.account) {
+      dbQuery = dbQuery.where({ controller_did: query.account })
+    }
+    if (query.filter) {
+      for (const [key, value] of Object.entries(query.filter)) {
+        const filterObj = {}
+        filterObj[key] = value
+        dbQuery = dbQuery.andWhere(filterObj)
+      }
+    }
+    return dbQuery.then((response) => Number(response[0]['count']))
   }
 
   async verifyTables(models: Array<IndexModelArgs>): Promise<void> {
@@ -162,21 +188,5 @@ export class PostgresIndexApi implements DatabaseIndexApi {
 
   async close(): Promise<void> {
     await this.dbConnection.destroy()
-  }
-
-  async count(query: BaseQuery): Promise<number> {
-    const tableName = asTableName(query.model)
-    let dbQuery = this.dbConnection(tableName).count('*')
-    if (query.account) {
-      dbQuery = dbQuery.where({ controller_did: query.account })
-    }
-    if (query.filter) {
-      for (const [key, value] of Object.entries(query.filter)) {
-        const filterObj = {}
-        filterObj[key] = value
-        dbQuery = dbQuery.andWhere(filterObj)
-      }
-    }
-    return dbQuery.then((response) => Number(response[0]['count']))
   }
 }
