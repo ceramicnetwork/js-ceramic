@@ -1,9 +1,6 @@
 import * as fs from 'fs'
 import express, { Request, Response } from 'express'
-import {
-  Ceramic,
-  CeramicConfig
-} from '@ceramicnetwork/core'
+import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { Metrics } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
@@ -14,7 +11,7 @@ import {
   LogStyle,
   MultiQuery,
   StreamUtils,
-  SyncOptions
+  SyncOptions,
 } from '@ceramicnetwork/common'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -35,7 +32,7 @@ import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
-import { StatusCodes } from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
@@ -372,19 +369,29 @@ export class CeramicDaemon {
 
   async generateAdminCode(): Promise<string> {
     const newCode = crypto.randomUUID()
-    const now = (new Date).getTime()
+    const now = new Date().getTime()
     this.adminCodeCache[newCode] = now
     return newCode
   }
 
   verifyAndDiscardAdminCode(code: string) {
-    const now = (new Date).getTime()
+    const now = new Date().getTime()
     if (!this.adminCodeCache[code]) {
-      this.diagnosticsLogger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with admin code missing from registry`)
+      this.diagnosticsLogger.log(
+        LogStyle.warn,
+        `Unauthorized access attempt to Admin Api with admin code missing from registry`
+      )
       throw Error(`Unauthorized access: invalid/already used admin code`)
     } else if (now - this.adminCodeCache[code] > ADMIN_CODE_EXPIRATION_TIMEOUT) {
-      this.diagnosticsLogger.log(LogStyle.warn, `Unauthorized access attempt to Admin Api with expired admin code`)
-      throw Error(`Unauthorized access: expired admin code - admin codes are only valid for ${ADMIN_CODE_EXPIRATION_TIMEOUT / 1000} seconds`)
+      this.diagnosticsLogger.log(
+        LogStyle.warn,
+        `Unauthorized access attempt to Admin Api with expired admin code`
+      )
+      throw Error(
+        `Unauthorized access: expired admin code - admin codes are only valid for ${
+          ADMIN_CODE_EXPIRATION_TIMEOUT / 1000
+        } seconds`
+      )
     } else {
       delete this.adminCodeCache[code]
     }
@@ -609,9 +616,7 @@ export class CeramicDaemon {
     return { count }
   }
 
-  private async _parseAdminApiJWS(
-    jws: string | undefined
-  ): Promise<AdminAPIJWSContents> {
+  private async _parseAdminApiJWS(jws: string | undefined): Promise<AdminAPIJWSContents> {
     const result = await this.ceramic.did.verifyJWS(jws)
     return {
       kid: result.kid,
@@ -635,16 +640,18 @@ export class CeramicDaemon {
       return { error: `Error while processing the authorization header ${e.message}` }
     }
     if (parsedJWS.requestPath !== basePath) {
-      return { error: `The jws block contains a request path that doesn't match the request`}
+      return { error: `The jws block contains a request path that doesn't match the request` }
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
-    } else  if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {
-      return { error: `The 'models' parameter is required and it has to be an array containing at least one model stream id`}
+    } else if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {
+      return {
+        error: `The 'models' parameter is required and it has to be an array containing at least one model stream id`,
+      }
     } else {
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
-        models: parsedJWS.models?.map( modelIDString => StreamID.fromString(modelIDString) )
+        models: parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString)),
       }
     }
   }
@@ -654,11 +661,7 @@ export class CeramicDaemon {
     res: Response,
     successCallback: AdminApiModelMutationMethod
   ): Promise<void> {
-    const jwsValidation = await this._validateAdminApiJWS(
-      req.baseUrl,
-      req.body.jws,
-      true
-    )
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws, true)
     if (jwsValidation.error) {
       res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
     } else {
@@ -673,7 +676,7 @@ export class CeramicDaemon {
   }
 
   async getAdminCode(req: Request, res: Response): Promise<void> {
-    res.json({'code': await this.generateAdminCode()})
+    res.json({ code: await this.generateAdminCode() })
   }
 
   async getIndexedModels(req: Request, res: Response): Promise<void> {
@@ -681,9 +684,13 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
       return
     }
-    const jwsString = req.headers.authorization.split("Basic ")[1]
+    const jwsString = req.headers.authorization.split('Basic ')[1]
     if (!jwsString) {
-      res.status(StatusCodes.BAD_REQUEST).json({ error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'` })
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({
+          error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'`,
+        })
       return
     }
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
@@ -694,7 +701,7 @@ export class CeramicDaemon {
         this.verifyAndDiscardAdminCode(jwsValidation.code)
         const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels(jwsValidation.kid)
         res.json({
-          models: indexedModelStreamIDs.map(modelStreamID => modelStreamID.toString())
+          models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
         })
       } catch (e) {
         res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
@@ -703,11 +710,19 @@ export class CeramicDaemon {
   }
 
   async startIndexingModels(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin))
+    await this._processAdminModelsMutationRequest(
+      req,
+      res,
+      this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin)
+    )
   }
 
   async stopIndexingModels(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(req, res, this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin))
+    await this._processAdminModelsMutationRequest(
+      req,
+      res,
+      this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin)
+    )
   }
 
   /**
@@ -822,7 +837,9 @@ export class CeramicDaemon {
   }
 
   async _notSupported(req: Request, res: Response): Promise<void> {
-    res.status(StatusCodes.BAD_REQUEST).json({ error: 'Method not supported by read only Ceramic Gateway' })
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: 'Method not supported by read only Ceramic Gateway' })
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {

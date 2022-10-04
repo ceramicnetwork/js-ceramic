@@ -12,9 +12,7 @@ export class RemoteAdminApi implements AdminApi {
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
 
-  constructor(
-    private readonly _apiUrl: URL
-  ) {}
+  constructor(private readonly _apiUrl: URL) {}
 
   private getCodeUrl(): URL {
     return new URL(this.getCodePath, this._apiUrl)
@@ -24,12 +22,18 @@ export class RemoteAdminApi implements AdminApi {
     return new URL(this.modelsPath, this._apiUrl)
   }
 
-  private async buildJWS(actingDid: DID, code: string, modelsIDs?: Array<StreamID>): Promise<string> {
-    const body = modelsIDs ? { models: modelsIDs.map(streamID => streamID.toString()) } : undefined
+  private async buildJWS(
+    actingDid: DID,
+    code: string,
+    modelsIDs?: Array<StreamID>
+  ): Promise<string> {
+    const body = modelsIDs
+      ? { models: modelsIDs.map((streamID) => streamID.toString()) }
+      : undefined
     const jws = await actingDid.createJWS({
       code: code,
       requestPath: this.getModelsUrl().pathname,
-      requestBody: body
+      requestBody: body,
     })
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
   }
@@ -42,14 +46,14 @@ export class RemoteAdminApi implements AdminApi {
     const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
-      body: { jws: await this.buildJWS(actingDid, code, modelsIDs)},
+      body: { jws: await this.buildJWS(actingDid, code, modelsIDs) },
     })
   }
 
   async getIndexedModels(actingDid: DID): Promise<Array<StreamID>> {
     const code = await this.generateCode()
-    const response= await this._fetchJson(this.getModelsUrl(), {
-      headers: { 'Authorization': `Basic ${await this.buildJWS(actingDid, code)}` },
+    const response = await this._fetchJson(this.getModelsUrl(), {
+      headers: { Authorization: `Basic ${await this.buildJWS(actingDid, code)}` },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
@@ -60,7 +64,7 @@ export class RemoteAdminApi implements AdminApi {
     const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',
-      body: { jws: await this.buildJWS(actingDid, code, modelsIDs)},
+      body: { jws: await this.buildJWS(actingDid, code, modelsIDs) },
     })
   }
 }
