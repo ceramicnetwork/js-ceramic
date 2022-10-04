@@ -18,6 +18,7 @@ const GET_RESPONSE = {
 
 let did: DID
 let getDidFn
+let expectedKid: string
 
 beforeAll(async () => {
   const seed = randomBytes(32)
@@ -28,48 +29,55 @@ beforeAll(async () => {
   getDidFn = () => {
     return did
   }
+  const didKeyVerStr = did.id.split('did:key:')[1]
+  expectedKid = `${did.id}#${didKeyVerStr}`
 })
 
 test('getIndexedModels()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
-  // @ts-ignore
-  adminApi.buildJWS = (): string => {
-    return '<FAKE JWS>'
-  }
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
   ;(adminApi as any)._fetchJson = fauxFetch
   await adminApi.getIndexedModels()
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {
-    headers: { Authorization: 'Basic <FAKE JWS>' },
-  })
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+  const sentPayload = fauxFetch.mock.calls[1][1]
+  const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+  const jwsResult = await did.verifyJWS(sentJws)
+  expect(jwsResult.kid).toEqual(expectedKid)
 })
 
 test('addModelsToIndex()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
-  // @ts-ignore
-  adminApi.buildJWS = (): string => {
-    return '<FAKE JWS>'
-  }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   ;(adminApi as any)._fetchJson = fauxFetch
   await adminApi.startIndexingModels([MODEL])
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {
-    method: 'post',
-    body: { jws: '<FAKE JWS>' },
-  })
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+  const sentPayload = fauxFetch.mock.calls[1][1]
+  expect(sentPayload.method).toEqual('post')
+  const sentJws = sentPayload.body.jws
+
+  const jwsResult = await did.verifyJWS(sentJws)
+  expect(jwsResult.kid).toEqual(expectedKid)
+  expect(jwsResult.payload.requestBody.models.length).toEqual(1)
+  expect(jwsResult.payload.requestBody.models[0]).toEqual(MODEL.toString())
 })
 
 test('removeModelsFromIndex()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
-  // @ts-ignore
-  adminApi.buildJWS = (): string => {
-    return '<FAKE JWS>'
-  }
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   ;(adminApi as any)._fetchJson = fauxFetch
   await adminApi.stopIndexingModels([MODEL])
-  expect(fauxFetch).toBeCalledWith(new URL(`https://example.com/admin/models`), {
-    method: 'delete',
-    body: { jws: '<FAKE JWS>' },
-  })
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+  const sentPayload = fauxFetch.mock.calls[1][1]
+  expect(sentPayload.method).toEqual('delete')
+  const sentJws = sentPayload.body.jws
+
+  const jwsResult = await did.verifyJWS(sentJws)
+  expect(jwsResult.kid).toEqual(expectedKid)
+  expect(jwsResult.payload.requestBody.models.length).toEqual(1)
+  expect(jwsResult.payload.requestBody.models[0]).toEqual(MODEL.toString())
 })
