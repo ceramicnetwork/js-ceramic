@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.11.0](/compare/@ceramicnetwork/core@2.11.0-rc.1...@ceramicnetwork/core@2.11.0) (2022-10-05)
+
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
 # [2.11.0-rc.2](/compare/@ceramicnetwork/core@2.11.0-rc.1...@ceramicnetwork/core@2.11.0-rc.2) (2022-10-04)
 
 

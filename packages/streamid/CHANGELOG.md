@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.5](/compare/@ceramicnetwork/streamid@2.3.5-rc.0...@ceramicnetwork/streamid@2.3.5) (2022-10-05)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
 ## [2.3.5-rc.0](/compare/@ceramicnetwork/streamid@2.3.4...@ceramicnetwork/streamid@2.3.5-rc.0) (2022-09-28)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
