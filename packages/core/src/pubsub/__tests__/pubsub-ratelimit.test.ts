@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { empty, fromEvent, merge, Subscription } from 'rxjs'
+import { empty, fromEvent, merge } from 'rxjs'
 import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
@@ -182,7 +182,6 @@ describe('pubsub with queries rate limited', () => {
       expect(warnSpy).toBeCalledTimes(1)
     })
     test('short interval', async () => {
-      await startOfASecond()
       // We want to prove that warnings are sent once every `rateLimitWarningsIntervalMs`.
       // The messages are rate-limited **per second**, and we can not change it for test purposes.
       // Below we first start to queue the messages by sending `QUERIES_PER_SECOND + 1` messages.
@@ -196,9 +195,7 @@ describe('pubsub with queries rate limited', () => {
         rateLimitWarningsIntervalMs
       )
 
-      const warnMock = jest.fn(() => {
-        return new Subscription()
-      })
+      const warnMock = jest.fn()
       diagnosticsLogger.warn = warnMock
       // For clarity of the test, we disable processing here.
       // If the queue is running, it is harder to reason about timing of message queueing.
@@ -206,6 +203,7 @@ describe('pubsub with queries rate limited', () => {
       // It simulates the case of sending speed > rate limit, which is what we need to trigger the warning.
       pubsub.queue.pause()
 
+      await startOfASecond()
       // One warning here, because we start populating the queue.
       const subscriptions = messages
         .slice(0, QUERIES_PER_SECOND + 1)
