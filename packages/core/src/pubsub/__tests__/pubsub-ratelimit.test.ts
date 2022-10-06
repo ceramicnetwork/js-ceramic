@@ -223,6 +223,7 @@ describe('pubsub with queries rate limited', () => {
       expect(warnMock).toBeCalledTimes(numMessagesSent)
       warnMock.mockClear()
 
+      await startOfASecond()
       // Scenario 2: Send multiple messages during `rateLimitWarningsIntervalMs` interval.
       // We should expect only one warning per the interval.
 
