@@ -211,6 +211,7 @@ describe('pubsub with queries rate limited', () => {
       expect(warnMock).toBeCalledTimes(1)
       warnMock.mockClear()
 
+      await startOfASecond()
       // Scenario 1: Send a message after `rateLimitWarningsIntervalMs`.
       // The interval for the warning is over.
       // Every message now gets into the queue. It triggers the warning.
