@@ -76,9 +76,9 @@ export class LevelStateStore implements StateStore {
       }
       this.#store = store
       return
+    } else {
+      this.#store = this._makeStore(networkName)
     }
-
-    this.#store = this._makeStore(networkName)
   }
 
   /**
