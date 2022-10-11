@@ -17,6 +17,9 @@ import PQueue from 'p-queue'
  */
 const MAX_LOAD_RPS = 4000
 
+/**
+ * Helper function for listing keys from a given S3 LevelDB instance.
+ */
 async function _listAll(store, limit?: number): Promise<string[]> {
   const bufArray = await toArray(store.createKeyStream({ limit }))
   return bufArray.map((buf) => buf.toString())

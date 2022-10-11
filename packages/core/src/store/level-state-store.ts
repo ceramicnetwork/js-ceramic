@@ -24,6 +24,9 @@ import path from 'path'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
+/**
+ * Helper function for listing keys from a given LevelDB instance.
+ */
 async function _listAll(store: Level, limit?: number): Promise<string[]> {
   return store.stream({ keys: true, values: false, limit })
 }
