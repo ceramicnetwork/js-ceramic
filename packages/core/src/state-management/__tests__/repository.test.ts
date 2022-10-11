@@ -223,37 +223,6 @@ describe('#load', () => {
 })
 
 describe('validation', () => {
-  test('json schema fuckery', async () => {
-    function dropResidue(name: string, prevKeys: any[] = []) {
-      const residue =
-        ((ceramic._streamHandlers.get('tile') as any)._schemaValidator._validator.scope._values
-          .schema as Map<any, any>) || new Map()
-      const diff = new Map<any, any>()
-      for (const [k, v] of residue) {
-        if (!prevKeys.includes(k)) {
-          diff.set(k, v)
-        }
-      }
-      console.log(`residue:${name}: total: ${residue.size}, added: ${diff.size}`, diff)
-      return Array.from(residue.keys())
-    }
-    const stringMapSchema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-    const d0 = dropResidue(`0`)
-    await TileDocument.create(ceramic, { stuff: 'stuff' }, { schema: stringMapSchema.commitId })
-    const d1 = dropResidue(`1`, d0)
-    const stringLenSchema = await TileDocument.create(ceramic, STRLEN_MAP_SCHEMA)
-    const d2 = dropResidue(`2`, d1)
-    await TileDocument.create(ceramic, { stuff: 'stf' }, { schema: stringLenSchema.commitId })
-    const d3 = dropResidue(`3`, d2)
-    const numSchema = await TileDocument.create(ceramic, NUMBER_MAP_SCHEMA)
-    await TileDocument.create(ceramic, { stuff: 3 }, { schema: numSchema.commitId })
-    const d4 = dropResidue(`4`, d3)
-    await TileDocument.create(ceramic, { stuff: 4 }, { schema: numSchema.commitId })
-    const d5 = dropResidue(`5`, d4)
-    await TileDocument.create(ceramic, { stuff: 5 }, { schema: numSchema.commitId })
-    dropResidue(`6`, d5)
-  }, 10000)
-
   test('when loading genesis ', async () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
