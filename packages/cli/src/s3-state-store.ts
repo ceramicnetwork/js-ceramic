@@ -1,4 +1,10 @@
-import { StreamState, Stream, StreamUtils, DiagnosticsLogger } from '@ceramicnetwork/common'
+import {
+  StreamState,
+  Stream,
+  StreamUtils,
+  DiagnosticsLogger,
+  Networks,
+} from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { StateStore } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
@@ -10,6 +16,11 @@ import PQueue from 'p-queue'
  * Maximum GET/HEAD requests per second to AWS S3
  */
 const MAX_LOAD_RPS = 4000
+
+async function _listAll(store, limit?: number): Promise<string[]> {
+  const bufArray = await toArray(store.createKeyStream({ limit }))
+  return bufArray.map((buf) => buf.toString())
+}
 
 /**
  * Ceramic store for saving stream state to S3
@@ -32,13 +43,34 @@ export class S3StateStore implements StateStore {
     this.#logger = logger
   }
 
+  private _makeStore(directoryName: string) {
+    const location = this.#bucketName + '/ceramic/' + directoryName + '/state-store'
+    // @ts-ignore
+    return new LevelUp(new S3LevelDOWN(location))
+  }
+
   /**
-   * Open pinning service
+   * Open pinning service.
+   * Always store the pinning state in a network-specific directory.
    */
   async open(networkName: string): Promise<void> {
-    const location = this.#bucketName + '/ceramic/' + networkName + '/state-store'
-    // @ts-ignore
-    this.#store = new LevelUp(new S3LevelDOWN(location))
+    if (networkName == Networks.MAINNET || networkName == Networks.ELP) {
+      // If using "mainnet", check for data under an 'elp' directory first. This is because older
+      // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored
+      // state store data under 'elp' instead of 'mainnet' by mistake, and we don't want to lose
+      // that data if it exists.
+      const store = this._makeStore(Networks.ELP)
+      const pinnedStreamIds = await _listAll(store, 1)
+      if (pinnedStreamIds.length > 0) {
+        this.#logger.verbose(
+          `Detected existing state store data under 'elp' directory. Continuing to use 'elp' directory to store state store data`
+        )
+      }
+      this.#store = store
+      return
+    }
+
+    this.#store = this._makeStore(networkName)
   }
 
   /**
@@ -89,8 +121,7 @@ export class S3StateStore implements StateStore {
    */
   async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     if (streamId == null) {
-      const bufArray = await toArray(this.#store.createKeyStream({ limit }))
-      return bufArray.map((buf) => buf.toString())
+      return _listAll(this.#store)
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []

@@ -2,6 +2,7 @@ import levelTs from 'level-ts'
 import type Level from 'level-ts'
 import {
   DiagnosticsLogger,
+  Networks,
   StreamState,
   StreamStateHolder,
   StreamUtils,
@@ -23,6 +24,10 @@ import path from 'path'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
+async function _listAll(store: Level, limit?: number): Promise<string[]> {
+  return store.stream({ keys: true, values: false, limit })
+}
+
 /**
  * Ceramic store for saving stream state to a local leveldb instance
  */
@@ -41,16 +46,36 @@ export class LevelStateStore implements StateStore {
     return this.#store
   }
 
-  /**
-   * Open pinning service
-   */
-  async open(networkName: string): Promise<void> {
-    // Always store the pinning state in a network-specific directory
-    const storePath = path.join(this.storeRoot, networkName)
+  private _makeStore(directoryName: string): Level {
+    const storePath = path.join(this.storeRoot, directoryName)
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#store = new LevelC(storePath)
+    return new LevelC(storePath)
+  }
+
+  /**
+   * Open pinning service.
+   * Always store the pinning state in a network-specific directory.
+   */
+  async open(networkName: string): Promise<void> {
+    if (networkName == Networks.MAINNET || networkName == Networks.ELP) {
+      // If using "mainnet", check for data under an 'elp' directory first. This is because older
+      // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored
+      // state store data under 'elp' instead of 'mainnet' by mistake, and we don't want to lose
+      // that data if it exists.
+      const store = this._makeStore(Networks.ELP)
+      const pinnedStreamIds = await _listAll(store, 1)
+      if (pinnedStreamIds.length > 0) {
+        this.#logger.verbose(
+          `Detected existing state store data under 'elp' directory. Continuing to use 'elp' directory to store state store data`
+        )
+      }
+      this.#store = store
+      return
+    }
+
+    this.#store = this._makeStore(networkName)
   }
 
   /**
@@ -100,7 +125,7 @@ export class LevelStateStore implements StateStore {
   async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     let streamIds: string[]
     if (streamId == null) {
-      return this.#store.stream({ keys: true, values: false, limit })
+      return _listAll(this.#store, limit)
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       streamIds = exists ? [streamId.toString()] : []

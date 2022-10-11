@@ -10,6 +10,7 @@ import {
   TestUtils,
   StreamState,
   LoggerProvider,
+  Networks,
 } from '@ceramicnetwork/common'
 
 class FakeType extends Stream {
@@ -49,7 +50,7 @@ describe('LevelDB state store', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     stateStore = new LevelStateStore(tmpFolder.path, new LoggerProvider().getDiagnosticsLogger())
-    stateStore.open('fakeNetwork')
+    await stateStore.open('fakeNetwork')
 
     // add a small delay after creating the leveldb instance before trying to use it.
     await TestUtils.delay(100)
@@ -163,5 +164,65 @@ describe('LevelDB state store', () => {
       list = await stateStore.list(streamID)
       expect(list).toEqual([streamID.toString()])
     })
+  })
+})
+
+describe('LevelDB state store network change tests', () => {
+  let tmpFolder: any
+
+  beforeEach(async () => {
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+  })
+
+  afterEach(async () => {
+    await tmpFolder.cleanup()
+  })
+
+  test('switch from ELP to Mainnet preserves data', async () => {
+    const elpStateStore = new LevelStateStore(
+      tmpFolder.path,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
+    await elpStateStore.open(Networks.ELP)
+
+    const state = makeStreamState()
+    const stream = streamFromState(state)
+    await elpStateStore.save(stream)
+    const retrievedFromElp = await elpStateStore.load(stream.id.baseID)
+    expect(retrievedFromElp).toEqual(state)
+
+    await elpStateStore.close()
+    const mainnetStateStore = new LevelStateStore(
+      tmpFolder.path,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
+    await mainnetStateStore.open(Networks.MAINNET)
+
+    const retrievedFromMainnet = await mainnetStateStore.load(stream.id.baseID)
+    expect(retrievedFromMainnet).toEqual(state)
+  })
+
+  test('switch from Clay to Mainnet does not preserve data', async () => {
+    const clayStateStore = new LevelStateStore(
+      tmpFolder.path,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
+    await clayStateStore.open(Networks.TESTNET_CLAY)
+
+    const state = makeStreamState()
+    const stream = streamFromState(state)
+    await clayStateStore.save(stream)
+    const retrievedFromClay = await clayStateStore.load(stream.id.baseID)
+    expect(retrievedFromClay).toEqual(state)
+
+    await clayStateStore.close()
+    const mainnetStateStore = new LevelStateStore(
+      tmpFolder.path,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
+    await mainnetStateStore.open(Networks.MAINNET)
+
+    const retrievedFromMainnet = await mainnetStateStore.load(stream.id.baseID)
+    expect(retrievedFromMainnet).toEqual(null)
   })
 })
