@@ -9,6 +9,7 @@ import {
   StreamUtils,
   TestUtils,
   StreamState,
+  LoggerProvider,
 } from '@ceramicnetwork/common'
 
 class FakeType extends Stream {
@@ -47,7 +48,7 @@ describe('LevelDB state store', () => {
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new LevelStateStore(tmpFolder.path)
+    stateStore = new LevelStateStore(tmpFolder.path, new LoggerProvider().getDiagnosticsLogger())
     stateStore.open('fakeNetwork')
 
     // add a small delay after creating the leveldb instance before trying to use it.

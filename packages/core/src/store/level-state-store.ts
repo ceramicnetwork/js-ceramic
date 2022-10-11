@@ -1,6 +1,11 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
-import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common'
+import {
+  DiagnosticsLogger,
+  StreamState,
+  StreamStateHolder,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 import { StateStore } from './state-store.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as fs from 'fs'
@@ -23,8 +28,11 @@ const LevelC = (levelTs as any).default as unknown as typeof Level
  */
 export class LevelStateStore implements StateStore {
   #store: Level
+  #logger: DiagnosticsLogger
 
-  constructor(private storeRoot: string) {}
+  constructor(private storeRoot: string, logger: DiagnosticsLogger) {
+    this.#logger = logger
+  }
 
   /**
    * Gets internal db
@@ -36,7 +44,7 @@ export class LevelStateStore implements StateStore {
   /**
    * Open pinning service
    */
-  open(networkName: string): void {
+  async open(networkName: string): Promise<void> {
     // Always store the pinning state in a network-specific directory
     const storePath = path.join(this.storeRoot, networkName)
     if (fs) {

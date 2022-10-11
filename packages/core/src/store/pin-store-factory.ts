@@ -1,4 +1,4 @@
-import { IpfsApi, PinningBackendStatic } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, IpfsApi, PinningBackendStatic } from '@ceramicnetwork/common'
 import { LevelStateStore } from './level-state-store.js'
 import { PinningAggregation } from '@ceramicnetwork/pinning-aggregation'
 import { PinStore } from './pin-store.js'
@@ -26,7 +26,12 @@ export class PinStoreFactory {
   readonly networkName: string
   private _stateStore: StateStore
 
-  constructor(readonly ipfs: IpfsApi, readonly repository: Repository, props: Props) {
+  constructor(
+    readonly ipfs: IpfsApi,
+    readonly repository: Repository,
+    props: Props,
+    readonly logger: DiagnosticsLogger
+  ) {
     this.networkName = props.networkName
     this.localStateStoreDirectory = props.stateStoreDirectory || DEFAULT_STATE_STORE_DIRECTORY
     this.pinningEndpoints =
@@ -46,7 +51,7 @@ export class PinStoreFactory {
   public createPinStore(): PinStore {
     if (!this._stateStore) {
       // Default to local leveldb backed state store if no other StateStore implementation is provided
-      this._stateStore = new LevelStateStore(this.localStateStoreDirectory)
+      this._stateStore = new LevelStateStore(this.localStateStoreDirectory, this.logger)
     }
     const ipfs = this.ipfs
     const pinning = PinningAggregation.build(ipfs, this.pinningEndpoints, this.pinningBackends)
@@ -58,8 +63,6 @@ export class PinStoreFactory {
       return (await ipfs.dag.resolve(path)).cid
     }
     const loadStream = this.repository.load.bind(this.repository)
-    const pinStore = new PinStore(this._stateStore, pinning, retrieve, resolve, loadStream)
-    pinStore.open(this.networkName)
-    return pinStore
+    return new PinStore(this._stateStore, pinning, retrieve, resolve, loadStream)
   }
 }

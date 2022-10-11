@@ -290,7 +290,10 @@ export class CeramicDaemon {
       )
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
+      const s3StateStore = new S3StateStore(
+        opts.stateStore?.s3Bucket,
+        modules.loggerProvider.getDiagnosticsLogger()
+      )
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }
 

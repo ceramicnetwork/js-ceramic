@@ -1,4 +1,4 @@
-import { StreamState, Stream, StreamUtils } from '@ceramicnetwork/common'
+import { StreamState, Stream, StreamUtils, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { StateStore } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
@@ -16,6 +16,7 @@ const MAX_LOAD_RPS = 4000
  */
 export class S3StateStore implements StateStore {
   readonly #bucketName: string
+  readonly #logger: DiagnosticsLogger
   /**
    * Limit reading to +MAX_CONCURRENT_READS+ requests per second
    */
@@ -26,14 +27,15 @@ export class S3StateStore implements StateStore {
   })
   #store
 
-  constructor(bucketName: string) {
+  constructor(bucketName: string, logger: DiagnosticsLogger) {
     this.#bucketName = bucketName
+    this.#logger = logger
   }
 
   /**
    * Open pinning service
    */
-  open(networkName: string): void {
+  async open(networkName: string): Promise<void> {
     const location = this.#bucketName + '/ceramic/' + networkName + '/state-store'
     // @ts-ignore
     this.#store = new LevelUp(new S3LevelDOWN(location))
