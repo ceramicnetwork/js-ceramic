@@ -720,13 +720,13 @@ export class CeramicDaemon {
       try {
         this._verifyAndDiscardAdminCode(jwsValidation.code)
         this._verifyActingDid(jwsValidation.kid)
-        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
-        res.json({
-          models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
-        })
       } catch (e) {
         res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
       }
+      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+      res.json({
+        models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
+      })
     }
   }
 
