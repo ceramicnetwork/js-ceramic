@@ -1,12 +1,11 @@
-import ajv, { SchemaObject } from 'ajv/dist/2020.js'
+import Ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import lru from 'lru_map'
-import Ajv from 'ajv'
 
 const AJV_CACHE_SIZE = 500
 
 function buildAjv(): Ajv {
-  const validator = new ajv({
+  const validator = new Ajv({
     strict: true,
     allErrors: true,
     allowMatchingProperties: false,
