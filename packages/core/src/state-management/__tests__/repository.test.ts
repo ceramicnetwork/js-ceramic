@@ -25,26 +25,6 @@ const STRING_MAP_SCHEMA = {
   },
 }
 
-const NUMBER_MAP_SCHEMA = {
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  title: 'StringMap',
-  type: 'object',
-  additionalProperties: {
-    type: 'number',
-  },
-}
-
-const STRLEN_MAP_SCHEMA = {
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  title: 'StringMap',
-  type: 'object',
-  additionalProperties: {
-    type: 'string',
-    minLength: 2,
-    maxLength: 3,
-  },
-}
-
 let ipfs: IpfsApi
 let ceramic: Ceramic
 let repository: Repository
