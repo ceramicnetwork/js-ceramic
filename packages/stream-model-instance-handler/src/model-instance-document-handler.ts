@@ -19,7 +19,6 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import lru from 'lru_map'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
