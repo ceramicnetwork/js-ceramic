@@ -273,10 +273,12 @@ describe('ModelInstanceDocumentHandler', () => {
         if (streamId.toString() === FAKE_MODEL_ID.toString()) {
           return {
             content: MODEL_DEFINITION,
+            commitId: FAKE_MODEL_ID,
           }
         } else if (streamId.toString() === FAKE_MODEL_ID2.toString()) {
           return {
             content: MODEL_DEFINITION_SINGLE,
+            commitId: FAKE_MODEL_ID2,
           }
         } else {
           throw new Error(
