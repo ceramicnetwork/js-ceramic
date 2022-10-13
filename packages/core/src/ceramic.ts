@@ -231,7 +231,7 @@ export class Ceramic implements CeramicApi {
       this._logger,
       params.networkOptions.name
     )
-    this.admin = new LocalAdminApi(localIndex, this._logger)
+    this.admin = new LocalAdminApi(localIndex)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,

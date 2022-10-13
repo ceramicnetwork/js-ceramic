@@ -1,4 +1,4 @@
-import { AdminApi, DiagnosticsLogger } from '@ceramicnetwork/common'
+import { AdminApi } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 
@@ -7,8 +7,7 @@ import { LocalIndexApi } from './indexing/local-index-api.js'
  */
 export class LocalAdminApi implements AdminApi {
   constructor(
-    private readonly indexApi: LocalIndexApi,
-    private readonly logger: DiagnosticsLogger
+    private readonly indexApi: LocalIndexApi
   ) {}
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
