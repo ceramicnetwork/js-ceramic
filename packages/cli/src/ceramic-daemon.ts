@@ -44,12 +44,10 @@ const HEALTHCHECK_RETRIES = 3
 const CALLER_NAME = 'js-ceramic'
 
 const ADMIN_CODE_EXPIRATION_TIMEOUT = 1000 * 60 * 1 // 1 min
-const ADMIN_CODE_CACHE_CAPACITY = 500
+const ADMIN_CODE_CACHE_CAPACITY = 50
 
 type AdminCode = string
 type Timestamp = number
-
-type AdminCodeCache = lru.LRUMap<AdminCode, Timestamp>
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
