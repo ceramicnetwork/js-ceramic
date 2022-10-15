@@ -175,7 +175,7 @@ describe('Ceramic integration', () => {
       let stream2 = await TileDocument.createFromGenesis(ceramic2, logCommits[0].value, {
         anchor: false,
         publish: false,
-        sync: 2, // NEVER_SYNC
+        sync: SyncOptions.NEVER_SYNC
       })
       for (let i = 1; i < logCommits.length; i++) {
         stream2 = await ceramic2.applyCommit(stream2.id, logCommits[i].value, {

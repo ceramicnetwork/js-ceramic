@@ -119,7 +119,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     await this._validateContent(modelStream, payload.data, true)
     await this._validateHeader(modelStream, payload.header)
 
-    const entry = { cid: commitData.cid, type: CommitType.GENESIS } as CommitData
+    const entry = { cid: commitData.cid, type: CommitType.GENESIS } as LogEntry
     if (commitData.timestamp) entry.timestamp = commitData.timestamp 
     return {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
@@ -171,7 +171,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
     nextState.content = newContent
-    const entry = { cid: commitData.cid, type: CommitType.SIGNED } as CommitData
+    const entry = { cid: commitData.cid, type: CommitType.SIGNED } as LogEntry
     if (commitData.timestamp) entry.timestamp = commitData.timestamp 
     nextState.log.push(entry)
 
