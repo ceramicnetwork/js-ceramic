@@ -24,16 +24,11 @@ jobs:
           node-version: 16
       -
         name: Install Dependencies
-        run: pnpm
+        run: |
+          npm install -g pnpm
+          pnpm install
       -
         name: Create Release Pull Request
         uses: changesets/action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Create pull request
-        id: changesets
-        uses: changesets/action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
