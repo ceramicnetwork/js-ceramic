@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link-handler",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",

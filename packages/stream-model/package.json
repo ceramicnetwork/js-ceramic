@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Ceramic Model stream type",
   "keywords": [
     "ceramic",

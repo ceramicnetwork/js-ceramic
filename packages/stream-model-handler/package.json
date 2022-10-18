@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-handler",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Ceramic Model stream handler",
   "keywords": [
     "ceramic",

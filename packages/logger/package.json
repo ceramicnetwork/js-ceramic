@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/logger",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "Ceramic file logging utilities",
   "keywords": [
     "ceramic",

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Ceramic Model Instance Document stream type",
   "keywords": [
     "ceramic",
