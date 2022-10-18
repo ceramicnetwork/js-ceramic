@@ -26,8 +26,8 @@
   "scripts": {
     "test": "exit 0",
     "build": "pnpm tsc --project tsconfig.json",
-    "prepublishOnly": "pnpm run build",
-    "prebuild": "pnpm run clean",
+    "prepublishOnly": "pnpm build",
+    "prebuild": "pnpm clean",
     "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "pnpm rimraf ./lib"
   },

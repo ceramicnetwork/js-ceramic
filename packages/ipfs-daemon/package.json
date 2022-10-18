@@ -28,8 +28,8 @@
   "scripts": {
     "build": "pnpm tsc -p tsconfig.json",
     "start": "pnpm tsm src/bin/ipfs-daemon.ts",
-    "prepublishOnly": "pnpm run build",
-    "prebuild": "pnpm run clean",
+    "prepublishOnly": "pnpm build",
+    "prebuild": "pnpm clean",
     "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "pnpm rimraf ./lib",
     "test": "exit 0"

@@ -4,8 +4,8 @@
     "test": "pnpm -r t",
     "build": "pnpm -r build",
     "docs": "pnpm typedoc",
-    "publish:release-candidate": "pnpm publish --allow-branch release-candidate --dist-tag next --preid rc --no-verify-access --conventional-prerelease",
-    "publish:latest": "pnpm publish --allow-branch main --create-release github --no-verify-access --conventional-graduate",
+    "ci:version": "pnpm changeset version",
+    "ci:publish": "pnpm build && pnpm changeset publish",
     "lint": "pnpm -r lint",
     "clean": "pnpm clean:deps && pnpm clean:coverage && pnpm clean:build-artifacts",
     "clean:install:build": "pnpm clean && pnpm install && pnpm build",
@@ -20,6 +20,8 @@
     "@babel/plugin-transform-modules-commonjs": "^7.16.8",
     "@babel/preset-env": "^7.16.8",
     "@babel/preset-typescript": "^7.16.7",
+    "@changesets/cli": "^2.25.0",
+    "@types/jest": "^27.0.3",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
     "babel-jest": "^27.4.6",
@@ -39,5 +41,8 @@
   "prettier": "eslint-config-3box/prettier.config",
   "dependencies": {
     "node-fetch": "pnpm:@achingbrain/node-fetch@^2.6.6"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

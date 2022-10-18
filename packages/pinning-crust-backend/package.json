@@ -21,8 +21,8 @@
   "scripts": {
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage",
     "build": "../../node_modules/.bin/tsc --project tsconfig.json",
-    "prepublishOnly": "pnpm run build",
-    "prebuild": "pnpm run clean",
+    "prepublishOnly": "pnpm build",
+    "prebuild": "pnpm clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },

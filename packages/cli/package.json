@@ -26,9 +26,9 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules pnpm jest --silent --coverage --runInBand --forceExit",
-    "build": "genversion --es6 src/version.ts && pnpm tsc -p tsconfig.json",
-    "prepublishOnly": "pnpm run build",
-    "prebuild": "pnpm run clean",
+    "build": "pnpm genversion --es6 src/version.ts && pnpm tsc -p tsconfig.json",
+    "prepublishOnly": "pnpm build",
+    "prebuild": "pnpm clean",
     "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "pnpm rimraf ./lib"
   },
@@ -57,6 +57,7 @@
     "key-did-provider-ed25519": "^2.0.0",
     "key-did-resolver": "workspace:*",
     "levelup": "^5.1.1",
+    "lru_map": "^0.4.1",
     "merge-options": "^3.0.4",
     "morgan": "^1.10.0",
     "nft-did-resolver": "^2.0.0",

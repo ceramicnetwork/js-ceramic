@@ -27,9 +27,9 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules pnpm jest --silent --coverage --runInBand --forceExit",
-    "build": "genversion --es6 src/version.ts && pnpm tsc --project tsconfig.json",
-    "prepublishOnly": "pnpm run build",
-    "prebuild": "pnpm run clean",
+    "build": "pnpm genversion --es6 src/version.ts && pnpm tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm build",
+    "prebuild": "pnpm clean",
     "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "pnpm rimraf ./lib"
   },
@@ -49,6 +49,7 @@
     "@ceramicnetwork/stream-tile-handler": "workspace:*",
     "@ceramicnetwork/streamid": "workspace:*",
     "@datastructures-js/priority-queue": "^6.1.0",
+    "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
