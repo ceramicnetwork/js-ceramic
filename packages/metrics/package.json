@@ -24,12 +24,12 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests",
-    "build": "npx tsc --project tsconfig.json",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean",
-    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "npx rimraf ./lib"
+    "test": "NODE_OPTIONS=--experimental-vm-modules pnpm jest --silent --coverage --passWithNoTests",
+    "build": "pnpm tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm run build",
+    "prebuild": "pnpm run clean",
+    "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "pnpm rimraf ./lib"
   },
   "dependencies": {
     "@opentelemetry/exporter-prometheus": "^0.28.0",

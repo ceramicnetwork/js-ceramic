@@ -26,17 +26,17 @@
     "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
-    "build": "npx tsc -p tsconfig.json",
-    "start": "npx tsm src/bin/ipfs-daemon.ts",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean",
-    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "npx rimraf ./lib",
+    "build": "pnpm tsc -p tsconfig.json",
+    "start": "pnpm tsm src/bin/ipfs-daemon.ts",
+    "prepublishOnly": "pnpm run build",
+    "prebuild": "pnpm run clean",
+    "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "pnpm rimraf ./lib",
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.8.0",
-    "@ceramicnetwork/ipfs-topology": "^2.2.2",
+    "@ceramicnetwork/common": "workspace:*",
+    "@ceramicnetwork/ipfs-topology": "workspace:*",
     "dag-jose": "^2.0.0",
     "express": "^4.17.2",
     "get-port": "^6.0.0",

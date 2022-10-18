@@ -23,15 +23,15 @@
   "sideEffects": false,
   "scripts": {
     "test": "exit 0",
-    "build": "npx tsc --project tsconfig.json",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean",
-    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "npx rimraf ./lib"
+    "build": "pnpm tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm run build",
+    "prebuild": "pnpm run clean",
+    "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "pnpm rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.8.0",
-    "@ceramicnetwork/streamid": "^2.3.5",
+    "@ceramicnetwork/common": "workspace:*",
+    "@ceramicnetwork/streamid": "workspace:*",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",

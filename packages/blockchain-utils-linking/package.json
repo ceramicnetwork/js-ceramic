@@ -22,15 +22,15 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent",
-    "build": "npx tsc --project tsconfig.json",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean",
-    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "npx rimraf ./lib"
+    "test": "NODE_OPTIONS=--experimental-vm-modules pnpm jest --silent",
+    "build": "pnpm tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm run build",
+    "prebuild": "pnpm run clean",
+    "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "pnpm rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.3.5",
+    "@ceramicnetwork/streamid": "workspace:*",
     "@didtools/cacao": "^1.0.0",
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",

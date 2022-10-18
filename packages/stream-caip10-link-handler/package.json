@@ -24,17 +24,17 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage",
-    "build": "npx tsc --project tsconfig.json",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean",
-    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "npx rimraf ./lib"
+    "test": "NODE_OPTIONS=--experimental-vm-modules pnpm jest --coverage",
+    "build": "pnpm tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm run build",
+    "prebuild": "pnpm run clean",
+    "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "pnpm rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-validation": "^2.0.14",
-    "@ceramicnetwork/common": "^2.8.0",
-    "@ceramicnetwork/stream-caip10-link": "^2.3.0"
+    "@ceramicnetwork/blockchain-utils-validation": "workspace:*",
+    "@ceramicnetwork/common": "workspace:*",
+    "@ceramicnetwork/stream-caip10-link": "workspace:*"
   },
   "devDependencies": {
     "@stablelib/sha256": "^1.0.1",

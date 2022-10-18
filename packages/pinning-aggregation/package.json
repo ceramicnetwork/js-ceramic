@@ -19,12 +19,12 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
-    "build": "npx tsc --project tsconfig.json",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean",
-    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "npx rimraf ./lib"
+    "test": "NODE_OPTIONS=--experimental-vm-modules pnpm jest --silent --coverage",
+    "build": "pnpm tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm run build",
+    "prebuild": "pnpm run clean",
+    "lint": "pnpm eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "pnpm rimraf ./lib"
   },
   "author": "Sergey Ukustov <sergey@ukstv.me>",
   "license": "(Apache-2.0 OR MIT)",
@@ -36,9 +36,9 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.8.0",
-    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.14",
-    "@ceramicnetwork/pinning-powergate-backend": "^2.0.14",
+    "@ceramicnetwork/common": "workspace:*",
+    "@ceramicnetwork/pinning-ipfs-backend": "workspace:*",
+    "@ceramicnetwork/pinning-powergate-backend": "workspace:*",
     "ipfs-core-types": "~0.9.0",
     "multiformats": "^9.5.8"
   },
