@@ -20,6 +20,7 @@ import {
   IpfsApi,
   GenesisCommit,
   CeramicSigner,
+  CommitData,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -608,7 +609,7 @@ describe('TileDocumentHandler', () => {
       envelope: genesisCommit.jws,
     }
     const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
-    const doc = new TileDocument(state, context)
+    const doc = new TileDocument(TestUtils.runningState(state), context)
     const makeCommit = doc.makeCommit(context.api, COMMITS.r1.desiredContent, {
       controllers: [did.id, did.id],
     })
@@ -639,13 +640,13 @@ describe('TileDocumentHandler', () => {
     for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = await doc._makeRawCommit({
+      const rawCommit = await (doc as any)._makeRawCommit({
         other: { obj2: 'fefe' },
       })
 
       // update unsigned metadata
       rawCommit.header.controllers = [invalidControllerValues[i]]
-      const signedCommit = await TileDocument._signDagJWS(context.api, rawCommit)
+      const signedCommit = await (TileDocument as any)._signDagJWS(context.api, rawCommit)
       await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
       const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
       await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
@@ -687,13 +688,13 @@ describe('TileDocumentHandler', () => {
     for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = await doc._makeRawCommit({
+      const rawCommit = await (doc as any)._makeRawCommit({
         other: { obj2: 'fefe' },
       })
 
       // update unsigned metadata
       rawCommit.prev = FAKE_CID_3
-      const signedCommit = await TileDocument._signDagJWS(context.api, rawCommit)
+      const signedCommit = await (TileDocument as any)._signDagJWS(context.api, rawCommit)
       await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
       const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
       await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
@@ -735,13 +736,13 @@ describe('TileDocumentHandler', () => {
     for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = await doc._makeRawCommit({
+      const rawCommit = await (doc as any)._makeRawCommit({
         other: { obj2: 'fefe' },
       })
 
       // update unsigned metadata
       rawCommit.id = FAKE_CID_3
-      const signedCommit = await TileDocument._signDagJWS(context.api, rawCommit)
+      const signedCommit = await (TileDocument as any)._signDagJWS(context.api, rawCommit)
       await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
       const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
       await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
@@ -808,7 +809,7 @@ describe('TileDocumentHandler', () => {
       type: CommitType.ANCHOR,
       commit: COMMITS.r2.commit,
       proof: COMMITS.proof,
-    }
+    } as CommitData
     state = await tileDocumentHandler.applyCommit(anchorCommitData, context, state)
     delete state.metadata.unique
     expect(state).toMatchSnapshot()
