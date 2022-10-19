@@ -25,6 +25,7 @@ import {
   StreamState,
   AdminApi,
 } from '@ceramicnetwork/common'
+import {Metrics, METRIC_NAMES} from '@ceramicnetwork/metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -760,6 +761,7 @@ export class Ceramic implements CeramicApi {
             } as part of a multiQuery request: ${e.toString()}`
           )
         }
+        Metrics.count(METRIC_NAMES.ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
       const streamRef = query.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId

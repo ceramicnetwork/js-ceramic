@@ -8,11 +8,15 @@ import { Resource } from '@opentelemetry/resources'
 // be flexible about what we record, as the dependency in the grafana does not see this code
 
 export enum METRIC_NAMES {
+  COMMITS_STORED = 'commits_stored',
+  ERROR_LOADING_STREAM = 'error_loading_stream',
+  ERROR_STORING_COMMIT = 'error_storing_commit',
   HTTP_REQUEST = 'http_request',
   HTTP_RESPONSE = 'http_response',
   PUBSUB_RECEIVED = 'pubsub_received',
   PUBSUB_PUBLISHED = 'pubsub_published',
   STREAM_PINNED = 'stream_pinned',
+  STREAM_UNPINNED = 'stream_unpinned',
 }
 
 export const UNKNOWN_CALLER = 'Unknown'
