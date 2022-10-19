@@ -3,17 +3,25 @@ import { CeramicApi } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
+import lru from 'lru_map'
+
+function buildAjv(): Ajv {
+  const validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
+  addFormats(validator)
+  return validator
+}
+
+const AJV_CACHE_SIZE = 500
 
 /**
  * Simple wrapper around AJV library for doing json-schema validation.
  * TODO: Move schema stream loading out of this.
  */
 export class SchemaValidation {
-  private readonly _validator: Ajv
+  readonly validators: lru.LRUMap<string, Ajv>
 
   constructor() {
-    this._validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
-    addFormats(this._validator)
+    this.validators = new lru.LRUMap(AJV_CACHE_SIZE)
   }
 
   public async validateSchema(
@@ -22,7 +30,7 @@ export class SchemaValidation {
     schemaStreamId: string
   ): Promise<void> {
     const schema = await this._loadSchemaById(ceramic, schemaStreamId)
-    this._validate(content, schema)
+    this._validate(content, schema, schemaStreamId)
   }
 
   private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<T | null> {
@@ -35,14 +43,20 @@ export class SchemaValidation {
     return ceramic.loadStream<TileDocument<T>>(commitId).then((doc) => doc.content)
   }
 
-  private _validate(content: Record<string, any>, schema: Record<string, any>): void {
-    const isValid = this._validator.validate(schema, content)
-
-    // Remove schema from the Ajv instance's cache, otherwise the ajv cache grows unbounded
-    this._validator.removeSchema(schema)
+  private _validate(
+    content: Record<string, any>,
+    schema: Record<string, any>,
+    schemaStreamId: string
+  ): void {
+    let validator = this.validators.get(schemaStreamId)
+    if (!validator) {
+      validator = buildAjv()
+      this.validators.set(schemaStreamId, validator)
+    }
+    const isValid = validator.validate(schema, content)
 
     if (!isValid) {
-      const errorMessages = this._validator.errorsText()
+      const errorMessages = validator.errorsText()
       throw new Error(`Validation Error: ${errorMessages}`)
     }
   }

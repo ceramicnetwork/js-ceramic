@@ -36,6 +36,7 @@ import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+import lru from 'lru_map'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -43,13 +44,10 @@ const HEALTHCHECK_RETRIES = 3
 const CALLER_NAME = 'js-ceramic'
 
 const ADMIN_CODE_EXPIRATION_TIMEOUT = 1000 * 60 * 1 // 1 min
+const ADMIN_CODE_CACHE_CAPACITY = 50
 
 type AdminCode = string
 type Timestamp = number
-
-type AdminCodeCache = {
-  [key: AdminCode]: Timestamp
-}
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -226,8 +224,7 @@ export class CeramicDaemon {
   public hostname: string
   public port: number
   private readonly adminDids: Array<string>
-
-  private readonly adminCodeCache: AdminCodeCache = {} as AdminCodeCache
+  private readonly adminCodeCache = new lru.LRUMap<AdminCode, Timestamp>(ADMIN_CODE_CACHE_CAPACITY)
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
@@ -374,19 +371,19 @@ export class CeramicDaemon {
   async generateAdminCode(): Promise<string> {
     const newCode = crypto.randomUUID()
     const now = new Date().getTime()
-    this.adminCodeCache[newCode] = now
+    this.adminCodeCache.set(newCode, now)
     return newCode
   }
 
   _verifyAndDiscardAdminCode(code: string) {
     const now = new Date().getTime()
-    if (!this.adminCodeCache[code]) {
+    if (!this.adminCodeCache.get(code)) {
       this.diagnosticsLogger.log(
         LogStyle.warn,
         `Unauthorized access attempt to Admin Api with admin code missing from registry`
       )
       throw Error(`Unauthorized access: invalid/already used admin code`)
-    } else if (now - this.adminCodeCache[code] > ADMIN_CODE_EXPIRATION_TIMEOUT) {
+    } else if (now - this.adminCodeCache.get(code) > ADMIN_CODE_EXPIRATION_TIMEOUT) {
       this.diagnosticsLogger.log(
         LogStyle.warn,
         `Unauthorized access attempt to Admin Api with expired admin code`
@@ -397,7 +394,7 @@ export class CeramicDaemon {
         } seconds`
       )
     } else {
-      delete this.adminCodeCache[code]
+      this.adminCodeCache.delete(code)
     }
   }
 
@@ -723,13 +720,13 @@ export class CeramicDaemon {
       try {
         this._verifyAndDiscardAdminCode(jwsValidation.code)
         this._verifyActingDid(jwsValidation.kid)
-        const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
-        res.json({
-          models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
-        })
       } catch (e) {
         res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
       }
+      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+      res.json({
+        models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
+      })
     }
   }
 

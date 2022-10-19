@@ -218,7 +218,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         )
       }
     } else {
-      await this._schemaValidator.validateSchema(content, model.content.schema)
+      await this._schemaValidator.validateSchema(
+        content,
+        model.content.schema,
+        model.commitId.toString()
+      )
     }
   }
 
