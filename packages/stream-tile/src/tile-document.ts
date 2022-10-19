@@ -23,6 +23,7 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
+import type { DID } from 'dids'
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -127,16 +128,18 @@ function headerFromMetadata(
   return header
 }
 
-async function _ensureAuthenticated(signer: CeramicSigner) {
-  if (signer.did == null) {
-    throw new Error('No DID provided')
-  }
+/**
+ * Get signer.did. Authenticate if not authenticated previously.
+ */
+async function getAuthenticatedDID(signer: CeramicSigner): Promise<DID> {
+  if (!signer.did) throw new Error(`No DID provided`)
   if (!signer.did.authenticated) {
     await signer.did.authenticate()
     if (signer.loggerProvider) {
       signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
     }
   }
+  return signer.did
 }
 
 async function throwReadOnlyError(): Promise<void> {
@@ -157,7 +160,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   private _isReadOnly = false
 
-  get content(): T {
+  override get content(): T {
     return super.content
   }
 
@@ -177,7 +180,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
-  static async create<T>(
+  static override async create<T>(
     ceramic: CeramicApi,
     content: T | null | undefined,
     metadata?: TileMetadataArgs,
@@ -338,7 +341,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     newContent: T | null | undefined,
     newMetadata?: TileMetadataArgs
   ): Promise<CeramicCommit> {
-    const commit = await this._makeRawCommit(signer, newContent, newMetadata)
+    const commit = await this._makeRawCommit(newContent, newMetadata)
     return TileDocument._signDagJWS(signer, commit)
   }
 
@@ -350,7 +353,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
    * @param newMetadata
    */
   private async _makeRawCommit(
-    signer: CeramicSigner,
     newContent: T | null | undefined,
     newMetadata?: TileMetadataArgs
   ): Promise<RawCommit> {
@@ -370,11 +372,13 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
 
     const patch = jsonpatch.compare(this.content, newContent)
+    const genesisLogEntry = this.state.log[0]
+    if (!genesisLogEntry) throw new Error(`No genesis log entry`)
     const commit: RawCommit = {
       header,
       data: patch,
       prev: this.tip,
-      id: this.state.log[0].cid,
+      id: genesisLogEntry.cid,
     }
     return commit
   }
@@ -396,9 +400,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
-        await _ensureAuthenticated(signer)
+        const did = await getAuthenticatedDID(signer)
         // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
-        metadata.controllers = [signer.did.hasParent ? signer.did.parent : signer.did.id]
+        metadata.controllers = [did.hasParent ? did.parent : did.id]
       } else {
         throw new Error('No controllers specified')
       }
@@ -433,7 +437,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     signer: CeramicSigner,
     commit: CeramicCommit
   ): Promise<SignedCommitContainer> {
-    await _ensureAuthenticated(signer)
-    return signer.did.createDagJWS(commit)
+    const did = await getAuthenticatedDID(signer)
+    return did.createDagJWS(commit)
   }
 }
