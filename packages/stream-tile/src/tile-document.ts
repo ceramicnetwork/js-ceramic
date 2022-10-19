@@ -84,7 +84,7 @@ const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit:
  * @param genesis - True if this is for a genesis header, false if it's for a signed commit header
  */
 function headerFromMetadata(
-  metadata: TileMetadataArgs | StreamMetadata | undefined,
+  metadata: TileMetadataArgs | StreamMetadata,
   genesis: boolean
 ): CommitHeader {
   if (typeof metadata?.schema === 'string') {
@@ -96,6 +96,7 @@ function headerFromMetadata(
   }
 
   const header: CommitHeader = {
+    // @ts-ignore TODO(CDB-1950) Problem with CommitHeader type
     controllers: metadata?.controllers,
     family: metadata?.family,
     schema: metadata?.schema?.toString(),
@@ -105,10 +106,10 @@ function headerFromMetadata(
   // Handle properties that can only be set on the genesis commit.
   if (genesis) {
     if (!metadata?.deterministic) {
-      header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+      header['unique'] = uint8arrays.toString(randomBytes(12), 'base64')
     }
     if (metadata?.forbidControllerChange) {
-      header.forbidControllerChange = true
+      header['forbidControllerChange'] = true
     }
   } else {
     // These throws aren't strictly necessary as we can just leave these fields out of the header
@@ -348,13 +349,12 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   /**
    * Helper function for makeCommit() to sanity check input values and
    * allow unit tests to update newMetadata before signing.
-   * @param signer - Object containing the DID making (and signing) the commit
    * @param newContent
    * @param newMetadata
    */
   private async _makeRawCommit(
     newContent: T | null | undefined,
-    newMetadata?: TileMetadataArgs
+    newMetadata: TileMetadataArgs = {}
   ): Promise<RawCommit> {
     const header = headerFromMetadata(newMetadata, false)
 
@@ -374,13 +374,12 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     const patch = jsonpatch.compare(this.content, newContent)
     const genesisLogEntry = this.state.log[0]
     if (!genesisLogEntry) throw new Error(`No genesis log entry`)
-    const commit: RawCommit = {
+    return {
       header,
       data: patch,
       prev: this.tip,
       id: genesisLogEntry.cid,
     }
-    return commit
   }
 
   /**
@@ -392,12 +391,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   static async makeGenesis<T>(
     signer: CeramicSigner,
     content: T | null | undefined,
-    metadata?: TileMetadataArgs
+    metadata: TileMetadataArgs = {}
   ): Promise<CeramicCommit> {
-    if (!metadata) {
-      metadata = {}
-    }
-
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
         const did = await getAuthenticatedDID(signer)
