@@ -6,10 +6,11 @@ import varint from 'varint'
 import * as codec from '@ipld/dag-cbor'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { STREAMID_CODEC } from './constants.js'
-import { readCidNoThrow, readVarint } from './reading-bytes.js'
+import { readCid, readVarint } from './reading-bytes.js'
 import { Memoize } from 'typescript-memoize'
 import { StreamRef } from './stream-ref.js'
 import { StreamType } from './stream-type.js'
+import { tryCatch } from './try-catch.util.js'
 
 /**
  * Parse StreamID from bytes representation.
@@ -19,11 +20,16 @@ import { StreamType } from './stream-type.js'
  * @see StreamID#bytes
  */
 function fromBytes(bytes: Uint8Array): StreamID {
-  const result = fromBytesNoThrow(bytes)
-  if (result instanceof Error) {
-    throw result
+  const [streamCodec, streamCodecRemainder] = readVarint(bytes)
+  if (streamCodec !== STREAMID_CODEC)
+    throw new Error('fromBytes: invalid streamid, does not include streamid codec')
+  const [type, streamTypeRemainder] = readVarint(streamCodecRemainder)
+  const cidResult = readCid(streamTypeRemainder)
+  const [cid, cidRemainder] = cidResult
+  if (cidRemainder.length > 0) {
+    throw new Error(`Invalid StreamID: contains commit`)
   }
-  return result
+  return new StreamID(type, cid)
 }
 
 /**
@@ -34,19 +40,7 @@ function fromBytes(bytes: Uint8Array): StreamID {
  * @param bytes
  */
 function fromBytesNoThrow(bytes: Uint8Array): StreamID | Error {
-  const [streamCodec, streamCodecRemainder] = readVarint(bytes)
-  if (streamCodec !== STREAMID_CODEC)
-    return new Error('fromBytes: invalid streamid, does not include streamid codec')
-  const [type, streamTypeRemainder] = readVarint(streamCodecRemainder)
-  const cidResult = readCidNoThrow(streamTypeRemainder)
-  if (cidResult instanceof Error) {
-    return cidResult
-  }
-  const [cid, cidRemainder] = cidResult
-  if (cidRemainder.length > 0) {
-    return new Error(`Invalid StreamID: contains commit`)
-  }
-  return new StreamID(type, cid)
+  return tryCatch(() => fromBytes(bytes))
 }
 
 /**
@@ -57,11 +51,11 @@ function fromBytesNoThrow(bytes: Uint8Array): StreamID | Error {
  * @see StreamID#toUrl
  */
 function fromString(input: string): StreamID {
-  const result = fromStringNoThrow(input)
-  if (result instanceof Error) {
-    throw result
-  }
-  return result
+  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
+  const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
+  if (!commitFree) throw new Error(`Malformed StreamID string: ${input}`)
+  const bytes = base36.decode(commitFree)
+  return fromBytes(bytes)
 }
 
 /**
@@ -72,11 +66,7 @@ function fromString(input: string): StreamID {
  * @param input
  */
 function fromStringNoThrow(input: string): StreamID | Error {
-  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
-  const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
-  if (!commitFree) return new Error(`Malformed StreamID string: ${input}`)
-  const bytes = base36.decode(commitFree)
-  return fromBytesNoThrow(bytes)
+  return tryCatch(() => fromString(input))
 }
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID')

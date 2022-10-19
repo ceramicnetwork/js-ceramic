@@ -14,17 +14,9 @@ function isCidVersion(input: number): input is 0 | 1 {
 }
 
 export function readCid(bytes: Uint8Array): [CID, Uint8Array] {
-  const result = readCidNoThrow(bytes)
-  if (result instanceof Error) {
-    throw result
-  }
-  return result
-}
-
-export function readCidNoThrow(bytes: Uint8Array): [CID, Uint8Array] | Error {
   const [cidVersion, cidVersionRemainder] = readVarint(bytes)
   if (!isCidVersion(cidVersion)) {
-    return new Error(`Unknown CID version ${cidVersion}`)
+    throw new Error(`Unknown CID version ${cidVersion}`)
   }
   const [codec, codecRemainder] = readVarint(cidVersionRemainder)
   const [, mhCodecRemainder, mhCodecLength] = readVarint(codecRemainder)
