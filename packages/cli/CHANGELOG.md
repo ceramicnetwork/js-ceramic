@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.9.0-rc.1](/compare/@ceramicnetwork/cli@2.9.0-rc.0...@ceramicnetwork/cli@2.9.0-rc.1) (2022-10-19)
+
+
+### Bug Fixes
+
+* **cli:** Include limit when listing entries from the S3 state store (#2507) 6eef279, closes #2507
+
+
+
+
+
 # [2.9.0-rc.0](/compare/@ceramicnetwork/cli@2.8.0...@ceramicnetwork/cli@2.9.0-rc.0) (2022-10-19)
 
 
