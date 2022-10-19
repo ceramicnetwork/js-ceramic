@@ -26,6 +26,7 @@ import {
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { AnchorProof } from '@ceramicnetwork/common/lib'
 
 jest.unstable_mockModule('did-jwt', () => {
   return {
@@ -171,7 +172,7 @@ async function checkSignedCommitMatchesExpectations(
   expect(jws).toBeDefined()
   expect(linkedBlock).toBeDefined()
 
-  const payload = dagCBOR.decode(linkedBlock)
+  const payload = dagCBOR.decode<any>(linkedBlock)
 
   const unpacked = { jws, linkedBlock: payload }
 
@@ -316,7 +317,11 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
+    const commit = await (ModelInstanceDocument as any)._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA
+    )
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -328,7 +333,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const commit = await (ModelInstanceDocument as any)._makeGenesis(context.api, CONTENT0, {
       model: FAKE_MODEL_ID,
     })
     expect(commit).toBeDefined()
@@ -342,25 +347,33 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('model is required', async () => {
-    await expect(ModelInstanceDocument._makeGenesis(context.api, null, {})).rejects.toThrow(
-      /Must specify a 'model' when creating a ModelInstanceDocument/
-    )
+    await expect(
+      (ModelInstanceDocument as any)._makeGenesis(context.api, null, {})
+    ).rejects.toThrow(/Must specify a 'model' when creating a ModelInstanceDocument/)
   })
 
   it('creates genesis commits uniquely', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
+    const commit1 = await (ModelInstanceDocument as any)._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA
+    )
+    const commit2 = await (ModelInstanceDocument as any)._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA
+    )
 
     expect(commit1).not.toEqual(commit2)
     expect(StreamUtils.isSignedCommitContainer(commit1)).toBeTruthy()
   })
 
   it('Can create deterministic genesis commit', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit1 = await (ModelInstanceDocument as any)._makeGenesis(context.api, null, {
       ...METADATA,
       deterministic: true,
     })
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit2 = await (ModelInstanceDocument as any)._makeGenesis(context.api, null, {
       ...METADATA,
       deterministic: true,
     })
@@ -369,7 +382,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -391,7 +404,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('genesis commit with content must be signed', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       DETERMINISTIC_METADATA
@@ -409,7 +422,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies deterministic genesis commit correctly', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       null,
       DETERMINISTIC_METADATA
@@ -426,14 +439,14 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('deterministic genesis commit cannot have content', async () => {
-    const rawCommit = await ModelInstanceDocument._makeGenesis(
+    const rawCommit = await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       DETERMINISTIC_METADATA
     )
 
     await context.ipfs.dag.put(rawCommit, FAKE_CID_1)
-    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const commit = await (ModelInstanceDocument as any)._signDagJWS(context.api, rawCommit)
     const payload = dagCBOR.decode(commit.linkedBlock)
     await context.ipfs.dag.put(payload, commit.jws.link)
 
@@ -449,7 +462,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models with SINGLE accountRelations must be created deterministically', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit = await (ModelInstanceDocument as any)._makeGenesis(context.api, null, {
       ...DETERMINISTIC_METADATA,
       deterministic: false,
     })
@@ -470,13 +483,13 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models without SINGLE accountRelations must be created uniquely', async () => {
-    const rawCommit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const rawCommit = await (ModelInstanceDocument as any)._makeGenesis(context.api, CONTENT0, {
       ...METADATA,
       deterministic: true,
     })
 
     await context.ipfs.dag.put(rawCommit, FAKE_CID_1)
-    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const commit = await (ModelInstanceDocument as any)._signDagJWS(context.api, rawCommit)
     const payload = dagCBOR.decode(commit.linkedBlock)
     await context.ipfs.dag.put(payload, commit.jws.link)
 
@@ -496,7 +509,7 @@ describe('ModelInstanceDocumentHandler', () => {
       'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
     )
 
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const commit = await (ModelInstanceDocument as any)._makeGenesis(context.api, CONTENT0, {
       model: nonModelStreamId,
     })
 
@@ -517,7 +530,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes signed commit correctly', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -537,16 +550,16 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
 
-    await expect(doc._makeCommit({} as CeramicApi, CONTENT1)).rejects.toThrow(/No DID/)
+    await expect((doc as any)._makeCommit({} as CeramicApi, CONTENT1)).rejects.toThrow(/No DID/)
 
-    const commit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const commit = (await (doc as any)._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
     const patch = jsonpatch.compare(CONTENT0, CONTENT1)
     const expectedCommit = { data: patch, prev: FAKE_CID_1, id: FAKE_CID_1 }
     await checkSignedCommitMatchesExpectations(did, commit, expectedCommit)
   })
 
   it('applies signed commit correctly', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -567,7 +580,10 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const signedCommit = (await (doc as any)._makeCommit(
+      context.api,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -589,7 +605,7 @@ describe('ModelInstanceDocumentHandler', () => {
   it('multiple consecutive updates', async () => {
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
 
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -609,7 +625,10 @@ describe('ModelInstanceDocumentHandler', () => {
     // make a first update
     const state$ = TestUtils.runningState(genesisState)
     let doc = new ModelInstanceDocument(state$, context)
-    const signedCommit1 = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const signedCommit1 = (await (doc as any)._makeCommit(
+      context.api,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit1, FAKE_CID_2)
     const sPayload1 = dagCBOR.decode(signedCommit1.linkedBlock)
@@ -626,7 +645,10 @@ describe('ModelInstanceDocumentHandler', () => {
     // make a second update on top of the first
     const state1$ = TestUtils.runningState(state1)
     doc = new ModelInstanceDocument(state1$, context)
-    const signedCommit2 = (await doc._makeCommit(context.api, CONTENT2)) as SignedCommitContainer
+    const signedCommit2 = (await (doc as any)._makeCommit(
+      context.api,
+      CONTENT2
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit2, FAKE_CID_3)
     const sPayload2 = dagCBOR.decode(signedCommit2.linkedBlock)
@@ -645,7 +667,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {
-    const commit = (await ModelInstanceDocument._makeGenesis(
+    const commit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       {},
       METADATA
@@ -668,7 +690,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -689,7 +711,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, {})) as SignedCommitContainer
+    const signedCommit = (await (doc as any)._makeCommit(context.api, {})) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -710,10 +732,14 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
-      controller: 'did:3:fake',
-      model: FAKE_MODEL_ID,
-    })) as SignedCommitContainer
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
+      context.api,
+      CONTENT0,
+      {
+        controller: 'did:3:fake',
+        model: FAKE_MODEL_ID,
+      }
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
@@ -732,7 +758,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('throws error if changes metadata', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -753,10 +779,10 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = doc._makeRawCommit(CONTENT1)
+    const rawCommit = (doc as any)._makeRawCommit(CONTENT1)
     const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
     rawCommit.header = { controllers: [newDid] }
-    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const signedCommit = await (ModelInstanceDocument as any)._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -776,7 +802,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid prev link', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -797,9 +823,9 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = doc._makeRawCommit(CONTENT1)
+    const rawCommit = (doc as any)._makeRawCommit(CONTENT1)
     rawCommit.prev = FAKE_CID_3
-    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const signedCommit = await (ModelInstanceDocument as any)._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -819,7 +845,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid id property', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -840,9 +866,9 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = doc._makeRawCommit(CONTENT1)
+    const rawCommit = (doc as any)._makeRawCommit(CONTENT1)
     rawCommit.id = FAKE_CID_3
-    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const signedCommit = await (ModelInstanceDocument as any)._signDagJWS(context.api, rawCommit)
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -862,7 +888,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
       context.api,
       CONTENT0,
       METADATA
@@ -883,7 +909,10 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const signedCommit = (await (doc as any)._makeCommit(
+      context.api,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -904,7 +933,7 @@ describe('ModelInstanceDocumentHandler', () => {
       blockNumber: 123456,
       blockTimestamp: 1615799679,
       chainId: 'fakechain:123',
-    }
+    } as AnchorProof
     await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
     const anchorCommitData = {
       cid: FAKE_CID_4,
@@ -921,9 +950,13 @@ describe('ModelInstanceDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make and apply genesis with old key
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
-      model: FAKE_MODEL_ID,
-    })) as SignedCommitContainer
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
+      signerUsingOldKey,
+      CONTENT0,
+      {
+        model: FAKE_MODEL_ID,
+      }
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
@@ -945,7 +978,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // make update with old key
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(
+    const signedCommit = (await (doc as any)._makeCommit(
       signerUsingOldKey,
       CONTENT1
     )) as SignedCommitContainer
@@ -974,9 +1007,13 @@ describe('ModelInstanceDocumentHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make genesis with new key
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
-      model: FAKE_MODEL_ID,
-    })) as SignedCommitContainer
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
+      signerUsingNewKey,
+      CONTENT0,
+      {
+        model: FAKE_MODEL_ID,
+      }
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
@@ -1003,9 +1040,13 @@ describe('ModelInstanceDocumentHandler', () => {
     rotateKey(did, rotateDate.toISOString())
 
     // make genesis commit using old key
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
-      model: FAKE_MODEL_ID,
-    })) as SignedCommitContainer
+    const genesisCommit = (await (ModelInstanceDocument as any)._makeGenesis(
+      signerUsingOldKey,
+      CONTENT0,
+      {
+        model: FAKE_MODEL_ID,
+      }
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)

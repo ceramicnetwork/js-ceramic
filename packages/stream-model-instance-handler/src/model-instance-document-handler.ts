@@ -60,10 +60,10 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
+    if (process.env['CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB'] != 'true') {
       context.loggerProvider
-        .getDiagnosticsLogger()
-        .err(
+        ?.getDiagnosticsLogger()
+        ?.err(
           'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB environment variable to `true`'
         )
       throw new Error('Indexing is not enabled')
@@ -75,7 +75,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     return this._applySigned(commitData, state, context)
@@ -104,9 +104,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
+      const did = context.did
+      if (!did) throw new Error(`No did is set`)
       await SignatureUtils.verifyCommitSignature(
         commitData,
-        context.did,
+        did,
         controller,
         modelStreamID,
         streamId
@@ -148,9 +150,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     // Verify the signature
     const metadata = state.metadata
     const controller = metadata.controllers[0]
+    if (!controller) throw new Error(`No controller present`)
     const model = metadata.model
+    if (!model) throw new Error(`No model in metadata`)
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
+    const did = context.did
+    if (!did) throw new Error(`No did is set`)
+    await SignatureUtils.verifyCommitSignature(commitData, did, controller, model, streamId)
 
     if (payload.header) {
       throw new Error(
@@ -162,7 +168,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     const oldContent = state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    const modelStream = await context.api.loadStream<Model>(metadata.model)
+    const modelStream = await context.api.loadStream<Model>(model)
     await this._validateContent(modelStream, newContent, false)
 
     const nextState = cloneDeep(state)
@@ -176,19 +182,15 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
     StreamUtils.assertCommitLinksToState(state, commitData.commit)
 
     const proof = commitData.proof
+    if (!proof) throw new Error(`No anchor proof present`)
     const newState = {
       ...state,
       anchorStatus: AnchorStatus.ANCHORED,
