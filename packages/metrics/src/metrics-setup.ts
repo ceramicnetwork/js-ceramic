@@ -13,6 +13,7 @@ export enum METRIC_NAMES {
   ERROR_STORING_COMMIT = 'error_storing_commit',
   HTTP_REQUEST = 'http_request',
   HTTP_RESPONSE = 'http_response',
+  IPFS_TIMEOUT = 'ipfs_timeout',
   PUBSUB_RECEIVED = 'pubsub_received',
   PUBSUB_PUBLISHED = 'pubsub_published',
   STREAM_PINNED = 'stream_pinned',
