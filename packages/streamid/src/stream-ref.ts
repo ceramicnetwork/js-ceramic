@@ -16,17 +16,6 @@ export interface StreamRef {
   toUrl(): string
 }
 
-/**
- * Return result of `f` or null if it fails.
- */
-function tryCatch<A>(f: () => A): A {
-  try {
-    return f()
-  } catch {
-    return null
-  }
-}
-
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace StreamRef {
   /**

@@ -59,11 +59,11 @@ function fromBytesNoThrow(bytes: Uint8Array): CommitID | Error {
  *
  * @param input - CID or string.
  */
-function parseCID(input: any): CID | undefined {
+function parseCID(input: any): CID | null {
   try {
     return typeof input === 'string' ? CID.parse(input) : CID.asCID(input)
   } catch {
-    return undefined
+    return null
   }
 }
 
@@ -76,7 +76,7 @@ function parseCID(input: any): CID | undefined {
  * @param genesis - genesis CID for stream
  * @param commit - representation of commit, be it CID, 0, `'0'`, `null`
  */
-function parseCommit(genesis: CID, commit: CID | string | number = null): CID | null {
+function parseCommit(genesis: CID, commit: CID | string | number | null = null): CID | null {
   if (!commit) return null
 
   const commitCID = parseCID(commit)
@@ -122,8 +122,9 @@ function fromString(input: string): CommitID {
 function fromStringNoThrow(input: string): CommitID | Error {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
   if (protocolFree.includes('commit')) {
-    const commit = protocolFree.split('?')[1].split('=')[1]
+    const commit = protocolFree.split('?')[1]?.split('=')[1]
     const base = protocolFree.split('?')[0]
+    if (!base || !commit) return new Error(`Malformed commit string: ${input}`)
     return make(StreamID.fromString(base), commit)
   } else {
     return fromBytesNoThrow(base36.decode(protocolFree))
@@ -177,7 +178,11 @@ export class CommitID implements StreamRef {
    * new StreamID(<type>, <CID>|<cidStr>)
    * new StreamID(<type>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>)
    */
-  constructor(type: string | number, cid: CID | string, commit: CID | string | number = null) {
+  constructor(
+    type: string | number,
+    cid: CID | string,
+    commit: CID | string | number | null = null
+  ) {
     if (!type && type !== 0) throw new Error('constructor: type required')
     if (!cid) throw new Error('constructor: cid required')
     this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type

@@ -74,6 +74,7 @@ function fromString(input: string): StreamID {
 function fromStringNoThrow(input: string): StreamID | Error {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
   const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
+  if (!commitFree) return new Error(`Malformed StreamID string: ${input}`)
   const bytes = base36.decode(commitFree)
   return fromBytesNoThrow(bytes)
 }
@@ -130,7 +131,6 @@ export class StreamID implements StreamRef {
   /**
    * Create a streamId from a genesis commit.
    *
-   * @param
    * @param {string|number}         type       the stream type
    * @param {Record<string, any>}   genesis    a genesis commit
    *
