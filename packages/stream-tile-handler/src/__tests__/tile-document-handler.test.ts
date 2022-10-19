@@ -639,7 +639,7 @@ describe('TileDocumentHandler', () => {
     for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = await doc._makeRawCommit(context.api, {
+      const rawCommit = await doc._makeRawCommit({
         other: { obj2: 'fefe' },
       })
 
@@ -687,7 +687,7 @@ describe('TileDocumentHandler', () => {
     for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = await doc._makeRawCommit(context.api, {
+      const rawCommit = await doc._makeRawCommit({
         other: { obj2: 'fefe' },
       })
 
@@ -735,7 +735,7 @@ describe('TileDocumentHandler', () => {
     for (let i = 0; i < invalidControllerValues.length; i++) {
       const state$ = TestUtils.runningState(genesisState)
       const doc = new TileDocument(state$, context)
-      const rawCommit = await doc._makeRawCommit(context.api, {
+      const rawCommit = await doc._makeRawCommit({
         other: { obj2: 'fefe' },
       })
 
