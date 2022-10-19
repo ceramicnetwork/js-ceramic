@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.1-rc.0](/compare/@ceramicnetwork/blockchain-utils-linking@2.1.0...@ceramicnetwork/blockchain-utils-linking@2.1.1-rc.0) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
 # [2.1.0](/compare/@ceramicnetwork/blockchain-utils-linking@2.1.0-rc.1...@ceramicnetwork/blockchain-utils-linking@2.1.0) (2022-10-05)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

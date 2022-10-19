@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.8.0...@ceramicnetwork/stream-model-instance-handler@0.8.1-rc.0) (2022-10-19)
+
+
+### Bug Fixes
+
+* Wrap AJV instances in LRU cache (#2488) 3a6e31a, closes #2488
+
+
+
+
+
 # [0.8.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.8.0) (2022-10-05)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
