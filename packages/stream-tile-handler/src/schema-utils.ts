@@ -4,11 +4,16 @@ import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import lru from 'lru_map'
+import isPlainObject from 'lodash.isplainobject'
 
 function buildAjv(): Ajv {
   const validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
   addFormats(validator)
   return validator
+}
+
+function isRecord(input: unknown): input is Record<string, any> {
+  return isPlainObject(input)
 }
 
 const AJV_CACHE_SIZE = 500
@@ -30,10 +35,14 @@ export class SchemaValidation {
     schemaStreamId: string
   ): Promise<void> {
     const schema = await this._loadSchemaById(ceramic, schemaStreamId)
+    if (!isRecord(schema)) throw new Error(`Invalid schema ${schemaStreamId}: Not object`)
     this._validate(content, schema, schemaStreamId)
   }
 
-  private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<T | null> {
+  private async _loadSchemaById<T = unknown>(
+    ceramic: CeramicApi,
+    schemaStreamId: string
+  ): Promise<T | null> {
     let commitId: CommitID
     try {
       commitId = CommitID.fromString(schemaStreamId)
