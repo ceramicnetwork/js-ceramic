@@ -7,6 +7,7 @@ import {
   IpfsApi,
   SignatureStatus,
   TestUtils,
+  LoggerProvider,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
@@ -48,12 +49,18 @@ describe('Level data store', () => {
 
   beforeEach(async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const storeFactory = new PinStoreFactory(ipfs, repository, {
-      stateStoreDirectory: levelPath,
-      pinningEndpoints: ['ipfs+context'],
-      networkName: 'inmemory',
-    })
+    const storeFactory = new PinStoreFactory(
+      ipfs,
+      repository,
+      {
+        stateStoreDirectory: levelPath,
+        pinningEndpoints: ['ipfs+context'],
+        networkName: 'inmemory',
+      },
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     store = storeFactory.createPinStore()
+    await store.open('inmemory')
   })
 
   it('pins stream correctly without IPFS pinning', async () => {
@@ -134,12 +141,18 @@ describe('Level data store', () => {
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const storeFactoryLocal = new PinStoreFactory(ipfs, repository, {
-      stateStoreDirectory: levelPath,
-      pinningEndpoints: ['ipfs+context'],
-      networkName: 'local',
-    })
+    const storeFactoryLocal = new PinStoreFactory(
+      ipfs,
+      repository,
+      {
+        stateStoreDirectory: levelPath,
+        pinningEndpoints: ['ipfs+context'],
+        networkName: 'local',
+      },
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     const localStore = storeFactoryLocal.createPinStore()
+    await localStore.open('local')
 
     await localStore.stateStore.save({ id: streamId, state: streamState })
     await expect(localStore.stateStore.load(streamId)).resolves.toEqual(streamState)
@@ -147,12 +160,18 @@ describe('Level data store', () => {
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const storeFactoryInMemory = new PinStoreFactory(ipfs, repository, {
-      stateStoreDirectory: levelPath,
-      pinningEndpoints: ['ipfs+context'],
-      networkName: 'inmemory',
-    })
+    const storeFactoryInMemory = new PinStoreFactory(
+      ipfs,
+      repository,
+      {
+        stateStoreDirectory: levelPath,
+        pinningEndpoints: ['ipfs+context'],
+        networkName: 'inmemory',
+      },
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     const inMemoryStore = storeFactoryInMemory.createPinStore()
+    await inMemoryStore.open('inmemory')
 
     // The new pin store shouldn't be able to see streams that were pinned on the other network
     await expect(inMemoryStore.stateStore.load(streamId)).resolves.toBeNull()

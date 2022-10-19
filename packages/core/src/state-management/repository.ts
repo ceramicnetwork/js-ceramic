@@ -6,6 +6,7 @@ import {
   Context,
   CreateOpts,
   LoadOpts,
+  Networks,
   PinningOpts,
   PublishOpts,
   StreamState,
@@ -93,6 +94,11 @@ export class Repository {
       state$.complete()
     })
     this.updates$ = this.updates$.bind(this)
+  }
+
+  async init(networkName: string): Promise<void> {
+    await this.pinStore.open(networkName)
+    await this.index.init()
   }
 
   get pinStore(): PinStore {

@@ -444,7 +444,7 @@ export class Ceramic implements CeramicApi {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
-    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions)
+    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -530,7 +530,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this.index.init()
+      await this.repository.init(this._networkOptions.name)
 
       await this._startupChecks()
     } catch (err) {
