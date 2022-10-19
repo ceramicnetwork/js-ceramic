@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.10](/compare/@ceramicnetwork/logger@2.0.10-rc.0...@ceramicnetwork/logger@2.0.10) (2022-10-05)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [2.0.10-rc.0](/compare/@ceramicnetwork/logger@2.0.9...@ceramicnetwork/logger@2.0.10-rc.0) (2022-09-28)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [2.0.9](/compare/@ceramicnetwork/logger@2.0.9-rc.0...@ceramicnetwork/logger@2.0.9) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
 ## [2.0.9-rc.0](/compare/@ceramicnetwork/logger@2.0.8...@ceramicnetwork/logger@2.0.9-rc.0) (2022-09-13)
 
 **Note:** Version bump only for package @ceramicnetwork/logger

@@ -17,7 +17,14 @@ import { ViewsValidation } from './views-utils.js'
 
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
-const ALLOWED_CONTENT_KEYS = new Set(['name', 'description', 'schema', 'accountRelation', 'views'])
+const ALLOWED_CONTENT_KEYS = new Set([
+  'name',
+  'description',
+  'schema',
+  'accountRelation',
+  'relations',
+  'views',
+])
 
 /**
  * Helper function for asserting that the content of a Model Stream only contains the expected fields
@@ -98,7 +105,6 @@ export class ModelHandler implements StreamHandler<Model> {
     if (!isSigned) {
       throw Error('Model genesis commit must be signed')
     }
-
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')

@@ -3,6 +3,103 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.9.1-rc.1](/compare/@ceramicnetwork/stream-tests@2.9.1-rc.0...@ceramicnetwork/stream-tests@2.9.1-rc.1) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+## [2.9.1-rc.0](/compare/@ceramicnetwork/stream-tests@2.9.0...@ceramicnetwork/stream-tests@2.9.1-rc.0) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.9.0](/compare/@ceramicnetwork/stream-tests@2.9.0-rc.1...@ceramicnetwork/stream-tests@2.9.0) (2022-10-05)
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.9.0-rc.2](/compare/@ceramicnetwork/stream-tests@2.9.0-rc.1...@ceramicnetwork/stream-tests@2.9.0-rc.2) (2022-10-04)
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.9.0-rc.1](/compare/@ceramicnetwork/stream-tests@2.9.0-rc.0...@ceramicnetwork/stream-tests@2.9.0-rc.1) (2022-09-30)
+
+
+### Features
+
+* **core:** Throw clear error and log warning when querying a model that isn't indexed (#2467) e79f157, closes #2467
+
+
+
+
+
+# [2.9.0-rc.0](/compare/@ceramicnetwork/stream-tests@2.8.0...@ceramicnetwork/stream-tests@2.9.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* **core:** Extract relation fields from MIDs and add to database, plus add filter capability to queries (#2455) fbe04b5, closes #2455
+* **core:** Load Model relations when indexing a new Model (#2447) 3c87ea7, closes #2447
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+# [2.8.0](/compare/@ceramicnetwork/stream-tests@2.8.0-rc.0...@ceramicnetwork/stream-tests@2.8.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.8.0-rc.0](/compare/@ceramicnetwork/stream-tests@2.7.1-rc.2...@ceramicnetwork/stream-tests@2.8.0-rc.0) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
+## [2.7.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.7.1-rc.1...@ceramicnetwork/stream-tests@2.7.1-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+## [2.7.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.7.1-rc.0...@ceramicnetwork/stream-tests@2.7.1-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 ## [2.7.1-rc.0](/compare/@ceramicnetwork/stream-tests@2.7.0...@ceramicnetwork/stream-tests@2.7.1-rc.0) (2022-09-13)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

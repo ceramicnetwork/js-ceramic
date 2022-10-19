@@ -170,7 +170,7 @@ export class Dispatcher {
    */
   async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
     try {
-      return this._getFromIpfs(cid, path)
+      return await this._getFromIpfs(cid, path)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e

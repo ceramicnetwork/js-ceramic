@@ -8,7 +8,7 @@ import { Observable } from 'rxjs'
 import type { RunningStateLike } from './running-state-like.js'
 import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
-import type { Cacao } from 'ceramic-cacao'
+import type { Cacao } from '@didtools/cacao'
 
 /**
  * Describes signature status

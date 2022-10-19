@@ -6,6 +6,7 @@ import {
   Context,
   CreateOpts,
   LoadOpts,
+  Networks,
   PinningOpts,
   PublishOpts,
   StreamState,
@@ -38,6 +39,15 @@ export type RepositoryDependencies = {
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
+
+/**
+ * Indicate if the stream should be indexed.
+ */
+function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
+  const model = state$.state?.metadata?.model
+  if (!model) return false
+  return index.shouldIndexStream(model)
+}
 
 export class Repository {
   /**
@@ -86,11 +96,16 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  async init(networkName: string): Promise<void> {
+    await this.pinStore.open(networkName)
+    await this.index.init()
+  }
+
   get pinStore(): PinStore {
     return this.#deps.pinStore
   }
 
-  get _index(): LocalIndexApi {
+  get index(): LocalIndexApi {
     return this.#deps.indexing
   }
 
@@ -107,7 +122,7 @@ export class Repository {
       (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts),
       // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
-      this.indexStreamIfNeeded,
+      this.indexStreamIfNeeded.bind(this),
       deps.indexing
     )
   }
@@ -202,7 +217,7 @@ export class Repository {
           // state are no longer valid (for example if the CACAOs used to author them
           // have expired since they were first applied to the cached state object).
           // But if we were the only node on the network that knew about the most
-          // recent tip, we don't want to totally forget about that, so we pass the tip in 
+          // recent tip, we don't want to totally forget about that, so we pass the tip in
           // to `sync` so that it gets considered alongside whatever tip we learn
           // about from the network.
           const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
@@ -283,8 +298,8 @@ export class Repository {
     await this.handlePinOpts(state$, opts)
   }
 
-  async handlePinOpts(state$: RunningState, opts: PinningOpts) {
-    if (opts.pin) {
+  async handlePinOpts(state$: RunningState, opts: PinningOpts): Promise<void> {
+    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
@@ -337,9 +352,18 @@ export class Repository {
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
+    if (shouldIndex(state$, this.index)) {
+      throw new Error(
+        `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
+          state$.state.metadata.model
+        }`
+      )
+    }
+
     if (opts?.publish) {
       this.stateManager.publishTip(state$)
     }
+
     return this.#deps.pinStore.rm(state$)
   }
 
@@ -400,7 +424,7 @@ export class Repository {
       firstAnchor: firstAnchor,
     }
 
-    await this._index.indexStream(STREAM_CONTENT)
+    await this.index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -440,6 +464,6 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
-    await this._index.close()
+    await this.index.close()
   }
 }

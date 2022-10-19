@@ -1,9 +1,18 @@
-import type { Cacao } from 'ceramic-cacao'
+import type { Cacao } from '@didtools/cacao'
 import type { DID } from 'dids'
 import type { CommitData } from '../index.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { getEIP191Verifier } from '@didtools/pkh-ethereum'
+import { getSolanaVerifier } from '@didtools/pkh-solana'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
+
+
+// Register supported CACAO Verifiers
+const verifiersCACAO = {
+  ...getEIP191Verifier(),
+  ...getSolanaVerifier()
+}
 
 /**
  * Utils related to cryptographic signatures
@@ -36,6 +45,7 @@ export class SignatureUtils {
         disableTimecheck: commitData.disableTimecheck,
         capability: cacao,
         revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
+        verifiers: verifiersCACAO
       })
     } catch (e: any) {
       const original = e.message ? e.message : String(e)

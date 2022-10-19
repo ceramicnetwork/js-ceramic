@@ -1,9 +1,14 @@
-import { empty, from, Observable, Subscription } from 'rxjs'
-import { MsgType, PubsubMessage } from './pubsub-message.js'
-import { TaskQueue } from './task-queue.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { ClockSource } from '../clock-source.js'
-import { ObservableWithNext } from './observable-with-next.js'
+import PQueue from 'p-queue'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { empty, from, Observable } from 'rxjs'
+import type { Subscription } from 'rxjs'
+import type { PubsubMessage } from './pubsub-message.js'
+import type { ObservableWithNext } from './observable-with-next.js'
+import { MsgType } from './pubsub-message.js'
+import { whenSubscriptionDone } from '../__tests__/when-subscription-done.util.js'
+
+// Warnings about rate-limiting appear once per:
+const DEFAULT_WARNINGS_INTERVAL = 30 * 60 * 1000 // 30 minutes
 
 /**
  * Wraps an instance of Pubsub and rate limits how often QUERY messages can be sent.  There are two
@@ -22,24 +27,17 @@ export class PubsubRateLimit
   implements ObservableWithNext<PubsubMessage>
 {
   /**
-   * List of timestamps of the most recent queries. Will grow to be at max this.queriesPerSecond in length.
-   * @private
-   */
-  private readonly _recentQueries: Date[] = []
-
-  /**
    * A fixed-size task queue for QUERY message publish tasks. There is a limit to the max number
    * of QUERY messages that can queue up, after which point publishing new query messages will start
-   * to fail
-   * @private
+   * to fail.
    */
-  private readonly _queryQueue: TaskQueue
+  readonly queue: PQueue
 
   /**
-   * An abstraction around accessing the system clock, to allow injecting mock behavior in unit tests.
-   * @private
+   * Maximum amount of QueryMessages allowed to hang in memory.
+   * A new message over the limit gets bounced off.
    */
-  private readonly _clock: ClockSource = new ClockSource()
+  readonly maxQueuedQueries: number
 
   /**
    * Constructs a new instance of PubsubRateLimit.
@@ -47,19 +45,35 @@ export class PubsubRateLimit
    * @param logger
    * @param queriesPerSecond - Max number of query messages that can be published per second
    *   before they start to queue up.
+   * @param rateLimitWarningsIntervalMs - How much time should pass between two warnings about rate-limiting
    */
   constructor(
     private readonly pubsub: ObservableWithNext<PubsubMessage>,
     private readonly logger: DiagnosticsLogger,
-    private readonly queriesPerSecond: number
+    private readonly queriesPerSecond: number,
+    private readonly rateLimitWarningsIntervalMs: number = DEFAULT_WARNINGS_INTERVAL
   ) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
     })
 
-    this._queryQueue = new TaskQueue((err) => {
-      this.logger.err(`Error while publishing pubsub QUERY message: ${err}`)
+    // Limit number of executions by +intervalCap+ in +interval+ milliseconds.
+    // Here it is +queriesPerSecond+ per 1000ms = 1 second.
+    this.queue = new PQueue({ interval: 1000, intervalCap: queriesPerSecond })
+
+    let lastWarning = 0
+    this.queue.on('add', () => {
+      // If there is a publishing task over the queriesPerSecond limit
+      // And longer than this.rateLimitWarningsIntervalMs has passed since the last warning
+      if (this.queue.size > 0 && Date.now() - lastWarning >= this.rateLimitWarningsIntervalMs) {
+        this.logger.warn(
+          `More than ${this.queriesPerSecond} query messages published in less than a second. Query messages will be rate limited`
+        )
+        lastWarning = Date.now()
+      }
     })
+
+    this.maxQueuedQueries = queriesPerSecond * 10
 
     this.logger.debug(
       `Configuring pubsub to rate limit query messages to ${queriesPerSecond} per second`
@@ -72,42 +86,16 @@ export class PubsubRateLimit
    * @param message
    */
   next(message: PubsubMessage): Subscription {
-    const maxQueuedQueries = this.queriesPerSecond * 10
     if (message.typ === MsgType.QUERY) {
-      if (this._queryQueue.size >= maxQueuedQueries) {
+      if (this.queue.size >= this.maxQueuedQueries) {
         this.logger.err(
-          `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${maxQueuedQueries} queued queries.`
+          `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${this.maxQueuedQueries} queued queries.`
         )
         return empty().subscribe()
       }
-      return from(this._queryQueue.run(this._publishQuery.bind(this, message))).subscribe()
+      return from(this.queue.add(() => whenSubscriptionDone(this.pubsub.next(message)))).subscribe()
     } else {
       return this.pubsub.next(message)
     }
-  }
-
-  /**
-   * Helper method for publishing a query to pubsub that only publishes the message once there have
-   * been fewer than this.queriesPerSecond queries published in the last second.
-   * @param message
-   * @private
-   */
-  private async _publishQuery(message: PubsubMessage): Promise<Subscription> {
-    if (this._recentQueries.length >= this.queriesPerSecond) {
-      const now = this._clock.now()
-      const oldestQuery = this._recentQueries.shift()
-      const timeSinceOldestQuery = now.getTime() - oldestQuery.getTime()
-      if (timeSinceOldestQuery < 1000) {
-        // If it's been less than a second since the oldest query, sleep until it's been more than a
-        // second
-        this.logger.verbose(
-          `More than ${this.queriesPerSecond} query messages published in less than a second. Query messages will be rate limited`
-        )
-        await this._clock.waitUntil(new Date(oldestQuery.getTime() + 1000))
-      }
-    }
-
-    this._recentQueries.push(this._clock.now())
-    return this.pubsub.next(message)
   }
 }

@@ -3,6 +3,100 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.8.1-rc.0](/compare/@ceramicnetwork/common@2.8.0...@ceramicnetwork/common@2.8.1-rc.0) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.8.0](/compare/@ceramicnetwork/common@2.8.0-rc.1...@ceramicnetwork/common@2.8.0) (2022-10-05)
+
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.8.0-rc.2](/compare/@ceramicnetwork/common@2.8.0-rc.1...@ceramicnetwork/common@2.8.0-rc.2) (2022-10-04)
+
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.8.0-rc.1](/compare/@ceramicnetwork/common@2.8.0-rc.0...@ceramicnetwork/common@2.8.0-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.8.0-rc.0](/compare/@ceramicnetwork/common@2.7.0...@ceramicnetwork/common@2.8.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+# [2.7.0](/compare/@ceramicnetwork/common@2.7.0-rc.0...@ceramicnetwork/common@2.7.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.7.0-rc.0](/compare/@ceramicnetwork/common@2.6.1-rc.2...@ceramicnetwork/common@2.7.0-rc.0) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
+## [2.6.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.6.1-rc.1...@ceramicnetwork/common@2.6.1-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [2.6.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.6.1-rc.0...@ceramicnetwork/common@2.6.1-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 ## [2.6.1-rc.0](/compare/@ceramicnetwork/common@2.6.0...@ceramicnetwork/common@2.6.1-rc.0) (2022-09-13)
 
 **Note:** Version bump only for package @ceramicnetwork/common

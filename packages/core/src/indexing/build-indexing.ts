@@ -12,11 +12,15 @@ export type IndexingConfig = {
   db: string
 
   /**
+   * @deprecated
+   *
    * List of models to index.
    */
-  models: Array<StreamID>
+  // TODO: Remove this key when Admin API is implemented
+  models?: Array<StreamID>
 
   /**
+   *
    * Allow a query only if historical sync is over.
    */
   allowQueriesBeforeHistoricalSync: boolean
@@ -64,7 +68,6 @@ export function buildIndexing(
       })
       return new SqliteIndexApi(
         dbConnection,
-        indexingConfig.models,
         indexingConfig.allowQueriesBeforeHistoricalSync,
         logger
       )
@@ -77,7 +80,6 @@ export function buildIndexing(
       })
       return new PostgresIndexApi(
         dataSource,
-        indexingConfig.models,
         indexingConfig.allowQueriesBeforeHistoricalSync,
         logger
       )

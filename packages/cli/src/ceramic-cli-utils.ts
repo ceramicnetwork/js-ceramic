@@ -33,7 +33,7 @@ const DEFAULT_METRICS_EXPORTER_PORT = 9090
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
-  'http-api': { 'cors-allowed-origins': [new RegExp('.*')] },
+  'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
   ipfs: { mode: IpfsMode.BUNDLED },
   logger: { 'log-level': LogLevel.important, 'log-to-files': false },
   metrics: {

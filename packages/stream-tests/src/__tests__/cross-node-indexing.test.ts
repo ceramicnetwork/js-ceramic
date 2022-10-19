@@ -7,7 +7,7 @@ import {
 } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
 
@@ -17,7 +17,7 @@ const CONTENT2 = { myData: 2 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
+  accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
@@ -83,19 +83,21 @@ describe('Cross-node indexing and query test', () => {
     ceramic1 = await createCeramic(ipfs1, {
       indexing: {
         db: `sqlite://${indexingDirectory1}/ceramic.sqlite`,
-        models: [model.id.toString()],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
+    await ceramic1.index.indexModels([model.id])
     const indexingDirectory2 = await tmp.tmpName()
     await fs.mkdir(indexingDirectory2)
     ceramic2 = await createCeramic(ipfs2, {
       indexing: {
         db: `sqlite://${indexingDirectory2}/ceramic.sqlite`,
-        models: [model.id.toString()],
+        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
+    await ceramic2.index.indexModels([model.id])
   }, 30 * 1000)
 
   afterEach(async () => {
@@ -112,7 +114,7 @@ describe('Cross-node indexing and query test', () => {
     // in the index, instead of this race-prone sleep.
     await TestUtils.delay(5 * 1000)
 
-    let resultObj = await ceramic2.index.queryIndex({ model: model.id, first: 100 })
+    let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
     let results = extractDocuments(ceramic2, resultObj)
 
     expect(results.length).toEqual(1)
@@ -130,7 +132,7 @@ describe('Cross-node indexing and query test', () => {
     // in the index, instead of this race-prone sleep.
     await TestUtils.delay(5 * 1000)
 
-    resultObj = await ceramic2.index.queryIndex({ model: model.id, first: 100 })
+    resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
     results = extractDocuments(ceramic2, resultObj)
 
     expect(results.length).toEqual(2)
@@ -152,17 +154,17 @@ describe('Cross-node indexing and query test', () => {
     })
 
     // Since ceramic1 didn't publish the commit, ceramic2 won't know about it.
-    let resultObj = await ceramic2.index.queryIndex({ model: model.id, first: 100 })
+    let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
     let results = extractDocuments(ceramic2, resultObj)
     expect(results.length).toEqual(0)
 
     // Explicitly loading the stream on ceramic2 should add it to the index.
-    const doc2 = await ModelInstanceDocument.load(ceramic2, doc1.id, { pin: false })
+    const doc2 = await ModelInstanceDocument.load(ceramic2, doc1.id)
     expect(doc1.content).toEqual(doc2.content)
     // Indexed streams should always get pinned, regardless of the 'pin' flag
     await expect(TestUtils.isPinned(ceramic2, doc1.id)).toBeTruthy()
 
-    resultObj = await ceramic2.index.queryIndex({ model: model.id, first: 100 })
+    resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
     results = extractDocuments(ceramic2, resultObj)
     expect(results.length).toEqual(1)
     expect(results[0].id.toString()).toEqual(doc1.id.toString())

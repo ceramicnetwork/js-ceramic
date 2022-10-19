@@ -6,7 +6,7 @@ import { Wallet } from 'ethers'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
-import { Cacao, SiweMessage } from 'ceramic-cacao'
+import { Cacao, SiweMessage } from '@didtools/cacao'
 import MockDate from 'mockdate'
 import { createCeramic } from '../create-ceramic.js'
 import {
@@ -14,12 +14,12 @@ import {
   ModelInstanceDocumentMetadata,
 } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 function getModelDef(name: string): ModelDefinition {
   return {
     name: name,
-    accountRelation: ModelAccountRelation.LIST,
+    accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
       type: 'object',

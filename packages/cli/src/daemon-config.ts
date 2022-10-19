@@ -153,6 +153,12 @@ export class DaemonHTTPApiConfig {
     },
   })
   corsAllowedOrigins?: RegExp[]
+
+  /**
+   * An array of DIDs with access to Admin API (represented as strings)
+   */
+  @jsonArrayMember(String, { name: 'admin-dids' })
+  adminDids?: Array<string>
 }
 
 /**
@@ -210,7 +216,7 @@ export class IndexingConfig {
    *  - `postgres:///user:password@host:5432/database`
    */
   @jsonMember(String)
-  db?: string
+  db: string
 
   /**
    * Allow serving indexing queries if historical indexing is not done yet.
@@ -218,7 +224,7 @@ export class IndexingConfig {
   @jsonMember(Boolean, {
     name: 'allow-queries-before-historical-sync',
   })
-  allowQueriesBeforeHistoricalSync?: boolean = false
+  allowQueriesBeforeHistoricalSync = false
 
   /**
    * Models to index.

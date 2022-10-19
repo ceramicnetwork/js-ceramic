@@ -3,6 +3,81 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1-rc.0](/compare/@ceramicnetwork/stream-caip10-link@2.3.0...@ceramicnetwork/stream-caip10-link@2.3.1-rc.0) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.3.0](/compare/@ceramicnetwork/stream-caip10-link@2.3.0-rc.1...@ceramicnetwork/stream-caip10-link@2.3.0) (2022-10-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.3.0-rc.2](/compare/@ceramicnetwork/stream-caip10-link@2.3.0-rc.1...@ceramicnetwork/stream-caip10-link@2.3.0-rc.2) (2022-10-04)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.3.0-rc.1](/compare/@ceramicnetwork/stream-caip10-link@2.3.0-rc.0...@ceramicnetwork/stream-caip10-link@2.3.0-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.3.0-rc.0](/compare/@ceramicnetwork/stream-caip10-link@2.2.4...@ceramicnetwork/stream-caip10-link@2.3.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+## [2.2.4](/compare/@ceramicnetwork/stream-caip10-link@2.2.4-rc.3...@ceramicnetwork/stream-caip10-link@2.2.4) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+## [2.2.4-rc.3](/compare/@ceramicnetwork/stream-caip10-link@2.2.4-rc.2...@ceramicnetwork/stream-caip10-link@2.2.4-rc.3) (2022-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+## [2.2.4-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.2.4-rc.1...@ceramicnetwork/stream-caip10-link@2.2.4-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+## [2.2.4-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.2.4-rc.0...@ceramicnetwork/stream-caip10-link@2.2.4-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
 ## [2.2.4-rc.0](/compare/@ceramicnetwork/stream-caip10-link@2.2.3...@ceramicnetwork/stream-caip10-link@2.2.4-rc.0) (2022-09-13)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link

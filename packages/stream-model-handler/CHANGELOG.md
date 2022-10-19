@@ -3,6 +3,84 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.7.0...@ceramicnetwork/stream-model-handler@0.7.1-rc.0) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [0.7.0](/compare/@ceramicnetwork/stream-model-handler@0.7.0-rc.1...@ceramicnetwork/stream-model-handler@0.7.0) (2022-10-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [0.7.0-rc.2](/compare/@ceramicnetwork/stream-model-handler@0.7.0-rc.1...@ceramicnetwork/stream-model-handler@0.7.0-rc.2) (2022-10-04)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [0.7.0-rc.1](/compare/@ceramicnetwork/stream-model-handler@0.7.0-rc.0...@ceramicnetwork/stream-model-handler@0.7.0-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [0.7.0-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.6.0...@ceramicnetwork/stream-model-handler@0.7.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+# [0.6.0](/compare/@ceramicnetwork/stream-model-handler@0.6.0-rc.0...@ceramicnetwork/stream-model-handler@0.6.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [0.6.0-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.5.1-rc.2...@ceramicnetwork/stream-model-handler@0.6.0-rc.0) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
+## [0.5.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.5.1-rc.1...@ceramicnetwork/stream-model-handler@0.5.1-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+## [0.5.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.5.1-rc.0...@ceramicnetwork/stream-model-handler@0.5.1-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
 ## [0.5.1-rc.0](/compare/@ceramicnetwork/stream-model-handler@0.5.0...@ceramicnetwork/stream-model-handler@0.5.1-rc.0) (2022-09-13)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler
