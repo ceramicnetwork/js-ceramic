@@ -124,7 +124,7 @@ export class S3StateStore implements StateStore {
    */
   async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     if (streamId == null) {
-      return _listAll(this.#store)
+      return _listAll(this.#store, limit)
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []
