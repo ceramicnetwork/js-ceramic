@@ -354,8 +354,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
    */
   private async _makeRawCommit(
     newContent: T | null | undefined,
-    newMetadata: TileMetadataArgs = {}
+    newMetadata?: TileMetadataArgs | undefined | null
   ): Promise<RawCommit> {
+    newMetadata ||= {}
     const header = headerFromMetadata(newMetadata, false)
 
     if (newContent == null) {
@@ -391,8 +392,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   static async makeGenesis<T>(
     signer: CeramicSigner,
     content: T | null | undefined,
-    metadata: TileMetadataArgs = {}
+    metadata: TileMetadataArgs | undefined | null
   ): Promise<CeramicCommit> {
+    metadata ||= {}
     if (!metadata.controllers || metadata.controllers.length === 0) {
       if (signer.did) {
         const did = await getAuthenticatedDID(signer)
