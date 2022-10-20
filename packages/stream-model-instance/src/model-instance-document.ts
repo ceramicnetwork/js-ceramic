@@ -19,6 +19,7 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
+import type { DID } from 'dids'
 
 /**
  * Arguments used to generate the metadata for Model Instance Documents
@@ -72,16 +73,16 @@ const DEFAULT_DETERMINISTIC_OPTS = {
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 
-async function _ensureAuthenticated(signer: CeramicSigner) {
-  if (signer.did == null) {
-    throw new Error('No DID provided')
-  }
-  if (!signer.did.authenticated) {
-    await signer.did.authenticate()
+async function getAuthenticatedDID(signer: CeramicSigner): Promise<DID> {
+  const did = signer.did
+  if (!did) throw new Error('No DID provided')
+  if (!did.authenticated) {
+    await did.authenticate()
     if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
+      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${did.id}`)
     }
   }
+  return did
 }
 
 async function throwReadOnlyError(): Promise<void> {
@@ -100,13 +101,17 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   private _isReadOnly = false
 
-  get content(): T {
+  override get content(): T {
     return super.content
   }
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { controller: metadata.controllers[0], model: metadata.model }
+    const controller = metadata.controllers[0]
+    if (!controller) throw new Error(`Controller is not present`)
+    const model = metadata.model
+    if (!model) throw new Error(`Model is not present`)
+    return { controller: controller, model: model }
   }
 
   /**
@@ -116,7 +121,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param metadata - Genesis metadata, including the model that this document belongs to
    * @param opts - Additional options
    */
-  static async create<T>(
+  static override async create<T>(
     ceramic: CeramicApi,
     content: T | null,
     metadata: ModelInstanceDocumentMetadataArgs,
@@ -242,10 +247,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   private _makeRawCommit(newContent: T | null): RawCommit {
     const patch = jsonpatch.compare(this.content, newContent || {})
+    const genesisLogEntry = this.state.log[0]
+    if (!genesisLogEntry) throw new Error(`Genesis log entry is absent`)
     return {
       data: patch,
       prev: this.tip,
-      id: this.state.log[0].cid,
+      id: genesisLogEntry.cid,
     }
   }
 
@@ -284,10 +291,10 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     let controller = metadata.controller
     if (!controller) {
       if (signer.did) {
-        await _ensureAuthenticated(signer)
+        const did = await getAuthenticatedDID(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        controller = signer.did.hasParent ? signer.did.parent : signer.did.id
+        controller = did.hasParent ? did.parent : did.id
       } else {
         throw new Error('No controller specified')
       }
@@ -314,7 +321,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     signer: CeramicSigner,
     commit: CeramicCommit
   ): Promise<SignedCommitContainer> {
-    await _ensureAuthenticated(signer)
-    return signer.did.createDagJWS(commit)
+    const did = await getAuthenticatedDID(signer)
+    return did.createDagJWS(commit)
   }
 }
