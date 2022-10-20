@@ -15,7 +15,7 @@ export class ViewsValidation {
       if (!SUPPORTED_VIEW_TYPES.includes(value.type)) {
         throw new Error('unsupported model view definition type')
       }
-      if (schema.properties[key] !== undefined) {
+      if (schema.properties?.[key]) {
         throw new Error('view definition used with a property also present in schema')
       }
     })

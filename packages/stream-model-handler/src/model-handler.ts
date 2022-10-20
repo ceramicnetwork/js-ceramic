@@ -72,9 +72,9 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
+    if (process.env['CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB'] != 'true') {
       context.loggerProvider
-        .getDiagnosticsLogger()
+        ?.getDiagnosticsLogger()
         .err(
           'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB environment variable to `true`'
         )
@@ -87,7 +87,7 @@ export class ModelHandler implements StreamHandler<Model> {
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     throw new Error('Cannot update a finalized Model')
@@ -100,6 +100,8 @@ export class ModelHandler implements StreamHandler<Model> {
    * @private
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+    const did = context.did
+    if (!did) throw new Error(`DID must be present`)
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (!isSigned) {
@@ -115,13 +117,7 @@ export class ModelHandler implements StreamHandler<Model> {
     const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
 
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.did,
-      controller,
-      modelStreamID,
-      streamId
-    )
+    await SignatureUtils.verifyCommitSignature(commitData, did, controller, modelStreamID, streamId)
 
     assertNoExtraKeys(payload.data)
     Model.assertComplete(payload.data)
@@ -153,19 +149,15 @@ export class ModelHandler implements StreamHandler<Model> {
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
     StreamUtils.assertCommitLinksToState(state, commitData.commit)
 
     const proof = commitData.proof
+    if (!proof) throw new Error(`Anchor proof must be present`)
     const newState = {
       ...state,
       anchorStatus: AnchorStatus.ANCHORED,

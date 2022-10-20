@@ -19,6 +19,9 @@ import {
   CeramicSigner,
   GenesisCommit,
   RawCommit,
+  CommitData,
+  StreamState,
+  AnchorProof,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -48,7 +51,6 @@ const hash = (data: string): CID => {
 }
 
 const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
@@ -290,7 +292,7 @@ describe('ModelHandler', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await Model._makeGenesis(context.api, FINAL_CONTENT)
+    const commit = await (Model as any)._makeGenesis(context.api, FINAL_CONTENT)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -302,7 +304,10 @@ describe('ModelHandler', () => {
   })
 
   it('supports view properties in genesis commit', async () => {
-    const commit = await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)
+    const commit = await (Model as any)._makeGenesis(
+      context.api,
+      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
+    )
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -314,20 +319,23 @@ describe('ModelHandler', () => {
   })
 
   it('Content is required', async () => {
-    await expect(Model._makeGenesis(context.api, null)).rejects.toThrow(
+    await expect((Model as any)._makeGenesis(context.api, null)).rejects.toThrow(
       /Genesis content cannot be null/
     )
   })
 
   it('creates genesis commits deterministically', async () => {
-    const commit1 = await Model._makeGenesis(context.api, FINAL_CONTENT)
-    const commit2 = await Model._makeGenesis(context.api, FINAL_CONTENT)
+    const commit1 = await (Model as any)._makeGenesis(context.api, FINAL_CONTENT)
+    const commit2 = await (Model as any)._makeGenesis(context.api, FINAL_CONTENT)
 
     expect(commit1).toEqual(commit2)
   })
 
   it('applies genesis commit correctly', async () => {
-    const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT)) as SignedCommitContainer
+    const commit = (await (Model as any)._makeGenesis(
+      context.api,
+      FINAL_CONTENT
+    )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
@@ -344,7 +352,7 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commits with views properties correctly', async () => {
-    const commit = (await Model._makeGenesis(
+    const commit = (await (Model as any)._makeGenesis(
       context.api,
       FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
     )) as SignedCommitContainer
@@ -364,7 +372,7 @@ describe('ModelHandler', () => {
   })
 
   it('fails to apply genesis commits with invalid schema', async () => {
-    const commit = (await Model._makeGenesis(
+    const commit = (await (Model as any)._makeGenesis(
       context.api,
       CONTENT_WITH_INVALID_SCHEMA
     )) as SignedCommitContainer
@@ -385,7 +393,7 @@ describe('ModelHandler', () => {
   })
 
   it(`fails to apply genesis commits if views validation fails`, async () => {
-    const commit = (await Model._makeGenesis(
+    const commit = (await (Model as any)._makeGenesis(
       context.api,
       CONTENT_WITH_INVALID_VIEWS
     )) as SignedCommitContainer
@@ -406,13 +414,15 @@ describe('ModelHandler', () => {
   })
 
   it('fails to apply signed commit', async () => {
-    await expect(handler.applyCommit({}, context, {})).rejects.toThrow(
+    const fauxCommit = {} as CommitData
+    const emptyState = {} as StreamState
+    await expect(handler.applyCommit(fauxCommit, context, emptyState)).rejects.toThrow(
       `Cannot update a finalized Model`
     )
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
-    const commit = (await Model._makeGenesis(context.api, {
+    const commit = (await (Model as any)._makeGenesis(context.api, {
       ...PLACEHOLDER_CONTENT,
       foo: 'bar',
     })) as SignedCommitContainer
@@ -433,7 +443,7 @@ describe('ModelHandler', () => {
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const genesisCommit = (await Model._makeGenesis(context.api, FINAL_CONTENT, {
+    const genesisCommit = (await (Model as any)._makeGenesis(context.api, FINAL_CONTENT, {
       controller: 'did:3:fake',
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
@@ -454,7 +464,7 @@ describe('ModelHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    const genesisCommit = (await Model._makeGenesis(
+    const genesisCommit = (await (Model as any)._makeGenesis(
       context.api,
       FINAL_CONTENT
     )) as SignedCommitContainer
@@ -477,7 +487,7 @@ describe('ModelHandler', () => {
       blockNumber: 123456,
       blockTimestamp: 1615799679,
       chainId: 'fakechain:123',
-    }
+    } as AnchorProof
     await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
     const anchorCommitData = {
       cid: FAKE_CID_4,
@@ -493,7 +503,7 @@ describe('ModelHandler', () => {
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make genesis with new key
-    const genesisCommit = (await Model._makeGenesis(
+    const genesisCommit = (await (Model as any)._makeGenesis(
       signerUsingNewKey,
       FINAL_CONTENT
     )) as SignedCommitContainer
@@ -523,7 +533,7 @@ describe('ModelHandler', () => {
     rotateKey(did, rotateDate.toISOString())
 
     // make genesis commit using old key
-    const genesisCommit = (await Model._makeGenesis(
+    const genesisCommit = (await (Model as any)._makeGenesis(
       signerUsingOldKey,
       FINAL_CONTENT
     )) as SignedCommitContainer
