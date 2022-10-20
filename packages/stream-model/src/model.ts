@@ -18,6 +18,7 @@ import { CID } from 'multiformats/cid'
 import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
 import multihashes from 'multihashes'
+import type { DID } from 'dids'
 
 /**
  * Arguments used to generate the metadata for Model streams.
@@ -48,16 +49,16 @@ export interface ModelMetadata {
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
-async function _ensureAuthenticated(signer: CeramicSigner) {
-  if (signer.did == null) {
-    throw new Error('No DID provided')
-  }
-  if (!signer.did.authenticated) {
-    await signer.did.authenticate()
+async function getAuthenticatedDID(signer: CeramicSigner): Promise<DID> {
+  const did = signer.did
+  if (!did) throw new Error('No DID provided')
+  if (!did.authenticated) {
+    await did.authenticate()
     if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
+      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${did.id}`)
     }
   }
+  return did
 }
 
 async function throwReadOnlyError(): Promise<void> {
@@ -155,12 +156,14 @@ export class Model extends Stream {
 
   private _isReadOnly = false
 
-  get content(): ModelDefinition {
+  override get content(): ModelDefinition {
     return super.content
   }
 
   get metadata(): ModelMetadata {
-    return { controller: this.state$.value.metadata.controllers[0], model: Model.MODEL }
+    const controller = this.state$.value.metadata.controllers[0]
+    if (!controller) throw new Error(`Controller must be present`)
+    return { controller: controller, model: Model.MODEL }
   }
 
   /**
@@ -169,7 +172,7 @@ export class Model extends Stream {
    * @param content - contents of the model to create
    * @param metadata
    */
-  static async create(
+  static override async create(
     ceramic: CeramicApi,
     content: ModelDefinition,
     metadata?: ModelMetadataArgs
@@ -184,8 +187,7 @@ export class Model extends Stream {
       throwOnInvalidCommit: true,
     }
     const commit = await Model._makeGenesis(ceramic, content, metadata)
-    const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
-    return model
+    return ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
   }
 
   /**
@@ -245,8 +247,7 @@ export class Model extends Stream {
       )
     }
 
-    const model = await ceramic.loadStream<Model>(streamRef, opts)
-    return model
+    return ceramic.loadStream<Model>(streamRef, opts)
   }
 
   /**
@@ -278,10 +279,10 @@ export class Model extends Stream {
 
     if (!metadata || !metadata.controller) {
       if (signer.did) {
-        await _ensureAuthenticated(signer)
+        const did = await getAuthenticatedDID(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        metadata = { controller: signer.did.hasParent ? signer.did.parent : signer.did.id }
+        metadata = { controller: did.hasParent ? did.parent : did.id }
       } else {
         throw new Error('No controller specified')
       }
@@ -317,7 +318,7 @@ export class Model extends Stream {
     signer: CeramicSigner,
     commit: CeramicCommit
   ): Promise<SignedCommitContainer> {
-    await _ensureAuthenticated(signer)
-    return signer.did.createDagJWS(commit)
+    const did = await getAuthenticatedDID(signer)
+    return did.createDagJWS(commit)
   }
 }

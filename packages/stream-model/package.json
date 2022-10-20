@@ -40,5 +40,8 @@
     "multihashes": "^4.0.3",
     "uint8arrays": "^3.0.0"
   },
+  "devDependencies": {
+    "dids": "^3.4.0"
+  },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
