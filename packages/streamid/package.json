@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/streamid",
-  "version": "2.3.5",
+  "version": "2.3.6-hotfix.0",
   "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",

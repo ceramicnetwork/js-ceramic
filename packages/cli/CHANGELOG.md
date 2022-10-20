@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.8.1-hotfix.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.8.1-hotfix.0...@ceramicnetwork/cli@2.8.1-hotfix.1) (2022-10-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+
 ## [2.8.1-hotfix.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.8.0...@ceramicnetwork/cli@2.8.1-hotfix.0) (2022-10-20)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

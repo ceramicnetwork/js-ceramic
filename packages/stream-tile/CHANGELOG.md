@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.4.6-hotfix.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.4.5...@ceramicnetwork/stream-tile@2.4.6-hotfix.0) (2022-10-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+
 ## [2.4.5](/compare/@ceramicnetwork/stream-tile@2.4.5-rc.1...@ceramicnetwork/stream-tile@2.4.5) (2022-10-05)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile
