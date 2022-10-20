@@ -12,7 +12,7 @@ import { StreamRef } from './stream-ref.js'
 import { StreamType } from './stream-type.js'
 
 /**
- * Parse StreamID from bytes representation.
+ * Parse StreamID from bytes representation .
  *
  * @param bytes - bytes representation of StreamID.
  * @throws error on invalid input
