@@ -3,38 +3,224 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [2.8.0-rc.1](/compare/@ceramicnetwork/core@2.7.1...@ceramicnetwork/core@2.8.0-rc.1) (2022-08-11)
-
-
-### Bug Fixes
-
-* **core:** Add default endpoint for gnosis (#2366) 3e53142, closes #2366
+# [2.12.0-rc.0](/compare/@ceramicnetwork/core@2.11.0...@ceramicnetwork/core@2.12.0-rc.0) (2022-10-19)
 
 
 ### Features
 
-* **cli:** Enable ceramic --version flag (#2339) df53df4, closes #2339
-* **core:** working implementation of indexable anchors Phase 2 (#2315) 987cd43, closes #2315
+* **core:** Allow setting network to mainnet (#2491) b4c5958, closes #2491
 
 
 
 
 
-# [2.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.8.0-rc.0) (2022-08-10)
+# [2.11.0](/compare/@ceramicnetwork/core@2.11.0-rc.1...@ceramicnetwork/core@2.11.0) (2022-10-05)
 
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.11.0-rc.2](/compare/@ceramicnetwork/core@2.11.0-rc.1...@ceramicnetwork/core@2.11.0-rc.2) (2022-10-04)
+
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.11.0-rc.1](/compare/@ceramicnetwork/core@2.11.0-rc.0...@ceramicnetwork/core@2.11.0-rc.1) (2022-09-30)
+
+
+### Features
+
+* **core:** Throw clear error and log warning when querying a model that isn't indexed (#2467) e79f157, closes #2467
+* Use StaticJsonRpcProvider in EthereumAnchorValidator (#2471) 6c4988f, closes #2471
+
+
+
+
+
+# [2.11.0-rc.0](/compare/@ceramicnetwork/core@2.10.0...@ceramicnetwork/core@2.11.0-rc.0) (2022-09-28)
+
+
+### Bug Fixes
+
+* **core:** Don't fail to start up if indexing section is missing from config file (#2454) fb4936e, closes #2454
+
+
+### Features
+
+* `count` endpoint (#2463) 6556596, closes #2463
+* Ceramic asks CAS to anchor indefinitely until some ok response (#2441) 18150a9, closes #2441
+* **core:** Add functionality for building tables with columns for relations (#2435) 1da2e65, closes #2435
+* **core:** Extract relation fields from MIDs and add to database, plus add filter capability to queries (#2455) fbe04b5, closes #2455
+* **core:** implement `ceramic_models` indexing config table (#2449) 33e3c09, closes #2449
+* **core:** Load Model relations when indexing a new Model (#2447) 3c87ea7, closes #2447
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+# [2.10.0](/compare/@ceramicnetwork/core@2.10.0-rc.3...@ceramicnetwork/core@2.10.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.10.0-rc.3](/compare/@ceramicnetwork/core@2.10.0-rc.2...@ceramicnetwork/core@2.10.0-rc.3) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+* Rate-limit a warning about messages over a rate-limit (#2424) 0b51309, closes #2424
+
+
+
+
+
+# [2.10.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.10.0-rc.1...@ceramicnetwork/core@2.10.0-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.10.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.10.0-rc.0...@ceramicnetwork/core@2.10.0-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.10.0-rc.0](/compare/@ceramicnetwork/core@2.9.0...@ceramicnetwork/core@2.10.0-rc.0) (2022-09-13)
+
+
+### Features
+
+* Bypass maxEventListeners warning by using homegrown signalling (#2411) bbe17cd, closes #2411
+
+
+
+
+
+# [2.9.0](/compare/@ceramicnetwork/core@2.9.0-rc.1...@ceramicnetwork/core@2.9.0) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.9.0-rc.1](/compare/@ceramicnetwork/core@2.9.0-rc.0...@ceramicnetwork/core@2.9.0-rc.1) (2022-09-06)
+
+
+### Features
+
+* Make SYNC_ALWAYS rewrite and revalidate local state (#2410) 24caa20, closes #2410
+
+
+
+
+
+# [2.9.0-rc.0](/compare/@ceramicnetwork/core@2.8.1-rc.0...@ceramicnetwork/core@2.9.0-rc.0) (2022-09-06)
+
+
+### Bug Fixes
+
+* **core:** Allow fast-forward of a stream state if newer commit is anchored (#2398) d4085aa, closes #2398
+* **core:** Pinning a stream should mark it as synced (#2394) 8e2fbf6, closes #2394
+* **core:** Use package, not relative path to metrics (#2393) 0d8e50a, closes #2393
+* evaluate string value of env vars as booleans (#2382) 2837112, closes #2382
+
+
+### Features
+
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features (#2405) f0435ac, closes #2405
+
+
+
+
+
+## [2.8.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.8.0...@ceramicnetwork/core@2.8.1-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.8.0-rc.2...@ceramicnetwork/core@2.8.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.8.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.2...@ceramicnetwork/core@2.8.0-rc.2) (2022-08-20)
+
+
+### Bug Fixes
+
+* **core:** Add default endpoint for gnosis ([#2366](https://github.com/ceramicnetwork/js-ceramic/issues/2366)) ([3e53142](https://github.com/ceramicnetwork/js-ceramic/commit/3e531428df28b811687186b6ebd7415a1cd3fec9))
+* **core:** check value of indexing env var ([#2363](https://github.com/ceramicnetwork/js-ceramic/issues/2363)) ([147cebc](https://github.com/ceramicnetwork/js-ceramic/commit/147cebccb8aae66df4aa8c30cb64561c74a1b40d))
 
 
 ### Features
 
 * **cli:** Enable ceramic --version flag ([#2339](https://github.com/ceramicnetwork/js-ceramic/issues/2339)) ([df53df4](https://github.com/ceramicnetwork/js-ceramic/commit/df53df49a480884d9d97da452a19a6e96a0633a4))
+* **core:** Add stream from pubsub for UPDATE msg types ([#2317](https://github.com/ceramicnetwork/js-ceramic/issues/2317)) ([413b644](https://github.com/ceramicnetwork/js-ceramic/commit/413b64490cfeb1a8430ecedaaeb55f106e103e2a))
+* **core:** Add tests and validation for anchor smart contract address ([#2367](https://github.com/ceramicnetwork/js-ceramic/issues/2367)) ([936705c](https://github.com/ceramicnetwork/js-ceramic/commit/936705cd5e241dadf101dea20642169822bfd5ff))
+* **core:** parse smart contract tx that anchors a 32 byte hash ([#2379](https://github.com/ceramicnetwork/js-ceramic/issues/2379)) ([0cd3a36](https://github.com/ceramicnetwork/js-ceramic/commit/0cd3a36914216b5b0dee385eb5b54bef280b632b))
 * **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+
+
+
+
+
+
+## [2.7.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.7.1...@ceramicnetwork/core@2.7.2) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
 
 
 ## [2.7.1](/compare/@ceramicnetwork/core@2.7.0...@ceramicnetwork/core@2.7.1) (2022-08-11)
 
+
 ### Bug Fixes
 
-* **core:** Add default endpoint for gnosis ([#2366](https://github.com/ceramicnetwork/js-ceramic/issues/2366)) ([3e53142](https://github.com/ceramicnetwork/js-ceramic/commit/3e531428df28b811687186b6ebd7415a1cd3fec9))
+* **core:** Add default endpoint for gnosis (#2366) 319adf2, closes #2366
+
+
+
 
 
 # [2.7.0](/compare/@ceramicnetwork/core@2.7.0-rc.2...@ceramicnetwork/core@2.7.0) (2022-08-08)

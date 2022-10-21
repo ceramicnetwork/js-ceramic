@@ -3,23 +3,165 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [2.5.0-rc.1](/compare/@ceramicnetwork/common@2.5.0-rc.0...@ceramicnetwork/common@2.5.0-rc.1) (2022-08-11)
+## [2.8.1-rc.0](/compare/@ceramicnetwork/common@2.8.0...@ceramicnetwork/common@2.8.1-rc.0) (2022-10-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.8.0](/compare/@ceramicnetwork/common@2.8.0-rc.1...@ceramicnetwork/common@2.8.0) (2022-10-05)
+
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
 
 
 ### Features
 
-* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations (#2356) a39d5e2, closes #2356
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
 
 
 
 
 
-# [2.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.4.0...@ceramicnetwork/common@2.5.0-rc.0) (2022-08-10)
+# [2.8.0-rc.2](/compare/@ceramicnetwork/common@2.8.0-rc.1...@ceramicnetwork/common@2.8.0-rc.2) (2022-10-04)
+
+
+### Bug Fixes
+
+* **core, http-client, common:** Remove AdminApi from CeramicAPI since the implementations are different (#2479) d83c739, closes #2479
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.8.0-rc.1](/compare/@ceramicnetwork/common@2.8.0-rc.0...@ceramicnetwork/common@2.8.0-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.8.0-rc.0](/compare/@ceramicnetwork/common@2.7.0...@ceramicnetwork/common@2.8.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+# [2.7.0](/compare/@ceramicnetwork/common@2.7.0-rc.0...@ceramicnetwork/common@2.7.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.7.0-rc.0](/compare/@ceramicnetwork/common@2.6.1-rc.2...@ceramicnetwork/common@2.7.0-rc.0) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
+## [2.6.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.6.1-rc.1...@ceramicnetwork/common@2.6.1-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [2.6.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.6.1-rc.0...@ceramicnetwork/common@2.6.1-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [2.6.1-rc.0](/compare/@ceramicnetwork/common@2.6.0...@ceramicnetwork/common@2.6.1-rc.0) (2022-09-13)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.6.0](/compare/@ceramicnetwork/common@2.6.0-rc.0...@ceramicnetwork/common@2.6.0) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.6.0-rc.0](/compare/@ceramicnetwork/common@2.5.1-rc.0...@ceramicnetwork/common@2.6.0-rc.0) (2022-09-06)
+
+
+### Bug Fixes
+
+* **core:** Allow fast-forward of a stream state if newer commit is anchored (#2398) d4085aa, closes #2398
+
+
+### Features
+
+* More descriptive error message when verifying commit signature (#2416) d86e9cf, closes #2416
+
+
+
+
+
+## [2.5.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.5.0...@ceramicnetwork/common@2.5.1-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.5.0-rc.2...@ceramicnetwork/common@2.5.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.5.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.4.1...@ceramicnetwork/common@2.5.0-rc.2) (2022-08-20)
 
 
 ### Features
 
 * **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+
+
+
+
+
+
+## [2.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.4.0...@ceramicnetwork/common@2.4.1) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
 
 
 

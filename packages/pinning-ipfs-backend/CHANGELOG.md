@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [2.0.10-rc.1](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.10-rc.0...@ceramicnetwork/pinning-ipfs-backend@2.0.10-rc.1) (2022-08-11)
+## [2.0.15-rc.0](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.14...@ceramicnetwork/pinning-ipfs-backend@2.0.15-rc.0) (2022-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
 
@@ -11,9 +11,123 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-## [2.0.10-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.9...@ceramicnetwork/pinning-ipfs-backend@2.0.10-rc.0) (2022-08-10)
+## [2.0.14](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.14-rc.1...@ceramicnetwork/pinning-ipfs-backend@2.0.14) (2022-10-05)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.14-rc.2](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.14-rc.1...@ceramicnetwork/pinning-ipfs-backend@2.0.14-rc.2) (2022-10-04)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.14-rc.1](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.14-rc.0...@ceramicnetwork/pinning-ipfs-backend@2.0.14-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.14-rc.0](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.13...@ceramicnetwork/pinning-ipfs-backend@2.0.14-rc.0) (2022-09-28)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.13](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.3...@ceramicnetwork/pinning-ipfs-backend@2.0.13) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.13-rc.3](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.2...@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.3) (2022-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.13-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.1...@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.13-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.0...@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.13-rc.0](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.12...@ceramicnetwork/pinning-ipfs-backend@2.0.13-rc.0) (2022-09-13)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.12](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.12-rc.1...@ceramicnetwork/pinning-ipfs-backend@2.0.12) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.12-rc.1](/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.12-rc.0...@ceramicnetwork/pinning-ipfs-backend@2.0.12-rc.1) (2022-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.12-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.11...@ceramicnetwork/pinning-ipfs-backend@2.0.12-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.11](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.11-rc.0...@ceramicnetwork/pinning-ipfs-backend@2.0.11) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+## [2.0.11-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.10...@ceramicnetwork/pinning-ipfs-backend@2.0.11-rc.0) (2022-08-20)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
+
+## [2.0.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@2.0.9...@ceramicnetwork/pinning-ipfs-backend@2.0.10) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
 
 
 

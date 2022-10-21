@@ -19,6 +19,7 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
+import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -32,7 +33,7 @@ const DEFAULT_METRICS_EXPORTER_PORT = 9090
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
-  'http-api': { 'cors-allowed-origins': [new RegExp('.*')] },
+  'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
   ipfs: { mode: IpfsMode.BUNDLED },
   logger: { 'log-level': LogLevel.important, 'log-to-files': false },
   metrics: {
@@ -120,7 +121,7 @@ export class CeramicCliUtils {
     if (process.env.CERAMIC_INDEXING_DB_URI)
       config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
     if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
-      config.metrics.metricsExporterEnabled = Boolean(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
+      config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
     if (process.env.CERAMIC_METRICS_PORT)
       config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
 
@@ -198,6 +199,7 @@ export class CeramicCliUtils {
     const daemon = await CeramicDaemon.create(config)
 
     handleHeapdumpSignal(new URL('./', configFilepath), daemon.diagnosticsLogger)
+    handleSigintSignal(daemon)
     return daemon
   }
 

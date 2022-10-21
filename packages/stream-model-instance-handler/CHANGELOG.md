@@ -3,23 +3,159 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [0.5.0-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.4.1-rc.0...@ceramicnetwork/stream-model-instance-handler@0.5.0-rc.0) (2022-08-11)
+## [0.8.1-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.8.0...@ceramicnetwork/stream-model-instance-handler@0.8.1-rc.0) (2022-10-19)
+
+
+### Bug Fixes
+
+* Wrap AJV instances in LRU cache (#2488) 3a6e31a, closes #2488
+
+
+
+
+
+# [0.8.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.8.0) (2022-10-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.8.0-rc.2](/compare/@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.2) (2022-10-04)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.8.0-rc.1](/compare/@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.8.0-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.7.0...@ceramicnetwork/stream-model-instance-handler@0.8.0-rc.0) (2022-09-28)
 
 
 ### Features
 
-* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations (#2356) a39d5e2, closes #2356
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
 
 
 
 
 
-## [0.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0...@ceramicnetwork/stream-model-instance-handler@0.4.1-rc.0) (2022-08-10)
+# [0.7.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.7.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.7.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.7.0-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.6.1-rc.2...@ceramicnetwork/stream-model-instance-handler@0.7.0-rc.0) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
+## [0.6.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.6.1-rc.1...@ceramicnetwork/stream-model-instance-handler@0.6.1-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+## [0.6.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.6.1-rc.0...@ceramicnetwork/stream-model-instance-handler@0.6.1-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+## [0.6.1-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.6.0...@ceramicnetwork/stream-model-instance-handler@0.6.1-rc.0) (2022-09-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.6.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.6.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.6.0) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.6.0-rc.0](/compare/@ceramicnetwork/stream-model-instance-handler@0.5.1-rc.0...@ceramicnetwork/stream-model-instance-handler@0.6.0-rc.0) (2022-09-06)
+
+
+### Bug Fixes
+
+* evaluate string value of env vars as booleans (#2382) 2837112, closes #2382
+
+
+### Features
+
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features (#2405) f0435ac, closes #2405
+
+
+
+
+
+## [0.5.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.5.0...@ceramicnetwork/stream-model-instance-handler@0.5.1-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.5.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.5.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.5.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.4.1...@ceramicnetwork/stream-model-instance-handler@0.5.0-rc.1) (2022-08-20)
 
 
 ### Bug Fixes
 
 * **stream-model-instance-handler,streamid:** Fix test snapshots with new Uint8Array format ([#2349](https://github.com/ceramicnetwork/js-ceramic/issues/2349)) ([8c7f239](https://github.com/ceramicnetwork/js-ceramic/commit/8c7f2398136f799feac9a3ba875d23063793ee9b))
+
+
+### Features
+
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+
+
+
+
+
+
+## [0.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.4.0...@ceramicnetwork/stream-model-instance-handler@0.4.1) (2022-08-19)
+
+
+### Bug Fixes
+
+* **stream-model-instance-handler,streamid:** Fix test snapshots with new Uint8Array format ([#2349](https://github.com/ceramicnetwork/js-ceramic/issues/2349)) ([d40a19a](https://github.com/ceramicnetwork/js-ceramic/commit/d40a19acac88b45d6539d94b8039363e0c650b92))
+
 
 
 

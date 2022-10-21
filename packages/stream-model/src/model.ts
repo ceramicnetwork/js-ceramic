@@ -1,16 +1,12 @@
-import jsonpatch from 'fast-json-patch'
-import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
   LoadOpts,
-  UpdateOpts,
   Stream,
   StreamConstructor,
   StreamStatic,
   SyncOptions,
   CeramicCommit,
   GenesisCommit,
-  RawCommit,
   CeramicApi,
   SignedCommitContainer,
   CeramicSigner,
@@ -76,10 +72,33 @@ async function throwReadOnlyError(): Promise<void> {
  * there can be only one instance of this model per account (if a new instance is created it
  * overrides the old one).
  */
-export enum ModelAccountRelation {
-  LIST = 'list',
-  SINGLE = 'single',
-}
+export type ModelAccountRelation = { type: 'list' } | { type: 'single' }
+
+/**
+ * Identifies types of properties that are supported as relations by the indexing service.
+ *
+ * Currently supported types of relation properties:
+ * - 'account': references a DID property
+ * - 'document': references a StreamID property with associated 'model' the related document must use
+ *
+ */
+export type ModelRelationDefinition = { type: 'account' } | { type: 'document'; model: string }
+
+/**
+ * A mapping between model's property names and types of relation properties
+ *
+ * It indicates which properties of a model are relation properties and of what type
+ */
+export type ModelRelationsDefinition = Record<string, ModelRelationDefinition>
+
+export type ModelDocumentMetadataViewDefinition =
+  | { type: 'documentAccount' }
+  | { type: 'documentVersion' }
+
+export type ModelRelationViewDefinition =
+  | { type: 'relationDocument'; model: string; property: string }
+  | { type: 'relationFrom'; model: string; property: string }
+  | { type: 'relationCountFrom'; model: string; property: string }
 
 /**
  * Identifies types of properties that are supported as view properties at DApps' runtime
@@ -89,9 +108,12 @@ export enum ModelAccountRelation {
  * Currently supported types of view properties:
  * - 'documentAccount': view properties of this type have the MID's controller DID as values
  * - 'documentVersion': view properties of this type have the MID's commit ID as values
+ * - 'relationDocument': view properties of this type represent document relations identified by the given 'property' field
+ * - 'relationFrom': view properties of this type represent inverse relations identified by the given 'model' and 'property' fields
+ * - 'relationCountFrom': view properties of this type represent the number of inverse relations identified by the given 'model' and 'property' fields
  *
  */
-export type ModelViewDefinition = { type: 'documentAccount' } | { type: 'documentVersion' }
+export type ModelViewDefinition = ModelDocumentMetadataViewDefinition | ModelRelationViewDefinition
 
 /**
  * A mapping between model's property names and types of view properties
@@ -108,6 +130,7 @@ export interface ModelDefinition {
   description?: string
   schema: JSONSchema.Object
   accountRelation: ModelAccountRelation
+  relations?: ModelRelationsDefinition
   views?: ModelViewsDefinition
 }
 
@@ -163,43 +186,6 @@ export class Model extends Stream {
     const commit = await Model._makeGenesis(ceramic, content, metadata)
     const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
     return model
-  }
-
-  /**
-   * Create an incomplete Model that can be updated later to add the missing required fields
-   * and finalize the Model.  This is useful when there is a circular relationship between multiple
-   * models and so you need to know a Model's StreamID before finalizing it.
-   * @param ceramic
-   * @param content
-   * @param metadata
-   */
-  static async createPlaceholder(
-    ceramic: CeramicApi,
-    content: Partial<ModelDefinition>,
-    metadata?: ModelMetadataArgs
-  ): Promise<Model> {
-    const opts: CreateOpts = {
-      publish: false,
-      anchor: false,
-      pin: false,
-      sync: SyncOptions.NEVER_SYNC,
-      throwOnInvalidCommit: true,
-    }
-    const commit = await Model._makeGenesis(ceramic, content, metadata)
-    return ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
-  }
-
-  /**
-   * Update an existing placeholder Model. Must update the model to its final content, setting
-   * all required fields, finalizing and publishing the model, and preventing all future updates.
-   * @param content - Final content for the Model
-   */
-  async replacePlaceholder(content: ModelDefinition): Promise<void> {
-    Model.assertComplete(content, this.id)
-    const opts: UpdateOpts = { publish: true, anchor: true, pin: true, throwOnInvalidCommit: true }
-    const updateCommit = await this._makeCommit(this.api, content)
-    const updated = await this.api.applyCommit(this.id, updateCommit, opts)
-    this.state$.next(updated.state)
   }
 
   /**
@@ -260,43 +246,7 @@ export class Model extends Stream {
     }
 
     const model = await ceramic.loadStream<Model>(streamRef, opts)
-    try {
-      Model.assertComplete(model.content, streamId)
-    } catch (err) {
-      // Add additional context to error message.
-      throw new Error(`Incomplete placeholder Models cannot be loaded: ${err.message}`)
-    }
     return model
-  }
-
-  /**
-   * Make a commit to update the Model
-   * @param signer - Object containing the DID making (and signing) the commit
-   * @param newContent
-   */
-  private async _makeCommit(
-    signer: CeramicSigner,
-    newContent: ModelDefinition
-  ): Promise<CeramicCommit> {
-    const commit = this._makeRawCommit(newContent)
-    return Model._signDagJWS(signer, commit)
-  }
-
-  /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
-   */
-  private _makeRawCommit(newContent: ModelDefinition): RawCommit {
-    if (newContent == null) {
-      throw new Error(`Cannot set Model content to null`)
-    }
-
-    const patch = jsonpatch.compare(this.content, newContent)
-    return {
-      data: patch,
-      prev: this.tip,
-      id: this.state.log[0].cid,
-    }
   }
 
   /**
@@ -339,7 +289,6 @@ export class Model extends Stream {
 
     const header: GenesisHeader = {
       controllers: [metadata.controller],
-      unique: randomBytes(12),
       model: Model.MODEL.bytes,
     }
     return { data: content, header }
@@ -350,7 +299,6 @@ export class Model extends Stream {
    * mutation methods on the instance will throw.
    */
   makeReadOnly() {
-    this.replacePlaceholder = throwReadOnlyError
     this.sync = throwReadOnlyError
     this._isReadOnly = true
   }

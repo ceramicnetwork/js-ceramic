@@ -14,7 +14,7 @@ import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import type { Cacao } from 'ceramic-cacao'
+import type { Cacao } from '@didtools/cacao'
 
 /**
  * Various utility functions

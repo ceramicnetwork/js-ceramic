@@ -72,9 +72,18 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
     return {
       model: StreamID.fromString(query.model),
       account: query.account,
+      filter: query.filter,
       ...pagination,
     }
   } catch (e) {
     throw new Error(`Invalid input in collection request: ${e.message}`)
+  }
+}
+
+export function countQuery(query: Record<string, any>): BaseQuery {
+  return {
+    model: StreamID.fromString(query.model),
+    account: query.account,
+    filter: query.filter,
   }
 }

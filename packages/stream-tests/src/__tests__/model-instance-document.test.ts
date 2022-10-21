@@ -10,7 +10,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -19,7 +19,7 @@ const CONTENT3 = { myData: 3 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  accountRelation: ModelAccountRelation.LIST,
+  accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
@@ -46,20 +46,31 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
-    core = await createCeramic(ipfs)
+    core = await createCeramic(ipfs, {
+      indexing: {
+        models: [],
+        allowQueriesBeforeHistoricalSync: true,
+      },
+    })
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    daemon = new CeramicDaemon(
+      core,
+      DaemonConfig.fromObject({
+        'http-api': { port },
+      })
+    )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     midMetadata = { model: model.id }
+    await core.index.indexModels([model.id])
   }, 12000)
 
   afterAll(async () => {
@@ -197,8 +208,15 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('create respects pin flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
-    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()
+    await expect(
+      ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, { pin: false })
+    ).rejects.toThrow(/Cannot unpin actively indexed stream/)
+  })
+
+  test('unpinning indexed stream fails', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
+    await expect(ceramic.pin.rm(doc.id)).rejects.toThrow(/Cannot unpin actively indexed stream/)
   })
 
   test('replace respects anchor flag', async () => {
@@ -210,7 +228,11 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 
   test('replace respects pin flag', async () => {
-    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    const nonIndexedModel = await Model.create(
+      ceramic,
+      Object.assign({}, MODEL_DEFINITION, { name: 'non-indexed' })
+    )
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: nonIndexedModel.id })
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
     await doc.replace(CONTENT1, { pin: false })
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()
@@ -238,7 +260,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()

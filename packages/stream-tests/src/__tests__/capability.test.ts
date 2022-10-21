@@ -1,4 +1,4 @@
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
+import { CeramicApi, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -6,41 +6,44 @@ import { Wallet } from 'ethers'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
-import { SiweMessage, Cacao } from 'ceramic-cacao'
+import { Cacao, SiweMessage } from '@didtools/cacao'
+import MockDate from 'mockdate'
 import { createCeramic } from '../create-ceramic.js'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
 } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
-const getModelDef = (name: string): ModelDefinition => ({
-  name: name,
-  accountRelation: ModelAccountRelation.LIST,
-  schema: {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      myData: {
-        type: 'integer',
-        maximum: 10000,
-        minimum: 0,
+function getModelDef(name: string): ModelDefinition {
+  return {
+    name: name,
+    accountRelation: { type: 'list' },
+    schema: {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        myData: {
+          type: 'integer',
+          maximum: 10000,
+          minimum: 0,
+        },
       },
+      required: ['myData'],
     },
-    required: ['myData'],
-  },
-})
+  }
+}
 
 const MODEL_DEFINITION = getModelDef('MyModel')
 const MODEL_DEFINITION_2 = getModelDef('MyModel_2')
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 
-const addCapToDid = async (wallet, didKey, resource) => {
+async function addCapToDid(wallet: Wallet, didKey: DID, resource: string, expirationTime?: string) {
   // Create CACAO with did:key as aud
-  const siweMessage = new SiweMessage({
+  const siwePayload: Partial<SiweMessage> = {
     domain: 'service.org',
     address: wallet.address,
     chainId: '1',
@@ -50,10 +53,11 @@ const addCapToDid = async (wallet, didKey, resource) => {
     nonce: '23423423',
     issuedAt: new Date().toISOString(),
     resources: [resource],
-  })
+  }
+  if (expirationTime) siwePayload.expirationTime = expirationTime
+  const siweMessage = new SiweMessage(siwePayload)
   // Sign CACAO with did:pkh
-  const signature = await wallet.signMessage(siweMessage.toMessage())
-  siweMessage.signature = signature
+  siweMessage.signature = await wallet.signMessage(siweMessage.toMessage())
   const capability = Cacao.fromSiweMessage(siweMessage)
   // Create new did:key with capability attached
   const didKeyWithCapability = didKey.withCapability(capability)
@@ -73,7 +77,7 @@ describe('CACAO Integration test', () => {
   let MODEL_STREAM_ID_2: StreamID
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
@@ -127,6 +131,42 @@ describe('CACAO Integration test', () => {
           publish: false,
         })
       ).rejects.toThrowError(/invalid_jws: not a valid verificationMethod for issuer:/)
+    }, 30000)
+
+    test('overwrite expired capability when SYNC_ALWAYS', async () => {
+      const now = new Date()
+      const tenMinutesInMs = 10 * 60 * 1000
+      const expirationTime = new Date(now.valueOf() + tenMinutesInMs)
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*`,
+        expirationTime.toISOString()
+      )
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const tile = await TileDocument.deterministic(
+        ceramic,
+        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-one' },
+        opts
+      )
+      await tile.update({ a: 2 }, null, opts)
+      await tile.update({ a: 3 }, null, opts)
+
+      // 1. While CACAO is valid: Loading is ok
+      const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+      const loaded1 = await TileDocument.load(ceramic, tile.id)
+      expect(loaded0.state).toEqual(tile.state)
+      expect(loaded1.state).toEqual(tile.state)
+      // 2. It is expired: Rewrite the state!
+      const twoDays = 48 * 3600 * 1000 // in ms
+      MockDate.set(new Date(expirationTime.valueOf() + twoDays).toISOString()) // Plus 2 days
+      const loaded2 = await TileDocument.load(ceramic, tile.id) // No sync options
+      expect(loaded2.state).toEqual(tile.state)
+      const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 1))
+      const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
+      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+      MockDate.reset()
     }, 30000)
 
     test('can not create new stream without capability', async () => {

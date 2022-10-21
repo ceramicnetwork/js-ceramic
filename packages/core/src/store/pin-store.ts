@@ -17,8 +17,8 @@ export class PinStore {
     readonly loadStream: (streamID: StreamID) => Promise<RunningState>
   ) {}
 
-  open(networkName: string): void {
-    this.stateStore.open(networkName)
+  async open(networkName: string): Promise<void> {
+    await this.stateStore.open(networkName)
     this.pinning.open()
   }
 

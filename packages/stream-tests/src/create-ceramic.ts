@@ -1,44 +1,30 @@
+import mergeOpts from 'merge-options'
 import { CeramicConfig, Ceramic } from '@ceramicnetwork/core'
 import { IpfsApi } from '@ceramicnetwork/common'
-import * as uint8arrays from 'uint8arrays'
-import * as sha256 from '@stablelib/sha256'
 import tmp from 'tmp-promise'
-import { Ed25519Provider } from 'key-did-provider-ed25519'
-import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import * as KeyDidResolver from 'key-did-resolver'
-import * as PkhDidResolver from 'pkh-did-resolver'
-import { Resolver } from 'did-resolver'
-import { DID } from 'dids'
+import { createDid } from './create_did.js'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config?: CeramicConfig & { seed?: string }
+  config: CeramicConfig & { seed?: string } = {}
 ): Promise<Ceramic> {
   const stateStoreDirectory = await tmp.tmpName()
-  const appliedConfig: CeramicConfig = {
-    stateStoreDirectory: stateStoreDirectory,
-    anchorOnRequest: false,
-    streamCacheLimit: 100,
-    pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
-    indexing: {
-      db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
-      allowQueriesBeforeHistoricalSync: false,
+  const appliedConfig: CeramicConfig = mergeOpts(
+    {
+      stateStoreDirectory: stateStoreDirectory,
+      anchorOnRequest: false,
+      streamCacheLimit: 100,
+      pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
+      indexing: {
+        db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
+        models: [],
+        allowQueriesBeforeHistoricalSync: false,
+      },
     },
-    ...config,
-  }
+    config
+  )
   const ceramic = await Ceramic.create(ipfs, appliedConfig)
-  const seed = sha256.hash(uint8arrays.fromString(appliedConfig.seed || 'SEED'))
-  const provider = new Ed25519Provider(seed)
-  const keyDidResolver = KeyDidResolver.getResolver()
-  const pkhDidResolver = PkhDidResolver.getResolver()
-  const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
-  const resolver = new Resolver({
-    ...threeIdResolver,
-    ...pkhDidResolver,
-    ...keyDidResolver,
-  })
-  const did = new DID({ provider, resolver })
+  const did = createDid(ceramic, appliedConfig.seed || 'SEED')
   await ceramic.setDID(did)
   await did.authenticate()
 

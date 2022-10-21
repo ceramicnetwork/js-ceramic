@@ -8,7 +8,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 /**
  * Generates string of particular size in bytes
@@ -41,7 +41,7 @@ describe('Ceramic API', () => {
 
   const MODEL_DEFINITION: ModelDefinition = {
     name: 'MyModel',
-    accountRelation: ModelAccountRelation.LIST,
+    accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
       type: 'object',
@@ -58,7 +58,7 @@ describe('Ceramic API', () => {
   }
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
   })

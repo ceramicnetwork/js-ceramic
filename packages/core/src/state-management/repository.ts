@@ -6,11 +6,12 @@ import {
   Context,
   CreateOpts,
   LoadOpts,
+  Networks,
   PinningOpts,
   PublishOpts,
-  Stream,
   StreamState,
   SyncOptions,
+  UnreachableCaseError,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store.js'
@@ -38,6 +39,15 @@ export type RepositoryDependencies = {
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
+
+/**
+ * Indicate if the stream should be indexed.
+ */
+function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
+  const model = state$.state?.metadata?.model
+  if (!model) return false
+  return index.shouldIndexStream(model)
+}
 
 export class Repository {
   /**
@@ -86,11 +96,16 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  async init(networkName: string): Promise<void> {
+    await this.pinStore.open(networkName)
+    await this.index.init()
+  }
+
   get pinStore(): PinStore {
     return this.#deps.pinStore
   }
 
-  get _index(): LocalIndexApi {
+  get index(): LocalIndexApi {
     return this.#deps.indexing
   }
 
@@ -107,7 +122,7 @@ export class Repository {
       (streamId) => this.fromMemoryOrStore(streamId),
       (streamId, opts) => this.load(streamId, opts),
       // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
-      this.indexStreamIfNeeded,
+      this.indexStreamIfNeeded.bind(this),
       deps.indexing
     )
   }
@@ -180,19 +195,50 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    const state$ = await this.loadingQ.forStream(streamId).run(async () => {
-      const [stream, synced] = await this._loadGenesis(streamId)
-      if (opts.sync == SyncOptions.PREFER_CACHE && synced) {
-        return stream
+    const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
+      switch (opts.sync) {
+        case SyncOptions.PREFER_CACHE: {
+          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          if (alreadySynced) {
+            return [streamState$, alreadySynced]
+          } else {
+            await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
+            return [await this.stateManager.verifyLoneGenesis(streamState$), true]
+          }
+        }
+        case SyncOptions.NEVER_SYNC: {
+          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
+        }
+        case SyncOptions.SYNC_ALWAYS: {
+          // When SYNC_ALWAYS is provided, we want to reapply and re-validate
+          // the stream state.  We effectively throw out our locally stored state
+          // as its possible that the commits that were used to construct that
+          // state are no longer valid (for example if the CACAOs used to author them
+          // have expired since they were first applied to the cached state object).
+          // But if we were the only node on the network that knew about the most
+          // recent tip, we don't want to totally forget about that, so we pass the tip in
+          // to `sync` so that it gets considered alongside whatever tip we learn
+          // about from the network.
+          const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
+            this.fromNetwork(streamId),
+            this.fromMemoryOrStore(streamId),
+          ])
+          await this.stateManager.sync(
+            fromNetwork$,
+            opts.syncTimeoutSeconds * 1000,
+            fromMemoryOrStore?.tip
+          )
+          return [await this.stateManager.verifyLoneGenesis(fromNetwork$), true]
+        }
+        default:
+          throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
       }
-
-      if (opts.sync == SyncOptions.NEVER_SYNC) {
-        return this.stateManager.verifyLoneGenesis(stream)
-      }
-
-      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
-      return this.stateManager.verifyLoneGenesis(stream)
     })
+    await this.handlePinOpts(state$, opts)
+    if (synced && state$.isPinned) {
+      this.stateManager.markPinnedAndSynced(state$.id)
+    }
 
     return state$
   }
@@ -252,8 +298,8 @@ export class Repository {
     await this.handlePinOpts(state$, opts)
   }
 
-  async handlePinOpts(state$: RunningState, opts: PinningOpts) {
-    if (opts.pin) {
+  async handlePinOpts(state$: RunningState, opts: PinningOpts): Promise<void> {
+    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
@@ -306,9 +352,18 @@ export class Repository {
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
+    if (shouldIndex(state$, this.index)) {
+      throw new Error(
+        `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
+          state$.state.metadata.model
+        }`
+      )
+    }
+
     if (opts?.publish) {
       this.stateManager.publishTip(state$)
     }
+
     return this.#deps.pinStore.rm(state$)
   }
 
@@ -343,7 +398,6 @@ export class Repository {
 
   /**
    * Helper function to add stream to db index if it has a 'model' in its metadata.
-   * @param state
    * @public
    */
   public async indexStreamIfNeeded(state$: RunningState): Promise<void> {
@@ -363,12 +417,14 @@ export class Repository {
     const STREAM_CONTENT = {
       model: state$.value.metadata.model,
       streamID: state$.id,
-      controller: state$.value.metadata.controller,
+      controller: state$.value.metadata.controllers[0],
+      streamContent: state$.value.content,
+      tip: state$.tip,
       lastAnchor: lastAnchor,
       firstAnchor: firstAnchor,
     }
 
-    await this._index.indexStream(STREAM_CONTENT)
+    await this.index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -408,6 +464,6 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
-    await this._index.close()
+    await this.index.close()
   }
 }

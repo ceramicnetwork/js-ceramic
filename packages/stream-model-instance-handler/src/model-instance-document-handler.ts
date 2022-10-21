@@ -18,7 +18,7 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
-import { Model, ModelAccountRelation } from '@ceramicnetwork/stream-model'
+import { Model } from '@ceramicnetwork/stream-model'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
@@ -60,11 +60,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
-    if (!process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
       context.loggerProvider
         .getDiagnosticsLogger()
         .err(
-          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_INDEXING environment variable'
+          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB environment variable to `true`'
         )
       throw new Error('Indexing is not enabled')
     }
@@ -211,14 +211,18 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @private
    */
   async _validateContent(model: Model, content: any, genesis: boolean): Promise<void> {
-    if (genesis && model.content.accountRelation == ModelAccountRelation.SINGLE) {
+    if (genesis && model.content.accountRelation.type === 'single') {
       if (content) {
         throw new Error(
           `Deterministic genesis commits for ModelInstanceDocuments must not have content`
         )
       }
     } else {
-      await this._schemaValidator.validateSchema(content, model.content.schema)
+      await this._schemaValidator.validateSchema(
+        content,
+        model.content.schema,
+        model.commitId.toString()
+      )
     }
   }
 
@@ -228,7 +232,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param header - the header to validate
    */
   async _validateHeader(model: Model, header: ModelInstanceDocumentHeader): Promise<void> {
-    if (model.content.accountRelation == ModelAccountRelation.SINGLE) {
+    if (model.content.accountRelation.type === 'single') {
       if (header.unique) {
         throw new Error(
           `ModelInstanceDocuments for models with SINGLE accountRelations must be created deterministically`

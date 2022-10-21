@@ -2,7 +2,7 @@ import knex, { Knex } from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { PostgresIndexApi } from '../postgres-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
-import { chunks } from './chunks.util.js'
+import { chunks } from '../../../__tests__/chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
 import { jest } from '@jest/globals'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
@@ -29,8 +29,13 @@ beforeEach(async () => {
     client: 'pg',
     connection: process.env.DATABASE_URL,
   })
-  const indexAPI = new PostgresIndexApi(dbConnection, MODELS_TO_INDEX, true, logger)
+  const indexAPI = new PostgresIndexApi(dbConnection, true, logger)
   await indexAPI.init()
+  await indexAPI.indexModels(
+    MODELS_TO_INDEX.map((model) => {
+      return { model }
+    })
+  )
   order = new InsertionOrder(dbConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
   // The responses in the tests below are ok if they are in the same order as in the CSV.
@@ -145,7 +150,7 @@ describe('backward pagination', () => {
 
 test('filtered by account', async () => {
   const presentAccount = 'did:key:foo' // We have that in the populated table
-  const absentAccount = 'did:key:blah' // We do not have that in the populated table
+  const absentAccount = 'did:key:absent' // We do not have that in the populated table
   const withPresentAccount = await order.page({
     model: MODEL,
     account: presentAccount,
