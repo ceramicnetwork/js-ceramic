@@ -1,6 +1,6 @@
 # Overview
 
-This document provides a basic overview to how js-ceramic is implemented. It goes though some of the high level apis of Ceramic and how it communicates with some external components. This is by no means comprehensive and will be expanded over time.
+This document provides a basic overview of how js-ceramic is implemented. It goes through some of the high-level apis of Ceramic and how it communicates with some external components. This is by no means comprehensive and will be expanded over time.
 
 ## Ceramic Api
 
