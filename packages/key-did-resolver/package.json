@@ -8,8 +8,15 @@
     "did",
     "key"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "author": "Janko Simonovic <simonovic86@gmail.com>",
-  "homepage": "",
   "contributors": [
     "Janko Simonovic <simonovic86@gmail.com>",
     "Brent Shambaugh <brent.shambaugh@gmail.com>"
