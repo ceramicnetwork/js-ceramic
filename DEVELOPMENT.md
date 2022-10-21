@@ -77,23 +77,23 @@ export GH_TOKEN=<your github token>       # You need a valid github api token se
 $ git checkout release-candidate
 $ git merge origin develop                # merge in recent changes from develop branch
 $ npm install && npm run build            # Make sure to build Ceramic and install current dependencies before releasing
-$ npm adduser                             # login to npm accunt
+$ npm adduser                             # login to npm account
 $ npm run publish:release-candidate       # create and publish the release
 $ git checkout develop
 $ git merge origin release-candidate      # Merge the new release commit back into the develop branch
 $ git push origin develop
 ```
-The main step that creates the release is `npm run publish:release-candidate`. This creates the release on NPM, as well as making a git commit bumping the version and new git tags on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
+The main step here is `npm run publish:release-candidate`, which creates a _pre-release_ on NPM by bumping the minor version (e.g. `2.1.9` => `2.2.0-rc.0`). It also creates a git commit with updated package versions as well as their corresponding git tags on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
-After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
+Afterwards, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release candidate!
 
-### Regular release
+### Full release
 ```
 export GH_TOKEN=<your github token>       # You need a valid github api token set to create the release on github
 $ git checkout master
 $ git merge origin release-candidate      # merge in most recent release candidate
 $ npm install && npm run build            # Make sure to build Ceramic and install current dependencies before releasing
-$ npm adduser                             # login to npm accunt
+$ npm adduser                             # login to npm account
 $ npm run publish:release                  # create and publish the release
 $ git checkout release-candidate
 $ git merge origin master                 # Merge the new release commit back into the release-candidate branch
@@ -102,18 +102,19 @@ $ git checkout develop
 $ git merge origin master                 # Merge the new release commit back into the develop branch
 $ git push origin develop
 ```
-The main step that creates the release is `npm run publish:release`. This creates the release on NPM, as well as making a git commit bumping the version, new git tags, and a release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
+The main step here is `npm run publish:release`, which creates a full release on NPM by graduating the minor version (e.g. `2.2.0-rc.0` => `2.2.0`). It also creates a git commit with updated package versions as well as their corresponding git tags on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
-After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
+Afterwards, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
 
 ### Hotfix release
+This option is necessary only when an urgent fix needs to be released to the community before we're ready to do a full release or RC. Note that whatever branch it's run against will be released as a full release, so it should generally be done from a recent fork of `main`. This branch MUST NOT be merged back into the `main` branch.
 ```
 export GH_TOKEN=<your github token>       # You need a valid github api token set to create the release on github
 $ git checkout <hotfix branch>
 $ npm install && npm run build            # Make sure to build Ceramic and install current dependencies before releasing
-$ npm adduser                             # login to npm accunt
+$ npm adduser                             # login to npm account
 $ npm run publish:hotfix                  # create and publish the release
 ```
-The main step that creates the release is `npm run publish:hotfix`. This creates the release on NPM, as well as making a git commit bumping the version and new git tags on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
+The main step here is `npm run publish:hotfix`, which creates a full release on NPM by bumping the patch version (e.g. `2.1.9` => `2.1.10`). It also creates a git commit with updated package versions as well as their corresponding git tags on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
 After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
