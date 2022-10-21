@@ -80,7 +80,7 @@ jobs:
           GH_TOKEN: ${{ env.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release
+          npm run publish:release -- --yes
       -
         name: Update and push code to rc and develop
         run: |
@@ -157,7 +157,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate
+          npm run publish:release-candidate -- --yes
       -
         name: Update and push code to develop
         run: |
@@ -226,7 +226,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:hotfix
+          npm run publish:hotfix -- --yes
       -
         name: Send Discord notification
         run: |
