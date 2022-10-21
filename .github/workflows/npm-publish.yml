@@ -4,86 +4,85 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Type of publish (one of: rc, main, both, hotfix, rc-hotfix)'
+        description: 'Type of publish (one of: rc, main, both, hotfix)'
         required: true
         default: 'rc'
-      force:
-        description: 'Force publish'
-        required: true
-        default: 'false'
-      desc:
-        description: 'Release description'
+      branch:
+        description: 'Hotfix branch'
         required: false
-        default: ''
+
+env:
+  # Dagger
+  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
+  DAGGER_LOG_FORMAT: "plain"
+  PIPELINE_TOOLS_VER: "0.2.0"
+  # Secrets
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 jobs:
   publish_main:
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.release_type == 'both' || github.event.inputs.release_type == 'main' }}
     steps:
-      - name: Setup environment
-        id: set-env
-        run: |
-          PUBLISH_ARGS=""
-          if [[ "${{ github.event.inputs.release_type }}" == "both" || "${{ github.event.inputs.release_type }}" == "main" ]]; then
-            echo "::set-output name=main::true"
-            PUBLISH_ARGS="$PUBLISH_ARGS --conventional-graduate"
-          elif [[ "${{ github.event.inputs.release_type }}" == "hotfix" ]]; then
-            echo "::set-output name=main::true"
-            echo "::set-output name=hotfix::true"
-          fi
-          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
-            PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
-          fi
-          if [[ -n $PUBLISH_ARGS ]]; then
-            echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
-          fi
-      - name: Setup Node
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: 16
-      - name: Checkout `main` branch
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Checkout main branch
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.GH_TOKEN }}
           ref: main
-      - name: Configure git
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Configure git
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           git fetch --all
-      - name: Merge down from `main` -> `rc` -> `develop`
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Merge down from main -> rc -> develop
         run: |
           git checkout -B release-candidate refs/remotes/origin/release-candidate
           git merge main
           git checkout -B develop refs/remotes/origin/develop
           git merge release-candidate
           git checkout main
-      - name: Merge `release-candidate` -> `main`
-        if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+      -
+        name: Merge rc -> main
         run: git merge release-candidate
-      - name: Initialize and build code
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
-          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
-      - name: Publish packages to NPM
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Publish packages to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PUBLISH_ARGS: ${{ steps.set-env.outputs.publishArgs }}
+          GH_TOKEN: ${{ env.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:latest $PUBLISH_ARGS
-          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
-          git push
-      - name: Update and push code to `release-candidate` and `develop`
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+          npx lerna publish --allow-branch main --dist-tag latest --no-verify-access --conventional-graduate bump minor --yes
+      -
+        name: Update and push code to rc and develop
         run: |
           git checkout release-candidate
           git merge main
@@ -91,104 +90,152 @@ jobs:
           git checkout develop
           git merge main
           git push
-      - name: Send Discord notification
-        if: ${{ steps.set-env.outputs.main == 'true' }}
+      -
+        name: Send Discord notification
         run: |
           # Prepare notification body
           echo '{"embeds":[{"title":"**Release Published**","description":"' > embed.json
-          echo '```' >> embed.json
-          git log -2 --pretty=%B >> embed.json
-          echo '```","color":3581519}]}' >> embed.json
-          sed -i '3,6d' embed.json
+          echo '' >> embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '","color":3581519}]}' >> embed.json
           sed -i '3 s/\ -/-/' embed.json
           sed -i '4,$ s/\-/\\n-/' embed.json
-          sed -i '2i \ ${{ github.event.inputs.desc }}' embed.json
-
           # Send notification
-          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
 
   publish_rc:
     runs-on: ubuntu-latest
     needs: publish_main
+    if: ${{ github.event.inputs.release_type == 'both' || github.event.inputs.release_type == 'rc' }}
     steps:
-      - name: Setup environment
-        id: set-env
-        run: |
-          PUBLISH_ARGS=""
-          if [[ "${{ github.event.inputs.release_type }}" == "both" || "${{ github.event.inputs.release_type }}" == "rc" ]]; then
-            echo "::set-output name=rc::true"
-            PUBLISH_ARGS="$PUBLISH_ARGS --conventional-prerelease"
-          elif [[ "${{ github.event.inputs.release_type }}" == "rc-hotfix" ]]; then
-            echo "::set-output name=rc::true"
-            echo "::set-output name=hotfix::true"
-          fi
-          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
-            PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
-          fi
-          if [[ -n $PUBLISH_ARGS ]]; then
-            echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
-          fi
-      - name: Setup Node
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: 16
-      - name: Checkout `release-candidate` branch
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Checkout rc branch
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
-      - name: Configure git
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Configure git
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           git fetch --all
-      - name: Merge down from `rc` -> `develop`
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Merge down from rc -> develop
         run: |
           git checkout -B develop refs/remotes/origin/develop
           git merge release-candidate
           git checkout release-candidate
-      - name: Merge `develop` -> `release-candidate`
-        if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+      -
+        name: Merge develop -> rc
         run: git merge develop
-      - name: Initialize and build code
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
-          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
-      - name: Publish packages to NPM
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Publish packages to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PUBLISH_ARGS: ${{ steps.set-env.outputs.publishArgs }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate $PUBLISH_ARGS
-          git commit -m 'chore(core): bump version' -- packages/core/src/version.ts || true
-          git push
-      - name: Update and push code to `develop`
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+          npx lerna publish --allow-branch release-candidate --dist-tag next --preid rc --no-verify-access --conventional-prerelease bump preminor --yes
+      -
+        name: Update and push code to develop
         run: |
           git checkout develop
           git merge release-candidate
           git push
-      - name: Send Discord notification
-        if: ${{ steps.set-env.outputs.rc == 'true' }}
+      -
+        name: Send Discord notification
         run: |
           # Prepare notification body
-          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"' > embed.json
-          echo '```' >> embed.json
+          echo '{"embeds":[{"title":"**Release Published**","description":"' > embed.json
+          echo '' >> embed.json
           git log -1 --pretty=%B >> embed.json
-          echo '```","color":3581519}]}' >> embed.json
-          sed -i '3,4d' embed.json
+          echo '","color":3581519}]}' >> embed.json
           sed -i '3 s/\ -/-/' embed.json
           sed -i '4,$ s/\-/\\n-/' embed.json
-          sed -i '2i \ ${{ github.event.inputs.desc }}' embed.json
-
           # Send notification
-          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
+
+  publish_hotfix:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.release_type == 'hotfix' }}
+    steps:
+      -
+        name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      -
+        name: Branch check
+        if: ${{ github.event.inputs.branch == '' }}
+        run: |
+          echo Hotfix branch must be specified
+          exit 1
+      -
+        name: Checkout hotfix branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      -
+        name: Configure git
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
+        run: |
+          npm set unsafe-perm true
+          npm ci && npm run build
+      -
+        name: Publish packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npx lerna publish --allow-branch "${{ github.event.inputs.branch }}" --no-verify-access --conventional-graduate bump patch --yes
+      -
+        name: Send Discord notification
+        run: |
+          # Prepare notification body
+          echo '{"embeds":[{"title":"**Hotfix Published**","description":"' > embed.json
+          echo '' >> embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '","color":3581519}]}' >> embed.json
+          sed -i '3 s/\ -/-/' embed.json
+          sed -i '4,$ s/\-/\\n-/' embed.json
+          # Send notification
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
