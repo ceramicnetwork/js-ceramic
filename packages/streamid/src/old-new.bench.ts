@@ -26,6 +26,22 @@ suite
     const streamId = new present.StreamID(1, TestUtils.randomCID())
     present.StreamID.fromBytes(streamId.bytes)
   })
+  .add('old.CommitID.fromString', () => {
+    const commitID = new old.CommitID(1, TestUtils.randomCID(), TestUtils.randomCID())
+    old.CommitID.fromString(commitID.toString())
+  })
+  .add('present.CommitID.fromString', () => {
+    const commitID = new present.CommitID(1, TestUtils.randomCID(), TestUtils.randomCID())
+    present.CommitID.fromString(commitID.toString())
+  })
+  .add('old.CommitID.fromBytes', () => {
+    const commitID = new old.CommitID(1, TestUtils.randomCID(), TestUtils.randomCID())
+    old.CommitID.fromBytes(commitID.bytes)
+  })
+  .add('present.CommitID.fromBytes', () => {
+    const commitID = new present.CommitID(1, TestUtils.randomCID(), TestUtils.randomCID())
+    present.CommitID.fromBytes(commitID.bytes)
+  })
   .on('cycle', (event: any) => {
     const name = event.target.name.padEnd('emit  '.length)
     const hz = formatNumber(event.target.hz.toFixed(0)).padStart(9)
