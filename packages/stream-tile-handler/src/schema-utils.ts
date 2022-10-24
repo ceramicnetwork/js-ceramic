@@ -35,7 +35,7 @@ export class SchemaValidation {
     schemaStreamId: string
   ): Promise<void> {
     const schema = await this._loadSchemaById(ceramic, schemaStreamId)
-    if (!isRecord(schema)) throw new Error(`Invalid schema ${schemaStreamId}: Not object`)
+    if (!isRecord(schema)) throw new Error(`Invalid schema in stream ${schemaStreamId}: The contents of the schema stream are not an object`)
     this._validate(content, schema, schemaStreamId)
   }
 
