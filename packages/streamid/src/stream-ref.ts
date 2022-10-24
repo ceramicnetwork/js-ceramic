@@ -1,9 +1,8 @@
 import type { CID } from 'multiformats/cid'
 import { StreamID } from './stream-id.js'
 import { CommitID } from './commit-id.js'
-import { readCid, readVarint } from './reading-bytes.js'
-import { STREAMID_CODEC } from './constants.js'
 import { base36 } from 'multiformats/bases/base36'
+import * as parsing from './stream-ref-parsing.js'
 
 /**
  * Ensure there is some resemblance in CommitID and StreamID APIs.
@@ -22,35 +21,26 @@ export interface StreamRef {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace StreamRef {
   export function fromBytes(input: Uint8Array): StreamID | CommitID {
-    const [streamCodec, streamCodecRemainder] = readVarint(input)
-    if (streamCodec !== STREAMID_CODEC)
-      throw new Error('fromBytes: invalid streamid, does not include streamid codec')
-    const [type, streamtypeRemainder] = readVarint(streamCodecRemainder)
-    const cidResult = readCid(streamtypeRemainder)
-    const [base, baseRemainder] = cidResult
-    if (baseRemainder.length === 0) {
-      return new StreamID(type, base)
-    } else if (baseRemainder.length === 1) {
-      // Zero commit
-      return new CommitID(type, base, baseRemainder[0])
-    } else {
-      // Commit
-      const [commit] = readCid(baseRemainder)
-      return new CommitID(type, base, commit)
+    const parsed = parsing.fromBytes(input)
+    switch (parsed.kind) {
+      case 'commit-id':
+        return new CommitID(parsed.type, parsed.genesis, parsed.commit)
+      case 'stream-id':
+        return new StreamID(parsed.type, parsed.genesis)
+      default:
+        throw new Error(`Malformed StreamRef bytes: ${base36.encode(input)}`)
     }
   }
 
   export function fromString(input: string): CommitID | StreamID {
-    const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
-    const commit = protocolFree.split('?')[1]?.split('=')[1]
-    const base = protocolFree.split('?')[0]
-    if (!base) throw new Error(`Malformed commit string: ${input}`)
-    if (commit) {
-      const streamId = StreamID.fromString(base)
-      return new CommitID(streamId.type, streamId.cid, commit)
-    } else {
-      const bytes = base36.decode(base)
-      return fromBytes(bytes)
+    const parsed = parsing.fromString(input)
+    switch (parsed.kind) {
+      case 'commit-id':
+        return new CommitID(parsed.type, parsed.genesis, parsed.commit)
+      case 'stream-id':
+        return new StreamID(parsed.type, parsed.genesis)
+      default:
+        throw new Error(`Malformed StreamRef string: ${input}`)
     }
   }
 

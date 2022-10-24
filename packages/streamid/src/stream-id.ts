@@ -6,11 +6,11 @@ import varint from 'varint'
 import * as codec from '@ipld/dag-cbor'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { STREAMID_CODEC } from './constants.js'
-import { readCid, readVarint } from './reading-bytes.js'
 import { Memoize } from 'typescript-memoize'
 import type { StreamRef } from './stream-ref.js'
 import { StreamType } from './stream-type.js'
 import { tryCatch } from './try-catch.util.js'
+import * as parsing from './stream-ref-parsing.js'
 
 /**
  * Parse StreamID from bytes representation.
@@ -20,16 +20,11 @@ import { tryCatch } from './try-catch.util.js'
  * @see StreamID#bytes
  */
 function fromBytes(bytes: Uint8Array): StreamID {
-  const [streamCodec, streamCodecRemainder] = readVarint(bytes)
-  if (streamCodec !== STREAMID_CODEC)
-    throw new Error('fromBytes: invalid streamid, does not include streamid codec')
-  const [type, streamTypeRemainder] = readVarint(streamCodecRemainder)
-  const cidResult = readCid(streamTypeRemainder)
-  const [cid, cidRemainder] = cidResult
-  if (cidRemainder.length > 0) {
-    throw new Error(`Invalid StreamID: contains commit`)
+  const parsed = parsing.fromBytes(bytes, 'StreamID')
+  if (parsed.kind === 'stream-id') {
+    return new StreamID(parsed.type, parsed.genesis)
   }
-  return new StreamID(type, cid)
+  throw new Error(`Invalid StreamID: contains commit`)
 }
 
 /**
@@ -51,11 +46,11 @@ function fromBytesNoThrow(bytes: Uint8Array): StreamID | Error {
  * @see StreamID#toUrl
  */
 function fromString(input: string): StreamID {
-  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
-  const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
-  if (!commitFree) throw new Error(`Malformed StreamID string: ${input}`)
-  const bytes = base36.decode(commitFree)
-  return fromBytes(bytes)
+  const parsed = parsing.fromString(input, 'StreamID')
+  if (parsed.kind === 'stream-id') {
+    return new StreamID(parsed.type, parsed.genesis)
+  }
+  throw new Error(`Invalid StreamID: contains commit`)
 }
 
 /**
