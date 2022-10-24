@@ -36,6 +36,9 @@
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
   },
+  "devDependencies": {
+    "@ceramicnetwork/streamid": "2.3.4"
+  },
   "publishConfig": {
     "access": "public"
   },
