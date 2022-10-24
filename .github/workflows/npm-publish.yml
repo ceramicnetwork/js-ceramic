@@ -39,6 +39,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: main
+          token: ${{ secrets.GH_TOKEN }}
       -
         name: Configure git
         run: |
@@ -117,6 +118,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: release-candidate
+          token: ${{ secrets.GH_TOKEN }}
       -
         name: Configure git
         run: |
@@ -196,6 +198,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.inputs.branch }}
+          token: ${{ secrets.GH_TOKEN }}
       -
         name: Configure git
         run: |
