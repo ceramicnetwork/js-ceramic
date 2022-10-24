@@ -8,7 +8,7 @@ import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { STREAMID_CODEC } from './constants.js'
 import { readCid, readVarint } from './reading-bytes.js'
 import { Memoize } from 'typescript-memoize'
-import { StreamRef } from './stream-ref.js'
+import type { StreamRef } from './stream-ref.js'
 import { StreamType } from './stream-type.js'
 import { tryCatch } from './try-catch.util.js'
 

@@ -7,7 +7,7 @@ import { Memoize } from 'typescript-memoize'
 import { STREAMID_CODEC } from './constants.js'
 import { readCid, readVarint } from './reading-bytes.js'
 import { StreamID } from './stream-id.js'
-import { StreamRef } from './stream-ref.js'
+import type { StreamRef } from './stream-ref.js'
 import { tryCatch } from './try-catch.util.js'
 
 /**
