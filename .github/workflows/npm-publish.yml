@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Type of publish (one of: rc, main, both, hotfix)'
+        description: 'Type of publish (one of: rc, main, hotfix)'
         required: true
         default: 'rc'
       branch:
@@ -27,7 +27,7 @@ env:
 jobs:
   publish_main:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.release_type == 'both' || github.event.inputs.release_type == 'main' }}
+    if: ${{ github.event.inputs.release_type == 'main' }}
     steps:
       -
         name: Setup Node
@@ -105,8 +105,7 @@ jobs:
 
   publish_rc:
     runs-on: ubuntu-latest
-    needs: publish_main
-    if: ${{ github.event.inputs.release_type == 'both' || github.event.inputs.release_type == 'rc' }}
+    if: ${{ github.event.inputs.release_type == 'rc' }}
     steps:
       -
         name: Setup Node
