@@ -83,17 +83,6 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release -- --yes
       -
-        name: Update and push code to rc and develop
-        run: |
-          git checkout release-candidate
-          git pull
-          git merge main
-          git push
-          git checkout develop
-          git pull
-          git merge main
-          git push
-      -
         name: Send Discord notification
         run: |
           # Prepare notification body
@@ -105,6 +94,17 @@ jobs:
           sed -i '4,$ s/\-/\\n-/' embed.json
           # Send notification
           res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
+      -
+        name: Update and push code to rc and develop
+        run: |
+          git checkout release-candidate
+          git pull
+          git merge main
+          git push
+          git checkout develop
+          git pull
+          git merge main
+          git push
 
   publish_rc:
     runs-on: ubuntu-latest
@@ -162,13 +162,6 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate -- --yes
       -
-        name: Update and push code to develop
-        run: |
-          git checkout develop
-          git pull
-          git merge release-candidate
-          git push
-      -
         name: Send Discord notification
         run: |
           # Prepare notification body
@@ -180,6 +173,13 @@ jobs:
           sed -i '4,$ s/\-/\\n-/' embed.json
           # Send notification
           res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
+      -
+        name: Update and push code to develop
+        run: |
+          git checkout develop
+          git pull
+          git merge release-candidate
+          git push
 
   publish_hotfix:
     runs-on: ubuntu-latest
