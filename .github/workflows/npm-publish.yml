@@ -85,11 +85,12 @@ jobs:
       -
         name: Update and push code to rc and develop
         run: |
-          git fetch --all
           git checkout release-candidate
+          git pull
           git merge main
           git push
           git checkout develop
+          git pull
           git merge main
           git push
       -
@@ -163,8 +164,8 @@ jobs:
       -
         name: Update and push code to develop
         run: |
-          git fetch --all
           git checkout develop
+          git pull
           git merge release-candidate
           git push
       -
