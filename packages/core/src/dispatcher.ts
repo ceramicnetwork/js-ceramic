@@ -242,11 +242,12 @@ export class Dispatcher {
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           Metrics.count(METRIC_NAMES.IPFS_TIMEOUT, 1)
+
           if (retries > 0) {
             continue
           }
         }
-        
+
         throw err
       }
     }
