@@ -101,7 +101,8 @@ export function parseCID(input: any): CID | null {
  * @param commit - representation of commit, be it CID, 0, `'0'`, `null`
  */
 export function parseCommit(genesis: CID, commit: CID | string | number | null = null): CID | null {
-  if (!commit) return null
+  if (!commit) return null // Handle number 0, null and undefined
+  if (commit === '0') return null // Handle string 0
 
   const commitCID = parseCID(commit)
   if (commitCID) {
@@ -111,9 +112,6 @@ export function parseCommit(genesis: CID, commit: CID | string | number | null =
     } else {
       return commitCID
     }
-  } else if (String(commit) === '0') {
-    // Zero as number or string
-    return null
   } else {
     throw new Error(
       'Cannot specify commit as a number except to request commit 0 (the genesis commit)'
