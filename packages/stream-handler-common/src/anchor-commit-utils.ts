@@ -16,6 +16,16 @@ export async function applyAnchorCommit(
 
   state.anchorStatus = AnchorStatus.ANCHORED
   state.anchorProof = commitData.proof
+
+  // Apply anchor timestamp to all commits that it anchors
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const logEntry = state.log[i]
+    if (logEntry.timestamp || logEntry.type == CommitType.ANCHOR) {
+      break
+    }
+    logEntry.timestamp = commitData.proof.blockTimestamp
+  }
+
   state.log.push({
     cid: commitData.cid,
     type: CommitType.ANCHOR,
