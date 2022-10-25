@@ -8,7 +8,7 @@
 
 ## Installation
 ```
-$ npm install @ceramicnetwork/strea-handler-common
+$ npm install @ceramicnetwork/stream-handler-common
 ```
 
 ## Usage
