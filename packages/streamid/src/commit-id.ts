@@ -10,6 +10,22 @@ import type { StreamRef } from './stream-ref.js'
 import { tryCatch } from './try-catch.util.js'
 import * as parsing from './stream-ref-parsing.js'
 
+export class InvalidCommitIDBytesError extends Error {
+  constructor(bytes: Uint8Array) {
+    super(
+      `Error while parsing CommitID from bytes ${base36.encode(
+        bytes
+      )}: no commit information provided`
+    )
+  }
+}
+
+export class InvalidCommitIDStringError extends Error {
+  constructor(input: string) {
+    super(`Error while parsing CommitID from string ${input}: no commit information provided`)
+  }
+}
+
 /**
  * Parse CommitID from bytes representation.
  *
@@ -22,7 +38,7 @@ function fromBytes(bytes: Uint8Array): CommitID {
   if (parsed.kind === 'commit-id') {
     return new CommitID(parsed.type, parsed.genesis, parsed.commit)
   }
-  throw new Error(`No commit information provided`)
+  throw new InvalidCommitIDBytesError(bytes)
 }
 
 /**
@@ -48,7 +64,7 @@ function fromString(input: string): CommitID {
   if (parsed.kind === 'commit-id') {
     return new CommitID(parsed.type, parsed.genesis, parsed.commit)
   }
-  throw new Error(`No commit information provided`)
+  throw new InvalidCommitIDStringError(input)
 }
 
 /**

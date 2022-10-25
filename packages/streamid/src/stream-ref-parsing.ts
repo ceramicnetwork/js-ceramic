@@ -27,14 +27,14 @@ export function fromBytes(input: Uint8Array, title = 'StreamRef'): StreamRefComp
     throw new Error(`Invalid ${title}, does not include streamid codec`)
   const [type, streamtypeRemainder] = readVarint(streamCodecRemainder)
   const cidResult = readCid(streamtypeRemainder)
-  const [genesis, gnesisRemainder] = cidResult
-  if (gnesisRemainder.length === 0) {
+  const [genesis, genesisRemainder] = cidResult
+  if (genesisRemainder.length === 0) {
     return {
       kind: 'stream-id',
       type: type,
       genesis: genesis,
     }
-  } else if (gnesisRemainder.length === 1) {
+  } else if (genesisRemainder.length === 1 && genesisRemainder[0] === 0) {
     // Zero commit
     return {
       kind: 'commit-id',
@@ -44,7 +44,7 @@ export function fromBytes(input: Uint8Array, title = 'StreamRef'): StreamRefComp
     }
   } else {
     // Commit
-    const [commit] = readCid(gnesisRemainder)
+    const [commit] = readCid(genesisRemainder)
     return {
       kind: 'commit-id',
       type: type,

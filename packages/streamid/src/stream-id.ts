@@ -12,6 +12,18 @@ import { StreamType } from './stream-type.js'
 import { tryCatch } from './try-catch.util.js'
 import * as parsing from './stream-ref-parsing.js'
 
+export class InvalidStreamIDBytesError extends Error {
+  constructor(bytes: Uint8Array) {
+    super(`Invalid StreamID bytes ${base36.encode(bytes)}: contains commit`)
+  }
+}
+
+export class InvalidStreamIDStringError extends Error {
+  constructor(input: string) {
+    super(`Invalid StreamID string ${input}: contains commit`)
+  }
+}
+
 /**
  * Parse StreamID from bytes representation.
  *
@@ -24,7 +36,7 @@ function fromBytes(bytes: Uint8Array): StreamID {
   if (parsed.kind === 'stream-id') {
     return new StreamID(parsed.type, parsed.genesis)
   }
-  throw new Error(`Invalid StreamID: contains commit`)
+  throw new InvalidStreamIDBytesError(bytes)
 }
 
 /**
@@ -50,7 +62,7 @@ function fromString(input: string): StreamID {
   if (parsed.kind === 'stream-id') {
     return new StreamID(parsed.type, parsed.genesis)
   }
-  throw new Error(`Invalid StreamID: contains commit`)
+  throw new InvalidStreamIDStringError(input)
 }
 
 /**
@@ -107,8 +119,8 @@ export class StreamID implements StreamRef {
    * ```
    */
   constructor(type: string | number, cid: CID | string) {
-    if (!(type || type === 0)) throw new Error('constructor: type required')
-    if (!cid) throw new Error('constructor: cid required')
+    if (!(type || type === 0)) throw new Error('StreamID constructor: type required')
+    if (!cid) throw new Error('StreamID constructor: cid required')
     this._type = typeof type === 'string' ? StreamType.codeByName(type) : type
     this._cid = typeof cid === 'string' ? CID.parse(cid) : cid
   }
