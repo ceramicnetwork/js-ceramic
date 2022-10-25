@@ -102,9 +102,6 @@ etherum.ts/createLink(did) -> sign
 
 * `aggregation` -> allows one to pin data to multiple backends (IPFS, Arweave, Crust, Filecoin, etc.) simultaneously
 
-
-`pkh-did-resolver` - we do accept blockchain signatures (just a fancy name)
-
 `stream-caip10-link` & `*-stream-tile` - immutable ipfs record / creation
 
 `stream-tile` - [Tile Stream Type](https://developers.ceramic.network/docs/advanced/standards/stream-programs/tile-document/) stores a mutable JSON document with schema validation, providing similar functionality as a NoSQL document
