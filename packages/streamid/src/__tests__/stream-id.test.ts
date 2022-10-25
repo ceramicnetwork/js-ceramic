@@ -97,20 +97,12 @@ describe('.fromString', () => {
     expect(streamid.toString()).toMatchSnapshot()
   })
 
-  test('create from legacy string "/ceramic/" with commit param "?commit="', () => {
-    const streamid = StreamID.fromString(STREAM_ID_WITH_COMMIT_LEGACY)
-
-    expect(streamid.type).toEqual(0)
-    expect(streamid.cid.toString()).toEqual(CID_STRING)
-    expect(streamid.toString()).toMatchSnapshot()
+  test('create from legacy string "/ceramic/" with commit param "?commit=": fail', () => {
+    expect(() => StreamID.fromString(STREAM_ID_WITH_COMMIT_LEGACY)).toThrow()
   })
 
   test('create from legacy string "/ceramic/" with commit param "?commit=0"', () => {
-    const streamid = StreamID.fromString(STREAM_ID_WITH_0_COMMIT_LEGACY)
-
-    expect(streamid.type).toEqual(0)
-    expect(streamid.cid.toString()).toEqual(CID_STRING)
-    expect(streamid.toString()).toMatchSnapshot()
+    expect(() => StreamID.fromString(STREAM_ID_WITH_0_COMMIT_LEGACY)).toThrow()
   })
 
   test('roundtrip streamID string', () => {

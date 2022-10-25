@@ -5,9 +5,26 @@ import varint from 'varint'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { Memoize } from 'typescript-memoize'
 import { STREAMID_CODEC } from './constants.js'
-import { readCid, readVarint } from './reading-bytes.js'
 import { StreamID } from './stream-id.js'
-import { StreamRef } from './stream-ref.js'
+import type { StreamRef } from './stream-ref.js'
+import { tryCatch } from './try-catch.util.js'
+import * as parsing from './stream-ref-parsing.js'
+
+export class InvalidCommitIDBytesError extends Error {
+  constructor(bytes: Uint8Array) {
+    super(
+      `Error while parsing CommitID from bytes ${base36.encode(
+        bytes
+      )}: no commit information provided`
+    )
+  }
+}
+
+export class InvalidCommitIDStringError extends Error {
+  constructor(input: string) {
+    super(`Error while parsing CommitID from string ${input}: no commit information provided`)
+  }
+}
 
 /**
  * Parse CommitID from bytes representation.
@@ -17,11 +34,11 @@ import { StreamRef } from './stream-ref.js'
  * @see CommitID#bytes
  */
 function fromBytes(bytes: Uint8Array): CommitID {
-  const result = fromBytesNoThrow(bytes)
-  if (result instanceof Error) {
-    throw result
+  const parsed = parsing.fromBytes(bytes, 'CommitID')
+  if (parsed.kind === 'commit-id') {
+    return new CommitID(parsed.type, parsed.genesis, parsed.commit)
   }
-  return result
+  throw new InvalidCommitIDBytesError(bytes)
 }
 
 /**
@@ -32,69 +49,7 @@ function fromBytes(bytes: Uint8Array): CommitID {
  * @param bytes
  */
 function fromBytesNoThrow(bytes: Uint8Array): CommitID | Error {
-  const [streamCodec, streamCodecRemainder] = readVarint(bytes)
-  if (streamCodec !== STREAMID_CODEC)
-    return new Error('fromBytes: invalid streamid, does not include streamid codec')
-  const [type, streamtypeRemainder] = readVarint(streamCodecRemainder)
-  const cidResult = readCid(streamtypeRemainder)
-  if (cidResult instanceof Error) {
-    return cidResult
-  }
-  const [base, baseRemainder] = cidResult
-  if (baseRemainder.length === 0) {
-    return new Error(`No commit information provided`)
-  } else if (baseRemainder.length === 1) {
-    // Zero commit
-    return new CommitID(type, base, baseRemainder[0])
-  } else {
-    // Commit
-    const [commit] = readCid(baseRemainder)
-    return new CommitID(type, base, commit)
-  }
-}
-
-/**
- * Safely parse CID, be it CID instance or a string representation.
- * Return `undefined` if not CID.
- *
- * @param input - CID or string.
- */
-function parseCID(input: any): CID | undefined {
-  try {
-    return typeof input === 'string' ? CID.parse(input) : CID.asCID(input)
-  } catch {
-    return undefined
-  }
-}
-
-/**
- * Parse commit CID from string or number.
- * `null` result indicates genesis commit.
- * If `commit` is 0, `'0'`, `null` or is equal to `genesis` CID, result is `null`.
- * Otherwise, return commit as proper CID.
- *
- * @param genesis - genesis CID for stream
- * @param commit - representation of commit, be it CID, 0, `'0'`, `null`
- */
-function parseCommit(genesis: CID, commit: CID | string | number = null): CID | null {
-  if (!commit) return null
-
-  const commitCID = parseCID(commit)
-  if (commitCID) {
-    // CID-like
-    if (genesis.equals(commitCID)) {
-      return null
-    } else {
-      return commitCID
-    }
-  } else if (String(commit) === '0') {
-    // Zero as number or string
-    return null
-  } else {
-    throw new Error(
-      'Cannot specify commit as a number except to request commit 0 (the genesis commit)'
-    )
-  }
+  return tryCatch(() => fromBytes(bytes))
 }
 
 /**
@@ -105,11 +60,11 @@ function parseCommit(genesis: CID, commit: CID | string | number = null): CID | 
  * @see CommitID#toUrl
  */
 function fromString(input: string): CommitID {
-  const result = fromStringNoThrow(input)
-  if (result instanceof Error) {
-    throw result
+  const parsed = parsing.fromString(input, 'CommitID')
+  if (parsed.kind === 'commit-id') {
+    return new CommitID(parsed.type, parsed.genesis, parsed.commit)
   }
-  return result
+  throw new InvalidCommitIDStringError(input)
 }
 
 /**
@@ -120,14 +75,7 @@ function fromString(input: string): CommitID {
  * @param input
  */
 function fromStringNoThrow(input: string): CommitID | Error {
-  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
-  if (protocolFree.includes('commit')) {
-    const commit = protocolFree.split('?')[1].split('=')[1]
-    const base = protocolFree.split('?')[0]
-    return make(StreamID.fromString(base), commit)
-  } else {
-    return fromBytesNoThrow(base36.decode(protocolFree))
-  }
+  return tryCatch(() => fromString(input))
 }
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID')
@@ -177,12 +125,16 @@ export class CommitID implements StreamRef {
    * new StreamID(<type>, <CID>|<cidStr>)
    * new StreamID(<type>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>)
    */
-  constructor(type: string | number, cid: CID | string, commit: CID | string | number = null) {
+  constructor(
+    type: string | number,
+    cid: CID | string,
+    commit: CID | string | number | null = null
+  ) {
     if (!type && type !== 0) throw new Error('constructor: type required')
     if (!cid) throw new Error('constructor: cid required')
     this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
     this.#cid = typeof cid === 'string' ? CID.parse(cid) : cid
-    this.#commit = parseCommit(this.#cid, commit)
+    this.#commit = parsing.parseCommit(this.#cid, commit)
   }
 
   /**
