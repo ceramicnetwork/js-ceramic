@@ -63,6 +63,7 @@ const COMMITS = {
   proof: {
     value: {
       blockNumber: 123456,
+      blockTimestamp: 1666728832,
       chainId: 'fakechain:123',
     },
   },
