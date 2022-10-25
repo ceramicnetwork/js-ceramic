@@ -175,6 +175,7 @@ Object {
         ],
         "version": 1,
       },
+      "timestamp": 1538352000,
       "type": 2,
     },
     Object {
@@ -261,6 +262,7 @@ Object {
         ],
         "version": 1,
       },
+      "timestamp": 1538352000,
       "type": 2,
     },
   ],
@@ -269,6 +271,7 @@ Object {
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
+    "lastUpdate": 1641461695,
   },
   "signature": 2,
   "type": 1,
