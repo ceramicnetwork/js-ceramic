@@ -65,7 +65,6 @@ By default the collection connects to the public dev network, but you can easily
 ## PACKAGES OVERVIEW
 
 `3id-did-resolver` - 3Box ID
-`key-did-resolver` - blockchain public keys
 
 `blockchain-utils-*`
 

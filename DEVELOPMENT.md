@@ -49,7 +49,6 @@ This repository contains many different JavaScript packages. The main reason for
 | [@ceramicnetwork/pinning-aggregation](https://github.com/ceramicnetwork/js-ceramic/tree/develop/packages/pinning-aggregation) | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/pinning-aggregation)](https://www.npmjs.com/package/@ceramicnetwork/pinning-aggregation) | Module that enables document pinning with multiple pinning backends |
 | [@ceramicnetwork/pinning-ipfs-backend](https://github.com/ceramicnetwork/js-ceramic/tree/develop/packages/pinning-ipfs-backend) | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/pinning-ipfs-backend)](https://www.npmjs.com/package/@ceramicnetwork/pinning-ipfs-backend) | Pinning backend for external ipfs node |
 | [@ceramicnetwork/pinning-powergate-backend](https://github.com/ceramicnetwork/js-ceramic/tree/develop/packages/pinning-powergate-backend) | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/pinning-powergate-backend)](https://www.npmjs.com/package/@ceramicnetwork/pinning-powergate-backend) | Pinning backend for filecoin |
-| [key-did-resolver](https://github.com/ceramicnetwork/js-ceramic/tree/develop/packages/key-did-resolver) | [![npm](https://img.shields.io/npm/v/key-did-resolver)](https://www.npmjs.com/package/key-did-resolver) | DID resolver for did:key method |
 
 
 ## Creating a release
