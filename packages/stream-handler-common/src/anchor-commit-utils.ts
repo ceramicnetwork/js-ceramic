@@ -17,20 +17,27 @@ export async function applyAnchorCommit(
   state.anchorStatus = AnchorStatus.ANCHORED
   state.anchorProof = commitData.proof
 
-  // Apply anchor timestamp to all commits that it anchors
-  for (let i = state.log.length - 1; i >= 0; i--) {
-    const logEntry = state.log[i]
-    if (logEntry.timestamp || logEntry.type == CommitType.ANCHOR) {
-      break
-    }
-    logEntry.timestamp = commitData.proof.blockTimestamp
-  }
-
   state.log.push({
     cid: commitData.cid,
     type: CommitType.ANCHOR,
     timestamp: commitData.proof.blockTimestamp,
   })
+
+  // Apply anchor timestamps to all commits that they anchor
+  // We do this for more than just the most recent anchor commit to fix-up the state objects
+  // stored in the state store for streams that were created and pinned before this logic was in
+  // place.  In the future, we may consider only propagating the timestamp from the anchor commit
+  // being applied to the commits that it anchors, up until the previous anchor commit, and then
+  // stopping, so we don't have to iterate over the whole log.
+  let timestamp
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const logEntry = state.log[i]
+    if (logEntry.type == CommitType.ANCHOR) {
+      timestamp = logEntry.timestamp
+    } else {
+      logEntry.timestamp = timestamp
+    }
+  }
 
   if (state.next?.content) {
     state.content = state.next.content
