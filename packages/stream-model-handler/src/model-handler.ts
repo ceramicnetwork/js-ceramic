@@ -14,6 +14,7 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { ViewsValidation } from './views-utils.js'
+import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
@@ -87,7 +88,7 @@ export class ModelHandler implements StreamHandler<Model> {
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     throw new Error('Cannot update a finalized Model')
@@ -153,30 +154,11 @@ export class ModelHandler implements StreamHandler<Model> {
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
-    StreamUtils.assertCommitLinksToState(state, commitData.commit)
-
-    const proof = commitData.proof
-    const newState = {
-      ...state,
-      anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: proof,
-    }
-    newState.log.push({
-      cid: commitData.cid,
-      type: CommitType.ANCHOR,
-      timestamp: proof.blockTimestamp,
-    })
-
-    return newState
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
+    return applyAnchorCommit(commitData, state)
   }
 }

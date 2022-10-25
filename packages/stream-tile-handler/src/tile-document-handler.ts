@@ -1,5 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
+import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
@@ -67,7 +68,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     return this._applySigned(commitData, state, context)
@@ -196,45 +197,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
-    StreamUtils.assertCommitLinksToState(state, commitData.commit)
-
-    const proof = commitData.proof
-    state.log.push({
-      cid: commitData.cid,
-      type: CommitType.ANCHOR,
-      timestamp: proof.blockTimestamp,
-    })
-    let content = state.content
-    let metadata = state.metadata
-
-    if (state.next?.content) {
-      content = state.next.content
-      delete state.next.content
-    }
-
-    if (state.next?.metadata) {
-      metadata = state.next.metadata
-      delete state.next.metadata
-    }
-
-    delete state.next
-
-    return {
-      ...state,
-      content,
-      metadata,
-      anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: proof,
-    }
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
+    return applyAnchorCommit(commitData, state)
   }
 }

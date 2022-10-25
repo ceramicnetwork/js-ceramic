@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.10.0",
+    "@ceramicnetwork/stream-handler-common": "^1.0.0",
     "@ceramicnetwork/stream-tile": "^2.6.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",

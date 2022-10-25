@@ -19,6 +19,7 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
+import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
@@ -75,7 +76,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     return this._applySigned(commitData, state, context)
@@ -176,31 +177,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
-    StreamUtils.assertCommitLinksToState(state, commitData.commit)
-
-    const proof = commitData.proof
-    const newState = {
-      ...state,
-      anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: proof,
-    }
-    newState.log.push({
-      cid: commitData.cid,
-      type: CommitType.ANCHOR,
-      timestamp: proof.blockTimestamp,
-    })
-
-    return newState
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
+    return applyAnchorCommit(commitData, state)
   }
 
   /**
