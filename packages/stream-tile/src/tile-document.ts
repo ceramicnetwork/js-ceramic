@@ -374,7 +374,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
     const patch = jsonpatch.compare(this.content, newContent)
     const genesisLogEntry = this.state.log[0]
-    if (!genesisLogEntry) throw new Error(`No genesis log entry`)
     return {
       header,
       data: patch,

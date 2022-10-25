@@ -97,7 +97,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const state = {
+    const state: StreamState = {
       type: TileDocument.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata: payload.header,

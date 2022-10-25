@@ -9,6 +9,7 @@ import type { RunningStateLike } from './running-state-like.js'
 import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
 import type { Cacao } from '@didtools/cacao'
+import { NonEmptyArray } from './non-empty-array.js'
 
 /**
  * Describes signature status
@@ -142,7 +143,7 @@ export interface StreamState {
   signature: SignatureStatus
   anchorStatus: AnchorStatus
   anchorProof?: AnchorProof // the anchor proof of the latest anchor, only present when anchor status is anchored
-  log: Array<LogEntry>
+  log: NonEmptyArray<LogEntry>
 }
 
 /**
