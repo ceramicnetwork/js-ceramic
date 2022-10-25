@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import express, { Request, Response } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
-import { Metrics } from '@ceramicnetwork/metrics'
+import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {
@@ -816,6 +816,7 @@ export class CeramicDaemon {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     const { force } = req.body
     await this.ceramic.pin.add(streamId, force)
+    Metrics.count(METRIC_NAMES.STREAM_PINNED, 1)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),
@@ -830,6 +831,7 @@ export class CeramicDaemon {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     const { opts } = req.body
     await this.ceramic.pin.rm(streamId, opts)
+    Metrics.count(METRIC_NAMES.STREAM_UNPINNED, 1)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),
