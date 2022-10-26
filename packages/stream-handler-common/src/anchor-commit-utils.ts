@@ -36,7 +36,6 @@ export async function applyAnchorCommit(
 
   state.anchorStatus = AnchorStatus.ANCHORED
   state.anchorProof = commitData.proof
-
   state.log.push({
     cid: commitData.cid,
     type: CommitType.ANCHOR,
