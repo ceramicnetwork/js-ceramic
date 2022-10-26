@@ -24,13 +24,19 @@ export const UNKNOWN_CALLER = 'Unknown'
 
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
+class _NullLogger {
+  debug(msg){}
+  info(msg){}
+  imp(msg){}
+  warn(msg){}
+  err(msg){}
+}
+
 class _Metrics {
   protected caller
   protected readonly config
   protected readonly counters
   protected readonly histograms
-  protected meterProvider: MeterProvider
-  protected metricExporter: PrometheusExporter
   protected meter
   constructor() {
     this.caller = ''
@@ -38,12 +44,13 @@ class _Metrics {
     this.counters = {}
     this.histograms = {}
     this.meter = null
-    this.meterProvider = null
-    this.metricExporter = null
+    this.logger = null
   }
 
   /* Set up the exporter at run time, after we have read the configuration */
-  start(metrics_config: any = exporterConfig, caller: string = UNKNOWN_CALLER) {
+  start(metrics_config: any = exporterConfig,
+        caller: string = UNKNOWN_CALLER,
+        logger: any = null) {
     // do not import type so as to be usable as a package anywhere
 
     this.config['preventServerStart'] = !metrics_config.metricsExporterEnabled
@@ -51,19 +58,28 @@ class _Metrics {
 
     this.caller = caller
 
-    this.metricExporter = new PrometheusExporter(this.config)
+    // accept a logger from the caller
+    this.logger = logger || new _NullLogger()
 
-    this.meterProvider = new MeterProvider({
-      resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: caller,
-      }),
-    })
+    try {
+      metricExporter = new PrometheusExporter(this.config)
 
-    // Creates MeterProvider and installs the exporter as a MetricReader
-    this.meterProvider.addMetricReader(this.metricExporter)
+      meterProvider = new MeterProvider({
+        resource: new Resource({
+          [SemanticResourceAttributes.SERVICE_NAME]: caller,
+        }),
+      })
+      // Creates MeterProvider and installs the exporter as a MetricReader
+      meterProvider.addMetricReader(metricExporter)
 
-    // Meter for calling application
-    this.meter = this.meterProvider.getMeter(caller)
+      // Meter for calling application
+      this.meter = meterProvider.getMeter(caller)
+    } catch (error) {
+      this.logger("Error at startup: {}".format(error))
+      this.meter = null
+      return 
+    }
+
   }
 
   // could have subclasses or specific functions with set params, but we want to
