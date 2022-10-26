@@ -1,4 +1,4 @@
-import { CeramicApi, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -187,6 +187,61 @@ describe('CACAO Integration test', () => {
         )
       ).rejects.toThrowError(/invalid_jws: not a valid verificationMethod for issuer:/)
     }, 30000)
+  })
+
+  describe('CommitID tests', () => {
+    test('Load anchored stream at CommitID after CACAO expiration', async () => {
+      const content0 = { a: 0 }
+      const content1 = { a: 1 }
+      const now = new Date()
+      const tenMinutesInMs = 10 * 60 * 1000
+      const expirationTime = new Date(now.valueOf() + tenMinutesInMs)
+      const didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*`,
+        expirationTime.toISOString()
+      )
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const doc = await TileDocument.create(
+        ceramic,
+        content0,
+        { controllers: [`did:pkh:eip155:1:${wallet.address}`] },
+        opts
+      )
+      await doc.update(content1, null, { ...opts, anchor: true })
+      await TestUtils.anchorUpdate(ceramic, doc)
+
+      // Move time forward until the CACAO is expired
+      const twoDays = 48 * 3600 * 1000 // in ms
+      MockDate.set(new Date(expirationTime.valueOf() + twoDays).toISOString()) // Plus 2 days
+
+      // Updating the doc with an expired CACAO should fail
+      await expect(doc.update({ invalidUpdate: 'shouldFail' }, null, opts)).rejects.toThrow(
+        /Capability is expired/
+      )
+
+      const docCopy = await TileDocument.load(ceramic, doc.id)
+      const docAtGenesisCommit = await TileDocument.load(ceramic, doc.allCommitIds[0])
+      const docAtUpdateCommit = await TileDocument.load(ceramic, doc.allCommitIds[1])
+      const docAtAnchorCommit = await TileDocument.load(ceramic, doc.allCommitIds[2])
+
+      expect(docCopy.content).toEqual(content1)
+      expect(docCopy.state.log.length).toEqual(3)
+      expect(docCopy.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      expect(docAtGenesisCommit.content).toEqual(content0)
+      expect(docAtGenesisCommit.state.log.length).toEqual(1)
+      expect(docAtGenesisCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      expect(docAtUpdateCommit.content).toEqual(content1)
+      expect(docAtUpdateCommit.state.log.length).toEqual(2)
+      expect(docAtUpdateCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      expect(docAtAnchorCommit.content).toEqual(content1)
+      expect(docAtAnchorCommit.state.log.length).toEqual(3)
+      expect(docAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    })
   })
 
   describe('Resources using StreamId', () => {
