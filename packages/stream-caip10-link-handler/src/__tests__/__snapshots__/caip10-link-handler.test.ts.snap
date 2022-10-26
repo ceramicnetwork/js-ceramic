@@ -4,6 +4,7 @@ exports[`Caip10LinkHandler applies anchor commit correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
+    "blockTimestamp": 1666728832,
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
@@ -136,6 +137,7 @@ Object {
         ],
         "version": 1,
       },
+      "timestamp": 1666728832,
       "type": 2,
     },
   ],
@@ -144,6 +146,7 @@ Object {
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
+    "lastUpdate": 1608116721,
   },
   "signature": 2,
   "type": 1,
