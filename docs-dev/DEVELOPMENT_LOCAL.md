@@ -65,7 +65,6 @@ By default the collection connects to the public dev network, but you can easily
 ## PACKAGES OVERVIEW
 
 `3id-did-resolver` - 3Box ID
-`key-did-resolver` - blockchain public keys
 
 `blockchain-utils-*`
 
@@ -101,9 +100,6 @@ etherum.ts/createLink(did) -> sign
 * `crust` - crust.network - alternative to filecoin
 
 * `aggregation` -> allows one to pin data to multiple backends (IPFS, Arweave, Crust, Filecoin, etc.) simultaneously
-
-
-`pkh-did-resolver` - we do accept blockchain signatures (just a fancy name)
 
 `stream-caip10-link` & `*-stream-tile` - immutable ipfs record / creation
 
