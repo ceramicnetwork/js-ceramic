@@ -24,6 +24,7 @@ export const UNKNOWN_CALLER = 'Unknown'
 
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
+/* eslint-disable  no-unused-vars */
 class _NullLogger {
   debug(msg){}
   info(msg){}
@@ -31,6 +32,7 @@ class _NullLogger {
   warn(msg){}
   err(msg){}
 }
+/* eslint-enable no-unused-vars */
 
 class _Metrics {
   protected caller
