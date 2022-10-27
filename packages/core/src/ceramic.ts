@@ -512,6 +512,8 @@ export class Ceramic implements CeramicApi {
         )
       }
 
+      await this.repository.init(this._networkOptions.name)
+
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()
       }
@@ -527,7 +529,6 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this.repository.init(this._networkOptions.name)
 
       await this._startupChecks()
     } catch (err) {
