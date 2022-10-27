@@ -1,4 +1,4 @@
-import { MeterProvider } from '@opentelemetry/sdk-metrics-base'
+import { MeterProvider } from '@opentelemetry/sdk-metrics'
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { Resource } from '@opentelemetry/resources'
@@ -38,6 +38,7 @@ class _Metrics {
   protected readonly counters
   protected readonly histograms
   protected meter
+  protected logger
   constructor() {
     this.caller = ''
     this.config = exporterConfig
@@ -51,9 +52,8 @@ class _Metrics {
   start(metrics_config: any = exporterConfig,
         caller: string = UNKNOWN_CALLER,
         logger: any = null) {
-    // do not import type so as to be usable as a package anywhere
 
-    this.config['preventServerStart'] = !metrics_config.metricsExporterEnabled
+    this.config['serverStart'] = metrics_config.metricsExporterEnabled
     this.config['port'] = metrics_config.metricsPort
 
     this.caller = caller
@@ -61,10 +61,16 @@ class _Metrics {
     // accept a logger from the caller
     this.logger = logger || new _NullLogger()
 
-    try {
-      metricExporter = new PrometheusExporter(this.config)
+    if (! metrics_config.metricsExporterEnabled) {
+      this.logger.info("Metrics are disabled")
+      // just leave meter set to null, all functions will be no-op
+      return
+    }
 
-      meterProvider = new MeterProvider({
+    try {
+      const metricExporter = new PrometheusExporter(this.config)
+
+      const meterProvider = new MeterProvider({
         resource: new Resource({
           [SemanticResourceAttributes.SERVICE_NAME]: caller,
         }),
@@ -75,7 +81,7 @@ class _Metrics {
       // Meter for calling application
       this.meter = meterProvider.getMeter(caller)
     } catch (error) {
-      this.logger("Error at startup: {}".format(error))
+      this.logger.warn(`Error starting metrics: {error}`)
       this.meter = null
       return 
     }
