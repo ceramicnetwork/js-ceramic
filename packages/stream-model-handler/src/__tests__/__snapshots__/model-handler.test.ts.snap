@@ -1,36 +1,36 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ModelHandler applies anchor commit correctly 1`] = `
-Object {
-  "anchorProof": Object {
+{
+  "anchorProof": {
     "blockNumber": 123456,
     "blockTimestamp": 1615799679,
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
-  "content": Object {
-    "accountRelation": Object {
+  "content": {
+    "accountRelation": {
       "type": "list",
     },
     "name": "MyModel",
-    "schema": Object {
+    "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
+      "properties": {
+        "stringPropName": {
           "maxLength": 80,
           "type": "string",
         },
       },
-      "required": Array [
+      "required": [
         "stringPropName",
       ],
       "type": "object",
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 112,
         "hash": Uint8Array [
           18,
@@ -73,8 +73,8 @@ Object {
       "timestamp": 1615799679,
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "code": 112,
         "hash": Uint8Array [
           18,
@@ -118,12 +118,12 @@ Object {
       "type": 2,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "code": 113,
         "hash": Uint8Array [
           113,
@@ -152,31 +152,31 @@ Object {
 `;
 
 exports[`ModelHandler applies commit made using an old key if it is applied within the revocation period 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
-    "accountRelation": Object {
+  "content": {
+    "accountRelation": {
       "type": "list",
     },
     "name": "MyModel",
-    "schema": Object {
+    "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
+      "properties": {
+        "stringPropName": {
           "maxLength": 80,
           "type": "string",
         },
       },
-      "required": Array [
+      "required": [
         "stringPropName",
       ],
       "type": "object",
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 112,
         "hash": Uint8Array [
           18,
@@ -219,12 +219,12 @@ Object {
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "code": 113,
         "hash": Uint8Array [
           113,
@@ -253,31 +253,31 @@ Object {
 `;
 
 exports[`ModelHandler applies genesis commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
-    "accountRelation": Object {
+  "content": {
+    "accountRelation": {
       "type": "list",
     },
     "name": "MyModel",
-    "schema": Object {
+    "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
+      "properties": {
+        "stringPropName": {
           "maxLength": 80,
           "type": "string",
         },
       },
-      "required": Array [
+      "required": [
         "stringPropName",
       ],
       "type": "object",
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 112,
         "hash": Uint8Array [
           18,
@@ -320,12 +320,12 @@ Object {
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "code": 113,
         "hash": Uint8Array [
           113,
@@ -354,36 +354,36 @@ Object {
 `;
 
 exports[`ModelHandler applies genesis commits with views properties correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
-    "accountRelation": Object {
+  "content": {
+    "accountRelation": {
       "type": "list",
     },
     "name": "MyModel",
-    "schema": Object {
+    "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "properties": Object {
-        "stringPropName": Object {
+      "properties": {
+        "stringPropName": {
           "maxLength": 80,
           "type": "string",
         },
       },
-      "required": Array [
+      "required": [
         "stringPropName",
       ],
       "type": "object",
     },
-    "views": Object {
-      "owner": Object {
+    "views": {
+      "owner": {
         "type": "documentAccount",
       },
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 112,
         "hash": Uint8Array [
           18,
@@ -426,12 +426,12 @@ Object {
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "code": 113,
         "hash": Uint8Array [
           113,

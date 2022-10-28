@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals'
 import { AuthProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { CeramicApi, toLegacyAccountId } from '@ceramicnetwork/common'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'

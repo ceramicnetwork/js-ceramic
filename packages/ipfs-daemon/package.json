@@ -56,7 +56,6 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
-    "@types/jest": "^27.0.3",
     "@types/node": "^18.0.3",
     "tsm": "^2.2.1"
   },

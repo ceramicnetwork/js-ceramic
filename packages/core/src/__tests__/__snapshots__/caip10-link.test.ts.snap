@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Ceramic API Caip10Link test Anchoring works 1`] = `
-Object {
-  "anchorProof": Object {
+{
+  "anchorProof": {
     "blockNumber": 1538352000,
     "blockTimestamp": 1538352000,
     "chainId": "inmemory:12345",
-    "root": Object {
+    "root": {
       "code": 113,
       "hash": Uint8Array [
         18,
@@ -46,7 +46,7 @@ Object {
       ],
       "version": 1,
     },
-    "txHash": Object {
+    "txHash": {
       "code": 147,
       "hash": Uint8Array [
         27,
@@ -90,9 +90,9 @@ Object {
   },
   "anchorStatus": 3,
   "content": "did:3:bafysdfwefwe",
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -135,8 +135,8 @@ Object {
       "timestamp": 1538352000,
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -179,8 +179,8 @@ Object {
       "timestamp": 1538352000,
       "type": 2,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -223,8 +223,8 @@ Object {
       "timestamp": 1538352000,
       "type": 1,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -268,8 +268,8 @@ Object {
       "type": 2,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
@@ -281,12 +281,12 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create and link DID 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -328,8 +328,8 @@ Object {
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -372,16 +372,16 @@ Object {
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": "did:3:bafysdfwefwe",
-    "metadata": Object {
-      "controllers": Array [
+    "metadata": {
+      "controllers": [
         "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       ],
       "family": "caip10-eip155:1337",
@@ -394,12 +394,12 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create and link DID with legacy CAIP proof 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -441,8 +441,8 @@ Object {
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -485,16 +485,16 @@ Object {
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": "did:3:bafysdfwefwe",
-    "metadata": Object {
-      "controllers": Array [
+    "metadata": {
+      "controllers": [
         "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       ],
       "family": "caip10-eip155:1337",
@@ -507,12 +507,12 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create from legacy account id 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -555,13 +555,13 @@ Object {
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": null,
   },
   "signature": 0,
@@ -570,12 +570,12 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create from valid account id 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "code": 113,
         "hash": Uint8Array [
           18,
@@ -618,13 +618,13 @@ Object {
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": null,
   },
   "signature": 0,
