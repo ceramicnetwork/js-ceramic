@@ -3,7 +3,6 @@ import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-uti
 import { InMemorySigner } from '@taquito/signer'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { AccountId, ChainId } from 'caip'
-import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
@@ -37,7 +36,7 @@ const ioTestCases: IoTestCase[] = [
   {
     testName: 'unable to validate when wallet address has not been published to the blockchain',
     async pubkeyObject(): Promise<HttpResponse> {
-      const { Response } = await import('cross-fetch')
+      const { Response } = await import('native-fetch')
       return new Response(
         JSON.stringify({
           pubkey: undefined,
@@ -51,7 +50,7 @@ const ioTestCases: IoTestCase[] = [
   // - the signature can be verified
   {
     async pubkeyObject(publicKey?: string): Promise<HttpResponse> {
-      const { Response } = await import('cross-fetch')
+      const { Response } = await import('native-fetch')
       return new Response(
         JSON.stringify({
           pubkey: publicKey,
@@ -89,11 +88,13 @@ let responseResult: () => Promise<any>
 // cache Date.now() to restore it after all tests
 const dateNow = Date.now
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const originalModule = jest.requireActual('cross-fetch') as any
+jest.unstable_mockModule('native-fetch', () => {
+  const originalModule = jest.requireActual('native-fetch') as any
   return {
     ...originalModule,
-    default: () => responseResult(),
+    fetch: () => {
+      return responseResult()
+    },
   }
 })
 
@@ -113,6 +114,8 @@ beforeAll(async () => {
   validProof = await authProvider.createLink(did)
 
   invalidSignatureProof = { ...validProof, signature: 'invalid' }
+
+  const { normalizeAccountId } = await import('@ceramicnetwork/common')
 
   const accountId = normalizeAccountId(validProof.account)
   const chainId = new ChainId(accountId.chainId)

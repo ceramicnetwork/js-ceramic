@@ -2,9 +2,8 @@ import { ChainId } from 'caip'
 import { verifySignature } from '@taquito/utils'
 import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof, tezos } from '@ceramicnetwork/blockchain-utils-linking'
-import fetch from 'cross-fetch'
 import * as uint8arrays from 'uint8arrays'
-import { normalizeAccountId } from '@ceramicnetwork/common'
+import { normalizeAccountId, fetchJson } from '@ceramicnetwork/common'
 
 export const ADDRESS_NOT_FOUND_ERROR = new Error(`Address not found on the Tezos blockchain`)
 export const PUBLIC_KEY_NOT_PUBLISHED_ERROR = new Error(
@@ -44,11 +43,10 @@ function encodeMessage(text: string): string {
  */
 async function findPublicKey(address: string): Promise<string> {
   // request the public key from the Tezos blockchain
-  const response = await fetch(`https://api.tzstats.com/explorer/account/${address}`).catch(() => {
+  const json = await fetchJson(`https://api.tzstats.com/explorer/account/${address}`).catch(() => {
     throw ADDRESS_NOT_FOUND_ERROR
   })
 
-  const json = await response.json()
   const result = json?.pubkey
   if (result) {
     return result

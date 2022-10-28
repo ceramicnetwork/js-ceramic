@@ -1,4 +1,4 @@
-import fetch from 'cross-fetch'
+import { fetchJson } from '@ceramicnetwork/common'
 import * as u8a from 'uint8arrays'
 import lru from 'lru_map'
 
@@ -15,15 +15,14 @@ const THREEBOX_API_URL = 'https://ipfs.3box.io'
 const LIMIT = 100
 const fetchCache = new lru.LRUMap<string, any>(LIMIT)
 
-const fetchJson = async (url: string): Promise<any> => {
+const fetchJsonCached = async (url: string): Promise<any> => {
   const cached = fetchCache.get(url)
   if (cached) return cached
-  const r = await fetch(url)
-  if (r.ok) {
-    const json = await r.json()
+  try {
+    const json = await fetchJson(url)
     fetchCache.set(url, json)
     return json
-  } else {
+  } catch {
     throw new Error('Not a valid 3ID')
   }
 }
@@ -34,7 +33,7 @@ const didDocReq = (cid: string): string =>
 // Mocks ipfs obj for 3id resolve, to resolve through api, until ipfs instance is available
 const ipfsMock: IPFS = {
   dag: {
-    get: async (cid) => fetchJson(didDocReq(cid)),
+    get: async (cid) => fetchJsonCached(didDocReq(cid)),
   },
 }
 

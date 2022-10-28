@@ -16,8 +16,8 @@ const casProcessingResponse = {
   message: `CAS is finally available; nonce: ${Math.random()}`,
 }
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
+jest.unstable_mockModule('native-fetch', () => {
+  const fetchFunc = jest.fn(async () => ({
     ok: true,
     json: async () => {
       attemptNum += 1
@@ -28,7 +28,7 @@ jest.unstable_mockModule('cross-fetch', () => {
     },
   }))
   return {
-    default: fetchFunc,
+    fetch: fetchFunc,
   }
 })
 

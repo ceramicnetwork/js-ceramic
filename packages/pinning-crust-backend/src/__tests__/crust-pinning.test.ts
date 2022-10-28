@@ -38,7 +38,7 @@ const cids = [
   CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
 ]
 const cidsArray = cids.map((cid) => ({ args: str2HexStr(cid.toString()) }))
-jest.unstable_mockModule('cross-fetch', () => {
+jest.unstable_mockModule('native-fetch', () => {
   const mockFetch = jest.fn(() => {
     return {
       status: 200,
@@ -47,7 +47,7 @@ jest.unstable_mockModule('cross-fetch', () => {
   })
 
   return {
-    default: mockFetch,
+    fetch: mockFetch,
   }
 })
 

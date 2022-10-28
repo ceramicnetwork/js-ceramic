@@ -14,7 +14,6 @@ import {
 
   TestUtils,
 } from '@ceramicnetwork/common'
-import { Model } from '@ceramicnetwork/stream-model'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -22,13 +21,11 @@ import { randomString } from '@stablelib/random'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
-import fetch from 'cross-fetch'
+import { fetch } from 'native-fetch'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 
 const seed = 'SEED'
-
-const MY_MODEL_1_CONTENT = { name: 'myModel1', schema: {}, accountRelation: { type: 'list' } }
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)

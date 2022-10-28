@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 const VECTORS_PATH = new URL('./vectors.json', import.meta.url)
 const vectors = JSON.parse(readFileSync(VECTORS_PATH, 'utf-8'))
 
-jest.unstable_mockModule('cross-fetch', () => {
+jest.unstable_mockModule('native-fetch', () => {
   const mockedCalls = vectors['http-mock']
   const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
     ok: true,
@@ -22,7 +22,7 @@ jest.unstable_mockModule('cross-fetch', () => {
     },
   }))
   return {
-    default: fetchFunc
+    fetch: fetchFunc
   }
 })
 

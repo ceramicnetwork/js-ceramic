@@ -3,7 +3,7 @@ import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/commo
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { typesBundleForPolkadot } from '@crustio/type-definitions'
-import fetch from 'cross-fetch'
+import { fetch } from 'native-fetch'
 import * as sha256 from '@stablelib/sha256'
 import { toString } from 'uint8arrays/to-string'
 import { KeyringPair } from '@polkadot/keyring/types';
@@ -109,7 +109,7 @@ export class CrustPinningBackend implements PinningBackend {
     await this.sendTx(tx2, krp)
   }
 
-  async unpin(_cid: CID): Promise<void> {
+  async unpin(): Promise<void> {
     // Do nothing
   }
 

@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
+import type { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
@@ -13,13 +13,13 @@ let publicKey: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const originalModule = jest.requireActual('cross-fetch') as any
+jest.unstable_mockModule('native-fetch', () => {
+  const originalModule = jest.requireActual('native-fetch') as any
   const fakeFetch = async () => {
     return new originalModule.Response(JSON.stringify({ pubkey: publicKey }))
   }
   return {
-    default: fakeFetch,
+    fetch: fakeFetch,
   }
 })
 
