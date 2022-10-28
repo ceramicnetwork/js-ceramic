@@ -276,15 +276,18 @@ export class CeramicDaemon {
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
-    modules.loggerProvider
-      .getDiagnosticsLogger()
-      .imp(
-        `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
-          opts,
-          null,
-          2
-        )}`
-      )
+    const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
+    diagnosticsLogger.imp(
+      `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
+        opts,
+        null,
+        2
+      )}`
+    )
+    const ipfsId = await ipfs.id()
+    diagnosticsLogger.imp(
+      `Connecting to IPFS node available as ${ipfsId.addresses.map(String).join(', ')}`
+    )
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3StateStore = new S3StateStore(
