@@ -66,7 +66,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     // TODO - verify genesis commit
-    const state = {
+    const state: StreamState = {
       type: Caip10Link.STREAM_TYPE_ID,
       content: null,
       next: {

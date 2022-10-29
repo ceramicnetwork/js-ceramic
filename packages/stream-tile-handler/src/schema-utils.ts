@@ -2,6 +2,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'
+import type { Schema } from 'ajv'
 import addFormats from 'ajv-formats'
 import lru from 'lru_map'
 
@@ -33,27 +34,28 @@ export class SchemaValidation {
     this._validate(content, schema, schemaStreamId)
   }
 
-  private async _loadSchemaById<T>(ceramic: CeramicApi, schemaStreamId: string): Promise<T | null> {
+  private async _loadSchemaById<T = unknown>(
+    ceramic: CeramicApi,
+    schemaStreamId: string
+  ): Promise<T | null> {
     let commitId: CommitID
     try {
       commitId = CommitID.fromString(schemaStreamId)
     } catch {
       throw new Error('Commit missing when loading schema document')
     }
-    return ceramic.loadStream<TileDocument<T>>(commitId).then((doc) => doc.content)
+    const stream = await ceramic.loadStream<TileDocument<T>>(commitId)
+    return stream.content
   }
 
-  private _validate(
-    content: Record<string, any>,
-    schema: Record<string, any>,
-    schemaStreamId: string
-  ): void {
+  private _validate(content: Record<string, any>, schema: unknown, schemaStreamId: string): void {
     let validator = this.validators.get(schemaStreamId)
     if (!validator) {
       validator = buildAjv()
       this.validators.set(schemaStreamId, validator)
     }
-    const isValid = validator.validate(schema, content)
+    // Type casting, because we know that validator would throw an error if schema is wrong.
+    const isValid = validator.validate(schema as Schema, content)
 
     if (!isValid) {
       const errorMessages = validator.errorsText()
