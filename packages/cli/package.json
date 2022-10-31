@@ -57,7 +57,7 @@
     "dag-jose": "^2.0.0",
     "did-resolver": "^3.1.5",
     "dids": "^3.4.0",
-    "ethr-did-resolver": "^5.0.3",
+    "ethr-did-resolver": "^7.0.2",
     "express": "^4.17.2",
     "http-status-codes": "^2.2.0",
     "ipfs-http-client": "^55.0.0",
