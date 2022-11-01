@@ -375,24 +375,24 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Applies the log to the document
+   * Applies the log to the document.
+   * Utilizes conflict resolution rules if log doesn't cleanly apply to current state.
    *
    * @param log - Log of commit CIDs
    * @returns - true if the remote log is applied, false if we stick with the current local log.
    * @private
    */
   async _applyLog (log: Array<CID>): Promise<boolean> {
-    let modified = false
     if (log[log.length - 1].equals(this.tip)) {
       // log already applied
-      return
+      return false
     }
     const cid = log[0]
     const commit = await this.dispatcher.retrieveCommit(cid)
     if (commit.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
-      modified = true
+      return true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the tip
@@ -417,7 +417,7 @@ class Document extends EventEmitter {
         if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
           state = await this._applyLogToState(log, cloneDeep(state))
           this._doctype.state = state
-          modified = true
+          return true
         }
       }
 
@@ -427,17 +427,17 @@ class Document extends EventEmitter {
         // keep present state
         state = await this._applyLogToState(log, cloneDeep(state))
         this._doctype.state = state
-        modified = true
+        return true
       }
 
       if (!isLocalAnchored && !isRemoteAnchored) {
         // if none of them is anchored, apply the log
         state = await this._applyLogToState(log, cloneDeep(state))
         this._doctype.state = state
-        modified = true
+        return true
       }
     }
-    return modified
+    return false
   }
 
   /**
