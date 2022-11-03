@@ -1,4 +1,4 @@
-import { MeterProvider } from '@opentelemetry/sdk-metrics-base'
+import { MeterProvider } from '@opentelemetry/sdk-metrics'
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { Resource } from '@opentelemetry/resources'
@@ -24,46 +24,72 @@ export const UNKNOWN_CALLER = 'Unknown'
 
 const exporterConfig = PrometheusExporter.DEFAULT_OPTIONS
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-empty-function */
+class _NullLogger {
+  debug(msg){}
+  info(msg){}
+  imp(msg){}
+  warn(msg){}
+  err(msg){}
+}
+/* eslint-enable @typescript-eslint/no-unused-vars */
+/* eslint-enable @typescript-eslint/no-empty-function */
+
 class _Metrics {
   protected caller
   protected readonly config
   protected readonly counters
   protected readonly histograms
-  protected meterProvider: MeterProvider
-  protected metricExporter: PrometheusExporter
   protected meter
+  protected logger
   constructor() {
     this.caller = ''
     this.config = exporterConfig
     this.counters = {}
     this.histograms = {}
     this.meter = null
-    this.meterProvider = null
-    this.metricExporter = null
+    this.logger = null
   }
 
   /* Set up the exporter at run time, after we have read the configuration */
-  start(metrics_config: any = exporterConfig, caller: string = UNKNOWN_CALLER) {
-    // do not import type so as to be usable as a package anywhere
+  start(metrics_config: any = exporterConfig,
+        caller: string = UNKNOWN_CALLER,
+        logger: any = null) {
 
-    this.config['preventServerStart'] = !metrics_config.metricsExporterEnabled
+    this.config['serverStart'] = metrics_config.metricsExporterEnabled
     this.config['port'] = metrics_config.metricsPort
 
     this.caller = caller
 
-    this.metricExporter = new PrometheusExporter(this.config)
+    // accept a logger from the caller
+    this.logger = logger || new _NullLogger()
 
-    this.meterProvider = new MeterProvider({
-      resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: caller,
-      }),
-    })
+    if (! metrics_config.metricsExporterEnabled) {
+      this.logger.info("Metrics are disabled")
+      // just leave meter set to null, all functions will be no-op
+      return
+    }
 
-    // Creates MeterProvider and installs the exporter as a MetricReader
-    this.meterProvider.addMetricReader(this.metricExporter)
+    try {
+      const metricExporter = new PrometheusExporter(this.config)
 
-    // Meter for calling application
-    this.meter = this.meterProvider.getMeter(caller)
+      const meterProvider = new MeterProvider({
+        resource: new Resource({
+          [SemanticResourceAttributes.SERVICE_NAME]: caller,
+        }),
+      })
+      // Creates MeterProvider and installs the exporter as a MetricReader
+      meterProvider.addMetricReader(metricExporter)
+
+      // Meter for calling application
+      this.meter = meterProvider.getMeter(caller)
+    } catch (error) {
+      this.logger.warn(`Error starting metrics: {error}`)
+      this.meter = null
+      return 
+    }
+
   }
 
   // could have subclasses or specific functions with set params, but we want to
