@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-crust-backend",
-  "version": "2.2.0",
+  "version": "2.3.0-rc.0",
   "description": "Crust Pinning backend",
   "keywords": [
     "ceramic",
@@ -41,7 +41,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.10.0",
+    "@ceramicnetwork/common": "^2.11.0-rc.0",
     "multiformats": "^9.5.8"
   },
   "publishConfig": {
