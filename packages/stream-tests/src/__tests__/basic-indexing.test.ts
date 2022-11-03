@@ -14,7 +14,6 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { DID } from 'dids'
 import { makeDID } from '@ceramicnetwork/cli/lib/__tests__/make-did.js'
 
 const CONTENT0 = { myData: 0 }

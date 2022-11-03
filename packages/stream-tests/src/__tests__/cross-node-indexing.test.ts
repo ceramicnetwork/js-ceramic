@@ -33,6 +33,27 @@ const MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
+// The model above will always result in this StreamID when created with the fixed did:key
+// controller used by the test.
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
+
+const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
+  name: 'MyModel',
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      linkedDoc: {
+        type: 'string',
+      },
+    },
+    required: ['linkedDoc'],
+  },
+  relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
+}
+
 const extractStreamStates = function (page: Page<StreamState>): Array<StreamState> {
   return page.edges.map((edge) => edge.node)
 }
@@ -55,21 +76,14 @@ describe('Cross-node indexing and query test', () => {
   let ceramic2: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let modelWithRelation: Model
+  let midRelationMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs1 = await createIPFS()
     ipfs2 = await createIPFS()
-
-    // Temporarily start a Ceramic node and use it to create the Model that will be used in the
-    // rest of the tests.
-    ceramic1 = await createCeramic(ipfs1)
-
-    model = await Model.create(ceramic1, MODEL_DEFINITION)
-    midMetadata = { model: model.id }
-
-    await ceramic1.close()
   })
 
   afterAll(async () => {
@@ -87,7 +101,14 @@ describe('Cross-node indexing and query test', () => {
         allowQueriesBeforeHistoricalSync: true,
       },
     })
-    await ceramic1.index.indexModels([model.id])
+
+    model = await Model.create(ceramic1, MODEL_DEFINITION)
+    expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
+    midMetadata = { model: model.id }
+    modelWithRelation = await Model.create(ceramic1, MODEL_WITH_RELATION_DEFINITION)
+    midRelationMetadata = { model: modelWithRelation.id }
+
+    await ceramic1.index.indexModels([model.id, modelWithRelation.id])
     const indexingDirectory2 = await tmp.tmpName()
     await fs.mkdir(indexingDirectory2)
     ceramic2 = await createCeramic(ipfs2, {
@@ -97,7 +118,7 @@ describe('Cross-node indexing and query test', () => {
         allowQueriesBeforeHistoricalSync: true,
       },
     })
-    await ceramic2.index.indexModels([model.id])
+    await ceramic2.index.indexModels([model.id, modelWithRelation.id])
   }, 30 * 1000)
 
   afterEach(async () => {
@@ -170,5 +191,28 @@ describe('Cross-node indexing and query test', () => {
     expect(results[0].id.toString()).toEqual(doc1.id.toString())
     expect(results[0].content).toEqual(doc1.content)
     expect(results[0].state).toEqual(doc1.state)
+  })
+
+  test('Can index stream before indexing the stream it has a relation to', async () => {
+    const doc1 = await ModelInstanceDocument.create(ceramic1, CONTENT0, midMetadata, {
+      publish: false,
+      anchor: false,
+    })
+    const doc2 = await ModelInstanceDocument.create(
+      ceramic1,
+      { linkedDoc: doc1.id.toString() },
+      midRelationMetadata
+    )
+
+    // Wait for doc2 creation to propagate to ceramic2
+    // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
+    // in the index, instead of this race-prone sleep.
+    await TestUtils.delay(5 * 1000)
+
+    await expect(ceramic2.index.count({ model: model.id })).resolves.toEqual(0)
+    await expect(ceramic2.index.count({ model: modelWithRelation.id })).resolves.toEqual(1)
+    await expect(
+      ceramic2.index.count({ model: modelWithRelation.id, filter: { linkedDoc: doc1.id } })
+    ).resolves.toEqual(1)
   })
 })
