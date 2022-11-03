@@ -35,11 +35,17 @@ export async function listMidTables(dbConnection: Knex): Promise<Array<string>> 
   return result.map((r) => r.name)
 }
 
+/**
+ * List existing config tables.
+ */
 export function listConfigTables(): Array<ConfigTable> {
   // TODO (CDB-1852): extend with ceramic_auth; If it will need to be async, see if it can be parallelised within initConfigTables(...)
   return [{ tableName: INDEXED_MODEL_CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
 }
 
+/**
+ * Create a list of db column info for relations in a given model
+ */
 function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition): Array<ColumnInfo> {
   if (!relations) {
     return []
@@ -57,6 +63,9 @@ export async function initConfigTables(dataSource: Knex, logger: DiagnosticsLogg
   await Promise.all(configTables.map( table => { return initConfigTable(table, dataSource, logger) } ))
 }
 
+/**
+ * Create a single DB config table
+ */
 async function initConfigTable(table: ConfigTable, dataSource: Knex, logger: DiagnosticsLogger) {
   const exists = await dataSource.schema.hasTable(table.tableName)
   if (!exists) {
@@ -79,6 +88,9 @@ export async function initMidTables(
   }))
 }
 
+/**
+ * Create a single mid table for a given model
+ */
 async function initMidTable(modelIndexArgs: IndexModelArgs, existingTables: Array<string>, dbConnection: Knex, logger: DiagnosticsLogger) {
   const tableName = asTableName(modelIndexArgs.model)
   if (existingTables.includes(tableName)) {
@@ -91,8 +103,6 @@ async function initMidTable(modelIndexArgs: IndexModelArgs, existingTables: Arra
 
 /**
  * Compose DB configuration table schema verification
- * @param dataSource
- * @param modelsToIndex
  */
 async function _verifyConfigTables(dataSource: Knex) {
   const configTables = listConfigTables()
@@ -101,6 +111,9 @@ async function _verifyConfigTables(dataSource: Knex) {
   }))
 }
 
+/**
+ * Verify a single config table schema
+ */
 async function _verifyConfigTable(table: ConfigTable, dataSource: Knex) {
   const columns = await dataSource.table(table.tableName).columnInfo()
   const validSchema = JSON.stringify(table.validSchema)
@@ -115,8 +128,6 @@ async function _verifyConfigTable(table: ConfigTable, dataSource: Knex) {
 
 /**
  * Compose DB Model Instance Document table schema verification
- * @param dataSource
- * @param modelsToIndex
  */
 async function _verifyMidTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
   const tableNames = await listMidTables(dataSource)
@@ -125,6 +136,9 @@ async function _verifyMidTables(dataSource: Knex, modelsToIndex: Array<IndexMode
   }))
 }
 
+/**
+ * Verify a single mid table schema
+ */
 async function _verifyMidTable(tableName: string, dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
   const modelIndexArgs = modelsToIndex.find((model) => tableName == asTableName(model.model))
   if (!modelIndexArgs) {
@@ -152,8 +166,6 @@ async function _verifyMidTable(tableName: string, dataSource: Knex, modelsToInde
 
 /**
  * Public function to run table schema verification helpers
- * @param dataSource
- * @param modelsToIndex
  */
 // TODO (NET-1635): unify logic between postgres & sqlite
 export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {

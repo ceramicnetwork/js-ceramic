@@ -85,7 +85,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   private async indexModelsInDatabase(models: Array<IndexModelArgs>): Promise<void> {
     if (models.length === 0) return
     await initMidTables(this.dbConnection, models, this.logger)
-    this.logger.imp('ARTUR WDOWIARSKI: WILL VERIFY TABLES')
     await this.verifyTables(models)
     const now = asTimestamp(new Date())
     // FIXME: CDB-1866 - populate the updated_by field properly when auth is implemented
