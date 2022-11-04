@@ -17,7 +17,7 @@ export class LocalPinApi implements PinApi {
       sync: SyncOptions.PREFER_CACHE,
       pin: true,
     })
-    await this.repository.pin(state$, force)
+    if (force) await this.repository.pin(state$, force)
     this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }
 
