@@ -84,7 +84,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
 
   private async indexModelsInDatabase(models: Array<IndexModelArgs>): Promise<void> {
     if (models.length === 0) return
-
     await initMidTables(this.dbConnection, models, this.logger)
     await this.verifyTables(models)
     const now = asTimestamp(new Date())
