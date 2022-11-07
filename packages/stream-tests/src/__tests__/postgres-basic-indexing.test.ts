@@ -225,9 +225,6 @@ describe('Basic end-to-end indexing query test', () => {
     })
 
     test('multiple documents - multiple pages', async () => {
-      const resultObjBefore0 = await ceramic.index.query({ model: model.id, first: 10 })
-      console.log("ARTUR WDOWIARSKI BEFORE0: ", extractDocuments(ceramic, resultObjBefore0).map( result => { return result.id.toString() } ))
-
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       await doc1.replace(CONTENT1)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
@@ -275,8 +272,6 @@ describe('Basic end-to-end indexing query test', () => {
       await doc1.replace(CONTENT1)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
-
-      console.log(`docIds: [${doc1.id.toString()}, ${doc2.id.toString()}, ${doc3.id.toString()}]`)
 
       const resultObj = await ceramic.index.query({ model: model.id, last: 100 })
       const results = extractDocuments(ceramic, resultObj)
