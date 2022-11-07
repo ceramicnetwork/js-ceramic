@@ -35,7 +35,13 @@ async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
 test('add', async () => {
   await pinApi.add(STREAM_ID)
   expect(repository.load).toBeCalledWith(STREAM_ID, { sync: SyncOptions.PREFER_CACHE, pin: true })
-  expect(repository.pin).toBeCalledWith(state$, undefined)
+  expect(repository.pin).not.toBeCalled()
+})
+
+test('add: force', async () => {
+  await pinApi.add(STREAM_ID, true)
+  expect(repository.load).toBeCalledWith(STREAM_ID, { sync: SyncOptions.PREFER_CACHE, pin: true })
+  expect(repository.pin).toBeCalled()
 })
 
 test('rm', async () => {
