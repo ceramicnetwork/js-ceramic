@@ -54,8 +54,8 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       tip: indexingArgs.tip.toString(),
       last_anchored_at: indexingArgs.lastAnchor,
       first_anchored_at: indexingArgs.firstAnchor,
-      created_at: indexingArgs.createdAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-XXX: set postgres created_at and updated_at precision to 3
-      updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-XXX: set postgres created_at and updated_at precision to 3
+      created_at: indexingArgs.createdAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
+      updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
     }
     for (const field of this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []) {
       indexedData[field] = indexingArgs.streamContent[field]
@@ -66,7 +66,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       .onConflict('stream_id')
       .merge({
         last_anchored_at: indexingArgs.lastAnchor,
-        updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-XXX: set postgres created_at and updated_at precision to 3
+        updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
       })
   }
 
@@ -87,7 +87,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       )
       .onConflict('model')
       .merge({
-        updated_at: new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-XXX: set postgres created_at and updated_at precision to 3
+        updated_at: new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
         is_indexed: true,
         updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
       })
@@ -108,7 +108,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       )
       .onConflict('model')
       .merge({
-        updated_at: new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-XXX: set postgres created_at and updated_at precision to 3
+        updated_at: new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
         is_indexed: false,
         updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
       })
