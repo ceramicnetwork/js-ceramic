@@ -18,6 +18,7 @@ import { makeDID } from '@ceramicnetwork/cli/lib/__tests__/make-did.js'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -112,8 +113,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', ( env)
   let dbConnection: Knex = null
 
   async function dropKnexTables() {
-    // FIXME: Import the 'ceramic_models' name as a constant
-    await dbConnection.schema.dropTableIfExists('ceramic_models')
+    await dbConnection.schema.dropTableIfExists(INDEXED_MODEL_CONFIG_TABLE_NAME)
     await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
     await dbConnection.schema.dropTableIfExists(modelWithRelation.id.toString())
     await dbConnection.schema.dropTableIfExists(model.id.toString())
