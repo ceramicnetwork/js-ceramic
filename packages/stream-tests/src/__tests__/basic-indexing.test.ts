@@ -13,11 +13,11 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
-import knex, { Knex } from 'knex'
-import pgSetup from '@databases/pg-test/jest/globalSetup'
-import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { makeDID } from '@ceramicnetwork/cli/lib/__tests__/make-did.js'
+import pgSetup from '@databases/pg-test/jest/globalSetup'
+import pgTeardown from '@databases/pg-test/jest/globalTeardown'
+import knex, { Knex } from 'knex'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -83,8 +83,22 @@ const extractDocuments = function (
   )
 }
 
-describe('Basic end-to-end indexing query test', () => {
-  jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
+enum DBEngine {
+  sqlite = "sqlite",
+  postgres = "postgres",
+}
+
+type BasicIndexingTestEnv = {
+  dbEngine: DBEngine
+}
+
+const envs: Array<BasicIndexingTestEnv> = [
+  { dbEngine: DBEngine.sqlite },
+  { dbEngine: DBEngine.postgres },
+]
+
+describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', ( env) => {
+  jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
   let port: number
@@ -95,9 +109,9 @@ describe('Basic end-to-end indexing query test', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
   let modelWithRelation: Model
   let midRelationMetadata: ModelInstanceDocumentMetadataArgs
-  let dbConnection: Knex
+  let dbConnection: Knex = null
 
-  async function dropTables() {
+  async function dropKnexTables() {
     // FIXME: Import the 'ceramic_models' name as a constant
     await dbConnection.schema.dropTableIfExists('ceramic_models')
     await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
@@ -107,28 +121,47 @@ describe('Basic end-to-end indexing query test', () => {
   }
 
   beforeAll(async () => {
-    await pgSetup()
+    switch (env.dbEngine) {
+      case DBEngine.postgres:
+        await pgSetup()
+    }
+
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
-    await pgTeardown()
+
+    switch (env.dbEngine) {
+      case DBEngine.postgres:
+        await pgTeardown()
+    }
   })
 
   beforeEach(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
-    dbConnection = knex({
-      client: 'pg',
-      connection: process.env.DATABASE_URL,
-    })
+    let dbURL: string
 
-    const indexingDirectory = await tmp.tmpName()
-    await fs.mkdir(indexingDirectory)
+    switch (env.dbEngine) {
+      case DBEngine.sqlite: {
+        const indexingDirectory = await tmp.tmpName()
+        await fs.mkdir(indexingDirectory)
+        dbURL = `sqlite://${indexingDirectory}/ceramic.sqlite`
+        break
+      }
+      case DBEngine.postgres:
+        dbURL = process.env.DATABASE_URL
+        dbConnection = knex({
+          client: 'pg',
+          connection: process.env.DATABASE_URL,
+        })
+        break
+    }
+
     core = await createCeramic(ipfs, {
       indexing: {
-        db: process.env.DATABASE_URL,
+        db: dbURL,
         models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
@@ -154,8 +187,12 @@ describe('Basic end-to-end indexing query test', () => {
     await ceramic.close()
     await daemon.close()
     await core.close()
-    await dropTables()
-    await dbConnection.destroy()
+
+    switch (env.dbEngine) {
+      case DBEngine.postgres:
+        await dropKnexTables()
+        await dbConnection.destroy()
+    }
   })
 
   describe('basic queries', () => {
@@ -234,7 +271,6 @@ describe('Basic end-to-end indexing query test', () => {
 
       const resultObj0 = await ceramic.index.query({ model: model.id, first: 2 })
       expect(resultObj0.pageInfo.hasNextPage).toBeTruthy()
-      // FIXME: It seems that the postgres implementation returns the last item from the previous page, if you give it after: resultObj0.pageInfo.endCursor
       const resultObj1 = await ceramic.index.query({
         model: model.id,
         first: 2,
@@ -272,6 +308,8 @@ describe('Basic end-to-end indexing query test', () => {
       await doc1.replace(CONTENT1)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+
+      console.log(`docIds: [${doc1.id.toString()}, ${doc2.id.toString()}, ${doc3.id.toString()}]`)
 
       const resultObj = await ceramic.index.query({ model: model.id, last: 100 })
       const results = extractDocuments(ceramic, resultObj)
