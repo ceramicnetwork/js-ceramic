@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile-handler",
-  "version": "2.8.0-rc.0",
+  "version": "2.8.0",
   "description": "Ceramic Tile Document stream handler",
   "keywords": [
     "ceramic",
@@ -38,10 +38,10 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.13.0-rc.0",
-    "@ceramicnetwork/stream-handler-common": "^1.3.0-rc.0",
-    "@ceramicnetwork/stream-tile": "^2.9.0-rc.0",
-    "@ceramicnetwork/streamid": "^2.7.0-rc.0",
+    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/stream-handler-common": "^1.3.0",
+    "@ceramicnetwork/stream-tile": "^2.9.0",
+    "@ceramicnetwork/streamid": "^2.7.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "fast-json-patch": "^3.1.0",
@@ -50,7 +50,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.6.0-rc.0",
+    "@ceramicnetwork/3id-did-resolver": "^2.6.0",
     "@didtools/cacao": "^1.0.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/sha256": "^1.0.1",
