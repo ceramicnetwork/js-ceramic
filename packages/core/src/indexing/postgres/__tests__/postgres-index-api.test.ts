@@ -117,7 +117,7 @@ describe('init', () => {
       await indexApi.indexModels(indexModelsArgs)
       const created = await listMidTables(dbConnection)
       const tableNames = indexModelsArgs.map((args) => `${asTableName(args.model)}`)
-      expect(created).toEqual(tableNames)
+      expect(created.sort()).toEqual(tableNames.sort())
 
       await expect(indexApi.verifyTables(indexModelsArgs)).resolves.not.toThrow()
 
@@ -138,7 +138,7 @@ describe('init', () => {
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       const created = await listMidTables(dbConnection)
       const tableNames = modelsToIndex.map(asTableName)
-      expect(created).toEqual(tableNames)
+      expect(created.sort()).toEqual(tableNames.sort())
     })
 
     test('create new table with existing ones', async () => {
@@ -149,7 +149,7 @@ describe('init', () => {
       await indexApiA.indexModels(modelsToIndexArgs(modelsA))
       const createdA = await listMidTables(dbConnection)
       const tableNamesA = modelsA.map(asTableName)
-      expect(createdA).toEqual(tableNamesA)
+      expect(createdA.sort()).toEqual(tableNamesA.sort())
 
       // Next add another one
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
@@ -157,9 +157,7 @@ describe('init', () => {
       await indexApiB.indexModels(modelsToIndexArgs(modelsB))
       const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map(asTableName)
-      createdB.sort()
-      tableNamesB.sort()
-      expect(createdB).toEqual(tableNamesB)
+      expect(createdB.sort()).toEqual(tableNamesB.sort())
     })
   })
 

@@ -145,8 +145,9 @@ export class InsertionOrder {
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
       return base.where('created_at', '>', after.created_at)
+    } else {
+      return base
     }
-    return base
   }
 
   /**

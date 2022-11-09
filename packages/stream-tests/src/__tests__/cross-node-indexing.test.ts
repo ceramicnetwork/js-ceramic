@@ -10,6 +10,10 @@ import { Ceramic } from '@ceramicnetwork/core'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import tmp from 'tmp-promise'
 import * as fs from 'fs/promises'
+import pgSetup from '@databases/pg-test/jest/globalSetup'
+import pgTeardown from '@databases/pg-test/jest/globalTeardown'
+import knex, { Knex } from 'knex'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -46,7 +50,16 @@ const extractDocuments = function (
   )
 }
 
-describe('Cross-node indexing and query test', () => {
+type CrossNodeIndexingTestEnv = {
+  ceramicInstanceWithPostgres: 1 | 2
+}
+
+const envs: Array<CrossNodeIndexingTestEnv> = [
+  { ceramicInstanceWithPostgres: 1 },
+  { ceramicInstanceWithPostgres: 2 },
+]
+
+describe.each(envs)('Cross-node indexing and query test with ceramic$ceramicInstanceWithPostgres running postgres', ( env ) => {
   jest.setTimeout(1000 * 30)
 
   let ipfs1: IpfsApi
@@ -55,16 +68,35 @@ describe('Cross-node indexing and query test', () => {
   let ceramic2: Ceramic
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let dbConnection: Knex
+
+  async function dropKnexTables() {
+    await dbConnection.schema.dropTableIfExists(INDEXED_MODEL_CONFIG_TABLE_NAME)
+    await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
+    await dbConnection.schema.dropTableIfExists(model.id.toString())
+  }
 
   beforeAll(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+
+    await pgSetup()
 
     ipfs1 = await createIPFS()
     ipfs2 = await createIPFS()
 
     // Temporarily start a Ceramic node and use it to create the Model that will be used in the
     // rest of the tests.
-    ceramic1 = await createCeramic(ipfs1)
+    if (env.ceramicInstanceWithPostgres === 1) {
+      ceramic1 = await createCeramic(ipfs1, {
+        indexing: {
+          db: process.env.DATABASE_URL,
+          models: [],
+          allowQueriesBeforeHistoricalSync: true,
+        },
+      })
+    } else {
+      ceramic1 = await createCeramic(ipfs1)
+    }
 
     model = await Model.create(ceramic1, MODEL_DEFINITION)
     midMetadata = { model: model.id }
@@ -75,24 +107,44 @@ describe('Cross-node indexing and query test', () => {
   afterAll(async () => {
     await ipfs1.stop()
     await ipfs2.stop()
+    await pgTeardown()
   })
 
   beforeEach(async () => {
-    const indexingDirectory1 = await tmp.tmpName()
-    await fs.mkdir(indexingDirectory1)
+    const indexingDirectory = await tmp.tmpName()
+    await fs.mkdir(indexingDirectory)
+
+    let ceramic1DbUrl: string
+    let ceramic2DbUrl: string
+
+    dbConnection = knex({
+      client: 'pg',
+      connection: process.env.DATABASE_URL,
+    })
+
+    switch (env.ceramicInstanceWithPostgres) {
+      case 1:
+        ceramic1DbUrl = process.env.DATABASE_URL
+        ceramic2DbUrl = `sqlite://${indexingDirectory}/ceramic.sqlite`
+        break
+      case 2:
+        ceramic2DbUrl = process.env.DATABASE_URL
+        ceramic1DbUrl = `sqlite://${indexingDirectory}/ceramic.sqlite`
+        break
+    }
+
     ceramic1 = await createCeramic(ipfs1, {
       indexing: {
-        db: `sqlite://${indexingDirectory1}/ceramic.sqlite`,
+        db: ceramic1DbUrl,
         models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })
     await ceramic1.index.indexModels([model.id])
-    const indexingDirectory2 = await tmp.tmpName()
-    await fs.mkdir(indexingDirectory2)
+
     ceramic2 = await createCeramic(ipfs2, {
       indexing: {
-        db: `sqlite://${indexingDirectory2}/ceramic.sqlite`,
+        db: ceramic2DbUrl,
         models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
@@ -103,6 +155,8 @@ describe('Cross-node indexing and query test', () => {
   afterEach(async () => {
     await ceramic1.close()
     await ceramic2.close()
+    await dropKnexTables()
+    await dbConnection.destroy()
   })
 
   test('Index is synced across nodes', async () => {
