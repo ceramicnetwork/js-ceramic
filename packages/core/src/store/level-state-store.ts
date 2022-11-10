@@ -18,7 +18,7 @@ export class LevelStateStore implements StateStore {
   #store: LevelStore
   #logger: DiagnosticsLogger
 
-  constructor(private storeRoot: string, logger: DiagnosticsLogger) {
+  constructor(logger: DiagnosticsLogger) {
     this.#logger = logger
   }
 
@@ -40,19 +40,20 @@ export class LevelStateStore implements StateStore {
    * Always store the pinning state in a network-specific directory.
    */
   async open(store: LevelStore): Promise<void> {
-    if (store.networkName == Networks.MAINNET || store.networkName == Networks.ELP) {
+    this.#store = store
+    await this.#store.init()
+    if (this.#store.networkName == Networks.MAINNET || this.#store.networkName == Networks.ELP) {
       // If using "mainnet", check for data under an 'elp' directory first. This is because older
       // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored
       // state store data under 'elp' instead of 'mainnet' by mistake, and we don't want to lose
       // that data if it exists.
-      const hasPinnedStreams = !(await store.isEmpty({ all: this.getStreamKey() }))
+      const hasPinnedStreams = !(await this.#store.isEmpty({ all: this.getStreamKey() }))
       if (hasPinnedStreams) {
         this.#logger.verbose(
           `Detected existing state store data under 'elp' directory. Continuing to use 'elp' directory to store state store data`
         )
       }
     }
-    this.#store = store
   }
 
   /**
@@ -121,6 +122,7 @@ export class LevelStateStore implements StateStore {
    * Close pinning service
    */
   async close(): Promise<void> {
+    await this.#store.close()
     this.#store = undefined
   }
 }

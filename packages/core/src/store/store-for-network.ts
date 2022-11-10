@@ -7,6 +7,7 @@ export interface StoreForNetwork {
   networkName: string
 
   init(): Promise<void>
+  close(): Promise<void>
   isEmpty(params?: StoreSearchParams): Promise<boolean>
   find(params?: StoreSearchParams): Promise<string[]>
   put(key: string, value: string): Promise<void>

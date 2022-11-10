@@ -43,14 +43,10 @@ export class LevelStore implements StoreForNetwork {
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
-    const searchParams: Record<string, any> = {
-      keys: true,
-      values: false,
+    const result = await this.find({
       limit: 1,
       ...params
-    }
-
-    const result = await this.#store.stream(searchParams)
+    })
     return result.length > 0
   }
 
@@ -67,5 +63,10 @@ export class LevelStore implements StoreForNetwork {
 
   async put(key: string, value: string): Promise<void> {
     return await this.#store.put(key, value)
+  }
+
+  async close(): Promise<void> {
+    // do nothing
+    return
   }
 }
