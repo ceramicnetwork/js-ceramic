@@ -17,6 +17,7 @@ import {
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
+import { addColumnPrefix } from '../../column-name.util.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -124,7 +125,7 @@ describe('init', () => {
       // Also manually check table structure
       const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
       const expectedTableStructure = Object.assign({}, COMMON_TABLE_STRUCTURE, {
-        fooRelation: RELATION_COLUMN_STRUCTURE,
+        [addColumnPrefix('fooRelation')]: RELATION_COLUMN_STRUCTURE,
       })
       expect(JSON.stringify(columns)).toEqual(JSON.stringify(expectedTableStructure))
     })

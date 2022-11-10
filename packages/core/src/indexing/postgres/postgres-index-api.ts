@@ -7,6 +7,7 @@ import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
+import { addColumnPrefix } from '../column-name.util.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
@@ -152,7 +153,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     if (query.filter) {
       for (const [key, value] of Object.entries(query.filter)) {
         const filterObj = {}
-        filterObj[key] = value
+        filterObj[addColumnPrefix(key)] = value
         dbQuery = dbQuery.andWhere(filterObj)
       }
     }
