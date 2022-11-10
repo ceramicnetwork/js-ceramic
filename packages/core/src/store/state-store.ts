@@ -15,7 +15,6 @@ export type StateStoreParams = {
 
 export class StateStore implements StateStoreInterface {
   #logger: DiagnosticsLogger
-  #keyPrefix = 'state-store'
   #store: StoreForNetwork
 
   constructor(params: StateStoreParams) {
@@ -30,7 +29,7 @@ export class StateStore implements StateStoreInterface {
   }
 
   private getFullKey(streamID: StreamID): string {
-    return `${this.#keyPrefix}-${streamID.toString()}`
+    return streamID.toString()
   }
 
   async open(store: StoreForNetwork): Promise<void> {
@@ -41,7 +40,7 @@ export class StateStore implements StateStoreInterface {
       // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored
       // state store data under 'elp' instead of 'mainnet' by mistake, and we don't want to lose
       // that data if it exists.
-      const hasPinnedStreams = !(await this.#store.isEmpty({ all: `${this.#keyPrefix}-` }))
+      const hasPinnedStreams = !(await this.#store.isEmpty())
       if (hasPinnedStreams) {
         this.#logger.verbose(
           `Detected existing state store data under 'elp' directory. Continuing to use 'elp' directory to store state store data`
@@ -81,11 +80,7 @@ export class StateStore implements StateStoreInterface {
   async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     if (streamId == null) {
-      const findParams = { all: `${this.#keyPrefix}-`, limit }
-      const results = await this.#store.find(findParams)
-      return results.map( prefixedStreamID => {
-        return prefixedStreamID.split(this.#keyPrefix)[1]
-      } )
+      return await this.#store.find({ limit })
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []
