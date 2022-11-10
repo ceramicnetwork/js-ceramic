@@ -8,30 +8,18 @@ import {
   StreamStateHolder,
   StreamUtils
 } from '@ceramicnetwork/common'
-import PQueue from 'p-queue'
 
 export type StateStoreParams = {
   logger: DiagnosticsLogger
-  keyPrefix?: string
-  maxReqsPerSec?: number
 }
 
 export class StateStore implements StateStoreInterface {
   #logger: DiagnosticsLogger
-  #keyPrefix: string
+  #keyPrefix = 'state-store'
   #store: StoreForNetwork
-  readonly #loadingLimit: PQueue
 
   constructor(params: StateStoreParams) {
     this.#logger = params.logger
-    this.#keyPrefix = params.keyPrefix ?? 'state-store'
-    if (params.maxReqsPerSec) {
-      this.#loadingLimit = new PQueue({
-        intervalCap: params.maxReqsPerSec,
-        interval: 1000,
-        carryoverConcurrencyCount: true,
-      })
-    }
   }
 
   /**
@@ -45,24 +33,6 @@ export class StateStore implements StateStoreInterface {
     return this.#keyPrefix ?
       `${this.#keyPrefix}-${streamID.toString()}` :
       streamID.toString()
-  }
-
-  private async _load(streamId: StreamID): Promise<StreamState> {
-    try {
-      const state = await this.#store.get(
-        this.getFullKey(streamId.baseID)
-      )
-      if (state) {
-        return StreamUtils.deserializeState(state)
-      } else {
-        return null
-      }
-    } catch (err) {
-      if (err.notFound) {
-        return null // return null for non-existent entry
-      }
-      throw err
-    }
   }
 
   async open(store: StoreForNetwork): Promise<void> {
@@ -88,12 +58,20 @@ export class StateStore implements StateStoreInterface {
    * @param streamId - Stream ID
    */
   async load(streamId: StreamID): Promise<StreamState> {
-    if (this.#loadingLimit) {
-      return this.#loadingLimit.add(async () => {
-        return await this._load(streamId)
-      })
-    } else {
-      return await this._load(streamId)
+    try {
+      const state = await this.#store.get(
+        this.getFullKey(streamId.baseID)
+      )
+      if (state) {
+        return StreamUtils.deserializeState(state)
+      } else {
+        return null
+      }
+    } catch (err) {
+      if (err.notFound) {
+        return null // return null for non-existent entry
+      }
+      throw err
     }
   }
 

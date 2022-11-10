@@ -49,7 +49,6 @@ import { LocalIndexApi } from './indexing/local-index-api.js'
 import { ShutdownSignal } from './shutdown-signal.js'
 import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelStore } from './store/level-store.js'
-import { StateStore } from './store/state-store.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
