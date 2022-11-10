@@ -24,7 +24,7 @@ import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
 const DEFAULT_CONFIG_PATH = new URL('.ceramic/', HOMEDIR)
-const DEFAULT_STATE_STORE_DIRECTORY = new URL('state-store/', DEFAULT_CONFIG_PATH)
+const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH)
 const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
@@ -131,7 +131,7 @@ export class CeramicCliUtils {
       // overriding DaemonConfig with CLI flags into another helper function.
       if (stateStoreDirectory && stateStoreS3Bucket) {
         throw new Error(
-          'Cannot specify both --storage-directory and --storage-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
+          'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
         )
       }
 
