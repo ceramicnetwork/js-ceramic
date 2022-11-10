@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../level-state-store.js'
 import {
   AnchorStatus,
   Stream,

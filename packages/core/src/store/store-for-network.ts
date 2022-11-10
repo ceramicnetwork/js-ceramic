@@ -1,5 +1,4 @@
 export type StoreSearchParams = {
-  all?: string
   limit?: number
 }
 
