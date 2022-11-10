@@ -5,6 +5,7 @@ import { StateStoreInterface } from './state-store-interface.js'
 import type { CID } from 'multiformats/cid'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { Repository } from '../state-management/repository.js'
+import { StateStore } from './state-store.js'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
@@ -32,10 +33,9 @@ export class PinStoreFactory {
       props.pinningBackends && props.pinningBackends.length > 0
         ? props.pinningBackends
         : [IpfsPinning]
-  }
-
-  public setStateStore(stateStore: StateStoreInterface): void {
-    this._stateStore = stateStore
+    this._stateStore = new StateStore({
+      logger: logger
+    })
   }
 
   public createPinStore(): PinStore {

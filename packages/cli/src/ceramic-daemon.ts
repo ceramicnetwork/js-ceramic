@@ -4,7 +4,6 @@ import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
-import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
@@ -37,7 +36,7 @@ import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 import lru from 'lru_map'
-import { StateStore } from '@ceramicnetwork/core/lib/store/state-store'
+import { S3Store } from './s3-store.js'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -291,12 +290,8 @@ export class CeramicDaemon {
     )
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3StateStore = new StateStore({
-        logger: modules.loggerProvider.getDiagnosticsLogger()
-      })
-      // FIXME: CDB-2008 : LOL!!! As state store is injected here only for the case of S3 storage (and I assume that if it's not S3, then the modeules from ceramic.ts are used)
-      // , this means that instead of injecting StateStore, I actually need to inject S3Store (i.e. the injection method needs to accept a StorePerNetwork, not StateStore)
-      modules.pinStoreFactory.setStateStore(s3StateStore)
+      const s3Store = new S3Store(opts.stateStore?.s3Bucket, params.networkOptions.name)
+      await modules.repository.injectStorage(s3Store)
     }
 
     const ceramic = new Ceramic(modules, params)

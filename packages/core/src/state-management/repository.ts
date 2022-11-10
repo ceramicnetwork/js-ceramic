@@ -97,6 +97,14 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  async injectStorage(storage: StoreForNetwork): Promise<void> {
+    this.setDeps({
+      ...this.#deps,
+      storage: storage
+    })
+    await this.init()
+  }
+
   async init(): Promise<void> {
     await this.pinStore.open(this.#deps.storage)
     await this.index.init()
