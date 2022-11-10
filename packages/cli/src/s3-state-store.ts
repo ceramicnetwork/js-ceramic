@@ -3,11 +3,10 @@ import {
   Stream,
   StreamUtils,
   DiagnosticsLogger,
-  Networks,
+  Networks, StreamStateHolder
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { StateStore } from '@ceramicnetwork/core'
-import toArray from 'stream-to-array'
+import { StateStoreInterface } from '@ceramicnetwork/core'
 import PQueue from 'p-queue'
 import { S3Store } from './s3-store.js'
 
@@ -17,17 +16,9 @@ import { S3Store } from './s3-store.js'
 const MAX_LOAD_RPS = 4000
 
 /**
- * Helper function for listing keys from a given S3 LevelDB instance.
- */
-async function _listAll(store, limit?: number): Promise<string[]> {
-  const bufArray = await toArray(store.createKeyStream({ limit }))
-  return bufArray.map((buf) => buf.toString())
-}
-
-/**
  * Ceramic store for saving stream state to S3
  */
-export class S3StateStore implements StateStore {
+export class S3StateStore implements StateStoreInterface {
   #store: S3Store
   #logger: DiagnosticsLogger
   /**
@@ -68,10 +59,21 @@ export class S3StateStore implements StateStore {
    * Pin stream
    * @param stream - Stream instance
    */
-  async save(stream: Stream): Promise<void> {
+  async saveFromStream(stream: Stream): Promise<void> {
     await this.#store.put(
       stream.id.baseID.toString(),
       JSON.stringify(StreamUtils.serializeState(stream.state))
+    )
+  }
+
+  /**
+   * Pin stream
+   * @param streamStateHolder - Stream instance
+   */
+  async saveFromStreamStateHolder(streamStateHolder: StreamStateHolder): Promise<void> {
+    await this.#store.put(
+      streamStateHolder.id.toString(),
+      StreamUtils.serializeState(streamStateHolder.state)
     )
   }
 

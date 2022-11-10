@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { PinStore } from '../pin-store.js'
-import { StateStore } from '../state-store.js'
+import { StateStoreInterface } from '../state-store-interface.js'
 import {
   AnchorStatus,
   SignatureStatus,
@@ -17,7 +17,7 @@ import { RunningState } from '../../state-management/running-state.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 
-let stateStore: StateStore
+let stateStore: StateStoreInterface
 let pinning: PinningBackend
 const NETWORK = 'fakeNetwork'
 

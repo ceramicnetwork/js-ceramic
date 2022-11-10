@@ -1,4 +1,4 @@
-import { StateStore } from './state-store.js'
+import { StateStoreInterface } from './state-store-interface.js'
 import { base64urlToJSON, PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -10,7 +10,7 @@ import { Model } from '@ceramicnetwork/stream-model'
  */
 export class PinStore {
   constructor(
-    readonly stateStore: StateStore,
+    readonly stateStore: StateStoreInterface,
     readonly pinning: PinningBackend,
     readonly retrieve: (cid: CID) => Promise<any | null>,
     readonly resolve: (path: string) => Promise<CID>,

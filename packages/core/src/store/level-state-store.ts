@@ -1,11 +1,11 @@
 import {
   DiagnosticsLogger,
-  Networks,
+  Networks, Stream,
   StreamState,
   StreamStateHolder,
-  StreamUtils,
+  StreamUtils
 } from '@ceramicnetwork/common'
-import { StateStore } from './state-store.js'
+import { StateStoreInterface } from './state-store-interface.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LevelStore } from './level-store.js'
 
@@ -13,7 +13,7 @@ import { LevelStore } from './level-store.js'
 /**
  * Ceramic store for saving stream state to a local leveldb instance
  */
-export class LevelStateStore implements StateStore {
+export class LevelStateStore implements StateStoreInterface {
   #stateStoreStream = 'state-store'
   #store: LevelStore
   #logger: DiagnosticsLogger
@@ -60,10 +60,21 @@ export class LevelStateStore implements StateStore {
    * Pin stream
    * @param streamStateHolder - Stream instance
    */
-  async save(streamStateHolder: StreamStateHolder): Promise<void> {
+  async saveFromStreamStateHolder(streamStateHolder: StreamStateHolder): Promise<void> {
     await this.#store.put(
       this.getStreamKey(streamStateHolder.id),
       StreamUtils.serializeState(streamStateHolder.state)
+    )
+  }
+
+  /**
+   * Pin stream
+   * @param stream - Stream instance
+   */
+  async saveFromStream(stream: Stream): Promise<void> {
+    await this.#store.put(
+      this.getStreamKey(stream.id.baseID),
+      JSON.stringify(StreamUtils.serializeState(stream.state))
     )
   }
 
