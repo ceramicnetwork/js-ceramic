@@ -27,7 +27,7 @@ import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { instrumentRequests } from './daemon/instrument-requests.js'
 import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
-import { DaemonConfig, StorageMode } from './daemon-config.js'
+import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
@@ -86,8 +86,8 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
   }
-  if (opts.storage?.mode == StorageMode.FS) {
-    ceramicConfig.stateStoreDirectory = opts.storage.localDirectory
+  if (opts.stateStore?.mode == StateStoreMode.FS) {
+    ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
   }
 
   return ceramicConfig
@@ -289,9 +289,9 @@ export class CeramicDaemon {
       `Connecting to IPFS node available as ${ipfsId.addresses.map(String).join(', ')}`
     )
 
-    if (opts.storage?.mode == StorageMode.S3) {
-      const s3Store = new S3Store(opts.storage?.s3Bucket, params.networkOptions.name)
-      await modules.repository.injectStorage(s3Store)
+    if (opts.stateStore?.mode == StateStoreMode.S3) {
+      const s3Store = new S3Store(opts.stateStore?.s3Bucket, params.networkOptions.name)
+      await modules.repository.injectStateStore(s3Store)
     }
 
     const ceramic = new Ceramic(modules, params)

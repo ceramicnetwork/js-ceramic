@@ -16,12 +16,12 @@ program
   .option('--anchor-service-api <url>', 'The anchor service URL to use. Deprecated.')
   .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints. Deprecated')
   .option(
-    '--storage-directory <string>',
-    `The directory path used for storage. Defaults to HOME_DIR/.ceramic/storage. Deprecated.`
+    '--state-store-directory <string>',
+    `The directory path used for state storage. Defaults to HOME_DIR/.ceramic/state-store. Deprecated.`
   )
   .option(
-    '--storage-s3-bucket <string>',
-    `The S3 bucket name to use for storage. If not provided data will only be saved locally but not to S3. Deprecated.`
+    '--state-store-s3-bucket <string>',
+    `The S3 bucket name to use for state store. If not provided data will only be saved locally but not to S3. Deprecated.`
   )
   .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
   .option('--port <int>', 'Port daemon is available on. Default is 7007')

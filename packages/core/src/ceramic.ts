@@ -85,7 +85,7 @@ const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 // FIXME: CDB-2008 : remember about migration from 'statestore' to 'storage'
-export const DEFAULT_STORAGE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'storage')
+export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 
 /**
  * Ceramic configuration
@@ -93,7 +93,7 @@ export const DEFAULT_STORAGE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'st
 export interface CeramicConfig {
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
-  storageDirectory?: string
+  stateStoreDirectory?: string
 
   ipfsPinningEndpoints?: string[]
   pinningBackends?: PinningBackendStatic[]
@@ -210,7 +210,7 @@ export class Ceramic implements CeramicApi {
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
 
-    this._levelStore = new LevelStore(DEFAULT_STORAGE_DIRECTORY, this._networkOptions.name)
+    this._levelStore = new LevelStore(DEFAULT_STATE_STORE_DIRECTORY, this._networkOptions.name)
 
     this.context = {
       api: this,
@@ -243,7 +243,7 @@ export class Ceramic implements CeramicApi {
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
-      storage: this._levelStore,
+      stateStore: this._levelStore,
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,

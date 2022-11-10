@@ -25,15 +25,15 @@ describe('reading from file', () => {
       logger: {
         'log-directory': './log-dir/',
       },
-      'storage': {
-        'local-directory': './storage/',
+      'state-store': {
+        'local-directory': './state-store/',
       },
     }
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     expect(read.logger.logDirectory).toEqual(new URL('./log-dir/', configFilepath).pathname)
     expect(read.stateStore.localDirectory).toEqual(
-      new URL('./storage/', configFilepath).pathname
+      new URL('./state-store/', configFilepath).pathname
     )
   })
   test('expand home-dir path', async () => {
@@ -41,42 +41,42 @@ describe('reading from file', () => {
       logger: {
         'log-directory': '~/log-dir/',
       },
-      'storage': {
-        'local-directory': '~/storage/',
+      'state-store': {
+        'local-directory': '~/state-store/',
       },
     }
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     const home = new URL(`file://${homedir()}/`)
     expect(read.logger.logDirectory).toEqual(new URL('./log-dir/', home).pathname)
-    expect(read.storage.localDirectory).toEqual(new URL('./storage/', home).pathname)
+    expect(read.storage.localDirectory).toEqual(new URL('./state-store/', home).pathname)
   })
   test('expand cwd path', async () => {
     const config = {
       logger: {
         'log-directory': '~+/log-dir/',
       },
-      'storage': {
-        'local-directory': '~+/storage/',
+      'state-store': {
+        'local-directory': '~+/state-store/',
       },
     }
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     expect(read.logger.logDirectory).toEqual(`${process.cwd()}/log-dir/`)
-    expect(read.storage.localDirectory).toEqual(`${process.cwd()}/storage/`)
+    expect(read.stateStore.localDirectory).toEqual(`${process.cwd()}/state-store/`)
   })
   test('do not expand absolute path', async () => {
     const config = {
       logger: {
         'log-directory': '/log-dir/',
       },
-      'storage': {
-        'local-directory': '/var/ceramic/storage/',
+      'state-store': {
+        'local-directory': '/var/ceramic/state-store/',
       },
     }
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     expect(read.logger.logDirectory).toEqual('/log-dir/')
-    expect(read.storage.localDirectory).toEqual('/var/ceramic/storage/')
+    expect(read.stateStore.localDirectory).toEqual('/var/ceramic/state-store/')
   })
 })

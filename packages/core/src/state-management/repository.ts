@@ -31,7 +31,7 @@ import { StoreForNetwork } from '../store/store-for-network.js'
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
-  storage: StoreForNetwork
+  stateStore: StoreForNetwork
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
@@ -97,16 +97,16 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async injectStorage(storage: StoreForNetwork): Promise<void> {
+  async injectStateStore(stateStore: StoreForNetwork): Promise<void> {
     this.setDeps({
       ...this.#deps,
-      storage: storage
+      stateStore: stateStore
     })
     await this.init()
   }
 
   async init(): Promise<void> {
-    await this.pinStore.open(this.#deps.storage)
+    await this.pinStore.open(this.#deps.stateStore)
     await this.index.init()
   }
 

@@ -40,7 +40,7 @@ beforeAll(async () => {
     anchor: {},
     ipfs: {},
     network: { 'pubsub-topic': TOPIC },
-    'storage': { mode: StateStoreMode.FS, 'local-directory': stateStoreDirectory },
+    'state-store': { mode: StateStoreMode.FS, 'local-directory': stateStoreDirectory },
     'http-api': { port: daemonPort, corsAllowedOrigins: ['.*'] },
     node: {},
     logger: {
