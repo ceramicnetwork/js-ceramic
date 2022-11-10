@@ -16,12 +16,12 @@ program
   .option('--anchor-service-api <url>', 'The anchor service URL to use. Deprecated.')
   .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints. Deprecated')
   .option(
-    '--state-store-directory <string>',
-    `The directory path used for storing pinned stream state. Defaults to HOME_DIR/.ceramic/statestore. Deprecated.`
+    '--storage-directory <string>',
+    `The directory path used for storage. Defaults to HOME_DIR/.ceramic/storage. Deprecated.`
   )
   .option(
-    '--state-store-s3-bucket <string>',
-    `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3. Deprecated.`
+    '--storage-s3-bucket <string>',
+    `The S3 bucket name to use for storage. If not provided data will only be saved locally but not to S3. Deprecated.`
   )
   .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
   .option('--port <int>', 'Port daemon is available on. Default is 7007')

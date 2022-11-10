@@ -11,7 +11,7 @@ import { CeramicApi, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/com
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
-import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
+import { DaemonConfig, IpfsMode, StorageMode } from './daemon-config.js'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -24,7 +24,7 @@ import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
 const DEFAULT_CONFIG_PATH = new URL('.ceramic/', HOMEDIR)
-const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH)
+const DEFAULT_STORAGE_DIRECTORY = new URL('storage/', DEFAULT_CONFIG_PATH)
 const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
@@ -42,9 +42,9 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   },
   network: { name: Networks.TESTNET_CLAY },
   node: {},
-  'state-store': {
-    mode: StateStoreMode.FS,
-    'local-directory': DEFAULT_STATE_STORE_DIRECTORY.pathname,
+  'storage': {
+    mode: StorageMode.FS,
+    'local-directory': DEFAULT_STORAGE_DIRECTORY.pathname,
   },
   indexing: {
     db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
@@ -74,8 +74,8 @@ export class CeramicCliUtils {
    * @param ethereumRpc - Ethereum RPC URL. Deprecated, use config file if you want to configure this.
    * @param anchorServiceApi - Anchor service API URL. Deprecated, use config file if you want to configure this.
    * @param ipfsPinningEndpoints - Ipfs pinning endpoints. Deprecated, use config file if you want to configure this.
-   * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state. Deprecated, use config file if you want to configure this.
-   * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state. Deprecated, use config file if you want to configure this.
+   * @param storageDirectory - Path to the directory that will be used for storing data. Deprecated, use config file if you want to configure this.
+   * @param storageS3Bucket - S3 bucket name for storing data. Deprecated, use config file if you want to configure this.
    * @param gateway - read only endpoints available. It is disabled by default
    * @param port - port on which daemon is available. Default is 7007
    * @param hostname - hostname to listen on.
@@ -96,8 +96,8 @@ export class CeramicCliUtils {
     ethereumRpc: string,
     anchorServiceApi: string,
     ipfsPinningEndpoints: string[],
-    stateStoreDirectory: string,
-    stateStoreS3Bucket: string,
+    storageDirectory: string,
+    storageS3Bucket: string,
     gateway: boolean,
     port: number,
     hostname: string,
@@ -129,9 +129,9 @@ export class CeramicCliUtils {
       // CLI flags override values from environment variables and config file
       // todo: Make interface for CLI flags, separate flag validation into helper function, separate
       // overriding DaemonConfig with CLI flags into another helper function.
-      if (stateStoreDirectory && stateStoreS3Bucket) {
+      if (storageDirectory && storageS3Bucket) {
         throw new Error(
-          'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
+          'Cannot specify both --storage-directory and --storage-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
         )
       }
 
@@ -187,13 +187,13 @@ export class CeramicCliUtils {
       if (syncOverride) {
         config.node.syncOverride = syncOverride
       }
-      if (stateStoreDirectory) {
-        config.stateStore.mode = StateStoreMode.FS
-        config.stateStore.localDirectory = stateStoreDirectory
+      if (storageDirectory) {
+        config.storage.mode = StorageMode.FS
+        config.storage.localDirectory = storageDirectory
       }
-      if (stateStoreS3Bucket) {
-        config.stateStore.mode = StateStoreMode.S3
-        config.stateStore.s3Bucket = stateStoreS3Bucket
+      if (storageS3Bucket) {
+        config.storage.mode = StorageMode.S3
+        config.storage.s3Bucket = storageS3Bucket
       }
     }
     const daemon = await CeramicDaemon.create(config)

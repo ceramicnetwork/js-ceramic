@@ -25,7 +25,8 @@ export class S3Store implements StoreForNetwork {
   }
 
   async init(): Promise<void> {
-    const location = this.#bucketName + '/ceramic/' + this.networkName + '/state-store'
+    // TODO: CDB-XXXX Manage migration from `state-store` to 'storage'??
+    const location = this.#bucketName + '/ceramic/' + this.networkName + '/storage'
     // @ts-ignore
     this.#store = new LevelUp(new S3LevelDOWN(location))
   }

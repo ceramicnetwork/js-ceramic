@@ -32,9 +32,9 @@ function expandPaths(config: DaemonConfig, configFilepath: URL): void {
   if (config.logger?.logDirectory) {
     config.logger.logDirectory = expandSinglePath(config.logger.logDirectory, configFilepath)
   }
-  if (config.stateStore?.localDirectory) {
-    config.stateStore.localDirectory = expandSinglePath(
-      config.stateStore.localDirectory,
+  if (config.storage?.localDirectory) {
+    config.storage.localDirectory = expandSinglePath(
+      config.storage.localDirectory,
       configFilepath
     )
   }
@@ -77,9 +77,9 @@ export class DaemonIpfsConfig {
 }
 
 /**
- * Whether the Ceramic state store should store its data on the local filesystem or in Amazon S3.
+ * Whether the Ceramic storage should store its data on the local filesystem or in Amazon S3.
  */
-export enum StateStoreMode {
+export enum StorageMode {
   S3 = 's3',
   FS = 'fs',
 }
@@ -89,12 +89,12 @@ export enum StateStoreMode {
  */
 @jsonObject
 @toJson
-export class DaemonStateStoreConfig {
+export class DaemonStorageConfig {
   /**
    * Controls whether the state store stores data in the local filesystem or in Amazon S3
    */
   @jsonMember(String)
-  mode?: StateStoreMode
+  mode?: StorageMode
 
   /**
    * If mode is 'fs', this controls where on the local file system to put the state store data.
@@ -397,11 +397,11 @@ export class DaemonConfig {
   node: DaemonCeramicNodeConfig
 
   /**
-   * Options related to the state store.
-   * When specifying in a config file, use the name 'state-store'.
+   * Options related to the storage.
+   * When specifying in a config file, use the name 'storage'.
    */
-  @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
-  stateStore: DaemonStateStoreConfig
+  @jsonMember(DaemonStorageConfig, { name: 'storage' })
+  storage: DaemonStorageConfig
 
   /**
    * Options related to DID-resolvers.

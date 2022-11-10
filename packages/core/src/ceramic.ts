@@ -93,7 +93,7 @@ export const DEFAULT_STORAGE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'st
 export interface CeramicConfig {
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
-  stateStoreDirectory?: string
+  storageDirectory?: string
 
   ipfsPinningEndpoints?: string[]
   pinningBackends?: PinningBackendStatic[]
