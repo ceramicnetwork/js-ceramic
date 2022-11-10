@@ -1,8 +1,9 @@
 import type { StreamState, StreamStateHolder } from '@ceramicnetwork/common'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { StoreForNetwork } from './store-for-network.js'
 
 export interface StateStore {
-  open(networkName: string): Promise<void>
+  open(store: StoreForNetwork): Promise<void>
   close(): Promise<void>
   save(streamStateHolder: StreamStateHolder): Promise<void>
   load(streamId: StreamID): Promise<StreamState | null>
