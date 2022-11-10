@@ -39,7 +39,7 @@ export class LevelStore implements StoreForNetwork {
   }
 
   async get(key: string): Promise<string> {
-    return await this.#store.get(key)
+    return  await this.#store.get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -57,8 +57,8 @@ export class LevelStore implements StoreForNetwork {
       ...params
     }
 
-    const results = await this.#store.stream(seachParams)
-    return results.map( result => { return result.value } )
+    // The return type of .stram is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
+    return (await this.#store.stream(seachParams)) as unknown as Array<string>
   }
 
   async put(key: string, value: string): Promise<void> {

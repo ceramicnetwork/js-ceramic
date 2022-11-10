@@ -30,9 +30,7 @@ export class StateStore implements StateStoreInterface {
   }
 
   private getFullKey(streamID: StreamID): string {
-    return this.#keyPrefix ?
-      `${this.#keyPrefix}-${streamID.toString()}` :
-      streamID.toString()
+    return `${this.#keyPrefix}-${streamID.toString()}`
   }
 
   async open(store: StoreForNetwork): Promise<void> {
@@ -43,8 +41,7 @@ export class StateStore implements StateStoreInterface {
       // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored
       // state store data under 'elp' instead of 'mainnet' by mistake, and we don't want to lose
       // that data if it exists.
-      const isEmptyParams = this.#keyPrefix ?  { all: `${this.#keyPrefix}-` } : undefined
-      const hasPinnedStreams = !(await this.#store.isEmpty(isEmptyParams))
+      const hasPinnedStreams = !(await this.#store.isEmpty({ all: `${this.#keyPrefix}-` }))
       if (hasPinnedStreams) {
         this.#logger.verbose(
           `Detected existing state store data under 'elp' directory. Continuing to use 'elp' directory to store state store data`
@@ -58,6 +55,7 @@ export class StateStore implements StateStoreInterface {
    * @param streamId - Stream ID
    */
   async load(streamId: StreamID): Promise<StreamState> {
+    if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     try {
       const state = await this.#store.get(
         this.getFullKey(streamId.baseID)
@@ -81,9 +79,13 @@ export class StateStore implements StateStoreInterface {
    * @param limit - limit on number of results
    */
   async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
+    if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     if (streamId == null) {
-      const findParams = this.#keyPrefix ?  { all: `${this.#keyPrefix}-`, limit } : { limit }
-      return await this.#store.find(findParams)
+      const findParams = { all: `${this.#keyPrefix}-`, limit }
+      const results = await this.#store.find(findParams)
+      return results.map( prefixedStreamID => {
+        return prefixedStreamID.split(this.#keyPrefix)[1]
+      } )
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []
@@ -95,6 +97,7 @@ export class StateStore implements StateStoreInterface {
    * @param stream - Stream instance
    */
   async saveFromStream(stream: Stream): Promise<void> {
+    if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.put(
       this.getFullKey(stream.id.baseID),
       JSON.stringify(StreamUtils.serializeState(stream.state))
@@ -106,6 +109,7 @@ export class StateStore implements StateStoreInterface {
    * @param streamStateHolder - Stream instance
    */
   async saveFromStreamStateHolder(streamStateHolder: StreamStateHolder): Promise<void> {
+    if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.put(
       this.getFullKey(streamStateHolder.id),
       StreamUtils.serializeState(streamStateHolder.state)
@@ -117,6 +121,7 @@ export class StateStore implements StateStoreInterface {
    * @param streamId - Stream ID
    */
   async remove(streamId: StreamID): Promise<void> {
+    if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.del(
       this.getFullKey(streamId.baseID)
     )
@@ -126,6 +131,7 @@ export class StateStore implements StateStoreInterface {
    * Close pinning service
    */
   async close(): Promise<void> {
+    if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.close()
     this.#store = undefined
   }
