@@ -77,7 +77,7 @@ export class DaemonIpfsConfig {
 }
 
 /**
- * Whether the Ceramic state store should store its data on the local filesystem or in Amazon S3.
+ * Whether the Ceramic storage should store its data on the local filesystem or in Amazon S3.
  */
 export enum StateStoreMode {
   S3 = 's3',

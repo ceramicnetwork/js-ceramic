@@ -4,12 +4,13 @@ import { CID } from 'multiformats/cid'
 import { LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TaskQueue } from '../pubsub/task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ShutdownSignal } from '../shutdown-signal.js'
+import { LevelStore } from '../store/level-store.js'
+import { StateStore } from '../store/state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -29,8 +30,9 @@ describe('Dispatcher with real ipfs over http', () => {
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
-    const stateStore = new LevelStateStore(levelPath)
-    stateStore.open('test')
+    const levelStore = new LevelStore(levelPath, 'test')
+    const stateStore = new StateStore(loggerProvider.getDiagnosticsLogger())
+    stateStore.open(levelStore)
     const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,

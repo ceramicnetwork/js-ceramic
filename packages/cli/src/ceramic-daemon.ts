@@ -4,7 +4,6 @@ import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
-import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
@@ -37,6 +36,7 @@ import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 import lru from 'lru_map'
+import { S3Store } from './s3-store.js'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -290,11 +290,8 @@ export class CeramicDaemon {
     )
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3StateStore = new S3StateStore(
-        opts.stateStore?.s3Bucket,
-        modules.loggerProvider.getDiagnosticsLogger()
-      )
-      modules.pinStoreFactory.setStateStore(s3StateStore)
+      const s3Store = new S3Store(opts.stateStore?.s3Bucket, params.networkOptions.name)
+      await modules.repository.injectStateStore(s3Store)
     }
 
     const ceramic = new Ceramic(modules, params)
