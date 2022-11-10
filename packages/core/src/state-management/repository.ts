@@ -6,7 +6,6 @@ import {
   Context,
   CreateOpts,
   LoadOpts,
-  Networks,
   PinningOpts,
   PublishOpts,
   StreamState,
@@ -27,10 +26,12 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
+import { StoreForNetwork } from '../store/store-for-network.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
+  storage: StoreForNetwork
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
@@ -96,8 +97,8 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async init(networkName: string): Promise<void> {
-    await this.pinStore.open(networkName)
+  async init(): Promise<void> {
+    await this.pinStore.open(this.#deps.storage)
     await this.index.init()
   }
 

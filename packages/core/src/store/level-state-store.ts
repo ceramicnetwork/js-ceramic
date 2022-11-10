@@ -36,6 +36,13 @@ export class LevelStateStore implements StateStoreInterface {
   }
 
   /**
+   * Gets network name
+   */
+  get networkName(): string {
+    return this.#store.networkName
+  }
+
+  /**
    * Open pinning service.
    * Always store the pinning state in a network-specific directory.
    */

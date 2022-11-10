@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
 import { Model } from '@ceramicnetwork/stream-model'
+import { StoreForNetwork } from './store-for-network.js'
 
 /**
  * Encapsulates logic for pinning streams
@@ -17,8 +18,8 @@ export class PinStore {
     readonly loadStream: (streamID: StreamID) => Promise<RunningState>
   ) {}
 
-  async open(networkName: string): Promise<void> {
-    await this.stateStore.open(networkName)
+  async open(store: StoreForNetwork): Promise<void> {
+    await this.stateStore.open(store)
     this.pinning.open()
   }
 
@@ -52,7 +53,7 @@ export class PinStore {
 
     const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
-    await this.stateStore.save(runningState)
+    await this.stateStore.saveFromStreamStateHolder(runningState)
     runningState.markAsPinned()
 
     const model = runningState.state.metadata.model

@@ -24,7 +24,7 @@ export class StateStore implements StateStoreInterface {
 
   constructor(params: StateStoreParams) {
     this.#logger = params.logger
-    this.#keyPrefix = params.keyPrefix
+    this.#keyPrefix = params.keyPrefix ?? 'state-store'
     if (params.maxReqsPerSec) {
       this.#loadingLimit = new PQueue({
         intervalCap: params.maxReqsPerSec,
@@ -32,6 +32,13 @@ export class StateStore implements StateStoreInterface {
         carryoverConcurrencyCount: true,
       })
     }
+  }
+
+  /**
+   * Gets network name
+   */
+  get networkName(): string {
+    return this.#store.networkName
   }
 
   private getFullKey(streamID: StreamID): string {

@@ -4,6 +4,8 @@ import { StoreForNetwork } from './store-for-network.js'
 import { Stream } from '@ceramicnetwork/common'
 
 export interface StateStoreInterface {
+  networkName: string
+
   open(store: StoreForNetwork): Promise<void>
   close(): Promise<void>
   saveFromStream(stream: Stream): Promise<void>
