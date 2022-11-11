@@ -10,6 +10,8 @@ import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
+import { LevelStore } from '../store/level-store.js'
+import { StateStore } from '../store/state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -52,8 +54,9 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.publish.mockClear()
 
     const levelPath = await tmp.tmpName()
-    const stateStore = new LevelStateStore(levelPath)
-    stateStore.open('test')
+    const levelStore = new LevelStore(levelPath, 'test')
+    const stateStore = new StateStore({ logger: loggerProvider.getDiagnosticsLogger() })
+    stateStore.open(levelStore)
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,
