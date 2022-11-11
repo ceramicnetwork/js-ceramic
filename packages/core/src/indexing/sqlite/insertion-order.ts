@@ -139,7 +139,7 @@ export class InsertionOrder {
     if (query.filter) {
       for (const [key, value] of Object.entries(query.filter)) {
         const filterObj = {}
-        filterObj[key] = value
+        filterObj[addColumnPrefix(key)] = value
         base = base.andWhere(filterObj)
       }
     }
