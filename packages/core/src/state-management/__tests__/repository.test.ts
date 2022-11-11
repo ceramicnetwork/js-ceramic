@@ -159,7 +159,7 @@ describe('#load', () => {
         fromMemory.mockReturnValueOnce(undefined)
         const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const save = jest.spyOn(repository.pinStore.stateStore, 'save')
+        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
 
         const stream2 = await repository.load(stream1.id, {
           sync: SyncOptions.SYNC_ALWAYS,
@@ -170,7 +170,7 @@ describe('#load', () => {
         expect(fromMemory).toBeCalledTimes(1)
         expect(fromStateStore).toBeCalledTimes(1)
         expect(fromNetwork).toBeCalledTimes(1)
-        expect(save).toBeCalledTimes(1)
+        expect(saveFromStreamStateHolder).toBeCalledTimes(1)
       })
     })
 
@@ -185,7 +185,7 @@ describe('#load', () => {
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
         const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const save = jest.spyOn(repository.pinStore.stateStore, 'save')
+        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
 
         const stream2 = await repository.load(stream1.id, {
           sync: SyncOptions.SYNC_ALWAYS,
@@ -196,7 +196,7 @@ describe('#load', () => {
         expect(fromMemory).toBeCalledTimes(1)
         expect(fromStateStore).toBeCalledTimes(0)
         expect(fromNetwork).toBeCalledTimes(1)
-        expect(save).toBeCalledTimes(0)
+        expect(saveFromStreamStateHolder).toBeCalledTimes(0)
       })
     })
   })
