@@ -16,8 +16,10 @@ import {
 import { RunningState } from '../../state-management/running-state.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
+import { StoreForNetwork, StoreSearchParams } from '../store-for-network.js'
 
 let stateStore: StateStoreInterface
+let storeForNetworkTemplate: StoreForNetwork
 let pinning: PinningBackend
 const NETWORK = 'fakeNetwork'
 
@@ -26,12 +28,23 @@ const FAKE_STREAM_ID = StreamID.fromString(
 )
 
 beforeEach(() => {
+  storeForNetworkTemplate = {
+    init: jest.fn(),
+    close: jest.fn(),
+    isEmpty: jest.fn(),
+    find: jest.fn(),
+    put: jest.fn(),
+    get: jest.fn(),
+    del: jest.fn(),
+  }
+
   stateStore = {
     open: jest.fn(),
     close: jest.fn(),
     list: jest.fn(),
     remove: jest.fn(),
-    save: jest.fn(),
+    saveFromStream: jest.fn(),
+    saveFromStreamStateHolder: jest.fn(),
     load: jest.fn(),
   }
   pinning = {
@@ -67,8 +80,12 @@ class FakeType extends Stream {
 
 test('#open', async () => {
   const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
-  await pinStore.open(NETWORK)
-  expect(stateStore.open).toBeCalledWith(NETWORK)
+  const storeForNetwork = {
+    networkName: NETWORK,
+    ...storeForNetworkTemplate
+  }
+  await pinStore.open(storeForNetwork)
+  expect(stateStore.open).toBeCalledWith(storeForNetwork)
   expect(pinning.open).toBeCalled()
 })
 
@@ -85,7 +102,7 @@ describe('#add', () => {
     const runningState = new RunningState(state, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
-    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(1)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -118,7 +135,7 @@ describe('#add', () => {
     const runningState = new RunningState(stateWithSignedCommit, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
-    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(4)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -161,7 +178,7 @@ describe('#add', () => {
     const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
-    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(4)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -208,7 +225,7 @@ describe('#add', () => {
     const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
-    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(6)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -238,7 +255,7 @@ describe('#add', () => {
       ],
     })
     await pinStore.add(runningState)
-    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(2)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -264,7 +281,7 @@ describe('#add', () => {
       ],
     })
     await pinStore.add(runningState, true)
-    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(3)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -295,9 +312,9 @@ describe('#add', () => {
     const runningState = new RunningState(midState, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
-    expect(stateStore.save).toBeCalledTimes(2)
-    expect(stateStore.save.mock.calls[0][0]).toEqual(runningState)
-    expect(stateStore.save.mock.calls[1][0]).toEqual(modelRunningState)
+    expect(stateStore.saveFromStreamStateHolder).toBeCalledTimes(2)
+    expect(stateStore.saveFromStreamStateHolder.mock.calls[0][0]).toEqual(runningState)
+    expect(stateStore.saveFromStreamStateHolder.mock.calls[1][0]).toEqual(modelRunningState)
     expect(pinning.pin).toBeCalledTimes(2)
     expect(pinning.pin.mock.calls[0][0].toString()).toEqual(midState.log[0].cid.toString())
     expect(pinning.pin.mock.calls[1][0].toString()).toEqual(modelState.log[0].cid.toString())
