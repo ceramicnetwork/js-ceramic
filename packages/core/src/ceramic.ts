@@ -584,6 +584,7 @@ export class Ceramic implements CeramicApi {
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
 
+
         if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
           throw new Error(
             `IPFS data missing! The CID ${cid} of pinned Stream ${streamID} is missing from the local IPFS node. This means that pinned content has gone missing from the IPFS node. A ~/.jsipfs directory has been detected which may mean you have not completed the steps needed to upgrade to js-ceramic v2. Please follow the upgrade guide found here: https://threebox.notion.site/Upgrading-to-js-ceramic-v2-Filesystem-b6b3cbb989a34e05893761fd914965b7. If that does not work check your IPFS node configuration and make sure it is pointing to the proper repo`
