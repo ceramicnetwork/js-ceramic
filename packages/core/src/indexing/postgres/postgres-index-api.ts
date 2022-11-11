@@ -59,7 +59,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
     }
     for (const field of this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []) {
-      indexedData[field] = indexingArgs.streamContent[field]
+      indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
     }
 
     await this.dbConnection(tableName)
