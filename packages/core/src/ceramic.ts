@@ -139,6 +139,7 @@ export interface CeramicModules {
  */
 export interface CeramicParameters {
   gateway: boolean
+  stateStoreDirectory?: string
   indexingConfig: IndexingConfig
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
@@ -210,7 +211,10 @@ export class Ceramic implements CeramicApi {
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
 
-    this._levelStore = new LevelStore(DEFAULT_STATE_STORE_DIRECTORY, this._networkOptions.name)
+    this._levelStore = new LevelStore(
+      params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
+      this._networkOptions.name
+    )
 
     this.context = {
       api: this,
@@ -461,6 +465,7 @@ export class Ceramic implements CeramicApi {
 
     const params: CeramicParameters = {
       gateway: config.gateway,
+      stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
