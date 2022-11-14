@@ -24,6 +24,10 @@ export class S3Store implements StoreForNetwork {
     this.networkName = networkName
   }
 
+  private _throwIfNotInitialized(): void {
+    if (!this.#store) throw new Error('You must call async init(), before you start using the S3Store')
+  }
+
   async init(): Promise<void> {
     // TODO: CDB-XXXX Manage migration from `state-store` to 'storage'??
     const location = this.#bucketName + '/ceramic/' + this.networkName + '/storage'
@@ -32,6 +36,7 @@ export class S3Store implements StoreForNetwork {
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
+    this._throwIfNotInitialized()
     const result = await this.find({
       limit: 1,
       ...params
@@ -40,25 +45,30 @@ export class S3Store implements StoreForNetwork {
   }
 
   async find(params?: StoreSearchParams): Promise<Array<string>> {
+    this._throwIfNotInitialized()
     const bufArray = await toArray(this.#store.createKeyStream(params))
     return bufArray.map((buf) => buf.toString())
   }
 
   async get(key: string): Promise<string> {
+    this._throwIfNotInitialized()
     return this.#loadingLimit.add(async () => {
       return await this.#store.get(key)
     })
   }
 
   async put(key: string, value: string): Promise<void> {
+    this._throwIfNotInitialized()
     return await this.#store.put(key, value)
   }
 
   async del(key: string): Promise<void> {
+    this._throwIfNotInitialized()
     return await this.#store.del(key)
   }
 
   async close() {
+    this._throwIfNotInitialized()
     await this.#store.close()
   }
 }

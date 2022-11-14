@@ -60,8 +60,9 @@ export class StateStore implements StateStoreInterface {
         this.getFullKey(streamId.baseID)
       )
       if (state) {
-        return StreamUtils.deserializeState(state)
+        return StreamUtils.deserializeState(typeof state === 'string' ? JSON.parse(state) : state)
       } else {
+
         return null
       }
     } catch (err) {
@@ -95,7 +96,7 @@ export class StateStore implements StateStoreInterface {
     if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.put(
       this.getFullKey(stream.id.baseID),
-      JSON.stringify(StreamUtils.serializeState(stream.state))
+      JSON.stringify(StreamUtils.serializeState(stream.state)) // FIXME: CDB-2008 Here state is stringified. Was it like this before the refactoring?
     )
   }
 
@@ -107,7 +108,7 @@ export class StateStore implements StateStoreInterface {
     if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.put(
       this.getFullKey(streamStateHolder.id),
-      StreamUtils.serializeState(streamStateHolder.state)
+      StreamUtils.serializeState(streamStateHolder.state) // FIXME: CDB-2008 Here state is not stringified. Was it like this before the refactoring?
     )
   }
 

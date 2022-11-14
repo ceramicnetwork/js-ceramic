@@ -26,6 +26,10 @@ export class LevelStore implements StoreForNetwork {
     this.#storeRoot = storeRoot
   }
 
+  private _throwIfNotInitialized(): void {
+    if (!this.#store) throw new Error('You must call async init(), before you start using the LevelStore')
+  }
+
   async init(): Promise<void> {
     const storePath = path.join(this.#storeRoot, this.networkName)
     if (fs) {
@@ -35,14 +39,17 @@ export class LevelStore implements StoreForNetwork {
   }
 
   async del(key: string): Promise<void> {
+    this._throwIfNotInitialized()
     await this.#store.del(key)
   }
 
   async get(key: string): Promise<string> {
-    return  await this.#store.get(key)
+    this._throwIfNotInitialized()
+    return await this.#store.get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
+    this._throwIfNotInitialized()
     const result = await this.find({
       limit: 1,
       ...params
@@ -51,6 +58,7 @@ export class LevelStore implements StoreForNetwork {
   }
 
   async find(params?: StoreSearchParams): Promise<Array<string>> {
+    this._throwIfNotInitialized()
     const seachParams: Record<string, any> = {
       keys: true,
       values: false,
@@ -62,10 +70,12 @@ export class LevelStore implements StoreForNetwork {
   }
 
   async put(key: string, value: string): Promise<void> {
+    this._throwIfNotInitialized()
     return await this.#store.put(key, value)
   }
 
   async close(): Promise<void> {
+    this._throwIfNotInitialized()
     // do nothing
     return
   }

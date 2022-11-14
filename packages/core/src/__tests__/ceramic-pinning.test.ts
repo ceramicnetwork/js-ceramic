@@ -18,9 +18,7 @@ const seed = u8a.fromString(
 
 const mockExistsSync = jest.fn()
 jest.unstable_mockModule('fs', () => {
-  console.log("ARTUR WDOWIARSKI WILL IMPORT FS")
   const originalModule = jest.requireActual('fs') as any
-  console.log("ARTUR WDOWIARSKI DID IMPORT FS: ", originalModule)
   return {
     ...originalModule,
     existsSync: mockExistsSync,
