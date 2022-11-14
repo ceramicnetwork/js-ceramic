@@ -1,5 +1,6 @@
 export type StoreSearchParams = {
   limit?: number
+  subChannel? : string
 }
 
 export interface StoreForNetwork {
