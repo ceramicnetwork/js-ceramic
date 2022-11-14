@@ -84,7 +84,6 @@ const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
-// FIXME: CDB-2008 : remember about migration from 'statestore' to 'storage'
 export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 
 /**
