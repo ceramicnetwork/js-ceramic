@@ -35,7 +35,7 @@ export class S3Store implements StoreForNetwork {
     // FIXME: CDB-2008 implement support for subChannel
     this._throwIfNotInitialized()
     const result = await this.find({
-      limit: params.limit ?? 1,
+      limit: params?.limit ?? 1,
     })
     return result.length > 0
   }
@@ -44,7 +44,7 @@ export class S3Store implements StoreForNetwork {
     this._throwIfNotInitialized()
     const bufArray = await toArray(
       this.#store.createKeyStream({
-        limit: params.limit
+        limit: params?.limit
       })
     )
     return bufArray.map((buf) => buf.toString())

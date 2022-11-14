@@ -66,7 +66,7 @@ export class LevelStore implements StoreForNetwork {
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
     this.throwIfNotInitialized()
     const result = await this.find({
-      limit: params.limit ?? 1,
+      limit: params?.limit ?? 1,
     })
     return result.length > 0
   }

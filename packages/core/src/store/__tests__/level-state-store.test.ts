@@ -44,7 +44,7 @@ const streamFromState = function (state: StreamState) {
   return new FakeType(TestUtils.runningState(state), {})
 }
 
-describe('LevelDB state store', () => {
+describe('LevelDB-backed StateStore state store', () => {
   let tmpFolder: any
   let levelStore: LevelStore
   let stateStore: StateStore
@@ -61,6 +61,7 @@ describe('LevelDB state store', () => {
 
   afterEach(async () => {
     await stateStore.close()
+    await levelStore.close()
     await tmpFolder.cleanup()
   })
 
@@ -172,7 +173,7 @@ describe('LevelDB state store', () => {
   })
 })
 
-describe('LevelDB state store network change tests', () => {
+describe('LevelDB-backed StateStore network change tests', () => {
   let tmpFolder: any
   let stateStore: StateStore
 
