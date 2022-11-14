@@ -26,12 +26,12 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
-import { StoreForNetwork } from '../store/store-for-network.js'
+import { StoreWrapperInterface } from '../store/store-wrapper-interface.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
-  stateStore: StoreForNetwork
+  stateStore: StoreWrapperInterface
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
@@ -97,7 +97,7 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async injectStateStore(stateStore: StoreForNetwork): Promise<void> {
+  async injectStateStore(stateStore: StoreWrapperInterface): Promise<void> {
     this.setDeps({
       ...this.#deps,
       stateStore: stateStore

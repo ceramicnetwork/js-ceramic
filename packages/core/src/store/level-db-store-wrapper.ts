@@ -1,6 +1,7 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
-import { StoreForNetwork, StoreSearchParams } from './store-for-network.js'
+import sublevel from 'sublevel'
+import { StoreWrapperInterface, StoreSearchParams } from './store-wrapper-interface.js'
 import path from 'path'
 import fs from 'fs'
 import { Networks } from '@ceramicnetwork/common'
@@ -17,10 +18,11 @@ import { Networks } from '@ceramicnetwork/common'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
-export class LevelStore implements StoreForNetwork {
+export class LevelDbStoreWrapper implements StoreWrapperInterface {
   readonly networkName: string
   readonly #storeRoot: string
-  #store: Level
+  store: Level
+  #subStores: Record<string, Level> = {}
 
   constructor(storeRoot: string, networkName: string) {
     this.networkName = networkName
@@ -33,35 +35,38 @@ export class LevelStore implements StoreForNetwork {
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#store = new LevelC(storePath)
+    this.store = new LevelC(storePath)
   }
 
-  /**
-   * Gets store
-   */
-  get store(): Level {
-    return this.#store
+  private getStore(subChannel?: string) {
+    if (subChannel) {
+      if (!this.#subStores[subChannel]) {
+        this.#subStores[subChannel] = new LevelC(sublevel(this.store, subChannel))
+      }
+      return this.#subStores[subChannel]
+    } else {
+      return this.store
+    }
   }
 
   private throwIfNotInitialized(): void {
-    if (!this.#store) throw new Error('You must call async init(), before you start using the LevelStore')
+    if (!this.store) throw new Error('You must call async init(), before you start using the LevelStore')
   }
 
-  async del(key: string): Promise<void> {
+  async del(key: string, subChannel?: string): Promise<void> {
     this.throwIfNotInitialized()
-    await this.#store.del(key)
+    await this.getStore(subChannel).del(key)
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string, subChannel?: string): Promise<any> {
     this.throwIfNotInitialized()
-    return await this.#store.get(key)
+    return await this.getStore(subChannel).get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
     this.throwIfNotInitialized()
     const result = await this.find({
-      limit: 1,
-      ...params
+      limit: params?.limit ?? 1,
     })
     return result.length > 0
   }
@@ -71,16 +76,16 @@ export class LevelStore implements StoreForNetwork {
     const seachParams: Record<string, any> = {
       keys: true,
       values: false,
-      ...params
+      limit: params?.limit
     }
 
     // The return type of .stram is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return (await this.#store.stream(seachParams)) as unknown as Array<string>
+    return (await this.getStore(params?.subChannel).stream(seachParams)) as unknown as Array<string>
   }
 
-  async put(key: string, value: any): Promise<void> {
+  async put(key: string, value: any, subChannel?: string): Promise<void> {
     this.throwIfNotInitialized()
-    return await this.#store.put(key, value)
+    return await this.getStore(subChannel).put(key, value)
   }
 
   async close(): Promise<void> {

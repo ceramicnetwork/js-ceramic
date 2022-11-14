@@ -11,7 +11,7 @@ import {
   LoggerProvider,
   Networks,
 } from '@ceramicnetwork/common'
-import { LevelStore } from '../level-store.js'
+import { LevelDbStoreWrapper } from '../level-db-store-wrapper.js'
 import { StateStore } from '../state-store.js'
 
 class FakeType extends Stream {
@@ -44,14 +44,14 @@ const streamFromState = function (state: StreamState) {
   return new FakeType(TestUtils.runningState(state), {})
 }
 
-describe('LevelDB state store', () => {
+describe('LevelDB-backed StateStore state store', () => {
   let tmpFolder: any
-  let levelStore: LevelStore
+  let levelStore: LevelDbStoreWrapper
   let stateStore: StateStore
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelStore(tmpFolder.path, 'fakeNetwork')
+    levelStore = new LevelDbStoreWrapper(tmpFolder.path, 'fakeNetwork')
     stateStore = new StateStore(new LoggerProvider().getDiagnosticsLogger())
     await stateStore.open(levelStore)
 
@@ -61,6 +61,7 @@ describe('LevelDB state store', () => {
 
   afterEach(async () => {
     await stateStore.close()
+    await levelStore.close()
     await tmpFolder.cleanup()
   })
 
@@ -71,7 +72,7 @@ describe('LevelDB state store', () => {
     const stream = streamFromState(state)
     await stateStore.saveFromStream(stream)
     const streamId = stream.id.baseID
-    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
+    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state), undefined)
 
     const retrieved = await stateStore.load(streamId)
     expect(retrieved).toEqual(state)
@@ -116,7 +117,7 @@ describe('LevelDB state store', () => {
   describe('#list', () => {
     test('saved entries', async () => {
 
-      // @ts-ignore the store property is not exposed on StoreForNetwork, because it's not neede outside of tests
+      // @ts-ignore the store property is not exposed on StoreWrapperInterface, because it's not needed outside of tests
       const streamSpy = jest.spyOn(stateStore.store.store, 'stream')
 
       const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
@@ -172,7 +173,7 @@ describe('LevelDB state store', () => {
   })
 })
 
-describe('LevelDB state store network change tests', () => {
+describe('LevelDB-backed StateStore network change tests', () => {
   let tmpFolder: any
   let stateStore: StateStore
 
@@ -186,7 +187,7 @@ describe('LevelDB state store network change tests', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpLevelStore = new LevelStore(tmpFolder.path, Networks.ELP)
+    const elpLevelStore = new LevelDbStoreWrapper(tmpFolder.path, Networks.ELP)
     await stateStore.open(elpLevelStore)
 
     const state = makeStreamState()
@@ -197,7 +198,7 @@ describe('LevelDB state store network change tests', () => {
 
     await stateStore.close()
 
-    const mainnetLevelStore = new LevelStore(tmpFolder.path, Networks.MAINNET)
+    const mainnetLevelStore = new LevelDbStoreWrapper(tmpFolder.path, Networks.MAINNET)
     await stateStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await stateStore.load(stream.id.baseID)
@@ -205,7 +206,7 @@ describe('LevelDB state store network change tests', () => {
   })
 
   test('switch from Clay to Mainnet does not preserve data', async () => {
-    const clayLevelStore = new LevelStore(tmpFolder.path, Networks.TESTNET_CLAY)
+    const clayLevelStore = new LevelDbStoreWrapper(tmpFolder.path, Networks.TESTNET_CLAY)
     await stateStore.open(clayLevelStore)
 
     const state = makeStreamState()
@@ -216,7 +217,7 @@ describe('LevelDB state store network change tests', () => {
 
     await stateStore.close()
 
-    const mainnetLevelStore = new LevelStore(tmpFolder.path, Networks.MAINNET)
+    const mainnetLevelStore = new LevelDbStoreWrapper(tmpFolder.path, Networks.MAINNET)
     await stateStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await stateStore.load(stream.id.baseID)

@@ -1,7 +1,6 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { PinStore } from '../pin-store.js'
-import { StateStoreInterface } from '../state-store-interface.js'
 import {
   AnchorStatus,
   SignatureStatus,
@@ -16,10 +15,11 @@ import {
 import { RunningState } from '../../state-management/running-state.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
-import { StoreForNetwork, StoreSearchParams } from '../store-for-network.js'
+import { StoreWrapperInterface } from '../store-wrapper-interface.js'
+import { StateStore } from '../state-store.js'
 
-let stateStore: StateStoreInterface
-let storeForNetworkTemplate: StoreForNetwork
+let stateStore: StateStore
+let storeWrapperTemplate: StoreWrapperInterface
 let pinning: PinningBackend
 const NETWORK = 'fakeNetwork'
 
@@ -28,7 +28,7 @@ const FAKE_STREAM_ID = StreamID.fromString(
 )
 
 beforeEach(() => {
-  storeForNetworkTemplate = {
+  storeWrapperTemplate = {
     init: jest.fn(),
     close: jest.fn(),
     isEmpty: jest.fn(),
@@ -80,12 +80,12 @@ class FakeType extends Stream {
 
 test('#open', async () => {
   const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
-  const storeForNetwork = {
+  const storeWrapper = {
     networkName: NETWORK,
-    ...storeForNetworkTemplate
+    ...storeWrapperTemplate
   }
-  await pinStore.open(storeForNetwork)
-  expect(stateStore.open).toBeCalledWith(storeForNetwork)
+  await pinStore.open(storeWrapper)
+  expect(stateStore.open).toBeCalledWith(storeWrapper)
   expect(pinning.open).toBeCalled()
 })
 
