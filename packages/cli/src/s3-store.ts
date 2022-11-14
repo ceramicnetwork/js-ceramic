@@ -80,7 +80,7 @@ export class S3Store implements StoreForNetwork {
       return await this.getStore(subChannel).get(key)
     })
   }
-  
+
   async put(key: string, value: any, subChannel?: string): Promise<void> {
     this.throwIfNotInitialized()
     return await this.getStore(subChannel).put(key, value)

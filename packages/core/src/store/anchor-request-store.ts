@@ -31,7 +31,6 @@ export class AnchorRequestStore implements AnchorRequestStoreInterface {
 
   async open(store: StoreForNetwork): Promise<void> {
     this.#store = store
-    await this.#store.init()
   }
 
   async save(commitID: CommitID, data: AnchorRequestData): Promise<void> {
