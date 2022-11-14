@@ -3,7 +3,7 @@ export type StoreSearchParams = {
   subChannel? : string
 }
 
-export interface StoreForNetwork {
+export interface StoreWrapperInterface {
   networkName: string
 
   close(): Promise<void>

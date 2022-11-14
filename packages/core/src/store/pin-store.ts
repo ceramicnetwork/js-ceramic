@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { StoreForNetwork } from './store-for-network.js'
+import { StoreWrapperInterface } from './store-wrapper-interface.js'
 import { StateStore } from './state-store.js'
 
 /**
@@ -18,7 +18,7 @@ export class PinStore {
     readonly loadStream: (streamID: StreamID) => Promise<RunningState>
   ) {}
 
-  async open(store: StoreForNetwork): Promise<void> {
+  async open(store: StoreWrapperInterface): Promise<void> {
     await this.stateStore.open(store)
     this.pinning.open()
   }

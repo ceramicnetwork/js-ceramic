@@ -8,7 +8,7 @@ import {
   StreamUtils
 } from '@ceramicnetwork/common'
 import { AbstractStore } from './abstract-store.js'
-import { StoreForNetwork } from './store-for-network.js'
+import { StoreWrapperInterface } from './store-wrapper-interface.js'
 
 export class StateStore extends AbstractStore<StreamID, StreamState> {
   #logger: DiagnosticsLogger
@@ -53,7 +53,7 @@ export class StateStore extends AbstractStore<StreamID, StreamState> {
     await this.save(streamStateHolder.id, streamStateHolder.state)
   }
 
-  async open(store: StoreForNetwork): Promise<void> {
+  async open(store: StoreWrapperInterface): Promise<void> {
     if (store.networkName == Networks.MAINNET || store.networkName == Networks.ELP) {
       // If using "mainnet", check for data under an 'elp' directory first. This is because older
       // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored

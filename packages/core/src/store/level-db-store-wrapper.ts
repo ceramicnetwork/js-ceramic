@@ -1,7 +1,7 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
 import sublevel from 'sublevel'
-import { StoreForNetwork, StoreSearchParams } from './store-for-network.js'
+import { StoreWrapperInterface, StoreSearchParams } from './store-wrapper-interface.js'
 import path from 'path'
 import fs from 'fs'
 import { Networks } from '@ceramicnetwork/common'
@@ -18,7 +18,7 @@ import { Networks } from '@ceramicnetwork/common'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
-export class LevelStore implements StoreForNetwork {
+export class LevelDbStoreWrapper implements StoreWrapperInterface {
   readonly networkName: string
   readonly #storeRoot: string
   store: Level

@@ -1,4 +1,4 @@
-import { StoreForNetwork, StoreSearchParams } from '@ceramicnetwork/core'
+import { StoreWrapperInterface, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
@@ -9,7 +9,7 @@ import PQueue from 'p-queue'
  */
 const MAX_LOAD_RPS = 4000
 
-export class S3Store implements StoreForNetwork {
+export class S3StoreWrapper implements StoreWrapperInterface {
   readonly networkName: string
   readonly #bucketName: string
   #store:  LevelUp.LevelUp

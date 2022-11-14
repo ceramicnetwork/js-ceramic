@@ -1,9 +1,9 @@
-import { StoreForNetwork } from './store-for-network.js'
+import { StoreWrapperInterface } from './store-wrapper-interface.js'
 import { StoreInterface } from './store-interface.js'
 
 export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
   storeSubChannel: string | undefined
-  store: StoreForNetwork
+  store: StoreWrapperInterface
 
   private throwIfNotOpened(): void {
     if (!this.store) throw Error('Anchor Request Store is closed, you need to call async open(), before performing other operations')
@@ -15,7 +15,7 @@ export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
 
   abstract deserialize(value: any): V
 
-  async open(store: StoreForNetwork): Promise<void> {
+  async open(store: StoreWrapperInterface): Promise<void> {
     this.store = store
   }
 

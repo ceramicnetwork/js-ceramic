@@ -1,15 +1,15 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { LevelStore } from '../level-store.js'
+import { LevelDbStoreWrapper } from '../level-db-store-wrapper.js'
 import { TestUtils } from '@ceramicnetwork/common'
 
 describe("LevelStore", () => {
   let tmpFolder: any
-  let levelStore: LevelStore
+  let levelStore: LevelDbStoreWrapper
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelStore(tmpFolder.path, 'fakeNetwork')
+    levelStore = new LevelDbStoreWrapper(tmpFolder.path, 'fakeNetwork')
 
     // add a small delay after creating the leveldb instance before trying to use it.
     await TestUtils.delay(100)
