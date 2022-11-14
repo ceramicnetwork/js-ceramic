@@ -9,16 +9,12 @@ import {
   StreamUtils
 } from '@ceramicnetwork/common'
 
-export type StateStoreParams = { // FIXME: CDB-2008 replace params back with just the single logger param
-  logger: DiagnosticsLogger
-}
-
 export class StateStore implements StateStoreInterface {
   #logger: DiagnosticsLogger
   #store: StoreForNetwork
 
-  constructor(params: StateStoreParams) {
-    this.#logger = params.logger
+  constructor(logger: DiagnosticsLogger) {
+    this.#logger = logger
   }
 
   /**

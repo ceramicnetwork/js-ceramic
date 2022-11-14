@@ -33,9 +33,7 @@ export class PinStoreFactory {
       props.pinningBackends && props.pinningBackends.length > 0
         ? props.pinningBackends
         : [IpfsPinning]
-    this._stateStore = new StateStore({
-      logger: logger
-    })
+    this._stateStore = new StateStore(logger)
   }
 
   public createPinStore(): PinStore {

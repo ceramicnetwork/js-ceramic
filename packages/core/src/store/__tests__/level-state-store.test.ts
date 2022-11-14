@@ -53,7 +53,7 @@ describe('LevelDB state store', () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     levelStore = new LevelStore(tmpFolder.path, 'fakeNetwork')
     await levelStore.init()
-    stateStore = new StateStore({ logger: new LoggerProvider().getDiagnosticsLogger() })
+    stateStore = new StateStore(new LoggerProvider().getDiagnosticsLogger())
     await stateStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
@@ -179,9 +179,7 @@ describe('LevelDB state store network change tests', () => {
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new StateStore(
-      { logger: new LoggerProvider().getDiagnosticsLogger() }
-    )
+    stateStore = new StateStore(new LoggerProvider().getDiagnosticsLogger())
   })
 
   afterEach(async () => {
