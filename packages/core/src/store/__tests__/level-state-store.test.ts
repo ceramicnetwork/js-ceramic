@@ -72,7 +72,7 @@ describe('LevelDB-backed StateStore state store', () => {
     const stream = streamFromState(state)
     await stateStore.saveFromStream(stream)
     const streamId = stream.id.baseID
-    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
+    expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state), undefined)
 
     const retrieved = await stateStore.load(streamId)
     expect(retrieved).toEqual(state)

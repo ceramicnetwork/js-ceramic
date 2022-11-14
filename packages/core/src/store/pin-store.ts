@@ -1,17 +1,17 @@
-import { StateStoreInterface } from './state-store-interface.js'
 import { base64urlToJSON, PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { StoreForNetwork } from './store-for-network.js'
+import { StateStore } from './state-store.js'
 
 /**
  * Encapsulates logic for pinning streams
  */
 export class PinStore {
   constructor(
-    readonly stateStore: StateStoreInterface,
+    readonly stateStore: StateStore,
     readonly pinning: PinningBackend,
     readonly retrieve: (cid: CID) => Promise<any | null>,
     readonly resolve: (path: string) => Promise<CID>,

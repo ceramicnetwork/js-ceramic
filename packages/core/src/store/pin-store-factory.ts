@@ -1,7 +1,6 @@
 import { DiagnosticsLogger, IpfsApi, PinningBackendStatic } from '@ceramicnetwork/common'
 import { PinningAggregation } from '@ceramicnetwork/pinning-aggregation'
 import { PinStore } from './pin-store.js'
-import { StateStoreInterface } from './state-store-interface.js'
 import type { CID } from 'multiformats/cid'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { Repository } from '../state-management/repository.js'
@@ -17,7 +16,7 @@ export type Props = {
 export class PinStoreFactory {
   readonly pinningEndpoints: string[]
   readonly pinningBackends: PinningBackendStatic[]
-  private _stateStore: StateStoreInterface
+  private _stateStore: StateStore
 
   constructor(
     readonly ipfs: IpfsApi,
