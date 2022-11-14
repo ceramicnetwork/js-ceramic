@@ -32,33 +32,38 @@ export class S3Store implements StoreForNetwork {
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
+    // FIXME: CDB-2008 implement support for subChannel
     this._throwIfNotInitialized()
     const result = await this.find({
-      limit: 1,
-      ...params
+      limit: params.limit ?? 1,
     })
     return result.length > 0
   }
 
   async find(params?: StoreSearchParams): Promise<Array<any>> {
     this._throwIfNotInitialized()
-    const bufArray = await toArray(this.#store.createKeyStream(params))
+    const bufArray = await toArray(
+      this.#store.createKeyStream({
+        limit: params.limit
+      })
+    )
     return bufArray.map((buf) => buf.toString())
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string, subChannel?: string): Promise<any> {
     this._throwIfNotInitialized()
     return this.#loadingLimit.add(async () => {
       return JSON.parse(await this.#store.get(key))
     })
   }
 
-  async put(key: string, value: any): Promise<void> {
+  async put(key: string, value: any, subChannel?: string): Promise<void> {
     this._throwIfNotInitialized()
     return await this.#store.put(key, JSON.stringify(value))
   }
 
-  async del(key: string): Promise<void> {
+  async del(key: string, subChannel?: string): Promise<void> {
+    // FIXME: CDB-2008 implement support for subChannel
     this._throwIfNotInitialized()
     return await this.#store.del(key)
   }
