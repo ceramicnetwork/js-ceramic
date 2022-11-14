@@ -25,8 +25,8 @@ export class StateStore extends AbstractStore<StreamID, StreamState> {
     return this.store.networkName
   }
 
-  getFullKey(key: StreamID): string {
-    return key.toString()
+  getKey(object: StreamID): string {
+    return object.toString()
   }
 
   serialize(value: StreamState): any {

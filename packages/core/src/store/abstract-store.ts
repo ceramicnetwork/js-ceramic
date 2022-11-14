@@ -1,7 +1,7 @@
 import { StoreForNetwork } from './store-for-network.js'
 import { StoreInterface } from './store-interface.js'
 
-export abstract class AbstractStore<K, V> implements StoreInterface<K, V> {
+export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
   storeSubChannel: string | undefined
   store: StoreForNetwork
 
@@ -9,7 +9,7 @@ export abstract class AbstractStore<K, V> implements StoreInterface<K, V> {
     if (!this.store) throw Error('Anchor Request Store is closed, you need to call async open(), before performing other operations')
   }
 
-  abstract getFullKey(key: K): string
+  abstract getKey(object: O): string
 
   abstract serialize(value: V): any
 
@@ -25,20 +25,20 @@ export abstract class AbstractStore<K, V> implements StoreInterface<K, V> {
     this.store = undefined
   }
 
-  async save(key: K, value: V): Promise<void> {
+  async save(object: O, value: V): Promise<void> {
     this.throwIfNotOpened()
     await this.store.put(
-      this.getFullKey(key),
+      this.getKey(object),
       this.serialize(value),
       this.storeSubChannel
     )
   }
 
-  async load(key: K): Promise<V> {
+  async load(object: O): Promise<V> {
     this.throwIfNotOpened()
     try {
       const serialized = await this.store.get(
-        this.getFullKey(key)
+        this.getKey(object)
       )
       if (serialized) {
         return this.deserialize(serialized)
@@ -53,10 +53,10 @@ export abstract class AbstractStore<K, V> implements StoreInterface<K, V> {
     }
   }
 
-  async remove(key: K): Promise<void> {
+  async remove(object: O): Promise<void> {
     this.throwIfNotOpened()
     await this.store.del(
-      this.getFullKey(key),
+      this.getKey(object),
       this.storeSubChannel
     )
   }

@@ -12,8 +12,8 @@ export class AnchorRequestStore extends AbstractStore<CommitID, AnchorRequestDat
     this.storeSubChannel = 'anchor-requests'
   }
 
-  getFullKey(key: CommitID): string {
-    return key.toString()
+  getKey(object: CommitID): string {
+    return object.toString()
   }
 
   serialize(value: AnchorRequestData): any {
