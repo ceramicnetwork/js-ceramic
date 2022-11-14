@@ -9,7 +9,7 @@ import {
   StreamUtils
 } from '@ceramicnetwork/common'
 
-export type StateStoreParams = {
+export type StateStoreParams = { // FIXME: CDB-2008 replace params back with just the single logger param
   logger: DiagnosticsLogger
 }
 
@@ -26,6 +26,13 @@ export class StateStore implements StateStoreInterface {
    */
   get networkName(): string {
     return this.#store.networkName
+  }
+
+  /**
+   * Gets store
+   */
+  get store(): StoreForNetwork {
+    return this.#store
   }
 
   private getFullKey(streamID: StreamID): string {
@@ -96,7 +103,7 @@ export class StateStore implements StateStoreInterface {
     if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.put(
       this.getFullKey(stream.id.baseID),
-      JSON.stringify(StreamUtils.serializeState(stream.state)) // FIXME: CDB-2008 Here state is stringified. Was it like this before the refactoring?
+      StreamUtils.serializeState(stream.state)
     )
   }
 
@@ -108,7 +115,7 @@ export class StateStore implements StateStoreInterface {
     if (!this.#store) throw Error('State Store is closed, you need to call async open(), before performing other operations')
     await this.#store.put(
       this.getFullKey(streamStateHolder.id),
-      StreamUtils.serializeState(streamStateHolder.state) // FIXME: CDB-2008 Here state is not stringified. Was it like this before the refactoring?
+      StreamUtils.serializeState(streamStateHolder.state)
     )
   }
 

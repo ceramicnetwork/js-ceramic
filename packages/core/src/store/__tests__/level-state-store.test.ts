@@ -11,6 +11,8 @@ import {
   LoggerProvider,
   Networks,
 } from '@ceramicnetwork/common'
+import { LevelStore } from '../level-store.js'
+import { StateStore } from '../state-store.js'
 
 class FakeType extends Stream {
   isReadOnly = true
@@ -44,12 +46,15 @@ const streamFromState = function (state: StreamState) {
 
 describe('LevelDB state store', () => {
   let tmpFolder: any
-  let stateStore: LevelStateStore
+  let levelStore: LevelStore
+  let stateStore: StateStore
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new LevelStateStore(tmpFolder.path, new LoggerProvider().getDiagnosticsLogger())
-    await stateStore.open('fakeNetwork')
+    levelStore = new LevelStore(tmpFolder.path, 'fakeNetwork')
+    await levelStore.init()
+    stateStore = new StateStore({ logger: new LoggerProvider().getDiagnosticsLogger() })
+    await stateStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
     await TestUtils.delay(100)
@@ -65,7 +70,7 @@ describe('LevelDB state store', () => {
 
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await stateStore.save(stream)
+    await stateStore.saveFromStream(stream)
     const streamId = stream.id.baseID
     expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
 
@@ -97,7 +102,7 @@ describe('LevelDB state store', () => {
   test('#remove', async () => {
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await stateStore.save(stream)
+    await stateStore.saveFromStream(stream)
     const streamId = stream.id.baseID
 
     let retrieved = await stateStore.load(streamId)
@@ -111,7 +116,9 @@ describe('LevelDB state store', () => {
 
   describe('#list', () => {
     test('saved entries', async () => {
-      const streamSpy = jest.spyOn(stateStore.store, 'stream')
+
+      // @ts-ignore the store property is not exposed on StoreForNetwork, because it's not neede outside of tests
+      const streamSpy = jest.spyOn(stateStore.store.store, 'stream')
 
       const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
       const streams = states.map((state) => streamFromState(state))
@@ -121,14 +128,14 @@ describe('LevelDB state store', () => {
       expect(streamSpy).toBeCalledWith({ keys: true, values: false })
       streamSpy.mockRestore()
 
-      await stateStore.save(streamFromState(states[0]))
+      await stateStore.saveFromStream(streamFromState(states[0]))
 
       list = await stateStore.list()
       expect(list.length).toEqual(1)
       expect(list).toEqual([streams[0].id.toString()])
 
-      await stateStore.save(streamFromState(states[1]))
-      await stateStore.save(streamFromState(states[2]))
+      await stateStore.saveFromStream(streamFromState(states[1]))
+      await stateStore.saveFromStream(streamFromState(states[2]))
 
       list = await stateStore.list()
       expect(list.length).toEqual(3)
@@ -140,8 +147,8 @@ describe('LevelDB state store', () => {
     test('list with limit', async () => {
       const states = await Promise.all([makeStreamState(), makeStreamState()])
 
-      await stateStore.save(streamFromState(states[0]))
-      await stateStore.save(streamFromState(states[1]))
+      await stateStore.saveFromStream(streamFromState(states[0]))
+      await stateStore.saveFromStream(streamFromState(states[1]))
 
       let list = await stateStore.list()
       expect(list.length).toEqual(2)
@@ -159,7 +166,7 @@ describe('LevelDB state store', () => {
       expect(list).toEqual([])
 
       // Stream present in state store
-      await stateStore.save(streamFromState(state))
+      await stateStore.saveFromStream(streamFromState(state))
       list = await stateStore.list(streamID)
       expect(list).toEqual([streamID.toString()])
     })
@@ -168,9 +175,13 @@ describe('LevelDB state store', () => {
 
 describe('LevelDB state store network change tests', () => {
   let tmpFolder: any
+  let stateStore: StateStore
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    stateStore = new StateStore(
+      { logger: new LoggerProvider().getDiagnosticsLogger() }
+    )
   })
 
   afterEach(async () => {
@@ -178,50 +189,44 @@ describe('LevelDB state store network change tests', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpStateStore = new LevelStateStore(
-      tmpFolder.path,
-      new LoggerProvider().getDiagnosticsLogger()
-    )
-    await elpStateStore.open(Networks.ELP)
+    const elpLevelStore = new LevelStore(tmpFolder.path, Networks.ELP)
+    await elpLevelStore.init()
+    await stateStore.open(elpLevelStore)
 
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await elpStateStore.save(stream)
-    const retrievedFromElp = await elpStateStore.load(stream.id.baseID)
+    await stateStore.saveFromStream(stream)
+    const retrievedFromElp = await stateStore.load(stream.id.baseID)
     expect(retrievedFromElp).toEqual(state)
 
-    await elpStateStore.close()
-    const mainnetStateStore = new LevelStateStore(
-      tmpFolder.path,
-      new LoggerProvider().getDiagnosticsLogger()
-    )
-    await mainnetStateStore.open(Networks.MAINNET)
+    await stateStore.close()
 
-    const retrievedFromMainnet = await mainnetStateStore.load(stream.id.baseID)
+    const mainnetLevelStore = new LevelStore(tmpFolder.path, Networks.MAINNET)
+    await mainnetLevelStore.init()
+    await stateStore.open(mainnetLevelStore)
+
+    const retrievedFromMainnet = await stateStore.load(stream.id.baseID)
     expect(retrievedFromMainnet).toEqual(state)
   })
 
   test('switch from Clay to Mainnet does not preserve data', async () => {
-    const clayStateStore = new LevelStateStore(
-      tmpFolder.path,
-      new LoggerProvider().getDiagnosticsLogger()
-    )
-    await clayStateStore.open(Networks.TESTNET_CLAY)
+    const clayLevelStore = new LevelStore(tmpFolder.path, Networks.TESTNET_CLAY)
+    await clayLevelStore.init()
+    await stateStore.open(clayLevelStore)
 
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await clayStateStore.save(stream)
-    const retrievedFromClay = await clayStateStore.load(stream.id.baseID)
+    await stateStore.saveFromStream(stream)
+    const retrievedFromClay = await stateStore.load(stream.id.baseID)
     expect(retrievedFromClay).toEqual(state)
 
-    await clayStateStore.close()
-    const mainnetStateStore = new LevelStateStore(
-      tmpFolder.path,
-      new LoggerProvider().getDiagnosticsLogger()
-    )
-    await mainnetStateStore.open(Networks.MAINNET)
+    await stateStore.close()
 
-    const retrievedFromMainnet = await mainnetStateStore.load(stream.id.baseID)
+    const mainnetLevelStore = new LevelStore(tmpFolder.path, Networks.MAINNET)
+    await mainnetLevelStore.init()
+    await stateStore.open(mainnetLevelStore)
+
+    const retrievedFromMainnet = await stateStore.load(stream.id.baseID)
     expect(retrievedFromMainnet).toEqual(null)
   })
 })

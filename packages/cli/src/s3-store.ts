@@ -53,13 +53,13 @@ export class S3Store implements StoreForNetwork {
   async get(key: string): Promise<string> {
     this._throwIfNotInitialized()
     return this.#loadingLimit.add(async () => {
-      return await this.#store.get(key)
+      return JSON.parse(await this.#store.get(key))
     })
   }
 
   async put(key: string, value: string): Promise<void> {
     this._throwIfNotInitialized()
-    return await this.#store.put(key, value)
+    return await this.#store.put(key, JSON.stringify(value))
   }
 
   async del(key: string): Promise<void> {

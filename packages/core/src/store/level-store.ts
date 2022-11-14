@@ -3,6 +3,7 @@ import type Level from 'level-ts'
 import { StoreForNetwork, StoreSearchParams } from './store-for-network.js'
 import path from 'path'
 import fs from 'fs'
+import { Networks } from '@ceramicnetwork/common'
 
 // When Node.js imports a CJS module from ESM, it considers whole contents of `module.exports` as ESM default export.
 // 'level-ts' is a CommomJS module, which exports Level constructor as `exports.default`.
@@ -26,12 +27,23 @@ export class LevelStore implements StoreForNetwork {
     this.#storeRoot = storeRoot
   }
 
+  /**
+   * Gets store
+   */
+  get store(): Level {
+    return this.#store
+  }
+
   private _throwIfNotInitialized(): void {
     if (!this.#store) throw new Error('You must call async init(), before you start using the LevelStore')
   }
 
   async init(): Promise<void> {
-    const storePath = path.join(this.#storeRoot, this.networkName)
+    const storePath = path.join(
+      this.#storeRoot,
+      // We want ELP and Mainnet to share data
+      this.networkName === Networks.MAINNET ? Networks.ELP : this.networkName
+    )
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
