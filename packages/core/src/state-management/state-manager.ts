@@ -250,7 +250,6 @@ export class StateManager {
     }
 
     await this.applyCommit(streamId, tip, {})
-    await this.indexStreamIfNeeded(state$)
   }
 
   /**
