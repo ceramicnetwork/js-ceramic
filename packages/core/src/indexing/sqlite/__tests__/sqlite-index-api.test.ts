@@ -16,6 +16,7 @@ import {
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verfication.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
+import { CONFIG_TABLE_NAME } from '../../config.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -140,6 +141,21 @@ describe('init', () => {
       const createdB = await listMidTables(dbConnection)
       const tableNamesB = modelsB.map((m) => `${m.toString()}`)
       expect(createdB.sort()).toEqual(tableNamesB.sort())
+    })
+
+    test('checks or persists the network used for indexing', async () => {
+      const indexApiA = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      await indexApiA.init()
+
+      // Throws if initialized with a different network
+      const indexApiB = new SqliteIndexApi(dbConnection, true, logger, Networks.MAINNET)
+      await expect(indexApiB.init()).rejects.toThrow(
+        'Initialization failed for config table: ceramic_config. The database is configured to use the network inmemory but the current network is mainnet.'
+      )
+
+      // Does not throw if initialized with the stored network
+      const indexApiC = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      await expect(indexApiC.init()).resolves.toBeUndefined()
     })
   })
 
