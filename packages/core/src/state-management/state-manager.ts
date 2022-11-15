@@ -22,8 +22,10 @@ import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, 
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
+import lru from 'lru_map'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
+const PUBSUB_CACHE_SIZE = 500
 
 export class StateManager {
   /**
@@ -33,6 +35,21 @@ export class StateManager {
    * @private
    */
   private readonly syncedPinnedStreams: Set<string> = new Set()
+
+  /**
+   * Cache recently seen tips processed via incoming pubsub UPDATE or RESPONSE messages.
+   * Keys are the tip CIDs, values are the StreamID that was associated with the commit in the
+   * pubsub message.
+   *
+   * It's important that if we see the same tip associated with a different StreamID
+   * that we still process it. In normal circumstances this will never happen, but if we didn't
+   * do this then an attacker could cause us to fail to process valid commits by sending them out
+   * to pubsub with the wrong StreamID associated in the pubsub message.
+   * @private
+   */
+  private readonly pubsubCache: lru.LRUMap<string, string> = new lru.LRUMap<string, string>(
+    PUBSUB_CACHE_SIZE
+  )
 
   /**
    * @param dispatcher - currently used instance of Dispatcher
@@ -217,6 +234,14 @@ export class StateManager {
    * @param model - Model Stream ID
    */
   async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    if (this.pubsubCache.get(tip.toString()) === streamId.toString()) {
+      // This tip was already processed for this streamid recently, no need to re-process it.
+      return
+    } else {
+      // Add tip to pubsub cache and continue processing
+      this.pubsubCache.set(tip.toString(), streamId.toString())
+    }
+
     let state$ = await this.fromMemoryOrStore(streamId)
     const shouldIndex = model && this._index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
