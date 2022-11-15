@@ -638,6 +638,9 @@ class Document extends EventEmitter {
     return next?.content ?? content
   }
 
+  /**
+   * Alias the Dispatcher as "commitLoader" to make clear how it's used in this file.
+   */
   get commitLoader(): Dispatcher {
     return this.dispatcher
   }
