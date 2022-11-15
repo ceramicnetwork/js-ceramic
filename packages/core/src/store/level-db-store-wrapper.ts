@@ -3,7 +3,7 @@ import type Level from 'level-ts'
 import sublevel from 'sublevel'
 import { StoreWrapperInterface, StoreSearchParams } from './store-wrapper-interface.js'
 import path from 'path'
-import fs from 'fs'
+import * as fs from 'fs'
 import { Networks } from '@ceramicnetwork/common'
 
 // When Node.js imports a CJS module from ESM, it considers whole contents of `module.exports` as ESM default export.
