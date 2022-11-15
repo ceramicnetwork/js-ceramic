@@ -242,19 +242,14 @@ export class StateManager {
       this.pubsubCache.set(tip.toString(), streamId.toString())
     }
 
-    let state$ = await this.fromMemoryOrStore(streamId)
+    const state$ = await this.fromMemoryOrStore(streamId)
     const shouldIndex = model && this._index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
       // stream isn't pinned or indexed, nothing to do
       return
     }
 
-    if (!state$) {
-      state$ = await this.load(streamId)
-    }
-    this.executionQ.forStream(streamId).add(async () => {
-      await this._handleTip(state$, tip)
-    })
+    await this.applyCommit(streamId, tip, {})
     await this.indexStreamIfNeeded(state$)
   }
 
