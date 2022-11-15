@@ -49,6 +49,7 @@ import { LocalIndexApi } from './indexing/local-index-api.js'
 import { ShutdownSignal } from './shutdown-signal.js'
 import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelDbStoreWrapper } from './store/level-db-store-wrapper.js'
+import { AnchorRequestStore } from './store/anchor-request-store.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -247,6 +248,7 @@ export class Ceramic implements CeramicApi {
       dispatcher: this.dispatcher,
       pinStore: pinStore,
       stateStore: this._levelStore,
+      anchorRequestStore: new AnchorRequestStore(),
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,

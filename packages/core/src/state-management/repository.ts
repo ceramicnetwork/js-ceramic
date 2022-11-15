@@ -27,11 +27,13 @@ import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { StoreWrapperInterface } from '../store/store-wrapper-interface.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
   stateStore: StoreWrapperInterface
+  anchorRequestStore: AnchorRequestStore
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
@@ -107,11 +109,16 @@ export class Repository {
 
   async init(): Promise<void> {
     await this.pinStore.open(this.#deps.stateStore)
+    await this.anchorRequestStore.open(this.#deps.stateStore)
     await this.index.init()
   }
 
   get pinStore(): PinStore {
     return this.#deps.pinStore
+  }
+
+  get anchorRequestStore(): AnchorRequestStore {
+    return this.#deps.anchorRequestStore
   }
 
   get index(): LocalIndexApi {
@@ -124,6 +131,7 @@ export class Repository {
     this.stateManager = new StateManager(
       deps.dispatcher,
       deps.pinStore,
+      deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
       deps.conflictResolution,
