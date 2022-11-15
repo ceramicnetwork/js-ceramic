@@ -404,8 +404,8 @@ class Document extends EventEmitter {
       // Example of conflict situation where the first two commits are the same, but the last two
       // commits diverge:
       //
-      // [A] <- [B] <- [C]  <- [D]           <= Our local log
-      //          ^--- [C`] <- [D`]          <= The remote log.
+      // [A] <- [B] <- [C] <- [D]          <= Our local log
+      //          ^--- [E] <- [F]          <= The remote log.
 
       // Find the index where the logs begin to diverge
       const conflictIdx = await this._findIndex(firstRemoteCommit.prev, this.state.log) + 1
