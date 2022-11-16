@@ -9,41 +9,59 @@ import PQueue from 'p-queue'
  */
 const MAX_LOAD_RPS = 4000
 
-export class S3StoreWrapper implements StoreWrapperInterface {
+class S3StoreMap {
   readonly networkName: string
+  #map: Map<string, LevelUp.LevelUp>
   readonly #bucketName: string
-  #store:  LevelUp.LevelUp
-  #subStores: Record<string, LevelUp.LevelUp> = {}
+  constructor(bucketName: string, networkName: string) {
+    this.networkName = networkName
+    this.#bucketName = bucketName
+    this.#map = new Map<string, LevelUp.LevelUp>()
+    // @ts-ignore
+    this.#map.set(this.getBaseLocation(), new LevelUp(new S3LevelDOWN(this.getBaseLocation())))
+  }
 
-  readonly  #loadingLimit = new PQueue({
+  getBaseLocation(): string {
+    return this.#bucketName + '/ceramic/' + this.networkName + '/state-store'
+  }
+
+  private getFullLocation(subdirectoryName?: string): string {
+    if (subdirectoryName) {
+      return `${this.getBaseLocation()}/${subdirectoryName}`
+    } else {
+      return this.getBaseLocation()
+    }
+  }
+
+  get(subdirectoryName?: string): LevelUp.LevelUp {
+    const fullLocation = this.getFullLocation(subdirectoryName)
+    if (!this.#map.get(fullLocation)) {
+      // @ts-ignore
+      this.#map.set(fullLocation, new LevelUp(new S3LevelDOWN(fullLocation)))
+    }
+    return this.#map.get(fullLocation)
+  }
+
+  values(): IterableIterator<LevelUp.LevelUp> {
+    return this.#map.values()
+  }
+}
+
+export class S3StoreWrapper implements StoreWrapperInterface {
+  readonly #storeMap: S3StoreMap
+
+  readonly #loadingLimit = new PQueue({
     intervalCap: MAX_LOAD_RPS,
     interval: 1000,
     carryoverConcurrencyCount: true,
   })
 
   constructor(bucketName: string, networkName: string) {
-    this.#bucketName = bucketName
-    this.networkName = networkName
-    const location = this.#bucketName + '/ceramic/' + this.networkName + '/state-store'
-    // @ts-ignore
-    this.#store = new LevelUp(new S3LevelDOWN(location))
+    this.#storeMap = new S3StoreMap(bucketName, networkName)
   }
 
-  private getLocation(subChannel?: string): string {
-    const baseLocation = this.#bucketName + '/ceramic/' + this.networkName + '/state-store'
-    return subChannel ? `${baseLocation}/${subChannel}` : baseLocation
-  }
-
-  private getStore(subChannel?: string): LevelUp.LevelUp {
-    if (subChannel) {
-      if (!this.#subStores[subChannel]) {
-        // @ts-ignore
-        this.#subStores[subChannel] = new LevelUp(new S3LevelDOWN(this.getLocation(subChannel)))
-      }
-      return this.#subStores[subChannel]
-    } else {
-      return this.#store
-    }
+  get networkName(): string {
+    return this.#storeMap.networkName
   }
 
   async init(): Promise<void> {
@@ -54,15 +72,15 @@ export class S3StoreWrapper implements StoreWrapperInterface {
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
     const result = await this.find({
       limit: 1,
-      ... params
+      ...params,
     })
     return result.length > 0
   }
 
   async find(params?: StoreSearchParams): Promise<Array<any>> {
     const bufArray = await toArray(
-      this.getStore(params?.subChannel).createKeyStream({
-        limit: params?.limit
+      this.#storeMap[params?.subChannel].createKeyStream({
+        limit: params?.limit,
       })
     )
     return bufArray.map((buf) => buf.toString())
@@ -70,22 +88,21 @@ export class S3StoreWrapper implements StoreWrapperInterface {
 
   async get(key: string, subChannel?: string): Promise<any> {
     return this.#loadingLimit.add(async () => {
-      return await this.getStore(subChannel).get(key)
+      return await this.#storeMap[subChannel].get(key)
     })
   }
 
   async put(key: string, value: any, subChannel?: string): Promise<void> {
-    return await this.getStore(subChannel).put(key, value)
+    return await this.#storeMap[subChannel].put(key, value)
   }
 
   async del(key: string, subChannel?: string): Promise<void> {
-    return await this.getStore(subChannel).del(key)
+    return await this.#storeMap[subChannel].del(key)
   }
 
   async close() {
-    await this.#store.close()
-    for (const subStoresKey in this.#subStores) {
-      await this.#subStores[subStoresKey].close()
+    for (const location in this.#storeMap) {
+      await this.#storeMap[location].close()
     }
   }
 }
