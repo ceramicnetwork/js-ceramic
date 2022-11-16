@@ -67,6 +67,7 @@ describe('ls', () => {
     expect(actual).toEqual(expected)
     expect(repository.listPinned).toBeCalledWith(STREAM_ID)
   })
+
   test('streamId: absent: empty list', async () => {
     const expected = []
     repository.listPinned = jest.fn(async () => expected)
