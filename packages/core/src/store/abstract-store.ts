@@ -6,7 +6,7 @@ export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
   store: StoreWrapperInterface
 
   private throwIfNotOpened(): void {
-    if (!this.store) throw Error('Anchor Request Store is closed, you need to call async open(), before performing other operations')
+    if (!this.store) throw Error(`${this.constructor.name} is closed, you need to call async open(), before performing other operations`)
   }
 
   abstract getKey(object: O): string
