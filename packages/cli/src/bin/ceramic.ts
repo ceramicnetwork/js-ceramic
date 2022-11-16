@@ -17,7 +17,7 @@ program
   .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints. Deprecated')
   .option(
     '--state-store-directory <string>',
-    `The directory path used for state storage. Defaults to HOME_DIR/.ceramic/statestore. Deprecated.`
+    `The directory path used for state store. Defaults to HOME_DIR/.ceramic/statestore. Deprecated.`
   )
   .option(
     '--state-store-s3-bucket <string>',

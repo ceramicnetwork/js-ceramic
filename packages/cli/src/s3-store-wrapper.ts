@@ -29,16 +29,12 @@ export class S3StoreWrapper implements StoreWrapperInterface {
     this.#store = new LevelUp(new S3LevelDOWN(location))
   }
 
-  private throwIfNotInitialized(): void {
-    if (!this.#store) throw new Error('You must call async init(), before you start using the S3Store')
-  }
-
-  private getLocation(subChannel?: string) {
+  private getLocation(subChannel?: string): string {
     const baseLocation = this.#bucketName + '/ceramic/' + this.networkName + '/state-store'
     return subChannel ? `${baseLocation}/${subChannel}` : baseLocation
   }
 
-  private getStore(subChannel?: string) {
+  private getStore(subChannel?: string): LevelUp.LevelUp {
     if (subChannel) {
       if (!this.#subStores[subChannel]) {
         // @ts-ignore
@@ -56,7 +52,6 @@ export class S3StoreWrapper implements StoreWrapperInterface {
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
-    this.throwIfNotInitialized()
     const result = await this.find({
       limit: 1,
       ... params
@@ -65,7 +60,6 @@ export class S3StoreWrapper implements StoreWrapperInterface {
   }
 
   async find(params?: StoreSearchParams): Promise<Array<any>> {
-    this.throwIfNotInitialized()
     const bufArray = await toArray(
       this.getStore(params?.subChannel).createKeyStream({
         limit: params?.limit
@@ -75,24 +69,20 @@ export class S3StoreWrapper implements StoreWrapperInterface {
   }
 
   async get(key: string, subChannel?: string): Promise<any> {
-    this.throwIfNotInitialized()
     return this.#loadingLimit.add(async () => {
       return await this.getStore(subChannel).get(key)
     })
   }
 
   async put(key: string, value: any, subChannel?: string): Promise<void> {
-    this.throwIfNotInitialized()
     return await this.getStore(subChannel).put(key, value)
   }
 
   async del(key: string, subChannel?: string): Promise<void> {
-    this.throwIfNotInitialized()
     return await this.getStore(subChannel).del(key)
   }
 
   async close() {
-    this.throwIfNotInitialized()
     await this.#store.close()
     for (const subStoresKey in this.#subStores) {
       await this.#subStores[subStoresKey].close()

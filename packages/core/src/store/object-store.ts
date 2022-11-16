@@ -1,19 +1,26 @@
 import { StoreWrapperInterface } from './store-wrapper-interface.js'
 import { StoreInterface } from './store-interface.js'
 
-export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
-  storeSubChannel: string | undefined
-  store: StoreWrapperInterface
+export class ObjectStore<O, V> implements StoreInterface<O, V> {
+  protected storeSubChannel: string | undefined
+  protected store: StoreWrapperInterface
+  private readonly generateKey: (object: O) => string
+  private readonly serialize: (value: V) => any
+  private readonly deserialize: (serialized: any) => V
 
   private throwIfNotOpened(): void {
     if (!this.store) throw Error(`${this.constructor.name} is closed, you need to call async open(), before performing other operations`)
   }
 
-  abstract getKey(object: O): string
-
-  abstract serialize(value: V): any
-
-  abstract deserialize(value: any): V
+  constructor(
+    generateKey: (object: O) => string,
+    serialize: (value: V) => any,
+    deserialize: (value: any) => V
+  ) {
+    this.generateKey = generateKey
+    this.serialize = serialize
+    this.deserialize = deserialize
+  }
 
   async open(store: StoreWrapperInterface): Promise<void> {
     this.store = store
@@ -28,7 +35,7 @@ export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
   async save(object: O, value: V): Promise<void> {
     this.throwIfNotOpened()
     await this.store.put(
-      this.getKey(object),
+      this.generateKey(object),
       this.serialize(value),
       this.storeSubChannel
     )
@@ -38,7 +45,7 @@ export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
     this.throwIfNotOpened()
     try {
       const serialized = await this.store.get(
-        this.getKey(object)
+        this.generateKey(object)
       )
       if (serialized) {
         return this.deserialize(serialized)
@@ -56,7 +63,7 @@ export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
   async remove(object: O): Promise<void> {
     this.throwIfNotOpened()
     await this.store.del(
-      this.getKey(object),
+      this.generateKey(object),
       this.storeSubChannel
     )
   }

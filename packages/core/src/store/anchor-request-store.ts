@@ -1,26 +1,25 @@
 
 import { CommitID } from '@ceramicnetwork/streamid'
-import { AbstractStore } from './abstract-store.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { ObjectStore } from './object-store.js'
 
 // TODO: CDB-2009 make this type store explicitly what's needed for an anchor request
 export type AnchorRequestData = Record<string, any>
 
-export class AnchorRequestStore extends AbstractStore<CommitID, AnchorRequestData> {
+function generateKey(object: CommitID): string {
+  return object.toString()
+}
+
+function serialize(value: AnchorRequestData): any {
+  return JSON.stringify(value)
+}
+
+function deserialize(serialized: any): AnchorRequestData {
+  return JSON.parse(serialized)
+}
+
+export class AnchorRequestStore extends ObjectStore<CommitID, AnchorRequestData> {
   constructor() {
-    super()
+    super(generateKey, serialize, deserialize)
     this.storeSubChannel = 'anchor-requests'
-  }
-
-  getKey(object: CommitID): string {
-    return object.toString()
-  }
-
-  serialize(value: AnchorRequestData): any {
-    return JSON.stringify(value)
-  }
-
-  deserialize(serialized: any): AnchorRequestData {
-    return JSON.parse(serialized)
   }
 }

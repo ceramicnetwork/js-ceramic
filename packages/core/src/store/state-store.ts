@@ -7,14 +7,26 @@ import {
   StreamStateHolder,
   StreamUtils
 } from '@ceramicnetwork/common'
-import { AbstractStore } from './abstract-store.js'
+import { ObjectStore } from './object-store.js'
 import { StoreWrapperInterface } from './store-wrapper-interface.js'
 
-export class StateStore extends AbstractStore<StreamID, StreamState> {
+function generateKey(object: StreamID): string {
+  return object.toString()
+}
+
+function serialize(value: StreamState): any {
+  return StreamUtils.serializeState(value)
+}
+
+function  deserialize(serialized: string): StreamState {
+  return StreamUtils.deserializeState(serialized)
+}
+
+export class StateStore extends ObjectStore<StreamID, StreamState> {
   #logger: DiagnosticsLogger
 
   constructor(logger: DiagnosticsLogger) {
-    super()
+    super(generateKey, serialize, deserialize)
     this.#logger = logger
   }
 
@@ -23,18 +35,6 @@ export class StateStore extends AbstractStore<StreamID, StreamState> {
    */
   get networkName(): string {
     return this.store.networkName
-  }
-
-  getKey(object: StreamID): string {
-    return object.toString()
-  }
-
-  serialize(value: StreamState): any {
-    return StreamUtils.serializeState(value)
-  }
-
-  deserialize(serialized: any): StreamState {
-    return StreamUtils.deserializeState(serialized)
   }
 
   /**
