@@ -20,7 +20,7 @@ export abstract class AbstractStore<O, V> implements StoreInterface<O, V> {
   }
 
   async close(): Promise<void> {
-    this.throwIfNotOpened()
+    if (!this.store) return
     await this.store.close()
     this.store = undefined
   }
