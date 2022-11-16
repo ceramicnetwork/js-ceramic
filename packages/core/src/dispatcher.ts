@@ -9,7 +9,7 @@ import {
   base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import {Metrics, METRIC_NAMES} from '@ceramicnetwork/metrics'
+import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
 import { Repository } from './state-management/repository.js'
 import {
   MsgType,
@@ -49,6 +49,14 @@ function messageTypeToString(type: MsgType): string {
       return 'Keepalive'
     default:
       throw new UnreachableCaseError(type, `Unsupported message type`)
+  }
+}
+
+export class InvalidTipError extends Error {
+  constructor(queryId: string, expectedStreamID: StreamID) {
+    super(
+      `Response to query with ID '${queryId}' is missing expected new tip for StreamID '${expectedStreamID}'`
+    )
   }
 }
 
@@ -363,20 +371,11 @@ export class Dispatcher {
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID
-    if (expectedStreamID) {
-      const newTip = tips.get(expectedStreamID.toString())
-      if (!newTip) {
-        throw new Error(
-          "Response to query with ID '" +
-            queryId +
-            "' is missing expected new tip for StreamID '" +
-            expectedStreamID +
-            "'"
-        )
-      }
-      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip)
-      // TODO Iterate over all streams in 'tips' object and process the new tip for each
-    }
+    if (!expectedStreamID) return
+    const newTip = tips.get(expectedStreamID.toString())
+    if (!newTip) throw new InvalidTipError(queryId, expectedStreamID)
+    await this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip)
+    // TODO Iterate over all streams in 'tips' object and process the new tip for each
   }
 
   /**
