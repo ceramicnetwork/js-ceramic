@@ -245,7 +245,7 @@ export class Dispatcher {
           console.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
-          Metrics.count(IPFS_TIMEOUT, 1)
+          Metrics.count(ERROR_IPFS_TIMEOUT, 1)
 
           if (retries > 0) {
             continue
