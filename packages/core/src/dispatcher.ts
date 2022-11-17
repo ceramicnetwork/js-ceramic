@@ -9,7 +9,7 @@ import {
   base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import {Metrics, METRIC_NAMES} from '@ceramicnetwork/metrics'
+import {ServiceMetrics as Metrics} from '@ceramicnetwork/observability'
 import { Repository } from './state-management/repository.js'
 import {
   MsgType,
@@ -36,6 +36,10 @@ const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
+
+const ERROR_IPFS_TIMEOUT = 'ipfs_timeout'
+const ERROR_STORING_COMMIT = 'error_storing_commit'
+const COMMITS_STORED = 'commits_stored'
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -97,7 +101,7 @@ export class Dispatcher {
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
-    Metrics.count(METRIC_NAMES.COMMITS_STORED, 1)
+    Metrics.count(COMMITS_STORED, 1)
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
         const { jws, linkedBlock, cacaoBlock } = data
@@ -140,7 +144,7 @@ export class Dispatcher {
       } else {
         this._logger.err(`Error while storing commit to IPFS: ${e}`)
       }
-      Metrics.count(METRIC_NAMES.ERROR_STORING_COMMIT, 1)
+      Metrics.count(ERROR_STORING_COMMIT, 1)
       throw e
     }
   }
@@ -241,7 +245,7 @@ export class Dispatcher {
           console.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
-          Metrics.count(METRIC_NAMES.IPFS_TIMEOUT, 1)
+          Metrics.count(ERROR_IPFS_TIMEOUT, 1)
 
           if (retries > 0) {
             continue

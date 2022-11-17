@@ -1,7 +1,7 @@
 import type { Knex } from 'knex'
-import { UnreachableCaseError } from '@ceramicnetwork/common'
+import { UnreachableCaseError, Networks } from '@ceramicnetwork/common'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../database-index-api.js'
-
+import { CONFIG_TABLE_NAME } from '../../config.js'
 
 /**
  * The expected type for the data in the column.  For now only supports STRING as the only extra
@@ -75,7 +75,7 @@ export async function createModelTable(
   })
 }
 
-export async function createConfigTable(dataSource: Knex, tableName: string) {
+export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {
   switch (tableName) {
     case INDEXED_MODEL_CONFIG_TABLE_NAME:
       await dataSource.schema.createTable(tableName, function (table) {
@@ -90,6 +90,13 @@ export async function createConfigTable(dataSource: Knex, tableName: string) {
           storageEngineIndexType: 'hash',
         })
       })
+      break
+    case CONFIG_TABLE_NAME:
+      await dataSource.schema.createTable(tableName, function (table) {
+        // create configuration table
+        table.string('network', 1024).notNullable()
+      })
+      await dataSource.into(tableName).insert({ network })
       break
     default:
       throw new Error(`Invalid config table creation requested: ${tableName}`)

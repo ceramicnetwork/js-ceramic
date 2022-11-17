@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.17.0",
+  "version": "2.18.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -43,7 +43,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.13.0",
     "@ceramicnetwork/ipfs-topology": "^2.7.0",
-    "@ceramicnetwork/metrics": "^0.5.0",
+    "@ceramicnetwork/observability": "^1.0.4",
     "@ceramicnetwork/pinning-aggregation": "^2.5.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^2.5.0",
     "@ceramicnetwork/stream-caip10-link": "^2.8.0",
