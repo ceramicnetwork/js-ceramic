@@ -39,14 +39,6 @@ export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
 
   /**
    * Pin stream
-   * @param stream - Stream instance
-   */
-  async saveFromStream(stream: Stream): Promise<void> {
-    await this.save(stream.id, stream.state)
-  }
-
-  /**
-   * Pin stream
    * @param streamStateHolder - Stream instance
    */
   async saveFromStreamStateHolder(streamStateHolder: StreamStateHolder): Promise<void> {

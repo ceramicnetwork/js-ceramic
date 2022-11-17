@@ -43,7 +43,6 @@ beforeEach(() => {
     close: jest.fn(),
     list: jest.fn(),
     remove: jest.fn(),
-    saveFromStream: jest.fn(),
     saveFromStreamStateHolder: jest.fn(),
     load: jest.fn(),
   }

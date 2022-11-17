@@ -70,7 +70,7 @@ describe('LevelDB-backed StateStore state store', () => {
 
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await stateStore.saveFromStream(stream)
+    await stateStore.saveFromStreamStateHolder(stream)
     const streamId = stream.id.baseID
     expect(putSpy).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state), undefined)
 
@@ -102,7 +102,7 @@ describe('LevelDB-backed StateStore state store', () => {
   test('#remove', async () => {
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await stateStore.saveFromStream(stream)
+    await stateStore.saveFromStreamStateHolder(stream)
     const streamId = stream.id.baseID
 
     let retrieved = await stateStore.load(streamId)
@@ -123,14 +123,14 @@ describe('LevelDB-backed StateStore state store', () => {
       let list = await stateStore.list()
       expect(list.length).toEqual(0)
 
-      await stateStore.saveFromStream(streamFromState(states[0]))
+      await stateStore.saveFromStreamStateHolder(streamFromState(states[0]))
 
       list = await stateStore.list()
       expect(list.length).toEqual(1)
       expect(list).toEqual([streams[0].id.toString()])
 
-      await stateStore.saveFromStream(streamFromState(states[1]))
-      await stateStore.saveFromStream(streamFromState(states[2]))
+      await stateStore.saveFromStreamStateHolder(streamFromState(states[1]))
+      await stateStore.saveFromStreamStateHolder(streamFromState(states[2]))
 
       list = await stateStore.list()
       expect(list.length).toEqual(3)
@@ -142,8 +142,8 @@ describe('LevelDB-backed StateStore state store', () => {
     test('list with limit', async () => {
       const states = await Promise.all([makeStreamState(), makeStreamState()])
 
-      await stateStore.saveFromStream(streamFromState(states[0]))
-      await stateStore.saveFromStream(streamFromState(states[1]))
+      await stateStore.saveFromStreamStateHolder(streamFromState(states[0]))
+      await stateStore.saveFromStreamStateHolder(streamFromState(states[1]))
 
       let list = await stateStore.list()
       expect(list.length).toEqual(2)
@@ -161,7 +161,7 @@ describe('LevelDB-backed StateStore state store', () => {
       expect(list).toEqual([])
 
       // Stream present in state store
-      await stateStore.saveFromStream(streamFromState(state))
+      await stateStore.saveFromStreamStateHolder(streamFromState(state))
       list = await stateStore.list(streamID)
       expect(list).toEqual([streamID.toString()])
     })
@@ -187,7 +187,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
 
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await stateStore.saveFromStream(stream)
+    await stateStore.saveFromStreamStateHolder(stream)
     const retrievedFromElp = await stateStore.load(stream.id.baseID)
     expect(retrievedFromElp).toEqual(state)
 
@@ -206,7 +206,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
 
     const state = makeStreamState()
     const stream = streamFromState(state)
-    await stateStore.saveFromStream(stream)
+    await stateStore.saveFromStreamStateHolder(stream)
     const retrievedFromClay = await stateStore.load(stream.id.baseID)
     expect(retrievedFromClay).toEqual(state)
 

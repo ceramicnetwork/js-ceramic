@@ -35,7 +35,6 @@ class LevelStoreMap {
     }
     this.#map = new Map<string, Level>()
     this.#map.set(this.getFullLocation(), this.createStore())
-
   }
 
   private getBaseLocation(): string {
@@ -101,11 +100,13 @@ export class LevelDbStoreWrapper implements StoreWrapperInterface {
     const seachParams: Record<string, any> = {
       keys: true,
       values: false,
-      limit: params?.limit
+      limit: params?.limit,
     }
 
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return this.#storeMap.get(params?.subChannel).stream(seachParams) as unknown as Promise<Array<any>>
+    return this.#storeMap.get(params?.subChannel).stream(seachParams) as unknown as Promise<
+      Array<any>
+    >
   }
 
   put(key: string, value: any, subChannel?: string): Promise<void> {

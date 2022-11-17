@@ -66,7 +66,7 @@ describe('Level data store', () => {
   it('pins stream correctly without IPFS pinning', async () => {
     await expect(store.stateStore.load(streamId)).resolves.toBeNull()
     const pinSpy = jest.spyOn(store.pinning, 'pin')
-    await store.stateStore.saveFromStream({ id: streamId, state: streamState })
+    await store.stateStore.saveFromStreamStateHolder({ id: streamId, state: streamState })
     expect(pinSpy).toBeCalledTimes(0)
     await expect(store.stateStore.load(streamId)).resolves.toEqual(streamState)
   })
@@ -153,7 +153,7 @@ describe('Level data store', () => {
     const localStore = storeFactoryLocal.createPinStore()
     await localStore.open(localLevelStore)
 
-    await localStore.stateStore.saveFromStream({ id: streamId, state: streamState })
+    await localStore.stateStore.saveFromStreamStateHolder({ id: streamId, state: streamState })
     await expect(localStore.stateStore.load(streamId)).resolves.toEqual(streamState)
 
     await localStore.close()
