@@ -7,7 +7,7 @@ import { InsertionOrder } from '../insertion-order.js'
 import { jest } from '@jest/globals'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
-import { LoggerProvider } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 
 const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
@@ -29,7 +29,7 @@ beforeEach(async () => {
     client: 'pg',
     connection: process.env.DATABASE_URL,
   })
-  const indexAPI = new PostgresIndexApi(dbConnection, true, logger)
+  const indexAPI = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
   await indexAPI.init()
   await indexAPI.indexModels(
     MODELS_TO_INDEX.map((model) => {
