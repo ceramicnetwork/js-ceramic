@@ -11,7 +11,7 @@ import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { LevelDbStoreWrapper } from '../store/level-db-store-wrapper.js'
-import { StateStore } from '../store/state-store.js'
+import { StreamStateStore } from '../store/stream-state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -55,7 +55,7 @@ describe('Dispatcher with mock ipfs', () => {
 
     const levelPath = await tmp.tmpName()
     const levelStore = new LevelDbStoreWrapper(levelPath, 'test')
-    const stateStore = new StateStore(loggerProvider.getDiagnosticsLogger())
+    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
     stateStore.open(levelStore)
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {

@@ -10,7 +10,7 @@ import { TaskQueue } from '../pubsub/task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { LevelDbStoreWrapper } from '../store/level-db-store-wrapper.js'
-import { StateStore } from '../store/state-store.js'
+import { StreamStateStore } from '../store/stream-state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -31,7 +31,7 @@ describe('Dispatcher with real ipfs over http', () => {
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
     const levelStore = new LevelDbStoreWrapper(levelPath, 'test')
-    const stateStore = new StateStore(loggerProvider.getDiagnosticsLogger())
+    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
     stateStore.open(levelStore)
     const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {

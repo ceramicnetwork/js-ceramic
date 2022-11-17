@@ -4,14 +4,14 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { StoreWrapperInterface } from './store-wrapper-interface.js'
-import { StateStore } from './state-store.js'
+import { StreamStateStore } from './stream-state-store.js'
 
 /**
  * Encapsulates logic for pinning streams
  */
 export class PinStore {
   constructor(
-    readonly stateStore: StateStore,
+    readonly stateStore: StreamStateStore,
     readonly pinning: PinningBackend,
     readonly retrieve: (cid: CID) => Promise<any | null>,
     readonly resolve: (path: string) => Promise<CID>,

@@ -16,9 +16,9 @@ import { RunningState } from '../../state-management/running-state.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { StoreWrapperInterface } from '../store-wrapper-interface.js'
-import { StateStore } from '../state-store.js'
+import { StreamStateStore } from '../stream-state-store.js'
 
-let stateStore: StateStore
+let stateStore: StreamStateStore
 let storeWrapperTemplate: StoreWrapperInterface
 let pinning: PinningBackend
 const NETWORK = 'fakeNetwork'

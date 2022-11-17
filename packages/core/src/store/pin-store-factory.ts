@@ -4,7 +4,7 @@ import { PinStore } from './pin-store.js'
 import type { CID } from 'multiformats/cid'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { Repository } from '../state-management/repository.js'
-import { StateStore } from './state-store.js'
+import { StreamStateStore } from './stream-state-store.js'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
@@ -16,7 +16,7 @@ export type Props = {
 export class PinStoreFactory {
   readonly pinningEndpoints: string[]
   readonly pinningBackends: PinningBackendStatic[]
-  private _stateStore: StateStore
+  private _stateStore: StreamStateStore
 
   constructor(
     readonly ipfs: IpfsApi,
@@ -32,7 +32,7 @@ export class PinStoreFactory {
       props.pinningBackends && props.pinningBackends.length > 0
         ? props.pinningBackends
         : [IpfsPinning]
-    this._stateStore = new StateStore(logger)
+    this._stateStore = new StreamStateStore(logger)
   }
 
   public createPinStore(): PinStore {

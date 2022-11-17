@@ -22,7 +22,7 @@ function  deserialize(serialized: string): StreamState {
   return StreamUtils.deserializeState(serialized)
 }
 
-export class StateStore extends ObjectStore<StreamID, StreamState> {
+export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
   #logger: DiagnosticsLogger
 
   constructor(logger: DiagnosticsLogger) {

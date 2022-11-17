@@ -12,7 +12,7 @@ import {
   Networks,
 } from '@ceramicnetwork/common'
 import { LevelDbStoreWrapper } from '../level-db-store-wrapper.js'
-import { StateStore } from '../state-store.js'
+import { StreamStateStore } from '../stream-state-store.js'
 
 class FakeType extends Stream {
   isReadOnly = true
@@ -47,12 +47,12 @@ const streamFromState = function (state: StreamState) {
 describe('LevelDB-backed StateStore state store', () => {
   let tmpFolder: any
   let levelStore: LevelDbStoreWrapper
-  let stateStore: StateStore
+  let stateStore: StreamStateStore
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     levelStore = new LevelDbStoreWrapper(tmpFolder.path, 'fakeNetwork')
-    stateStore = new StateStore(new LoggerProvider().getDiagnosticsLogger())
+    stateStore = new StreamStateStore(new LoggerProvider().getDiagnosticsLogger())
     await stateStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
@@ -170,11 +170,11 @@ describe('LevelDB-backed StateStore state store', () => {
 
 describe('LevelDB-backed StateStore network change tests', () => {
   let tmpFolder: any
-  let stateStore: StateStore
+  let stateStore: StreamStateStore
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new StateStore(new LoggerProvider().getDiagnosticsLogger())
+    stateStore = new StreamStateStore(new LoggerProvider().getDiagnosticsLogger())
   })
 
   afterEach(async () => {
