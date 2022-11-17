@@ -239,6 +239,7 @@ export class Repository {
     if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)
     }
+    await this.indexStreamIfNeeded(state$)
 
     return state$
   }
