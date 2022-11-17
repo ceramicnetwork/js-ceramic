@@ -82,21 +82,21 @@ export class S3StoreWrapper implements StoreWrapperInterface {
     return bufArray.map((buf) => buf.toString())
   }
 
-  async get(key: string, subChannel?: string): Promise<any> {
-    return this.#loadingLimit.add(async () => {
-      return await this.#storeMap.get(subChannel).get(key)
+  get(key: string, subChannel?: string): Promise<any> {
+    return this.#loadingLimit.add(() => {
+      return this.#storeMap.get(subChannel).get(key)
     })
   }
 
-  async put(key: string, value: any, subChannel?: string): Promise<void> {
-    return await this.#storeMap.get(subChannel).put(key, value)
+  put(key: string, value: any, subChannel?: string): Promise<void> {
+    return this.#storeMap.get(subChannel).put(key, value)
   }
 
-  async del(key: string, subChannel?: string): Promise<void> {
-    return await this.#storeMap.get(subChannel).del(key)
+  del(key: string, subChannel?: string): Promise<void> {
+    return this.#storeMap.get(subChannel).del(key)
   }
 
-  async close() {
+  async close(): Promise<void> {
     for (const store of this.#storeMap.values()) {
       await store.close()
     }

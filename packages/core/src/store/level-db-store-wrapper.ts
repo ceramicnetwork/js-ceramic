@@ -82,12 +82,12 @@ export class LevelDbStoreWrapper implements StoreWrapperInterface {
     return this.#storeMap.networkName
   }
 
-  async del(key: string, subChannel?: string): Promise<void> {
-    await this.#storeMap.get(subChannel).del(key)
+  del(key: string, subChannel?: string): Promise<void> {
+    return this.#storeMap.get(subChannel).del(key)
   }
 
-  async get(key: string, subChannel?: string): Promise<any> {
-    return await this.#storeMap.get(subChannel).get(key)
+  get(key: string, subChannel?: string): Promise<any> {
+    return this.#storeMap.get(subChannel).get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -97,22 +97,22 @@ export class LevelDbStoreWrapper implements StoreWrapperInterface {
     return result.length > 0
   }
 
-  async find(params?: StoreSearchParams): Promise<Array<any>> {
+  find(params?: StoreSearchParams): Promise<Array<any>> {
     const seachParams: Record<string, any> = {
       keys: true,
       values: false,
       limit: params?.limit
     }
 
-    // The return type of .stram is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return (await this.#storeMap.get(params?.subChannel).stream(seachParams)) as unknown as Array<string>
+    // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
+    return this.#storeMap.get(params?.subChannel).stream(seachParams) as unknown as Promise<Array<any>>
   }
 
-  async put(key: string, value: any, subChannel?: string): Promise<void> {
-    return await this.#storeMap.get(subChannel).put(key, value)
+  put(key: string, value: any, subChannel?: string): Promise<void> {
+    return this.#storeMap.get(subChannel).put(key, value)
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
     // do nothing
     return
   }
