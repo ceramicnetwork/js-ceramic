@@ -218,14 +218,19 @@ export class StateManager {
    * @param model - Model Stream ID
    */
   async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    const state$ = await this.fromMemoryOrStore(streamId)
+    let state$ = await this.fromMemoryOrStore(streamId)
     const shouldIndex = model && this._index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
       // stream isn't pinned or indexed, nothing to do
       return
     }
 
-    await this.applyCommit(streamId, tip, {})
+    if (!state$) {
+      state$ = await this.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._handleTip(state$, tip)
+    })
   }
 
   /**
