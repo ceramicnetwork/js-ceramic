@@ -18,7 +18,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { RunningState } from '../../state-management/running-state.js'
 import { Repository } from '../../state-management/repository.js'
-import { LevelDbStoreWrapper } from '../level-db-store-wrapper.js'
+import { LevelDbStore } from '../level-db-store.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -58,7 +58,7 @@ describe('Level data store', () => {
       },
       new LoggerProvider().getDiagnosticsLogger()
     )
-    const levelStore = new LevelDbStoreWrapper(levelPath, 'inmemory')
+    const levelStore = new LevelDbStore(levelPath, 'inmemory')
     store = storeFactory.createPinStore()
     await store.open(levelStore)
   })
@@ -141,7 +141,7 @@ describe('Level data store', () => {
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const localLevelStore = new LevelDbStoreWrapper(levelPath, 'local')
+    const localLevelStore = new LevelDbStore(levelPath, 'local')
     const storeFactoryLocal = new PinStoreFactory(
       ipfs,
       repository,
@@ -159,7 +159,7 @@ describe('Level data store', () => {
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const inmemoryLevelStore = new LevelDbStoreWrapper(levelPath, 'inmemory')
+    const inmemoryLevelStore = new LevelDbStore(levelPath, 'inmemory')
     const storeFactoryInMemory = new PinStoreFactory(
       ipfs,
       repository,

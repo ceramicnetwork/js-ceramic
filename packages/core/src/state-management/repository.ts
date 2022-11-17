@@ -26,13 +26,13 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
-import { StoreWrapperInterface } from '../store/store-wrapper-interface.js'
+import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
-  stateStore: StoreWrapperInterface
+  stateStore: IKVStore
   anchorRequestStore: AnchorRequestStore
   context: Context
   handlers: HandlersMap
@@ -99,7 +99,7 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async injectStateStore(stateStore: StoreWrapperInterface): Promise<void> {
+  async injectStateStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
       stateStore: stateStore

@@ -15,11 +15,11 @@ import {
 import { RunningState } from '../../state-management/running-state.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
-import { StoreWrapperInterface } from '../store-wrapper-interface.js'
+import { IKVStore } from '../ikv-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
 
 let stateStore: StreamStateStore
-let storeWrapperTemplate: StoreWrapperInterface
+let storeWrapperTemplate: IKVStore
 let pinning: PinningBackend
 const NETWORK = 'fakeNetwork'
 

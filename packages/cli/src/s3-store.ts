@@ -1,4 +1,4 @@
-import { StoreWrapperInterface, StoreSearchParams } from '@ceramicnetwork/core'
+import { IKVStore, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
@@ -48,7 +48,7 @@ class S3StoreMap {
   }
 }
 
-export class S3StoreWrapper implements StoreWrapperInterface {
+export class S3Store implements IKVStore {
   readonly #storeMap: S3StoreMap
 
   readonly #loadingLimit = new PQueue({

@@ -8,7 +8,7 @@ import {
   StreamUtils
 } from '@ceramicnetwork/common'
 import { ObjectStore } from './object-store.js'
-import { StoreWrapperInterface } from './store-wrapper-interface.js'
+import { IKVStore } from './ikv-store.js'
 
 function generateKey(object: StreamID): string {
   return object.toString()
@@ -45,7 +45,7 @@ export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
     await this.save(streamStateHolder.id, streamStateHolder.state)
   }
 
-  async open(store: StoreWrapperInterface): Promise<void> {
+  async open(store: IKVStore): Promise<void> {
     if (store.networkName == Networks.MAINNET || store.networkName == Networks.ELP) {
       // If using "mainnet", check for data under an 'elp' directory first. This is because older
       // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored

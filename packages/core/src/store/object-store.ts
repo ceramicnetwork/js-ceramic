@@ -1,9 +1,9 @@
-import { StoreWrapperInterface } from './store-wrapper-interface.js'
-import { StoreInterface } from './store-interface.js'
+import { IKVStore } from './ikv-store.js'
+import { IObjectStore } from './iobject-store.js'
 
-export class ObjectStore<TKeyObject, TValue> implements StoreInterface<TKeyObject, TValue> {
+export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
   protected storeSubChannel: string | undefined
-  protected store: StoreWrapperInterface
+  protected store: IKVStore
   private readonly generateKey: (object: TKeyObject) => string
   private readonly serialize: (value: TValue) => any
   private readonly deserialize: (serialized: any) => TValue
@@ -25,7 +25,7 @@ export class ObjectStore<TKeyObject, TValue> implements StoreInterface<TKeyObjec
     this.deserialize = deserialize
   }
 
-  async open(store: StoreWrapperInterface): Promise<void> {
+  async open(store: IKVStore): Promise<void> {
     this.store = store
   }
 

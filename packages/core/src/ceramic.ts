@@ -48,7 +48,7 @@ import * as path from 'path'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { ShutdownSignal } from './shutdown-signal.js'
 import { IndexingConfig } from './indexing/build-indexing.js'
-import { LevelDbStoreWrapper } from './store/level-db-store-wrapper.js'
+import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
@@ -195,7 +195,7 @@ export class Ceramic implements CeramicApi {
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
-  private readonly _levelStore: LevelDbStoreWrapper
+  private readonly _levelStore: LevelDbStore
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -211,7 +211,7 @@ export class Ceramic implements CeramicApi {
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
 
-    this._levelStore = new LevelDbStoreWrapper(
+    this._levelStore = new LevelDbStore(
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
       this._networkOptions.name
     )

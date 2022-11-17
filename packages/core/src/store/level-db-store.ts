@@ -1,7 +1,7 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
 import sublevel from 'sublevel'
-import { StoreWrapperInterface, StoreSearchParams } from './store-wrapper-interface.js'
+import { IKVStore, StoreSearchParams } from './ikv-store.js'
 import path from 'path'
 import * as fs from 'fs'
 import { Networks } from '@ceramicnetwork/common'
@@ -70,7 +70,7 @@ class LevelStoreMap {
   }
 }
 
-export class LevelDbStoreWrapper implements StoreWrapperInterface {
+export class LevelDbStore implements IKVStore {
   readonly #storeMap: LevelStoreMap
 
   constructor(storeRoot: string, networkName: string) {

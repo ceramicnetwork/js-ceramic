@@ -10,7 +10,7 @@ import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
-import { LevelDbStoreWrapper } from '../store/level-db-store-wrapper.js'
+import { LevelDbStore } from '../store/level-db-store.js'
 import { StreamStateStore } from '../store/stream-state-store.js'
 
 const TOPIC = '/ceramic'
@@ -54,7 +54,7 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.publish.mockClear()
 
     const levelPath = await tmp.tmpName()
-    const levelStore = new LevelDbStoreWrapper(levelPath, 'test')
+    const levelStore = new LevelDbStore(levelPath, 'test')
     const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
     stateStore.open(levelStore)
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())

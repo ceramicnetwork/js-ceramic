@@ -3,7 +3,7 @@ export type StoreSearchParams = {
   subChannel? : string
 }
 
-export interface StoreWrapperInterface {
+export interface IKVStore {
   networkName: string
 
   close(): Promise<void>
