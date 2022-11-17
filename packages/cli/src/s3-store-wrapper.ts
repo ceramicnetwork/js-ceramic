@@ -11,8 +11,9 @@ const MAX_LOAD_RPS = 4000
 
 class S3StoreMap {
   readonly networkName: string
-  #map: Map<string, LevelUp.LevelUp>
   readonly #bucketName: string
+  readonly #map: Map<string, LevelUp.LevelUp>
+
   constructor(bucketName: string, networkName: string) {
     this.networkName = networkName
     this.#bucketName = bucketName
@@ -64,11 +65,6 @@ export class S3StoreWrapper implements StoreWrapperInterface {
     return this.#storeMap.networkName
   }
 
-  async init(): Promise<void> {
-    // @ts-ignore
-    this.#store = new LevelUp(new S3LevelDOWN(this.getLocation()))
-  }
-
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
     const result = await this.find({
       limit: 1,
@@ -79,7 +75,7 @@ export class S3StoreWrapper implements StoreWrapperInterface {
 
   async find(params?: StoreSearchParams): Promise<Array<any>> {
     const bufArray = await toArray(
-      this.#storeMap[params?.subChannel].createKeyStream({
+      this.#storeMap.get(params?.subChannel).createKeyStream({
         limit: params?.limit,
       })
     )
@@ -88,21 +84,21 @@ export class S3StoreWrapper implements StoreWrapperInterface {
 
   async get(key: string, subChannel?: string): Promise<any> {
     return this.#loadingLimit.add(async () => {
-      return await this.#storeMap[subChannel].get(key)
+      return await this.#storeMap.get(subChannel).get(key)
     })
   }
 
   async put(key: string, value: any, subChannel?: string): Promise<void> {
-    return await this.#storeMap[subChannel].put(key, value)
+    return await this.#storeMap.get(subChannel).put(key, value)
   }
 
   async del(key: string, subChannel?: string): Promise<void> {
-    return await this.#storeMap[subChannel].del(key)
+    return await this.#storeMap.get(subChannel).del(key)
   }
 
   async close() {
-    for (const location in this.#storeMap) {
-      await this.#storeMap[location].close()
+    for (const store of this.#storeMap.values()) {
+      await store.close()
     }
   }
 }

@@ -117,16 +117,11 @@ describe('LevelDB-backed StateStore state store', () => {
   describe('#list', () => {
     test('saved entries', async () => {
 
-      // @ts-ignore the store property is not exposed on StoreWrapperInterface, because it's not needed outside of tests
-      const streamSpy = jest.spyOn(stateStore.store.store, 'stream')
-
       const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
       const streams = states.map((state) => streamFromState(state))
 
       let list = await stateStore.list()
       expect(list.length).toEqual(0)
-      expect(streamSpy).toBeCalledWith({ keys: true, values: false })
-      streamSpy.mockRestore()
 
       await stateStore.saveFromStream(streamFromState(states[0]))
 

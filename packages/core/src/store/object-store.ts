@@ -9,7 +9,7 @@ export class ObjectStore<O, V> implements StoreInterface<O, V> {
   private readonly deserialize: (serialized: any) => V
 
   private throwIfNotOpened(): void {
-    if (!this.store) throw Error(`${this.constructor.name} is closed, you need to call async open(), before performing other operations`)
+    if (!this.store) throw Error(`${this.constructor.name} is closed, you need to call async open(...), before performing other operations`)
   }
 
   constructor(
