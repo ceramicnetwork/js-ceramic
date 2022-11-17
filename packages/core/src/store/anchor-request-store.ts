@@ -1,11 +1,16 @@
 
-import { CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { ObjectStore } from './object-store.js'
+import { CID } from 'multiformats/cid'
+import { GenesisCommit } from '@ceramicnetwork/common'
 
-// TODO: CDB-2009 make this type store explicitly what's needed for an anchor request
-export type AnchorRequestData = Record<string, any>
+export type AnchorRequestData = {
+  cid: CID
+  timestamp: number
+  genesis: GenesisCommit
+}
 
-function generateKey(object: CommitID): string {
+function generateKey(object: StreamID): string {
   return object.toString()
 }
 
@@ -17,7 +22,7 @@ function deserialize(serialized: any): AnchorRequestData {
   return JSON.parse(serialized)
 }
 
-export class AnchorRequestStore extends ObjectStore<CommitID, AnchorRequestData> {
+export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
   constructor() {
     super(generateKey, serialize, deserialize)
     this.useCaseName = 'anchor-requests'

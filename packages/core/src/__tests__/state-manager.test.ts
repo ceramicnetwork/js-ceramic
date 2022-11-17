@@ -71,8 +71,9 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
+    const subsciption = await ceramic.repository.stateManager.anchor(stream$)
     await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
+      subsciption.add(resolve)
     })
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
@@ -81,15 +82,17 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
-    await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
+    const subscription1 = await ceramic.repository.stateManager.anchor(stream$)
+    await new Promise<void>( (resolve) => {
+      subscription1.add(resolve)
     })
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(stream$.value.log.length).toEqual(2)
 
     // Now re-request an anchor when the stream is already anchored. Should be a no-op
+    const subscription2 = await ceramic.repository.stateManager.anchor(stream$)
     await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
+      subscription2.add(resolve)
     })
     expect(stream$.value.log.length).toEqual(2)
   })
@@ -107,8 +110,9 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
+    const subscription = await ceramic.repository.stateManager.anchor(stream$)
     await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
+      subscription.add(resolve)
     })
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(fakeHandleTip).toHaveBeenCalledTimes(4)
@@ -126,8 +130,9 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
+    const subscription = await ceramic.repository.stateManager.anchor(stream$)
     await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
+      subscription.add(resolve)
     })
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED)
   })
@@ -137,8 +142,9 @@ test('handleTip', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
   await stream1.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
+  const subscription1 = await ceramic.repository.stateManager.anchor(streamState1)
   await new Promise<void>((resolve) => {
-    ceramic.repository.stateManager.anchor(streamState1).add(resolve)
+    subscription1.add(resolve)
   })
 
   const ceramic2 = await createCeramic(ipfs)

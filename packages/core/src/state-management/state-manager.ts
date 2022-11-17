@@ -13,7 +13,7 @@ import {
   UnreachableCaseError,
   RunningStateLike,
   DiagnosticsLogger,
-  StreamUtils,
+  StreamUtils, GenesisCommit
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -22,7 +22,7 @@ import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, 
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
-import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { AnchorRequestData, AnchorRequestStore } from '../store/anchor-request-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -160,11 +160,11 @@ export class StateManager {
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
    * @private
    */
-  applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
+  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts): Promise<void> {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
     if (anchor) {
-      this.anchor(state$)
+      await this.anchor(state$)
     }
     if (publish) {
       this.publishTip(state$)
@@ -323,7 +323,7 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  anchor(state$: RunningState): Subscription {
+  async anchor(state$: RunningState): Promise<Subscription> {
     if (!this.anchorService) {
       throw new Error(
         `Anchor requested for stream ${state$.id.toString()} but anchoring is disabled`
@@ -332,22 +332,30 @@ export class StateManager {
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
       return Subscription.EMPTY
     }
+
+    await this.anchorRequestStore.save(state$.id, {
+      cid: state$.tip,
+      timestamp: Date.now(),
+      genesis: await this.dispatcher.retrieveCommit(
+        state$.value.log[0].cid,  // genesis commit CID
+        state$.id) as GenesisCommit
+    })
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
-    return this._processAnchorResponse(state$, anchorStatus$)
+    return await this._processAnchorResponse(state$, anchorStatus$)
   }
 
   /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  confirmAnchorResponse(state$: RunningState): Subscription {
+  async confirmAnchorResponse(state$: RunningState): Promise<Subscription> {
     const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, state$.tip)
-    return this._processAnchorResponse(state$, anchorStatus$)
+    return await this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private _processAnchorResponse(
+  private async  _processAnchorResponse(
     state$: RunningState,
     anchorStatus$: Observable<AnchorServiceResponse>
-  ): Subscription {
+  ): Promise<Subscription> {
     const stopSignal = new Subject<void>()
     const subscription = anchorStatus$
       .pipe(
@@ -381,6 +389,7 @@ export class StateManager {
             }
             case AnchorStatus.ANCHORED: {
               await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit)
+              await this.anchorRequestStore.remove(state$.id)
               stopSignal.next()
               return
             }
@@ -391,6 +400,7 @@ export class StateManager {
                 }`
               )
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
+              await this.anchorRequestStore.remove(state$.id)
               stopSignal.next()
               return
             }

@@ -157,7 +157,7 @@ export class Repository {
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
         runningState.value.anchorStatus === AnchorStatus.PROCESSING
       if (toRecover && this.stateManager.anchorService) {
-        this.stateManager.confirmAnchorResponse(runningState)
+        await this.stateManager.confirmAnchorResponse(runningState)
       }
       return runningState
     } else {
@@ -310,7 +310,7 @@ export class Repository {
    * @private
    */
   async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
-    this.stateManager.applyWriteOpts(state$, opts)
+    await this.stateManager.applyWriteOpts(state$, opts)
 
     await this.handlePinOpts(state$, opts)
   }
