@@ -25,7 +25,7 @@ import {
   StreamState,
   AdminApi,
 } from '@ceramicnetwork/common'
-import {Metrics, METRIC_NAMES} from '@ceramicnetwork/metrics'
+import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -630,8 +630,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    await this.repository.indexStreamIfNeeded(state$)
-
     return stream
   }
 
@@ -670,8 +668,6 @@ export class Ceramic implements CeramicApi {
       state$.value,
       this.repository.updates$
     )
-
-    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }

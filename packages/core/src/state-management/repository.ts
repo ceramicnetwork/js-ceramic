@@ -283,6 +283,7 @@ export class Repository {
   ): Promise<RunningState> {
     const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
     await this.applyWriteOpts(state$, opts)
+    await this.indexStreamIfNeeded(state$)
     return state$
   }
 
