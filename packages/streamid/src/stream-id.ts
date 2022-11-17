@@ -6,7 +6,6 @@ import varint from 'varint'
 import * as codec from '@ipld/dag-cbor'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { STREAMID_CODEC } from './constants.js'
-import { Memoize } from 'typescript-memoize'
 import type { StreamRef } from './stream-ref.js'
 import { StreamType } from './stream-type.js'
 import { tryCatch } from './try-catch.util.js'
@@ -93,6 +92,13 @@ export class StreamID implements StreamRef {
   private readonly _type: number
   private readonly _cid: CID
 
+  // Memoization
+  #_toUrl?: string
+  #_toString?: string
+  #_typeName?: string
+  #_bytes?: Uint8Array
+  #_baseID?: StreamID
+
   static fromBytes = fromBytes
   static fromBytesNoThrow = fromBytesNoThrow
   static fromString = fromString
@@ -156,9 +162,11 @@ export class StreamID implements StreamRef {
   /**
    * Stream type name
    */
-  @Memoize()
   get typeName(): string {
-    return StreamType.nameByCode(this._type)
+    if (!this.#_typeName) {
+      this.#_typeName = StreamType.nameByCode(this._type)
+    }
+    return this.#_typeName
   }
 
   /**
@@ -171,21 +179,25 @@ export class StreamID implements StreamRef {
   /**
    * Bytes representation of StreamID.
    */
-  @Memoize()
   get bytes(): Uint8Array {
-    const codec = varint.encode(STREAMID_CODEC)
-    const type = varint.encode(this.type)
+    if (!this.#_bytes) {
+      const codec = varint.encode(STREAMID_CODEC)
+      const type = varint.encode(this.type)
 
-    return uint8ArrayConcat([codec, type, this.cid.bytes])
+      this.#_bytes = uint8ArrayConcat([codec, type, this.cid.bytes])
+    }
+    return this.#_bytes
   }
 
   /**
    * Copy of self. Exists to maintain compatibility with CommitID.
    * @readonly
    */
-  @Memoize()
   get baseID(): StreamID {
-    return new StreamID(this._type, this._cid)
+    if (!this.#_baseID) {
+      this.#_baseID = new StreamID(this._type, this._cid)
+    }
+    return this.#_baseID
   }
 
   /**
@@ -202,17 +214,21 @@ export class StreamID implements StreamRef {
   /**
    * Encode the StreamID into a string.
    */
-  @Memoize()
   toString(): string {
-    return base36.encode(this.bytes)
+    if (!this.#_toString) {
+      this.#_toString = base36.encode(this.bytes)
+    }
+    return this.#_toString
   }
 
   /**
    * Encode the StreamID into a base36 url.
    */
-  @Memoize()
   toUrl(): string {
-    return `ceramic://${this.toString()}`
+    if (!this.#_toUrl) {
+      this.#_toUrl = `ceramic://${this.toString()}`
+    }
+    return this.#_toUrl
   }
 
   /**

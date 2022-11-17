@@ -3,7 +3,6 @@ import { base36 } from 'multiformats/bases/base36'
 import { StreamType } from './stream-type.js'
 import varint from 'varint'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
-import { Memoize } from 'typescript-memoize'
 import { STREAMID_CODEC } from './constants.js'
 import { StreamID } from './stream-id.js'
 import type { StreamRef } from './stream-ref.js'
@@ -101,6 +100,14 @@ export class CommitID implements StreamRef {
   readonly #cid: CID
   readonly #commit: CID | null // null ≝ genesis commit
 
+  // Memoization
+  #_baseID?: StreamID
+  #_typeName?: string
+  #_commit?: CID
+  #_bytes?: Uint8Array
+  #_toString?: string
+  #_toUrl?: string
+
   static fromBytes = fromBytes
   static fromBytesNoThrow = fromBytesNoThrow
   static fromString = fromString
@@ -140,9 +147,11 @@ export class CommitID implements StreamRef {
   /**
    * Construct StreamID, no commit information included
    */
-  @Memoize()
   get baseID(): StreamID {
-    return new StreamID(this.#type, this.#cid)
+    if (!this.#_baseID) {
+      this.#_baseID = new StreamID(this.#type, this.#cid)
+    }
+    return this.#_baseID
   }
 
   /**
@@ -155,9 +164,11 @@ export class CommitID implements StreamRef {
   /**
    * Stream type name
    */
-  @Memoize()
   get typeName(): string {
-    return StreamType.nameByCode(this.#type)
+    if (!this.#_typeName) {
+      this.#_typeName = StreamType.nameByCode(this.#type)
+    }
+    return this.#_typeName
   }
 
   /**
@@ -170,21 +181,25 @@ export class CommitID implements StreamRef {
   /**
    * Commit CID
    */
-  @Memoize()
   get commit(): CID {
-    return this.#commit || this.#cid
+    if (!this.#_commit) {
+      this.#_commit = this.#commit || this.#cid
+    }
+    return this.#_commit
   }
 
   /**
    * Bytes representation
    */
-  @Memoize()
   get bytes(): Uint8Array {
-    const codec = varint.encode(STREAMID_CODEC)
-    const type = varint.encode(this.type)
+    if (!this.#_bytes) {
+      const codec = varint.encode(STREAMID_CODEC)
+      const type = varint.encode(this.type)
 
-    const commitBytes = this.#commit?.bytes || new Uint8Array([0])
-    return uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes])
+      const commitBytes = this.#commit?.bytes || new Uint8Array([0])
+      this.#_bytes = uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes])
+    }
+    return this.#_bytes
   }
 
   /**
@@ -199,17 +214,21 @@ export class CommitID implements StreamRef {
   /**
    * Encode the CommitID into a string.
    */
-  @Memoize()
   toString(): string {
-    return base36.encode(this.bytes)
+    if (!this.#_toString) {
+      this.#_toString = base36.encode(this.bytes)
+    }
+    return this.#_toString
   }
 
   /**
    * Encode the StreamID into a base36 url
    */
-  @Memoize()
   toUrl(): string {
-    return `ceramic://${this.toString()}`
+    if (!this.#_toUrl) {
+      this.#_toUrl = `ceramic://${this.toString()}`
+    }
+    return this.#_toUrl
   }
 
   /**
