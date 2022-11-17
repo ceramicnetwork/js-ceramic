@@ -7,13 +7,15 @@ import {
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from '../database-index-api.js'
 import {
   COMMON_TABLE_STRUCTURE,
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
   RELATION_COLUMN_STRUCTURE,
+  CONFIG_TABLE_STRUCTURE,
 } from './migrations/cdb-schema-verification.js'
+import { CONFIG_TABLE_NAME } from '../config.js'
 
 /**
  * Compose DB Config Table Type
@@ -44,7 +46,10 @@ export async function listMidTables(dataSource: Knex): Promise<Array<string>> {
  */
 export function listConfigTables(): Array<ConfigTable> {
   // TODO (CDB-1852): extend with ceramic_auth; If it will need to be async, see if it can be parallelised within initConfigTables(...)
-  return [{ tableName: INDEXED_MODEL_CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE }]
+  return [
+    { tableName: INDEXED_MODEL_CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE },
+    { tableName: CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_STRUCTURE },
+  ]
 }
 
 /**
@@ -62,21 +67,39 @@ function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition):
 /**
  * Create Compose DB config tables
  */
-export async function initConfigTables(dataSource: Knex, logger: DiagnosticsLogger) {
+export async function initConfigTables(
+  dataSource: Knex,
+  logger: DiagnosticsLogger,
+  network: Networks
+) {
   const configTables = listConfigTables()
-  await Promise.all(configTables.map( table => {
-    return initConfigTable(table, dataSource, logger)
-  }))
+  await Promise.all(
+    configTables.map((table) => {
+      return initConfigTable(table, dataSource, logger, network)
+    })
+  )
 }
 
 /**
  * Create a single DB config table
  */
-async function initConfigTable(table: ConfigTable, dataSource: Knex, logger: DiagnosticsLogger) {
+async function initConfigTable(
+  table: ConfigTable,
+  dataSource: Knex,
+  logger: DiagnosticsLogger,
+  network: Networks
+) {
   const exists = await dataSource.schema.hasTable(table.tableName)
   if (!exists) {
     logger.imp(`Creating Compose DB config table: ${table.tableName}`)
-    await createConfigTable(dataSource, table.tableName)
+    await createConfigTable(dataSource, table.tableName, network)
+  } else if (table.tableName === CONFIG_TABLE_NAME) {
+    const config = await dataSource.from(table.tableName).first('network')
+    if (config.network !== network) {
+      throw new Error(
+        `Initialization failed for config table: ${table.tableName}. The database is configured to use the network ${config.network} but the current network is ${network}.`
+      )
+    }
   }
 }
 
@@ -88,15 +111,21 @@ export async function initMidTables(
   modelsToIndex: Array<IndexModelArgs>,
   logger: DiagnosticsLogger
 ) {
-  await Promise.all(modelsToIndex.map( modelIndexArgs => {
-    return initMidTable(modelIndexArgs, dataSource, logger)
-  }))
+  await Promise.all(
+    modelsToIndex.map((modelIndexArgs) => {
+      return initMidTable(modelIndexArgs, dataSource, logger)
+    })
+  )
 }
 
 /**
  * Create a single mid table for a given model
  */
-async function initMidTable(modelIndexArgs: IndexModelArgs, dataSource: Knex, logger: DiagnosticsLogger) {
+async function initMidTable(
+  modelIndexArgs: IndexModelArgs,
+  dataSource: Knex,
+  logger: DiagnosticsLogger
+) {
   const tableName = asTableName(modelIndexArgs.model)
   if (tableName.length > 63) {
     const errStr = `Cannot index model ${modelIndexArgs.model.toString()}.  Table name is too long: ${tableName}`
@@ -117,9 +146,11 @@ async function initMidTable(modelIndexArgs: IndexModelArgs, dataSource: Knex, lo
  */
 async function _verifyConfigTables(dataSource: Knex) {
   const configTables = listConfigTables()
-  await Promise.all(configTables.map( table => {
-    return _verifyConfigTable(table, dataSource)
-  }))
+  await Promise.all(
+    configTables.map((table) => {
+      return _verifyConfigTable(table, dataSource)
+    })
+  )
 }
 
 /**
@@ -142,15 +173,21 @@ async function _verifyConfigTable(table: ConfigTable, dataSource: Knex) {
  */
 async function _verifyMidTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
   const tableNames = await listMidTables(dataSource)
-  await Promise.all(tableNames.map( tableName => {
-    return _verifyMidTable(tableName, dataSource, modelsToIndex)
-  }))
+  await Promise.all(
+    tableNames.map((tableName) => {
+      return _verifyMidTable(tableName, dataSource, modelsToIndex)
+    })
+  )
 }
 
 /**
  * Verify a single mid table schema
  */
-async function _verifyMidTable(tableName: string, dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
+async function _verifyMidTable(
+  tableName: string,
+  dataSource: Knex,
+  modelsToIndex: Array<IndexModelArgs>
+) {
   const modelIndexArgs = modelsToIndex.find((model) => tableName == asTableName(model.model))
   if (!modelIndexArgs) {
     // TODO: CDB-1869 - This means that there's is a table for a model that is no longer indexed. Should this table have been deleted?
@@ -180,8 +217,5 @@ async function _verifyMidTable(tableName: string, dataSource: Knex, modelsToInde
  */
 // TODO (NET-1635): unify logic between postgres & sqlite
 export async function verifyTables(dataSource: Knex, modelsToIndex: Array<IndexModelArgs>) {
-  await Promise.all([
-    _verifyConfigTables(dataSource),
-    _verifyMidTables(dataSource, modelsToIndex)
-  ])
+  await Promise.all([_verifyConfigTables(dataSource), _verifyMidTables(dataSource, modelsToIndex)])
 }
