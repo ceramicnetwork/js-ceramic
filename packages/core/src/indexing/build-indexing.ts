@@ -3,7 +3,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import knex from 'knex'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 
 export type IndexingConfig = {
   /**
@@ -51,7 +51,8 @@ function parseURL(input: string) {
  */
 export function buildIndexing(
   indexingConfig: IndexingConfig,
-  logger: DiagnosticsLogger
+  logger: DiagnosticsLogger,
+  network: Networks
 ): DatabaseIndexApi {
   const connectionString = parseURL(indexingConfig.db)
   const protocol = connectionString.protocol.replace(/:$/, '')
@@ -69,7 +70,8 @@ export function buildIndexing(
       return new SqliteIndexApi(
         dbConnection,
         indexingConfig.allowQueriesBeforeHistoricalSync,
-        logger
+        logger,
+        network
       )
     }
     case 'postgres': {
@@ -81,7 +83,8 @@ export function buildIndexing(
       return new PostgresIndexApi(
         dataSource,
         indexingConfig.allowQueriesBeforeHistoricalSync,
-        logger
+        logger,
+        network
       )
     }
     default:

@@ -5,7 +5,7 @@ import { SqliteIndexApi } from '../sqlite-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { chunks } from '../../../__tests__/chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
-import { LoggerProvider } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 
 const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
@@ -28,7 +28,7 @@ beforeEach(async () => {
       filename: filename,
     },
   })
-  const indexAPI = new SqliteIndexApi(dbConnection, true, logger)
+  const indexAPI = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
   await indexAPI.init()
   await indexAPI.indexModels(
     MODELS_TO_INDEX.map((model) => {

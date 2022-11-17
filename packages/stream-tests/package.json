@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tests",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
@@ -17,9 +17,9 @@
     "@ceramicnetwork/3id-did-resolver": "^2.6.0",
     "@ceramicnetwork/blockchain-utils-linking": "^2.6.0",
     "@ceramicnetwork/blockchain-utils-validation": "^2.5.0",
-    "@ceramicnetwork/cli": "^2.14.0",
+    "@ceramicnetwork/cli": "^2.15.0",
     "@ceramicnetwork/common": "^2.13.0",
-    "@ceramicnetwork/core": "^2.17.0",
+    "@ceramicnetwork/core": "^2.18.0",
     "@ceramicnetwork/http-client": "^2.10.0",
     "@ceramicnetwork/ipfs-daemon": "^2.6.0",
     "@ceramicnetwork/stream-caip10-link": "^2.8.0",

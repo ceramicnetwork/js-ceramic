@@ -25,7 +25,7 @@ import {
   StreamState,
   AdminApi,
 } from '@ceramicnetwork/common'
-import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -82,6 +82,8 @@ const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
+
+const ERROR_LOADING_STREAM = 'error_loading_stream'
 
 /**
  * Ceramic configuration
@@ -758,7 +760,7 @@ export class Ceramic implements CeramicApi {
             } as part of a multiQuery request: ${e.toString()}`
           )
         }
-        Metrics.count(METRIC_NAMES.ERROR_LOADING_STREAM, 1)
+        Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
       const streamRef = query.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId

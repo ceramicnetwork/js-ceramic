@@ -100,3 +100,16 @@ export const CONFIG_TABLE_MODEL_INDEX_STRUCTURE = {
     defaultValue: null,
   },
 }
+
+/**
+ * Valid Postgres table structure for config table
+ * Used to verify table integrity during node startup
+ */
+export const CONFIG_TABLE_STRUCTURE = {
+  network: {
+    type: 'character varying',
+    maxLength: 1024,
+    nullable: false,
+    defaultValue: null,
+  },
+}
