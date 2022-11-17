@@ -22,7 +22,6 @@ import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, 
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
-import lru from 'lru_map'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 

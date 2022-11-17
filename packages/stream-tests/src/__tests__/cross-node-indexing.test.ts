@@ -168,7 +168,7 @@ describe.each(envs)(
 
       // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
       // in the index, instead of this race-prone sleep.
-      await TestUtils.delay(10 * 1000)
+      await TestUtils.delay(5 * 1000)
 
       let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
       let results = extractDocuments(ceramic2, resultObj)
