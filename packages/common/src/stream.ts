@@ -112,10 +112,22 @@ export enum CommitType {
   ANCHOR,
 }
 
+/**
+ * Entry in a stream log as represented in a StreamState object.
+ */
 export interface LogEntry {
+  // CID of the stream commit
   cid: CID
+
+  // Type of the commit (e.g. genesis, signed, anchor)
   type: CommitType
+
+  // Timestamp of when this commit was anchored (if available)
   timestamp?: number
+
+  // If this commit was created with a CACAO, then this is the timestamp when that CACAO expires.
+  // The anchor timestamp must be before the expirationTime, or else the commit is invalid.
+  expirationTime?: number
 }
 
 /**

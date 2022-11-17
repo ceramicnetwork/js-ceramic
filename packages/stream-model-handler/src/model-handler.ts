@@ -141,7 +141,7 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
     }
 
     await this._schemaValidator.validateSchema(state.content.schema)

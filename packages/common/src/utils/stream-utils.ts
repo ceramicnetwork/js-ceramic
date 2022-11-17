@@ -6,6 +6,7 @@ import {
   AnchorCommit,
   CeramicCommit,
   CommitData,
+  CommitType,
   IpfsApi,
   RawCommit,
   SignedCommit,
@@ -299,5 +300,16 @@ export class StreamUtils {
    */
   static isAnchorCommitData(commitData: CommitData): boolean {
     return commitData && commitData.proof !== undefined
+  }
+
+  static commitDataToLogEntry(commitData: CommitData, commitType: CommitType): LogEntry {
+    const logEntry: LogEntry = {
+      cid: commitData.cid,
+      type: commitType,
+    }
+    if (commitData?.capability?.p?.exp) {
+      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+    }
+    return logEntry
   }
 }
