@@ -308,7 +308,7 @@ export class StreamUtils {
       type: commitType,
     }
     if (commitData?.capability?.p?.exp) {
-      logEntry.expirationTime = Date.parse(commitData.capability.p.exp)
+      logEntry.expirationTime = Math.floor(Date.parse(commitData.capability.p.exp) / 1000)
     }
     return logEntry
   }
