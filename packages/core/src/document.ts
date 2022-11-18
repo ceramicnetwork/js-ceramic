@@ -378,33 +378,51 @@ class Document extends EventEmitter {
    * Applies the log to the document.
    * Utilizes conflict resolution rules if log doesn't cleanly apply to current state.
    *
-   * @param log - Log of commit CIDs
+   * @param remoteLog - Log of commit CIDs
    * @returns - true if the remote log is applied, false if we stick with the current local log.
    * @private
    */
-  async _applyLog (log: Array<CID>): Promise<boolean> {
-    if (log[log.length - 1].equals(this.tip)) {
+  async _applyLog (remoteLog: Array<CID>): Promise<boolean> {
+    if (remoteLog[remoteLog.length - 1].equals(this.tip)) {
       // log already applied
       return false
     }
-    const cid = log[0]
-    const commit = await this.dispatcher.retrieveCommit(cid)
-    if (commit.prev.equals(this.tip)) {
-      // the new log starts where the previous one ended
-      this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
+    const firstRemoteCommitCID = remoteLog[0]
+    const firstRemoteCommit = await this.commitLoader.retrieveCommit(firstRemoteCommitCID)
+    if (firstRemoteCommit.prev.equals(this.tip)) {
+      // the new log starts where the previous one ended.  Apply the remote log cleanly on top
+      // of our current local log.
+      this.state = await this._applyLogToState(remoteLog, cloneDeep(this.state))
       return true
     } else {
-      // we have a conflict since prev is in the log of the
-      // local state, but isn't the tip
-      const conflictIdx = await this._findIndex(commit.prev, this._doctype.state.log) + 1
-      const canonicalLog = this._doctype.state.log.map(({ cid }) => cid) // copy log
+      // we have a conflict. Before getting into this function we already confirmed that
+      // the 'prev' pointer from the earliest commit in the remote log does point to some valid
+      // commit in our local log.  But since it doesn't point to the *most recent* commit in our
+      // local log, that means it represents a different branch of history for this stream. We
+      // now need to apply conflict resolution rules to decide which branch of history survives.
+      //
+      // Example of conflict situation where the first two commits are the same, but the last two
+      // commits diverge:
+      //
+      // [A] <- [B] <- [C] <- [D]          <= Our local log
+      //          ^--- [E] <- [F]          <= The remote log.
+
+      // Find the index where the logs begin to diverge
+      const conflictIdx = await this._findIndex(firstRemoteCommit.prev, this.state.log) + 1
+
+      // The part of the log that is shared between both histories
+      const canonicalLog = this.state.log.map(({ cid }) => cid) // copy log
+
+      // The extra part of our local log, after the conflict point
       const localLog = canonicalLog.splice(conflictIdx)
+
       // Compute state up till conflictIdx
-      let state: DocState = await this._applyLogToState(canonicalLog)
+      const canonicalState: DocState = await this._applyLogToState(canonicalLog)
+
       // Compute both localState (what we currently have) and remoteState
       // (what we would get from applying the log).
-      const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
-      const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
+      const localState = await this._applyLogToState(localLog, cloneDeep(canonicalState), true)
+      const remoteState = await this._applyLogToState(remoteLog, cloneDeep(canonicalState), true)
 
       const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
       const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
@@ -415,28 +433,28 @@ class Document extends EventEmitter {
         const { anchorProof: remoteProof } = remoteState
 
         if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
-          state = await this._applyLogToState(log, cloneDeep(state))
-          this._doctype.state = state
+          // if the remote state has an earlier anchor timestamp than the local, apply the remote
+          // log to our local state. Otherwise, keep present state.
+          this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
           return true
         }
       }
 
       if (!isLocalAnchored && isRemoteAnchored) {
-        // if the remote state is anchored before the local,
-        // apply the remote log to our local state. Otherwise
-        // keep present state
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
+        // if the remote state is anchored before the local, apply the remote log to our local state.
+        // Otherwise, keep present state.
+        this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
         return true
       }
 
       if (!isLocalAnchored && !isRemoteAnchored) {
-        // if none of them is anchored, apply the log
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
+        // if neither of them is anchored, apply the remote log
+        this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
         return true
       }
     }
+
+    // Default case, we keep our original local state without applying remoteLog.
     return false
   }
 
@@ -621,10 +639,25 @@ class Document extends EventEmitter {
   }
 
   /**
+   * Alias the Dispatcher as "commitLoader" to make clear how it's used in this file.
+   */
+  get commitLoader(): Dispatcher {
+    return this.dispatcher
+  }
+
+  /**
    * Gets document state
    */
   get state (): DocState {
     return this._doctype.state
+  }
+
+  /**
+   * Set document state
+   * @param newState
+   */
+  set state(newState: DocState) {
+    this._doctype.state = newState
   }
 
   /**
