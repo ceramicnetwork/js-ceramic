@@ -61,9 +61,9 @@ export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
     return super.open(store)
   }
 
-  async list(streamId?: StreamID | null, limit?: number): Promise<string[]> {
+  async listStoredStreamIDs(streamId?: StreamID | null, limit?: number): Promise<string[]> {
     if (streamId == null) {
-      return await this.store.find({ limit })
+      return await this.store.findKeys({ limit })
     } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []

@@ -85,7 +85,7 @@ export class PinStore {
   }
 
   async ls(streamId?: StreamID): Promise<string[]> {
-    return this.stateStore.list(streamId)
+    return this.stateStore.listStoredStreamIDs(streamId)
   }
 
   /**

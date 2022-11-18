@@ -20,21 +20,27 @@ describe("LevelStore", () => {
     await tmpFolder.cleanup()
   })
 
-  test("The main store is separated from a sub-channel", async () => {
+  test("The default store is separated from use case store", async () => {
     await levelStore.put('foo', 'bar')
     expect(await  levelStore.get('foo')).toEqual('bar')
-    await expect( levelStore.get('foo', 'sub-channel')).rejects.toThrow(/Key not found in database/)
+    await expect( levelStore.get('foo', 'use-case')).rejects.toThrow(/Key not found in database/)
+    expect(await levelStore.findKeys()).toEqual(['foo'])
+    expect(await levelStore.findKeys({ useCaseName: 'use-case' })).toEqual([])
   })
 
-  test("A sub-channel is separated from the main store", async () => {
-    await levelStore.put('foo', 'bar', 'sub-channel')
-    expect(await  levelStore.get('foo', 'sub-channel')).toEqual('bar')
+  test("A use case store is separated from the default store", async () => {
+    await levelStore.put('foo', 'bar', 'use-case')
+    expect(await  levelStore.get('foo', 'use-case')).toEqual('bar')
     await expect(levelStore.get('foo', )).rejects.toThrow(/Key not found in database/)
+    expect(await levelStore.findKeys({ useCaseName: 'use-case' })).toEqual(['foo'])
+    expect(await levelStore.findKeys()).toEqual([])
   })
 
-  test("A sub-channel is separated from another sub-channel", async () => {
-    await levelStore.put('foo', 'bar', 'sub-channel')
-    expect(await  levelStore.get('foo', 'sub-channel')).toEqual('bar')
-    await expect(levelStore.get('foo', 'another-sub-channel')).rejects.toThrow(/Key not found in database/)
+  test("A use case store  is separated from another use case store", async () => {
+    await levelStore.put('foo', 'bar', 'use-case-1')
+    expect(await  levelStore.get('foo', 'use-case-1')).toEqual('bar')
+    await expect(levelStore.get('foo', 'use-case-2')).rejects.toThrow(/Key not found in database/)
+    expect(await levelStore.findKeys({ useCaseName: 'use-case-1' })).toEqual(['foo'])
+    expect(await levelStore.findKeys({ useCaseName: 'use-case-2' })).toEqual([])
   })
 })

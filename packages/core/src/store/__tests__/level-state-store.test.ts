@@ -120,19 +120,19 @@ describe('LevelDB-backed StateStore state store', () => {
       const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
       const streams = states.map((state) => streamFromState(state))
 
-      let list = await stateStore.list()
+      let list = await stateStore.listStoredStreamIDs()
       expect(list.length).toEqual(0)
 
       await stateStore.saveFromStreamStateHolder(streamFromState(states[0]))
 
-      list = await stateStore.list()
+      list = await stateStore.listStoredStreamIDs()
       expect(list.length).toEqual(1)
       expect(list).toEqual([streams[0].id.toString()])
 
       await stateStore.saveFromStreamStateHolder(streamFromState(states[1]))
       await stateStore.saveFromStreamStateHolder(streamFromState(states[2]))
 
-      list = await stateStore.list()
+      list = await stateStore.listStoredStreamIDs()
       expect(list.length).toEqual(3)
       expect(list.sort()).toEqual(
         [streams[0].id.toString(), streams[1].id.toString(), streams[2].id.toString()].sort()
@@ -145,10 +145,10 @@ describe('LevelDB-backed StateStore state store', () => {
       await stateStore.saveFromStreamStateHolder(streamFromState(states[0]))
       await stateStore.saveFromStreamStateHolder(streamFromState(states[1]))
 
-      let list = await stateStore.list()
+      let list = await stateStore.listStoredStreamIDs()
       expect(list.length).toEqual(2)
 
-      list = await stateStore.list(null, 1)
+      list = await stateStore.listStoredStreamIDs(null, 1)
       expect(list.length).toEqual(1)
     })
 
@@ -157,12 +157,12 @@ describe('LevelDB-backed StateStore state store', () => {
       const streamID = StreamUtils.streamIdFromState(state)
 
       // Stream absent from state store
-      let list = await stateStore.list(streamID)
+      let list = await stateStore.listStoredStreamIDs(streamID)
       expect(list).toEqual([])
 
       // Stream present in state store
       await stateStore.saveFromStreamStateHolder(streamFromState(state))
-      list = await stateStore.list(streamID)
+      list = await stateStore.listStoredStreamIDs(streamID)
       expect(list).toEqual([streamID.toString()])
     })
   })

@@ -397,13 +397,13 @@ export class Repository {
    */
   async randomPinnedStreamState(): Promise<StreamState | null> {
     // First get a random streamID from the state store.
-    const res = await this.#deps.pinStore.stateStore.list(null, 1)
+    const res = await this.#deps.pinStore.stateStore.listStoredStreamIDs(null, 1)
     if (res.length == 0) {
       return null
     }
     if (res.length > 1) {
       // This should be impossible and indicates a programming error with how the state store
-      // list() call is enforcing the limit argument.
+      // listStoredStreamIDs() call is enforcing the limit argument.
       throw new Error(
         `Expected a single streamID from the state store, but got ${res.length} streamIDs instead`
       )

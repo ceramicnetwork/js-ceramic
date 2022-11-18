@@ -420,8 +420,8 @@ test('#ls', async () => {
   const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
   const stream = new FakeType(TestUtils.runningState(state), {})
   const list = ['1', '2', '3']
-  stateStore.list = jest.fn(async () => list)
+  stateStore.listStoredStreamIDs = jest.fn(async () => list)
   const result = await pinStore.ls(stream.id)
   expect(result).toEqual(list)
-  expect(stateStore.list).toBeCalledWith(stream.id)
+  expect(stateStore.listStoredStreamIDs).toBeCalledWith(stream.id)
 })

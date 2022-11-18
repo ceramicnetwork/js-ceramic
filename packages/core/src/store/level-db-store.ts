@@ -1,6 +1,5 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
-import sublevel from 'sublevel'
 import { IKVStore, StoreSearchParams } from './ikv-store.js'
 import path from 'path'
 import * as fs from 'fs'
@@ -18,51 +17,50 @@ import { Networks } from '@ceramicnetwork/common'
 // See also https://github.com/nodejs/node/blob/master/doc/api/esm.md#commonjs-namespaces,
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
-class LevelStoreMap {
-  readonly #storePath
+const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
+
+class LevelDBStoreMap {
+  readonly #storeRoot
   readonly networkName
   readonly #map: Map<string, Level>
 
   constructor(storeRoot: string, networkName: string) {
     this.networkName = networkName
-    this.#storePath = path.join(
-      storeRoot,
-      // We want ELP and Mainnet to share data
-      this.networkName === Networks.MAINNET ? Networks.ELP : this.networkName
-    )
-    if (fs) {
-      fs.mkdirSync(this.#storePath, { recursive: true }) // create dir if it doesn't exist
-    }
+    this.#storeRoot = storeRoot
     this.#map = new Map<string, Level>()
-    this.#map.set(this.getFullLocation(), this.createStore())
   }
 
-  private getBaseLocation(): string {
-    return 'root'
+  createStore(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): Promise<void> {
+    // Different LevelDB stores live in different subdirectories (named based use-cases with the default being 'networkName'
+    // and others being `networkName-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
+    const fullLocation = this.getFullLocation(useCaseName)
+    const storePath = path.join(this.#storeRoot, fullLocation)
+    if (fs) {
+      fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
+    }
+    this.#map.set(fullLocation, new LevelC(storePath))
+    // add a small delay after creating the leveldb instance before trying to use it.
+    return new Promise((res) => setTimeout(res, 100));
   }
 
-  private createStore(sublevelName?: string): Level {
-    if (!sublevelName) {
-      return new LevelC(this.#storePath)
+  private getDefaultLocation(): string {
+    // We want ELP and Mainnet to share data
+    return this.networkName === Networks.MAINNET ? Networks.ELP : this.networkName
+  }
+
+  private getFullLocation(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): string {
+    if (useCaseName === DEFAULT_LEVELDB_STORE_USE_CASE_NAME) {
+      return this.getDefaultLocation()
     } else {
-      return new LevelC(sublevel(this.#map.get(this.getBaseLocation()), sublevelName))
+      return `${this.getDefaultLocation()}-${useCaseName}`
     }
   }
 
-  private getFullLocation(sublevelName?: string): string {
-    if (sublevelName) {
-      return `${this.getBaseLocation()}/${sublevelName}`
-    } else {
-      return this.getBaseLocation()
+  async get(useCaseName?: string): Promise<Level> {
+    if (!this.#map.get(this.getFullLocation(useCaseName))) {
+      await this.createStore(useCaseName)
     }
-  }
-
-  get(sublevelName?: string): Level {
-    const fullLocation = this.getFullLocation(sublevelName)
-    if (!this.#map.get(fullLocation)) {
-      this.#map.set(fullLocation, this.createStore(sublevelName))
-    }
-    return this.#map.get(fullLocation)
+    return this.#map.get(this.getFullLocation(useCaseName))
   }
 
   values(): IterableIterator<Level> {
@@ -71,32 +69,34 @@ class LevelStoreMap {
 }
 
 export class LevelDbStore implements IKVStore {
-  readonly #storeMap: LevelStoreMap
+  readonly #storeMap: LevelDBStoreMap
 
   constructor(storeRoot: string, networkName: string) {
-    this.#storeMap = new LevelStoreMap(storeRoot, networkName)
+    this.#storeMap = new LevelDBStoreMap(storeRoot, networkName)
   }
 
   get networkName(): string {
     return this.#storeMap.networkName
   }
 
-  del(key: string, subChannel?: string): Promise<void> {
-    return this.#storeMap.get(subChannel).del(key)
+  close(useCaseName?: string): Promise<void> {
+    // do nothing
+    return
   }
 
-  get(key: string, subChannel?: string): Promise<any> {
-    return this.#storeMap.get(subChannel).get(key)
+  async del(key: string, useCaseName?: string): Promise<void> {
+    return (await this.#storeMap.get(useCaseName)).del(key)
+  }
+
+  async get(key: string, useCaseName?: string): Promise<any> {
+    return (await this.#storeMap.get(useCaseName)).get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
-    const result = await this.find({
-      limit: params?.limit ?? 1,
-    })
-    return result.length > 0
+    return (await this.findKeys(params)).length > 0
   }
 
-  find(params?: StoreSearchParams): Promise<Array<any>> {
+  async findKeys(params?: StoreSearchParams): Promise<Array<any>> {
     const seachParams: Record<string, any> = {
       keys: true,
       values: false,
@@ -104,17 +104,12 @@ export class LevelDbStore implements IKVStore {
     }
 
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return this.#storeMap.get(params?.subChannel).stream(seachParams) as unknown as Promise<
+    return (await this.#storeMap.get(params?.useCaseName)).stream(seachParams) as unknown as Promise<
       Array<any>
     >
   }
 
-  put(key: string, value: any, subChannel?: string): Promise<void> {
-    return this.#storeMap.get(subChannel).put(key, value)
-  }
-
-  close(): Promise<void> {
-    // do nothing
-    return
+  async put(key: string, value: any, useCaseName?: string): Promise<void> {
+    return (await this.#storeMap.get(useCaseName)).put(key, value)
   }
 }

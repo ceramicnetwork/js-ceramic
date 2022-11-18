@@ -20,6 +20,6 @@ function deserialize(serialized: any): AnchorRequestData {
 export class AnchorRequestStore extends ObjectStore<CommitID, AnchorRequestData> {
   constructor() {
     super(generateKey, serialize, deserialize)
-    this.storeSubChannel = 'anchor-requests'
+    this.useCaseName = 'anchor-requests'
   }
 }

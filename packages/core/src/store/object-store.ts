@@ -2,7 +2,7 @@ import { IKVStore } from './ikv-store.js'
 import { IObjectStore } from './iobject-store.js'
 
 export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject, TValue> {
-  protected storeSubChannel: string | undefined
+  protected useCaseName: string | undefined
   protected store: IKVStore
   private readonly generateKey: (object: TKeyObject) => string
   private readonly serialize: (value: TValue) => any
@@ -31,13 +31,13 @@ export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject,
 
   async close(): Promise<void> {
     if (!this.store) return
-    await this.store.close()
+    await this.store.close(this.useCaseName)
     this.store = undefined
   }
 
   async save(object: TKeyObject, value: TValue): Promise<void> {
     this.throwIfNotOpened()
-    await this.store.put(this.generateKey(object), this.serialize(value), this.storeSubChannel)
+    await this.store.put(this.generateKey(object), this.serialize(value), this.useCaseName)
   }
 
   async load(object: TKeyObject): Promise<TValue> {
@@ -59,6 +59,6 @@ export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject,
 
   async remove(object: TKeyObject): Promise<void> {
     this.throwIfNotOpened()
-    await this.store.del(this.generateKey(object), this.storeSubChannel)
+    await this.store.del(this.generateKey(object), this.useCaseName)
   }
 }
