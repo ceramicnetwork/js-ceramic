@@ -230,6 +230,7 @@ export class StateManager {
     this.executionQ.forStream(streamId).add(async () => {
       await this._handleTip(state$, tip)
     })
+    await this.indexStreamIfNeeded(state$)
   }
 
   /**

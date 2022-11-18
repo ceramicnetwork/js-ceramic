@@ -632,6 +632,8 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
+    await this.repository.indexStreamIfNeeded(state$)
+
     return stream
   }
 
@@ -670,6 +672,8 @@ export class Ceramic implements CeramicApi {
       state$.value,
       this.repository.updates$
     )
+
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }

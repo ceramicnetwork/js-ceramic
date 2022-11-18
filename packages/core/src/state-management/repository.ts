@@ -239,7 +239,6 @@ export class Repository {
     if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)
     }
-    await this.indexStreamIfNeeded(state$)
 
     return state$
   }
@@ -283,7 +282,6 @@ export class Repository {
   ): Promise<RunningState> {
     const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
     await this.applyWriteOpts(state$, opts)
-    await this.indexStreamIfNeeded(state$)
     return state$
   }
 
