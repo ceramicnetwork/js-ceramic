@@ -394,64 +394,64 @@ class Document extends EventEmitter {
       // of our current local log.
       this.state = await this._applyLogToState(remoteLog, cloneDeep(this.state))
       return true
-    } else {
-      // we have a conflict. Before getting into this function we already confirmed that
-      // the 'prev' pointer from the earliest commit in the remote log does point to some valid
-      // commit in our local log.  But since it doesn't point to the *most recent* commit in our
-      // local log, that means it represents a different branch of history for this stream. We
-      // now need to apply conflict resolution rules to decide which branch of history survives.
-      //
-      // Example of conflict situation where the first two commits are the same, but the last two
-      // commits diverge:
-      //
-      // [A] <- [B] <- [C] <- [D]          <= Our local log
-      //          ^--- [E] <- [F]          <= The remote log.
+    }
+    
+    // We have a conflict. Before getting into this function we already confirmed that
+    // the 'prev' pointer from the earliest commit in the remote log does point to some valid
+    // commit in our local log.  But since it doesn't point to the *most recent* commit in our
+    // local log, that means it represents a different branch of history for this stream. We
+    // now need to apply conflict resolution rules to decide which branch of history survives.
+    //
+    // Example of conflict situation where the first two commits are the same, but the last two
+    // commits diverge:
+    //
+    // [A] <- [B] <- [C] <- [D]          <= Our local log
+    //          ^--- [E] <- [F]          <= The remote log.
 
-      // Find the index where the logs begin to diverge
-      const conflictIdx = await this._findIndex(firstRemoteCommit.prev, this.state.log) + 1
+    // Find the index where the logs begin to diverge
+    const conflictIdx = await this._findIndex(firstRemoteCommit.prev, this.state.log) + 1
 
-      // The part of the log that is shared between both histories
-      const canonicalLog = this.state.log.map(({ cid }) => cid) // copy log
+    // The part of the log that is shared between both histories
+    const canonicalLog = this.state.log.map(({ cid }) => cid) // copy log
 
-      // The extra part of our local log, after the conflict point
-      const localLog = canonicalLog.splice(conflictIdx)
+    // The extra part of our local log, after the conflict point
+    const localLog = canonicalLog.splice(conflictIdx)
 
-      // Compute state up till conflictIdx
-      const canonicalState: DocState = await this._applyLogToState(canonicalLog)
+    // Compute state up till conflictIdx
+    const canonicalState: DocState = await this._applyLogToState(canonicalLog)
 
-      // Compute both localState (what we currently have) and remoteState
-      // (what we would get from applying the log).
-      const localState = await this._applyLogToState(localLog, cloneDeep(canonicalState), true)
-      const remoteState = await this._applyLogToState(remoteLog, cloneDeep(canonicalState), true)
+    // Compute both localState (what we currently have) and remoteState
+    // (what we would get from applying the log).
+    const localState = await this._applyLogToState(localLog, cloneDeep(canonicalState), true)
+    const remoteState = await this._applyLogToState(remoteLog, cloneDeep(canonicalState), true)
 
-      const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
-      const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
+    const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
+    const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
 
-      if (isLocalAnchored && isRemoteAnchored) {
-        // compare anchor proofs if both states are anchored
-        const { anchorProof: localProof } = localState
-        const { anchorProof: remoteProof } = remoteState
+    if (isLocalAnchored && isRemoteAnchored) {
+      // compare anchor proofs if both states are anchored
+      const { anchorProof: localProof } = localState
+      const { anchorProof: remoteProof } = remoteState
 
-        if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
-          // if the remote state has an earlier anchor timestamp than the local, apply the remote
-          // log to our local state. Otherwise, keep present state.
-          this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
-          return true
-        }
-      }
-
-      if (!isLocalAnchored && isRemoteAnchored) {
-        // if the remote state is anchored before the local, apply the remote log to our local state.
-        // Otherwise, keep present state.
+      if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
+        // if the remote state has an earlier anchor timestamp than the local, apply the remote
+        // log to our local state. Otherwise, keep present state.
         this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
         return true
       }
+    }
 
-      if (!isLocalAnchored && !isRemoteAnchored) {
-        // if neither of them is anchored, apply the remote log
-        this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
-        return true
-      }
+    if (!isLocalAnchored && isRemoteAnchored) {
+      // if the remote state is anchored before the local, apply the remote log to our local state.
+      // Otherwise, keep present state.
+      this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
+      return true
+    }
+
+    if (!isLocalAnchored && !isRemoteAnchored) {
+      // if neither of them is anchored, apply the remote log
+      this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
+      return true
     }
 
     // Default case, we keep our original local state without applying remoteLog.
