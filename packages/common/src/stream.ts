@@ -64,7 +64,7 @@ export interface AnchorProof {
   blockTimestamp: number
   txHash: CID
   root: CID
-  version?: number
+  txType?: string
 }
 
 export interface AnchorCommit {
