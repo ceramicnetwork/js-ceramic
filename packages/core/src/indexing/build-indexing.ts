@@ -4,6 +4,7 @@ import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import knex from 'knex'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import * as fs from 'fs'
 
 export type IndexingConfig = {
   /**
@@ -60,6 +61,12 @@ export function buildIndexing(
     case 'sqlite':
     case 'sqlite3': {
       logger.imp('Initializing SQLite connection')
+      if (fs) {
+        // create dir if it doesn't exist
+        // not strictly necessary here, but keeping it for backwards compatibility, as this directory
+        // was created on startup before CDB-2008
+        fs.mkdirSync(connectionString.pathname.substring(0, connectionString.pathname.lastIndexOf('/')), { recursive: true })
+      }
       const dbConnection = knex({
         client: 'sqlite3',
         useNullAsDefault: true,
