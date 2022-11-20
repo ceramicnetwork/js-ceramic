@@ -45,8 +45,11 @@ class S3StoreMap {
     }
   }
 
-  get(subdirectoryName?: string): LevelUp.LevelUp {
-    return this.#map.get(this.getFullLocation(subdirectoryName))
+  async get(useCaseName?: string): Promise<LevelUp.LevelUp> {
+    if (!this.#map.get(this.getFullLocation(useCaseName))) {
+      await this.createStore(useCaseName)
+    }
+    return this.#map.get(this.getFullLocation(useCaseName))
   }
 
   values(): IterableIterator<LevelUp.LevelUp> {
@@ -72,7 +75,7 @@ export class S3Store implements IKVStore {
   }
 
   async close(useCaseName?: string): Promise<void> {
-    await this.#storeMap.get(useCaseName).close()
+    await (await this.#storeMap.get(useCaseName)).close()
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -85,24 +88,24 @@ export class S3Store implements IKVStore {
 
   async findKeys(params?: StoreSearchParams): Promise<Array<any>> {
     const bufArray = await toArray(
-      this.#storeMap.get(params?.useCaseName).createKeyStream({
+      (await this.#storeMap.get(params?.useCaseName)).createKeyStream({
         limit: params?.limit,
       })
     )
     return bufArray.map((buf) => buf.toString())
   }
 
-  get(key: string, useCaseName?: string): Promise<any> {
-    return this.#loadingLimit.add(() => {
-      return this.#storeMap.get(useCaseName).get(key)
+  async get(key: string, useCaseName?: string): Promise<any> {
+    return this.#loadingLimit.add(async () => {
+      return JSON.parse(await (await this.#storeMap.get(useCaseName)).get(key))
     })
   }
 
-  put(key: string, value: any, useCaseName?: string): Promise<void> {
-    return this.#storeMap.get(useCaseName).put(key, value)
+  async put(key: string, value: any, useCaseName?: string): Promise<void> {
+    return (await this.#storeMap.get(useCaseName)).put(key, JSON.stringify(value))
   }
 
-  del(key: string, useCaseName?: string): Promise<void> {
-    return this.#storeMap.get(useCaseName).del(key)
+  async del(key: string, useCaseName?: string): Promise<void> {
+    return (await this.#storeMap.get(useCaseName)).del(key)
   }
 }
