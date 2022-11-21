@@ -126,7 +126,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
     }
   }
 
@@ -170,7 +170,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
     nextState.content = newContent
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
+    nextState.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
 
     return nextState
   }
