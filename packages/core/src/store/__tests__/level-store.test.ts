@@ -20,6 +20,18 @@ describe("LevelStore", () => {
     await tmpFolder.cleanup()
   })
 
+  test("Can save and retrieve from the default store", async () => {
+    await expect( levelStore.get('foo')).rejects.toThrow(/Key not found in database/)
+    await levelStore.put('foo', 'bar')
+    expect(await  levelStore.get('foo')).toEqual('bar')
+  })
+
+  test("Can save and retrieve from a use cuse store", async () => {
+    await expect( levelStore.get('foo', 'use-case')).rejects.toThrow(/Key not found in database/)
+    await levelStore.put('foo', 'bar', 'use-case')
+    expect(await  levelStore.get('foo', 'use-case')).toEqual('bar')
+  })
+
   test("The default store is separated from use case store", async () => {
     await levelStore.put('foo', 'bar')
     expect(await  levelStore.get('foo')).toEqual('bar')
