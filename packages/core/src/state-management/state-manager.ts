@@ -245,8 +245,9 @@ export class StateManager {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    const state$ = await this.load(streamId, opts)
+
     return this.executionQ.forStream(streamId).run(async () => {
-      const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit, streamId)
 
       await this._handleTip(state$, cid, opts)
