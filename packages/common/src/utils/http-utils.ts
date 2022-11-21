@@ -10,6 +10,8 @@ interface FetchOpts {
   signal?: AbortSignal
 }
 
+export type FetchJson = (url: URL | string, opts?: FetchOpts) => Promise<any>
+
 export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {
   if (opts.body) {
     Object.assign(opts, {

@@ -2,6 +2,7 @@ import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
+import type { FetchJson } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 
 export interface AnchorServicePending {
@@ -83,6 +84,20 @@ export interface AnchorService {
    * anchor service.
    */
   getSupportedChains(): Promise<Array<string>>
+}
+
+export interface AnchorServiceAuth {
+  /**
+   * Performs whatever initialization work is required by the specific auth implementation
+   */
+  init(): Promise<void>
+
+  /**
+   *
+   * @param url - Anchor service url as URL or string
+   * @param {FetchOpts} opts - Optional options for the request
+   */
+  sendAuthenticatedRequest: FetchJson
 }
 
 /**
