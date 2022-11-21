@@ -43,7 +43,7 @@ export class ObjectStore<TKeyObject, TValue> implements IObjectStore<TKeyObject,
   async load(object: TKeyObject): Promise<TValue> {
     this.throwIfNotOpened()
     try {
-      const serialized = await this.store.get(this.generateKey(object))
+      const serialized = await this.store.get(this.generateKey(object), this.useCaseName)
       if (serialized) {
         return this.deserialize(serialized)
       } else {
