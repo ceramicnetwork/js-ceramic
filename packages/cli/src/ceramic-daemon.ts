@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import express, { Request, Response } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
-import { Metrics, METRIC_NAMES } from '@ceramicnetwork/metrics'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { buildIpfsConnection } from './build-ipfs-connection.util.js'
 import { S3StateStore } from './s3-state-store.js'
 import {
@@ -46,6 +46,9 @@ const CALLER_NAME = 'js-ceramic'
 const ADMIN_CODE_EXPIRATION_TIMEOUT = 1000 * 60 * 1 // 1 min
 const ADMIN_CODE_CACHE_CAPACITY = 50
 
+const STREAM_PINNED = 'stream_pinned'
+const STREAM_UNPINNED = 'stream_unpinned'
+
 type AdminCode = string
 type Timestamp = number
 
@@ -70,8 +73,8 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   })
 
   // If desired, enable metrics
-  if (opts.metrics?.metricsExporterEnabled) {
-    Metrics.start(opts.metrics, CALLER_NAME)
+  if (opts.metrics?.metricsExporterEnabled && opts.metrics?.collectorHost) {
+    Metrics.start(opts.metrics.collectorHost, CALLER_NAME)
   }
 
   const ceramicConfig: CeramicConfig = {
@@ -819,7 +822,7 @@ export class CeramicDaemon {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     const { force } = req.body
     await this.ceramic.pin.add(streamId, force)
-    Metrics.count(METRIC_NAMES.STREAM_PINNED, 1)
+    Metrics.count(STREAM_PINNED, 1)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),
@@ -834,7 +837,7 @@ export class CeramicDaemon {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     const { opts } = req.body
     await this.ceramic.pin.rm(streamId, opts)
-    Metrics.count(METRIC_NAMES.STREAM_UNPINNED, 1)
+    Metrics.count(STREAM_UNPINNED, 1)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),
