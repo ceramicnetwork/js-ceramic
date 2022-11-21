@@ -17,7 +17,6 @@ export async function createCeramic(
       pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
       indexing: {
         db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-        models: [],
         allowQueriesBeforeHistoricalSync: false,
       },
     },

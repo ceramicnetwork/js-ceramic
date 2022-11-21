@@ -22,7 +22,6 @@ export async function createCeramic(
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
     indexing: {
       db: databaseUrl.href,
-      models: [],
       allowQueriesBeforeHistoricalSync: false,
     },
     ...config,
