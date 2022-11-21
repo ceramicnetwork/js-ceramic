@@ -1,4 +1,4 @@
-import { IKVStore, StoreSearchParams } from '@ceramicnetwork/core'
+import { IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
@@ -86,7 +86,16 @@ export class S3Store implements IKVStore {
     return result.length > 0
   }
 
-  async findKeys(params?: StoreSearchParams): Promise<Array<any>> {
+  async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
+    const dataArray = await toArray(
+      (await this.#storeMap.get(params?.useCaseName)).createReadStream({
+        limit: params?.limit,
+      })
+    )
+    return dataArray.map((data) => { return { key: data.key.toString(), value: data.value } })
+  }
+
+  async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
     const bufArray = await toArray(
       (await this.#storeMap.get(params?.useCaseName)).createKeyStream({
         limit: params?.limit,

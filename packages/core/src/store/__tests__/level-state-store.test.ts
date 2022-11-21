@@ -44,7 +44,7 @@ const streamFromState = function (state: StreamState) {
   return new FakeType(TestUtils.runningState(state), {})
 }
 
-describe('LevelDB-backed StateStore state store', () => {
+describe('LevelDB-backed StreamStateStore state store', () => {
   let tmpFolder: any
   let levelStore: LevelDbStore
   let stateStore: StreamStateStore

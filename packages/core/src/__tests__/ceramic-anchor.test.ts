@@ -338,15 +338,19 @@ describe('Ceramic anchoring', () => {
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       // request anchor
+      expect(await ceramic.repository.stateManager.anchorRequestStore.load(stream.id)).toBeNull()
       const anchorStatus = await stream.requestAnchor()
       expect(anchorStatus).toEqual(AnchorStatus.PENDING)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
       await stream.sync()
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      expect(await ceramic.repository.stateManager.anchorRequestStore.load(stream.id)).not.toBeNull()
 
       // fulfill anchor
       await TestUtils.anchorUpdate(ceramic, stream)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      await new Promise(resolve => setTimeout(resolve, 10)) // for some reason this slight delay seems to be necessary
+      expect(await ceramic.repository.stateManager.anchorRequestStore.load(stream.id)).toBeNull()
 
       await ceramic.close()
     })

@@ -13,7 +13,8 @@ import {
   UnreachableCaseError,
   RunningStateLike,
   DiagnosticsLogger,
-  StreamUtils, GenesisCommit
+  StreamUtils,
+  GenesisCommit,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -336,9 +337,10 @@ export class StateManager {
     await this.anchorRequestStore.save(state$.id, {
       cid: state$.tip,
       timestamp: Date.now(),
-      genesis: await this.dispatcher.retrieveCommit(
-        state$.value.log[0].cid,  // genesis commit CID
-        state$.id) as GenesisCommit
+      genesis: (await this.dispatcher.retrieveCommit(
+        state$.value.log[0].cid, // genesis commit CID
+        state$.id
+      )) as GenesisCommit,
     })
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
     return await this._processAnchorResponse(state$, anchorStatus$)
@@ -352,7 +354,7 @@ export class StateManager {
     return await this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private async  _processAnchorResponse(
+  private async _processAnchorResponse(
     state$: RunningState,
     anchorStatus$: Observable<AnchorServiceResponse>
   ): Promise<Subscription> {

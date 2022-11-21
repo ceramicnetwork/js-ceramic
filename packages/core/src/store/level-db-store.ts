@@ -1,6 +1,6 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
-import { IKVStore, StoreSearchParams } from './ikv-store.js'
+import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import path from 'path'
 import * as fs from 'fs'
 import { Networks } from '@ceramicnetwork/common'
@@ -96,16 +96,26 @@ export class LevelDbStore implements IKVStore {
     return (await this.findKeys(params)).length > 0
   }
 
-  async findKeys(params?: StoreSearchParams): Promise<Array<any>> {
-    const seachParams: Record<string, any> = {
+  async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
+    const searchParams: Record<string, any> = {
+      keys: true,
+      values: true,
+      limit: params?.limit,
+    }
+
+    return (await this.#storeMap.get(params?.useCaseName)).stream(searchParams)
+  }
+
+  async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
+    const searchParams: Record<string, any> = {
       keys: true,
       values: false,
       limit: params?.limit,
     }
 
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return (await this.#storeMap.get(params?.useCaseName)).stream(seachParams) as unknown as Promise<
-      Array<any>
+    return (await this.#storeMap.get(params?.useCaseName)).stream(searchParams) as unknown as Promise<
+      Array<string>
     >
   }
 
