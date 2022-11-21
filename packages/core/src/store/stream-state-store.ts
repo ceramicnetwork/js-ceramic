@@ -22,6 +22,9 @@ function  deserialize(serialized: string): StreamState {
   return StreamUtils.deserializeState(serialized)
 }
 
+/**
+ * An object-value store being able to save, retrieve and delete stream states identified by stream ids
+ */
 export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
   #logger: DiagnosticsLogger
 
