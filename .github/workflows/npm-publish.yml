@@ -21,7 +21,7 @@ jobs:
     secrets: inherit
 
   publish_rc:
-    name: Publish release candidate
+    name: Publish RC
     needs: publish_main
     if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
