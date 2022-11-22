@@ -13,13 +13,11 @@ on:
 
 jobs:
   both:
-    name: Publish release/RC
     if: ${{ github.event.inputs.release_type == 'both' }}
     uses: ./.github/workflows/reusable-release-both.yml
     secrets: inherit
 
   main:
-    name: Publish release
     if: ${{ github.event.inputs.release_type == 'main' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
@@ -27,7 +25,6 @@ jobs:
     secrets: inherit
 
   rc:
-    name: Publish RC
     if: ${{ github.event.inputs.release_type == 'rc' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
@@ -35,7 +32,6 @@ jobs:
     secrets: inherit
 
   hotfix:
-    name: Publish hotfix
     if: ${{ github.event.inputs.release_type == 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
