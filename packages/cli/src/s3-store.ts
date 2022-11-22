@@ -15,12 +15,14 @@ const DEFAULT_S3_STORE_USE_CASE_NAME = 'default'
 
 class S3StoreMap {
   readonly #storeRoot
+  readonly #defaultLocation
   readonly networkName: string
   readonly #map: Map<string, LevelUp.LevelUp>
 
   constructor(bucketName: string, networkName: string) {
     this.networkName = networkName
     this.#storeRoot = bucketName + '/ceramic/' + this.networkName
+    this.#defaultLocation = 'state-store'
     this.#map = new Map<string, LevelUp.LevelUp>()
   }
 
@@ -29,19 +31,16 @@ class S3StoreMap {
     // and others being `<bucketName + '/ceramic/' + this.networkName + '/state-store-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const fullLocation = this.getFullLocation(useCaseName)
     const storePath = `${this.#storeRoot}/${fullLocation}`
-    // @ts-ignore
-    this.#map.set(fullLocation, new LevelUp(new S3LevelDOWN(storePath)))
-  }
-
-  private getDefaultLocation(): string {
-    return 'state-store'
+    // @ts-ignore FIXME: CDB-2064 S3LevelDOWN is not a AbstractLevelDOWN<any, any> (it's missing a few methods)
+    const levelUp = new LevelUp(new S3LevelDOWN(storePath))
+    this.#map.set(fullLocation, levelUp)
   }
 
   private getFullLocation(useCaseName = DEFAULT_S3_STORE_USE_CASE_NAME): string {
     if (useCaseName === DEFAULT_S3_STORE_USE_CASE_NAME) {
-      return this.getDefaultLocation()
+      return this.#defaultLocation
     } else {
-      return `${this.getDefaultLocation()}-${useCaseName}`
+      return `${this.#defaultLocation}-${useCaseName}`
     }
   }
 
