@@ -120,8 +120,8 @@ export class CeramicCliUtils {
       config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
     if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
-    if (process.env.COLLECTOR_HOST)
-      config.metrics.collectorHost = process.env.COLLECTOR_HOST
+    if (process.env.COLLECTOR_HOSTNAME)
+      config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
 
     {
       // CLI flags override values from environment variables and config file
