@@ -9,6 +9,7 @@ import {
   PinningOpts,
   PublishOpts,
   StreamState,
+  StreamUtils,
   SyncOptions,
   UnreachableCaseError,
   UpdateOpts,
@@ -102,7 +103,7 @@ export class Repository {
   async injectStateStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
-      stateStore: stateStore
+      stateStore: stateStore,
     })
     await this.init()
   }
@@ -172,7 +173,9 @@ export class Repository {
     if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
-    // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
+    // Do not check for possible key revocation here, as we will do so later after loading the tip
+    // (or learning that the genesis commit *is* the current tip), when we will have timestamp
+    // information for when the genesis commit was anchored.
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
     const state$ = new RunningState(state, false)
@@ -220,12 +223,12 @@ export class Repository {
             return [streamState$, alreadySynced]
           } else {
             await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
-            return [await this.stateManager.verifyLoneGenesis(streamState$), true]
+            return [await streamState$, true]
           }
         }
         case SyncOptions.NEVER_SYNC: {
           const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
-          return [await this.stateManager.verifyLoneGenesis(streamState$), alreadySynced]
+          return [await streamState$, alreadySynced]
         }
         case SyncOptions.SYNC_ALWAYS: {
           // When SYNC_ALWAYS is provided, we want to reapply and re-validate
@@ -246,12 +249,15 @@ export class Repository {
             opts.syncTimeoutSeconds * 1000,
             fromMemoryOrStore?.tip
           )
-          return [await this.stateManager.verifyLoneGenesis(fromNetwork$), true]
+          return [fromNetwork$, true]
         }
         default:
           throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
       }
     })
+
+    StreamUtils.checkForCacaoExpiration(state$.state)
+
     await this.handlePinOpts(state$, opts)
     if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)

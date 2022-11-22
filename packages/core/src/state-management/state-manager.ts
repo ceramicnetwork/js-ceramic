@@ -106,18 +106,6 @@ export class StateManager {
   }
 
   /**
-   * If it is a lone genesis, verify the signature.
-   * @param state$
-   */
-  async verifyLoneGenesis(state$: RunningState): Promise<RunningState> {
-    if (state$.value.log.length > 1) {
-      return state$
-    }
-    await this.conflictResolution.verifyLoneGenesis(state$.value)
-    return state$
-  }
-
-  /**
    * Take the version of a stream state and a specific commit and returns a snapshot of a state
    * at the requested commit. If the requested commit is for a branch of history that conflicts with the
    * known commits, throw an error. If the requested commit is ahead of the currently known state

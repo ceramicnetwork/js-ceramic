@@ -279,21 +279,25 @@ export class ConflictResolution {
     breakOnAnchor: boolean,
     opts: InternalOpts
   ): Promise<StreamState> {
-    // When we have genesis state only, and add some commits on top, we should check a signature at particular timestamp.
-    // Most probably there is a timestamp information there. If no timestamp found, we consider it to be _now_.
-    // `fetchLog` provides the timestamps.
-    if (state && state.log.length === 1) {
-      const streamId = StreamUtils.streamIdFromState(state)
-      const timestamp = unappliedCommits[0].timestamp
-      const genesis = await Utils.getCommitData(
-        this.dispatcher,
-        state.log[0].cid,
-        streamId,
-        timestamp
-      )
-      await handler.applyCommit(genesis, this.context)
-    }
+    state = await this._applyLogToState_noCacaoVerification(
+      handler,
+      unappliedCommits,
+      state,
+      breakOnAnchor,
+      opts
+    )
+    StreamUtils.checkForCacaoExpiration(state)
 
+    return state
+  }
+
+  private async _applyLogToState_noCacaoVerification<T extends Stream>(
+    handler: StreamHandler<T>,
+    unappliedCommits: CommitData[],
+    state: StreamState | null,
+    breakOnAnchor: boolean,
+    opts: InternalOpts
+  ): Promise<StreamState> {
     for (const entry of unappliedCommits) {
       try {
         state = await this.applyCommitDataToState(entry, state, handler)
@@ -398,21 +402,6 @@ export class ConflictResolution {
     if (log.length) {
       return this.applyLog(initialState, stateLog, log, opts)
     }
-  }
-
-  /**
-   * Verify signature of a lone genesis commit, using current time to check for revoked key.
-   */
-  async verifyLoneGenesis(state: StreamState) {
-    const streamId = StreamUtils.streamIdFromState(state)
-    const handler = this.handlers.get(state.type)
-    const genesis = await Utils.getCommitData(
-      this.dispatcher,
-      state.log[0].cid,
-      streamId,
-      state.log[0].timestamp
-    )
-    await handler.applyCommit(genesis, this.context)
   }
 
   /**

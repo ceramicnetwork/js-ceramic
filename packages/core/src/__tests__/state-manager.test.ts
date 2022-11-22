@@ -172,14 +172,14 @@ test('handleTip for commit already in log', async () => {
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
 
   expect(streamState2.state).toEqual(stream1.state)
-  // 4 IPFS retrievals - 2 each (signed commit and linked commit) for CID of commit to be applied and CID of lone
-  // genesis commit already in the stream state.
-  expect(retrieveCommitSpy).toBeCalledTimes(4)
+  // 2 IPFS retrievals - the signed commit and its linked commit payload for the commit to be
+  // applied
+  expect(retrieveCommitSpy).toBeCalledTimes(2)
 
   // Now re-apply the same commit and don't expect any additional calls to IPFS
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[0].cid)
-  expect(retrieveCommitSpy).toBeCalledTimes(4)
+  expect(retrieveCommitSpy).toBeCalledTimes(2)
 
   // Add another update to stream 1
   const moreNewContent = { foo: 'baz' }
@@ -612,7 +612,6 @@ describe('sync', () => {
         log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
       },
     } as unknown as RunningState
-    stateManager.conflictResolution.verifyLoneGenesis = jest.fn()
     await stateManager.sync(state$, 1000)
     expect(fakeHandleTip).toBeCalledTimes(5)
     response.slice(0, 5).forEach((r) => {
@@ -634,7 +633,6 @@ describe('sync', () => {
         log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
       },
     } as unknown as RunningState
-    stateManager.conflictResolution.verifyLoneGenesis = jest.fn()
     await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10)
     expect(fakeHandleTip).toBeCalledTimes(20)
   })
