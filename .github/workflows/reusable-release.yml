@@ -29,7 +29,7 @@ env:
 jobs:
   publish_main:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.release_type == 'main' }}
+    if: ${{ inputs.release_type == 'main' }}
     steps:
       -
         name: Setup Node
@@ -110,7 +110,7 @@ jobs:
 
   publish_rc:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.release_type == 'rc' }}
+    if: ${{ inputs.release_type == 'rc' }}
     steps:
       -
         name: Setup Node
@@ -185,7 +185,7 @@ jobs:
 
   publish_hotfix:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.release_type == 'hotfix' }}
+    if: ${{ inputs.release_type == 'hotfix' }}
     steps:
       -
         name: Setup Node
@@ -194,7 +194,7 @@ jobs:
           node-version: 16
       -
         name: Branch check
-        if: ${{ github.event.inputs.branch == '' }}
+        if: ${{ inputs.branch == '' }}
         run: |
           echo Hotfix branch must be specified
           exit 1
@@ -202,7 +202,7 @@ jobs:
         name: Checkout hotfix branch
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ inputs.branch }}
           token: ${{ secrets.GH_TOKEN }}
       -
         name: Configure git
