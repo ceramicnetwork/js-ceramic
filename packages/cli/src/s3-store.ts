@@ -74,7 +74,8 @@ export class S3Store implements IKVStore {
   }
 
   async close(useCaseName?: string): Promise<void> {
-    await (await this.#storeMap.get(useCaseName)).close()
+    const store = await this.#storeMap.get(useCaseName)
+    await store.close()
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -86,17 +87,21 @@ export class S3Store implements IKVStore {
   }
 
   async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
+    const store = await this.#storeMap.get(params?.useCaseName)
     const dataArray = await toArray(
-      (await this.#storeMap.get(params?.useCaseName)).createReadStream({
+      store.createReadStream({
         limit: params?.limit,
       })
     )
-    return dataArray.map((data) => { return { key: data.key.toString(), value: data.value } })
+    return dataArray.map((data) => {
+      return { key: data.key.toString(), value: data.value }
+    })
   }
 
   async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
+    const store = await this.#storeMap.get(params?.useCaseName)
     const bufArray = await toArray(
-      (await this.#storeMap.get(params?.useCaseName)).createKeyStream({
+      store.createKeyStream({
         limit: params?.limit,
       })
     )
@@ -105,15 +110,19 @@ export class S3Store implements IKVStore {
 
   async get(key: string, useCaseName?: string): Promise<any> {
     return this.#loadingLimit.add(async () => {
-      return JSON.parse(await (await this.#storeMap.get(useCaseName)).get(key))
+      const store = await this.#storeMap.get(useCaseName)
+      const value = await store.get(key)
+      return JSON.parse(value)
     })
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).put(key, JSON.stringify(value))
+    const store = await this.#storeMap.get(useCaseName)
+    return store.put(key, JSON.stringify(value))
   }
 
   async del(key: string, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).del(key)
+    const store = await this.#storeMap.get(useCaseName)
+    return store.del(key)
   }
 }

@@ -85,11 +85,13 @@ export class LevelDbStore implements IKVStore {
   }
 
   async del(key: string, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).del(key)
+    const store = await this.#storeMap.get(useCaseName)
+    return store.del(key)
   }
 
   async get(key: string, useCaseName?: string): Promise<any> {
-    return (await this.#storeMap.get(useCaseName)).get(key)
+    const store = await this.#storeMap.get(useCaseName)
+    return store.get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -102,8 +104,8 @@ export class LevelDbStore implements IKVStore {
       values: true,
       limit: params?.limit,
     }
-
-    return (await this.#storeMap.get(params?.useCaseName)).stream(searchParams)
+    const store = await this.#storeMap.get(params?.useCaseName)
+    return store.stream(searchParams)
   }
 
   async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
@@ -113,13 +115,15 @@ export class LevelDbStore implements IKVStore {
       limit: params?.limit,
     }
 
+    const store = await this.#storeMap.get(params?.useCaseName)
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return (await this.#storeMap.get(params?.useCaseName)).stream(searchParams) as unknown as Promise<
+    return store.stream(searchParams) as unknown as Promise<
       Array<string>
     >
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).put(key, value)
+    const store = await this.#storeMap.get(useCaseName)
+    return store.put(key, value)
   }
 }
