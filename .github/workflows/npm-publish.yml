@@ -14,7 +14,6 @@ on:
 jobs:
   publish_main:
     name: Publish release
-    if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: main
@@ -23,7 +22,6 @@ jobs:
   publish_rc:
     name: Publish RC
     needs: publish_main
-    if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: rc
@@ -31,7 +29,6 @@ jobs:
 
   publish_hotfix:
     name: Publish hotfix
-    if: ${{ github.event.inputs.release_type == 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: hotfix
