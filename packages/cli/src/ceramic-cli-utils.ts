@@ -73,8 +73,8 @@ export class CeramicCliUtils {
    * @param ethereumRpc - Ethereum RPC URL. Deprecated, use config file if you want to configure this.
    * @param anchorServiceApi - Anchor service API URL. Deprecated, use config file if you want to configure this.
    * @param ipfsPinningEndpoints - Ipfs pinning endpoints. Deprecated, use config file if you want to configure this.
-   * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state. Deprecated, use config file if you want to configure this.
-   * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state. Deprecated, use config file if you want to configure this.
+   * @param stateStoreDirectory - Path to the directory that will be used for storing state. Deprecated, use config file if you want to configure this.
+   * @param stateStoreS3Bucket - S3 bucket name for storing data. Deprecated, use config file if you want to configure this.
    * @param gateway - read only endpoints available. It is disabled by default
    * @param port - port on which daemon is available. Default is 7007
    * @param hostname - hostname to listen on.

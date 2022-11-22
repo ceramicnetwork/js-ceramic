@@ -6,11 +6,12 @@ import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ce
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
+import { LevelDbStore } from '../store/level-db-store.js'
+import { StreamStateStore } from '../store/stream-state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -53,8 +54,9 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.publish.mockClear()
 
     const levelPath = await tmp.tmpName()
-    const stateStore = new LevelStateStore(levelPath)
-    stateStore.open('test')
+    const levelStore = new LevelDbStore(levelPath, 'test')
+    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
+    stateStore.open(levelStore)
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,

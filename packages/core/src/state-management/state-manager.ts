@@ -22,6 +22,7 @@ import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, 
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -48,6 +49,7 @@ export class StateManager {
   constructor(
     private readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
+    private readonly anchorRequestStore: AnchorRequestStore,
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,

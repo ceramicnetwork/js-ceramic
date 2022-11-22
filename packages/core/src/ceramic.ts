@@ -48,6 +48,8 @@ import * as path from 'path'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { ShutdownSignal } from './shutdown-signal.js'
 import { IndexingConfig } from './indexing/build-indexing.js'
+import { LevelDbStore } from './store/level-db-store.js'
+import { AnchorRequestStore } from './store/anchor-request-store.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -83,6 +85,7 @@ const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
+export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const ERROR_LOADING_STREAM = 'error_loading_stream'
 
 /**
@@ -137,6 +140,7 @@ export interface CeramicModules {
  */
 export interface CeramicParameters {
   gateway: boolean
+  stateStoreDirectory?: string
   indexingConfig: IndexingConfig
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
@@ -192,6 +196,7 @@ export class Ceramic implements CeramicApi {
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
+  private readonly _levelStore: LevelDbStore
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -206,6 +211,11 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+
+    this._levelStore = new LevelDbStore(
+      params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
+      this._networkOptions.name
+    )
 
     this.context = {
       api: this,
@@ -238,6 +248,8 @@ export class Ceramic implements CeramicApi {
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
+      stateStore: this._levelStore,
+      anchorRequestStore: new AnchorRequestStore(),
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
@@ -423,8 +435,6 @@ export class Ceramic implements CeramicApi {
     }
 
     const pinStoreOptions = {
-      networkName: networkOptions.name,
-      stateStoreDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
     }
@@ -457,6 +467,7 @@ export class Ceramic implements CeramicApi {
 
     const params: CeramicParameters = {
       gateway: config.gateway,
+      stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
@@ -514,7 +525,7 @@ export class Ceramic implements CeramicApi {
         )
       }
 
-      await this.repository.init(this._networkOptions.name)
+      await this.repository.init()
 
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()
@@ -574,6 +585,7 @@ export class Ceramic implements CeramicApi {
       const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
+
 
         if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
           throw new Error(

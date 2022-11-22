@@ -6,7 +6,6 @@ import {
   Context,
   CreateOpts,
   LoadOpts,
-  Networks,
   PinningOpts,
   PublishOpts,
   StreamState,
@@ -27,10 +26,14 @@ import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
+import { IKVStore } from '../store/ikv-store.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
+  stateStore: IKVStore
+  anchorRequestStore: AnchorRequestStore
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
@@ -96,13 +99,26 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async init(networkName: string): Promise<void> {
-    await this.pinStore.open(networkName)
+  async injectStateStore(stateStore: IKVStore): Promise<void> {
+    this.setDeps({
+      ...this.#deps,
+      stateStore: stateStore
+    })
+    await this.init()
+  }
+
+  async init(): Promise<void> {
+    await this.pinStore.open(this.#deps.stateStore)
+    await this.anchorRequestStore.open(this.#deps.stateStore)
     await this.index.init()
   }
 
   get pinStore(): PinStore {
     return this.#deps.pinStore
+  }
+
+  get anchorRequestStore(): AnchorRequestStore {
+    return this.#deps.anchorRequestStore
   }
 
   get index(): LocalIndexApi {
@@ -115,6 +131,7 @@ export class Repository {
     this.stateManager = new StateManager(
       deps.dispatcher,
       deps.pinStore,
+      deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
       deps.conflictResolution,
@@ -380,13 +397,13 @@ export class Repository {
    */
   async randomPinnedStreamState(): Promise<StreamState | null> {
     // First get a random streamID from the state store.
-    const res = await this.#deps.pinStore.stateStore.list(null, 1)
+    const res = await this.#deps.pinStore.stateStore.listStoredStreamIDs(null, 1)
     if (res.length == 0) {
       return null
     }
     if (res.length > 1) {
       // This should be impossible and indicates a programming error with how the state store
-      // list() call is enforcing the limit argument.
+      // listStoredStreamIDs() call is enforcing the limit argument.
       throw new Error(
         `Expected a single streamID from the state store, but got ${res.length} streamIDs instead`
       )
