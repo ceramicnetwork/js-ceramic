@@ -30,7 +30,7 @@ jobs:
   publish_main:
     name: Publish release (reusable)
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.release_type == 'main' || github.event.inputs.release_type == 'both' }}
+    if: ${{ github.event.inputs.release_type == 'main' }}
     steps:
       -
         name: Setup Node
@@ -112,7 +112,7 @@ jobs:
   publish_rc:
     name: Publish RC (reusable)
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.release_type == 'rc' || github.event.inputs.release_type == 'both' }}
+    if: ${{ github.event.inputs.release_type == 'rc' }}
     steps:
       -
         name: Setup Node
