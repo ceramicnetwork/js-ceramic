@@ -12,26 +12,9 @@ on:
         required: false
 
 jobs:
-  publish_both:
-    name: Publish release and release candidate
-    if: ${{ github.event.inputs.release_type == 'both' }}
-    steps:
-      -
-        name: Publish release
-        uses: ./.github/workflows/reusable-release.yml
-        with:
-          release_type: main
-        secrets: inherit
-      -
-        name: Publish release candidate
-        uses: ./.github/workflows/reusable-release.yml
-        with:
-          release_type: rc
-        secrets: inherit
-
   publish_main:
     name: Publish release
-    if: ${{ github.event.inputs.release_type == 'main' }}
+    if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: main
@@ -39,7 +22,8 @@ jobs:
 
   publish_rc:
     name: Publish release candidate
-    if: ${{ github.event.inputs.release_type == 'rc' }}
+    needs: publish_main
+    if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: rc
