@@ -162,7 +162,6 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', ( env)
     core = await createCeramic(ipfs, {
       indexing: {
         db: dbURL,
-        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })

@@ -92,7 +92,6 @@ describe.each(envs)(
         ceramic1 = await createCeramic(ipfs1, {
           indexing: {
             db: process.env.DATABASE_URL,
-            models: [],
             allowQueriesBeforeHistoricalSync: true,
           },
         })
@@ -147,7 +146,6 @@ describe.each(envs)(
       ceramic2 = await createCeramic(ipfs2, {
         indexing: {
           db: ceramic2DbUrl,
-          models: [],
           allowQueriesBeforeHistoricalSync: true,
         },
       })

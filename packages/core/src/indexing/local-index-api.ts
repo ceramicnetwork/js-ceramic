@@ -153,7 +153,6 @@ export class LocalIndexApi implements IndexApi {
     }
 
     await this.databaseIndexApi?.init()
-    return this.indexModels(this.indexingConfig?.models)
   }
 
   async close(): Promise<void> {

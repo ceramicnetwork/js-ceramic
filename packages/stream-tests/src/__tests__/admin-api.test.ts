@@ -61,7 +61,6 @@ describe('Admin API tests', () => {
     core = await createCeramic(ipfs, {
       indexing: {
         db: `sqlite://${indexingDirectory}/ceramic.sqlite`,
-        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })

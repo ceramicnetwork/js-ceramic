@@ -12,7 +12,6 @@ export async function makeCeramicCore(
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
       allowQueriesBeforeHistoricalSync: true,
     },
   })

@@ -225,22 +225,6 @@ export class IndexingConfig {
     name: 'allow-queries-before-historical-sync',
   })
   allowQueriesBeforeHistoricalSync = false
-
-  /**
-   * Models to index.
-   */
-  @jsonArrayMember(StreamID, {
-    emitDefaultValue: true,
-    deserializer: (arr?: Array<string>) => {
-      if (!arr) return arr
-      return arr.map(StreamID.fromString)
-    },
-    serializer: (arr?: Array<StreamID>) => {
-      if (!arr) return arr
-      return arr.map((s) => s.toString())
-    },
-  })
-  models: StreamID[]
 }
 
 @jsonObject
