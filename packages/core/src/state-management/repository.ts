@@ -223,12 +223,11 @@ export class Repository {
             return [streamState$, alreadySynced]
           } else {
             await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
-            return [await streamState$, true]
+            return [streamState$, true]
           }
         }
         case SyncOptions.NEVER_SYNC: {
-          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
-          return [await streamState$, alreadySynced]
+          return this._loadGenesis(streamId)
         }
         case SyncOptions.SYNC_ALWAYS: {
           // When SYNC_ALWAYS is provided, we want to reapply and re-validate

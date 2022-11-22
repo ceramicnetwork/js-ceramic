@@ -1017,7 +1017,7 @@ describe('ModelInstanceDocumentHandler', () => {
       type: CommitType.GENESIS,
       commit: payload,
       envelope: genesisCommit.jws,
-      timestamp: rotateDate.valueOf() / 1000 + 60 * 60,
+      timestamp: Math.floor(rotateDate.valueOf() / 1000) + 60 * 60,
     }
     const state = await handler.applyCommit(genesisCommitData, context)
     delete state.metadata.unique
