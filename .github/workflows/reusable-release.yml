@@ -28,7 +28,6 @@ env:
 
 jobs:
   publish_main:
-    name: Publish release (reusable)
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.release_type == 'main' }}
     steps:
@@ -110,7 +109,6 @@ jobs:
 #          git push
 
   publish_rc:
-    name: Publish RC (reusable)
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.release_type == 'rc' }}
     steps:
@@ -186,7 +184,6 @@ jobs:
 #          git push
 
   publish_hotfix:
-    name: Publish hotfix (reusable)
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.release_type == 'hotfix' }}
     steps:
