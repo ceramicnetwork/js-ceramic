@@ -1,21 +1,22 @@
-import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
   CommitType,
   Context,
   CreateOpts,
+  DiagnosticsLogger,
   LoadOpts,
+  LogStyle,
   PinningOpts,
   PublishOpts,
   StreamState,
   StreamUtils,
   SyncOptions,
   UnreachableCaseError,
-  UpdateOpts,
+  UpdateOpts
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import { StateManager } from './state-manager.js'
@@ -29,6 +30,7 @@ import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import PQueue from 'p-queue'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -43,6 +45,8 @@ export type RepositoryDependencies = {
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
+
+const RESUME_QUEUE_CONCURRENCY = 30
 
 /**
  * Indicate if the stream should be indexed.
@@ -63,6 +67,11 @@ export class Repository {
    * Serialize operations on state per streamId.
    */
   readonly executionQ: ExecutionQueue
+
+  /**
+   * Resume running states from anchor request store
+   */
+  readonly resumeQ: PQueue
 
   /**
    * In-memory cache of the currently running streams.
@@ -91,6 +100,7 @@ export class Repository {
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
+    this.resumeQ = new PQueue({ concurrency: RESUME_QUEUE_CONCURRENCY })
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -263,6 +273,23 @@ export class Repository {
     }
 
     return state$
+  }
+
+  async resumeRunningStatesFromAnchorRequestStore(): Promise<void> {
+    const currentTimestamp = Date.now()
+    // The following steps in this method modify the anchor request store, so we
+    // need to load it all here first
+    const allStoredRequests = await this.anchorRequestStore.list()
+    allStoredRequests.map((listResult) => {
+      this.resumeQ.add(async () => {
+        await this.load(listResult.key, { sync: SyncOptions.PREFER_CACHE })
+        if (listResult.value.timestamp > currentTimestamp) {
+          throw Error(`System clock possibly moving backwards!!! Check your system clock and if it's accurate, delete your state store`)
+        }
+        this.logger.log(LogStyle.info, `Resumed running state for stream id: ${listResult.key.toString()}`)
+      })
+    })
+
   }
 
   /**
