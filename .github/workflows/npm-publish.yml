@@ -12,20 +12,16 @@ on:
         required: false
 
 jobs:
-  both:
-    if: ${{ github.event.inputs.release_type == 'both' }}
-    uses: ./.github/workflows/reusable-release-both.yml
-    secrets: inherit
-
   main:
-    if: ${{ github.event.inputs.release_type == 'main' }}
+    if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: main
     secrets: inherit
 
   rc:
-    if: ${{ github.event.inputs.release_type == 'rc' }}
+    needs: main
+    if: ${{ github.event.inputs.release_type != 'hotfix' }}
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: rc
