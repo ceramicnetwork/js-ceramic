@@ -5,14 +5,12 @@ on:
 
 jobs:
   publish_main:
-    name: Publish release
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: main
     secrets: inherit
 
   publish_rc:
-    name: Publish RC
     needs: publish_main
     uses: ./.github/workflows/reusable-release.yml
     with:
