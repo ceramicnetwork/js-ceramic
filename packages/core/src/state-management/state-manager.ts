@@ -26,6 +26,7 @@ import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestData, AnchorRequestStore } from '../store/anchor-request-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
+const ANCHOR_REQUEST_STORE_SAVE_TIMEOUT = 5000
 
 export class StateManager {
   /**
@@ -161,11 +162,11 @@ export class StateManager {
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
    * @private
    */
-  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts): Promise<void> {
+  applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts): void {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
     if (anchor) {
-      await this.anchor(state$)
+      this.anchor(state$)
     }
     if (publish) {
       this.publishTip(state$)
@@ -324,7 +325,7 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  async anchor(state$: RunningState): Promise<Subscription> {
+  anchor(state$: RunningState): Subscription {
     if (!this.anchorService) {
       throw new Error(
         `Anchor requested for stream ${state$.id.toString()} but anchoring is disabled`
@@ -334,30 +335,45 @@ export class StateManager {
       return Subscription.EMPTY
     }
 
-    await this.anchorRequestStore.save(state$.id, {
-      cid: state$.tip,
-      timestamp: Date.now(),
-      genesis: (await this.dispatcher.retrieveCommit(
-        state$.value.log[0].cid, // genesis commit CID
-        state$.id
-      )) as GenesisCommit,
+    const requestSaved$ = new Observable((subscriber) => {
+      setTimeout(async () => {
+        await this.anchorRequestStore.save(state$.id, {
+          cid: state$.tip,
+          timestamp: Date.now(),
+          genesis: (await this.dispatcher.retrieveCommit(
+            state$.value.log[0].cid, // genesis commit CID
+            state$.id
+          )) as GenesisCommit,
+        })
+        subscriber.next();
+        subscriber.complete();
+      }, ANCHOR_REQUEST_STORE_SAVE_TIMEOUT)
     })
-    const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
-    return await this._processAnchorResponse(state$, anchorStatus$)
+
+    const stopSignal = new Subject<void>()
+    const subscription = requestSaved$.pipe(takeUntil(stopSignal),
+      concatMap(async () => {
+        const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
+        return this._processAnchorResponse(state$, anchorStatus$)
+      })
+      ).subscribe()
+
+    state$.add(subscription)
+    return subscription
   }
 
   /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  async confirmAnchorResponse(state$: RunningState): Promise<Subscription> {
+  confirmAnchorResponse(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, state$.tip)
-    return await this._processAnchorResponse(state$, anchorStatus$)
+    return this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private async _processAnchorResponse(
+  private _processAnchorResponse(
     state$: RunningState,
     anchorStatus$: Observable<AnchorServiceResponse>
-  ): Promise<Subscription> {
+  ): Subscription {
     const stopSignal = new Subject<void>()
     const subscription = anchorStatus$
       .pipe(
