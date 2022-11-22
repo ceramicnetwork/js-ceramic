@@ -82,6 +82,7 @@ export class CeramicCliUtils {
    * @param logToFiles - Enable writing logs to files. Deprecated, use config file if you want to configure this.
    * @param logDirectory - Store log files in this directory. Deprecated, use config file if you want to configure this.
    * @param metricsExporterEnabled - Enable metrics exporter.
+   * @param collectorHost - Hostname of the metrics collector.
    * @param network - The Ceramic network to connect to
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
@@ -103,6 +104,7 @@ export class CeramicCliUtils {
     logToFiles: boolean,
     logDirectory: string,
     metricsExporterEnabled: boolean,
+    collectorHost: string,
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
@@ -118,6 +120,8 @@ export class CeramicCliUtils {
       config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
     if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
+    if (process.env.COLLECTOR_HOST)
+      config.metrics.collectorHost = process.env.COLLECTOR_HOST
 
     {
       // CLI flags override values from environment variables and config file
