@@ -4,13 +4,13 @@ on:
   workflow_call:
 
 jobs:
-  publish_main:
+  both_main:
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: main
     secrets: inherit
 
-  publish_rc:
+  both_rc:
     needs: publish_main
     uses: ./.github/workflows/reusable-release.yml
     with:
