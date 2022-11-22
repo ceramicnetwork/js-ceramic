@@ -11,7 +11,7 @@ jobs:
     secrets: inherit
 
   both_rc:
-    needs: publish_main
+    needs: both_main
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: rc
