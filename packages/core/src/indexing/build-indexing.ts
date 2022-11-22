@@ -1,5 +1,4 @@
 import type { DatabaseIndexApi } from './database-index-api.js'
-import type { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from './sqlite/sqlite-index-api.js'
 import { PostgresIndexApi } from './postgres/postgres-index-api.js'
 import knex from 'knex'
@@ -11,14 +10,6 @@ export type IndexingConfig = {
    * Database connection string.
    */
   db: string
-
-  /**
-   * @deprecated
-   *
-   * List of models to index.
-   */
-  // TODO: Remove this key when Admin API is implemented
-  models?: Array<StreamID>
 
   /**
    *

@@ -25,7 +25,7 @@ import {
   StreamState,
   AdminApi,
 } from '@ceramicnetwork/common'
-import {ServiceMetrics as Metrics} from '@ceramicnetwork/observability'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'

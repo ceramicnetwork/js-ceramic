@@ -9,7 +9,7 @@ import {
   base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import {ServiceMetrics as Metrics} from '@ceramicnetwork/observability'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { Repository } from './state-management/repository.js'
 import {
   MsgType,
@@ -36,6 +36,7 @@ const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
+const PUBSUB_CACHE_SIZE = 500
 
 const ERROR_IPFS_TIMEOUT = 'ipfs_timeout'
 const ERROR_STORING_COMMIT = 'error_storing_commit'
@@ -61,7 +62,27 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
+
+  /**
+   * Cache IPFS objects.
+   */
   readonly dagNodeCache: lru.LRUMap<string, any>
+
+  /**
+   * Cache recently seen tips processed via incoming pubsub UPDATE or RESPONSE messages.
+   * Keys are the tip CIDs, values are the StreamID that was associated with the commit in the
+   * pubsub message.
+   *
+   * It's important that if we see the same tip associated with a different StreamID
+   * that we still process it. In normal circumstances this will never happen, but if we didn't
+   * do this then an attacker could cause us to fail to process valid commits by sending them out
+   * to pubsub with the wrong StreamID associated in the pubsub message.
+   * @private
+   */
+  private readonly pubsubCache: lru.LRUMap<string, string> = new lru.LRUMap<string, string>(
+    PUBSUB_CACHE_SIZE
+  )
+
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -323,6 +344,20 @@ export class Dispatcher {
   }
 
   /**
+   * Handle a new tip learned about from pubsub, either via an UPDATE or a RESPONSE message
+   */
+  async _handleTip(tip: CID, streamId: StreamID, model?: StreamID) {
+    if (this.pubsubCache.get(tip.toString()) === streamId.toString()) {
+      // This tip was already processed for this streamid recently, no need to re-process it.
+      return
+    }
+    // Add tip to pubsub cache and continue processing
+    this.pubsubCache.set(tip.toString(), streamId.toString())
+
+    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
+  }
+
+  /**
    * Handles an incoming Update message from the pub/sub topic.
    * @param message
    * @private
@@ -330,10 +365,7 @@ export class Dispatcher {
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
     const { stream: streamId, tip, model } = message
-
-    // TODO: add cache of cids here so that we don't emit event
-    // multiple times if we get the message from more than one peer.
-    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
+    return this._handleTip(tip, streamId, model)
     // TODO: Handle 'anchorService' if present in message
   }
 
@@ -378,7 +410,8 @@ export class Dispatcher {
             "'"
         )
       }
-      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip)
+
+      return this._handleTip(newTip, expectedStreamID)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }

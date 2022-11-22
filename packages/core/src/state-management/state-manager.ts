@@ -23,7 +23,7 @@ import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, 
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
-import { AnchorRequestData, AnchorRequestStore } from '../store/anchor-request-store.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const ANCHOR_REQUEST_STORE_SAVE_TIMEOUT = 5000
@@ -249,8 +249,9 @@ export class StateManager {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    const state$ = await this.load(streamId, opts)
+
     return this.executionQ.forStream(streamId).run(async () => {
-      const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit, streamId)
 
       await this._handleTip(state$, cid, opts)

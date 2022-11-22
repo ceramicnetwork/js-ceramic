@@ -259,7 +259,8 @@ describe('Dispatcher with mock ipfs', () => {
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       stream2.id,
-      FAKE_CID2
+      FAKE_CID2,
+      undefined
     )
   })
 

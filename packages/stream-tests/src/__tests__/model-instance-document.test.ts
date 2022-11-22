@@ -51,7 +51,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ipfs = await createIPFS()
     core = await createCeramic(ipfs, {
       indexing: {
-        models: [],
         allowQueriesBeforeHistoricalSync: true,
       },
     })

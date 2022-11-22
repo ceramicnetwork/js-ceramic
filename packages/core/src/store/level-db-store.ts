@@ -114,7 +114,6 @@ export class LevelDbStore implements IKVStore {
       values: false,
       limit: params?.limit,
     }
-
     const store = await this.#storeMap.get(params?.useCaseName)
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
     return store.stream(searchParams) as unknown as Promise<
