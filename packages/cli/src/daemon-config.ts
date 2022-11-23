@@ -313,7 +313,7 @@ export class DaemonLoggerConfig {
 }
 
 /**
- * Metrics exporter config indicating whether the metrics exporter should start and on what port
+ * Metrics exporter config indicating whether the metrics exporter should start and where is the collector
  */
 @jsonObject
 @toJson
@@ -327,8 +327,8 @@ export class DaemonMetricsConfig {
   /**
    * If 'enabled' is true, this contains the port on which the metrics exporter will listen
    */
-  @jsonMember(Number, { name: 'metrics-port' })
-  metricsPort?: number
+  @jsonMember(String, { name: 'collector-host' })
+  collectorHost?: string
 }
 
 /**

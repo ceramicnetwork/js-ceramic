@@ -29,7 +29,6 @@ const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CON
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
-const DEFAULT_METRICS_EXPORTER_PORT = 9090
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
@@ -38,7 +37,6 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   logger: { 'log-level': LogLevel.important, 'log-to-files': false },
   metrics: {
     'metrics-exporter-enabled': false,
-    'metrics-port': DEFAULT_METRICS_EXPORTER_PORT,
   },
   network: { name: Networks.TESTNET_CLAY },
   node: {},
@@ -83,7 +81,7 @@ export class CeramicCliUtils {
    * @param logToFiles - Enable writing logs to files. Deprecated, use config file if you want to configure this.
    * @param logDirectory - Store log files in this directory. Deprecated, use config file if you want to configure this.
    * @param metricsExporterEnabled - Enable metrics exporter.
-   * @param metricsPort - The port to scrape metrics from, if enabled.
+   * @param collectorHost - Hostname of the metrics collector.
    * @param network - The Ceramic network to connect to
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
@@ -105,7 +103,7 @@ export class CeramicCliUtils {
     logToFiles: boolean,
     logDirectory: string,
     metricsExporterEnabled: boolean,
-    metricsPort: number,
+    collectorHost: string,
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
@@ -121,8 +119,8 @@ export class CeramicCliUtils {
       config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
     if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
-    if (process.env.CERAMIC_METRICS_PORT)
-      config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
+    if (process.env.COLLECTOR_HOSTNAME)
+      config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
 
     {
       // CLI flags override values from environment variables and config file
@@ -170,9 +168,6 @@ export class CeramicCliUtils {
       }
       if (metricsExporterEnabled) {
         config.metrics.metricsExporterEnabled = metricsExporterEnabled
-      }
-      if (metricsPort) {
-        config.metrics.metricsPort = metricsPort
       }
       if (network) {
         config.network.name = network
