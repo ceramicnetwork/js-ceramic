@@ -57,4 +57,8 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       }
     )
   }
+
+  createSaveStream(state: RunningState): Observable {
+
+  }
 }

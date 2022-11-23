@@ -229,7 +229,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     this.state$.next(stream.state)
   }
 
-  async requestAnchor(): Promise<AnchorStatus> {
+  requestAnchor(): Promise<AnchorStatus> {
     return this.api.requestAnchor(this.id)
   }
 

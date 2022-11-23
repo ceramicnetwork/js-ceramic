@@ -659,7 +659,10 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const effectiveStreamId = normalizeStreamID(streamId)
     const state = await this.repository.load(effectiveStreamId, opts)
+
     await this.repository.stateManager.anchor(state)
+    // FIXME: CDB-XXXX it seems that it's not always true,
+    // that the state.anchorStatus is updated to PENDING after await this.repository.stateManager.anchor(state)
     return state.state.anchorStatus
   }
 

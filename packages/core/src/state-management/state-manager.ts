@@ -7,23 +7,23 @@ import {
   AnchorServiceResponse,
   AnchorStatus,
   CreateOpts,
-  LoadOpts,
+  DiagnosticsLogger, GenesisCommit,
   InternalOpts,
-  UpdateOpts,
-  UnreachableCaseError,
+  LoadOpts,
   RunningStateLike,
-  DiagnosticsLogger,
   StreamUtils,
-  GenesisCommit,
+  TestUtils,
+  UnreachableCaseError,
+  UpdateOpts
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
-import { catchError, concatMap, takeUntil } from 'rxjs/operators'
-import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
+import { catchError, concatMap, takeUntil, tap } from 'rxjs/operators'
+import { empty, lastValueFrom, merge, Observable, of, Subject, Subscription, timer } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
-import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { AnchorRequestData, AnchorRequestStore } from '../store/anchor-request-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const ANCHOR_REQUEST_STORE_SAVE_TIMEOUT = 5000
@@ -326,41 +326,36 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  anchor(state$: RunningState): Subscription {
+  async anchor(state$: RunningState): Promise<void> {
     if (!this.anchorService) {
       throw new Error(
         `Anchor requested for stream ${state$.id.toString()} but anchoring is disabled`
       )
     }
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
-      return Subscription.EMPTY
+      return
     }
 
-    const requestSaved$ = new Observable((subscriber) => {
-      setTimeout(async () => {
-        await this.anchorRequestStore.save(state$.id, {
-          cid: state$.tip,
-          timestamp: Date.now(),
-          genesis: (await this.dispatcher.retrieveCommit(
-            state$.value.log[0].cid, // genesis commit CID
-            state$.id
-          )) as GenesisCommit,
-        })
-        subscriber.next();
-        subscriber.complete();
-      }, ANCHOR_REQUEST_STORE_SAVE_TIMEOUT)
-    })
-
-    const stopSignal = new Subject<void>()
-    const subscription = requestSaved$.pipe(takeUntil(stopSignal),
-      concatMap(async () => {
-        const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
-        return this._processAnchorResponse(state$, anchorStatus$)
+    return new Promise(async (resolve) => {
+      await this.anchorRequestStore.save(state$.id, {
+        cid: state$.tip,
+        timestamp: Date.now(),
+        genesis: (await this.dispatcher.retrieveCommit(
+          state$.value.log[0].cid, // genesis commit CID
+          state$.id
+        )) as GenesisCommit,
       })
-      ).subscribe()
-
-    state$.add(subscription)
-    return subscription
+      const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
+      let n = 0
+      const observable$ = anchorStatus$.pipe(
+      tap((value) => {
+        if (n == 0 && value.status === AnchorStatus.PENDING) {
+          n += 1;
+          resolve()
+        }
+      }))
+      this._processAnchorResponse(state$, observable$)
+    })
   }
 
   /**
@@ -397,6 +392,7 @@ export class StateManager {
                 ...state$.value,
                 anchorStatus: AnchorStatus.PENDING,
               }
+              TestUtils.delay(100)
               state$.next(next)
               await this._updateStateIfPinned(state$)
               return
