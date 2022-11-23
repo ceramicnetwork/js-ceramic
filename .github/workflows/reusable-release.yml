@@ -19,7 +19,6 @@ env:
   # Dagger
   DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
   DAGGER_LOG_FORMAT: "plain"
-  PIPELINE_TOOLS_VER: "0.2.0"
   # Dummy (for Dagger)
   AWS_ACCESS_KEY_ID: "."
   AWS_SECRET_ACCESS_KEY: "."
@@ -69,7 +68,7 @@ jobs:
         run: |
           dagger project init
           dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+          dagger project update "github.com/3box/pipeline-tools/ci"
           dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
@@ -148,7 +147,7 @@ jobs:
         run: |
           dagger project init
           dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+          dagger project update "github.com/3box/pipeline-tools/ci"
           dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
@@ -219,7 +218,7 @@ jobs:
         run: |
           dagger project init
           dagger project update
-          dagger project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+          dagger project update "github.com/3box/pipeline-tools/ci"
           dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
