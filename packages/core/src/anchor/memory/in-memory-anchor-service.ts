@@ -105,6 +105,18 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Sets all pending anchors for PROCESSINGS. Useful for testing.
+   */
+  async startProcessingPendingAnchors(): Promise<void> {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
+      this._startProcessingCandidate(candidate, 'anchor is being processed')
+    }
+
+    this.#queue = [] // reset
+  }
+
+  /**
    * Filter candidates by stream and DIDs
    * @private
    */
@@ -188,6 +200,18 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     this.#feed.next({
       status: AnchorStatus.FAILED,
+      streamId: candidate.streamId,
+      cid: candidate.cid,
+      message,
+    })
+  }
+
+  _startProcessingCandidate(candidate: Candidate, message?: string): void {
+    if (!message) {
+      message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
+    }
+    this.#feed.next({
+      status: AnchorStatus.PROCESSING,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,

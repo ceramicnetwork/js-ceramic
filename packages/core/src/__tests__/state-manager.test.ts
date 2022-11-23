@@ -23,6 +23,7 @@ import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import cloneDeep from 'lodash.clonedeep'
 import { StateLink } from '../state-management/state-link.js'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -71,9 +72,9 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
-    await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
-    })
+    await ceramic.repository.stateManager.anchor(stream$)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+    await TestUtils.delay(100) // Needs a bit of time to move from PENDING to ANCHORED
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
@@ -81,16 +82,14 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
-    await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
-    })
+    await ceramic.repository.stateManager.anchor(stream$)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+    await TestUtils.delay(100)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(stream$.value.log.length).toEqual(2)
 
     // Now re-request an anchor when the stream is already anchored. Should be a no-op
-    await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
-    })
+    await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.log.length).toEqual(2)
   })
 
@@ -107,9 +106,9 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-    await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
-    })
+    await ceramic.repository.stateManager.anchor(stream$)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+    await TestUtils.delay(500)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(fakeHandleTip).toHaveBeenCalledTimes(4)
   })
@@ -126,10 +125,73 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-    await new Promise<void>((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve)
-    })
+    await ceramic.repository.stateManager.anchor(stream$)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+    await TestUtils.delay(100)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED)
+  })
+
+  test('anchor request is stored when created and deleted when anchored', async () => {
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
+    const stream$ = await ceramic.repository.load(stream.id, {})
+
+    // @ts-ignore anchorRequestStore is private
+    const anchorRequestStore = ceramic.repository.stateManager.anchorRequestStore
+
+    expect(await anchorRequestStore.load(stream.id)).toBeNull()
+    await ceramic.repository.stateManager.anchor(stream$)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+    expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
+    await TestUtils.delay(100) // Needs a bit of time to move from PENDING to ANCHORED
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    await TestUtils.delay(100) // Needs a bit of time delete the request from the store
+    expect(await anchorRequestStore.load(stream.id)).toBeNull()
+  })
+
+  test('anchor request is stored when created and deleted when failed', async () => {
+    // create stream without requesting anchor
+    const ceramicWithManualAnchoring = await createCeramic(ipfs, { anchorOnRequest: false })
+    const stream = await TileDocument.create(ceramicWithManualAnchoring, { x: 1 }, null, {
+      anchor: true,
+    })
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+    // @ts-ignore anchorRequestStore is private
+    const anchorRequestStore = ceramicWithManualAnchoring.repository.stateManager.anchorRequestStore
+
+    expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
+
+    // fail anchor
+    const anchorService = ceramicWithManualAnchoring.context
+      .anchorService as any as InMemoryAnchorService
+    await anchorService.failPendingAnchors()
+    await stream.sync()
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+    await TestUtils.delay(100) // Needs a bit of time delete the request from the store
+    expect(await anchorRequestStore.load(stream.id)).toBeNull()
+  })
+
+  test('anchor request is stored when created and not deleted when processing', async () => {
+    // create stream without requesting anchor
+    const ceramicWithManualAnchoring = await createCeramic(ipfs, { anchorOnRequest: false })
+    const stream = await TileDocument.create(ceramicWithManualAnchoring, { x: 1 }, null, {
+      anchor: true,
+    })
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+    // @ts-ignore anchorRequestStore is private
+    const anchorRequestStore = ceramicWithManualAnchoring.repository.stateManager.anchorRequestStore
+
+    expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
+
+    // fail anchor
+    const anchorService = ceramicWithManualAnchoring.context
+      .anchorService as any as InMemoryAnchorService
+    await anchorService.startProcessingPendingAnchors()
+    await stream.sync()
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.PROCESSING)
+    await TestUtils.delay(2000) // Needs a bit of time delete the request from the store (but it won't delte it in this case)
+    expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
   })
 })
 
@@ -137,9 +199,7 @@ test('handleTip', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
   await stream1.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
-  await new Promise<void>((resolve) => {
-    ceramic.repository.stateManager.anchor(streamState1).add(resolve)
-  })
+  await ceramic.repository.stateManager.anchor(streamState1)
 
   const ceramic2 = await createCeramic(ipfs)
   const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id, { syncTimeoutSeconds: 0 })
