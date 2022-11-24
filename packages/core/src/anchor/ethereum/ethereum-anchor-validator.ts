@@ -78,7 +78,7 @@ const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
 
 /**
  * Parses the transaction data to recover the CID.
- * @param txType transaction type of the anchor proof. Currently support `raw` and `dagCbor(bytes32)`
+ * @param txType transaction type of the anchor proof. Currently support `raw` and `f(bytes32)`
  * @param txResponse the retrieved transaction from the ethereum blockchain
  * @returns
  */
