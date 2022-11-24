@@ -13,7 +13,8 @@ import {
   UnreachableCaseError,
   RunningStateLike,
   DiagnosticsLogger,
-  StreamUtils, GenesisCommit
+  StreamUtils,
+  GenesisCommit,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -334,17 +335,18 @@ export class StateManager {
       return
     }
 
-    return new Promise( (resolve) => {
+    return new Promise((resolve) => {
       this._saveAnchorRequestForState(state$).then(() => {
         const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
         let resolved = false
         const observable$ = anchorStatus$.pipe(
           tap((value) => {
             if (!resolved && value.status === AnchorStatus.PENDING) {
-              resolved = true;
+              resolved = true
               resolve()
             }
-          }))
+          })
+        )
         this._processAnchorResponse(state$, observable$)
       })
     })
@@ -388,7 +390,6 @@ export class StateManager {
             // the stream's state.
             return
           }
-
           switch (asr.status) {
             case AnchorStatus.PENDING: {
               const next = {

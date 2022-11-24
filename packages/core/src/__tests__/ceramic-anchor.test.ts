@@ -45,11 +45,6 @@ describe('Ceramic anchoring', () => {
 
     const stream1 = await TileDocument.create(ceramic1, { a: 1 })
 
-    stream1.subscribe( (event) => {
-      console.log("ARTUR WDOWIARSKI DATA: ", new Date())
-      console.log("ARTUR WOWIARSKI STREAM STATE: ", event)
-    } )
-
     await stream1.update({ a: 2 })
     await stream1.update({ a: 3 })
 

@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals'
 import {
   AnchorStatus,
-  IpfsApi,
   CommitType,
+  IpfsApi,
   SignatureStatus,
   StreamUtils,
   TestUtils,
@@ -17,13 +17,32 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { streamFromState } from '../state-management/stream-from-state.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { from, timer } from 'rxjs'
-import { concatMap, map } from 'rxjs/operators'
+import { concatMap, map, tap } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import cloneDeep from 'lodash.clonedeep'
 import { StateLink } from '../state-management/state-link.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+
+const waitForAnchorStatus = async (stream$: RunningState, status: AnchorStatus): Promise<void> => {
+  await new Promise<void>((resolve) => {
+    let resolved = false
+    stream$.subscribe()
+
+    const subscription = stream$
+      .pipe(
+        tap((value) => {
+          if (!resolved && value.anchorStatus === status) {
+            resolved = true
+            resolve()
+          }
+        })
+      )
+      .subscribe()
+    stream$.add(subscription)
+  })
+}
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -74,7 +93,7 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.delay(100) // Needs a bit of time to move from PENDING to ANCHORED
+    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
@@ -84,7 +103,7 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.delay(100)
+    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(stream$.value.log.length).toEqual(2)
 
@@ -108,7 +127,7 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.delay(500)
+    await TestUtils.delay(3000) // Give some time for retries to be triggered
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(fakeHandleTip).toHaveBeenCalledTimes(4)
   })
@@ -127,7 +146,7 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.delay(100)
+    await waitForAnchorStatus(stream$, AnchorStatus.FAILED)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED)
   })
 
@@ -142,7 +161,7 @@ describe('anchor', () => {
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
-    await TestUtils.delay(100) // Needs a bit of time to move from PENDING to ANCHORED
+    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     await TestUtils.delay(100) // Needs a bit of time delete the request from the store
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
