@@ -4,6 +4,7 @@ import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
+import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
 
@@ -47,6 +48,10 @@ const BLOCK_CACHE_SIZE = 50
 const V0_PROOF_TYPE = 'raw'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
+const ABI = ['function anchorDagCbor(bytes32)']
+
+const iface = new Interface(ABI)
+
 
 //TODO (NET-1659): Finalize block numbers and smart contract addresses once CAS is creating smart contract anchors
 const BLOCK_THRESHHOLDS = {
@@ -70,9 +75,9 @@ const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
 }
 
 const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
-  // function signatures are encoded as 0x + 8 chars, the rest is our bytes32 param
-  const rootMultihash = txResponse.data.slice(10)
-  const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootMultihash, 'base16'))
+  const decodedArgs = iface.decodeFunctionData('anchorDagCbor', txResponse.data)
+  const rootCID = decodedArgs[0]
+  const multihash = createMultihash(SHA256_CODE, uint8arrays.fromString(rootCID.slice(2), 'base16'))
   return CID.create(1, DAG_CBOR_CODE, multihash)
 }
 
