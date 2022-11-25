@@ -24,6 +24,7 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
 const CHAIN_ID = 'inmemory:12345'
+const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
   constructor(readonly cid: CID, readonly streamId?: StreamID, readonly log?: CID[]) {}
@@ -323,7 +324,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       txHash: CID.parse(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
-      version: 1,
+      txType: V1_PROOF_TYPE,
     }
     const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }

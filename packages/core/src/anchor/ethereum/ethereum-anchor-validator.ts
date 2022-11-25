@@ -45,10 +45,13 @@ const BASE_CHAIN_ID = 'eip155'
 const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
+const V0_PROOF_TYPE = 'raw'
+const V1_PROOF_TYPE = 'f(bytes32)'
 
 const ABI = ['function anchorDagCbor(bytes32)']
 
 const iface = new Interface(ABI)
+
 
 //TODO (NET-1659): Finalize block numbers and smart contract addresses once CAS is creating smart contract anchors
 const BLOCK_THRESHHOLDS = {
@@ -80,12 +83,12 @@ const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
 
 /**
  * Parses the transaction data to recover the CID.
- * @param version version of the anchor proof. Version 1 anchor proofs are created using the official anchoring smart contract and must be parsed accordingly
+ * @param txType transaction type of the anchor proof. Currently support `raw` and `f(bytes32)`
  * @param txResponse the retrieved transaction from the ethereum blockchain
  * @returns
  */
-const getCidFromTransaction = (version: number, txResponse: TransactionResponse): CID => {
-  if (version === 1) {
+const getCidFromTransaction = (txType: string, txResponse: TransactionResponse): CID => {
+  if (txType === V1_PROOF_TYPE) {
     return getCidFromV1Transaction(txResponse)
   } else {
     return getCidFromV0Transaction(txResponse)
@@ -210,7 +213,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [txResponse, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    const txCid = getCidFromTransaction(anchorProof.version, txResponse)
+    const txCid = getCidFromTransaction(anchorProof.txType, txResponse)
 
     if (!txCid.equals(anchorProof.root)) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
@@ -228,19 +231,19 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    // if the block number is greater than the threshold and the version is 0 or non existent
+    // if the block number is greater than the threshold and the txType is `raw` or non existent
     if (
       txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId] &&
-      (anchorProof.version === 0 || !anchorProof.version)
+      (anchorProof.txType === V0_PROOF_TYPE || !anchorProof.txType)
     ) {
       throw new Error(
         `Any anchor proofs created after block ${
           BLOCK_THRESHHOLDS[this._chainId]
-        } must include the version field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+        } must include the txType field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
       )
     }
 
-    if (anchorProof.version === 1 && txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]) {
+    if (anchorProof.txType === V1_PROOF_TYPE && txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]) {
       throw new Error(
         `Anchor was created using address ${
           txResponse.to
