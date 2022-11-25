@@ -3,6 +3,209 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.8.0-rc.0...@ceramicnetwork/stream-tile-handler@2.8.0) (2022-11-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.7.0-rc.0...@ceramicnetwork/stream-tile-handler@2.8.0-rc.0) (2022-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.6.0-rc.0...@ceramicnetwork/stream-tile-handler@2.7.0-rc.0) (2022-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.5.0...@ceramicnetwork/stream-tile-handler@2.6.0-rc.0) (2022-11-03)
+
+
+### Bug Fixes
+
+* **stream-handler-common:** Fix loading of historical commits with CACAOs ([#2523](https://github.com/ceramicnetwork/js-ceramic/issues/2523)) ([329f1c8](https://github.com/ceramicnetwork/js-ceramic/commit/329f1c8457bd04bf9619fed0bba8f89afabd0b7e))
+
+
+
+
+
+# [2.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.5.0-rc.0...@ceramicnetwork/stream-tile-handler@2.5.0) (2022-10-24)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.3.1-rc.0...@ceramicnetwork/stream-tile-handler@2.5.0-rc.0) (2022-10-24)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# 2.4.0-rc.0 (2022-10-24)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.3.1-rc.0](/compare/@ceramicnetwork/stream-tile-handler@2.3.0...@ceramicnetwork/stream-tile-handler@2.3.1-rc.0) (2022-10-19)
+
+
+### Bug Fixes
+
+* Wrap AJV instances in LRU cache (#2488) 3a6e31a, closes #2488
+
+
+
+
+
+# [2.3.0](/compare/@ceramicnetwork/stream-tile-handler@2.3.0-rc.1...@ceramicnetwork/stream-tile-handler@2.3.0) (2022-10-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.3.0-rc.2](/compare/@ceramicnetwork/stream-tile-handler@2.3.0-rc.1...@ceramicnetwork/stream-tile-handler@2.3.0-rc.2) (2022-10-04)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.3.0-rc.1](/compare/@ceramicnetwork/stream-tile-handler@2.3.0-rc.0...@ceramicnetwork/stream-tile-handler@2.3.0-rc.1) (2022-09-30)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [2.3.0-rc.0](/compare/@ceramicnetwork/stream-tile-handler@2.2.8...@ceramicnetwork/stream-tile-handler@2.3.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+## [2.2.8](/compare/@ceramicnetwork/stream-tile-handler@2.2.8-rc.3...@ceramicnetwork/stream-tile-handler@2.2.8) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.8-rc.3](/compare/@ceramicnetwork/stream-tile-handler@2.2.8-rc.2...@ceramicnetwork/stream-tile-handler@2.2.8-rc.3) (2022-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.8-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.8-rc.1...@ceramicnetwork/stream-tile-handler@2.2.8-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.8-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.8-rc.0...@ceramicnetwork/stream-tile-handler@2.2.8-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.8-rc.0](/compare/@ceramicnetwork/stream-tile-handler@2.2.7...@ceramicnetwork/stream-tile-handler@2.2.8-rc.0) (2022-09-13)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.7](/compare/@ceramicnetwork/stream-tile-handler@2.2.7-rc.1...@ceramicnetwork/stream-tile-handler@2.2.7) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.7-rc.1](/compare/@ceramicnetwork/stream-tile-handler@2.2.7-rc.0...@ceramicnetwork/stream-tile-handler@2.2.7-rc.1) (2022-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.7-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.6...@ceramicnetwork/stream-tile-handler@2.2.7-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.6-rc.0...@ceramicnetwork/stream-tile-handler@2.2.6) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [2.2.6-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.5...@ceramicnetwork/stream-tile-handler@2.2.6-rc.0) (2022-08-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+
+## [2.2.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.2.4...@ceramicnetwork/stream-tile-handler@2.2.5) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+
+## [2.2.4](/compare/@ceramicnetwork/stream-tile-handler@2.2.4-rc.2...@ceramicnetwork/stream-tile-handler@2.2.4) (2022-08-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
 ## [2.2.4-rc.2](/compare/@ceramicnetwork/stream-tile-handler@2.2.4-rc.1...@ceramicnetwork/stream-tile-handler@2.2.4-rc.2) (2022-07-26)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

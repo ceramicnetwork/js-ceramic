@@ -10,8 +10,8 @@ import {
   fetchJson,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, interval, from, concat, of } from 'rxjs'
-import { concatMap, catchError, map } from 'rxjs/operators'
+import { Observable, interval, from, concat, of, defer } from 'rxjs'
+import { concatMap, catchError, map, retry } from 'rxjs/operators'
 
 /**
  * CID-streamId pair
@@ -21,8 +21,8 @@ interface CidAndStream {
   readonly streamId: StreamID
 }
 
-const POLL_INTERVAL = 60000 // 60 seconds
-const MAX_POLL_TIME = 86400000 // 24 hours
+const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
+const MAX_POLL_TIME = 86_400_000 // 24 hours
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -33,14 +33,20 @@ export class EthereumAnchorService implements AnchorService {
   private _chainId: string
   private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger
-
   /**
-   * @param anchorServiceUrl
+   * Retry a request to CAS every +pollInterval+ milliseconds.
    */
-  constructor(readonly anchorServiceUrl: string, logger: DiagnosticsLogger) {
+  private readonly pollInterval: number
+
+  constructor(
+    readonly anchorServiceUrl: string,
+    logger: DiagnosticsLogger,
+    pollInterval: number = DEFAULT_POLL_INTERVAL
+  ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this._logger = logger
+    this.pollInterval = pollInterval
   }
 
   /**
@@ -113,16 +119,30 @@ export class EthereumAnchorService implements AnchorService {
    * @private
    */
   private _makeRequest(cidStreamPair: CidAndStream): Observable<AnchorServiceResponse> {
-    return from(
-      fetchJson(this.requestsApiEndpoint, {
-        method: 'POST',
-        body: {
-          streamId: cidStreamPair.streamId.toString(),
-          docId: cidStreamPair.streamId.toString(),
-          cid: cidStreamPair.cid.toString(),
-        },
-      })
+    return defer(() =>
+      from(
+        fetchJson(this.requestsApiEndpoint, {
+          method: 'POST',
+          body: {
+            streamId: cidStreamPair.streamId.toString(),
+            docId: cidStreamPair.streamId.toString(),
+            cid: cidStreamPair.cid.toString(),
+          },
+        })
+      )
     ).pipe(
+      retry({
+        delay: (error) => {
+          this._logger.err(
+            new Error(
+              `Error connecting to CAS while attempting to anchor ${cidStreamPair.streamId.toString()} at commit ${cidStreamPair.cid.toString()}: ${
+                error.message
+              }`
+            )
+          )
+          return interval(this.pollInterval)
+        },
+      }),
       map((response) => {
         return this.parseResponse(cidStreamPair, response)
       })
@@ -141,7 +161,7 @@ export class EthereumAnchorService implements AnchorService {
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
     const cidStream = { cid: tip, streamId }
 
-    return interval(POLL_INTERVAL).pipe(
+    return interval(this.pollInterval).pipe(
       concatMap(async () => {
         const now = new Date().getTime()
         if (now > maxTime) {

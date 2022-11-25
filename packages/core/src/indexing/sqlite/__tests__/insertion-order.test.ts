@@ -3,12 +3,14 @@ import knex, { Knex } from 'knex'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SqliteIndexApi } from '../sqlite-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
-import { chunks } from './chunks.util.js'
+import { chunks } from '../../../__tests__/chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 
 const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
 const MODEL = MODELS_TO_INDEX[0]
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let EXPECTED: Array<string>
 
@@ -26,8 +28,13 @@ beforeEach(async () => {
       filename: filename,
     },
   })
-  const indexAPI = new SqliteIndexApi(dbConnection, MODELS_TO_INDEX)
+  const indexAPI = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
   await indexAPI.init()
+  await indexAPI.indexModels(
+    MODELS_TO_INDEX.map((model) => {
+      return { model }
+    })
+  )
   order = new InsertionOrder(dbConnection)
   // Rows in insertion-order.fixture.csv are in insertion order.
   // The responses in the tests below are ok if they are in the same order as in the CSV.
@@ -134,7 +141,7 @@ describe('backward pagination', () => {
 
 test('filtered by account', async () => {
   const presentAccount = 'did:key:foo' // We have that in the populated table
-  const absentAccount = 'did:key:blah' // We do not have that in the populated table
+  const absentAccount = 'did:key:absent' // We do not have that in the populated table
   const withPresentAccount = await order.page({
     model: MODEL,
     account: presentAccount,

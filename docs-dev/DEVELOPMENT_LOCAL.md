@@ -12,12 +12,14 @@ Open the js-ceramic project.  Set the Run/Debug configuration template (under Ru
 ![edit configuration templates](https://user-images.githubusercontent.com/798887/169563176-f6e15e71-8bf3-4f7f-a5d4-ce90732067e1.png)
 
 
-Note this uses the __*dev-unstable*__ network, it is also possible to configure for clay testnet.  The Application parameters used in this example are:
+The Application parameters used in this example are:
 
 ```
 daemon --port 7007 --hostname 0.0.0.0 --network dev-unstable --anchor-service-api https://cas-dev.3boxlabs.com --debug true --ethereum-rpc https://rinkeby.infura.io/v3/b6685df41e1647c4be0046dfa62a020b
 ```
 This configuration will allow running the ceramic daemon from the debugger and setting breakpoints in the daemon.
+
+__*Note*__ that using `--network dev-unstable` will cause your node connecting to unstable development ceramic network. You can also make it connect to clay testnet with `--network clay-testnet` or, if you want your node to be completely isolated from any network, without the need to run a local CAS service, you can also use `--network inmemory`.
 
 
 ## PRE-REQUISITES
@@ -57,13 +59,12 @@ Run on [Clayground](https://github.com/ceramicnetwork/clayground) (full environm
 
 Import this [Postman Collection](postman_collection.json) of queries to see a sample of API calls that can be used to exercise and explore common endpoints.
 
-By default the collection connects to the public dev network, but you can easily overwrite the local variables to point to your locally running deamon by updating `ceramic_hostname` to `http://localhost:7007`.
+By default the collection connects to the public dev network, but you can easily overwrite the local variables to point to your locally running daemon by updating `ceramic_hostname` to `http://localhost:7007`.
 
 
 ## PACKAGES OVERVIEW
 
 `3id-did-resolver` - 3Box ID
-`key-did-resolver` - blockchain public keys
 
 `blockchain-utils-*`
 
@@ -99,9 +100,6 @@ etherum.ts/createLink(did) -> sign
 * `crust` - crust.network - alternative to filecoin
 
 * `aggregation` -> allows one to pin data to multiple backends (IPFS, Arweave, Crust, Filecoin, etc.) simultaneously
-
-
-`pkh-did-resolver` - we do accept blockchain signatures (just a fancy name)
 
 `stream-caip10-link` & `*-stream-tile` - immutable ipfs record / creation
 

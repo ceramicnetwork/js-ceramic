@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/logger",
-  "version": "2.0.6-rc.1",
+  "version": "2.5.0",
   "description": "Ceramic file logging utilities",
   "keywords": [
     "ceramic",
@@ -9,7 +9,14 @@
     "utilities"
   ],
   "author": "Val Mack <val@3box.io>",
-  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
     "lib": "./lib"

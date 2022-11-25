@@ -6,10 +6,12 @@ import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ce
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
+import { ShutdownSignal } from '../shutdown-signal.js'
+import { LevelDbStore } from '../store/level-db-store.js'
+import { StreamStateStore } from '../store/stream-state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -52,8 +54,9 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.publish.mockClear()
 
     const levelPath = await tmp.tmpName()
-    const stateStore = new LevelStateStore(levelPath)
-    stateStore.open('test')
+    const levelStore = new LevelDbStore(levelPath, 'test')
+    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
+    stateStore.open(levelStore)
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,
@@ -65,7 +68,7 @@ describe('Dispatcher with mock ipfs', () => {
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
-      new AbortController().signal,
+      new ShutdownSignal(),
       10
     )
   })
@@ -221,10 +224,16 @@ describe('Dispatcher with mock ipfs', () => {
 
     // Handle UPDATE message without model
     dispatcher.repository.stateManager.handlePubsubUpdate = jest.fn()
-    await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID })
+    await dispatcher.handleMessage({
+      typ: MsgType.UPDATE,
+      stream: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      model: null,
+    })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       state$.id,
-      FAKE_CID
+      FAKE_CID,
+      null
     )
 
     const continuationState = {
@@ -250,7 +259,8 @@ describe('Dispatcher with mock ipfs', () => {
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       stream2.id,
-      FAKE_CID2
+      FAKE_CID2,
+      undefined
     )
   })
 
@@ -285,7 +295,8 @@ describe('Dispatcher with mock ipfs', () => {
     })
     expect(dispatcher.repository.stateManager.handlePubsubUpdate).toBeCalledWith(
       state$.id,
-      FAKE_CID
+      FAKE_CID,
+      FAKE_MODEL
     )
   })
 })

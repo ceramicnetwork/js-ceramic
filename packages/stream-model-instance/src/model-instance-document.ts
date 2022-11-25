@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import type { Operation } from 'fast-json-patch'
-import * as uint8arrays from 'uint8arrays'
+import * as dagCbor from '@ipld/dag-cbor'
 import { randomBytes } from '@stablelib/random'
 import {
   CreateOpts,
@@ -33,6 +33,12 @@ export interface ModelInstanceDocumentMetadataArgs {
    * The StreamID of the Model that this ModelInstanceDocument belongs to.
    */
   model: StreamID
+
+  /**
+   * Whether the stream should be created deterministically or not.  Should only be used for
+   * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
+   */
+  deterministic?: boolean
 }
 
 /**
@@ -56,6 +62,12 @@ const DEFAULT_CREATE_OPTS = {
   pin: true,
   sync: SyncOptions.NEVER_SYNC,
   syncTimeoutSeconds: 0,
+}
+const DEFAULT_DETERMINISTIC_OPTS = {
+  anchor: false,
+  publish: false,
+  pin: true,
+  sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
@@ -113,6 +125,30 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
+
+    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
+      ModelInstanceDocument.STREAM_TYPE_ID,
+      commit,
+      opts
+    )
+  }
+
+  /**
+   * Creates a deterministic ModelInstanceDocument with a 'single' accountRelation.
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param metadata - Genesis metadata
+   * @param opts - Additional options
+   */
+  static async single<T>(
+    ceramic: CeramicApi,
+    metadata: ModelInstanceDocumentMetadataArgs,
+    opts: CreateOpts = {}
+  ): Promise<ModelInstanceDocument<T>> {
+    opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
+    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    metadata = { ...metadata, deterministic: true }
+
+    const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata)
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
       ModelInstanceDocument.STREAM_TYPE_ID,
       commit,
@@ -223,9 +259,17 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     signer: CeramicSigner,
     content: T,
     metadata: ModelInstanceDocumentMetadataArgs
-  ): Promise<SignedCommitContainer> {
+  ): Promise<SignedCommitContainer | GenesisCommit> {
     const commit = await this._makeRawGenesis(signer, content, metadata)
-    return ModelInstanceDocument._signDagJWS(signer, commit)
+    if (metadata.deterministic) {
+      // Check if we can encode it in cbor. Should throw an error when invalid payload.
+      // See https://github.com/ceramicnetwork/ceramic/issues/205 for discussion on why we do this.
+      dagCbor.encode(commit)
+      // No signature needed for deterministic genesis commits (which cannot have content)
+      return commit
+    } else {
+      return ModelInstanceDocument._signDagJWS(signer, commit)
+    }
   }
 
   private static async _makeRawGenesis<T>(
@@ -237,21 +281,24 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
 
-    if (!metadata.controller) {
+    let controller = metadata.controller
+    if (!controller) {
       if (signer.did) {
         await _ensureAuthenticated(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        metadata.controller = signer.did.hasParent ? signer.did.parent : signer.did.id
+        controller = signer.did.hasParent ? signer.did.parent : signer.did.id
       } else {
         throw new Error('No controller specified')
       }
     }
 
     const header: GenesisHeader = {
-      controllers: [metadata.controller],
-      unique: randomBytes(12),
+      controllers: [controller],
       model: metadata.model.bytes,
+    }
+    if (!metadata.deterministic) {
+      header.unique = randomBytes(12)
     }
 
     return { data: content, header }

@@ -2,13 +2,16 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
+  CommitType,
   Context,
   CreateOpts,
   LoadOpts,
   PinningOpts,
   PublishOpts,
   StreamState,
+  StreamUtils,
   SyncOptions,
+  UnreachableCaseError,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store.js'
@@ -23,17 +26,32 @@ import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
+import { LocalIndexApi } from '../indexing/local-index-api.js'
+import { IKVStore } from '../store/ikv-store.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
+  stateStore: IKVStore
+  anchorRequestStore: AnchorRequestStore
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
   conflictResolution: ConflictResolution
+  indexing: LocalIndexApi
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
+
+/**
+ * Indicate if the stream should be indexed.
+ */
+function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
+  const model = state$.state?.metadata?.model
+  if (!model) return false
+  return index.shouldIndexStream(model)
+}
 
 export class Repository {
   /**
@@ -82,8 +100,30 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  async injectStateStore(stateStore: IKVStore): Promise<void> {
+    this.setDeps({
+      ...this.#deps,
+      stateStore: stateStore,
+    })
+    await this.init()
+  }
+
+  async init(): Promise<void> {
+    await this.pinStore.open(this.#deps.stateStore)
+    await this.anchorRequestStore.open(this.#deps.stateStore)
+    await this.index.init()
+  }
+
   get pinStore(): PinStore {
     return this.#deps.pinStore
+  }
+
+  get anchorRequestStore(): AnchorRequestStore {
+    return this.#deps.anchorRequestStore
+  }
+
+  get index(): LocalIndexApi {
+    return this.#deps.indexing
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
@@ -92,12 +132,16 @@ export class Repository {
     this.stateManager = new StateManager(
       deps.dispatcher,
       deps.pinStore,
+      deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
       deps.conflictResolution,
       this.logger,
       (streamId) => this.fromMemoryOrStore(streamId),
-      (streamId, opts) => this.load(streamId, opts)
+      (streamId, opts) => this.load(streamId, opts),
+      // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
+      this.indexStreamIfNeeded.bind(this),
+      deps.indexing
     )
   }
 
@@ -129,7 +173,9 @@ export class Repository {
     if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
-    // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
+    // Do not check for possible key revocation here, as we will do so later after loading the tip
+    // (or learning that the genesis commit *is* the current tip), when we will have timestamp
+    // information for when the genesis commit was anchored.
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
     const state$ = new RunningState(state, false)
@@ -169,19 +215,52 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    const state$ = await this.loadingQ.forStream(streamId).run(async () => {
-      const [stream, synced] = await this._loadGenesis(streamId)
-      if (opts.sync == SyncOptions.PREFER_CACHE && synced) {
-        return stream
+    const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
+      switch (opts.sync) {
+        case SyncOptions.PREFER_CACHE: {
+          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          if (alreadySynced) {
+            return [streamState$, alreadySynced]
+          } else {
+            await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
+            return [streamState$, true]
+          }
+        }
+        case SyncOptions.NEVER_SYNC: {
+          return this._loadGenesis(streamId)
+        }
+        case SyncOptions.SYNC_ALWAYS: {
+          // When SYNC_ALWAYS is provided, we want to reapply and re-validate
+          // the stream state.  We effectively throw out our locally stored state
+          // as its possible that the commits that were used to construct that
+          // state are no longer valid (for example if the CACAOs used to author them
+          // have expired since they were first applied to the cached state object).
+          // But if we were the only node on the network that knew about the most
+          // recent tip, we don't want to totally forget about that, so we pass the tip in
+          // to `sync` so that it gets considered alongside whatever tip we learn
+          // about from the network.
+          const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
+            this.fromNetwork(streamId),
+            this.fromMemoryOrStore(streamId),
+          ])
+          await this.stateManager.sync(
+            fromNetwork$,
+            opts.syncTimeoutSeconds * 1000,
+            fromMemoryOrStore?.tip
+          )
+          return [fromNetwork$, true]
+        }
+        default:
+          throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
       }
-
-      if (opts.sync == SyncOptions.NEVER_SYNC) {
-        return this.stateManager.verifyLoneGenesis(stream)
-      }
-
-      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
-      return this.stateManager.verifyLoneGenesis(stream)
     })
+
+    StreamUtils.checkForCacaoExpiration(state$.state)
+
+    await this.handlePinOpts(state$, opts)
+    if (synced && state$.isPinned) {
+      this.stateManager.markPinnedAndSynced(state$.id)
+    }
 
     return state$
   }
@@ -241,8 +320,8 @@ export class Repository {
     await this.handlePinOpts(state$, opts)
   }
 
-  async handlePinOpts(state$: RunningState, opts: PinningOpts) {
-    if (opts.pin) {
+  async handlePinOpts(state$: RunningState, opts: PinningOpts): Promise<void> {
+    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
@@ -295,9 +374,18 @@ export class Repository {
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
+    if (shouldIndex(state$, this.index)) {
+      throw new Error(
+        `Cannot unpin actively indexed stream (${state$.id.toString()}) with model: ${
+          state$.state.metadata.model
+        }`
+      )
+    }
+
     if (opts?.publish) {
       this.stateManager.publishTip(state$)
     }
+
     return this.#deps.pinStore.rm(state$)
   }
 
@@ -314,13 +402,13 @@ export class Repository {
    */
   async randomPinnedStreamState(): Promise<StreamState | null> {
     // First get a random streamID from the state store.
-    const res = await this.#deps.pinStore.stateStore.list(null, 1)
+    const res = await this.#deps.pinStore.stateStore.listStoredStreamIDs(null, 1)
     if (res.length == 0) {
       return null
     }
     if (res.length > 1) {
       // This should be impossible and indicates a programming error with how the state store
-      // list() call is enforcing the limit argument.
+      // listStoredStreamIDs() call is enforcing the limit argument.
       throw new Error(
         `Expected a single streamID from the state store, but got ${res.length} streamIDs instead`
       )
@@ -328,6 +416,37 @@ export class Repository {
 
     const [streamID] = res
     return this.#deps.pinStore.stateStore.load(StreamID.fromString(streamID))
+  }
+
+  /**
+   * Helper function to add stream to db index if it has a 'model' in its metadata.
+   * @public
+   */
+  public async indexStreamIfNeeded(state$: RunningState): Promise<void> {
+    if (!state$.value.metadata.model) {
+      return
+    }
+
+    const asDate = (unixTimestamp: number | null | undefined) => {
+      return unixTimestamp ? new Date(unixTimestamp * 1000) : null
+    }
+
+    // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
+    const lastAnchor = asDate(state$.value.anchorProof?.blockTimestamp)
+    const firstAnchor = asDate(
+      state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
+    )
+    const STREAM_CONTENT = {
+      model: state$.value.metadata.model,
+      streamID: state$.id,
+      controller: state$.value.metadata.controllers[0],
+      streamContent: state$.value.content,
+      tip: state$.tip,
+      lastAnchor: lastAnchor,
+      firstAnchor: firstAnchor,
+    }
+
+    await this.index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -367,5 +486,6 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
+    await this.index.close()
   }
 }

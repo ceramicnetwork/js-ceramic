@@ -63,7 +63,7 @@ Legend:
 - solid block - class,
 - dotted block - interface,
 - arrow - interface being implemented by a class,
-- external and internal - if the call was initiated outside or intside the node.
+- external and internal - if the call was initiated outside or inside the node.
 
 Figure above represents all the components working together. External calls through `PinApi` trigger `PinStore` to save state in `StateStore` and pin using `PinningAggregation`. `StateStore` block here represents an interface that is implemented by `LevelStateStore` (persistence on LevelDB). `PinningAggregation` and particular `IPFSPinning` and `PowergatePinning` implement same `Pinning` interface, so one could choose to put a particular pinning backends into `PinStore` instead of aggregation. `PinningAggregation` instantiates pinning backends based on passed connection strings, see below.
 

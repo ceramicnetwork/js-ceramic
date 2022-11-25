@@ -1,5 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
+import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
@@ -67,7 +68,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     return this._applySigned(commitData, state, context)
@@ -80,18 +81,14 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @private
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+    const did = context.did
+    if (!did) throw new Error(`DID is not set`)
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = await StreamID.fromGenesis('tile', commitData.commit)
       const { controllers } = payload.header
-      await SignatureUtils.verifyCommitSignature(
-        commitData,
-        context.did,
-        controllers[0],
-        null,
-        streamId
-      )
+      await SignatureUtils.verifyCommitSignature(commitData, did, controllers[0], null, streamId)
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -100,13 +97,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const state = {
+    const state: StreamState = {
       type: TileDocument.STREAM_TYPE_ID,
       content: payload.data || {},
       metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
     }
 
     if (state.metadata.schema) {
@@ -128,14 +125,17 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
+    const did = context.did
+    if (!did) throw new Error(`DID is not set`)
     // Retrieve the payload
     const payload = commitData.commit
     StreamUtils.assertCommitLinksToState(state, payload)
 
     // Verify the signature
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
+    if (!controller) throw new Error(`Controller is not set`)
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, null, streamId)
+    await SignatureUtils.verifyCommitSignature(commitData, did, controller, null, streamId)
 
     if (payload.header.controllers) {
       if (payload.header.controllers.length !== 1) {
@@ -151,7 +151,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       payload.header.controllers &&
       !stringArraysEqual(payload.header.controllers, state.metadata.controllers)
     ) {
-      const streamId = new StreamID(TileDocument.STREAM_TYPE_ID, state.log[0].cid)
+      const genesisLogEntry = state.log[0]
+      const streamId = new StreamID(TileDocument.STREAM_TYPE_ID, genesisLogEntry.cid)
       throw new Error(
         `Cannot change controllers since 'forbidControllerChange' is set. Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
           state.metadata.controllers
@@ -171,7 +172,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
+    nextState.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
 
     const oldContent = state.next?.content ?? state.content
     const oldMetadata = state.next?.metadata ?? state.metadata
@@ -196,45 +197,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
-    StreamUtils.assertCommitLinksToState(state, commitData.commit)
-
-    const proof = commitData.proof
-    state.log.push({
-      cid: commitData.cid,
-      type: CommitType.ANCHOR,
-      timestamp: proof.blockTimestamp,
-    })
-    let content = state.content
-    let metadata = state.metadata
-
-    if (state.next?.content) {
-      content = state.next.content
-      delete state.next.content
-    }
-
-    if (state.next?.metadata) {
-      metadata = state.next.metadata
-      delete state.next.metadata
-    }
-
-    delete state.next
-
-    return {
-      ...state,
-      content,
-      metadata,
-      anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: proof,
-    }
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
+    return applyAnchorCommit(commitData, state)
   }
 }

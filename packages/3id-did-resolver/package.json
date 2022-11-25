@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "2.1.4-rc.2",
+  "version": "2.6.0",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -9,7 +9,14 @@
     "Data"
   ],
   "author": "Joel Torstensson <oed3933@gmail.com>",
-  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "license": "(Apache-2.0 OR MIT)",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -33,16 +40,16 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.4.0-rc.1",
-    "@ceramicnetwork/stream-tile": "^2.4.0-rc.1",
-    "@ceramicnetwork/streamid": "^2.3.0-rc.1",
+    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/stream-tile": "^2.9.0",
+    "@ceramicnetwork/streamid": "^2.7.0",
     "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
     "multiformats": "^9.5.8",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/http-client": "^2.3.1-rc.2",
+    "@ceramicnetwork/http-client": "^2.10.0",
     "did-resolver": "^3.1.5"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

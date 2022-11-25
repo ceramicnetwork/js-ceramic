@@ -1,7 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { AnchorStatus, CommitType, RawCommit, SignatureStatus, StreamState } from '../stream.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { StreamUtils } from '../utils/stream-utils'
+import { StreamUtils } from '../utils/stream-utils.js'
+import { exec } from 'child_process'
 
 const FAKE_DID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -42,7 +43,7 @@ test('Commit serialization round trip - unsigned genesis commit', async () => {
     id: FAKE_CID,
     data: null,
     prev: null,
-    header: { controllers: [FAKE_DID], model: FAKE_STREAM_ID },
+    header: { controllers: [FAKE_DID], model: FAKE_STREAM_ID.bytes },
   }
 
   const serialized = StreamUtils.serializeCommit(commit)
@@ -56,6 +57,11 @@ test('Commit serialization round trip - unsigned genesis commit', async () => {
   expect(deserialized.header.controllers[0].toString()).toEqual(
     commit.header.controllers[0].toString()
   )
-  expect(deserialized.header.model.type).toEqual(commit.header.model.type)
-  expect(deserialized.header.model.cid.toString()).toEqual(commit.header.model.cid.toString())
+  const deserializedModel = StreamID.fromBytes(deserialized.header.model)
+  expect(deserializedModel.type).toEqual(FAKE_STREAM_ID.type)
+  expect(deserializedModel.cid.toString()).toEqual(FAKE_STREAM_ID.cid.toString())
+})
+
+test('StreamUtils.deserializeState returns null if given null as a param', async () => {
+  expect(StreamUtils.deserializeState(null)).toBeNull()
 })

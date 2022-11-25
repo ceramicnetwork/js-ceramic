@@ -12,5 +12,5 @@ export interface Context {
   anchorService?: AnchorService
   loggerProvider?: LoggerProvider
 
-  api?: CeramicApi // the self reference to the Ceramic API
+  api: CeramicApi // the self reference to the Ceramic API
 }

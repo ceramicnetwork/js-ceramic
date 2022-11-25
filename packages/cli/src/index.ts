@@ -1,4 +1,3 @@
-export * from './ceramic-cli-utils'
-export * from './s3-state-store'
-export * from './ceramic-daemon'
-export * from './daemon-config'
+export * from './ceramic-cli-utils.js'
+export * from './ceramic-daemon.js'
+export * from './daemon-config.js'

@@ -4,18 +4,18 @@ import type { StreamState } from './stream.js'
 /**
  * Traverse from the most recent to the last, according to selected ordering.
  */
-export interface ForwardPagination {
-  readonly first: number
-  readonly after?: string
+export type ForwardPagination = {
+  first: number
+  after?: string
 }
 
 /**
  * Traverse from the last to the most recent, according to selected ordering.
  * Gets the oldest entries but the results get newer as you iterate.
  */
-export interface BackwardPagination {
-  readonly last: number
-  readonly before?: string
+export type BackwardPagination = {
+  last: number
+  before?: string
 }
 
 /**
@@ -27,16 +27,22 @@ export type Pagination = ForwardPagination | BackwardPagination
 /**
  * Base query to the index. Disregards pagination.
  */
-export interface BaseQuery {
-  readonly model: StreamID | string
-  readonly account?: string
+export type BaseQuery = {
+  model: StreamID | string
+  account?: string
+  filter?: Record<string, string>
 }
+
+export type PaginationQuery = BaseQuery & Pagination
 
 /**
  * API to query an index.
+ *
+ * Returns null, iff the stream state can't be retrieved from the repository.
  */
 export interface IndexApi {
-  queryIndex(query: BaseQuery & Pagination): Promise<Page<StreamState>>
+  count(query: BaseQuery): Promise<number>
+  query(query: PaginationQuery): Promise<Page<StreamState | null>>
 }
 
 export type Edge<T> = {

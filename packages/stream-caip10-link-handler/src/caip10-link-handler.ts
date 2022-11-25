@@ -12,6 +12,7 @@ import {
   StreamUtils,
   toLegacyAccountId,
 } from '@ceramicnetwork/common'
+import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   get type(): number {
@@ -42,7 +43,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     if (StreamUtils.isAnchorCommitData(commitData)) {
-      return this._applyAnchor(context, commitData, state)
+      return this._applyAnchor(commitData, state)
     }
 
     return this._applySigned(commitData, state)
@@ -65,7 +66,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     // TODO - verify genesis commit
-    const state = {
+    const state: StreamState = {
       type: Caip10Link.STREAM_TYPE_ID,
       content: null,
       next: {
@@ -145,31 +146,11 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
 
   /**
    * Applies anchor commit
-   * @param context - Ceramic context
    * @param commitData - Anchor commit
    * @param state - Stream state
    * @private
    */
-  async _applyAnchor(
-    context: Context,
-    commitData: CommitData,
-    state: StreamState
-  ): Promise<StreamState> {
-    StreamUtils.assertCommitLinksToState(state, commitData.commit)
-
-    state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR })
-    let content = state.content
-    if (state.next?.content) {
-      content = state.next.content
-    }
-
-    delete state.next
-
-    return {
-      ...state,
-      content,
-      anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: commitData.proof,
-    }
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
+    return applyAnchorCommit(commitData, state)
   }
 }

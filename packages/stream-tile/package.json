@@ -1,13 +1,20 @@
 {
   "name": "@ceramicnetwork/stream-tile",
-  "version": "2.4.0-rc.1",
+  "version": "2.9.0",
   "description": "Ceramic Tile Document stream type",
   "keywords": [
     "ceramic",
     "tile"
   ],
   "author": "Janko Simonovic <simonovic86@gmail.com>",
-  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
     "lib": "./lib"
@@ -31,10 +38,11 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.4.0-rc.1",
-    "@ceramicnetwork/streamid": "^2.3.0-rc.1",
+    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/streamid": "^2.7.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
+    "dids": "^3.4.0",
     "fast-json-patch": "^3.1.0",
     "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^3.0.0"

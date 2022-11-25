@@ -1,28 +1,20 @@
 import { jest } from '@jest/globals'
-import { StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import {
+  StreamUtils,
+  IpfsApi,
+  TestUtils,
+  CommitType,
+  StreamState,
+  SyncOptions,
+} from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Repository } from '../repository.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
-
-let ipfs: IpfsApi
-let ceramic: Ceramic
-
-let repository: Repository
-
-beforeAll(async () => {
-  ipfs = await createIPFS()
-  ceramic = await createCeramic(ipfs)
-
-  repository = ceramic.repository
-})
-
-afterAll(async () => {
-  await ceramic.close()
-  await ipfs.stop()
-})
+import { StreamID } from '@ceramicnetwork/streamid'
+import { RunningState } from '../running-state.js'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -33,7 +25,29 @@ const STRING_MAP_SCHEMA = {
   },
 }
 
-describe('load', () => {
+let ipfs: IpfsApi
+let ceramic: Ceramic
+let repository: Repository
+
+beforeAll(async () => {
+  ipfs = await createIPFS()
+})
+
+afterAll(async () => {
+  await ipfs.stop()
+})
+
+beforeEach(async () => {
+  ceramic = await createCeramic(ipfs)
+  repository = ceramic.repository
+})
+
+afterEach(async () => {
+  jest.resetAllMocks()
+  await ceramic.close()
+})
+
+describe('#load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
@@ -71,8 +85,8 @@ describe('load', () => {
     expect(fromMemorySpy).toBeCalledTimes(1)
     expect(fromStateStoreSpy).toBeCalledTimes(1)
     expect(fromNetworkSpy).toBeCalledTimes(0)
-    // First time loading from state store it needs to be synced
-    expect(syncSpy).toBeCalledTimes(1)
+    // Do not need to sync a stream after it has been pinned because pinning also syncs
+    expect(syncSpy).toBeCalledTimes(0)
 
     const stream3 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 })
     expect(StreamUtils.serializeState(stream3.state)).toEqual(
@@ -81,8 +95,110 @@ describe('load', () => {
     expect(fromMemorySpy).toBeCalledTimes(2)
     expect(fromStateStoreSpy).toBeCalledTimes(2)
     expect(fromNetworkSpy).toBeCalledTimes(0)
+    expect(syncSpy).toBeCalledTimes(0)
+  })
+
+  test('Sync pinned stream first time loaded from state store', async () => {
+    const content = { foo: 'bar' }
+    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' })
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
+    const streamId = new StreamID('tile', genesisCid)
+    const streamState = {
+      type: TileDocument.STREAM_TYPE_ID,
+      log: [
+        {
+          type: CommitType.GENESIS,
+          cid: genesisCid,
+        },
+      ],
+      content,
+    } as unknown as StreamState
+    const runningState = new RunningState(streamState, true)
+
+    const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromNetworkSpy = jest.spyOn(repository as any, 'fromNetwork')
+    const syncSpy = jest.spyOn(repository.stateManager, 'sync')
+
+    fromMemorySpy.mockReturnValueOnce(null)
+    fromMemorySpy.mockReturnValueOnce(null)
+    fromStateStoreSpy.mockReturnValueOnce(runningState)
+    fromStateStoreSpy.mockReturnValueOnce(runningState)
+
+    const stream1 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
+    expect(stream1.state.content).toEqual(content)
+    expect(fromMemorySpy).toBeCalledTimes(1)
+    expect(fromStateStoreSpy).toBeCalledTimes(1)
+    expect(fromNetworkSpy).toBeCalledTimes(0)
+    // Needs to sync with the network the first time a pinned stream is loaded
+    // (in case there were updates while the node was offline)
+    expect(syncSpy).toBeCalledTimes(1)
+
+    const stream2 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
+    expect(StreamUtils.serializeState(stream2.state)).toEqual(
+      StreamUtils.serializeState(stream1.state)
+    )
+    expect(fromMemorySpy).toBeCalledTimes(2)
+    expect(fromStateStoreSpy).toBeCalledTimes(2)
+    expect(fromNetworkSpy).toBeCalledTimes(0)
+
     // Second time loading from state store it does not need to be synced again
     expect(syncSpy).toBeCalledTimes(1)
+  })
+
+  describe('sync: SYNC_ALWAYS', () => {
+    describe('pinned', () => {
+      test('revalidate current state, rewrite', async () => {
+        const stream1 = await TileDocument.create(ceramic, { a: 1 }, null, {
+          anchor: false,
+          pin: true,
+        })
+        await stream1.update({ a: 2 }, null, { anchor: false })
+
+        const fromMemory = jest.spyOn(repository as any, 'fromMemory')
+        fromMemory.mockReturnValueOnce(undefined)
+        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
+        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
+
+        const stream2 = await repository.load(stream1.id, {
+          sync: SyncOptions.SYNC_ALWAYS,
+        })
+        expect(StreamUtils.serializeState(stream1.state)).toEqual(
+          StreamUtils.serializeState(stream2.state)
+        )
+        expect(fromMemory).toBeCalledTimes(1)
+        expect(fromStateStore).toBeCalledTimes(1)
+        expect(fromNetwork).toBeCalledTimes(1)
+        expect(saveFromStreamStateHolder).toBeCalledTimes(1)
+      })
+    })
+
+    describe('unpinned', () => {
+      test('revalidate current state, do not rewrite', async () => {
+        const stream1 = await TileDocument.create(ceramic, { a: 1 }, null, {
+          anchor: false,
+          pin: false,
+        })
+        await stream1.update({ a: 2 }, null, { anchor: false, pin: false })
+
+        const fromMemory = jest.spyOn(repository as any, 'fromMemory')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
+        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
+
+        const stream2 = await repository.load(stream1.id, {
+          sync: SyncOptions.SYNC_ALWAYS,
+        })
+        expect(StreamUtils.serializeState(stream1.state)).toEqual(
+          StreamUtils.serializeState(stream2.state)
+        )
+        expect(fromMemory).toBeCalledTimes(1)
+        expect(fromStateStore).toBeCalledTimes(0)
+        expect(fromNetwork).toBeCalledTimes(1)
+        expect(saveFromStreamStateHolder).toBeCalledTimes(0)
+      })
+    })
   })
 })
 

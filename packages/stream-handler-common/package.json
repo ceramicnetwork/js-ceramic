@@ -1,0 +1,48 @@
+{
+  "name": "@ceramicnetwork/stream-handler-common",
+  "version": "1.3.0",
+  "description": "Ceramic stream handler common types and utilities",
+  "keywords": [
+    "ceramic",
+    "types",
+    "utilities",
+    "stream",
+    "handlers"
+  ],
+  "author": "Spencer T Brody <spencer+npm@3box.io>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "./lib"
+  },
+  "main": "lib/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests",
+    "build": "npx tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
+  },
+  "dependencies": {
+    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/streamid": "^2.7.0",
+    "lodash.clonedeep": "^4.5.0"
+  }
+}

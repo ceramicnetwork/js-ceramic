@@ -1,12 +1,19 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "2.0.8-rc.2",
+  "version": "2.6.0",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
     "caip10-link"
   ],
-  "homepage": "https://ceramic.network",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
     "lib": "./lib"
@@ -30,11 +37,11 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.3.0-rc.1",
+    "@ceramicnetwork/streamid": "^2.7.0",
+    "@didtools/cacao": "^1.0.0",
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
-    "ceramic-cacao": "^1.1.1",
     "near-api-js": "^0.44.2",
     "uint8arrays": "^3.0.0"
   },

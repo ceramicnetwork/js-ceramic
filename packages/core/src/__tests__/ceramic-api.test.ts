@@ -2,13 +2,13 @@ import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, StreamUtils, IpfsApi, TestUtils, CommitType } from '@ceramicnetwork/common'
+import { AnchorStatus, StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 /**
  * Generates string of particular size in bytes
@@ -41,7 +41,7 @@ describe('Ceramic API', () => {
 
   const MODEL_DEFINITION: ModelDefinition = {
     name: 'MyModel',
-    accountRelation: ModelAccountRelation.LIST,
+    accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
       type: 'object',
@@ -58,7 +58,7 @@ describe('Ceramic API', () => {
   }
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
   })
@@ -149,7 +149,7 @@ describe('Ceramic API', () => {
       // should be rejected by conflict resolution
       expect(streamOg.state.log.length).toEqual(1)
       await expect(streamOg.update(contentRejected)).rejects.toThrow(
-        /Commit rejected by conflict resolution/
+        /rejected by conflict resolution/
       )
       expect(streamOg.state.log.length).toEqual(1)
 
@@ -173,8 +173,8 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
 
-      // TODO: NET-1614 Extend with targeted payload comparison
-      const addIndexSpy = jest.spyOn(ceramic._index, 'indexStream')
+      // TODO (NET-1614): Extend with targeted payload comparison
+      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
       expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
@@ -475,6 +475,13 @@ describe('Ceramic API', () => {
       expect(streams[streamE.id.toString()]).toBeTruthy()
     })
 
+    /**
+     * Asserts that the given timestamps are within 5 seconds of each other
+     */
+    function expectTimestampsClose(givenTimestamp: number, expectedTimestamp: number) {
+      expect(Math.abs(expectedTimestamp - givenTimestamp)).toBeLessThan(5)
+    }
+
     it('loads the same stream at multiple points in time', async () => {
       // test data for the atTime feature
       streamFStates.push(streamF.state)
@@ -519,6 +526,13 @@ describe('Ceramic API', () => {
       // annoying thing, was pending when snapshotted but will
       // obviously not be when loaded at a specific commit
       streamFStates[0].anchorStatus = 0
+
+      // first stream state didn't have an anchor timestamp when it was added to the streamFStates
+      // array, but it does get a timestamp after being anchored
+      // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
+      expect(Math.abs(states[0].log[0].timestamp - streamFTimestamps[0])).toBeLessThan(5)
+      delete states[0].log[0].timestamp
+
       expect(states[0]).toEqual(streamFStates[0])
       expect(states[1]).toEqual(streamFStates[1])
       expect(states[2]).toEqual(streamFStates[2])

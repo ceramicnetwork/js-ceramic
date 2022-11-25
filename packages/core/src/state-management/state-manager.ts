@@ -18,9 +18,11 @@ import {
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
-import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
+import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { LocalIndexApi } from '../indexing/local-index-api.js'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -42,10 +44,12 @@ export class StateManager {
    * @param logger - Logger
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
+   * @param indexStreamIfNeeded - `Repository#indexStreamIfNeeded`
    */
   constructor(
     private readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
+    private readonly anchorRequestStore: AnchorRequestStore,
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
@@ -54,7 +58,9 @@ export class StateManager {
     private readonly load: (
       streamId: StreamID,
       opts?: LoadOpts | CreateOpts
-    ) => Promise<RunningState>
+    ) => Promise<RunningState>,
+    private readonly indexStreamIfNeeded,
+    private readonly _index: LocalIndexApi | undefined
   ) {}
 
   /**
@@ -71,34 +77,32 @@ export class StateManager {
   /**
    * Takes a stream state that might not contain the complete log (and might in fact contain only the
    * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
-   * @param state$
-   * @param timeoutMillis
+   *
+   * @param state$ - Current stream state.
+   * @param timeoutMillis - How much time do we wait for a response from the network.
+   * @param hint - Tip to try while we are waiting for the network to respond.
    */
-  async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
+  async sync(state$: RunningState, timeoutMillis: number, hint?: CID): Promise<void> {
+    // Begin querying the network for the tip immediately.
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
+    // If a 'hint' is provided we can work on applying it while the tip is
+    // fetched from the network
+    const tipSource$ = hint ? merge(tip$, of(hint)) : tip$
     // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
     await lastValueFrom(
-      tip$.pipe(
+      tipSource$.pipe(
         takeUntil(timer(timeoutMillis)),
         concatMap((tip) => this._handleTip(state$, tip))
       ),
       { defaultValue: undefined }
     )
     if (state$.isPinned) {
-      this.syncedPinnedStreams.add(state$.id.toString())
+      this.markPinnedAndSynced(state$.id)
     }
   }
 
-  /**
-   * If it is a lone genesis, verify the signature.
-   * @param state$
-   */
-  async verifyLoneGenesis(state$: RunningState): Promise<RunningState> {
-    if (state$.value.log.length > 1) {
-      return state$
-    }
-    await this.conflictResolution.verifyLoneGenesis(state$.value)
-    return state$
+  markPinnedAndSynced(streamId: StreamID): void {
+    this.syncedPinnedStreams.add(streamId.toString())
   }
 
   /**
@@ -163,11 +167,7 @@ export class StateManager {
    * @returns boolean - whether or not the tip was actually applied
    * @private
    */
-  private async _handleTip(
-    state$: RunningState,
-    cid: CID,
-    opts: InternalOpts = {}
-  ): Promise<boolean> {
+  async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<boolean> {
     // by default swallow and log errors applying commits
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
@@ -186,9 +186,13 @@ export class StateManager {
 
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
-    if (isPinned) {
+    // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
+    const shouldIndex =
+      state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
+    if (isPinned || shouldIndex) {
       await this.pinStore.add(state$)
     }
+    await this.indexStreamIfNeeded(state$)
   }
 
   publishTip(state$: RunningState): void {
@@ -200,17 +204,23 @@ export class StateManager {
    *
    * @param streamId
    * @param tip - Stream Tip CID
-   * @private
+   * @param model - Model Stream ID
    */
-  handlePubsubUpdate(streamId: StreamID, tip: CID): void {
-    this.fromMemoryOrStore(streamId).then((state$) => {
-      if (!state$) {
-        return
-      }
-      this.executionQ.forStream(streamId).add(async () => {
-        await this._handleTip(state$, tip)
-      })
+  async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    let state$ = await this.fromMemoryOrStore(streamId)
+    const shouldIndex = model && this._index.shouldIndexStream(model)
+    if (!shouldIndex && !state$) {
+      // stream isn't pinned or indexed, nothing to do
+      return
+    }
+
+    if (!state$) {
+      state$ = await this.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._handleTip(state$, tip)
     })
+    await this.indexStreamIfNeeded(state$)
   }
 
   /**
@@ -225,8 +235,9 @@ export class StateManager {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    const state$ = await this.load(streamId, opts)
+
     return this.executionQ.forStream(streamId).run(async () => {
-      const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit, streamId)
 
       await this._handleTip(state$, cid, opts)

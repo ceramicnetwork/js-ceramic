@@ -11,6 +11,7 @@ import {
   IpfsApi,
   TimedAbortSignal,
   GenesisCommit,
+
   TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -33,13 +34,18 @@ describe('Ceramic interop: core <> http-client', () => {
   let core: Ceramic
   let daemon: CeramicDaemon
   let client: CeramicClient
+  let originalEnvVarVal: string | undefined
 
   beforeAll(async () => {
+    // FIXME: How should we be setting up this env var properly?
+    originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
   })
 
   beforeEach(async () => {
@@ -48,7 +54,6 @@ describe('Ceramic interop: core <> http-client', () => {
     daemon = await makeCeramicDaemon(core)
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-
     await core.setDID(makeDID(core, seed))
     await client.setDID(makeDID(client, seed))
   })
@@ -268,7 +273,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // should be rejected by conflict resolution
     expect(streamOg.state.log.length).toEqual(1)
     await expect(streamOg.update(contentRejected)).rejects.toThrow(
-      /Commit rejected by conflict resolution/
+      /rejected by conflict resolution/
     )
     expect(streamOg.state.log.length).toEqual(1)
 

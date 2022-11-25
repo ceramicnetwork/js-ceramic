@@ -1,7 +1,13 @@
 import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
 import { ModelViewsDefinition } from '@ceramicnetwork/stream-model'
 
-const SUPPORTED_VIEW_TYPES = ['documentAccount', 'documentVersion']
+const SUPPORTED_VIEW_TYPES = [
+  'documentAccount',
+  'documentVersion',
+  'relationDocument',
+  'relationFrom',
+  'relationCountFrom',
+]
 
 export class ViewsValidation {
   public validateViews(views: ModelViewsDefinition, schema: JSONSchema.Object): void {

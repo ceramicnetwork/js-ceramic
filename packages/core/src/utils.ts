@@ -14,8 +14,7 @@ import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { fromString, toString } from 'uint8arrays'
-import type { Cacao } from 'ceramic-cacao'
+import type { Cacao } from '@didtools/cacao'
 
 /**
  * Various utility functions
@@ -33,8 +32,8 @@ export class Utils {
    */
   // eslint-disable-next-line @typescript-eslint/ban-types
   static async awaitCondition(
-    conditionFn: Function,
-    stopFunction: Function,
+    conditionFn: () => boolean,
+    stopFunction: () => boolean,
     awaitInterval: number
   ): Promise<void> {
     while (conditionFn()) {

@@ -7,6 +7,7 @@ import {
   IpfsApi,
   SignatureStatus,
   TestUtils,
+  LoggerProvider,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
@@ -17,6 +18,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { RunningState } from '../../state-management/running-state.js'
 import { Repository } from '../../state-management/repository.js'
+import { LevelDbStore } from '../level-db-store.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -48,18 +50,23 @@ describe('Level data store', () => {
 
   beforeEach(async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const storeFactory = new PinStoreFactory(ipfs, repository, {
-      stateStoreDirectory: levelPath,
-      pinningEndpoints: ['ipfs+context'],
-      networkName: 'inmemory',
-    })
+    const storeFactory = new PinStoreFactory(
+      ipfs,
+      repository,
+      {
+        pinningEndpoints: ['ipfs+context'],
+      },
+      new LoggerProvider().getDiagnosticsLogger()
+    )
+    const levelStore = new LevelDbStore(levelPath, 'inmemory')
     store = storeFactory.createPinStore()
+    await store.open(levelStore)
   })
 
   it('pins stream correctly without IPFS pinning', async () => {
     await expect(store.stateStore.load(streamId)).resolves.toBeNull()
     const pinSpy = jest.spyOn(store.pinning, 'pin')
-    await store.stateStore.save({ id: streamId, state: streamState })
+    await store.stateStore.saveFromStreamStateHolder({ id: streamId, state: streamState })
     expect(pinSpy).toBeCalledTimes(0)
     await expect(store.stateStore.load(streamId)).resolves.toEqual(streamState)
   })
@@ -134,25 +141,35 @@ describe('Level data store', () => {
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const storeFactoryLocal = new PinStoreFactory(ipfs, repository, {
-      stateStoreDirectory: levelPath,
-      pinningEndpoints: ['ipfs+context'],
-      networkName: 'local',
-    })
+    const localLevelStore = new LevelDbStore(levelPath, 'local')
+    const storeFactoryLocal = new PinStoreFactory(
+      ipfs,
+      repository,
+      {
+        pinningEndpoints: ['ipfs+context'],
+      },
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     const localStore = storeFactoryLocal.createPinStore()
+    await localStore.open(localLevelStore)
 
-    await localStore.stateStore.save({ id: streamId, state: streamState })
+    await localStore.stateStore.saveFromStreamStateHolder({ id: streamId, state: streamState })
     await expect(localStore.stateStore.load(streamId)).resolves.toEqual(streamState)
 
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const storeFactoryInMemory = new PinStoreFactory(ipfs, repository, {
-      stateStoreDirectory: levelPath,
-      pinningEndpoints: ['ipfs+context'],
-      networkName: 'inmemory',
-    })
+    const inmemoryLevelStore = new LevelDbStore(levelPath, 'inmemory')
+    const storeFactoryInMemory = new PinStoreFactory(
+      ipfs,
+      repository,
+      {
+        pinningEndpoints: ['ipfs+context'],
+      },
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     const inMemoryStore = storeFactoryInMemory.createPinStore()
+    await inMemoryStore.open(inmemoryLevelStore)
 
     // The new pin store shouldn't be able to see streams that were pinned on the other network
     await expect(inMemoryStore.stateStore.load(streamId)).resolves.toBeNull()

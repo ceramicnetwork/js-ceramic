@@ -4,11 +4,13 @@ import { CID } from 'multiformats/cid'
 import { LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TaskQueue } from '../pubsub/task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { ShutdownSignal } from '../shutdown-signal.js'
+import { LevelDbStore } from '../store/level-db-store.js'
+import { StreamStateStore } from '../store/stream-state-store.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -21,21 +23,22 @@ describe('Dispatcher with real ipfs over http', () => {
 
   let dispatcher: Dispatcher
   let ipfsClient: IpfsApi
-  let shutdownController: AbortController
+  let shutdownSignal: ShutdownSignal
 
   beforeAll(async () => {
     ipfsClient = await createIPFS()
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
-    const stateStore = new LevelStateStore(levelPath)
-    stateStore.open('test')
+    const levelStore = new LevelDbStore(levelPath, 'test')
+    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
+    stateStore.open(levelStore)
     const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    shutdownController = new AbortController()
+    shutdownSignal = new ShutdownSignal()
 
     dispatcher = new Dispatcher(
       ipfsClient,
@@ -43,7 +46,7 @@ describe('Dispatcher with real ipfs over http', () => {
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
-      shutdownController.signal,
+      shutdownSignal,
       10,
       new TaskQueue(),
       3000 // time out ipfs.dag.get after 3 seconds
@@ -99,7 +102,7 @@ describe('Dispatcher with real ipfs over http', () => {
     if (isJsIpfsNode) {
       await TestUtils.delay(1000)
     }
-    shutdownController.abort()
+    shutdownSignal.abort()
     await expect(getPromise).rejects.toThrow(/aborted/)
   }, 50000)
 })

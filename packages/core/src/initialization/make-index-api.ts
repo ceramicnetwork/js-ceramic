@@ -28,22 +28,17 @@ export function makeIndexApi(
   network: Networks,
   logger: DiagnosticsLogger
 ): DatabaseIndexApi | undefined {
-  if (!process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+  if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
     return undefined
   }
   if (network == Networks.MAINNET || network == Networks.ELP) {
-    // TODO enable ComposeDB on mainnet once mainnet anchors are indexable.
-    throw new Error(`ComposeDB indexing features are not yet supported on mainnet`)
+    // TODO enable Compose DB on mainnet once mainnet anchors are indexable.
+    throw new Error(`Compose DB indexing features are not yet supported on mainnet`)
   }
   if (!indexingConfig) {
     logger.warn(`Indexing is not configured. Please add the indexing settings to your config file`)
     return undefined
   }
-  const indexApi = buildIndexing(indexingConfig)
-  if (isNonProduction(indexApi, network, indexingConfig.models)) {
-    logger.warn(
-      'SQLite configuration detected for indexing database.  For production deployments we recommend using Postgres not SQLite as it will scale better'
-    )
-  }
+  const indexApi = buildIndexing(indexingConfig, logger, network)
   return indexApi
 }

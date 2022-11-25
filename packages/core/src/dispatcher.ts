@@ -6,10 +6,10 @@ import {
   ServiceLogger,
   StreamUtils,
   UnreachableCaseError,
-  abortable,
   base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { Repository } from './state-management/repository.js'
 import {
   MsgType,
@@ -26,6 +26,7 @@ import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './pubsub/task-queue.js'
 import { Utils } from './utils.js'
+import type { ShutdownSignal } from './shutdown-signal.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -35,6 +36,11 @@ const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
+const PUBSUB_CACHE_SIZE = 500
+
+const ERROR_IPFS_TIMEOUT = 'ipfs_timeout'
+const ERROR_STORING_COMMIT = 'error_storing_commit'
+const COMMITS_STORED = 'commits_stored'
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -56,7 +62,27 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
+
+  /**
+   * Cache IPFS objects.
+   */
   readonly dagNodeCache: lru.LRUMap<string, any>
+
+  /**
+   * Cache recently seen tips processed via incoming pubsub UPDATE or RESPONSE messages.
+   * Keys are the tip CIDs, values are the StreamID that was associated with the commit in the
+   * pubsub message.
+   *
+   * It's important that if we see the same tip associated with a different StreamID
+   * that we still process it. In normal circumstances this will never happen, but if we didn't
+   * do this then an attacker could cause us to fail to process valid commits by sending them out
+   * to pubsub with the wrong StreamID associated in the pubsub message.
+   * @private
+   */
+  private readonly pubsubCache: lru.LRUMap<string, string> = new lru.LRUMap<string, string>(
+    PUBSUB_CACHE_SIZE
+  )
+
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -65,7 +91,7 @@ export class Dispatcher {
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
-    private readonly _shutdownSignal: AbortSignal,
+    private readonly _shutdownSignal: ShutdownSignal,
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue(),
     private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
@@ -96,6 +122,7 @@ export class Dispatcher {
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
+    Metrics.count(COMMITS_STORED, 1)
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
         const { jws, linkedBlock, cacaoBlock } = data
@@ -103,13 +130,13 @@ export class Dispatcher {
         if (cacaoBlock) {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
           const capIPFSUri = decodedProtectedHeader.cap
-          await abortable(this._shutdownSignal, (signal) => {
+          await this._shutdownSignal.abortable((signal) => {
             return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
           })
         }
 
         // put the JWS into the ipfs dag
-        const cid = await abortable(this._shutdownSignal, (signal) => {
+        const cid = await this._shutdownSignal.abortable((signal) => {
           return this._ipfs.dag.put(jws, {
             storeCodec: 'dag-jose',
             hashAlg: 'sha2-256',
@@ -118,14 +145,14 @@ export class Dispatcher {
         })
         // put the payload into the ipfs dag
         const linkCid = jws.link
-        await abortable(this._shutdownSignal, (signal) => {
+        await this._shutdownSignal.abortable((signal) => {
           return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
         })
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
       }
-      const cid = await abortable(this._shutdownSignal, (signal) => {
+      const cid = await this._shutdownSignal.abortable((signal) => {
         return this._ipfs.dag.put(data, { signal: signal })
       })
       await this._restrictCommitSize(cid)
@@ -138,6 +165,7 @@ export class Dispatcher {
       } else {
         this._logger.err(`Error while storing commit to IPFS: ${e}`)
       }
+      Metrics.count(ERROR_STORING_COMMIT, 1)
       throw e
     }
   }
@@ -170,7 +198,7 @@ export class Dispatcher {
    */
   async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
     try {
-      return this._getFromIpfs(cid, path)
+      return await this._getFromIpfs(cid, path)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
@@ -222,7 +250,7 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await abortable(this._shutdownSignal, (signal) => {
+        dagResult = await this._shutdownSignal.abortable((signal) => {
           return this._ipfs.dag.get(asCid, {
             timeout: this._ipfsTimeout,
             path,
@@ -238,6 +266,8 @@ export class Dispatcher {
           console.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
+          Metrics.count(ERROR_IPFS_TIMEOUT, 1)
+
           if (retries > 0) {
             continue
           }
@@ -258,7 +288,7 @@ export class Dispatcher {
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await abortable(this._shutdownSignal, (signal) => {
+    const stat = await this._shutdownSignal.abortable((signal) => {
       return this._ipfs.block.stat(asCid, {
         timeout: this._ipfsTimeout,
         signal: signal,
@@ -314,17 +344,28 @@ export class Dispatcher {
   }
 
   /**
+   * Handle a new tip learned about from pubsub, either via an UPDATE or a RESPONSE message
+   */
+  async _handleTip(tip: CID, streamId: StreamID, model?: StreamID) {
+    if (this.pubsubCache.get(tip.toString()) === streamId.toString()) {
+      // This tip was already processed for this streamid recently, no need to re-process it.
+      return
+    }
+    // Add tip to pubsub cache and continue processing
+    this.pubsubCache.set(tip.toString(), streamId.toString())
+
+    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
+  }
+
+  /**
    * Handles an incoming Update message from the pub/sub topic.
    * @param message
    * @private
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
-    // TODO(NET-1527) model isn't used in update yet, will be in later versions
     const { stream: streamId, tip, model } = message
-    // TODO: add cache of cids here so that we don't emit event
-    // multiple times if we get the message from more than one peer.
-    this.repository.stateManager.handlePubsubUpdate(streamId, tip)
+    return this._handleTip(tip, streamId, model)
     // TODO: Handle 'anchorService' if present in message
   }
 
@@ -369,7 +410,8 @@ export class Dispatcher {
             "'"
         )
       }
-      this.repository.stateManager.handlePubsubUpdate(expectedStreamID, newTip)
+
+      return this._handleTip(newTip, expectedStreamID)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }

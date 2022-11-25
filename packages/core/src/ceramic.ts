@@ -22,10 +22,10 @@ import {
   SyncOptions,
   AnchorValidator,
   AnchorStatus,
-  IndexApi,
-  CommitType,
   StreamState,
+  AdminApi,
 } from '@ceramicnetwork/common'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
@@ -36,6 +36,7 @@ import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.
 
 import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
+import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
@@ -44,10 +45,11 @@ import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-valid
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
-import type { DatabaseIndexApi } from './indexing/database-index-api.js'
 import { LocalIndexApi } from './indexing/local-index-api.js'
-import { makeIndexApi } from './initialization/make-index-api.js'
-import { RunningState } from './state-management/running-state.js'
+import { ShutdownSignal } from './shutdown-signal.js'
+import { IndexingConfig } from './indexing/build-indexing.js'
+import { LevelDbStore } from './store/level-db-store.js'
+import { AnchorRequestStore } from './store/anchor-request-store.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -83,6 +85,9 @@ const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
+export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
+const ERROR_LOADING_STREAM = 'error_loading_stream'
+
 /**
  * Ceramic configuration
  */
@@ -96,6 +101,8 @@ export interface CeramicConfig {
 
   loggerProvider?: LoggerProvider
   gateway?: boolean
+
+  indexing?: IndexingConfig
 
   networkName?: string
   pubsubTopic?: string
@@ -123,8 +130,7 @@ export interface CeramicModules {
   loggerProvider: LoggerProvider
   pinStoreFactory: PinStoreFactory
   repository: Repository
-  shutdownController: AbortController
-  indexing: DatabaseIndexApi | undefined
+  shutdownSignal: ShutdownSignal
 }
 
 /**
@@ -134,6 +140,8 @@ export interface CeramicModules {
  */
 export interface CeramicParameters {
   gateway: boolean
+  stateStoreDirectory?: string
+  indexingConfig: IndexingConfig
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
@@ -176,25 +184,26 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly pin: PinApi
+  public readonly admin: AdminApi
   readonly repository: Repository
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _index: LocalIndexApi
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private _supportedChains: Array<string>
   private readonly _loadOptsOverride: LoadOpts
-  private readonly _shutdownController: AbortController
+  private readonly _shutdownSignal: ShutdownSignal
+  private readonly _levelStore: LevelDbStore
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this._shutdownController = modules.shutdownController
+    this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
@@ -202,6 +211,11 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+
+    this._levelStore = new LevelDbStore(
+      params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
+      this._networkOptions.name
+    )
 
     this.context = {
       api: this,
@@ -224,19 +238,28 @@ export class Ceramic implements CeramicApi {
       this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
+    const localIndex = new LocalIndexApi(
+      params.indexingConfig,
+      this.repository,
+      this._logger,
+      params.networkOptions.name
+    )
+    this.admin = new LocalAdminApi(localIndex)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
+      stateStore: this._levelStore,
+      anchorRequestStore: new AnchorRequestStore(),
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
+      indexing: localIndex,
     })
-    this._index = new LocalIndexApi(modules.indexing, this.repository, this._logger)
   }
 
-  get index(): IndexApi {
-    return this._index
+  get index(): LocalIndexApi {
+    return this.repository.index
   }
 
   /**
@@ -326,10 +349,6 @@ export class Ceramic implements CeramicApi {
       }
     }
 
-    if (networkName == Networks.MAINNET) {
-      throw new Error('Ceramic mainnet is not yet supported')
-    }
-
     return { name: networkName, pubsubTopic }
   }
 
@@ -375,7 +394,6 @@ export class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
     const networkOptions = Ceramic._generateNetworkOptions(config)
-    const indexingApi = makeIndexApi(config.indexing, networkOptions.name, logger)
 
     let anchorService = null
     if (!config.gateway) {
@@ -417,8 +435,6 @@ export class Ceramic implements CeramicApi {
     }
 
     const pinStoreOptions = {
-      networkName: networkOptions.name,
-      stateStoreDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
     }
@@ -437,20 +453,22 @@ export class Ceramic implements CeramicApi {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
-    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions)
-    const shutdownController = new AbortController()
+    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions, logger)
+    const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
       networkOptions.pubsubTopic,
       repository,
       logger,
       pubsubLogger,
-      shutdownController.signal,
+      shutdownSignal,
       maxQueriesPerSecond
     )
 
     const params: CeramicParameters = {
       gateway: config.gateway,
+      stateStoreDirectory: config.stateStoreDirectory,
+      indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
     }
@@ -464,8 +482,7 @@ export class Ceramic implements CeramicApi {
       loggerProvider,
       pinStoreFactory,
       repository,
-      shutdownController,
-      indexing: indexingApi,
+      shutdownSignal,
     }
 
     return [modules, params]
@@ -478,7 +495,6 @@ export class Ceramic implements CeramicApi {
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
     const [modules, params] = await Ceramic._processConfig(ipfs, config)
-
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
@@ -503,11 +519,13 @@ export class Ceramic implements CeramicApi {
         this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
       }
 
-      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING) {
+      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB == 'true') {
         this._logger.warn(
           `Warning: indexing and query APIs are experimental and still under active development.  Please do not create Composites, Models, or ModelInstanceDocument streams, or use any of the new GraphQL query APIs on mainnet until they are officially released`
         )
       }
+
+      await this.repository.init()
 
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()
@@ -524,7 +542,6 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-      await this._index.init()
 
       await this._startupChecks()
     } catch (err) {
@@ -546,7 +563,7 @@ export class Ceramic implements CeramicApi {
    * as expected.
    */
   async _checkIPFSPersistence(): Promise<void> {
-    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK) {
+    if (process.env.CERAMIC_SKIP_IPFS_PERSISTENCE_STARTUP_CHECK == 'true') {
       this._logger.warn(`Skipping IPFS persistence checks`)
       return
     }
@@ -568,6 +585,7 @@ export class Ceramic implements CeramicApi {
       const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
+
 
         if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
           throw new Error(
@@ -626,38 +644,9 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    await this.indexStreamIfNeeded(stream)
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
-  }
-
-  /**
-   * Helper function to add stream to db index if it has a 'model' in its metadata.
-   * @param stream
-   * @private
-   */
-  private async indexStreamIfNeeded(stream: Stream): Promise<void> {
-    if (!stream.metadata.model) {
-      return
-    }
-
-    const asDate = (unixTimestamp: number | null | undefined) => {
-      return unixTimestamp ? new Date(unixTimestamp * 1000) : null
-    }
-
-    // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
-    const lastAnchor = asDate(stream.state.anchorProof?.blockTimestamp)
-    const firstAnchor = asDate(
-      stream.state.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
-    )
-    const STREAM_CONTENT = {
-      model: stream.metadata.model,
-      streamID: stream.id,
-      controller: stream.metadata.controller,
-      lastAnchor: lastAnchor,
-      firstAnchor: firstAnchor,
-    }
-    await this._index.indexStream(STREAM_CONTENT)
   }
 
   /**
@@ -696,7 +685,7 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
 
-    await this.indexStreamIfNeeded(stream)
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }
@@ -721,7 +710,6 @@ export class Ceramic implements CeramicApi {
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       const base$ = await this.repository.load(streamRef.baseID, opts)
-      await this.repository.handlePinOpts(base$, opts)
       return streamFromState<T>(
         this.context,
         this._streamHandlers,
@@ -788,6 +776,7 @@ export class Ceramic implements CeramicApi {
             } as part of a multiQuery request: ${e.toString()}`
           )
         }
+        Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
       const streamRef = query.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
@@ -885,10 +874,9 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
-    this._shutdownController.abort()
+    this._shutdownSignal.abort()
     await this.dispatcher.close()
     await this.repository.close()
-    await this._index.close()
     this._ipfsTopology.stop()
     this._logger.imp('Ceramic instance closed successfully')
   }

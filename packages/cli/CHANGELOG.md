@@ -3,6 +3,272 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.14.0...@ceramicnetwork/cli@2.15.0) (2022-11-16)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.14.0-rc.0...@ceramicnetwork/cli@2.14.0) (2022-11-09)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.13.0-rc.0...@ceramicnetwork/cli@2.14.0-rc.0) (2022-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.12.0-rc.0...@ceramicnetwork/cli@2.13.0-rc.0) (2022-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.11.0...@ceramicnetwork/cli@2.12.0-rc.0) (2022-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.11.0-rc.0...@ceramicnetwork/cli@2.11.0) (2022-10-24)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.9.0-rc.1...@ceramicnetwork/cli@2.11.0-rc.0) (2022-10-24)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.9.0-rc.1...@ceramicnetwork/cli@2.10.0-rc.0) (2022-10-24)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.9.0-rc.1](/compare/@ceramicnetwork/cli@2.9.0-rc.0...@ceramicnetwork/cli@2.9.0-rc.1) (2022-10-19)
+
+
+### Bug Fixes
+
+* **cli:** Include limit when listing entries from the S3 state store (#2507) 6eef279, closes #2507
+
+
+
+
+
+# [2.9.0-rc.0](/compare/@ceramicnetwork/cli@2.8.0...@ceramicnetwork/cli@2.9.0-rc.0) (2022-10-19)
+
+
+### Features
+
+* **core:** Allow setting network to mainnet (#2491) b4c5958, closes #2491
+
+
+
+
+
+# [2.8.0](/compare/@ceramicnetwork/cli@2.8.0-rc.1...@ceramicnetwork/cli@2.8.0) (2022-10-05)
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.8.0-rc.2](/compare/@ceramicnetwork/cli@2.8.0-rc.1...@ceramicnetwork/cli@2.8.0-rc.2) (2022-10-04)
+
+
+### Features
+
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. (#2481) 52a8c50, closes #2481
+
+
+
+
+
+# [2.8.0-rc.1](/compare/@ceramicnetwork/cli@2.8.0-rc.0...@ceramicnetwork/cli@2.8.0-rc.1) (2022-09-30)
+
+
+### Features
+
+* **cli,http-client:** Use HTTP POST for composedb queries (#2472) 64700c4, closes #2472
+
+
+
+
+
+# [2.8.0-rc.0](/compare/@ceramicnetwork/cli@2.7.0...@ceramicnetwork/cli@2.8.0-rc.0) (2022-09-28)
+
+
+### Features
+
+* `count` endpoint (#2463) 6556596, closes #2463
+* **core:** Extract relation fields from MIDs and add to database, plus add filter capability to queries (#2455) fbe04b5, closes #2455
+* **core:** Load Model relations when indexing a new Model (#2447) 3c87ea7, closes #2447
+* update dids, add/register cacao verifiers (#2452) d93fedb, closes #2452
+
+
+
+
+
+# [2.7.0](/compare/@ceramicnetwork/cli@2.7.0-rc.3...@ceramicnetwork/cli@2.7.0) (2022-09-21)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.7.0-rc.3](/compare/@ceramicnetwork/cli@2.7.0-rc.2...@ceramicnetwork/cli@2.7.0-rc.3) (2022-09-20)
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations (#2421) a4c4ce3, closes #2421
+
+
+
+
+
+# [2.7.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.7.0-rc.1...@ceramicnetwork/cli@2.7.0-rc.2) (2022-09-15)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.7.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.7.0-rc.0...@ceramicnetwork/cli@2.7.0-rc.1) (2022-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.7.0-rc.0](/compare/@ceramicnetwork/cli@2.6.1...@ceramicnetwork/cli@2.7.0-rc.0) (2022-09-13)
+
+
+### Features
+
+* Bypass maxEventListeners warning by using homegrown signalling (#2411) bbe17cd, closes #2411
+
+
+
+
+
+## [2.6.1](/compare/@ceramicnetwork/cli@2.6.1-rc.2...@ceramicnetwork/cli@2.6.1) (2022-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.6.1-rc.2](/compare/@ceramicnetwork/cli@2.6.1-rc.1...@ceramicnetwork/cli@2.6.1-rc.2) (2022-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [2.6.1-rc.1](/compare/@ceramicnetwork/cli@2.6.1-rc.0...@ceramicnetwork/cli@2.6.1-rc.1) (2022-09-06)
+
+
+### Bug Fixes
+
+* evaluate string value of env vars as booleans (#2382) 2837112, closes #2382
+
+
+
+
+
+## [2.6.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.6.0...@ceramicnetwork/cli@2.6.1-rc.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.6.0-rc.2...@ceramicnetwork/cli@2.6.0) (2022-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.6.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.5.2...@ceramicnetwork/cli@2.6.0-rc.2) (2022-08-20)
+
+
+### Bug Fixes
+
+* restore version file generation ([5fc4e61](https://github.com/ceramicnetwork/js-ceramic/commit/5fc4e6157f52ef513abda2845005673f1955ae48))
+
+
+### Features
+
+* **cli:** Enable ceramic --version flag ([#2339](https://github.com/ceramicnetwork/js-ceramic/issues/2339)) ([df53df4](https://github.com/ceramicnetwork/js-ceramic/commit/df53df49a480884d9d97da452a19a6e96a0633a4))
+* **cli:** Undeprecate read-only CLI commands ([#2364](https://github.com/ceramicnetwork/js-ceramic/issues/2364)) ([7db84e0](https://github.com/ceramicnetwork/js-ceramic/commit/7db84e01f47bb54f811db346bcdf672f29ae7bfc))
+* **core:** working implementation of indexable anchors Phase 2 ([#2315](https://github.com/ceramicnetwork/js-ceramic/issues/2315)) ([987cd43](https://github.com/ceramicnetwork/js-ceramic/commit/987cd43fa5d6f0a8bac1aefc28e8b181e33b62cb))
+
+
+
+
+
+
+## [2.5.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.5.1...@ceramicnetwork/cli@2.5.2) (2022-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+
+## [2.5.1](/compare/@ceramicnetwork/cli@2.5.0...@ceramicnetwork/cli@2.5.1) (2022-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.5.0](/compare/@ceramicnetwork/cli@2.5.0-rc.1...@ceramicnetwork/cli@2.5.0) (2022-08-08)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [2.5.0-rc.1](/compare/@ceramicnetwork/cli@2.5.0-rc.0...@ceramicnetwork/cli@2.5.0-rc.1) (2022-07-26)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

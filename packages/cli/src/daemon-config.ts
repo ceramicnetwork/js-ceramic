@@ -153,6 +153,12 @@ export class DaemonHTTPApiConfig {
     },
   })
   corsAllowedOrigins?: RegExp[]
+
+  /**
+   * An array of DIDs with access to Admin API (represented as strings)
+   */
+  @jsonArrayMember(String, { name: 'admin-dids' })
+  adminDids?: Array<string>
 }
 
 /**
@@ -210,7 +216,7 @@ export class IndexingConfig {
    *  - `postgres:///user:password@host:5432/database`
    */
   @jsonMember(String)
-  db?: string
+  db: string
 
   /**
    * Allow serving indexing queries if historical indexing is not done yet.
@@ -218,23 +224,7 @@ export class IndexingConfig {
   @jsonMember(Boolean, {
     name: 'allow-queries-before-historical-sync',
   })
-  allowQueriesBeforeHistoricalSync?: boolean = false
-
-  /**
-   * Models to index.
-   */
-  @jsonArrayMember(StreamID, {
-    emitDefaultValue: true,
-    deserializer: (arr?: Array<string>) => {
-      if (!arr) return arr
-      return arr.map(StreamID.fromString)
-    },
-    serializer: (arr?: Array<StreamID>) => {
-      if (!arr) return arr
-      return arr.map((s) => s.toString())
-    },
-  })
-  models: StreamID[]
+  allowQueriesBeforeHistoricalSync = false
 }
 
 @jsonObject
@@ -323,7 +313,7 @@ export class DaemonLoggerConfig {
 }
 
 /**
- * Metrics exporter config indicating whether the metrics exporter should start and on what port
+ * Metrics exporter config indicating whether the metrics exporter should start and where is the collector
  */
 @jsonObject
 @toJson
@@ -337,8 +327,8 @@ export class DaemonMetricsConfig {
   /**
    * If 'enabled' is true, this contains the port on which the metrics exporter will listen
    */
-  @jsonMember(Number, { name: 'metrics-port' })
-  metricsPort?: number
+  @jsonMember(String, { name: 'collector-host' })
+  collectorHost?: string
 }
 
 /**

@@ -1,4 +1,4 @@
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -6,41 +6,45 @@ import { Wallet } from 'ethers'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as KeyDidResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
-import { SiweMessage, Cacao } from 'ceramic-cacao'
+import { Cacao, SiweMessage } from '@didtools/cacao'
+import MockDate from 'mockdate'
 import { createCeramic } from '../create-ceramic.js'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
 } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Model, ModelAccountRelation, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
-const getModelDef = (name: string): ModelDefinition => ({
-  name: name,
-  accountRelation: ModelAccountRelation.LIST,
-  schema: {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      myData: {
-        type: 'integer',
-        maximum: 10000,
-        minimum: 0,
+function getModelDef(name: string): ModelDefinition {
+  return {
+    name: name,
+    accountRelation: { type: 'list' },
+    schema: {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        myData: {
+          type: 'integer',
+          maximum: 10000,
+          minimum: 0,
+        },
       },
+      required: ['myData'],
     },
-    required: ['myData'],
-  },
-})
+  }
+}
 
 const MODEL_DEFINITION = getModelDef('MyModel')
 const MODEL_DEFINITION_2 = getModelDef('MyModel_2')
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
+const CONTENT2 = { myData: 2 }
 
-const addCapToDid = async (wallet, didKey, resource) => {
+async function addCapToDid(wallet: Wallet, didKey: DID, resource: string, expirationTime?: string) {
   // Create CACAO with did:key as aud
-  const siweMessage = new SiweMessage({
+  const siwePayload: Partial<SiweMessage> = {
     domain: 'service.org',
     address: wallet.address,
     chainId: '1',
@@ -50,10 +54,11 @@ const addCapToDid = async (wallet, didKey, resource) => {
     nonce: '23423423',
     issuedAt: new Date().toISOString(),
     resources: [resource],
-  })
+  }
+  if (expirationTime) siwePayload.expirationTime = expirationTime
+  const siweMessage = new SiweMessage(siwePayload)
   // Sign CACAO with did:pkh
-  const signature = await wallet.signMessage(siweMessage.toMessage())
-  siweMessage.signature = signature
+  siweMessage.signature = await wallet.signMessage(siweMessage.toMessage())
   const capability = Cacao.fromSiweMessage(siweMessage)
   // Create new did:key with capability attached
   const didKeyWithCapability = didKey.withCapability(capability)
@@ -73,7 +78,7 @@ describe('CACAO Integration test', () => {
   let MODEL_STREAM_ID_2: StreamID
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_INDEXING = 'true'
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
@@ -107,8 +112,8 @@ describe('CACAO Integration test', () => {
   }, 120000)
 
   afterAll(async () => {
-    await ipfs.stop()
     await ceramic.close()
+    await ipfs.stop()
   }, 30000)
 
   describe('Updates without CACAO should fail', () => {
@@ -371,7 +376,7 @@ describe('CACAO Integration test', () => {
 
   describe('Resources using wildcard', () => {
     test('update using capability with wildcard * resource', async () => {
-      // Create a determinstic tiledocument owned by the user
+      // Create a deterministic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testfamily',
@@ -388,7 +393,7 @@ describe('CACAO Integration test', () => {
       expect(deterministicDocument.content).toEqual({ foo: 'bar' })
     }, 30000)
 
-    test('create the c', async () => {
+    test('create using capability with wildcard * resource', async () => {
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
 
       const doc = await TileDocument.create(
@@ -473,5 +478,224 @@ describe('CACAO Integration test', () => {
       expect(doc.content).toEqual({ foo: 'bar' })
       expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
     }, 30000)
+  })
+
+  describe('CACAO Expiration', () => {
+    let didKeyWithCapability
+    let opts
+    const CACAO_EXPIRATION_WINDOW = 1000 * 60 * 10 // 10 minutes
+
+    // Set curren time forward far enough into the future that the CACAO being used has expired
+    function expireCacao() {
+      const twoDays = 48 * 3600 * 1000 // in ms
+      MockDate.set(new Date(new Date().valueOf() + twoDays).toISOString()) // Plus 2 days
+    }
+
+    beforeEach(async () => {
+      const expirationTime = new Date(new Date().valueOf() + CACAO_EXPIRATION_WINDOW)
+      didKeyWithCapability = await addCapToDid(
+        wallet,
+        didKey,
+        `ceramic://*`,
+        expirationTime.toISOString()
+      )
+      opts = { anchor: false, publish: false, asDID: didKeyWithCapability }
+    })
+
+    afterEach(() => {
+      MockDate.reset()
+    })
+
+    test(
+      'Cannot create with expired capability',
+      async () => {
+        expireCacao()
+
+        await expect(
+          TileDocument.create(
+            ceramic,
+            CONTENT0,
+            {
+              controllers: [`did:pkh:eip155:1:${wallet.address}`],
+            },
+            opts
+          )
+        ).rejects.toThrow(/Capability is expired, cannot create a valid signature/)
+      },
+      1000 * 60
+    )
+
+    test(
+      'Cannot update with expired capability',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          },
+          opts
+        )
+
+        expireCacao()
+
+        await expect(doc.update(CONTENT1, null, opts)).rejects.toThrow(
+          /Capability is expired, cannot create a valid signature/
+        )
+      },
+      1000 * 60
+    )
+
+    test('overwrite expired capability when SYNC_ALWAYS', async () => {
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const tile = await TileDocument.deterministic(
+        ceramic,
+        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-one' },
+        opts
+      )
+      await tile.update({ a: 2 }, null, opts)
+      await tile.update({ a: 3 }, null, opts)
+
+      // 1. While CACAO is valid: Loading is ok
+      const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+      const loaded1 = await TileDocument.load(ceramic, tile.id)
+      expect(loaded0.state).toEqual(tile.state)
+      expect(loaded1.state).toEqual(tile.state)
+      // 2. It is expired: Rewrite the state!
+      expireCacao()
+      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+      const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 1))
+      const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
+      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+    }, 30000)
+
+    test('Load anchored stream at CommitID after CACAO expiration', async () => {
+      const content0 = { a: 0 }
+      const content1 = { a: 1 }
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const doc = await TileDocument.create(
+        ceramic,
+        content0,
+        { controllers: [`did:pkh:eip155:1:${wallet.address}`] },
+        opts
+      )
+      await doc.update(content1, null, { ...opts, anchor: true })
+      await TestUtils.anchorUpdate(ceramic, doc)
+
+      expireCacao()
+
+      // Updating the doc with an expired CACAO should fail
+      await expect(doc.update({ invalidUpdate: 'shouldFail' }, null, opts)).rejects.toThrow(
+        /Capability is expired/
+      )
+
+      const docCopy = await TileDocument.load(ceramic, doc.id)
+      const docAtGenesisCommit = await TileDocument.load(ceramic, doc.allCommitIds[0])
+      const docAtUpdateCommit = await TileDocument.load(ceramic, doc.allCommitIds[1])
+      const docAtAnchorCommit = await TileDocument.load(ceramic, doc.allCommitIds[2])
+
+      expect(docCopy.content).toEqual(content1)
+      expect(docCopy.state.log.length).toEqual(3)
+      expect(docCopy.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      expect(docAtGenesisCommit.content).toEqual(content0)
+      expect(docAtGenesisCommit.state.log.length).toEqual(1)
+      expect(docAtGenesisCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      expect(docAtUpdateCommit.content).toEqual(content1)
+      expect(docAtUpdateCommit.state.log.length).toEqual(2)
+      expect(docAtUpdateCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      expect(docAtAnchorCommit.content).toEqual(content1)
+      expect(docAtAnchorCommit.state.log.length).toEqual(3)
+      expect(docAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    })
+
+    test(
+      'Genesis commit applied with valid capability that later expires without being anchored',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          },
+          opts
+        )
+
+        expireCacao()
+
+        // Time is now ahead, so the capability used for the genesis commit has expired, but we'll
+        // use a new capability so the update is done with a valid capability.
+        const didKeyWithCurrentCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+        // Even though the capability for this update is valid, it builds on a commit that was
+        // authored with an expired capability and so we should detect that and error.
+        await expect(
+          doc.update(CONTENT1, null, {
+            ...opts,
+            asDID: didKeyWithCurrentCapability,
+          })
+        ).rejects.toThrow(/CACAO expired/)
+
+        // Update was not applied, but stream handle wasn't reset.
+        expect(doc.content).toEqual(CONTENT0)
+
+        // Cannot repair stream even with SyncOptions.SYNC_ALWAYS if it is the genesis commit that
+        // messed up.
+        await expect(doc.sync()).rejects.toThrow(/CACAO expired/)
+        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(/CACAO expired/)
+        expect(doc.content).toEqual(CONTENT0)
+      },
+      1000 * 60
+    )
+
+    test(
+      'Update applied with valid capability that later expires without being anchored',
+      async () => {
+        const doc = await TileDocument.create(
+          ceramic,
+          CONTENT0,
+          {
+            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          },
+          { ...opts, anchor: true }
+        )
+
+        await TestUtils.anchorUpdate(ceramic, doc)
+
+        await doc.update(CONTENT1, null, opts)
+
+        expect(doc.state.log.length).toEqual(3)
+
+        expireCacao()
+
+        // Time is now ahead, so the capability used for the first two updates has expired, but we'll
+        // use a new capability so the new update is done with a valid capability.
+        const didKeyWithCurrentCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+
+        // Even though the capability for this update is valid, it builds on a commit that was
+        // authored with an expired capability and so we should detect that, error, and revert the
+        // state to the genesis state as the genesis state was anchored and so has a timestamp
+        // within the capability's expiration window, while the update commit does not and so is
+        // now expired
+        await expect(
+          doc.update(CONTENT2, null, {
+            ...opts,
+            asDID: didKeyWithCurrentCapability,
+          })
+        ).rejects.toThrow(/CACAO expired/)
+
+        // Update was not applied, but stream handle wasn't reset.
+        expect(doc.content).toEqual(CONTENT1)
+
+        // Can reset the stream state with SyncOptions.SYNC_ALWAYS
+        await expect(doc.sync()).rejects.toThrow(/CACAO expired/)
+        await doc.sync({ sync: SyncOptions.SYNC_ALWAYS })
+        expect(doc.content).toEqual(CONTENT0)
+      },
+      1000 * 60
+    )
   })
 })

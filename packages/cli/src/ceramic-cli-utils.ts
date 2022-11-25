@@ -19,6 +19,7 @@ import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
+import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -28,16 +29,14 @@ const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CON
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
-const DEFAULT_METRICS_EXPORTER_PORT = 9090
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
-  'http-api': { 'cors-allowed-origins': [new RegExp('.*')] },
+  'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
   ipfs: { mode: IpfsMode.BUNDLED },
   logger: { 'log-level': LogLevel.important, 'log-to-files': false },
   metrics: {
     'metrics-exporter-enabled': false,
-    'metrics-port': DEFAULT_METRICS_EXPORTER_PORT,
   },
   network: { name: Networks.TESTNET_CLAY },
   node: {},
@@ -48,7 +47,6 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   indexing: {
     db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
     'allow-queries-before-historical-sync': true,
-    models: [],
   },
 })
 
@@ -73,8 +71,8 @@ export class CeramicCliUtils {
    * @param ethereumRpc - Ethereum RPC URL. Deprecated, use config file if you want to configure this.
    * @param anchorServiceApi - Anchor service API URL. Deprecated, use config file if you want to configure this.
    * @param ipfsPinningEndpoints - Ipfs pinning endpoints. Deprecated, use config file if you want to configure this.
-   * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state. Deprecated, use config file if you want to configure this.
-   * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state. Deprecated, use config file if you want to configure this.
+   * @param stateStoreDirectory - Path to the directory that will be used for storing state. Deprecated, use config file if you want to configure this.
+   * @param stateStoreS3Bucket - S3 bucket name for storing data. Deprecated, use config file if you want to configure this.
    * @param gateway - read only endpoints available. It is disabled by default
    * @param port - port on which daemon is available. Default is 7007
    * @param hostname - hostname to listen on.
@@ -83,7 +81,7 @@ export class CeramicCliUtils {
    * @param logToFiles - Enable writing logs to files. Deprecated, use config file if you want to configure this.
    * @param logDirectory - Store log files in this directory. Deprecated, use config file if you want to configure this.
    * @param metricsExporterEnabled - Enable metrics exporter.
-   * @param metricsPort - The port to scrape metrics from, if enabled.
+   * @param collectorHost - Hostname of the metrics collector.
    * @param network - The Ceramic network to connect to
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
@@ -105,7 +103,7 @@ export class CeramicCliUtils {
     logToFiles: boolean,
     logDirectory: string,
     metricsExporterEnabled: boolean,
-    metricsPort: number,
+    collectorHost: string,
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
@@ -120,9 +118,9 @@ export class CeramicCliUtils {
     if (process.env.CERAMIC_INDEXING_DB_URI)
       config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
     if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
-      config.metrics.metricsExporterEnabled = Boolean(process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
-    if (process.env.CERAMIC_METRICS_PORT)
-      config.metrics.metricsPort = Number(process.env.CERAMIC_METRICS_PORT)
+      config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
+    if (process.env.COLLECTOR_HOSTNAME)
+      config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
 
     {
       // CLI flags override values from environment variables and config file
@@ -171,9 +169,6 @@ export class CeramicCliUtils {
       if (metricsExporterEnabled) {
         config.metrics.metricsExporterEnabled = metricsExporterEnabled
       }
-      if (metricsPort) {
-        config.metrics.metricsPort = metricsPort
-      }
       if (network) {
         config.network.name = network
       }
@@ -198,6 +193,7 @@ export class CeramicCliUtils {
     const daemon = await CeramicDaemon.create(config)
 
     handleHeapdumpSignal(new URL('./', configFilepath), daemon.diagnosticsLogger)
+    handleSigintSignal(daemon)
     return daemon
   }
 
@@ -228,7 +224,7 @@ export class CeramicCliUtils {
 
       console.log(doc.id)
       console.log(JSON.stringify(doc.content, null, 2))
-      depreciationNotice()
+      deprecationNotice()
     })
   }
 
@@ -266,7 +262,7 @@ export class CeramicCliUtils {
       await doc.update(parsedContent, metadata)
 
       console.log(JSON.stringify(doc.content, null, 2))
-      depreciationNotice()
+      deprecationNotice()
     })
   }
 
@@ -278,7 +274,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await TileDocument.load(ceramic, streamRef)
       console.log(JSON.stringify(stream.content, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -290,7 +285,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await ceramic.loadStream(streamRef)
       console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
-      depreciationNotice()
     })
   }
 
@@ -304,7 +298,7 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const doc = await TileDocument.load(ceramic, id)
       console.log(JSON.stringify(doc.content, null, 2))
-      depreciationNotice()
+      deprecationNotice()
       doc.subscribe(() => {
         console.log('--- document changed ---')
         console.log(JSON.stringify(doc.content, null, 2))
@@ -323,7 +317,6 @@ export class CeramicCliUtils {
       const stream = await ceramic.loadStream(id)
       const commits = stream.allCommitIds.map((v) => v.toString())
       console.log(JSON.stringify(commits, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -394,7 +387,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const result = await ceramic.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -408,7 +400,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const result = await ceramic.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -422,10 +413,23 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const pinnedStreamIds = []
       const iterator = await ceramic.pin.ls(id)
+      let i = 0
+      let truncated = false
       for await (const id of iterator) {
         pinnedStreamIds.push(id)
+        i++
+        if (i > 20) {
+          truncated = true
+          break
+        }
+      }
+      if (truncated) {
+        console.log('Too many results to show them all, printing the first 20:')
       }
       console.log(JSON.stringify(pinnedStreamIds, null, 2))
+      if (truncated) {
+        console.log('... Additional results were not shown')
+      }
     })
   }
 
@@ -490,7 +494,7 @@ export class CeramicCliUtils {
     const cliConfig = await this._loadCliConfig()
 
     console.log(JSON.stringify(cliConfig, null, 2))
-    depreciationNotice()
+    deprecationNotice()
   }
 
   /**
@@ -513,7 +517,7 @@ export class CeramicCliUtils {
 
     console.log(`Ceramic CLI configuration ${variable} set to ${value}`)
     console.log(JSON.stringify(cliConfig))
-    depreciationNotice()
+    deprecationNotice()
   }
 
   /**
@@ -528,7 +532,7 @@ export class CeramicCliUtils {
 
     console.log(`Ceramic CLI configuration ${variable} unset`)
     console.log(JSON.stringify(cliConfig, null, 2))
-    depreciationNotice()
+    deprecationNotice()
   }
 
   /**
@@ -626,7 +630,7 @@ export class CeramicCliUtils {
   }
 }
 
-const depreciationNotice = () => {
+const deprecationNotice = () => {
   console.log(
     `${pc.red(pc.bold('This command has been deprecated.'))}
 Please use the upgraded Glaze CLI instead.

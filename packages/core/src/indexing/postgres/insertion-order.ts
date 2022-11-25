@@ -135,11 +135,19 @@ export class InsertionOrder {
     if (query.account) {
       base = base.where({ controller_did: query.account })
     }
+    if (query.filter) {
+      for (const [key, value] of Object.entries(query.filter)) {
+        const filterObj = {}
+        filterObj[key] = value
+        base = base.andWhere(filterObj)
+      }
+    }
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
       return base.where('created_at', '>', after.created_at)
+    } else {
+      return base
     }
-    return base
   }
 
   /**
@@ -166,6 +174,13 @@ export class InsertionOrder {
             .as('T')
           if (query.account) {
             subquery = subquery.where({ controller_did: query.account })
+          }
+          if (query.filter) {
+            for (const [key, value] of Object.entries(query.filter)) {
+              const filterObj = {}
+              filterObj[key] = value
+              subquery = subquery.andWhere(filterObj)
+            }
           }
           return withWhereCallback(subquery)
         })

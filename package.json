@@ -1,12 +1,21 @@
 {
   "name": "root",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceramicnetwork/js-ceramic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
+  },
+  "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "scripts": {
     "postinstall": "npx lerna bootstrap --hoist --ci",
     "test": "npx lerna exec npm t",
     "build": "npx lerna run build",
     "docs": "npx typedoc",
-    "publish:release-candidate": "npx lerna publish --allow-branch release-candidate --dist-tag next --preid rc --no-verify-access --conventional-prerelease",
-    "publish:latest": "npx lerna publish --allow-branch main --create-release github --no-verify-access --conventional-graduate",
+    "publish:release-candidate": "npx lerna publish --dist-tag next --preid rc --no-verify-access --conventional-prerelease bump preminor",
+    "publish:release": "npx lerna publish --dist-tag latest --create-release github --no-verify-access --conventional-graduate bump minor",
+    "publish:hotfix": "npx lerna publish --no-verify-access --conventional-graduate bump patch",
     "lint": "npx lerna run lint",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
     "clean:install:build": "npm run clean && npm install && npm run build",
@@ -26,7 +35,9 @@
     "babel-jest": "^27.4.6",
     "eslint": "^8.7.0",
     "eslint-config-3box": "^0.4.0",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^25.7.0",
+    "eslint-import-resolver-typescript": "^3.4.0",
     "jest": "^28.1.1",
     "jest-resolver-enhanced": "^1.0.1",
     "lerna": "^4.0.0",
