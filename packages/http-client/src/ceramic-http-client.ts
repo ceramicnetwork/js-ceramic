@@ -64,14 +64,6 @@ export interface CeramicClientConfig {
  */
 export class CeramicClient implements CeramicApi {
   private readonly _apiUrl: URL
-  /**
-   * _streamCache stores handles to Documents that been handed out. This allows us
-   * to update the state within the Document object when we learn about changes
-   * to the stream. This means that client code with Document references
-   * always have access to the most recent known-about version, without needing
-   * to explicitly re-load the stream.
-   */
-  private readonly _streamCache: Map<string, Document>
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
@@ -86,9 +78,6 @@ export class CeramicClient implements CeramicApi {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = new URL(API_PATH, apiHost)
-    // this._streamCache = new LRUMap(config.streamCacheLimit) Not now. We do not know what to do when stream is evicted on HTTP client.
-    this._streamCache = new Map()
-
     this.context = { api: this }
 
     this.pin = new RemotePinApi(this._apiUrl)
@@ -132,14 +121,7 @@ export class CeramicClient implements CeramicApi {
       this._config.syncInterval
     )
 
-    const found = this._streamCache.get(stream.id.toString())
-    if (found) {
-      if (!StreamUtils.statesEqual(stream.state, found.state)) found.next(stream.state)
-      return this.buildStreamFromDocument<T>(found)
-    } else {
-      this._streamCache.set(stream.id.toString(), stream)
-      return this.buildStreamFromDocument<T>(stream)
-    }
+    return this.buildStreamFromDocument<T>(stream)
   }
 
   async loadStream<T extends Stream>(
@@ -148,13 +130,7 @@ export class CeramicClient implements CeramicApi {
   ): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
     const streamRef = StreamRef.from(streamId)
-    let stream = this._streamCache.get(streamRef.baseID.toString())
-    if (stream) {
-      await stream._syncState(streamRef, opts)
-    } else {
-      stream = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
-      this._streamCache.set(stream.id.toString(), stream)
-    }
+    const stream = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
     return this.buildStreamFromDocument<T>(stream)
   }
 
@@ -203,14 +179,8 @@ export class CeramicClient implements CeramicApi {
       opts,
       this._config.syncInterval
     )
-    const fromCache = this._streamCache.get(effectiveStreamId.toString())
-    if (fromCache) {
-      fromCache.next(document.state)
-      return this.buildStreamFromDocument<T>(document)
-    } else {
-      this._streamCache.set(effectiveStreamId.toString(), document)
-      return this.buildStreamFromDocument<T>(document)
-    }
+
+    return this.buildStreamFromDocument<T>(document)
   }
 
   async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
@@ -264,10 +234,6 @@ export class CeramicClient implements CeramicApi {
     return supportedChains
   }
 
-  async close(): Promise<void> {
-    Array.from(this._streamCache).map(([, stream]) => {
-      stream.complete()
-    })
-    this._streamCache.clear()
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async close(): Promise<void> {}
 }
