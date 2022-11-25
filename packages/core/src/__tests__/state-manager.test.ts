@@ -1,12 +1,5 @@
 import { jest } from '@jest/globals'
-import {
-  AnchorStatus,
-  CommitType,
-  IpfsApi,
-  SignatureStatus,
-  StreamUtils,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi, SignatureStatus, StreamUtils, TestUtils } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { RunningState } from '../state-management/running-state.js'
@@ -28,8 +21,6 @@ import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service
 const waitForAnchorStatus = async (stream$: RunningState, status: AnchorStatus): Promise<void> => {
   await new Promise<void>((resolve) => {
     let resolved = false
-    stream$.subscribe()
-
     const subscription = stream$
       .pipe(
         tap((value) => {
@@ -112,42 +103,73 @@ describe('anchor', () => {
     expect(stream$.value.log.length).toEqual(2)
   })
 
-  test('anchor retries successfully', async () => {
+  test(`_handleTip is retried until it returns`, async () => {
     const stateManager = ceramic.repository.stateManager
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
-    const fakeHandleTip = jest.fn()
-    ;(stateManager as any)._handleTip = fakeHandleTip
-    // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it
-    fakeHandleTip.mockImplementationOnce(realHandleTip)
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockImplementationOnce(realHandleTip)
-
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.delay(3000) // Give some time for retries to be triggered
-    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    expect(fakeHandleTip).toHaveBeenCalledTimes(4)
+    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
+
+    const fakeHandleTip = jest.fn()
+
+    // count the number of times fakeHandleTip() is called
+    let numberOfCalls = 0
+    ;(stateManager as any)._handleTip = (...args) => {
+      const bound = fakeHandleTip.bind(stateManager)
+      const result = bound(...args)
+      numberOfCalls += 1
+      return result
+    }
+
+    // Mock a throw as the first call
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+
+    // Mock the result of the original implementation as the second call - this one should return
+    // and stop the retrying mechanism
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    // wait for 3 secs to let the retry mechanism work
+    await TestUtils.delay(5000)
+
+    // Check that fakeHandleTip was called only three times
+    expect(fakeHandleTip).toHaveBeenCalledTimes(2)
   })
 
-  test('anchor too many retries', async () => {
+  test(`_handleTip is retried up to three times, if it doesn't return`, async () => {
     const stateManager = ceramic.repository.stateManager
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
-    const fakeHandleTip = jest.fn()
-    ;(stateManager as any)._handleTip = fakeHandleTip
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockImplementationOnce(realHandleTip)
-
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await waitForAnchorStatus(stream$, AnchorStatus.FAILED)
-    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED)
+    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
+
+    const fakeHandleTip = jest.fn()
+
+    // count the number of times fakeHandleTip() is called
+    let numberOfCalls = 0
+    ;(stateManager as any)._handleTip = (...args) => {
+      const bound = fakeHandleTip.bind(stateManager)
+      const result = bound(...args)
+      numberOfCalls += 1
+      return result
+    }
+
+    // Mock a bunch of throws as consecutive calls to fakeHandleTip
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+
+    // wait for 3 secs to let the retry mechanism work
+    await TestUtils.delay(5000)
+
+    // Check that fakeHandleTip was called only three times
+    expect(fakeHandleTip).toHaveBeenCalledTimes(3)
   })
 
   test('anchor request is stored when created and deleted when anchored', async () => {

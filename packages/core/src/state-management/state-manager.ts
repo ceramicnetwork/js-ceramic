@@ -62,7 +62,8 @@ export class StateManager {
     ) => Promise<RunningState>,
     private readonly indexStreamIfNeeded,
     private readonly _index: LocalIndexApi | undefined
-  ) {}
+  ) {
+  }
 
   /**
    * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
