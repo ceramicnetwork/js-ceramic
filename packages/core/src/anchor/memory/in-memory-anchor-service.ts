@@ -298,6 +298,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const stream = await this.#ceramic.applyCommit(streamId, commit, {
       publish: true,
       anchor: false,
+      throwIfStale: false,
+      throwOnConflict: false,
     })
     const commitFound: boolean =
       null != stream.state.log.find((logEntry) => logEntry.cid.equals(expectedCID))

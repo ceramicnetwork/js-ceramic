@@ -186,6 +186,84 @@ describe('Ceramic integration', () => {
     })
   })
 
+  it('Throw on update based on stale state', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const content0 = { data: 0 }
+      const content1 = { data: 1 }
+      const content2 = { data: 'rejected' }
+
+      const streamOg = await TileDocument.deterministic(
+        ceramic1,
+        { family: 'test' },
+        { anchor: false, publish: false }
+      )
+      await streamOg.update(content0)
+
+      // Do a write via a different stream handle so the og handle doesn't know about it.
+      const streamCopy = await TileDocument.load(ceramic1, streamOg.id)
+      await streamCopy.update(content1)
+      const content1Cid = streamCopy.state.log[streamCopy.state.log.length - 1].cid
+
+      expect(streamCopy.content).toEqual(content1)
+      expect(streamCopy.state.log.length).toEqual(3)
+      expect(streamOg.content).toEqual(content0)
+      expect(streamOg.state.log.length).toEqual(2)
+
+      // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+      // should be rejected because it builds on a stale tip.
+      await expect(streamOg.update(content2)).rejects.toThrow(
+        /rejected because it builds on stale state/
+      )
+      expect(streamOg.state.log.length).toEqual(2)
+
+      // While we disallow creating commits based on a stale tip as part of a user request when the node already
+      // knows about an existing tip, if we hear about a conflicting tip via pubsub, we need to consider it. The node
+      // that created it may not have known about the existing tip when it did, and so now we need to use our conflict
+      // resolution rules to decide between the two equally valid tips.
+      const commit = await streamOg.makeCommit(ceramic1, content2)
+      const content2Cid = await ceramic2.dispatcher.storeCommit(commit)
+      await ceramic2.dispatcher.publishTip(streamOg.id, content2Cid)
+
+      // wait for the update to propagate to ceramic1
+      await TestUtils.waitForState(
+        streamOg,
+        10 * 1000,
+        (state) => state.next.content.data == content2.data,
+        (state) => {
+          throw new Error(
+            `content data should be ${content2.data} but was ${state.next.content.data}`
+          )
+        }
+      )
+
+      await streamOg.sync()
+      await streamCopy.sync()
+
+      // NOTE: this test relies on the commit for content2 to win the conflict resolution
+      // against the update for content1. That conflict resolution is done arbitrarily (but
+      // deterministically) by comparing the CIDs of the conflicting commits. If the IPLD encoding
+      // of these commits changed in the future for any reason and that changed the CIDs generated
+      // for these commits, then it could cause content1 to win the conflict here. That would negate
+      // the value of this test, which is designed to show that a node with an existing tip
+      // can learn about a conflicting branch of history via pubsub and still take it if it
+      // wins conflict resolution. If the CIDs changed and content1 started winning, we would need
+      // to change the commits until content2 started winning the CID comparison again.
+      expect(content2Cid.bytes < content1Cid.bytes)
+
+      expect(streamOg.content).toEqual(content2)
+      expect(streamCopy.content).toEqual(content2)
+      expect(streamOg.state.log.length).toEqual(3)
+      expect(streamCopy.state.log.length).toEqual(3)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
   it('can utilize stream commit cache', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)

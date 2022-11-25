@@ -76,12 +76,30 @@ const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
 }
 
-const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+/**
+ * For user-initiated writes that come in via the 'core' or http clients directly (as opposed to
+ * writes initiated internally, such as from pubsub), we add additional default options.
+ * User-initiated writes throw errors in more cases that are likely to indicate application bugs
+ * or user errors, while internal writes generally swallow those errors.
+ */
+const DEFAULT_CLIENT_INITIATED_WRITE_OPTS = {
+  throwOnInvalidCommit: true,
+  throwOnConflict: true,
+  throwIfStale: true,
+}
+
+const DEFAULT_APPLY_COMMIT_OPTS = {
+  anchor: true,
+  publish: true,
+  sync: SyncOptions.PREFER_CACHE,
+  ...DEFAULT_CLIENT_INITIATED_WRITE_OPTS,
+}
 const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
   anchor: true,
   publish: true,
   pin: true,
   sync: SyncOptions.PREFER_CACHE,
+  ...DEFAULT_CLIENT_INITIATED_WRITE_OPTS,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
@@ -585,7 +603,6 @@ export class Ceramic implements CeramicApi {
       const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
-
 
         if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
           throw new Error(

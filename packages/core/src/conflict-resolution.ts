@@ -348,6 +348,19 @@ export class ConflictResolution {
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
+    const conflictingTip = unappliedCommits[unappliedCommits.length - 1].cid
+    const streamId = StreamUtils.streamIdFromState(initialState)
+    if (opts.throwIfStale) {
+      // If this tip came from a client-initiated request and it doesn't build off the node's
+      // current local state, that means the client has a stale view of the data.  Even if the new
+      // commit would win the arbitrary conflict resolution with the local state, that just
+      // increases the likelihood of lost writes. Clients should always at least be in sync with
+      // their Ceramic node when authoring new writes.
+      throw new Error(
+        `Commit to stream ${streamId.toString()} rejected because it builds on stale state. Calling 'sync()' on the stream handle will synchronize the stream state in the client with that on the Ceramic node.  Rejected commit CID: ${conflictingTip.toString()}. Current tip: ${tip.toString()}`
+      )
+    }
+
     const conflictIdx = initialStateLog.findIndex(commitData.commit.prev) + 1
     const canonicalLog = await initialStateLog.toCommitData()
     // The conflict index applies equivalently to the CommitData array derived from the canonical state log
@@ -366,12 +379,10 @@ export class ConflictResolution {
 
     const selectedState = await pickLogToAccept(localState, remoteState)
     if (selectedState === localState) {
-      if (opts.throwOnInvalidCommit) {
-        const commit = unappliedCommits[unappliedCommits.length - 1].cid
-        const streamId = StreamUtils.streamIdFromState(localState)
+      if (opts.throwOnConflict) {
         const tip = localState.log[localState.log.length - 1].cid
         throw new Error(
-          `Commit to stream ${streamId.toString()} rejected by conflict resolution. Rejected commit CID: ${commit.toString()}. Current tip: ${tip.toString()}`
+          `Commit to stream ${streamId.toString()} rejected by conflict resolution. Rejected commit CID: ${conflictingTip.toString()}. Current tip: ${tip.toString()}`
         )
       }
       return null
@@ -410,7 +421,7 @@ export class ConflictResolution {
   async snapshotAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
     // Throw if any commit fails to apply as we are trying to load at a specific commit and want
     // to error if we can't.
-    const opts = { throwOnInvalidCommit: true }
+    const opts = { throwOnInvalidCommit: true, throwOnConflict: true, throwIfStale: false }
 
     // If 'commit' is ahead of 'initialState', sync state up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit, opts)) || initialState
