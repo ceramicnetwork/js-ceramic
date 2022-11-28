@@ -4,7 +4,7 @@ import { CeramicApi, toLegacyAccountId } from '@ceramicnetwork/common'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { AccountId } from 'caip'
 
-export async function happyPath(ceramic: CeramicApi, authProvider: AuthProvider) {
+export async function happyPath(ceramic: CeramicApi, authProvider: AuthProvider): Promise<void> {
   const accountId = await authProvider.accountId()
   const caip = await Caip10Link.fromAccount(ceramic, accountId)
   await caip.setDid(ceramic.did, authProvider)
@@ -16,7 +16,7 @@ export async function wrongProof(
   ceramic: CeramicApi,
   authProvider: AuthProvider,
   wrongAccountId?: AccountId
-) {
+): Promise<void> {
   const signingAccountId = await authProvider.accountId()
   if (!wrongAccountId) {
     wrongAccountId = await authProvider.accountId()
@@ -32,7 +32,7 @@ export async function wrongProof(
   )
 }
 
-export async function clearDid(ceramic: CeramicApi, authProvider: AuthProvider) {
+export async function clearDid(ceramic: CeramicApi, authProvider: AuthProvider): Promise<void> {
   const accountId = await authProvider.accountId()
   const caip = await Caip10Link.fromAccount(ceramic, accountId)
 
