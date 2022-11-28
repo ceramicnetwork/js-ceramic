@@ -8,7 +8,7 @@ import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 
 const SEED = '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83'
 
-const packages/core/src/__tests__/state-manager.test.tscreateCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
   return vanillaCreateCeramic(ipfs, {
     anchorOnRequest: !anchorManual,
     seed: SEED,

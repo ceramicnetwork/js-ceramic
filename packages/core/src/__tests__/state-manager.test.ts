@@ -120,15 +120,8 @@ describe('anchor', () => {
     await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
 
     const fakeHandleTip = jest.fn()
-
-    // count the number of times fakeHandleTip() is called
-    let numberOfCalls = 0
-    ;(stateManager as any)._handleTip = (...args) => {
-      const bound = fakeHandleTip.bind(stateManager)
-      const result = bound(...args)
-      numberOfCalls += 1
-      return result
-    }
+    const bound = fakeHandleTip.bind(stateManager)
+    ;(stateManager as any)._handleTip = bound
 
     // Mock a throw as the first call
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
@@ -138,7 +131,7 @@ describe('anchor', () => {
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
     // wait for 3 secs to let the retry mechanism work
-    await TestUtils.delay(5000)
+    await TestUtils.delay(3000)
 
     // Check that fakeHandleTip was called only three times
     expect(fakeHandleTip).toHaveBeenCalledTimes(2)
@@ -154,15 +147,8 @@ describe('anchor', () => {
     await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
 
     const fakeHandleTip = jest.fn()
-
-    // count the number of times fakeHandleTip() is called
-    let numberOfCalls = 0
-    ;(stateManager as any)._handleTip = (...args) => {
-      const bound = fakeHandleTip.bind(stateManager)
-      const result = bound(...args)
-      numberOfCalls += 1
-      return result
-    }
+    fakeHandleTip.bind(stateManager)
+    ;(stateManager as any)._handleTip = fakeHandleTip
 
     // Mock a bunch of throws as consecutive calls to fakeHandleTip
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
@@ -173,7 +159,7 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
 
     // wait for 3 secs to let the retry mechanism work
-    await TestUtils.delay(5000)
+    await TestUtils.delay(3000)
 
     // Check that fakeHandleTip was called only three times
     expect(fakeHandleTip).toHaveBeenCalledTimes(3)
