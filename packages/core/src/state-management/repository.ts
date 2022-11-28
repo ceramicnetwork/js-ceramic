@@ -102,7 +102,7 @@ export class Repository {
   async injectStateStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
-      stateStore: stateStore
+      stateStore: stateStore,
     })
     await this.init()
   }

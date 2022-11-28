@@ -1,5 +1,12 @@
 import { jest } from '@jest/globals'
-import { AnchorStatus, CommitType, IpfsApi, SignatureStatus, StreamUtils, TestUtils } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  CommitType,
+  IpfsApi,
+  SignatureStatus,
+  StreamUtils,
+  TestUtils,
+} from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { RunningState } from '../state-management/running-state.js'

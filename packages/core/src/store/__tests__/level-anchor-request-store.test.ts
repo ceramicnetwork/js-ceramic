@@ -3,8 +3,9 @@ import { LevelDbStore } from '../level-db-store.js'
 import { CeramicApi, GenesisCommit, IpfsApi, Networks, TestUtils } from '@ceramicnetwork/common'
 import {
   AnchorRequestData,
-  AnchorRequestStore, AnchorRequestStoreListResult,
-  serializeAnchorRequestData
+  AnchorRequestStore,
+  AnchorRequestStoreListResult,
+  serializeAnchorRequestData,
 } from '../anchor-request-store.js'
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
@@ -162,7 +163,9 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     getSpy.mockImplementationOnce(() => {
       throw new Error('something internal to LevelDB')
     })
-    await expect(anchorRequestStore.load(streamId1)).rejects.toThrow('something internal to LevelDB')
+    await expect(anchorRequestStore.load(streamId1)).rejects.toThrow(
+      'something internal to LevelDB'
+    )
 
     await getSpy.mockRestore()
   })
@@ -207,7 +210,10 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     }
     await anchorRequestStore.save(streamId3, anchorRequestData3)
 
-    const sortByKeyStreamId = (a: AnchorRequestStoreListResult, b: AnchorRequestStoreListResult) => {
+    const sortByKeyStreamId = (
+      a: AnchorRequestStoreListResult,
+      b: AnchorRequestStoreListResult
+    ) => {
       return a.key.toString().localeCompare(b.key.toString())
     }
 
