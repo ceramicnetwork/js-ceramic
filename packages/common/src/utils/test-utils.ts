@@ -26,6 +26,36 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
 
 export class TestUtils {
   /**
+   * Wait up to 'timeoutMs' for the given predicate to return true.  Polls the given predicate once
+   * every 100ms.  Returns true if the predicate eventually returned true, or false if it timed out
+   * without ever becoming true.
+   */
+  static async waitForConditionOrTimeout(
+    predicate: () => Promise<boolean>,
+    timeoutMs = 1000 * 30
+  ): Promise<boolean> {
+    const startTime = new Date()
+    const deadline = new Date(startTime.getTime() + timeoutMs)
+    let now = startTime
+    while (now < deadline) {
+      await TestUtils.delay(100)
+      now = new Date()
+
+      try {
+        const res = await predicate()
+        if (res) {
+          return res
+        }
+      } catch (err) {
+        console.warn(err)
+      }
+    }
+
+    console.warn(`timed out after ${timeoutMs}ms waiting for condition to be true`)
+    return false
+  }
+
+  /**
    * Given a stream and a predicate that operates on the stream state, continuously waits for
    * changes to the stream until the predicate returns true.
    * @param stream
