@@ -1,7 +1,12 @@
 import type { Knex } from 'knex'
 import { UnreachableCaseError, Networks } from '@ceramicnetwork/common'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../database-index-api.js'
-import { CONFIG_TABLE_NAME } from '../../config.js'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
+import { CONFIG_TABLE_NAME } from '../config.js'
+
+export enum DatabaseType {
+  POSTGRES = 'postgres',
+  SQLITE = 'sqlite',
+}
 
 /**
  * The expected type for the data in the column.  For now only supports STRING as the only extra
@@ -21,11 +26,28 @@ export type ColumnInfo = {
   type: ColumnType
 }
 
-export async function createModelTable(
+function createExtraColumns(
+  table: Knex.CreateTableBuilder,
+  tableName: string,
+  extraColumns: Array<ColumnInfo>
+): void {
+  for (const column of extraColumns) {
+    switch (column.type) {
+      case ColumnType.STRING:
+        table.string(column.name, 1024).notNullable()
+        table.index([column.name], `idx_${tableName}_${column.name}`)
+        break
+      default:
+        throw new UnreachableCaseError(column.type, `Invalid column type`)
+    }
+  }
+}
+
+export async function createPostgresModelTable(
   dataSource: Knex,
   tableName: string,
   extraColumns: Array<ColumnInfo>
-) {
+): Promise<void> {
   await dataSource.schema.createTable(tableName, function (table) {
     // create unique index name <64 chars that are still capable of being referenced to MID table
     const indexName = tableName.substring(tableName.length - 10)
@@ -39,16 +61,7 @@ export async function createModelTable(
     table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
     table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
 
-    for (const column of extraColumns) {
-      switch (column.type) {
-        case ColumnType.STRING:
-          table.string(column.name, 1024).notNullable()
-          table.index([column.name], `idx_${tableName}_${column.name}`)
-          break
-        default:
-          throw new UnreachableCaseError(column.type, `Invalid column type`)
-      }
-    }
+    createExtraColumns(table, tableName, extraColumns)
 
     table.index(['stream_id'], `idx_${indexName}_stream_id`, {
       storageEngineIndexType: 'hash',
@@ -73,6 +86,51 @@ export async function createModelTable(
       }
     )
   })
+}
+
+export async function createSqliteModelTable(
+  dataSource: Knex,
+  tableName: string,
+  extraColumns: Array<ColumnInfo>
+): Promise<void> {
+  await dataSource.schema.createTable(tableName, (table) => {
+    table.string('stream_id', 1024).primary().unique().notNullable()
+    table.string('controller_did', 1024).notNullable()
+    table.string('stream_content').notNullable()
+    table.string('tip').notNullable()
+    table.integer('last_anchored_at').nullable()
+    table.integer('first_anchored_at').nullable()
+    table.integer('created_at').notNullable()
+    table.integer('updated_at').notNullable()
+
+    createExtraColumns(table, tableName, extraColumns)
+
+    table.index(['last_anchored_at'], `idx_${tableName}_last_anchored_at`)
+    table.index(['created_at'], `idx_${tableName}_created_at`)
+    table.index(['updated_at'], `idx_${tableName}_updated_at`)
+    table.index(['last_anchored_at', 'created_at'], `idx_${tableName}_last_anchored_at_created_at`)
+    table.index(['first_anchored_at'], `idx_${tableName}_first_anchored_at`)
+    table.index(
+      ['first_anchored_at', 'created_at'],
+      `idx_${tableName}_first_anchored_at_created_at`
+    )
+  })
+}
+
+export async function createModelTable(
+  database: DatabaseType,
+  dataSource: Knex,
+  tableName: string,
+  extraColumns: Array<ColumnInfo>
+): Promise<void> {
+  switch (database) {
+    case DatabaseType.POSTGRES:
+      return await createPostgresModelTable(dataSource, tableName, extraColumns)
+    case DatabaseType.SQLITE:
+      return await createSqliteModelTable(dataSource, tableName, extraColumns)
+    default:
+      throw new Error('Unsupported database type')
+  }
 }
 
 export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {

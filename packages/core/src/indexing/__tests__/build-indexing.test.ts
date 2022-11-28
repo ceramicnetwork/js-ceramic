@@ -2,7 +2,7 @@ import tmp from 'tmp-promise'
 import { buildIndexing, UnsupportedDatabaseProtocolError } from '../build-indexing.js'
 import { PostgresIndexApi } from '../postgres/postgres-index-api.js'
 import { SqliteIndexApi } from '../sqlite/sqlite-index-api.js'
-import { LoggerProvider } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 import pgTest from '@databases/pg-test'
 
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
@@ -25,9 +25,10 @@ describe('sqlite', () => {
     const indexingApi = buildIndexing(
       {
         db: databaseUrl.href,
-        models: [],
+        allowQueriesBeforeHistoricalSync: true,
       },
-      diagnosticsLogger
+      diagnosticsLogger,
+      Networks.INMEMORY
     )
     expect(indexingApi).toBeInstanceOf(SqliteIndexApi)
   })
@@ -37,9 +38,10 @@ describe('sqlite', () => {
     const indexingApi = buildIndexing(
       {
         db: databaseUrl.href,
-        models: [],
+        allowQueriesBeforeHistoricalSync: true,
       },
-      diagnosticsLogger
+      diagnosticsLogger,
+      Networks.INMEMORY
     )
     expect(indexingApi).toBeInstanceOf(SqliteIndexApi)
   })
@@ -50,9 +52,10 @@ test('build for postgres connection string', async () => {
   const indexingApi = buildIndexing(
     {
       db: databaseURL,
-      models: [],
+      allowQueriesBeforeHistoricalSync: true,
     },
-    diagnosticsLogger
+    diagnosticsLogger,
+    Networks.INMEMORY
   )
   expect(indexingApi).toBeInstanceOf(PostgresIndexApi)
   await kill()
@@ -60,12 +63,22 @@ test('build for postgres connection string', async () => {
 
 test('throw on unsupported protocol', () => {
   const connectionString = 'garbage://host:3000/database'
-  expect(() => buildIndexing({ db: connectionString, models: [] }, diagnosticsLogger)).toThrow(
-    UnsupportedDatabaseProtocolError
-  )
+  expect(() =>
+    buildIndexing(
+      { db: connectionString, allowQueriesBeforeHistoricalSync: true },
+      diagnosticsLogger,
+      Networks.INMEMORY
+    )
+  ).toThrow(UnsupportedDatabaseProtocolError)
 })
 
 test('throw on non-url connection string', () => {
   const connectionString = `/absolute/path/to/database.sqlite`
-  expect(() => buildIndexing({ db: connectionString, models: [] })).toThrow()
+  expect(() =>
+    buildIndexing(
+      { db: connectionString, allowQueriesBeforeHistoricalSync: true },
+      diagnosticsLogger,
+      Networks.INMEMORY
+    )
+  ).toThrow()
 })

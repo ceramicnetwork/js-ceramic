@@ -1,20 +1,16 @@
 import {
+  DatabaseType,
   ColumnInfo,
   ColumnType,
   createConfigTable,
   createModelTable,
-} from './migrations/1-create-model-table.js'
+} from '../migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from '../database-index-api.js'
-import {
-  COMMON_TABLE_STRUCTURE,
-  CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
-  RELATION_COLUMN_STRUCTURE,
-  CONFIG_TABLE_STRUCTURE,
-} from './migrations/cdb-schema-verification.js'
+import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
 
 /**
@@ -47,8 +43,11 @@ export async function listMidTables(dataSource: Knex): Promise<Array<string>> {
 export function listConfigTables(): Array<ConfigTable> {
   // TODO (CDB-1852): extend with ceramic_auth; If it will need to be async, see if it can be parallelised within initConfigTables(...)
   return [
-    { tableName: INDEXED_MODEL_CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_MODEL_INDEX_STRUCTURE },
-    { tableName: CONFIG_TABLE_NAME, validSchema: CONFIG_TABLE_STRUCTURE },
+    {
+      tableName: INDEXED_MODEL_CONFIG_TABLE_NAME,
+      validSchema: STRUCTURES[DatabaseType.POSTGRES].CONFIG_TABLE_MODEL_INDEX,
+    },
+    { tableName: CONFIG_TABLE_NAME, validSchema: STRUCTURES[DatabaseType.POSTGRES].CONFIG_TABLE },
   ]
 }
 
@@ -137,7 +136,7 @@ async function initMidTable(
   if (!exists) {
     logger.imp(`Creating Compose DB Indexing table for model: ${tableName}`)
     const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
-    await createModelTable(dataSource, tableName, relationColumns)
+    await createModelTable(DatabaseType.POSTGRES, dataSource, tableName, relationColumns)
   }
 }
 
@@ -196,10 +195,10 @@ async function _verifyMidTable(
 
   // Clone the COMMON_TABLE_STRUCTURE object that has the fields expected for all tables so we can
   // extend it with the model-specific fields expected
-  const expectedTableStructure = Object.assign({}, COMMON_TABLE_STRUCTURE)
+  const expectedTableStructure = Object.assign({}, STRUCTURES[DatabaseType.POSTGRES].COMMON_TABLE)
   if (modelIndexArgs.relations) {
     for (const relation of Object.keys(modelIndexArgs.relations)) {
-      expectedTableStructure[relation] = RELATION_COLUMN_STRUCTURE
+      expectedTableStructure[relation] = STRUCTURES[DatabaseType.POSTGRES].RELATION_COLUMN
     }
   }
   const validSchema = JSON.stringify(expectedTableStructure)
