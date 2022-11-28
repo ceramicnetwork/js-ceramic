@@ -475,6 +475,13 @@ describe('Ceramic API', () => {
       expect(streams[streamE.id.toString()]).toBeTruthy()
     })
 
+    /**
+     * Asserts that the given timestamps are within 5 seconds of each other
+     */
+    function expectTimestampsClose(givenTimestamp: number, expectedTimestamp: number) {
+      expect(Math.abs(expectedTimestamp - givenTimestamp)).toBeLessThan(5)
+    }
+
     it('loads the same stream at multiple points in time', async () => {
       // test data for the atTime feature
       streamFStates.push(streamF.state)
@@ -519,6 +526,13 @@ describe('Ceramic API', () => {
       // annoying thing, was pending when snapshotted but will
       // obviously not be when loaded at a specific commit
       streamFStates[0].anchorStatus = 0
+
+      // first stream state didn't have an anchor timestamp when it was added to the streamFStates
+      // array, but it does get a timestamp after being anchored
+      // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
+      expect(Math.abs(states[0].log[0].timestamp - streamFTimestamps[0])).toBeLessThan(5)
+      delete states[0].log[0].timestamp
+
       expect(states[0]).toEqual(streamFStates[0])
       expect(states[1]).toEqual(streamFStates[1])
       expect(states[2]).toEqual(streamFStates[2])

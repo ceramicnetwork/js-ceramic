@@ -5,13 +5,14 @@ import { decode } from 'multiformats/hashes/digest'
 import * as uint8arrays from 'uint8arrays'
 
 const TEST_CHAIN_ID = '1337'
+const V1_PROOF_TYPE = 'f(bytes32)'
 const ANCHOR_PROOF: AnchorProof = {
   chainId: `eip155:${TEST_CHAIN_ID}`,
   blockNumber: 3,
   blockTimestamp: 1586784008,
   txHash: CID.parse('bagjqcgza7mvdlzewbfbq35peso2atjydg3ekalew5vmze7w2a5cbhmav4rmq'),
   root: CID.parse('bafyreic5p7grucmzx363ayxgoywb6d4qf5zjxgbqjixpkokbf5jtmdj5ni'),
-  version: 1,
+  txType: V1_PROOF_TYPE,
 }
 const TX_HASH =
   '0x' + uint8arrays.toString(decode(ANCHOR_PROOF.txHash.multihash.bytes).digest, 'base16')
