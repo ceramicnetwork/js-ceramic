@@ -18,7 +18,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 const MODEL_STREAM_ID = 'kjzl6hvfrbw6c62dn29qy8b6lot6m9xr98wz4hfq0htxfhpxgqo41ufqew22qe1'
 
 const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
-  name: 'myModel',
+  name: 'myModelWithARelation',
   schema: {},
   accountRelation: { type: 'list' },
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
