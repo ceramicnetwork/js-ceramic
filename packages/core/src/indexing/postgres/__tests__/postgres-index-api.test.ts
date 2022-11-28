@@ -16,7 +16,7 @@ import {
   RELATION_COLUMN_STRUCTURE,
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verification.js'
-import { readCsvFixture } from './read-csv-fixture.util.js'
+import { readCsvFixture } from '../../__tests__/read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../../config.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
@@ -617,7 +617,9 @@ describe('count', () => {
         return { model: m }
       })
     )
-    const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
+    const rows = await readCsvFixture(
+      new URL('../../__tests__/insertion-order.fixture.csv', import.meta.url)
+    )
     for (const row of rows) {
       await indexApi.indexStream(row)
     }

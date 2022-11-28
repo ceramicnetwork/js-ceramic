@@ -7,9 +7,9 @@ import {
   ForwardPaginationQuery,
   PaginationKind,
   parsePagination,
-} from '../parse-pagination.js'
-import { asTableName } from '../as-table-name.util.js'
-import { UnsupportedOrderingError } from '../unsupported-ordering-error.js'
+} from './parse-pagination.js'
+import { asTableName } from './as-table-name.util.js'
+import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
 
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
@@ -17,7 +17,7 @@ type Selected = { stream_id: string; last_anchored_at: number; created_at: numbe
  * Contains functions to transform (parse and stringify) GraphQL cursors
  * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
  *
- * A cursor for Postgres insertion order is a JSON having `created_at` field as number.
+ * A cursor for insertion order is a JSON having `created_at` field as number.
  */
 abstract class Cursor {
   /**

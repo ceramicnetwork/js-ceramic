@@ -10,7 +10,7 @@ import type { Knex } from 'knex'
 import type { DatabaseIndexApi, IndexModelArgs, IndexStreamArgs } from '../database-index-api.js'
 import { initConfigTables, initMidTables, verifyTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
-import { InsertionOrder } from './insertion-order.js'
+import { InsertionOrder } from '../insertion-order.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
 

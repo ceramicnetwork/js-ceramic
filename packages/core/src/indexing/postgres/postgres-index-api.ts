@@ -8,7 +8,7 @@ import type {
 } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs, IndexStreamArgs } from '../database-index-api.js'
 import { initConfigTables, initMidTables, verifyTables } from './init-tables.js'
-import { InsertionOrder } from './insertion-order.js'
+import { InsertionOrder } from '../insertion-order.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
