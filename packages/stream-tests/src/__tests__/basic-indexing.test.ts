@@ -85,8 +85,8 @@ const extractDocuments = function (
 }
 
 enum DBEngine {
-  sqlite = "sqlite",
-  postgres = "postgres",
+  sqlite = 'sqlite',
+  postgres = 'postgres',
 }
 
 type BasicIndexingTestEnv = {
@@ -98,7 +98,7 @@ const envs: Array<BasicIndexingTestEnv> = [
   { dbEngine: DBEngine.postgres },
 ]
 
-describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', ( env) => {
+describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
