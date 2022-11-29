@@ -105,7 +105,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
-   * Sets all pending anchors for PROCESSINGS. Useful for testing.
+   * Sets all pending anchors to PROCESSING status. Useful for testing.
    */
   async startProcessingPendingAnchors(): Promise<void> {
     const candidates = await this._findCandidates()
@@ -338,6 +338,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @private
    */
   async _process(leaf: Candidate): Promise<void> {
+    this._startProcessingCandidate(leaf)
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
     const proofData: AnchorProof = {
