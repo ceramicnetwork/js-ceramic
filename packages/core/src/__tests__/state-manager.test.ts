@@ -174,7 +174,7 @@ describe('anchor', () => {
     await TestUtils.waitForAnchor(stream, 3000)
 
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    await TestUtils.delay(100) // Needs a bit of time delete the request from the store
+    await TestUtils.delay(5000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
   })
 
@@ -197,7 +197,7 @@ describe('anchor', () => {
     await anchorService.failPendingAnchors()
     await stream.sync()
     expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
-    await TestUtils.delay(100) // Needs a bit of time delete the request from the store
+    await TestUtils.delay(5000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
   })
 
