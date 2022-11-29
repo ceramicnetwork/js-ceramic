@@ -25,23 +25,6 @@ import cloneDeep from 'lodash.clonedeep'
 import { StateLink } from '../state-management/state-link.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
-const waitForAnchorStatus = async (stream$: RunningState, status: AnchorStatus): Promise<void> => {
-  await new Promise<void>((resolve) => {
-    let resolved = false
-    const subscription = stream$
-      .pipe(
-        tap((value) => {
-          if (!resolved && value.anchorStatus === status) {
-            resolved = true
-            resolve()
-          }
-        })
-      )
-      .subscribe()
-    stream$.add(subscription)
-  })
-}
-
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
 const STRING_MAP_SCHEMA = {
@@ -91,7 +74,14 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
+    await TestUtils.waitForState(
+      stream,
+      3000,
+      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`Expect anchored`)
+      }
+    )
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
@@ -101,7 +91,14 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
+    await TestUtils.waitForState(
+      stream,
+      3000,
+      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`Expect anchored`)
+      }
+    )
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(stream$.value.log.length).toEqual(2)
 
@@ -115,42 +112,50 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
 
-    await ceramic.repository.stateManager.anchor(stream$)
-    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
-
     const fakeHandleTip = jest.fn()
     const bound = fakeHandleTip.bind(stateManager)
     ;(stateManager as any)._handleTip = bound
 
-    // Mock a throw as the first call
+    // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it - this is the first call
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    // Mock a throw as the second call
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
 
-    // Mock the result of the original implementation as the second call - this one should return
+    // Mock the result of the original implementation as the third call - this one should return
     // and stop the retrying mechanism
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-    // wait for 3 secs to let the retry mechanism work
-    await TestUtils.delay(3000)
+    await ceramic.repository.stateManager.anchor(stream$)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+    await TestUtils.waitForState(
+      stream,
+      6000,
+      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`Expect anchored`)
+      }
+    )
 
     // Check that fakeHandleTip was called only three times
-    expect(fakeHandleTip).toHaveBeenCalledTimes(2)
+    expect(fakeHandleTip).toHaveBeenCalledTimes(3)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
-  test(`_handleTip is retried up to three times, if it doesn't return`, async () => {
+  test(`_handleTip is retried up to three times within _handleAnchorCommit, if it doesn't return`, async () => {
     const stateManager = ceramic.repository.stateManager
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const stream$ = await ceramic.repository.load(stream.id, {})
-
-    await ceramic.repository.stateManager.anchor(stream$)
-    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
 
     const fakeHandleTip = jest.fn()
     fakeHandleTip.bind(stateManager)
     ;(stateManager as any)._handleTip = fakeHandleTip
 
-    // Mock a bunch of throws as consecutive calls to fakeHandleTip
+    // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it - this is the first call
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    // Mock a bunch of throws as consecutive calls to fakeHandleTip - only the first three of them will be executed
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
@@ -158,11 +163,20 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
 
-    // wait for 3 secs to let the retry mechanism work
-    await TestUtils.delay(3000)
+    await ceramic.repository.stateManager.anchor(stream$)
 
-    // Check that fakeHandleTip was called only three times
-    expect(fakeHandleTip).toHaveBeenCalledTimes(3)
+    // FIXME: CDB-XXXX are the anchor statuses expected to diverge like this between stream and stream$ ?
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+    await TestUtils.delay(5000)
+
+    // Check that fakeHandleTip was called only four times
+    expect(fakeHandleTip).toHaveBeenCalledTimes(4)
+
+    // FIXME: CDB-XXXX are the anchor statuses expected to diverge like this between stream and stream$ ?
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
   test('anchor request is stored when created and deleted when anchored', async () => {
@@ -176,7 +190,14 @@ describe('anchor', () => {
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
-    await waitForAnchorStatus(stream$, AnchorStatus.ANCHORED)
+    await TestUtils.waitForState(
+      stream,
+      3000,
+      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`Expect anchored`)
+      }
+    )
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     await TestUtils.delay(100) // Needs a bit of time delete the request from the store
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
