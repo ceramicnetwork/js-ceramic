@@ -51,6 +51,23 @@ export class TestUtils {
     }
   }
 
+  /**
+   * Given a stream, continuously waits for
+   * the streams anchor status to be changed to ANCHORED
+   * @param stream
+   * @param timeout - how long to wait for
+   */
+  static waitForAnchor(stream: Stream, timeout: number): Promise<void> {
+    return this.waitForState(
+      stream,
+      timeout,
+      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`Expect anchored`)
+      }
+    )
+  }
+
   static runningState(state: StreamState): RunningStateLike {
     return new FakeRunningState(state)
   }

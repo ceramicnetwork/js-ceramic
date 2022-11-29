@@ -74,14 +74,9 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.waitForState(
-      stream,
-      3000,
-      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`Expect anchored`)
-      }
-    )
+
+    await TestUtils.waitForAnchor(stream, 3000)
+
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
@@ -91,14 +86,9 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.waitForState(
-      stream,
-      3000,
-      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`Expect anchored`)
-      }
-    )
+
+    await TestUtils.waitForAnchor(stream, 3000)
+
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(stream$.value.log.length).toEqual(2)
 
@@ -128,14 +118,8 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
-    await TestUtils.waitForState(
-      stream,
-      6000,
-      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`Expect anchored`)
-      }
-    )
+
+    await TestUtils.waitForAnchor(stream, 3000)
 
     // Check that fakeHandleTip was called only three times
     expect(fakeHandleTip).toHaveBeenCalledTimes(3)
@@ -175,6 +159,7 @@ describe('anchor', () => {
     expect(fakeHandleTip).toHaveBeenCalledTimes(4)
 
     // FIXME: CDB-XXXX are the anchor statuses expected to diverge like this between stream and stream$ ?
+    // FIXME: CDB-XXXX is it ok that the failure of _handleTip is not requested in the anchor status of neigher the stream, nor the stream$?
     expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
@@ -190,14 +175,9 @@ describe('anchor', () => {
     await ceramic.repository.stateManager.anchor(stream$)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
-    await TestUtils.waitForState(
-      stream,
-      3000,
-      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`Expect anchored`)
-      }
-    )
+
+    await TestUtils.waitForAnchor(stream, 3000)
+
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     await TestUtils.delay(100) // Needs a bit of time delete the request from the store
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
@@ -373,14 +353,7 @@ test('commit history and atCommit', async () => {
   expect(commit4.equals(stream.anchorCommitIds[1])).toBeFalsy()
   expect(stream.state.log.length).toEqual(5)
 
-  await TestUtils.waitForState(
-    stream,
-    3000,
-    (s) => s.anchorStatus === AnchorStatus.ANCHORED,
-    () => {
-      throw new Error(`Expect anchored`)
-    }
-  )
+  await TestUtils.waitForAnchor(stream, 3000)
 
   // Correctly check out a specific commit
   const streamStateOriginal = cloneDeep(streamState.state)
