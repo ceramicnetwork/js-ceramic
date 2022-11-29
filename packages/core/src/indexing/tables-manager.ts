@@ -42,6 +42,20 @@ export class TablesManager {
   ) {}
 
   /**
+   * List existing mid tables.
+   */
+  async listMidTables(): Promise<Array<string>> {
+    throw new Error('Must be implemented in extending class')
+  }
+
+  /**
+   * Create mid tables and corresponding indexes
+   */
+  async initMidTables(modelsToIndex: Array<IndexModelArgs>): Promise<void> {
+    throw new Error('Must be implemented in extending class')
+  }
+
+  /**
    * List existing config tables.
    */
   listConfigTables(): Array<ConfigTable> {
@@ -53,13 +67,6 @@ export class TablesManager {
       },
       { tableName: CONFIG_TABLE_NAME, validSchema: STRUCTURES[this.dbType].CONFIG_TABLE },
     ]
-  }
-
-  /**
-   * List existing mid tables.
-   */
-  async listMidTables(): Promise<Array<string>> {
-    throw new Error('Must be implemented in extending class')
   }
 
   /**
@@ -233,7 +240,7 @@ export class SqliteTablesManager extends TablesManager {
   }
 
   /**
-   * Create mid tables and corresponding indexes.n
+   * Create mid tables and corresponding indexes
    */
   async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
     const existingTables = await this.listMidTables()
