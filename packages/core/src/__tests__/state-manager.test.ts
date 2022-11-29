@@ -124,7 +124,6 @@ describe('anchor', () => {
     // Check that fakeHandleTip was called only three times
     expect(fakeHandleTip).toHaveBeenCalledTimes(3)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
   test(`_handleTip is retried up to three times within _handleAnchorCommit, if it doesn't return`, async () => {
@@ -144,8 +143,6 @@ describe('anchor', () => {
 
     await ceramic.repository.stateManager.anchor(stream$)
 
-    // FIXME: CDB-XXXX are the anchor statuses expected to diverge like this between stream and stream$ ?
-    expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await TestUtils.delay(5000)
@@ -153,9 +150,7 @@ describe('anchor', () => {
     // Check that fakeHandleTip was called only four times: the first time to create the commit and then three times in retries within _handleAnchorCommit
     expect(fakeHandleTip).toHaveBeenCalledTimes(4)
 
-    // FIXME: CDB-XXXX are the anchor statuses expected to diverge like this between stream and stream$ ?
-    // FIXME: CDB-XXXX is it ok that the failure of _handleTip is not requested in the anchor status of neigher the stream, nor the stream$?
-    expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+    // FIXME: CDB-XXXX is it ok that the value of anchor status here is ANCHORED?
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
@@ -174,7 +169,7 @@ describe('anchor', () => {
     await TestUtils.waitForAnchor(stream, 3000)
 
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    await TestUtils.delay(5000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+    await TestUtils.delay(3000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
   })
 
@@ -197,7 +192,7 @@ describe('anchor', () => {
     await anchorService.failPendingAnchors()
     await stream.sync()
     expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
-    await TestUtils.delay(5000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+    await TestUtils.delay(3000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(await anchorRequestStore.load(stream.id)).toBeNull()
   })
 
