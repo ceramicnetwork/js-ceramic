@@ -1,8 +1,7 @@
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Networks } from '@ceramicnetwork/common'
 import { buildIndexing, IndexingConfig } from '../indexing/build-indexing.js'
-import { SqliteIndexApi } from '../indexing/sqlite/sqlite-index-api.js'
-import { DatabaseIndexApi } from '../indexing/database-index-api.js'
+import { DatabaseIndexApi, SqliteIndexApi } from '../indexing/database-index-api.js'
 
 /**
  * Returns true if (1) runs on mainnet, (2) uses SQLite, (3) have models to index.

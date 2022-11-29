@@ -51,7 +51,7 @@ type IndexedData<DateType> = {
 /**
  * Base class for an index backend.
  */
-export class DatabaseIndexApi<DateType = Date> {
+export class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private modelsToIndex: Array<StreamID> = []
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be

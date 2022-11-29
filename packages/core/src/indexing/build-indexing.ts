@@ -43,7 +43,7 @@ export function buildIndexing(
   indexingConfig: IndexingConfig,
   logger: DiagnosticsLogger,
   network: Networks
-): DatabaseIndexApi {
+): DatabaseIndexApi<Date | number> {
   const connectionString = parseURL(indexingConfig.db)
   const protocol = connectionString.protocol.replace(/:$/, '')
   switch (protocol) {
