@@ -139,13 +139,8 @@ describe('anchor', () => {
     // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it - this is the first call
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-    // Mock a bunch of throws as consecutive calls to fakeHandleTip - only the first three of them will be executed
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
-    fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+    // Mock fakeHandleTip to always throw
+    fakeHandleTip.mockRejectedValue(new Error('Handle tip failed'))
 
     await ceramic.repository.stateManager.anchor(stream$)
 
@@ -155,7 +150,7 @@ describe('anchor', () => {
 
     await TestUtils.delay(5000)
 
-    // Check that fakeHandleTip was called only four times
+    // Check that fakeHandleTip was called only four times: the first time to create the commit and then three times in retries within _handleAnchorCommit
     expect(fakeHandleTip).toHaveBeenCalledTimes(4)
 
     // FIXME: CDB-XXXX are the anchor statuses expected to diverge like this between stream and stream$ ?
