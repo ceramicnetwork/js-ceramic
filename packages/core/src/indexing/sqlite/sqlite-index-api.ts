@@ -8,11 +8,11 @@ import type {
 } from '@ceramicnetwork/common'
 import type { Knex } from 'knex'
 import type { DatabaseIndexApi, IndexModelArgs, IndexStreamArgs } from '../database-index-api.js'
-import { initConfigTables, initMidTables, verifyTables } from './init-tables.js'
 import { asTableName } from '../as-table-name.util.js'
 import { InsertionOrder } from '../insertion-order.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
+import { SqliteTablesManager } from '../tables-manager.js'
 
 /**
  * Convert `Date` to SQLite `INTEGER`.
@@ -31,6 +31,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
   // indexed
   private readonly modelsIndexedFields = new Map<string, Array<string>>()
+  readonly tablesManager: SqliteTablesManager
 
   constructor(
     private readonly dbConnection: Knex,
@@ -39,6 +40,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     private readonly network: Networks
   ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
+    this.tablesManager = new SqliteTablesManager(dbConnection, logger)
   }
 
   public getActiveModelsToIndex(): Array<StreamID> {
@@ -91,8 +93,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
 
   private async indexModelsInDatabase(models: Array<IndexModelArgs>): Promise<void> {
     if (models.length === 0) return
-    await initMidTables(this.dbConnection, models, this.logger)
-    await this.verifyTables(models)
+    await this.tablesManager.initMidTables(models)
+    await this.tablesManager.verifyTables(models)
     const now = asTimestamp(new Date())
     // FIXME: CDB-1866 - populate the updated_by field properly when auth is implemented
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -180,10 +182,6 @@ export class SqliteIndexApi implements DatabaseIndexApi {
     return dbQuery.then((response) => Number(response[0]['count(*)']))
   }
 
-  async verifyTables(models: Array<IndexModelArgs>): Promise<void> {
-    await verifyTables(this.dbConnection, models)
-  }
-
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
@@ -203,7 +201,7 @@ export class SqliteIndexApi implements DatabaseIndexApi {
   }
 
   async init(): Promise<void> {
-    await initConfigTables(this.dbConnection, this.logger, this.network)
+    await this.tablesManager.initConfigTables(this.network)
     this.modelsToIndex = await this.getIndexedModelsFromDatabase()
   }
 

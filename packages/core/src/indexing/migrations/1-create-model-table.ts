@@ -117,22 +117,6 @@ export async function createSqliteModelTable(
   })
 }
 
-export async function createModelTable(
-  database: DatabaseType,
-  dataSource: Knex,
-  tableName: string,
-  extraColumns: Array<ColumnInfo>
-): Promise<void> {
-  switch (database) {
-    case DatabaseType.POSTGRES:
-      return await createPostgresModelTable(dataSource, tableName, extraColumns)
-    case DatabaseType.SQLITE:
-      return await createSqliteModelTable(dataSource, tableName, extraColumns)
-    default:
-      throw new Error('Unsupported database type')
-  }
-}
-
 export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {
   switch (tableName) {
     case INDEXED_MODEL_CONFIG_TABLE_NAME:
@@ -158,6 +142,5 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
       break
     default:
       throw new Error(`Invalid config table creation requested: ${tableName}`)
-      process.exit(-1)
   }
 }

@@ -2,7 +2,6 @@ import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { asTimestamp, SqliteIndexApi } from '../sqlite-index-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { listMidTables } from '../init-tables.js'
 import knex, { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../../index-query-not-available.error.js'
 import { asTableName } from '../../as-table-name.util.js'
@@ -16,7 +15,6 @@ import {
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
 } from '../migrations/cdb-schema-verfication.js'
 import { readCsvFixture } from '../../__tests__/read-csv-fixture.util.js'
-import { CONFIG_TABLE_NAME } from '../../config.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -67,13 +65,15 @@ describe('init', () => {
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs([modelToIndex]))
-      const created = await listMidTables(dbConnection)
+      const created = await indexApi.tablesManager.listMidTables()
       const tableName = asTableName(modelToIndex)
       expect(created.length).toEqual(1)
       expect(created[0]).toEqual(tableName)
 
       // Built-in table verification should pass
-      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
+      await expect(
+        indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+      ).resolves.not.toThrow()
 
       // Also manually check MID table structure
       const midColumns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
@@ -98,11 +98,11 @@ describe('init', () => {
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       await indexApi.init()
       await indexApi.indexModels(indexModelsArgs)
-      const created = await listMidTables(dbConnection)
+      const created = await indexApi.tablesManager.listMidTables()
       const tableNames = indexModelsArgs.map((args) => `${asTableName(args.model)}`)
       expect(created.sort()).toEqual(tableNames.sort())
 
-      await expect(indexApi.verifyTables(indexModelsArgs)).resolves.not.toThrow()
+      await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).resolves.not.toThrow()
 
       // Also manually check table structure
       const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
@@ -119,7 +119,7 @@ describe('init', () => {
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       // Index the same models again to make sure we don't error trying to re-create the tables
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-      const created = await listMidTables(dbConnection)
+      const created = await indexApi.tablesManager.listMidTables()
       const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
       expect(created.sort()).toEqual(tableNames.sort())
     })
@@ -130,7 +130,7 @@ describe('init', () => {
       const indexApiA = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       await indexApiA.init()
       await indexApiA.indexModels(modelsToIndexArgs(modelsA))
-      const createdA = await listMidTables(dbConnection)
+      const createdA = await indexApiA.tablesManager.listMidTables()
       const tableNamesA = modelsA.map((m) => `${m.toString()}`)
       expect(createdA.sort()).toEqual(tableNamesA.sort())
 
@@ -138,7 +138,7 @@ describe('init', () => {
       const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
       const indexApiB = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       await indexApiB.indexModels(modelsToIndexArgs(modelsB))
-      const createdB = await listMidTables(dbConnection)
+      const createdB = await indexApiB.tablesManager.listMidTables()
       const tableNamesB = modelsB.map((m) => `${m.toString()}`)
       expect(createdB.sort()).toEqual(tableNamesB.sort())
     })
@@ -187,7 +187,9 @@ describe('init', () => {
         table.integer('updated_at').notNullable()
       })
 
-      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).resolves.not.toThrow()
+      await expect(
+        indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+      ).resolves.not.toThrow()
     })
 
     test('Fail table validation', async () => {
@@ -206,9 +208,9 @@ describe('init', () => {
         table.integer('created_at').notNullable()
       })
 
-      await expect(indexApi.verifyTables(modelsToIndexArgs([modelToIndex]))).rejects.toThrow(
-        /Schema verification failed for index/
-      )
+      await expect(
+        indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+      ).rejects.toThrow(/Schema verification failed for index/)
     })
 
     test('Fail table validation if relation column missing', async () => {
@@ -235,7 +237,7 @@ describe('init', () => {
         table.integer('updated_at').notNullable()
       })
 
-      await expect(indexApi.verifyTables(indexModelsArgs)).rejects.toThrow(
+      await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).rejects.toThrow(
         /Schema verification failed for index/
       )
     })
