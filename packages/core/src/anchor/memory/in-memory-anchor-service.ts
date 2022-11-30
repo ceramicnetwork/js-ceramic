@@ -343,9 +343,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     const serializedMessage = serialize(updateMessage as any)
 
-    // @ts-ignore topic is private
     const pubsubTopic = this.#dispatcher.topic
-
     await this.#dispatcher._ipfs.pubsub.publish(pubsubTopic, serializedMessage)
 
     return anchorCid
