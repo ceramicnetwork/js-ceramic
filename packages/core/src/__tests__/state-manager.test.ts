@@ -596,6 +596,8 @@ describe('anchor', () => {
 
       await inMemoryAnchorService.anchor()
 
+      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
@@ -607,6 +609,8 @@ describe('anchor', () => {
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await inMemoryAnchorService.anchor()
+
+      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       expect(stream$.value.log.length).toEqual(2)
@@ -625,13 +629,10 @@ describe('anchor', () => {
       const bound = fakeHandleTip.bind(stateManager)
       ;(stateManager as any)._handleTip = bound
 
-      // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it - this is the first call
-      fakeHandleTip.mockImplementationOnce(realHandleTip)
-
-      // Mock a throw as the second call
+      // Mock a throw as the first call
       fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
 
-      // Mock the result of the original implementation as the third call - this one should return
+      // Mock the result of the original implementation as the second call - this one should return
       // and stop the retrying mechanism
       fakeHandleTip.mockImplementationOnce(realHandleTip)
 
@@ -644,7 +645,7 @@ describe('anchor', () => {
       await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
 
       // Check that fakeHandleTip was called only three times
-      expect(fakeHandleTip).toHaveBeenCalledTimes(3)
+      expect(fakeHandleTip).toHaveBeenCalledTimes(2)
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
@@ -657,9 +658,6 @@ describe('anchor', () => {
       const bound = fakeHandleTip.bind(stateManager)
       ;(stateManager as any)._handleTip = bound
 
-      // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it - this is the first call
-      fakeHandleTip.mockImplementationOnce(realHandleTip)
-
       // Mock fakeHandleTip to always throw
       fakeHandleTip.mockRejectedValue(new Error('Handle tip failed'))
 
@@ -671,11 +669,10 @@ describe('anchor', () => {
 
       await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
 
-      // Check that fakeHandleTip was called only four times: the first time to create the commit and then three times in retries within _handleAnchorCommit
-      expect(fakeHandleTip).toHaveBeenCalledTimes(4)
+      // Check that fakeHandleTip was called only three times
+      expect(fakeHandleTip).toHaveBeenCalledTimes(3)
 
-      // FIXME: CDB-XXXX is it ok that the value of anchor status here is ANCHORED?
-      expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED)
     })
 
     test('anchor request is stored when created and deleted when anchored', async () => {
@@ -691,6 +688,8 @@ describe('anchor', () => {
       expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
 
       await inMemoryAnchorService.anchor()
+
+      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       await TestUtils.delay(3000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition

@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import * as Block from 'multiformats/block'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import {
@@ -18,8 +17,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
-import * as codec from '@ipld/dag-cbor'
-import { sha256 as hasher } from 'multiformats/hashes/sha2'
+import { PubsubMessage } from '../../index.js'
+const { serialize, MsgType } = PubsubMessage
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -310,32 +309,46 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
   }
 
+  async _storeRecord(record: Record<string, unknown>): Promise<CID> {
+    let timeout: any
+
+    const putPromise = this.#dispatcher._ipfs.dag.put(record).finally(() => {
+      clearTimeout(timeout)
+    })
+
+    const timeoutPromise = new Promise((resolve) => {
+      timeout = setTimeout(resolve, 30 * 1000)
+    })
+
+    return await Promise.race([
+      putPromise,
+      timeoutPromise.then(() => {
+        throw new Error(`Timed out storing record in IPFS`)
+      }),
+    ])
+  }
+
   /**
    * Sends anchor commit to Ceramic node and instructs it to publish the commit to pubsub
    * @param streamId
    * @param commit
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
-    const block = await Block.encode({ value: commit, codec, hasher })
-    const expectedCID = block.cid
+    const anchorCid = await this._storeRecord(commit as any)
 
-    // TODO: CDB-2009
-    // instead of this.#ceramic.applyCommit, publish to IPFS directly, like the real CAS does
-    // use https://github.com/ceramicnetwork/ceramic-anchor-service/blob/develop/src/services/ipfs-service.ts#L145 as reference
-
-    const stream = await this.#ceramic.applyCommit(streamId, commit, {
-      publish: true,
-      anchor: false,
-    })
-    const commitFound: boolean =
-      null != stream.state.log.find((logEntry) => logEntry.cid.equals(expectedCID))
-    if (!commitFound) {
-      throw new Error(
-        `Anchor commit not found in stream log after being applied to Ceramic node. This most likely means the commit was rejected by Ceramic's conflict resolution. StreamID: ${streamId.toString()}, found tip: ${stream.tip.toString()}`
-      )
+    const updateMessage = {
+      typ: MsgType.UPDATE,
+      stream: streamId,
+      tip: anchorCid,
     }
+    const serializedMessage = serialize(updateMessage as any)
 
-    return expectedCID
+    // @ts-ignore topic is private
+    const pubsubTopic = this.#dispatcher.topic
+
+    await this.#dispatcher._ipfs.pubsub.publish(pubsubTopic, serializedMessage)
+
+    return anchorCid
   }
 
   /**
