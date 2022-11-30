@@ -318,6 +318,11 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
     const block = await Block.encode({ value: commit, codec, hasher })
     const expectedCID = block.cid
+
+    // TODO: CDB-2009
+    // instead of this.#ceramic.applyCommit, publish to IPFS directly, like the real CAS does
+    // use https://github.com/ceramicnetwork/ceramic-anchor-service/blob/develop/src/services/ipfs-service.ts#L145 as reference
+
     const stream = await this.#ceramic.applyCommit(streamId, commit, {
       publish: true,
       anchor: false,
