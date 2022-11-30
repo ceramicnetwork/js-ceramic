@@ -1,5 +1,3 @@
-import * as postgres from '../postgres/migrations/cdb-schema-verification.js'
-import * as sqlite from '../sqlite/migrations/cdb-schema-verfication.js'
 import { DatabaseType } from './1-create-model-table.js'
 
 // Copied from Knex but not exported
@@ -15,15 +13,231 @@ type StructuresRecord = Record<TableName, TableInfo> & { RELATION_COLUMN: Column
 
 export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
   [DatabaseType.POSTGRES]: {
-    RELATION_COLUMN: postgres.RELATION_COLUMN_STRUCTURE,
-    COMMON_TABLE: postgres.COMMON_TABLE_STRUCTURE,
-    CONFIG_TABLE_MODEL_INDEX: postgres.CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
-    CONFIG_TABLE: postgres.CONFIG_TABLE_STRUCTURE,
+    /**
+     * Expected Postgres structure for columns for relations.
+     * Used to verify table integrity during node startup and after indexing a new model.
+     */
+    RELATION_COLUMN: {
+      type: 'character varying',
+      maxLength: 1024,
+      nullable: false,
+      defaultValue: null,
+    },
+    /**
+     * Valid Postgres table structure for mid tables
+     * Used to verify table integrity during node startup and after indexing a new model
+     */
+    COMMON_TABLE: {
+      stream_id: {
+        type: 'character varying',
+        maxLength: 255,
+        nullable: false,
+        defaultValue: null,
+      },
+      controller_did: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null,
+      },
+      stream_content: {
+        type: 'jsonb',
+        maxLength: null,
+        nullable: false,
+        defaultValue: null,
+      },
+      tip: {
+        type: 'character varying',
+        maxLength: 255,
+        nullable: false,
+        defaultValue: null,
+      },
+      last_anchored_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: true,
+        defaultValue: null,
+      },
+      first_anchored_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: true,
+        defaultValue: null,
+      },
+      created_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP',
+      },
+      updated_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP',
+      },
+    },
+    /**
+     * Valid Postgres table structure for model indexing config table
+     * Used to verify table integrity during node startup and after indexing a new model
+     */
+    CONFIG_TABLE_MODEL_INDEX: {
+      model: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null,
+      },
+      is_indexed: {
+        type: 'boolean',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'true',
+      },
+      created_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP',
+      },
+      updated_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP',
+      },
+      updated_by: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null,
+      },
+    },
+    /**
+     * Valid Postgres table structure for config table
+     * Used to verify table integrity during node startup
+     */
+    CONFIG_TABLE: {
+      network: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null,
+      },
+    },
   },
   [DatabaseType.SQLITE]: {
-    RELATION_COLUMN: sqlite.RELATION_COLUMN_STRUCTURE,
-    COMMON_TABLE: sqlite.COMMON_TABLE_STRUCTURE,
-    CONFIG_TABLE_MODEL_INDEX: sqlite.CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
-    CONFIG_TABLE: sqlite.CONFIG_TABLE_STRUCTURE,
+    /**
+     * Expected SQLite structure for columns for relations.
+     * Used to verify table integrity during node startup and after indexing a new model.
+     */
+    RELATION_COLUMN: {
+      type: 'varchar',
+      maxLength: '1024',
+      nullable: false,
+      defaultValue: null,
+    },
+    /**
+     * Valid SQLite table structure for mid tables
+     * Used to verify table integrity during node startup and after indexing a new model.
+     */
+    COMMON_TABLE: {
+      stream_id: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null,
+      },
+      controller_did: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null,
+      },
+      stream_content: {
+        type: 'varchar',
+        maxLength: '255',
+        nullable: false,
+        defaultValue: null,
+      },
+      tip: {
+        type: 'varchar',
+        maxLength: '255',
+        nullable: false,
+        defaultValue: null,
+      },
+      last_anchored_at: {
+        type: 'integer',
+        maxLength: null,
+        nullable: true,
+        defaultValue: null,
+      },
+      first_anchored_at: {
+        type: 'integer',
+        maxLength: null,
+        nullable: true,
+        defaultValue: null,
+      },
+      created_at: {
+        type: 'integer',
+        maxLength: null,
+        nullable: false,
+        defaultValue: null,
+      },
+      updated_at: {
+        type: 'integer',
+        maxLength: null,
+        nullable: false,
+        defaultValue: null,
+      },
+    },
+    /**
+     * Valid SQLite table structure for model indexing config table
+     * Used to verify table integrity during node startup and after indexing a new model
+     */
+    CONFIG_TABLE_MODEL_INDEX: {
+      model: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null,
+      },
+      is_indexed: {
+        type: 'boolean',
+        maxLength: null,
+        nullable: false,
+        defaultValue: "'1'",
+      },
+      created_at: {
+        type: 'datetime',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP',
+      },
+      updated_at: {
+        type: 'datetime',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP',
+      },
+      updated_by: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null,
+      },
+    },
+    /**
+     * Valid SQLite table structure for config table
+     * Used to verify table integrity during node startup
+     */
+    CONFIG_TABLE: {
+      network: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null,
+      },
+    },
   },
 }
