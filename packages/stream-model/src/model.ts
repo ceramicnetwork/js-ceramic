@@ -236,14 +236,14 @@ export class Model extends Stream {
     for (const [fieldName, relationDefinition] of Object.entries(content.relations)) {
       switch (relationDefinition.type) {
         case 'account':
-          return
+          continue
         case 'document':
           try {
             StreamID.fromString(relationDefinition.model)
           } catch (err) {
             throw new Error(`Relation on field ${fieldName} has invalid model: ${err.toString()}`)
           }
-          return
+          continue
         default:
           throw new Error(
             // @ts-ignore

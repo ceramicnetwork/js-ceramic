@@ -33,16 +33,9 @@ describe('Model API http-client tests', () => {
   let ceramic: CeramicClient
 
   beforeAll(async () => {
-    ipfs = await createIPFS()
-  })
-
-  afterAll(async () => {
-    await ipfs.stop()
-  })
-
-  beforeEach(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
+    ipfs = await createIPFS()
     core = await createCeramic(ipfs)
 
     const port = await getPort()
@@ -53,10 +46,11 @@ describe('Model API http-client tests', () => {
     ceramic.setDID(core.did)
   }, 12000)
 
-  afterEach(async () => {
+  afterAll(async () => {
     await ceramic.close()
     await daemon.close()
     await core.close()
+    await ipfs.stop()
   })
 
   test('Model model is unloadable', async () => {
