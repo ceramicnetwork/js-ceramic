@@ -30,7 +30,7 @@ describe('Model API http-client tests', () => {
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
+    await ceramic.setDID(core.did)
   }, 12000)
 
   afterAll(async () => {
@@ -69,7 +69,7 @@ describe('Model API http-client tests', () => {
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(model.state.log[1].type).toEqual(CommitType.ANCHOR)
     expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
-  })
+  }, 1000 * 60)
 
   test('Models are created deterministically', async () => {
     const model1 = await Model.create(ceramic, FINAL_CONTENT)
@@ -94,7 +94,7 @@ describe('Model API http-client tests', () => {
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(2)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
-  })
+  }, 1000 * 60)
 })
 
 describe('Model API multi-node tests', () => {
