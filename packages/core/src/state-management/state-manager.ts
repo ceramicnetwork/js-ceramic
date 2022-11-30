@@ -335,21 +335,9 @@ export class StateManager {
       return
     }
 
-    return new Promise((resolve) => {
-      this._saveAnchorRequestForState(state$).then(() => {
-        const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
-        let resolved = false
-        const observable$ = anchorStatus$.pipe(
-          tap((value) => {
-            if (!resolved && value.status === AnchorStatus.PENDING) {
-              resolved = true
-              resolve()
-            }
-          })
-        )
-        this._processAnchorResponse(state$, observable$)
-      })
-    })
+    await this._saveAnchorRequestForState(state$)
+    const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
+    this._processAnchorResponse(state$, anchorStatus$)
   }
 
   /**
