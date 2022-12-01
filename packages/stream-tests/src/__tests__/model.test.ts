@@ -8,12 +8,6 @@ import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 
-const PLACEHOLDER_CONTENT = { name: 'myModel' }
-
-function modelContentWithTestName(): ModelDefinition {
-  return { name: expect.getState().currentTestName, schema: {}, accountRelation: { type: 'list' } }
-}
-
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'myModel',
   schema: {},
@@ -90,8 +84,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Anchor genesis', async () => {
-    const modelContent = modelContentWithTestName()
-    const model = await Model.create(ceramic, modelContent)
+    const model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await TestUtils.anchorUpdate(core, model)
@@ -101,13 +94,12 @@ describe('Model API http-client tests', () => {
     expect(model.state.log.length).toEqual(2)
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(model.state.log[1].type).toEqual(CommitType.ANCHOR)
-    expect(JSON.stringify(model.content)).toEqual(JSON.stringify(modelContent))
+    expect(model.content).toEqual(MODEL_DEFINITION)
   })
 
   test('Models are created deterministically', async () => {
-    const modelContent = modelContentWithTestName()
-    const model1 = await Model.create(ceramic, modelContent)
-    const model2 = await Model.create(ceramic, modelContent)
+    const model1 = await Model.create(ceramic, MODEL_DEFINITION)
+    const model2 = await Model.create(ceramic, MODEL_DEFINITION)
 
     expect(model1.id.toString()).toEqual(model2.id.toString())
   })
@@ -155,9 +147,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Can load a complete stream', async () => {
-    const modelContent = modelContentWithTestName()
-
-    const model = await Model.create(ceramic, modelContent)
+    const model = await Model.create(ceramic, MODEL_DEFINITION)
     await TestUtils.anchorUpdate(core, model)
     await model.sync()
 
@@ -200,8 +190,7 @@ describe('Model API multi-node tests', () => {
   })
 
   test('load basic model', async () => {
-    const modelContent = modelContentWithTestName()
-    const model = await Model.create(ceramic0, modelContent)
+    const model = await Model.create(ceramic0, MODEL_DEFINITION)
 
     const loaded = await Model.load(ceramic1, model.id)
 
@@ -216,8 +205,7 @@ describe('Model API multi-node tests', () => {
   })
 
   test('load anchored model', async () => {
-    const modelContent = modelContentWithTestName()
-    const model = await Model.create(ceramic0, modelContent)
+    const model = await Model.create(ceramic0, MODEL_DEFINITION)
     await TestUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
