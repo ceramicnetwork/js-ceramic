@@ -21,8 +21,8 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: []
-    }
+      models: [],
+    },
   })
 
   const handler = new TileDocumentHandler()
@@ -140,9 +140,10 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     // wait for doc2 to learn about the new state
     const receivedUpdatePromise = new Promise((resolve) => {
-      doc2.subscribe((state) => {
+      const subscription = doc2.subscribe((state) => {
         if (state.log.length > 1) {
           resolve(state)
+          subscription.unsubscribe()
         }
       })
     })
@@ -151,5 +152,31 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     await doc2.sync({ sync: SyncOptions.PREFER_CACHE })
     expect(doc2.content).toEqual(updatedContent)
+  })
+
+  it('stream instances are independent in core', async () => {
+    const initialContent = { state: 'initial' }
+    const updatedContent = { state: 'updated' }
+    const doc1A = await TileDocument.create(core1, initialContent, null, { anchor: false })
+
+    const doc2 = await TileDocument.load(core2, doc1A.id)
+    await doc2.update(updatedContent, null, {publish:false, anchor:false})
+
+    const doc1B = await TileDocument.load(core1, doc1A.id, {sync: SyncOptions.SYNC_ALWAYS})
+    expect(doc1B.content).toEqual(updatedContent)
+    expect(doc1A.content).toEqual(initialContent)
+  })
+
+  it('stream instances are independent in http client', async () => {
+    const initialContent = { state: 'initial' }
+    const updatedContent = { state: 'updated' }
+    const doc1A = await TileDocument.create(client1, initialContent, null, { anchor: false })
+
+    const doc2 = await TileDocument.load(client2, doc1A.id)
+    await doc2.update(updatedContent, null, {publish:false, anchor:false})
+
+    const doc1B = await TileDocument.load(client1, doc1A.id, {sync: SyncOptions.SYNC_ALWAYS})
+    expect(doc1B.content).toEqual(updatedContent)
+    expect(doc1A.content).toEqual(initialContent)
   })
 })

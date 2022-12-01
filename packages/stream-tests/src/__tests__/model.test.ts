@@ -14,6 +14,23 @@ function modelContentWithName(name: string): ModelDefinition {
   return { name: name, schema: {}, accountRelation: { type: 'list' } }
 }
 
+const MODEL_DEFINITION: ModelDefinition = {
+  name: 'myModel',
+  schema: {},
+  accountRelation: { type: 'list' },
+}
+
+// The model above will always result in this StreamID when created with the fixed did:key
+// controller used by the test.
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c62dn29qy8b6lot6m9xr98wz4hfq0htxfhpxgqo41ufqew22qe1'
+
+const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
+  name: 'myModelWithARelation',
+  schema: {},
+  accountRelation: { type: 'list' },
+  relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
+}
+
 describe('Model API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -33,7 +50,7 @@ describe('Model API http-client tests', () => {
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
-    await ceramic.setDID(core.did)
+    ceramic.did = core.did
   }, 12000)
 
   afterAll(async () => {
@@ -50,12 +67,22 @@ describe('Model API http-client tests', () => {
   })
 
   test('Create valid model', async () => {
-    const modelContent = modelContentWithName('CreateValidModel')
-
-    const model = await Model.create(ceramic, modelContent)
+    const model = await Model.create(ceramic, MODEL_DEFINITION)
 
     expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
-    expect(JSON.stringify(model.content)).toEqual(JSON.stringify(modelContent))
+    expect(model.content).toEqual(MODEL_DEFINITION)
+    expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+    expect(model.state.log.length).toEqual(1)
+    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
+  })
+
+  test('Create valid model with relation', async () => {
+    const model = await Model.create(ceramic, MODEL_DEFINITION_WITH_RELATION)
+
+    expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+    expect(model.content).toEqual(MODEL_DEFINITION_WITH_RELATION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
@@ -85,12 +112,45 @@ describe('Model API http-client tests', () => {
     expect(model1.id.toString()).toEqual(model2.id.toString())
   })
 
-  test('Cannot create incomplete model with create()', async () => {
-    // @ts-ignore PLACEHOLDER_CONTENT does not conform to type ModelDefinition
-    const invalidModelContent: ModelDefinition = PLACEHOLDER_CONTENT
+  test('Cannot create incomplete model', async () => {
+    // @ts-ignore this is not a valid ModelDefinition - and that's the point of this test
+    const invalidIncompleteModelDefinition: ModelDefinition = { name: 'myModel' }
 
-    await expect(Model.create(ceramic, invalidModelContent)).rejects.toThrow(
+    await expect(Model.create(ceramic, invalidIncompleteModelDefinition)).rejects.toThrow(
       /missing a 'schema' field/
+    )
+  })
+
+  test('Cannot create model with relation with an invalid type', async () => {
+    // @ts-ignore this is not a valid relation - that's the point of this test
+    const linkedDocType: 'account' | 'document' = 'foobar'
+    const invalidRelationModelDefinition: ModelDefinition = {
+      name: 'myModel',
+      schema: {},
+      accountRelation: { type: 'list' },
+      relations: {
+        linkedDoc: { type: linkedDocType, model: MODEL_STREAM_ID },
+      },
+    }
+
+    await expect(Model.create(ceramic, invalidRelationModelDefinition)).rejects.toThrow(
+      'Relation on field linkedDoc has unexpected type foobar'
+    )
+  })
+
+  test("Cannot create model with relation that isn't a streamid", async () => {
+    // @ts-ignore this is not a valid ModelDefinition - and that's the point of this test
+    const invalidRelationModelDefinition: ModelDefinition = {
+      name: 'myModel',
+      schema: {},
+      accountRelation: { type: 'list' },
+      relations: {
+        linkedDoc: { type: 'document', model: 'this is totally a streamid, trust me bro' },
+      },
+    }
+
+    await expect(Model.create(ceramic, invalidRelationModelDefinition)).rejects.toThrow(
+      /Relation on field linkedDoc has invalid model/
     )
   })
 

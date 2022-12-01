@@ -1,0 +1,247 @@
+name: Publish npm packages (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      release_type:
+        required: true
+        type: string
+      branch:
+        required: false
+        type: string
+    secrets:
+      gh_token:
+        required: true
+      npm_token:
+        required: true
+
+env:
+  # Dagger
+  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
+  DAGGER_LOG_FORMAT: "plain"
+  # Dummy (for Dagger)
+  AWS_ACCESS_KEY_ID: "."
+  AWS_SECRET_ACCESS_KEY: "."
+  AWS_REGION: "."
+  AWS_ACCOUNT_ID: "."
+
+jobs:
+  publish_main:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.release_type == 'main' }}
+    steps:
+      -
+        name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      -
+        name: Checkout main branch
+        uses: actions/checkout@v2
+        with:
+          ref: main
+          token: ${{ secrets.GH_TOKEN }}
+      -
+        name: Configure git
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
+          git fetch --all
+      -
+        name: Merge down from main -> rc -> develop
+        run: |
+          git checkout -B release-candidate refs/remotes/origin/release-candidate
+          git merge main
+          git checkout -B develop refs/remotes/origin/develop
+          git merge release-candidate
+          git checkout main
+      -
+        name: Merge rc -> main
+        run: git merge release-candidate
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
+        run: |
+          npm set unsafe-perm true
+          npm ci && npm run build
+      -
+        name: Publish packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ env.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm run publish:release -- --yes
+      -
+        name: Send Discord notification
+        run: |
+          # Prepare notification body
+          echo '{"embeds":[{"title":"**Release Published**","description":"' > embed.json
+          echo '' >> embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '","color":3581519}]}' >> embed.json
+          sed -i '3 s/\ -/-/' embed.json
+          sed -i '4,$ s/\-/\\n-/' embed.json
+          # Send notification
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
+      -
+        name: Update and push code to rc and develop
+        run: |
+          git checkout release-candidate
+          git pull
+          git merge main
+          git push
+          git checkout develop
+          git pull
+          git merge main
+          git push
+
+  publish_rc:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.release_type == 'rc' }}
+    steps:
+      -
+        name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      -
+        name: Checkout rc branch
+        uses: actions/checkout@v2
+        with:
+          ref: release-candidate
+          token: ${{ secrets.GH_TOKEN }}
+      -
+        name: Configure git
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
+          git fetch --all
+      -
+        name: Merge down from rc -> develop
+        run: |
+          git checkout -B develop refs/remotes/origin/develop
+          git merge release-candidate
+          git checkout release-candidate
+      -
+        name: Merge develop -> rc
+        run: git merge develop
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
+        run: |
+          npm set unsafe-perm true
+          npm ci && npm run build
+      -
+        name: Publish packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm run publish:release-candidate -- --yes
+      -
+        name: Send Discord notification
+        run: |
+          # Prepare notification body
+          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"' > embed.json
+          echo '' >> embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '","color":3581519}]}' >> embed.json
+          sed -i '3 s/\ -/-/' embed.json
+          sed -i '4,$ s/\-/\\n-/' embed.json
+          # Send notification
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0
+      -
+        name: Update and push code to develop
+        run: |
+          git checkout develop
+          git pull
+          git merge release-candidate
+          git push
+
+  publish_hotfix:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.release_type == 'hotfix' }}
+    steps:
+      -
+        name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      -
+        name: Branch check
+        if: ${{ inputs.branch == '' }}
+        run: |
+          echo Hotfix branch must be specified
+          exit 1
+      -
+        name: Checkout hotfix branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.GH_TOKEN }}
+      -
+        name: Configure git
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
+        run: |
+          npm set unsafe-perm true
+          npm ci && npm run build
+      -
+        name: Publish packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm run publish:hotfix -- --yes
+      -
+        name: Send Discord notification
+        run: |
+          # Prepare notification body
+          echo '{"embeds":[{"title":"**Hotfix Published**","description":"' > embed.json
+          echo '' >> embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '","color":3581519}]}' >> embed.json
+          sed -i '3 s/\ -/-/' embed.json
+          sed -i '4,$ s/\-/\\n-/' embed.json
+          # Send notification
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 0

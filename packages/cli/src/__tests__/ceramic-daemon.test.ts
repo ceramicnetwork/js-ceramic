@@ -209,8 +209,8 @@ describe('Ceramic interop: core <> http-client', () => {
     const doc1 = await TileDocument.create(core, initialContent)
     await anchorDoc(doc1)
     const doc2 = await client.loadStream<TileDocument>(doc1.id)
-    doc1.subscribe()
-    doc2.subscribe()
+    const subscription1 = doc1.subscribe()
+    const subscription2 = doc2.subscribe()
     // change from core viewable in client
     await doc1.update(middleContent)
     await anchorDoc(doc1)
@@ -226,6 +226,9 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.content).toEqual(finalContent)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
+
+    subscription1.unsubscribe()
+    subscription2.unsubscribe()
   })
 
   it('makes and gets updates correctly with manual sync', async () => {
@@ -355,6 +358,21 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(StreamUtils.serializeState(docV5Core.state)).toEqual(
       StreamUtils.serializeState(docV5Client.state)
     )
+
+    // Ensure that loading different versions didn't affect the existing
+    // document handles
+    expect(docV0Core.content).toEqual(content1)
+    expect(docV0Client.content).toEqual(content1)
+    expect(docV1Core.state.log.length).toEqual(2)
+    expect(docV1Client.state.log.length).toEqual(2)
+    expect(docV2Core.content).toEqual(content2)
+    expect(docV2Client.content).toEqual(content2)
+    expect(docV3Core.state.log.length).toEqual(4)
+    expect(docV3Client.state.log.length).toEqual(4)
+    expect(docV4Core.content).toEqual(content3)
+    expect(docV4Client.content).toEqual(content3)
+    expect(docV5Core.state.log.length).toEqual(6)
+    expect(docV5Client.state.log.length).toEqual(6)
   })
 
   it('can get stream contents from /streams/contents', async () => {
