@@ -87,7 +87,7 @@ export class Dispatcher {
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
     readonly _ipfs: IpfsApi,
-    readonly topic: string,
+    private readonly topic: string,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,

@@ -313,7 +313,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async _storeRecord(record: Record<string, unknown>): Promise<CID> {
     let timeout: any
 
-    const putPromise = this.#dispatcher._ipfs.dag.put(record).finally(() => {
+    const putPromise = this.#dispatcher.storeCommit(record).finally(() => {
       clearTimeout(timeout)
     })
 
@@ -336,16 +336,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
     const anchorCid = await this._storeRecord(commit as any)
-
-    const updateMessage = {
-      typ: MsgType.UPDATE,
-      stream: streamId,
-      tip: anchorCid,
-    }
-    const serializedMessage = serialize(updateMessage as any)
-
-    const pubsubTopic = this.#dispatcher.topic
-    await this.#dispatcher._ipfs.pubsub.publish(pubsubTopic, serializedMessage)
+    let resolved = false
+    await new Promise<void>((resolve) => {
+      this.#dispatcher.publishTip(streamId, anchorCid).add(() => {
+        if (!resolved) {
+          resolved = true
+          resolve()
+        }
+      })
+    })
 
     return anchorCid
   }
