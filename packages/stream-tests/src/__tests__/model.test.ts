@@ -10,8 +10,8 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
-function modelContentWithName(name: string): ModelDefinition {
-  return { name: name, schema: {}, accountRelation: { type: 'list' } }
+function modelContentWithTestName(): ModelDefinition {
+  return { name: expect.getState().currentTestName, schema: {}, accountRelation: { type: 'list' } }
 }
 
 const MODEL_DEFINITION: ModelDefinition = {
@@ -90,7 +90,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Anchor genesis', async () => {
-    const modelContent = modelContentWithName('AnchorGenesis')
+    const modelContent = modelContentWithTestName()
     const model = await Model.create(ceramic, modelContent)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -105,7 +105,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Models are created deterministically', async () => {
-    const modelContent = modelContentWithName('DeterministicModel')
+    const modelContent = modelContentWithTestName()
     const model1 = await Model.create(ceramic, modelContent)
     const model2 = await Model.create(ceramic, modelContent)
 
@@ -155,7 +155,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Can load a complete stream', async () => {
-    const modelContent = modelContentWithName('CanLoadACompleteStream')
+    const modelContent = modelContentWithTestName()
 
     const model = await Model.create(ceramic, modelContent)
     await TestUtils.anchorUpdate(core, model)
@@ -200,7 +200,7 @@ describe('Model API multi-node tests', () => {
   })
 
   test('load basic model', async () => {
-    const modelContent = modelContentWithName('LoadBasicModel')
+    const modelContent = modelContentWithTestName()
     const model = await Model.create(ceramic0, modelContent)
 
     const loaded = await Model.load(ceramic1, model.id)
@@ -216,7 +216,7 @@ describe('Model API multi-node tests', () => {
   })
 
   test('load anchored model', async () => {
-    const modelContent = modelContentWithName('LoadAnchoredModel')
+    const modelContent = modelContentWithTestName()
     const model = await Model.create(ceramic0, modelContent)
     await TestUtils.anchorUpdate(ceramic0, model)
 
