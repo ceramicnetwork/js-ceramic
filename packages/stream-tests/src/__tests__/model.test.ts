@@ -2,14 +2,17 @@ import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
-const FINAL_CONTENT = { name: 'myModel', schema: {}, accountRelation: { type: 'list' } }
+
+function modelContentWithName(name: string): ModelDefinition {
+  return { name: name, schema: {}, accountRelation: { type: 'list' } }
+}
 
 describe('Model API http-client tests', () => {
   jest.setTimeout(1000 * 30)
@@ -47,10 +50,12 @@ describe('Model API http-client tests', () => {
   })
 
   test('Create valid model', async () => {
-    const model = await Model.create(ceramic, FINAL_CONTENT)
+    const modelContent = modelContentWithName('CreateValidModel')
+
+    const model = await Model.create(ceramic, modelContent)
 
     expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
-    expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
+    expect(JSON.stringify(model.content)).toEqual(JSON.stringify(modelContent))
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
@@ -58,7 +63,8 @@ describe('Model API http-client tests', () => {
   })
 
   test('Anchor genesis', async () => {
-    const model = await Model.create(ceramic, FINAL_CONTENT)
+    const modelContent = modelContentWithName('AnchorGenesis')
+    const model = await Model.create(ceramic, modelContent)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await TestUtils.anchorUpdate(core, model)
@@ -68,24 +74,30 @@ describe('Model API http-client tests', () => {
     expect(model.state.log.length).toEqual(2)
     expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(model.state.log[1].type).toEqual(CommitType.ANCHOR)
-    expect(JSON.stringify(model.content)).toEqual(JSON.stringify(FINAL_CONTENT))
-  }, 1000 * 60)
+    expect(JSON.stringify(model.content)).toEqual(JSON.stringify(modelContent))
+  })
 
   test('Models are created deterministically', async () => {
-    const model1 = await Model.create(ceramic, FINAL_CONTENT)
-    const model2 = await Model.create(ceramic, FINAL_CONTENT)
+    const modelContent = modelContentWithName('DeterministicModel')
+    const model1 = await Model.create(ceramic, modelContent)
+    const model2 = await Model.create(ceramic, modelContent)
 
     expect(model1.id.toString()).toEqual(model2.id.toString())
   })
 
   test('Cannot create incomplete model with create()', async () => {
-    await expect(Model.create(ceramic, PLACEHOLDER_CONTENT)).rejects.toThrow(
+    // @ts-ignore PLACEHOLDER_CONTENT does not conform to type ModelDefinition
+    const invalidModelContent: ModelDefinition = PLACEHOLDER_CONTENT
+
+    await expect(Model.create(ceramic, invalidModelContent)).rejects.toThrow(
       /missing a 'schema' field/
     )
   })
 
   test('Can load a complete stream', async () => {
-    const model = await Model.create(ceramic, FINAL_CONTENT)
+    const modelContent = modelContentWithName('CanLoadACompleteStream')
+
+    const model = await Model.create(ceramic, modelContent)
     await TestUtils.anchorUpdate(core, model)
     await model.sync()
 
@@ -94,7 +106,7 @@ describe('Model API http-client tests', () => {
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(loaded.state.log.length).toEqual(2)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
-  }, 1000 * 60)
+  })
 })
 
 describe('Model API multi-node tests', () => {
@@ -128,7 +140,8 @@ describe('Model API multi-node tests', () => {
   })
 
   test('load basic model', async () => {
-    const model = await Model.create(ceramic0, FINAL_CONTENT)
+    const modelContent = modelContentWithName('LoadBasicModel')
+    const model = await Model.create(ceramic0, modelContent)
 
     const loaded = await Model.load(ceramic1, model.id)
 
@@ -143,7 +156,8 @@ describe('Model API multi-node tests', () => {
   })
 
   test('load anchored model', async () => {
-    const model = await Model.create(ceramic0, FINAL_CONTENT)
+    const modelContent = modelContentWithName('LoadAnchoredModel')
+    const model = await Model.create(ceramic0, modelContent)
     await TestUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
