@@ -85,11 +85,11 @@ export class S3Store implements IKVStore {
 
   async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
     const store = await this.#storeMap.get(params?.useCaseName)
-    const dataArray = await toArray(
-      store.createReadStream({
-        limit: params?.limit,
-      })
-    )
+    const options = {
+      limit: params?.limit,
+    }
+    if (params.gt) (options as any).gt = params.gt
+    const dataArray = await toArray(store.createReadStream(options))
     return dataArray.map((data) => {
       return { key: data.key.toString(), value: data.value }
     })

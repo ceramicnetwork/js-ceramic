@@ -1,5 +1,6 @@
 export type StoreSearchParams = {
   limit?: number
+  gt?: string
   useCaseName? : string
 }
 

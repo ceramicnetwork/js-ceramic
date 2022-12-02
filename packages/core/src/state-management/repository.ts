@@ -14,7 +14,7 @@ import {
   StreamUtils,
   SyncOptions,
   UnreachableCaseError,
-  UpdateOpts
+  UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
@@ -29,7 +29,7 @@ import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
-import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { AnchorRequestStore, AnchorRequestStoreListResult } from '../store/anchor-request-store.js'
 import PQueue from 'p-queue'
 
 export type RepositoryDependencies = {
@@ -47,6 +47,7 @@ export type RepositoryDependencies = {
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 
 const RESUME_QUEUE_CONCURRENCY = 30
+const RESUME_BATCH_SIZE = RESUME_QUEUE_CONCURRENCY * 5
 
 /**
  * Indicate if the stream should be indexed.
@@ -277,19 +278,28 @@ export class Repository {
 
   async resumeRunningStatesFromAnchorRequestStore(): Promise<void> {
     const currentTimestamp = Date.now()
-    // The following steps in this method modify the anchor request store, so we
-    // need to load it all here first
-    const allStoredRequests = await this.anchorRequestStore.list()
-    allStoredRequests.map((listResult) => {
-      this.resumeQ.add(async () => {
-        await this.load(listResult.key, { sync: SyncOptions.PREFER_CACHE })
-        if (listResult.value.timestamp > currentTimestamp) {
-          throw Error(`System clock possibly moving backwards!!! Check your system clock and if it's accurate, delete your state store`)
-        }
-        this.logger.log(LogStyle.info, `Resumed running state for stream id: ${listResult.key.toString()}`)
+    let gt: StreamID | undefined = undefined
+    let batch = new Array<AnchorRequestStoreListResult>()
+    do {
+      batch = await this.anchorRequestStore.list(RESUME_BATCH_SIZE, gt)
+      batch.map((listResult) => {
+        this.resumeQ.add(async () => {
+          const stream$ = await this.load(listResult.key, { sync: SyncOptions.PREFER_CACHE })
+          // TODO: CDB-2010 Do we want to do the actual anchor request here? Or do we just want to start polling? If the latter, than .load(..) doesn't seem to start polling as of now.
+          await this.stateManager.anchor(stream$)
+          if (listResult.value.timestamp > currentTimestamp) {
+            throw Error(
+              `System clock possibly moving backwards!!! Check your system clock and if it's accurate, delete your state store`
+            )
+          }
+          this.logger.log(
+            LogStyle.info,
+            `Resumed running state for stream id: ${listResult.key.toString()}`
+          )
+        })
       })
-    })
-
+      gt = batch[batch.length - 1]?.key
+    } while (batch.length > 0)
   }
 
   /**

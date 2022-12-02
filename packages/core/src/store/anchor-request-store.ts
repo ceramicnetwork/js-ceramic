@@ -10,7 +10,7 @@ export type AnchorRequestData = {
 }
 
 export type AnchorRequestStoreListResult = {
-  key: StreamID,
+  key: StreamID
   value: AnchorRequestData
 }
 
@@ -47,14 +47,18 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     this.useCaseName = 'anchor-requests'
   }
 
-  async list(limit?: number): Promise<Array<AnchorRequestStoreListResult>> {
-    return (await this.store.find({ limit: limit, useCaseName: this.useCaseName })).map(
-      (result) => {
-        return {
-          key: StreamID.fromString(result.key),
-          value: deserializeAnchorRequestData(result.value),
-        }
+  async list(limit?: number, gt?: StreamID): Promise<Array<AnchorRequestStoreListResult>> {
+    return (
+      await this.store.find({
+        limit: limit,
+        useCaseName: this.useCaseName,
+        gt: gt ? generateKey(gt) : undefined,
+      })
+    ).map((result) => {
+      return {
+        key: StreamID.fromString(result.key),
+        value: deserializeAnchorRequestData(result.value),
       }
-    )
+    })
   }
 }
