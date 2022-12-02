@@ -84,7 +84,7 @@ export class Repository {
    *
    * @private
    */
-  #isClosing = false
+  #shouldBeClosed = false
 
   /**
    * Various dependencies.
@@ -127,7 +127,7 @@ export class Repository {
   }
 
   async init(): Promise<void> {
-    this.#isClosing = false
+    this.#shouldBeClosed = true
     await this.pinStore.open(this.#deps.stateStore)
     await this.anchorRequestStore.open(this.#deps.stateStore)
     await this.index.init()
@@ -311,7 +311,7 @@ export class Repository {
         })
       })
       gt = batch[batch.length - 1]?.key
-    } while (batch.length > 0 && !this.#isClosing)
+    } while (batch.length > 0 && !this.#shouldBeClosed)
   }
 
   /**
@@ -528,7 +528,7 @@ export class Repository {
   }
 
   async close(): Promise<void> {
-    this.#isClosing = true
+    this.#shouldBeClosed = true
     await this.resumeQ.clear()
     await this.loadingQ.close()
     await this.executionQ.close()
