@@ -80,6 +80,13 @@ export class Repository {
   readonly inmemory: StateCache<RunningState>
 
   /**
+   * true iff the repository is in the process of closing
+   *
+   * @private
+   */
+  #isClosing = false
+
+  /**
    * Various dependencies.
    */
   #deps: RepositoryDependencies
@@ -120,6 +127,7 @@ export class Repository {
   }
 
   async init(): Promise<void> {
+    this.#isClosing = false
     await this.pinStore.open(this.#deps.stateStore)
     await this.anchorRequestStore.open(this.#deps.stateStore)
     await this.index.init()
@@ -285,6 +293,10 @@ export class Repository {
       batch.map((listResult) => {
         this.resumeQ.add(async () => {
           const stream$ = await this.load(listResult.key, { sync: SyncOptions.PREFER_CACHE })
+          if ([AnchorStatus.FAILED, AnchorStatus.ANCHORED].includes(stream$.value.anchorStatus)) {
+            await this.anchorRequestStore.remove(stream$.id)
+            return
+          }
           // TODO: CDB-2010 Do we want to do the actual anchor request here? Or do we just want to start polling? If the latter, than .load(..) doesn't seem to start polling as of now.
           await this.stateManager.anchor(stream$)
           if (listResult.value.timestamp > currentTimestamp) {
@@ -299,7 +311,7 @@ export class Repository {
         })
       })
       gt = batch[batch.length - 1]?.key
-    } while (batch.length > 0)
+    } while (batch.length > 0 && !this.#isClosing)
   }
 
   /**
@@ -516,6 +528,8 @@ export class Repository {
   }
 
   async close(): Promise<void> {
+    this.#isClosing = true
+    await this.resumeQ.clear()
     await this.loadingQ.close()
     await this.executionQ.close()
     Array.from(this.inmemory).forEach(([id, stream]) => {

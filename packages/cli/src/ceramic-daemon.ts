@@ -303,7 +303,7 @@ export class CeramicDaemon {
 
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
-    await ceramic.repository.resumeRunningStatesFromAnchorRequestStore()
+    ceramic.repository.resumeRunningStatesFromAnchorRequestStore()
     return daemon
   }
 
