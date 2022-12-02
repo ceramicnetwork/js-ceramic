@@ -127,32 +127,31 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   async _groupCandidatesByStreamId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
     const result: Record<string, Candidate[]> = {}
-    await Promise.all(
-      candidates.map(async (req) => {
-        try {
-          const commitData = await Utils.getCommitData(
-            this.#dispatcher,
-            req.cid,
-            req.streamId,
-            null
-          )
-          if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
-            await this.verifySignedCommit(commitData.envelope)
-          }
-
-          const log = await this._loadCommitHistory(req.cid, req.streamId)
-          const candidate = new Candidate(req.cid, req.streamId, log)
-
-          if (!result[candidate.key]) {
-            result[candidate.key] = []
-          }
-          result[candidate.key].push(candidate)
-        } catch (e) {
-          this.#logger.err(e)
-          this._failCandidate(req, e.message)
+    for (const req of candidates) {
+      try {
+        if (!result[req.key]) {
+          result[req.key] = []
         }
-      })
-    )
+        if (result[req.key].find((c) => c.cid.equals(req.cid))) {
+          // If we already have an identical request for the exact same commit on the same,
+          // streamid, don't create duplicate Candidates
+          continue
+        }
+
+        const commitData = await Utils.getCommitData(this.#dispatcher, req.cid, req.streamId, null)
+        if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
+          await this.verifySignedCommit(commitData.envelope)
+        }
+
+        const log = await this._loadCommitHistory(req.cid, req.streamId)
+        const candidate = new Candidate(req.cid, req.streamId, log)
+
+        result[candidate.key].push(candidate)
+      } catch (e) {
+        this.#logger.err(e)
+        this._failCandidate(req, e.message)
+      }
+    }
     return result
   }
 
