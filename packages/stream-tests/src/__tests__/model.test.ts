@@ -7,6 +7,7 @@ import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
+
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'myModel',
   schema: {},
@@ -43,7 +44,7 @@ describe('Model API http-client tests', () => {
     daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
+    ceramic.did = core.did
   }, 12000)
 
   afterAll(async () => {
@@ -104,7 +105,8 @@ describe('Model API http-client tests', () => {
   })
 
   test('Cannot create incomplete model', async () => {
-    const invalidIncompleteModelDefinition = { name: 'myModel' }
+    // @ts-ignore this is not a valid ModelDefinition - and that's the point of this test
+    const invalidIncompleteModelDefinition: ModelDefinition = { name: 'myModel' }
 
     await expect(Model.create(ceramic, invalidIncompleteModelDefinition)).rejects.toThrow(
       /missing a 'schema' field/
@@ -112,12 +114,14 @@ describe('Model API http-client tests', () => {
   })
 
   test('Cannot create model with relation with an invalid type', async () => {
-    const invalidRelationModelDefinition = {
+    // @ts-ignore this is not a valid relation - that's the point of this test
+    const linkedDocType: 'account' | 'document' = 'foobar'
+    const invalidRelationModelDefinition: ModelDefinition = {
       name: 'myModel',
       schema: {},
       accountRelation: { type: 'list' },
       relations: {
-        linkedDoc: { type: 'foobar' },
+        linkedDoc: { type: linkedDocType, model: MODEL_STREAM_ID },
       },
     }
 
@@ -127,7 +131,8 @@ describe('Model API http-client tests', () => {
   })
 
   test("Cannot create model with relation that isn't a streamid", async () => {
-    const invalidRelationModelDefinition = {
+    // @ts-ignore this is not a valid ModelDefinition - and that's the point of this test
+    const invalidRelationModelDefinition: ModelDefinition = {
       name: 'myModel',
       schema: {},
       accountRelation: { type: 'list' },

@@ -44,6 +44,7 @@ describe('Ceramic anchoring', () => {
     ])
 
     const stream1 = await TileDocument.create(ceramic1, { a: 1 })
+
     await stream1.update({ a: 2 })
     await stream1.update({ a: 3 })
 
