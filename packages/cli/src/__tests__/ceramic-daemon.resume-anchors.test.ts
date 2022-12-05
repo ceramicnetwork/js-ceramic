@@ -5,23 +5,22 @@ import { CeramicDaemon } from '../ceramic-daemon.js'
 import { StateStoreMode } from '../daemon-config.js'
 import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import * as util from '../build-ipfs-connection.util.js'
+import { IpfsConnectionFactory } from '../ipfs-connection-factory.js'
 
 const MOCK_WAS_CALLED_DELAY = 3 * 1000
 
 describe('Ceramic Daemon Anchor Resuming', () => {
-  // const origBuildIpfs = util.buildIpfsConnection
+  const origBuildIpfs = IpfsConnectionFactory.buildIpfsConnection
   let mockWasCalled: boolean
   let stateStoreDir: tmp.DirectoryResult
+  let daemon: CeramicDaemon
 
   beforeAll(async () => {
-    // const mocked = jest.fn()
-    // mocked.mockImplementation(async (): Promise<IpfsApi> => {
-    //   return await createIPFS()
-    // })
-    // Object.defineProperty(util, 'buildIpfsConnection', {
-    //   value: mocked
-    // })
+    const mocked = jest.fn()
+    mocked.mockImplementation(async (): Promise<IpfsApi> => {
+      return await createIPFS()
+    })
+    ;(IpfsConnectionFactory as any).buildIpfsConnection = mocked
     stateStoreDir = await tmp.dir({ unsafeCleanup: true })
   })
 
@@ -38,17 +37,16 @@ describe('Ceramic Daemon Anchor Resuming', () => {
   })
 
   afterEach(async () => {
+    await daemon.close()
     await stateStoreDir.cleanup()
   })
 
   afterAll(() => {
-    // Object.defineProperty(util, 'buildIpfsConnection', {
-    //   value: origBuildIpfs
-    // })
+    (IpfsConnectionFactory as any).buildIpfsConnection = origBuildIpfs
   })
 
   it('Resume method is called when initialized with create()', async () => {
-    const daemon = await CeramicDaemon.create({
+    daemon = await CeramicDaemon.create({
       network: {
         name: Networks.INMEMORY
       },
