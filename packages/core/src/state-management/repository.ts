@@ -35,7 +35,7 @@ import PQueue from 'p-queue'
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
-  stateStore: IKVStore
+  keyValueStore: IKVStore
   anchorRequestStore: AnchorRequestStore
   context: Context
   handlers: HandlersMap
@@ -118,18 +118,18 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async injectStateStore(stateStore: IKVStore): Promise<void> {
+  async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
-      stateStore: stateStore,
+      keyValueStore: stateStore,
     })
     await this.init()
   }
 
   async init(): Promise<void> {
     this.#shouldBeClosed = true
-    await this.pinStore.open(this.#deps.stateStore)
-    await this.anchorRequestStore.open(this.#deps.stateStore)
+    await this.pinStore.open(this.#deps.keyValueStore)
+    await this.anchorRequestStore.open(this.#deps.keyValueStore)
     await this.index.init()
   }
 
@@ -168,7 +168,7 @@ export class Repository {
     return this.inmemory.get(streamId.toString())
   }
 
-  private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
+  private async fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.#deps.pinStore.stateStore.load(streamId)
     if (streamState) {
       const runningState = new RunningState(streamState, true)
@@ -218,7 +218,7 @@ export class Repository {
       return [stream, true]
     }
 
-    stream = await this.fromStateStore(streamId)
+    stream = await this.fromStreamStateStore(streamId)
     if (stream) {
       return [stream, this.stateManager.wasPinnedStreamSynced(streamId)]
     }
@@ -396,7 +396,7 @@ export class Repository {
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
     const fromMemory = this.fromMemory(streamId)
     if (fromMemory) return fromMemory
-    return this.fromStateStore(streamId)
+    return this.fromStreamStateStore(streamId)
   }
 
   /**

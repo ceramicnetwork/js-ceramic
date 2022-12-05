@@ -248,7 +248,7 @@ export class Ceramic implements CeramicApi {
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
-      stateStore: this._levelStore,
+      keyValueStore: this._levelStore,
       anchorRequestStore: new AnchorRequestStore(),
       context: this.context,
       handlers: this._streamHandlers,

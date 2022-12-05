@@ -295,7 +295,7 @@ export class CeramicDaemon {
     const ceramic = new Ceramic(modules, params)
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3Store = new S3Store(opts.stateStore?.s3Bucket, params.networkOptions.name)
-      await ceramic.repository.injectStateStore(s3Store)
+      await ceramic.repository.injectKeyValueStore(s3Store)
     }
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     ceramic.did = did
