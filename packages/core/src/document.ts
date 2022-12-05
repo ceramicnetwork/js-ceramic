@@ -429,32 +429,25 @@ class Document extends EventEmitter {
     const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
 
     if (isLocalAnchored && isRemoteAnchored) {
-      // compare anchor proofs if both states are anchored
       const { anchorProof: localProof } = localState
       const { anchorProof: remoteProof } = remoteState
 
       if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
-        // if the remote state has an earlier anchor timestamp than the local, apply the remote
-        // log to our local state. Otherwise, keep present state.
         this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
         return true
       }
     }
 
     if (!isLocalAnchored && isRemoteAnchored) {
-      // if the remote state is anchored before the local, apply the remote log to our local state.
-      // Otherwise, keep present state.
       this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
       return true
     }
 
     if (!isLocalAnchored && !isRemoteAnchored) {
-      // if neither of them is anchored, apply the remote log
       this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
       return true
     }
 
-    // Default case, we keep our original local state without applying remoteLog.
     return false
   }
 
