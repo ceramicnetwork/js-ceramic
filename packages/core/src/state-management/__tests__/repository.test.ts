@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
 import {
-  StreamUtils,
-  IpfsApi,
-  TestUtils,
+  AnchorStatus,
   CommitType,
+  IpfsApi,
   StreamState,
+  StreamUtils,
   SyncOptions,
+  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
@@ -15,6 +16,8 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../running-state.js'
+import { LevelDbStore } from '../../store/level-db-store.js'
+import tmp from 'tmp-promise'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -51,7 +54,7 @@ describe('#load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStreamStateStore')
     const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
     const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 })
     expect(StreamUtils.serializeState(stream1.state)).toEqual(
@@ -64,7 +67,7 @@ describe('#load', () => {
 
   test('from state store', async () => {
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStreamStateStore')
     const fromNetworkSpy = jest.spyOn(repository as any, 'fromNetwork')
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
@@ -116,7 +119,7 @@ describe('#load', () => {
     const runningState = new RunningState(streamState, true)
 
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStreamStateStore')
     const fromNetworkSpy = jest.spyOn(repository as any, 'fromNetwork')
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
@@ -157,9 +160,12 @@ describe('#load', () => {
 
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
         fromMemory.mockReturnValueOnce(undefined)
-        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStreamStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
+        const saveFromStreamStateHolder = jest.spyOn(
+          repository.pinStore.stateStore,
+          'saveFromStreamStateHolder'
+        )
 
         const stream2 = await repository.load(stream1.id, {
           sync: SyncOptions.SYNC_ALWAYS,
@@ -183,9 +189,12 @@ describe('#load', () => {
         await stream1.update({ a: 2 }, null, { anchor: false, pin: false })
 
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
-        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStreamStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
+        const saveFromStreamStateHolder = jest.spyOn(
+          repository.pinStore.stateStore,
+          'saveFromStreamStateHolder'
+        )
 
         const stream2 = await repository.load(stream1.id, {
           sync: SyncOptions.SYNC_ALWAYS,
@@ -240,4 +249,73 @@ test('subscribe makes state endured', async () => {
   await TestUtils.delay(200) // Wait for rxjs plumbing
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
+})
+
+describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
+  jest.setTimeout(10000)
+
+  let ceramicWithAutoAnchor: Ceramic
+  let tmpFolder: any
+  let levelStore: LevelDbStore
+
+  beforeEach(async () => {
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    levelStore = new LevelDbStore(tmpFolder.path, 'fakeNetwork')
+
+    ceramicWithAutoAnchor = await createCeramic(ipfs, { anchorOnRequest: true })
+
+    // Use the same levelDB store for ceramic without and with manual anchor
+    await ceramic.repository.injectKeyValueStore(levelStore)
+    await ceramicWithAutoAnchor.repository.injectKeyValueStore(levelStore)
+  })
+
+  afterEach(async () => {
+    jest.resetAllMocks()
+    await ceramicWithAutoAnchor.close()
+    await levelStore.close()
+    await tmpFolder.cleanup()
+  })
+
+  test('Anchors streams from anchor request store if anchorOnRequest === true', async () => {
+    // create a few streams using the ceramic instance with manual anchoring to make sure that they stay in
+    // the anchor request store and in the stream state store (so that the ceramic instance with anchorOnRequest === true
+    // can load them
+    const numberOfStreams = 3
+    const streamIds = await Promise.all(
+      [...Array(numberOfStreams).keys()].map((number) => {
+        return TileDocument.create(ceramic, { x: number }, null, {
+          anchor: true,
+        }).then((tileDocument) => {
+          return tileDocument.id
+        })
+      })
+    )
+
+    const loaded = (await ceramicWithAutoAnchor.repository.anchorRequestStore.list()).map(
+      (result) => result.key.toString()
+    )
+    // LevelDB Store stores keys ordered lexicographically
+    expect(streamIds.map(streamId => streamId.toString()).sort()).toEqual(loaded)
+
+    // Both ceramics are set up to share the LevelDB stores
+    expect(await ceramicWithAutoAnchor.repository.anchorRequestStore.list()).toEqual(
+      await ceramic.repository.anchorRequestStore.list()
+    )
+
+    // Use the ceramic instance with anchorOnRequest === true to resume anchors
+    await ceramicWithAutoAnchor.repository.resumeRunningStatesFromAnchorRequestStore()
+
+    // Wait for anchor requests to be processed
+    await TestUtils.delay(6000)
+
+    const runnningStates$ = await Promise.all(streamIds.map((streamId) => {
+      return ceramicWithAutoAnchor.repository.load(streamId, {
+        sync: SyncOptions.NEVER_SYNC,
+      })
+    }))
+
+    runnningStates$.forEach((runningState$) => {
+      expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    })
+  })
 })
