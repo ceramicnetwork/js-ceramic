@@ -29,6 +29,12 @@ export class TestUtils {
    * Wait up to 'timeoutMs' for the given predicate to return true.  Polls the given predicate once
    * every 100ms.  Returns true if the predicate eventually returned true, or false if it timed out
    * without ever becoming true.
+   *
+   * This test doesn't throw when it times out as that would wind up throwing a fairly uninformative
+   * "timeout" error message.  So instead, test code using this should make sure to re-check the
+   * condition that is being waited for, in case this actually did time out without the condition
+   * ever being satisfied.  That will allow tests to throw more useful errors indicating what
+   * condition actually failed.
    */
   static async waitForConditionOrTimeout(
     predicate: () => Promise<boolean>,
