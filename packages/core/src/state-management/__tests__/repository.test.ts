@@ -7,7 +7,7 @@ import {
   StreamState,
   StreamUtils,
   SyncOptions,
-  TestUtils
+  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
@@ -17,9 +17,8 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../running-state.js'
-import { LevelDbStore } from '../../store/level-db-store.js'
 import tmp from 'tmp-promise'
-import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service'
+import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { Observable } from 'rxjs'
 
 const STRING_MAP_SCHEMA = {
@@ -274,8 +273,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
   })
 
   test('Requests anchors for streams with stored anchor requests', async () => {
-    const anchorService = ceramic.repository.stateManager
-      .anchorService as InMemoryAnchorService
+    const anchorService = ceramic.repository.stateManager.anchorService as InMemoryAnchorService
     const realRequestAnchor = anchorService.requestAnchor
     const mockedRequestAnchor = jest.fn()
     mockedRequestAnchor.mockImplementation(() => {
