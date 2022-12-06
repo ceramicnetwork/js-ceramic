@@ -18,6 +18,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../running-state.js'
 import { LevelDbStore } from '../../store/level-db-store.js'
 import tmp from 'tmp-promise'
+import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -255,35 +256,39 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
   jest.setTimeout(10000)
 
   let ceramicWithAutoAnchor: Ceramic
-  let tmpFolder: any
-  let levelStore: LevelDbStore
+  let stateStoreDirectoryName: string
 
   beforeEach(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelDbStore(tmpFolder.path, 'fakeNetwork')
-
-    ceramicWithAutoAnchor = await createCeramic(ipfs, { anchorOnRequest: true })
-
-    // Use the same levelDB store for ceramic without and with manual anchor
-    await ceramic.repository.injectKeyValueStore(levelStore)
-    await ceramicWithAutoAnchor.repository.injectKeyValueStore(levelStore)
+    stateStoreDirectoryName = await tmp.tmpName()
+    ceramicWithAutoAnchor = await createCeramic(ipfs, {
+      anchorOnRequest: true,
+      stateStoreDirectory: stateStoreDirectoryName,
+    })
   })
 
   afterEach(async () => {
     jest.resetAllMocks()
     await ceramicWithAutoAnchor.close()
-    await levelStore.close()
-    await tmpFolder.cleanup()
   })
 
   test('Anchors streams from anchor request store if anchorOnRequest === true', async () => {
+    const numberOfStreams = 3
+
+    const anchorService = ceramicWithAutoAnchor.repository.stateManager
+      .anchorService as InMemoryAnchorService
+    const mockedProcess = jest.fn()
+    // @ts-ignore Mock the implementation of process to prevent setting the status to ANCHORED or FAILED
+    anchorService._process = mockedProcess
+    mockedProcess.mockImplementation((...args) => {
+      return Promise.resolve()
+    })
+
     // create a few streams using the ceramic instance with manual anchoring to make sure that they stay in
     // the anchor request store and in the stream state store (so that the ceramic instance with anchorOnRequest === true
     // can load them
-    const numberOfStreams = 3
     const streamIds = await Promise.all(
       [...Array(numberOfStreams).keys()].map((number) => {
-        return TileDocument.create(ceramic, { x: number }, null, {
+        return TileDocument.create(ceramicWithAutoAnchor, { x: number }, null, {
           anchor: true,
         }).then((tileDocument) => {
           return tileDocument.id
@@ -291,34 +296,48 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
+    expect(mockedProcess).toHaveBeenCalledTimes(numberOfStreams)
+
     const loaded = (await ceramicWithAutoAnchor.repository.anchorRequestStore.list()).map(
       (result) => result.key.toString()
     )
     // LevelDB Store stores keys ordered lexicographically
-    expect(streamIds.map(streamId => streamId.toString()).sort()).toEqual(loaded)
+    expect(streamIds.map((streamId) => streamId.toString()).sort()).toEqual(loaded)
 
-    // Both ceramics are set up to share the LevelDB stores
-    expect(await ceramicWithAutoAnchor.repository.anchorRequestStore.list()).toEqual(
-      await ceramic.repository.anchorRequestStore.list()
+    const runnningStates$ = await Promise.all(
+      streamIds.map((streamId) => {
+        return ceramicWithAutoAnchor.repository.load(streamId, {
+          sync: SyncOptions.NEVER_SYNC,
+        })
+      })
     )
 
-    const runnningStates$ = await Promise.all(streamIds.map((streamId) => {
-      return ceramicWithAutoAnchor.repository.load(streamId, {
-        sync: SyncOptions.NEVER_SYNC,
-      })
-    }))
-    
     runnningStates$.forEach((runningState$) => {
-      expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    })
+
+    // Create a new ceramic (with the same state directory) to check that resuming works,
+    // even if everything is loaded from scratch
+    const newCeramic = await createCeramic(ipfs, {
+      anchorOnRequest: true,
+      stateStoreDirectory: stateStoreDirectoryName,
     })
 
     // Use the ceramic instance with anchorOnRequest === true to resume anchors
-    await ceramicWithAutoAnchor.repository.resumeRunningStatesFromAnchorRequestStore()
+    await newCeramic.repository.resumeRunningStatesFromAnchorRequestStore()
 
     // Wait for anchor requests to be processed
     await TestUtils.delay(6000)
 
-    runnningStates$.forEach((runningState$) => {
+    const newRunnningStates$ = await Promise.all(
+      streamIds.map((streamId) => {
+        return newCeramic.repository.load(streamId, {
+          sync: SyncOptions.NEVER_SYNC,
+        })
+      })
+    )
+
+    newRunnningStates$.forEach((runningState$) => {
       expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
   })
