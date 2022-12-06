@@ -7,7 +7,7 @@ export function instrumentRequests(req, res, next) {
 
   const HTTP_REQUEST = 'http_request'
 
-  const clean_endpoint_re = /(\/streams\/)[^\/\?]+(?.+)?/
+  const clean_endpoint_re = /(\/streams\/)[^\/\?]+(\?.+)?/
 
   const endpoint = req.url.replace(clean_endpoint_re, "$1...$2")
 
