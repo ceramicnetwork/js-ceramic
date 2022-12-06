@@ -1,9 +1,13 @@
 import tmp from 'tmp-promise'
 import { buildIndexing, UnsupportedDatabaseProtocolError } from '../build-indexing.js'
+import { PostgresIndexApi } from '../postgres/postgres-index-api.js'
 import { SqliteIndexApi } from '../sqlite/sqlite-index-api.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
+import pgTest from '@databases/pg-test'
 
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+// @ts-ignore default import
+const getDatabase = pgTest.default
 
 describe('sqlite', () => {
   let databaseFolder: tmp.DirectoryResult
@@ -39,6 +43,19 @@ describe('sqlite', () => {
     )
     expect(indexingApi).toBeInstanceOf(SqliteIndexApi)
   })
+})
+
+test('build for postgres connection string', async () => {
+  const { databaseURL, kill } = await getDatabase()
+  const indexingApi = buildIndexing(
+    {
+      db: databaseURL,
+      models: [],
+    },
+    diagnosticsLogger
+  )
+  expect(indexingApi).toBeInstanceOf(PostgresIndexApi)
+  await kill()
 })
 
 test('throw on unsupported protocol', () => {

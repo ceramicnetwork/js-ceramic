@@ -31,8 +31,8 @@
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
     "@ipld/dag-cbor": "^7.0.0",
+    "mapmoize": "^1.2.0",
     "multiformats": "^9.5.8",
-    "typescript-memoize": "^1.1.0",
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
   },

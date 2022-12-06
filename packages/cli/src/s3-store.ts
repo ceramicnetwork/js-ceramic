@@ -1,11 +1,8 @@
-import { IKVStore, StoreSearchParams } from '@ceramicnetwork/core'
+import { IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
 import PQueue from 'p-queue'
-import { Networks } from '@ceramicnetwork/common'
-import path from 'path'
-import fs from 'fs'
 
 /**
  * Maximum GET/HEAD requests per second to AWS S3
@@ -74,7 +71,8 @@ export class S3Store implements IKVStore {
   }
 
   async close(useCaseName?: string): Promise<void> {
-    await (await this.#storeMap.get(useCaseName)).close()
+    const store = await this.#storeMap.get(useCaseName)
+    await store.close()
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -85,9 +83,22 @@ export class S3Store implements IKVStore {
     return result.length > 0
   }
 
-  async findKeys(params?: StoreSearchParams): Promise<Array<any>> {
+  async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
+    const store = await this.#storeMap.get(params?.useCaseName)
+    const dataArray = await toArray(
+      store.createReadStream({
+        limit: params?.limit,
+      })
+    )
+    return dataArray.map((data) => {
+      return { key: data.key.toString(), value: data.value }
+    })
+  }
+
+  async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
+    const store = await this.#storeMap.get(params?.useCaseName)
     const bufArray = await toArray(
-      (await this.#storeMap.get(params?.useCaseName)).createKeyStream({
+      store.createKeyStream({
         limit: params?.limit,
       })
     )
@@ -96,15 +107,19 @@ export class S3Store implements IKVStore {
 
   async get(key: string, useCaseName?: string): Promise<any> {
     return this.#loadingLimit.add(async () => {
-      return JSON.parse(await (await this.#storeMap.get(useCaseName)).get(key))
+      const store = await this.#storeMap.get(useCaseName)
+      const value = await store.get(key)
+      return JSON.parse(value)
     })
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).put(key, JSON.stringify(value))
+    const store = await this.#storeMap.get(useCaseName)
+    return await store.put(key, JSON.stringify(value))
   }
 
   async del(key: string, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).del(key)
+    const store = await this.#storeMap.get(useCaseName)
+    return await store.del(key)
   }
 }

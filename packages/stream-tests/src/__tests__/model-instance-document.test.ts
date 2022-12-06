@@ -35,6 +35,27 @@ const MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
+// The model above will always result in this StreamID when created with the fixed did:key
+// controller used by the test.
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c9rpdsro0cldierurftxvlr0uzh5nt3yqsje7t4ykfcnnnkjxtq'
+
+const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
+  name: 'MyModelWithARelation',
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      linkedDoc: {
+        type: 'string',
+      },
+    },
+    required: ['linkedDoc'],
+  },
+  relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
+}
+
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -44,6 +65,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let ceramic: CeramicClient
   let model: Model
   let midMetadata: ModelInstanceDocumentMetadataArgs
+  let modelWithRelation: Model
+  let midRelationMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
@@ -68,7 +91,11 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ceramic.setDID(core.did)
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
+    expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
     midMetadata = { model: model.id }
+    modelWithRelation = await Model.create(ceramic, MODEL_WITH_RELATION_DEFINITION)
+    midRelationMetadata = { model: modelWithRelation.id }
+
     await core.index.indexModels([model.id])
   }, 12000)
 
@@ -110,6 +137,25 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic, doc.metadata.model)).resolves.toBeTruthy()
+
+    const relationContent = { linkedDoc: doc.id.toString() }
+    const docWithRelation = await ModelInstanceDocument.create(
+      ceramic,
+      relationContent,
+      midRelationMetadata
+    )
+    expect(docWithRelation.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
+    expect(docWithRelation.content).toEqual(relationContent)
+    expect(docWithRelation.metadata).toEqual({
+      controller: ceramic.did.id.toString(),
+      model: midRelationMetadata.model,
+    })
+    expect(docWithRelation.state.log.length).toEqual(1)
+    expect(docWithRelation.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    expect(docWithRelation.metadata.model.toString()).toEqual(modelWithRelation.id.toString())
+    await expect(TestUtils.isPinned(ceramic, docWithRelation.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, docWithRelation.metadata.model)).resolves.toBeTruthy()
   })
 
   test('Create and update doc', async () => {
@@ -122,6 +168,26 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.log[1].type).toEqual(CommitType.SIGNED)
+  })
+
+  test(`Cannot create document with relation that isn't a valid streamid`, async () => {
+    const relationContent = { linkedDoc: 'this is a streamid' }
+    await expect(
+      ModelInstanceDocument.create(ceramic, relationContent, midRelationMetadata)
+    ).rejects.toThrow(/Error while parsing relation from field linkedDoc: Invalid StreamID/)
+  })
+
+  test(`Cannot create document with relation to a stream in the wrong model`, async () => {
+    const randomModel = await Model.create(ceramic, { ...MODEL_DEFINITION, name: 'random model' })
+    const docInRandomModel = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+      ...midMetadata,
+      model: randomModel.id,
+    })
+
+    const relationContent = { linkedDoc: docInRandomModel.id.toString() }
+    await expect(
+      ModelInstanceDocument.create(ceramic, relationContent, midRelationMetadata)
+    ).rejects.toThrow(/must be to a Stream in the Model/)
   })
 
   test('Anchor genesis', async () => {

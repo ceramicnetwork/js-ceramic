@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import * as Block from 'multiformats/block'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import {
@@ -18,8 +17,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
-import * as codec from '@ipld/dag-cbor'
-import { sha256 as hasher } from 'multiformats/hashes/sha2'
+import { PubsubMessage } from '../../index.js'
+const { serialize, MsgType } = PubsubMessage
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -106,6 +105,18 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Sets all pending anchors to PROCESSING status. Useful for testing.
+   */
+  async startProcessingPendingAnchors(): Promise<void> {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
+      this._startProcessingCandidate(candidate, 'anchor is being processed')
+    }
+
+    this.#queue = [] // reset
+  }
+
+  /**
    * Filter candidates by stream and DIDs
    * @private
    */
@@ -116,32 +127,31 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   async _groupCandidatesByStreamId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
     const result: Record<string, Candidate[]> = {}
-    await Promise.all(
-      candidates.map(async (req) => {
-        try {
-          const commitData = await Utils.getCommitData(
-            this.#dispatcher,
-            req.cid,
-            req.streamId,
-            null
-          )
-          if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
-            await this.verifySignedCommit(commitData.envelope)
-          }
-
-          const log = await this._loadCommitHistory(req.cid, req.streamId)
-          const candidate = new Candidate(req.cid, req.streamId, log)
-
-          if (!result[candidate.key]) {
-            result[candidate.key] = []
-          }
-          result[candidate.key].push(candidate)
-        } catch (e) {
-          this.#logger.err(e)
-          this._failCandidate(req, e.message)
+    for (const req of candidates) {
+      try {
+        if (!result[req.key]) {
+          result[req.key] = []
         }
-      })
-    )
+        if (result[req.key].find((c) => c.cid.equals(req.cid))) {
+          // If we already have an identical request for the exact same commit on the same,
+          // streamid, don't create duplicate Candidates
+          continue
+        }
+
+        const commitData = await Utils.getCommitData(this.#dispatcher, req.cid, req.streamId, null)
+        if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
+          await this.verifySignedCommit(commitData.envelope)
+        }
+
+        const log = await this._loadCommitHistory(req.cid, req.streamId)
+        const candidate = new Candidate(req.cid, req.streamId, log)
+
+        result[candidate.key].push(candidate)
+      } catch (e) {
+        this.#logger.err(e)
+        this._failCandidate(req, e.message)
+      }
+    }
     return result
   }
 
@@ -189,6 +199,18 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     this.#feed.next({
       status: AnchorStatus.FAILED,
+      streamId: candidate.streamId,
+      cid: candidate.cid,
+      message,
+    })
+  }
+
+  _startProcessingCandidate(candidate: Candidate, message?: string): void {
+    if (!message) {
+      message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
+    }
+    this.#feed.next({
+      status: AnchorStatus.PROCESSING,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,
@@ -287,27 +309,43 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
   }
 
+  async _storeRecord(record: Record<string, unknown>): Promise<CID> {
+    let timeout: any
+
+    const putPromise = this.#dispatcher.storeCommit(record).finally(() => {
+      clearTimeout(timeout)
+    })
+
+    const timeoutPromise = new Promise((resolve) => {
+      timeout = setTimeout(resolve, 30 * 1000)
+    })
+
+    return await Promise.race([
+      putPromise,
+      timeoutPromise.then(() => {
+        throw new Error(`Timed out storing record in IPFS`)
+      }),
+    ])
+  }
+
   /**
    * Sends anchor commit to Ceramic node and instructs it to publish the commit to pubsub
    * @param streamId
    * @param commit
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
-    const block = await Block.encode({ value: commit, codec, hasher })
-    const expectedCID = block.cid
-    const stream = await this.#ceramic.applyCommit(streamId, commit, {
-      publish: true,
-      anchor: false,
+    const anchorCid = await this._storeRecord(commit as any)
+    let resolved = false
+    await new Promise<void>((resolve) => {
+      this.#dispatcher.publishTip(streamId, anchorCid).add(() => {
+        if (!resolved) {
+          resolved = true
+          resolve()
+        }
+      })
     })
-    const commitFound: boolean =
-      null != stream.state.log.find((logEntry) => logEntry.cid.equals(expectedCID))
-    if (!commitFound) {
-      throw new Error(
-        `Anchor commit not found in stream log after being applied to Ceramic node. This most likely means the commit was rejected by Ceramic's conflict resolution. StreamID: ${streamId.toString()}, found tip: ${stream.tip.toString()}`
-      )
-    }
 
-    return expectedCID
+    return anchorCid
   }
 
   /**
@@ -315,6 +353,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @private
    */
   async _process(leaf: Candidate): Promise<void> {
+    this._startProcessingCandidate(leaf)
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
     const proofData: AnchorProof = {
