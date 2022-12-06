@@ -302,17 +302,21 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       await ceramic.repository.anchorRequestStore.list()
     )
 
-    // Use the ceramic instance with anchorOnRequest === true to resume anchors
-    await ceramicWithAutoAnchor.repository.resumeRunningStatesFromAnchorRequestStore()
-
-    // Wait for anchor requests to be processed
-    await TestUtils.delay(6000)
-
     const runnningStates$ = await Promise.all(streamIds.map((streamId) => {
       return ceramicWithAutoAnchor.repository.load(streamId, {
         sync: SyncOptions.NEVER_SYNC,
       })
     }))
+    
+    runnningStates$.forEach((runningState$) => {
+      expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+    })
+
+    // Use the ceramic instance with anchorOnRequest === true to resume anchors
+    await ceramicWithAutoAnchor.repository.resumeRunningStatesFromAnchorRequestStore()
+
+    // Wait for anchor requests to be processed
+    await TestUtils.delay(6000)
 
     runnningStates$.forEach((runningState$) => {
       expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
