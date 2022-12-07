@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { LevelDbStore } from '../level-db-store.js'
 import { TestUtils } from '@ceramicnetwork/common'
