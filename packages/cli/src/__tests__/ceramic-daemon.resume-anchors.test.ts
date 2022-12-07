@@ -61,7 +61,6 @@ describe('Ceramic Daemon Anchor Resuming', () => {
   })
 
   afterEach(async () => {
-
     await stateStoreDir.cleanup()
     stateStoreDir = undefined
   })
@@ -78,7 +77,7 @@ describe('Ceramic Daemon Anchor Resuming', () => {
     expect(mockCompleted).toBeFalsy()
 
     // resumeRunningStatesFromAnchorRequestStore() is triggered by CeramicDaemon.create(...)
-    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100)
+    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100) // TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(mockCompleted).toBeTruthy()
     await daemon.close()
   })
@@ -96,7 +95,7 @@ describe('Ceramic Daemon Anchor Resuming', () => {
     expect(mockCompleted).toBeFalsy()
 
     // .. just checking again after delay to make sure
-    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 3000)
+    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 3000) // TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(mockWasCalled).toBeFalsy()
     expect(mockCompleted).toBeFalsy()
 
