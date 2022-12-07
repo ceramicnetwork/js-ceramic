@@ -7,7 +7,6 @@ import {
   CreateOpts,
   DiagnosticsLogger,
   LoadOpts,
-  LogStyle,
   PinningOpts,
   PublishOpts,
   StreamState,
@@ -29,8 +28,7 @@ import { SnapshotState } from './snapshot-state.js'
 import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
-import { AnchorRequestStore, AnchorRequestStoreListResult } from '../store/anchor-request-store.js'
-import PQueue from 'p-queue'
+import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -45,9 +43,6 @@ export type RepositoryDependencies = {
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
-
-const RESUME_QUEUE_CONCURRENCY = 30
-const RESUME_BATCH_SIZE = RESUME_QUEUE_CONCURRENCY * 5
 
 /**
  * Indicate if the stream should be indexed.
@@ -70,21 +65,9 @@ export class Repository {
   readonly executionQ: ExecutionQueue
 
   /**
-   * Resume running states from anchor request store
-   */
-  readonly resumeQ: PQueue
-
-  /**
    * In-memory cache of the currently running streams.
    */
   readonly inmemory: StateCache<RunningState>
-
-  /**
-   * true iff the repository is in the process of closing
-   *
-   * @private
-   */
-  #shouldBeClosed = false
 
   /**
    * Various dependencies.
@@ -108,7 +91,6 @@ export class Repository {
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
-    this.resumeQ = new PQueue({ concurrency: RESUME_QUEUE_CONCURRENCY })
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -127,7 +109,6 @@ export class Repository {
   }
 
   async init(): Promise<void> {
-    this.#shouldBeClosed = true
     await this.pinStore.open(this.#deps.keyValueStore)
     await this.anchorRequestStore.open(this.#deps.keyValueStore)
     await this.index.init()
@@ -282,36 +263,6 @@ export class Repository {
     }
 
     return state$
-  }
-
-  async resumeRunningStatesFromAnchorRequestStore(): Promise<void> {
-    const currentTimestamp = Date.now()
-    let gt: StreamID | undefined = undefined
-    let batch = new Array<AnchorRequestStoreListResult>()
-    do {
-      batch = await this.anchorRequestStore.list(RESUME_BATCH_SIZE, gt)
-      batch.map((listResult) => {
-        this.resumeQ.add(async () => {
-          const stream$ = await this.load(listResult.key, { sync: SyncOptions.PREFER_CACHE })
-          if ([AnchorStatus.FAILED, AnchorStatus.ANCHORED].includes(stream$.value.anchorStatus)) {
-            await this.anchorRequestStore.remove(stream$.id)
-            return
-          }
-          // TODO: CDB-2010 Do we want to do the actual anchor request here? Or do we just want to start polling? If the latter, than .load(..) doesn't seem to start polling as of now.
-          await this.stateManager.anchor(stream$)
-          if (listResult.value.timestamp > currentTimestamp) {
-            throw Error(
-              `System clock possibly moving backwards!!! Check your system clock and if it's accurate, delete your state store`
-            )
-          }
-          this.logger.log(
-            LogStyle.info,
-            `Resumed running state for stream id: ${listResult.key.toString()}`
-          )
-        })
-      })
-      gt = batch[batch.length - 1]?.key
-    } while (batch.length > 0 && !this.#shouldBeClosed)
   }
 
   /**
@@ -528,8 +479,6 @@ export class Repository {
   }
 
   async close(): Promise<void> {
-    this.#shouldBeClosed = true
-    await this.resumeQ.clear()
     await this.loadingQ.close()
     await this.executionQ.close()
     Array.from(this.inmemory).forEach(([id, stream]) => {

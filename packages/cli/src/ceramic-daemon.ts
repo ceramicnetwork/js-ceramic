@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import express, { Request, Response } from 'express'
-import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
+import { AnchorResumingService, Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
@@ -223,6 +223,7 @@ type AdminApiModelMutationMethod = (modelIDs: Array<StreamID>) => Promise<void>
 export class CeramicDaemon {
   private server?: Server
   private readonly app: ExpressWithAsync
+  private readonly anchorResumingService: AnchorResumingService
   readonly diagnosticsLogger: DiagnosticsLogger
   public hostname: string
   public port: number
@@ -231,6 +232,7 @@ export class CeramicDaemon {
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
+    this.anchorResumingService = new AnchorResumingService(this.diagnosticsLogger)
     this.port = validatePort(this.opts.httpApi?.port) || DEFAULT_PORT
     this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
     this.adminDids = this.opts.httpApi?.adminDids || []
@@ -303,7 +305,11 @@ export class CeramicDaemon {
 
     const daemon = new CeramicDaemon(ceramic, opts)
     await daemon.listen()
-    ceramic.repository.resumeRunningStatesFromAnchorRequestStore()
+    daemon.anchorResumingService
+      .resumeRunningStatesFromAnchorRequestStore(ceramic.repository)
+      .catch((error) => {
+        diagnosticsLogger.err(`Error while resuming anchors: ${error}`)
+      })
     return daemon
   }
 
@@ -877,6 +883,7 @@ export class CeramicDaemon {
    * Close Ceramic daemon
    */
   async close(): Promise<void> {
+    this.anchorResumingService.close()
     await new Promise<void>((resolve, reject) => {
       if (!this.server) resolve()
       this.server.close((err) => {

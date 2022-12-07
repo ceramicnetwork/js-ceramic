@@ -1,4 +1,4 @@
-import { Ceramic, Repository } from '@ceramicnetwork/core'
+import { Ceramic, AnchorResumingService } from '@ceramicnetwork/core'
 import { jest } from '@jest/globals'
 import { IpfsApi, Networks, TestUtils } from '@ceramicnetwork/common'
 import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon.js'
@@ -44,12 +44,12 @@ describe('Ceramic Daemon Anchor Resuming', () => {
   })
 
   beforeEach(async () => {
-    stateStoreDir =  await tmp.dir({ unsafeCleanup: true })
+    stateStoreDir = await tmp.dir({ unsafeCleanup: true })
     mockWasCalled = false
     mockCompleted = false
 
     jest
-      .spyOn(Repository.prototype, 'resumeRunningStatesFromAnchorRequestStore')
+      .spyOn(AnchorResumingService.prototype, 'resumeRunningStatesFromAnchorRequestStore')
       .mockImplementation(() => {
         mockWasCalled = true
         return new Promise<void>(() => {
@@ -66,7 +66,7 @@ describe('Ceramic Daemon Anchor Resuming', () => {
   })
 
   afterAll(() => {
-    (IpfsConnectionFactory as any).buildIpfsConnection = origBuildIpfs
+    ;(IpfsConnectionFactory as any).buildIpfsConnection = origBuildIpfs
   })
 
   it('Resume method is called when initialized with create()', async () => {
