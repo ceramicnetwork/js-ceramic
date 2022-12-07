@@ -1,0 +1,43 @@
+{
+  "name": "@ceramicnetwork/anchor-listener",
+  "version": "1.0.0",
+  "description": "Ceramic anchor events listener",
+  "keywords": [
+    "ceramic",
+    "anchor"
+  ],
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "files": [
+    "lib"
+  ],
+  "directories": {
+    "lib": "./lib"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "build": "npx tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
+  },
+  "author": "3Box Labs",
+  "license": "(Apache-2.0 OR MIT)",
+  "dependencies": {
+    "@ceramicnetwork/anchor-contract": "^1.0.0",
+    "@ethersproject/providers": "^5.7.2",
+    "rxjs": "^7.6.0"
+  },
+  "devDependencies": {
+    "multiformats": "^10.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
