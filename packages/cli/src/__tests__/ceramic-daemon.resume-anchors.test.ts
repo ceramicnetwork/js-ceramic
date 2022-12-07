@@ -66,7 +66,7 @@ describe('Ceramic Daemon Anchor Resuming', () => {
   })
 
   afterAll(() => {
-    ;(IpfsConnectionFactory as any).buildIpfsConnection = origBuildIpfs
+    (IpfsConnectionFactory as any).buildIpfsConnection = origBuildIpfs
   })
 
   it('Resume method is called when initialized with create()', async () => {
