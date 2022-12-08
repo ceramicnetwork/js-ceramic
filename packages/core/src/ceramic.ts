@@ -32,7 +32,8 @@ import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import { EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
+import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
+import { AuthenticatedEthereumAnchorService, EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
 import { randomUint32 } from '@stablelib/random'
@@ -402,10 +403,19 @@ export class Ceramic implements CeramicApi {
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
     let anchorService = null
+    let anchorServiceAuth = null
     if (!config.gateway) {
       const anchorServiceUrl =
         config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
         DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+
+      if (config.anchorServiceAuthMethod) {
+        const method = DEFAULT_ANCHOR_SERVICE_AUTH_METHODS[config.anchorServiceAuthMethod]
+        if (!method) {
+          throw new Error(`Invalid auth method for anchor service: ${config.anchorServiceAuthMethod}`)
+        }
+        anchorServiceAuth = new method(anchorServiceUrl, logger)
+      }
 
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
@@ -414,10 +424,14 @@ export class Ceramic implements CeramicApi {
       ) {
         throw new Error('Cannot use custom anchor service on Ceramic mainnet')
       }
-      anchorService =
-        networkOptions.name != Networks.INMEMORY
-          ? new EthereumAnchorService(anchorServiceUrl, logger)
-          : new InMemoryAnchorService(config as any)
+
+      if (networkOptions.name != Networks.INMEMORY) {
+        anchorService = anchorServiceAuth
+          ? new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
+          : new EthereumAnchorService(anchorServiceUrl, logger)
+      } else {
+        anchorService = new InMemoryAnchorService(config as any)
+      }
     }
 
     let ethereumRpcUrl = config.ethereumRpcUrl

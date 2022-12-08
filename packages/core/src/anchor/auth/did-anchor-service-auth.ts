@@ -1,0 +1,101 @@
+import {
+  AnchorServiceAuth,
+  CeramicApi,
+  DiagnosticsLogger,
+  FetchOpts,
+  HttpMethods,
+  fetchJson
+} from "@ceramicnetwork/common"
+import { DagJWS } from "dids"
+
+export class DIDAnchorServiceAuth implements AnchorServiceAuth {
+  private _ceramic: CeramicApi
+  private _nonce: number
+  private readonly nonceApiEndpoint: string
+  private readonly _logger: DiagnosticsLogger
+
+  constructor(
+    readonly anchorServiceUrl: string,
+    logger: DiagnosticsLogger,
+  ) {
+    this.nonceApiEndpoint = this.anchorServiceUrl + '/api/v0/auth/nonce'
+    this._logger = logger
+  }
+
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  set ceramic(ceramic: CeramicApi) {
+    this._ceramic = ceramic
+  }
+
+  get nonce(): number {
+    return this._nonce
+  }
+
+  init = async (): Promise<void> => {
+    this._nonce = await this.lookupLastNonce() ?? 0
+  }
+
+  lookupLastNonce = async (): Promise<number | undefined> => {
+    if (!this._ceramic) {
+      throw new Error('Missing Ceramic instance required by this auth method')
+    }
+    let nonce
+    const { authorization } = await this.signRequest(this.nonceApiEndpoint)
+    let headers: any = { authorization }
+    const data = await this._sendRequest(this.nonceApiEndpoint, {
+      method: HttpMethods.POST,
+      headers,
+      body: {did: this._ceramic.did.id}
+    })
+    if (data) {
+      if (data.nonce) {
+        nonce = Number(data.nonce)
+        if (nonce != NaN) {
+          return nonce
+        }
+      }
+    }
+    this._logger.debug('Could not get nonce from anchor service')
+    return
+  }
+
+  sendAuthenticatedRequest = async (url: URL | string, opts?: FetchOpts): Promise<any> => {
+    if (!this._ceramic) {
+      throw new Error('Missing Ceramic instance required by this auth method')
+    }
+    this._updateNonce()
+    const { authorization } = await this.signRequest(url, opts?.body, this._nonce)
+    let headers: any = { authorization }
+    opts?.headers && (headers = {...opts.headers, headers })
+    return await this._sendRequest(url, { ...opts, headers})
+  }
+
+  /**
+   * Increments nonce in memory.
+   */
+  private _updateNonce = async (): Promise<void> => {
+    this._nonce = this._nonce + 1
+  }
+
+  signRequest = async (url: URL | string, body?: any, nonce?: number): Promise<{jws: DagJWS, authorization: string}> => {
+    let payload: any = { url }
+    body && (payload = { ...payload, body})
+    nonce && (payload = { ...payload, nonce})
+    const jws = await this._ceramic.did.createJWS(payload)
+    const authorization = `Basic ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
+    return { jws, authorization }
+  }
+
+  private _sendRequest = async (url: URL| string, opts?: FetchOpts): Promise<any> => {
+    const data = await fetchJson(url, opts)
+    if (data.error) {
+      this._logger.err(data.error)
+      return data
+    }
+    return data
+  }
+}

@@ -232,3 +232,34 @@ export class EthereumAnchorService implements AnchorService {
     }
   }
 }
+
+/**
+ * Ethereum anchor service that authenticates requests
+ */
+export class AuthenticatedEthereumAnchorService extends EthereumAnchorService implements AuthenticatedAnchorService {
+  readonly auth: AnchorServiceAuth
+
+  constructor(
+    auth: AnchorServiceAuth,
+    readonly anchorServiceUrl: string,
+    logger: DiagnosticsLogger,
+    pollInterval: number = DEFAULT_POLL_INTERVAL,
+  ) {
+    super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest)
+    // this.auth = auth
+  }
+
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  set ceramic(ceramic: CeramicApi) {
+    // this.auth.ceramic = ceramic
+  }
+
+  async init(): Promise<void> {
+    // await this.auth.init()
+    await super.init()
+  }
+}
