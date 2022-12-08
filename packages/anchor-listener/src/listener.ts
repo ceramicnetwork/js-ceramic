@@ -1,22 +1,17 @@
-import {
-  ANCHOR_CONTRACT_ADDRESSES,
-  getCidFromAnchorEventLog,
-} from '@ceramicnetwork/anchor-contract'
-import type { Block, Filter, Provider } from '@ethersproject/providers'
+import { ANCHOR_CONTRACT_ADDRESSES } from '@ceramicnetwork/anchor-contract'
+import type { Block, Provider } from '@ethersproject/providers'
 import type { CID } from 'multiformats/cid'
 import {
   type Observable,
-  type OperatorFunction,
   type RetryConfig,
   firstValueFrom,
-  from,
   fromEvent,
   map,
   mergeMap,
-  pipe,
-  retry,
   scan,
 } from 'rxjs'
+
+import { createRootCIDsLoader, mapLoadBlock } from './loader.js'
 
 export type ProcessedBlockEvent = {
   type: 'processed-block'
@@ -32,28 +27,6 @@ export type ReorganizationEvent = {
 
 export type ListenerEvent = ProcessedBlockEvent | ReorganizationEvent
 
-export function tryLoadBlock(
-  provider: Provider,
-  retryConfig: RetryConfig = { count: 3 }
-): OperatorFunction<number, Block> {
-  return pipe(
-    mergeMap(async (blockNumber) => await provider.getBlock(blockNumber)),
-    retry(retryConfig)
-  )
-}
-
-export async function tryLoadRootCIDs(
-  provider: Provider,
-  filter: Filter,
-  retryConfig: RetryConfig = { count: 3 }
-): Promise<Array<CID>> {
-  const cids$ = from(provider.getLogs(filter)).pipe(
-    retry(retryConfig),
-    map((logs) => logs.map(getCidFromAnchorEventLog))
-  )
-  return await firstValueFrom(cids$)
-}
-
 export type ListenerParams = {
   latestProcessedBlock?: string
   confirmations: number
@@ -62,10 +35,10 @@ export type ListenerParams = {
   retryConfig?: RetryConfig
 }
 
-type State = { status: 'processed' | 'reorganized'; previousHash: string; block: Block }
+type State = { status: 'process' | 'reorganized'; previousHash: string; block: Block }
 type Seed = { status: 'initial' }
 
-export function createListener({
+export function createBlockListener({
   confirmations,
   latestProcessedBlock,
   network,
@@ -78,40 +51,47 @@ export function createListener({
   }
 
   return fromEvent(provider, 'block').pipe(
+    // Map to latest block number minus wanted confirmations
     map((blockNumber) => (blockNumber as number) - confirmations),
-    tryLoadBlock(provider, retryConfig),
+    // Load block from provider
+    mapLoadBlock(provider, retryConfig),
+    // Check for blockchain reorganizations based on previous known block
     scan<Block, State, Seed>(
       (state, block) => {
         if (state.status === 'initial') {
           // Check against initial latestProcessedBlock if provided
           return latestProcessedBlock == null || block.parentHash === latestProcessedBlock
-            ? { status: 'processed', block, previousHash: block.parentHash }
+            ? { status: 'process', block, previousHash: block.parentHash }
             : { status: 'reorganized', block, previousHash: latestProcessedBlock }
         }
         return {
-          status: block.parentHash === state.previousHash ? 'processed' : 'reorganized',
+          status: block.parentHash === state.previousHash ? 'process' : 'reorganized',
           block,
           previousHash: block.parentHash,
         }
       },
       { status: 'initial' }
     ),
+    // Emit event based on status, loading root CIDs for processed blocks
     mergeMap(async ({ status, block, previousHash }) => {
-      return status === 'processed'
-        ? ({
-            type: 'processed-block',
-            block,
-            roots: await tryLoadRootCIDs(provider, {
-              address,
-              fromBlock: block.number,
-              toBlock: block.number,
-            }),
-          } as ProcessedBlockEvent)
-        : ({
-            type: 'reorganization',
-            newBlock: block,
-            latestProcessedBlock: previousHash,
-          } as ReorganizationEvent)
+      if (status === 'process') {
+        const cids$ = createRootCIDsLoader(provider, {
+          address,
+          fromBlock: block.number,
+          toBlock: block.number,
+        })
+        return {
+          type: 'processed-block',
+          block,
+          roots: await firstValueFrom(cids$),
+        } as ProcessedBlockEvent
+      }
+
+      return {
+        type: 'reorganization',
+        newBlock: block,
+        latestProcessedBlock: previousHash,
+      } as ReorganizationEvent
     })
   )
 }
