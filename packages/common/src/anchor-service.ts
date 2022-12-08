@@ -90,11 +90,27 @@ export interface AnchorService {
   getSupportedChains(): Promise<Array<string>>
 }
 
+export interface AuthenticatedAnchorService extends AnchorService {
+  /**
+   * Set Anchor Service Auth instance
+   *
+   * @param auth - Anchor service authentication instance
+   */
+  auth: AnchorServiceAuth
+}
+
 export interface AnchorServiceAuth {
   /**
    * Performs whatever initialization work is required by the specific auth implementation
    */
   init(): Promise<void>
+
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  ceramic: CeramicApi
 
   /**
    *

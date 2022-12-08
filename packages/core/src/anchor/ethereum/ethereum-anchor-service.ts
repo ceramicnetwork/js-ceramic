@@ -5,9 +5,12 @@ import {
   CeramicApi,
   AnchorServiceResponse,
   AnchorService,
+  AnchorServiceAuth,
   AnchorStatus,
+  AuthenticatedAnchorService,
   DiagnosticsLogger,
   fetchJson,
+  FetchJson,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
@@ -37,16 +40,19 @@ export class EthereumAnchorService implements AnchorService {
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
   private readonly pollInterval: number
+  private readonly sendRequest: FetchJson
 
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL
+    pollInterval: number = DEFAULT_POLL_INTERVAL,
+    sendRequest: FetchJson = fetchJson,
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this._logger = logger
     this.pollInterval = pollInterval
+    this.sendRequest = sendRequest
   }
 
   /**
@@ -64,7 +70,7 @@ export class EthereumAnchorService implements AnchorService {
 
   async init(): Promise<void> {
     // Get the chainIds supported by our anchor service
-    const response = await fetchJson(this.chainIdApiEndpoint)
+    const response = await this.sendRequest(this.chainIdApiEndpoint)
     if (response.supportedChains.length > 1) {
       throw new Error(
         "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
@@ -82,7 +88,7 @@ export class EthereumAnchorService implements AnchorService {
     const cidStreamPair: CidAndStream = { cid: tip, streamId }
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeRequest(cidStreamPair),
+      this._makeAnchorRequest(cidStreamPair),
       this.pollForAnchorResponse(streamId, tip)
     ).pipe(
       catchError((error) =>
@@ -118,10 +124,10 @@ export class EthereumAnchorService implements AnchorService {
    * @param cidStreamPair - mapping
    * @private
    */
-  private _makeRequest(cidStreamPair: CidAndStream): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(cidStreamPair: CidAndStream): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
-        fetchJson(this.requestsApiEndpoint, {
+        this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
           body: {
             streamId: cidStreamPair.streamId.toString(),
@@ -167,7 +173,7 @@ export class EthereumAnchorService implements AnchorService {
         if (now > maxTime) {
           throw new Error('Exceeded max anchor polling time limit')
         } else {
-          const response = await fetchJson(requestUrl)
+          const response = await this.sendRequest(requestUrl)
           return this.parseResponse(cidStream, response)
         }
       })
