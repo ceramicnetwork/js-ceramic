@@ -195,6 +195,13 @@ export class DaemonAnchorConfig {
   anchorServiceUrl?: string
 
   /**
+   * Controls the authentication method Ceramic uses to make requests to the Ceramic Anchor Service.
+   * When specifying in a config file, use the name 'auth-method'.
+   */
+  @jsonMember(String, { name: 'auth-method' })
+  authMethod: string
+
+  /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
    * When specifying in a config file, use the name 'ethereum-rpc-url'.
    */
@@ -260,6 +267,20 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
+  /**
+   * DID used to sign requests to CAS. This is automatically derived by the `did-seed`.
+   */
+  @jsonMember(String)
+  did: string
+
+  /**
+   * Seed used to sign requests to CAS.
+   * This is randomly generated if a config file is not found.
+   * When specifying in a config file, use the name 'did-seed'.
+   */
+  @jsonMember(String, { name: 'did-seed' })
+  didSeed: URL
+
   /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
@@ -412,6 +433,8 @@ export class DaemonConfig {
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
+    // Whenever we load from a file the did-seed needs to be present even if not using an anchor auth method
+    if (!config.node.didSeed) throw Error('Daemon config is missing node.did-seed')
     expandPaths(config, filepath)
     return config
   }

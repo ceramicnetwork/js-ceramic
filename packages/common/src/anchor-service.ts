@@ -5,6 +5,10 @@ import type { CeramicApi } from './ceramic-api.js'
 import type { FetchJson } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 
+export enum AnchorServiceAuthMethods {
+  DID = 'did',
+}
+
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING
   readonly streamId: StreamID

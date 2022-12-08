@@ -10,6 +10,7 @@ import {
   StreamUtils,
   LoadOpts,
   AnchorService,
+  AnchorServiceAuthMethods,
   CeramicApi,
   CeramicCommit,
   IpfsApi,
@@ -65,6 +66,10 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.LOCAL]: 'http://localhost:8081',
 }
 
+const DEFAULT_ANCHOR_SERVICE_AUTH_METHODS = {
+  [AnchorServiceAuthMethods.DID]: DIDAnchorServiceAuth,
+}
+
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
 
 const SUPPORTED_CHAINS_BY_NETWORK = {
@@ -94,6 +99,7 @@ const ERROR_LOADING_STREAM = 'error_loading_stream'
 export interface CeramicConfig {
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
+  anchorServiceAuthMethod?: string
   stateStoreDirectory?: string
 
   ipfsPinningEndpoints?: string[]
