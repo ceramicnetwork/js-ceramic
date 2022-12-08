@@ -51,18 +51,17 @@ test('re-request an anchor till get a response', async () => {
   const loggerProvider = new common.LoggerProvider()
   const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
   let errSpy = jest.spyOn(diagnosticsLogger, 'err')
-  let anchorService
   const url = 'http://example.com'
 
-    ipfs = await createIPFS()
-    ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: true })
-    const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
-    anchorService = new eas.AuthenticatedEthereumAnchorService(
-      auth,
-      url,
-      diagnosticsLogger,
-      100
-    )
+  ipfs = await createIPFS()
+  ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: true })
+  const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
+  const anchorService = new eas.AuthenticatedEthereumAnchorService(
+    auth,
+    url,
+    diagnosticsLogger,
+    100
+  )
 
   let lastResponse: any
   const subscription = anchorService
