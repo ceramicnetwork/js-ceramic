@@ -50,7 +50,7 @@ test('re-request an anchor till get a response', async () => {
   const { createDidAnchorServiceAuth } = await import('../../../__tests__/create-did-anchor-service-auth.js')
   const loggerProvider = new common.LoggerProvider()
   const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
-  let errSpy = jest.spyOn(diagnosticsLogger, 'err')
+  const errSpy = jest.spyOn(diagnosticsLogger, 'err')
   const url = 'http://example.com'
 
   ipfs = await createIPFS()
