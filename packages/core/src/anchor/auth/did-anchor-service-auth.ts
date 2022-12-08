@@ -11,14 +11,14 @@ import { DagJWS } from "dids"
 export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   private _ceramic: CeramicApi
   private _nonce: number
-  private readonly nonceApiEndpoint: string
+  private readonly _anchorServiceUrl: string
   private readonly _logger: DiagnosticsLogger
 
   constructor(
-    readonly anchorServiceUrl: string,
+    anchorServiceUrl: string,
     logger: DiagnosticsLogger,
   ) {
-    this.nonceApiEndpoint = this.anchorServiceUrl + '/api/v0/auth/nonce'
+    this._anchorServiceUrl = anchorServiceUrl
     this._logger = logger
   }
 
@@ -44,8 +44,8 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
       throw new Error('Missing Ceramic instance required by this auth method')
     }
     let nonce
-    const { authorization } = await this.signRequest(this.nonceApiEndpoint)
-    const data = await this._sendRequest(this.nonceApiEndpoint, {
+    const { authorization } = await this.signRequest(this._getNonceEndpoint())
+    const data = await this._sendRequest(this._getNonceEndpoint(), {
       method: HttpMethods.POST,
       headers: { authorization },
       body: {did: this._ceramic.did.id}
@@ -73,13 +73,6 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     return await this._sendRequest(url, { ...opts, headers})
   }
 
-  /**
-   * Increments nonce in memory.
-   */
-  private _updateNonce = async (): Promise<void> => {
-    this._nonce = this._nonce + 1
-  }
-
   signRequest = async (url: URL | string, body?: any, nonce?: number): Promise<{jws: DagJWS, authorization: string}> => {
     let payload: any = { url }
     body && (payload = { ...payload, body})
@@ -87,6 +80,13 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     const jws = await this._ceramic.did.createJWS(payload)
     const authorization = `Basic ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
     return { jws, authorization }
+  }
+
+  /**
+   * Increments nonce in memory.
+   */
+  private _updateNonce = async (): Promise<void> => {
+    this._nonce = this._nonce + 1
   }
 
   private _sendRequest = async (url: URL| string, opts?: FetchOpts): Promise<any> => {
@@ -97,4 +97,9 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     }
     return data
   }
+
+  private _getNonceEndpoint = (): string => {
+    return this._anchorServiceUrl + `/api/v0/auth/did/${this._ceramic.did.id}/nonce`
+  }
+
 }

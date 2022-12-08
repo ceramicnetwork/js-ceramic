@@ -8,8 +8,8 @@ const mockedUrls = {
 }
 
 const mockedCalls = {
-  'NONCE_OFFLINE': { response: { error: 'failed' } },
-  'NONCE_ONLINE': { response: { nonce: 5 } },
+  NONCE_OFFLINE: { response: { error: 'failed' } },
+  NONCE_ONLINE: { response: { nonce: 5 } },
 }
 
 jest.unstable_mockModule('cross-fetch', () => {
@@ -17,9 +17,9 @@ jest.unstable_mockModule('cross-fetch', () => {
     ok: true,
     json: async () => {
       if (url.startsWith(mockedUrls.OFFLINE)) {
-        return mockedCalls.NONCE_OFFLINE
+        return mockedCalls.NONCE_OFFLINE.response
       } else {
-        return mockedCalls.NONCE_ONLINE
+        return mockedCalls.NONCE_ONLINE.response
       }
     },
   }))
@@ -111,18 +111,18 @@ describe('sendAuthenticatedRequest', () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()
     expect(auth.nonce).toEqual(5)
-    await auth.sendAuthenticatedRequest(mockedUrls.nonceOnline(auth.ceramic.did.id))
+    await auth.sendAuthenticatedRequest(mockedUrls.nonceOnline(ceramic.did.id))
     expect(auth.nonce).toEqual(6)
-    await auth.sendAuthenticatedRequest(mockedUrls.nonceOnline(auth.ceramic.did.id))
+    await auth.sendAuthenticatedRequest(mockedUrls.nonceOnline(ceramic.did.id))
     expect(auth.nonce).toEqual(7)
   })
   test('increments nonce on failure', async () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()
     expect(auth.nonce).toEqual(5)
-    await auth.sendAuthenticatedRequest(mockedUrls.nonceOffline(auth.ceramic.did.id))
+    await auth.sendAuthenticatedRequest(mockedUrls.nonceOffline(ceramic.did.id))
     expect(auth.nonce).toEqual(6)
-    await auth.sendAuthenticatedRequest(mockedUrls.nonceOnline(auth.ceramic.did.id))
+    await auth.sendAuthenticatedRequest(mockedUrls.nonceOnline(ceramic.did.id))
     expect(auth.nonce).toEqual(7)
   })
 })
