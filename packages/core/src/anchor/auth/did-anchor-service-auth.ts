@@ -45,16 +45,15 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     }
     let nonce
     const { authorization } = await this.signRequest(this.nonceApiEndpoint)
-    let headers: any = { authorization }
     const data = await this._sendRequest(this.nonceApiEndpoint, {
       method: HttpMethods.POST,
-      headers,
+      headers: { authorization },
       body: {did: this._ceramic.did.id}
     })
     if (data) {
       if (data.nonce) {
         nonce = Number(data.nonce)
-        if (nonce != NaN) {
+        if (!isNaN(nonce)) {
           return nonce
         }
       }
