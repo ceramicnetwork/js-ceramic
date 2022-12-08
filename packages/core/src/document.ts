@@ -399,8 +399,11 @@ class Document extends EventEmitter {
     // We have a conflict. Before getting into this function we already confirmed that
     // the 'prev' pointer from the earliest commit in the remote log does point to some valid
     // commit in our local log.  But since it doesn't point to the *most recent* commit in our
-    // local log, that means it represents a different branch of history for this stream. We
-    // now need to apply conflict resolution rules to decide which branch of history survives.
+    // local log, that means it represents a different branch of history for this stream.
+    //
+    // Since there is no way to merge histories currently, we will need to pick one branch of
+    // history to survive, and discard the other branch - losing all writes from the discarded
+    // branch.
     //
     // Example of conflict situation where the first two commits are the same, but the last two
     // commits diverge:
