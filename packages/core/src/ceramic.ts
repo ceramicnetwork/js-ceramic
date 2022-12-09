@@ -50,6 +50,7 @@ import { ShutdownSignal } from './shutdown-signal.js'
 import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
+import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -186,6 +187,7 @@ export class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly admin: AdminApi
   readonly repository: Repository
+  private readonly anchorResumingService: AnchorResumingService
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
@@ -202,6 +204,7 @@ export class Ceramic implements CeramicApi {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
+    this.anchorResumingService = new AnchorResumingService(this._logger)
     this.repository = modules.repository
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
@@ -543,6 +546,13 @@ export class Ceramic implements CeramicApi {
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
 
+      // We're not awaiting here for purpose, it's not supposed to be blocking
+      this.anchorResumingService
+        .resumeRunningStatesFromAnchorRequestStore(this.repository)
+        .catch((error) => {
+          this._logger.err(`Error while resuming anchors: ${error}`)
+        })
+
       await this._startupChecks()
     } catch (err) {
       await this.close()
@@ -585,7 +595,6 @@ export class Ceramic implements CeramicApi {
       const cidFound = await this.dispatcher.cidExistsInLocalIPFSStore(cid)
       if (!cidFound) {
         const streamID = StreamUtils.streamIdFromState(state).toString()
-
 
         if (!process.env.IPFS_PATH && fs.existsSync(path.resolve(os.homedir(), '.jsipfs'))) {
           throw new Error(
@@ -874,6 +883,7 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
+    this.anchorResumingService.close()
     this._shutdownSignal.abort()
     await this.dispatcher.close()
     await this.repository.close()
