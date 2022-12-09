@@ -399,8 +399,11 @@ class Document extends EventEmitter {
     // We have a conflict. Before getting into this function we already confirmed that
     // the 'prev' pointer from the earliest commit in the remote log does point to some valid
     // commit in our local log.  But since it doesn't point to the *most recent* commit in our
-    // local log, that means it represents a different branch of history for this stream. We
-    // now need to apply conflict resolution rules to decide which branch of history survives.
+    // local log, that means it represents a different branch of history for this stream.
+    //
+    // Since there is no way to merge histories currently, we will need to pick one branch of
+    // history to survive, and discard the other branch - losing all writes from the discarded
+    // branch.
     //
     // Example of conflict situation where the first two commits are the same, but the last two
     // commits diverge:
@@ -429,32 +432,25 @@ class Document extends EventEmitter {
     const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
 
     if (isLocalAnchored && isRemoteAnchored) {
-      // compare anchor proofs if both states are anchored
       const { anchorProof: localProof } = localState
       const { anchorProof: remoteProof } = remoteState
 
       if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
-        // if the remote state has an earlier anchor timestamp than the local, apply the remote
-        // log to our local state. Otherwise, keep present state.
         this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
         return true
       }
     }
 
     if (!isLocalAnchored && isRemoteAnchored) {
-      // if the remote state is anchored before the local, apply the remote log to our local state.
-      // Otherwise, keep present state.
       this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
       return true
     }
 
     if (!isLocalAnchored && !isRemoteAnchored) {
-      // if neither of them is anchored, apply the remote log
       this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
       return true
     }
 
-    // Default case, we keep our original local state without applying remoteLog.
     return false
   }
 
