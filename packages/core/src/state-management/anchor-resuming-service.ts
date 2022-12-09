@@ -25,7 +25,9 @@ export class AnchorResumingService {
   }
 
   async resumeRunningStatesFromAnchorRequestStore(repository: Repository): Promise<void> {
-    this.#shouldBeClosed = false
+    if (this.#shouldBeClosed)
+      throw Error('This AnchorResumingService is closed, create a new instance to resume')
+
     const currentTimestamp = Date.now()
     let gt: StreamID | undefined = undefined
     let batch = new Array<AnchorRequestStoreListResult>()
@@ -48,7 +50,7 @@ export class AnchorResumingService {
             )
           }
           this.logger.log(
-            LogStyle.info,
+            LogStyle.verbose,
             `Resumed running state for stream id: ${listResult.key.toString()}`
           )
         })
