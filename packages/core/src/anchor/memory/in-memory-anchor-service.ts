@@ -18,6 +18,7 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
 import { PubsubMessage } from '../../index.js'
+import { str } from 'ajv'
 const { serialize, MsgType } = PubsubMessage
 
 const DID_MATCHER =

@@ -79,25 +79,15 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     await ceramic.close()
   })
 
-  test('Anchors streams from anchor request store if anchorOnRequest === true', async () => {
+  test('Anchors streams from anchor request store', async () => {
     const numberOfStreams = 3
 
     const ceramic = await createCeramic(ipfs, {
-      anchorOnRequest: true,
       stateStoreDirectory: stateStoreDirectoryName,
     })
 
-    const anchorService = ceramic.repository.stateManager.anchorService as InMemoryAnchorService
-    const mockedProcess = jest.fn()
-    // @ts-ignore Mock the implementation of process to prevent setting the status to ANCHORED or FAILED
-    anchorService._process = mockedProcess
-    mockedProcess.mockImplementation((...args) => {
-      return Promise.resolve()
-    })
-
-    // create a few streams using the ceramic instance with manual anchoring to make sure that they stay in
-    // the anchor request store and in the stream state store (so that the ceramic instance with anchorOnRequest === true
-    // can load them
+    // create a few streams with anchor === true to make sure that they stay in the anchor request store
+    //  and in the stream state store
     const streamIds = await Promise.all(
       [...Array(numberOfStreams).keys()].map((number) => {
         return TileDocument.create(ceramic, { x: number }, null, {
@@ -107,8 +97,6 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
         })
       })
     )
-
-    expect(mockedProcess).toHaveBeenCalledTimes(numberOfStreams)
 
     const loaded = (await ceramic.repository.anchorRequestStore.list()).map((result) =>
       result.key.toString()
@@ -133,8 +121,16 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     // Create a new ceramic (with the same state directory) to check that resuming works,
     // even if everything is loaded from scratch
     const newCeramic = await createCeramic(ipfs, {
-      anchorOnRequest: true,
       stateStoreDirectory: stateStoreDirectoryName,
+    })
+
+    const newAnchoringService = newCeramic.repository.stateManager
+      .anchorService as InMemoryAnchorService
+
+    runnningStates$.forEach((state$) => {
+      // We call _process(...) here to mimic the behaviour of the real CAS which would send us ANCHORED status, if polled
+      // @ts-ignore { cid: , streamID: } is not an instance of Candidate class (which shouldn't be exported, if necessary)
+      newAnchoringService._process({ cid: state$.tip, streamId: state$.id })
     })
 
     // Use the ceramic instance with anchorOnRequest === true to resume anchors
@@ -154,6 +150,8 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
+    // We check that the newRunningStates$ loaded from newCeramic are correctly updated, which means
+    // that the anchor service needs to be polled for anchor statuses
     newRunnningStates$.forEach((runningState$) => {
       expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })

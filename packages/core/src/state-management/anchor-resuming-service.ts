@@ -37,20 +37,7 @@ export class AnchorResumingService {
       batch.map((listResult) => {
         this.resumeQ.add(async () => {
           try {
-            const stream$ = await repository.load(listResult.key, {
-              sync: SyncOptions.PREFER_CACHE,
-            })
-            if ([AnchorStatus.FAILED, AnchorStatus.ANCHORED].includes(stream$.value.anchorStatus)) {
-              await repository.anchorRequestStore.remove(stream$.id)
-              return
-            }
-            // TODO: CDB-2010 Do we want to do the actual anchor request here? Or do we just want to start polling? If the latter, than .load(..) doesn't seem to start polling as of now.
-            await repository.stateManager.anchor(stream$)
-            if (listResult.value.timestamp > currentTimestamp) {
-              throw Error(
-                `System clock possibly moving backwards!!! Check your system clock and if it's accurate, delete your state store`
-              )
-            }
+            await repository.fromMemoryOrStore(listResult.key)
             this.logger.log(
               LogStyle.verbose,
               `Resumed running state for stream id: ${listResult.key.toString()}`

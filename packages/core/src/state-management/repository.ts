@@ -154,10 +154,7 @@ export class Repository {
     if (streamState) {
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
-      const toRecover =
-        runningState.value.anchorStatus === AnchorStatus.PENDING ||
-        runningState.value.anchorStatus === AnchorStatus.PROCESSING
-      if (toRecover && this.stateManager.anchorService) {
+      if (this.stateManager.anchorService) {
         this.stateManager.confirmAnchorResponse(runningState)
       }
       return runningState
