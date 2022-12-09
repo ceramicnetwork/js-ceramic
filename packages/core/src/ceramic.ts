@@ -546,14 +546,14 @@ export class Ceramic implements CeramicApi {
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
 
+      await this._startupChecks()
+
       // We're not awaiting here for purpose, it's not supposed to be blocking
       this.anchorResumingService
         .resumeRunningStatesFromAnchorRequestStore(this.repository)
         .catch((error) => {
           this._logger.err(`Error while resuming anchors: ${error}`)
         })
-
-      await this._startupChecks()
     } catch (err) {
       await this.close()
       throw err
