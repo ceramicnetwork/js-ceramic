@@ -6,6 +6,7 @@ import { homedir } from 'node:os'
 describe('reading from file', () => {
   let folder: tmp.DirectoryResult
   let configFilepath: URL
+  const minimumConfig = { 'node': {'did-seed': 'abc'} }
   beforeEach(async () => {
     folder = await tmp.dir({ unsafeCleanup: true })
     const base = new URL(`file://${folder.path}/`)
@@ -16,19 +17,19 @@ describe('reading from file', () => {
   })
 
   test('read config from file', async () => {
-    const config = {}
+    const config = Object.assign({}, minimumConfig)
     await writeFile(configFilepath, JSON.stringify(config))
     await expect(DaemonConfig.fromFile(configFilepath)).resolves.toBeInstanceOf(DaemonConfig)
   })
   test('expand relative path', async () => {
-    const config = {
+    const config = Object.assign({
       logger: {
         'log-directory': './log-dir/',
       },
       'state-store': {
         'local-directory': './statestore/',
       },
-    }
+    }, minimumConfig)
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     expect(read.logger.logDirectory).toEqual(new URL('./log-dir/', configFilepath).pathname)
@@ -37,14 +38,14 @@ describe('reading from file', () => {
     )
   })
   test('expand home-dir path', async () => {
-    const config = {
+    const config = Object.assign({
       logger: {
         'log-directory': '~/log-dir/',
       },
       'state-store': {
         'local-directory': '~/statestore/',
       },
-    }
+    }, minimumConfig)
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     const home = new URL(`file://${homedir()}/`)
@@ -52,28 +53,28 @@ describe('reading from file', () => {
     expect(read.stateStore.localDirectory).toEqual(new URL('./statestore/', home).pathname)
   })
   test('expand cwd path', async () => {
-    const config = {
+    const config = Object.assign({
       logger: {
         'log-directory': '~+/log-dir/',
       },
       'state-store': {
         'local-directory': '~+/statestore/',
       },
-    }
+    }, minimumConfig)
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     expect(read.logger.logDirectory).toEqual(`${process.cwd()}/log-dir/`)
     expect(read.stateStore.localDirectory).toEqual(`${process.cwd()}/statestore/`)
   })
   test('do not expand absolute path', async () => {
-    const config = {
+    const config = Object.assign({
       logger: {
         'log-directory': '/log-dir/',
       },
       'state-store': {
         'local-directory': '/var/ceramic/statestore/',
       },
-    }
+    }, minimumConfig)
     await writeFile(configFilepath, JSON.stringify(config))
     const read = await DaemonConfig.fromFile(configFilepath)
     expect(read.logger.logDirectory).toEqual('/log-dir/')
