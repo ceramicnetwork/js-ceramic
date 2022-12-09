@@ -246,7 +246,7 @@ export class AuthenticatedEthereumAnchorService extends EthereumAnchorService im
     pollInterval: number = DEFAULT_POLL_INTERVAL,
   ) {
     super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest)
-    // this.auth = auth
+    this.auth = auth
   }
 
   /**
@@ -255,11 +255,11 @@ export class AuthenticatedEthereumAnchorService extends EthereumAnchorService im
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: CeramicApi) {
-    // this.auth.ceramic = ceramic
+    this.auth.ceramic = ceramic
   }
 
   async init(): Promise<void> {
-    // await this.auth.init()
+    await this.auth.init()
     await super.init()
   }
 }
