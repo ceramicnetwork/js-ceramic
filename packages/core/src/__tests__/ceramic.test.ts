@@ -425,37 +425,43 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('Loading many commits of same stream via multiquery works', async () => {
-    await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs1, ipfs2)
-      const ceramic1 = await createCeramic(ipfs1, false)
-      const ceramic2 = await createCeramic(ipfs2, false)
+  const LARGE_MULTIQUERY_TIMEOUT = 30000
 
-      const NUM_UPDATES = 20
-      const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
-      for (let i = 1; i < NUM_UPDATES; i++) {
-        await stream.update({ counter: i }, null, { anchor: false, publish: false })
-      }
+  it(
+    'Loading many commits of same stream via multiquery works',
+    async () => {
+      await withFleet(2, async ([ipfs1, ipfs2]) => {
+        await swarmConnect(ipfs1, ipfs2)
+        const ceramic1 = await createCeramic(ipfs1, false)
+        const ceramic2 = await createCeramic(ipfs2, false)
 
-      const queries: Array<MultiQuery> = [{ streamId: stream.id }]
-      for (const commitId of stream.allCommitIds) {
-        queries.push({ streamId: commitId })
-      }
+        const NUM_UPDATES = 20
+        const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
+        for (let i = 1; i < NUM_UPDATES; i++) {
+          await stream.update({ counter: i }, null, { anchor: false, publish: false })
+        }
 
-      const result = await ceramic2.multiQuery(queries, 30000)
-      expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
-      expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
+        const queries: Array<MultiQuery> = [{ streamId: stream.id }]
+        for (const commitId of stream.allCommitIds) {
+          queries.push({ streamId: commitId })
+        }
 
-      let i = 0
-      for (const commitId of stream.allCommitIds) {
-        const docAtCommit = result[commitId.toString()]
-        expect(docAtCommit.content).toEqual({ counter: i++ })
-      }
+        const result = await ceramic2.multiQuery(queries, LARGE_MULTIQUERY_TIMEOUT) // Here it starts to time out
+        expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
+        expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
 
-      await ceramic1.close()
-      await ceramic2.close()
-    })
-  })
+        let i = 0
+        for (const commitId of stream.allCommitIds) {
+          const docAtCommit = result[commitId.toString()]
+          expect(docAtCommit.content).toEqual({ counter: i++ })
+        }
+
+        await ceramic1.close()
+        await ceramic2.close()
+      })
+    },
+    LARGE_MULTIQUERY_TIMEOUT + 1000
+  )
 
   it('Multiquery with genesis commit provided', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
