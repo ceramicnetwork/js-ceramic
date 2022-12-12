@@ -27,7 +27,8 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
 export class TestUtils {
   /**
    * Wait up to 'timeoutMs' for the given predicate to return true.  Polls the given predicate once
-   * every 100ms.  Returns true if the predicate eventually returned true, or false if it timed out
+   * every 100ms (plus however long it takes for the predicate itself to execute).  
+   * Returns true if the predicate eventually returned true, or false if it timed out
    * without ever becoming true.
    *
    * This test doesn't throw when it times out as that would wind up throwing a fairly uninformative
