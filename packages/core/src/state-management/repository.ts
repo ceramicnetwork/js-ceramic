@@ -154,7 +154,8 @@ export class Repository {
     if (streamState) {
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
-      if (this.stateManager.anchorService) {
+      const toRecover = await this.anchorRequestStore.exists(streamId)
+      if (toRecover && this.stateManager.anchorService) {
         this.stateManager.confirmAnchorResponse(runningState)
       }
       return runningState

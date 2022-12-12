@@ -53,6 +53,9 @@ export class PinStore {
 
     const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
+    // TODO: CDB-XXXX move this to the beginnign of the method, as it's possible now for a stream not to have
+    // anchorStatus updated from NOT_REQUESTED to PENDING in the stream state store, because this line is after the
+    // newCommits check
     await this.stateStore.saveFromStreamStateHolder(runningState)
     runningState.markAsPinned()
 

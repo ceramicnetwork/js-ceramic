@@ -47,6 +47,10 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     this.useCaseName = 'anchor-requests'
   }
 
+  exists(key: StreamID): Promise<boolean> {
+    return this.store.exists(generateKey(key), this.useCaseName)
+  }
+
   async list(limit?: number, gt?: StreamID): Promise<Array<AnchorRequestStoreListResult>> {
     return (
       await this.store.find({
