@@ -17,9 +17,6 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
-import { PubsubMessage } from '../../index.js'
-import { str } from 'ajv'
-const { serialize, MsgType } = PubsubMessage
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -297,7 +294,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const feed$ = this.#feed.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
-
     if (anchorResponse) {
       return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
     } else {
