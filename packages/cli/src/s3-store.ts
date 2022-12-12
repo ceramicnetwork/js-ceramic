@@ -93,7 +93,7 @@ export class S3Store implements IKVStore {
     const options = {
       limit: params?.limit,
     }
-    if (params.gt) (options as any).gt = params.gt
+    if (params?.gt) (options as any).gt = params.gt
     const dataArray = await toArray(store.createReadStream(options))
     return dataArray.map((data) => {
       return { key: data.key.toString(), value: data.value }
