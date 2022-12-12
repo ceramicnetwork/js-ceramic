@@ -1,4 +1,5 @@
 import tmp from 'tmp-promise'
+import { jest } from '@jest/globals'
 import { buildIndexing, UnsupportedDatabaseProtocolError } from '../build-indexing.js'
 import { PostgresIndexApi } from '../postgres/postgres-index-api.js'
 import { SqliteIndexApi } from '../sqlite/sqlite-index-api.js'
@@ -8,6 +9,8 @@ import pgTest from '@databases/pg-test'
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
 // @ts-ignore default import
 const getDatabase = pgTest.default
+
+jest.setTimeout(20000)
 
 describe('sqlite', () => {
   let databaseFolder: tmp.DirectoryResult
