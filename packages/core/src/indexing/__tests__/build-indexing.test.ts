@@ -56,7 +56,7 @@ test('build for postgres connection string', async () => {
   )
   expect(indexingApi).toBeInstanceOf(PostgresIndexApi)
   await kill()
-})
+}, 10000)
 
 test('throw on unsupported protocol', () => {
   const connectionString = 'garbage://host:3000/database'
