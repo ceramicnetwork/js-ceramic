@@ -297,12 +297,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     if (anchorResponse) {
       return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
     } else {
-      return of<AnchorServiceResponse>({
-        status: AnchorStatus.FAILED,
-        streamId,
-        cid: tip,
-        message: 'Request not found',
-      })
+      return feed$
     }
   }
 
