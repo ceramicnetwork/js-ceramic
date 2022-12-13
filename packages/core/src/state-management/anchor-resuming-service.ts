@@ -45,7 +45,7 @@ export class AnchorResumingService {
             if (this.#shouldBeClosed) {
               this.logger.log(
                 LogStyle.verbose,
-                `Anthor Resuming Service threw an error after it was closed: ${error.toString()}`
+                `Anchor Resuming Service threw an error after it was closed: ${error.toString()}`
               )
             } else {
               throw error

@@ -85,7 +85,15 @@ export class S3Store implements IKVStore {
 
   async exists(key: string, useCaseName?: string): Promise<boolean> {
     const store = await this.#storeMap.get(useCaseName)
-    return typeof (await store.get(key)) === 'string'
+    try {
+      return typeof (await store.get(key).toString()) === 'string'
+    } catch (e) {
+      if (/Key not found in database/.test(e.toString())) {
+        return false
+      } else {
+        throw e
+      }
+    }
   }
 
   async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
@@ -96,7 +104,7 @@ export class S3Store implements IKVStore {
     if (params?.gt) (options as any).gt = params.gt
     const dataArray = await toArray(store.createReadStream(options))
     return dataArray.map((data) => {
-      return { key: data.key.toString(), value: data.value }
+      return { key: data.key.toString(), value: JSON.parse(data.value.toString()) }
     })
   }
 
