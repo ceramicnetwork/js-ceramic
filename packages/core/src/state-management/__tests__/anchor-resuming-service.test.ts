@@ -110,9 +110,6 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     )
     await anchorResumingService.resumeRunningStatesFromAnchorRequestStore(newCeramic.repository)
 
-    // Wait for anchor requests to be processed
-    await TestUtils.delay(6000) // TODO(CDB-2090): use less brittle approach to waiting for this condition
-
     const newRunnningStates$ = await Promise.all(
       streamIds.map((streamId) => {
         return newCeramic.repository.load(streamId, {
@@ -120,6 +117,10 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
         })
       })
     )
+
+    await TestUtils.waitForConditionOrTimeout(async () => {
+      return newRunnningStates$[0].state.anchorStatus === AnchorStatus.ANCHORED
+    }, 6000)
 
     // We check that the newRunningStates$ loaded from newCeramic are correctly updated, which means
     // that the anchor service needs to be polled for anchor statuses
