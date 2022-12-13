@@ -267,19 +267,29 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-  /**
-   * DID used to sign requests to CAS. This is automatically derived by the `did-seed`.
-   */
-  @jsonMember(String)
-  did: string
+
+  private _didSeed: URL;
 
   /**
-   * Seed used to sign requests to CAS.
-   * This is randomly generated if a config file is not found.
-   * When specifying in a config file, use the name 'did-seed'.
+   * Disallows public access to did-seed because it is a sensitive field.
    */
   @jsonMember(String, { name: 'did-seed' })
-  didSeed: URL
+  public get didSeed(): any {
+    return undefined;
+  }
+
+  public sensitive_didSeed(): URL {
+    return this._didSeed
+  }
+
+  /**
+   * Setter for seed used to sign requests to CAS.
+   * A seed is randomly generated if a config file is not found.
+   * When specifying in a config file, use the name 'did-seed'.
+   */
+  public set didSeed(value: URL) {
+    this._didSeed = value
+  }
 
   /**
    * Whether to run the Ceramic node in read-only gateway mode.
@@ -434,7 +444,8 @@ export class DaemonConfig {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
     // Whenever we load from a file the did-seed needs to be present even if not using an anchor auth method
-    if (!config.node.didSeed) throw Error('Daemon config is missing node.did-seed')
+    if (!config.node) throw Error('Daemon config is missing node.did-seed')
+    if (!config.node.sensitive_didSeed()) throw Error('Daemon config is missing node.did-seed')
     expandPaths(config, filepath)
     return config
   }

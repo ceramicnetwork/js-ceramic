@@ -299,7 +299,7 @@ export class CeramicDaemon {
       const s3Store = new S3Store(opts.stateStore?.s3Bucket, params.networkOptions.name)
       await ceramic.repository.injectStateStore(s3Store)
     }
-    const provider = makeNodeDIDProvider(parseSeedUrl(opts.node.didSeed))
+    const provider = makeNodeDIDProvider(parseSeedUrl(opts.node.sensitive_didSeed()))
     const did = new DID({ provider, resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     ceramic.did = did
     await ceramic._init(true)

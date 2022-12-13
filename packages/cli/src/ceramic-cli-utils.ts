@@ -40,7 +40,6 @@ const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG
  */
 const generateDefaultDaemonConfig = () => {
   const didSeed = generateSeedUrl()
-  const did = makeNodeDID(parseSeedUrl(didSeed)).id
 
   return DaemonConfig.fromObject({
     anchor: {
@@ -54,7 +53,6 @@ const generateDefaultDaemonConfig = () => {
     },
     network: { name: Networks.TESTNET_CLAY },
     node: {
-      'did': did,
       'did-seed': didSeed
     },
     'state-store': {
@@ -141,7 +139,6 @@ export class CeramicCliUtils {
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
     if (process.env.CERAMIC_NODE_DID_SEED) {
       config.node.didSeed = new URL(process.env.CERAMIC_NODE_DID_SEED)
-      config.node.did = makeNodeDID(parseSeedUrl(config.node.didSeed)).id
     }
 
     {
