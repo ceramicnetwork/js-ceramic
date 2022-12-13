@@ -29,7 +29,6 @@ export class AnchorResumingService {
       throw Error('This AnchorResumingService is closed, create a new instance to resume')
     }
 
-    const currentTimestamp = Date.now()
     let gt: StreamID | undefined = undefined
     let batch = new Array<AnchorRequestStoreListResult>()
     do {

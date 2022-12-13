@@ -191,8 +191,7 @@ export class StateManager {
     const shouldIndex =
       state$.state.metadata.model && this._index.shouldIndexStream(state$.state.metadata.model)
     if (isPinned || shouldIndex) {
-      // force: true to save the updated stream in the stream state store, even if there hadn't been any new pinned commits
-      await this.pinStore.add(state$, true)
+      await this.pinStore.add(state$)
     }
     await this.indexStreamIfNeeded(state$)
   }

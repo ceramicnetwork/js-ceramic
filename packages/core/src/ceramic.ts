@@ -548,7 +548,7 @@ export class Ceramic implements CeramicApi {
 
       await this._startupChecks()
 
-      // We're not awaiting here for purpose, it's not supposed to be blocking
+      // We're not awaiting here on purpose, it's not supposed to be blocking
       this.anchorResumingService
         .resumeRunningStatesFromAnchorRequestStore(this.repository)
         .catch((error) => {
