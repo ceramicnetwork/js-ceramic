@@ -3,6 +3,7 @@ import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { StreamMetadata } from './stream.js'
 
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING
@@ -31,6 +32,13 @@ export interface AnchorServiceFailed {
   readonly streamId: StreamID
   readonly cid: CID
   readonly message: string
+}
+
+export type RequestAnchorParams = {
+  streamID: StreamID
+  tip: CID
+  timestamp: number
+  metadata: StreamMetadata
 }
 
 /**
@@ -68,7 +76,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>
+  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
