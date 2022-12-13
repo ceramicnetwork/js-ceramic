@@ -2,7 +2,6 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import {
   DiagnosticsLogger,
   Networks,
-  Stream,
   StreamState,
   StreamStateHolder,
   StreamUtils
