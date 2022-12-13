@@ -96,8 +96,11 @@ export interface AnchorValidator {
   init(chainId: string | null): Promise<void>
 
   /**
-   * Validate anchor proof commit
-   * @param anchorProof - Proof of blockchain inclusion
+   * Verifies that the given anchor proof refers to a valid ethereum transaction that actually
+   * includes the expected merkle root in the transaction data.  Throws if the transaction doesn't
+   * contain the expected data.
+   * @param anchorProof Proof of blockchain inclusion
+   * @returns The ethereum block timestamp that includes the anchor transaction from the anchorProof
    */
-  validateChainInclusion(anchorProof: AnchorProof): Promise<void>
+  validateChainInclusion(anchorProof: AnchorProof): Promise<number>
 }

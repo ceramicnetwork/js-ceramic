@@ -52,7 +52,6 @@ const ABI = ['function anchorDagCbor(bytes32)']
 
 const iface = new Interface(ABI)
 
-
 //TODO (NET-1659): Finalize block numbers and smart contract addresses once CAS is creating smart contract anchors
 const BLOCK_THRESHHOLDS = {
   'eip155:1': 1000000000, //mainnet
@@ -209,7 +208,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
   }
 
-  async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
+  async validateChainInclusion(anchorProof: AnchorProof): Promise<number> {
     const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
     const [txResponse, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
@@ -217,18 +216,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
 
     if (!txCid.equals(anchorProof.root)) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
-    }
-
-    if (anchorProof.blockNumber !== txResponse.blockNumber) {
-      throw new Error(
-        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${txResponse.blockNumber}`
-      )
-    }
-
-    if (anchorProof.blockTimestamp !== block.timestamp) {
-      throw new Error(
-        `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`
-      )
     }
 
     // if the block number is greater than the threshold and the txType is `raw` or non existent
@@ -243,7 +230,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    if (anchorProof.txType === V1_PROOF_TYPE && txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]) {
+    if (
+      anchorProof.txType === V1_PROOF_TYPE &&
+      txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]
+    ) {
       throw new Error(
         `Anchor was created using address ${
           txResponse.to
@@ -252,6 +242,8 @@ export class EthereumAnchorValidator implements AnchorValidator {
         }`
       )
     }
+
+    return block.timestamp
   }
 
   /**

@@ -39,7 +39,7 @@ export async function applyAnchorCommit(
   state.log.push({
     cid: commitData.cid,
     type: CommitType.ANCHOR,
-    timestamp: commitData.proof.blockTimestamp,
+    timestamp: commitData.timestamp,
   })
 
   applyAnchorTimestampsToLog(state)

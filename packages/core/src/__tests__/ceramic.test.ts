@@ -141,8 +141,8 @@ describe('Ceramic integration', () => {
         stream3,
         2000,
         (state) => StreamUtils.statesEqual(state, stream1.state),
-        () => {
-          throw new Error(`streamtype3.state should equal streamtype1.state`)
+        (state) => {
+          expect(state).toEqual(stream1.state)
         }
       )
 

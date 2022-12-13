@@ -901,8 +901,6 @@ describe('ModelInstanceDocumentHandler', () => {
 
     // apply anchor
     const anchorProof = {
-      blockNumber: 123456,
-      blockTimestamp: 1615799679,
       chainId: 'fakechain:123',
     }
     await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
@@ -911,6 +909,7 @@ describe('ModelInstanceDocumentHandler', () => {
       type: CommitType.ANCHOR,
       commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_2 },
       proof: anchorProof,
+      timestamp: 1615799679,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
     delete state.metadata.unique

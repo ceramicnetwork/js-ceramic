@@ -21,17 +21,18 @@ import { HandlersMap } from './handlers-map.js'
 import { Utils } from './utils.js'
 
 /**
- * Verifies anchor commit structure
+ * Verifies anchor commit structure. Throws if the anchor commit is invalid in any way.
  *
  * @param dispatcher - To get raw blob from IPFS
  * @param anchorValidator - AnchorValidator to verify chain inclusion
  * @param commitData - Anchor commit data
+ * @returns The anchor timestamp of the blockchain anchor transaction (in seconds).
  */
 async function verifyAnchorCommit(
   dispatcher: Dispatcher,
   anchorValidator: AnchorValidator,
   commitData: CommitData
-): Promise<AnchorProof> {
+): Promise<number> {
   const proof = commitData.proof
   const commitPath = commitData.commit.path
 
@@ -61,8 +62,7 @@ async function verifyAnchorCommit(
     )
   }
 
-  await anchorValidator.validateChainInclusion(proof)
-  return proof
+  return anchorValidator.validateChainInclusion(proof)
 }
 
 /**
@@ -260,8 +260,15 @@ export class ConflictResolution {
   ): Promise<StreamState> {
     if (StreamUtils.isAnchorCommitData(commitData)) {
       // It's an anchor commit
-      // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
-      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commitData)
+      const anchorTimestamp = await verifyAnchorCommit(
+        this.dispatcher,
+        this.anchorValidator,
+        commitData
+      )
+      // Add the anchor's blockTimestamp that we learned when verifying the anchor commit
+      // inclusion on chain to the CommitData.  This will allow that timestamp information to be
+      // available when applying the anchor commit.
+      commitData.timestamp = anchorTimestamp
     }
 
     return handler.applyCommit(commitData, this.context, state)
