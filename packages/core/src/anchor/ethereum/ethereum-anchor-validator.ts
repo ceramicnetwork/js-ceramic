@@ -226,7 +226,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       throw new Error(
         `Any anchor proofs created after block ${
           BLOCK_THRESHHOLDS[this._chainId]
-        } must include the txType field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+        } must include the txType field. Anchor txn blockNumber: ${txResponse.blockNumber}`
       )
     }
 

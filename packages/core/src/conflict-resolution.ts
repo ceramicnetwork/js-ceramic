@@ -1,6 +1,5 @@
 import type { CID } from 'multiformats/cid'
 import {
-  AnchorProof,
   AnchorStatus,
   AnchorValidator,
   CommitData,
@@ -99,10 +98,14 @@ export async function pickLogToAccept(
       )
     }
 
-    // Compare block heights to decide which to take
-    if (proof1.blockNumber < proof2.blockNumber) {
+    // Compare anchor block timestamp to decide which to take.  Even though blockTimestamps can
+    // drift from wallclock time, they are guaranteed to be increasing in increasing blockNumbers,
+    // so they are still safe to compare for relative ordering.
+    const anchorTimestamp1 = StreamUtils.anchorTimestampFromState(state1)
+    const anchorTimestamp2 = StreamUtils.anchorTimestampFromState(state2)
+    if (anchorTimestamp1 < anchorTimestamp2) {
       return state1
-    } else if (proof2.blockNumber < proof1.blockNumber) {
+    } else if (anchorTimestamp2 < anchorTimestamp1) {
       return state2
     }
     // If they have the same block number fall through to fallback mechanism

@@ -432,7 +432,7 @@ export class Repository {
     }
 
     // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
-    const lastAnchor = asDate(state$.value.anchorProof?.blockTimestamp)
+    const lastAnchor = asDate(StreamUtils.anchorTimestampFromState(state$.value))
     const firstAnchor = asDate(
       state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
     )
