@@ -327,7 +327,7 @@ export class StreamUtils {
         throw new Error(
           `CACAO expired: Commit ${logEntry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
             state
-          ).toString()} has a CACAO that expired at ${logEntry.expirationTime}`
+          ).toString()} has a CACAO that expired at ${logEntry.expirationTime}. Loading the stream with 'sync: SyncOptions.ALWAYS_SYNC' will restore the stream to a usable state, by discarding the invalid commits (this means losing the data from those invalid writes!)`
         )
       }
     }

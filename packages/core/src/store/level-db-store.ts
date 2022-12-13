@@ -1,6 +1,6 @@
 import levelTs from 'level-ts'
 import type Level from 'level-ts'
-import { IKVStore, StoreSearchParams } from './ikv-store.js'
+import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import path from 'path'
 import * as fs from 'fs'
 import { Networks } from '@ceramicnetwork/common'
@@ -85,31 +85,46 @@ export class LevelDbStore implements IKVStore {
   }
 
   async del(key: string, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).del(key)
+    const store = await this.#storeMap.get(useCaseName)
+    return await store.del(key)
   }
 
   async get(key: string, useCaseName?: string): Promise<any> {
-    return (await this.#storeMap.get(useCaseName)).get(key)
+    const store = await this.#storeMap.get(useCaseName)
+    return await store.get(key)
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
-    return (await this.findKeys(params)).length > 0
+    const keys = await this.findKeys(params)
+    return keys.length > 0
   }
 
-  async findKeys(params?: StoreSearchParams): Promise<Array<any>> {
-    const seachParams: Record<string, any> = {
+  async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
+    const searchParams: Record<string, any> = {
+      keys: true,
+      values: true,
+      limit: params?.limit,
+    }
+    const store = await this.#storeMap.get(params?.useCaseName)
+    return await store.stream(searchParams)
+  }
+
+  async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
+    const searchParams: Record<string, any> = {
       keys: true,
       values: false,
       limit: params?.limit,
     }
 
+    const store = await this.#storeMap.get(params?.useCaseName)
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return (await this.#storeMap.get(params?.useCaseName)).stream(seachParams) as unknown as Promise<
-      Array<any>
-    >
+    return await store.stream(searchParams) as unknown as Promise<
+      Array<string>
+      >
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
-    return (await this.#storeMap.get(useCaseName)).put(key, value)
+    const store = await this.#storeMap.get(useCaseName)
+    return await store.put(key, value)
   }
 }

@@ -6,6 +6,7 @@ import {
 } from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
+  CeramicApi,
   CommitData,
   CommitType,
   Context,
@@ -117,7 +118,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const modelStream = await context.api.loadStream<Model>(metadata.model)
-    await this._validateContent(modelStream, payload.data, true)
+    await this._validateContent(context.api, modelStream, payload.data, true)
     await this._validateHeader(modelStream, payload.header)
 
     return {
@@ -164,7 +165,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.api.loadStream<Model>(metadata.model)
-    await this._validateContent(modelStream, newContent, false)
+    await this._validateContent(context.api, modelStream, newContent, false)
 
     const nextState = cloneDeep(state)
     nextState.signature = SignatureStatus.SIGNED
@@ -187,24 +188,66 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
   /**
    * Validates content against the schema of the model stream with given stream id
+   * @param ceramic - Ceramic handle that can be used to load Streams
    * @param model - The model that this ModelInstanceDocument belongs to
    * @param content - content to validate
    * @param genesis - whether the commit being applied is a genesis commit
    * @private
    */
-  async _validateContent(model: Model, content: any, genesis: boolean): Promise<void> {
+  async _validateContent(
+    ceramic: CeramicApi,
+    model: Model,
+    content: any,
+    genesis: boolean
+  ): Promise<void> {
     if (genesis && model.content.accountRelation.type === 'single') {
       if (content) {
         throw new Error(
           `Deterministic genesis commits for ModelInstanceDocuments must not have content`
         )
       }
-    } else {
-      await this._schemaValidator.validateSchema(
-        content,
-        model.content.schema,
-        model.commitId.toString()
-      )
+      return
+    }
+
+    await this._schemaValidator.validateSchema(
+      content,
+      model.content.schema,
+      model.commitId.toString()
+    )
+
+    // Now validate the relations
+    await this._validateRelationsContent(ceramic, model, content)
+  }
+
+  async _validateRelationsContent(ceramic: CeramicApi, model: Model, content: any) {
+    if (!model.content.relations) {
+      return
+    }
+
+    for (const [fieldName, relationDefinition] of Object.entries(model.content.relations)) {
+      switch (relationDefinition.type) {
+        case 'account':
+          continue
+        case 'document': {
+          const expectedModelStreamId = relationDefinition.model
+          let midStreamId
+          try {
+            midStreamId = StreamID.fromString(content[fieldName])
+          } catch (err) {
+            throw new Error(
+              `Error while parsing relation from field ${fieldName}: Invalid StreamID: ${err.toString()}`
+            )
+          }
+
+          const linkedMid = await ModelInstanceDocument.load(ceramic, midStreamId)
+          const foundModelStreamId = linkedMid.metadata.model.toString()
+          if (expectedModelStreamId !== foundModelStreamId) {
+            throw new Error(
+              `Relation on field ${fieldName} points to Stream ${midStreamId.toString()}, which belongs to Model ${foundModelStreamId}, but this Stream's Model (${model.id.toString()}) specifies that this relation must be to a Stream in the Model ${expectedModelStreamId}`
+            )
+          }
+        }
+      }
     }
   }
 

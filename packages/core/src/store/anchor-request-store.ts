@@ -1,20 +1,38 @@
-
-import { CommitID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { ObjectStore } from './object-store.js'
+import { CID } from 'multiformats/cid'
+import { GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
 
-// TODO: CDB-2009 make this type store explicitly what's needed for an anchor request
-export type AnchorRequestData = Record<string, any>
+export type AnchorRequestData = {
+  cid: CID
+  timestamp: number
+  genesis: GenesisCommit
+}
 
-function generateKey(object: CommitID): string {
+export type AnchorRequestStoreListResult = {
+  key: StreamID,
+  value: AnchorRequestData
+}
+
+function generateKey(object: StreamID): string {
   return object.toString()
 }
 
-function serialize(value: AnchorRequestData): any {
-  return JSON.stringify(value)
+export function serializeAnchorRequestData(value: AnchorRequestData): any {
+  return JSON.stringify({
+    cid: value.cid.toString(),
+    timestamp: value.timestamp,
+    genesis: StreamUtils.serializeCommit(value.genesis),
+  })
 }
 
-function deserialize(serialized: any): AnchorRequestData {
-  return JSON.parse(serialized)
+export function deserializeAnchorRequestData(serialized: any): AnchorRequestData {
+  const parsed = JSON.parse(serialized)
+  return {
+    cid: CID.parse(parsed.cid),
+    timestamp: parsed.timestamp,
+    genesis: StreamUtils.deserializeCommit(parsed.genesis),
+  }
 }
 
 /**
@@ -23,9 +41,20 @@ function deserialize(serialized: any): AnchorRequestData {
  * Anchor request data includes everything that's necessary to request an anchor from Ceramic Anchoring Service (CAS).
  * This store is used to save and retrieve this data so that it can be re-sent to CAS in case of networking issues.
  */
-export class AnchorRequestStore extends ObjectStore<CommitID, AnchorRequestData> {
+export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
   constructor() {
-    super(generateKey, serialize, deserialize)
+    super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.useCaseName = 'anchor-requests'
+  }
+
+  async list(limit?: number): Promise<Array<AnchorRequestStoreListResult>> {
+    return (await this.store.find({ limit: limit, useCaseName: this.useCaseName })).map(
+      (result) => {
+        return {
+          key: StreamID.fromString(result.key),
+          value: deserializeAnchorRequestData(result.value),
+        }
+      }
+    )
   }
 }

@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 

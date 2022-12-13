@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "description": "Ceramic Tile Document stream type",
   "keywords": [
     "ceramic",
@@ -38,7 +38,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/common": "^2.14.0",
     "@ceramicnetwork/streamid": "^2.7.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",

@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.16.0-rc.0...@ceramicnetwork/stream-tests@2.16.0) (2022-12-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.15.0...@ceramicnetwork/stream-tests@2.16.0-rc.0) (2022-11-28)
+
+
+### Features
+
+* **core:** Cache recently processed pubsub messages ([#2559](https://github.com/ceramicnetwork/js-ceramic/issues/2559)) ([94d539b](https://github.com/ceramicnetwork/js-ceramic/commit/94d539b8df21305c7cb4f49cc8c144e9d4622cfd))
+* **core:** Throw when loading or updating a stream with expired CACAOs in the log ([#2574](https://github.com/ceramicnetwork/js-ceramic/issues/2574)) ([928d5e3](https://github.com/ceramicnetwork/js-ceramic/commit/928d5e338957ba361c6b33246091ac145e6740d4))
+
+
+
+
+
 # [2.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.14.0...@ceramicnetwork/stream-tests@2.15.0) (2022-11-16)
 
 

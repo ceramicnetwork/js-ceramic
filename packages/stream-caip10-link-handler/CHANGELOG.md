@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link-handler@2.7.0-rc.0...@ceramicnetwork/stream-caip10-link-handler@2.7.0) (2022-12-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link-handler
+
+
+
+
+
+# [2.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link-handler@2.6.0...@ceramicnetwork/stream-caip10-link-handler@2.7.0-rc.0) (2022-11-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link-handler
+
+
+
+
+
 # [2.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link-handler@2.6.0-rc.0...@ceramicnetwork/stream-caip10-link-handler@2.6.0) (2022-11-09)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link-handler

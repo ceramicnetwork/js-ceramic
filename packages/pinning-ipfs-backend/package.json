@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-ipfs-backend",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "IPFS Pinning backend",
   "keywords": [
     "ceramic",
@@ -35,7 +35,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/common": "^2.14.0",
     "ipfs-core-types": "~0.9.0",
     "multiformats": "^9.5.8"
   },

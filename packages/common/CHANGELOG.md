@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.14.0-rc.0...@ceramicnetwork/common@2.14.0) (2022-12-08)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.13.0...@ceramicnetwork/common@2.14.0-rc.0) (2022-11-28)
+
+
+### Bug Fixes
+
+* **core:** anchor proofs use txType instead of version - CDB-2074 ([#2565](https://github.com/ceramicnetwork/js-ceramic/issues/2565)) ([bed5161](https://github.com/ceramicnetwork/js-ceramic/commit/bed51611244b3fcd3880743c309440728ff08573))
+
+
+### Features
+
+* **core:** Throw when loading or updating a stream with expired CACAOs in the log ([#2574](https://github.com/ceramicnetwork/js-ceramic/issues/2574)) ([928d5e3](https://github.com/ceramicnetwork/js-ceramic/commit/928d5e338957ba361c6b33246091ac145e6740d4))
+* Track cacao expiration times in StreamState ([#2563](https://github.com/ceramicnetwork/js-ceramic/issues/2563)) ([09f17c8](https://github.com/ceramicnetwork/js-ceramic/commit/09f17c82eb9d8b313185d028c01445b7d312517b))
+
+
+
+
+
 # [2.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.13.0-rc.0...@ceramicnetwork/common@2.13.0) (2022-11-09)
 
 **Note:** Version bump only for package @ceramicnetwork/common

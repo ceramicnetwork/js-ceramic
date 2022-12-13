@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-powergate-backend",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Powergate Pinning backend",
   "keywords": [
     "ceramic",
@@ -37,7 +37,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.13.0",
+    "@ceramicnetwork/common": "^2.14.0",
     "multiformats": "^9.5.8"
   },
   "publishConfig": {
