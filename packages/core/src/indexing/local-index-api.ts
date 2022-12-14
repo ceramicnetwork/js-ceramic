@@ -153,6 +153,17 @@ export class LocalIndexApi implements IndexApi {
     }
 
     await this.databaseIndexApi?.init()
+    await this.populateDatabaseApiInternalState()
+  }
+
+  /*
+  Gets currently indexed models from the database api and calls index's api indexModels()
+  which creates index model args and passes them back to the database api, so that it can populate
+  its internal state
+   */
+  async populateDatabaseApiInternalState(): Promise<void> {
+    const modelsToIndex = this.databaseIndexApi?.getActiveModelsToIndex()
+    await this.indexModels(modelsToIndex)
   }
 
   async close(): Promise<void> {
