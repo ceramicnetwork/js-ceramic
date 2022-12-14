@@ -328,7 +328,6 @@ export class StateManager {
       streamID: state$.id,
       tip: state$.tip,
       timestamp: Date.now(),
-      metadata: state$.value.metadata,
     })
     this._processAnchorResponse(state$, anchorStatus$)
   }

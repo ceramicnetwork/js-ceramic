@@ -38,7 +38,6 @@ export type RequestAnchorParams = {
   streamID: StreamID
   tip: CID
   timestamp: number
-  metadata: StreamMetadata
 }
 
 /**
