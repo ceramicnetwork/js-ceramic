@@ -153,6 +153,7 @@ export class LocalIndexApi implements IndexApi {
     }
 
     await this.databaseIndexApi?.init()
+    // FIXME: CDB-2132 - Fragile DatabaseApi initialisation
     await this.populateDatabaseApiInternalState()
   }
 
