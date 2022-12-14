@@ -1,68 +1,103 @@
-import { ANCHOR_CONTRACT_ADDRESSES } from '@ceramicnetwork/anchor-contract'
+import type { SupportedNetwork } from '@ceramicnetwork/anchor-contract'
+import type { AnchorProof } from '@ceramicnetwork/common'
 import type { Block, Provider } from '@ethersproject/providers'
-import type { CID } from 'multiformats/cid'
 import {
   type Observable,
+  type OperatorFunction,
   type RetryConfig,
   firstValueFrom,
   fromEvent,
   map,
   mergeMap,
+  pipe,
   scan,
 } from 'rxjs'
 
-import { createRootCIDsLoader, mapLoadBlock } from './loader.js'
+import { createAnchorProofsLoader, mapLoadBlocks } from './loader.js'
 
 export type ProcessedBlockEvent = {
   type: 'processed-block'
   block: Block
-  roots: Array<CID>
+  proofs: Array<AnchorProof>
 }
 
 export type ReorganizationEvent = {
   type: 'reorganization'
-  latestProcessedBlock: string
-  newBlock: Block
+  block: Block
+  expectedParentHash: string
 }
 
 export type ListenerEvent = ProcessedBlockEvent | ReorganizationEvent
 
 export type ListenerParams = {
-  latestProcessedBlock?: string
+  chainId: SupportedNetwork
   confirmations: number
-  network: keyof typeof ANCHOR_CONTRACT_ADDRESSES
+  expectedParentHash?: string
   provider: Provider
   retryConfig?: RetryConfig
 }
 
-type State = { status: 'process' | 'reorganized'; previousHash: string; block: Block }
-type Seed = { status: 'initial' }
+type OrderingState = { continuous: Array<number>; latestContinuous?: number; maxFuture?: number }
 
-export function createBlockListener({
-  confirmations,
-  latestProcessedBlock,
-  network,
-  provider,
-  retryConfig,
-}: ListenerParams): Observable<ListenerEvent> {
-  const address = ANCHOR_CONTRACT_ADDRESSES[network]
-  if (address == null) {
-    throw new Error(`No known contract address for network: ${network}`)
-  }
-
+export function createContinuousBlocksListener(
+  provider: Provider,
+  confirmations = 0
+): Observable<Array<number>> {
   return fromEvent(provider, 'block').pipe(
     // Map to latest block number minus wanted confirmations
     map((blockNumber) => (blockNumber as number) - confirmations),
-    // Load block from provider
-    mapLoadBlock(provider, retryConfig),
+    // Order continuous block numbers, keeping track of highest block received
+    scan<number, OrderingState, OrderingState>(
+      (state, blockNumber) => {
+        if (state.latestContinuous != null) {
+          if (blockNumber <= state.latestContinuous) {
+            // Already processed block number
+            return { ...state, continuous: [] }
+          }
+          if (blockNumber > state.latestContinuous + 1) {
+            // Future block number, keep track
+            return {
+              ...state,
+              continuous: [],
+              maxFuture: Math.max(state.maxFuture ?? 0, blockNumber),
+            }
+          }
+        }
+
+        return state.maxFuture == null
+          ? // Load single block
+            { continuous: [blockNumber], latestContinuous: blockNumber }
+          : // Load range from new block number to max tracked future block number
+            {
+              continuous: new Array(state.maxFuture - blockNumber).map((_, i) => blockNumber + i),
+              latestContinuous: state.maxFuture,
+            }
+      },
+      { continuous: [] }
+    ),
+    // Extract continous blocks from ordering state
+    map((state) => state.continuous)
+  )
+}
+
+type ProcessingState = { status: 'process' | 'reorganized'; previousHash: string; block: Block }
+type ProcessingSeed = { status: 'initial' }
+
+export function mapProcessBlock(
+  provider: Provider,
+  chainId: SupportedNetwork,
+  expectedParentHash?: string,
+  retryConfig?: RetryConfig
+): OperatorFunction<Block, ListenerEvent> {
+  return pipe(
     // Check for blockchain reorganizations based on previous known block
-    scan<Block, State, Seed>(
+    scan<Block, ProcessingState, ProcessingSeed>(
       (state, block) => {
         if (state.status === 'initial') {
-          // Check against initial latestProcessedBlock if provided
-          return latestProcessedBlock == null || block.parentHash === latestProcessedBlock
+          // Check against initial expectedParentHash if provided
+          return expectedParentHash == null || block.parentHash === expectedParentHash
             ? { status: 'process', block, previousHash: block.parentHash }
-            : { status: 'reorganized', block, previousHash: latestProcessedBlock }
+            : { status: 'reorganized', block, previousHash: expectedParentHash }
         }
         return {
           status: block.parentHash === state.previousHash ? 'process' : 'reorganized',
@@ -72,26 +107,35 @@ export function createBlockListener({
       },
       { status: 'initial' }
     ),
-    // Emit event based on status, loading root CIDs for processed blocks
+    // Emit event based on status, loading anchor proofs for processed blocks
     mergeMap(async ({ status, block, previousHash }) => {
       if (status === 'process') {
-        const cids$ = createRootCIDsLoader(provider, {
-          address,
-          fromBlock: block.number,
-          toBlock: block.number,
-        })
+        const proofs$ = createAnchorProofsLoader(provider, chainId, block, retryConfig)
         return {
           type: 'processed-block',
           block,
-          roots: await firstValueFrom(cids$),
+          proofs: await firstValueFrom(proofs$),
         } as ProcessedBlockEvent
       }
 
       return {
         type: 'reorganization',
-        newBlock: block,
-        latestProcessedBlock: previousHash,
+        block,
+        expectedParentHash: previousHash,
       } as ReorganizationEvent
     })
+  )
+}
+
+export function createBlockListener({
+  chainId,
+  confirmations,
+  expectedParentHash,
+  provider,
+  retryConfig,
+}: ListenerParams): Observable<ListenerEvent> {
+  return createContinuousBlocksListener(provider, confirmations).pipe(
+    mapLoadBlocks(provider, retryConfig),
+    mapProcessBlock(provider, chainId, expectedParentHash, retryConfig)
   )
 }

@@ -6,9 +6,10 @@ import { fromString } from 'uint8arrays'
 
 import { contractInterface } from './interface.js'
 
-const SHA256_CODE = 0x12
-const DAG_CBOR_CODE = 0x71
-const V1_PROOF_TYPE = 'f(bytes32)'
+export const SHA256_CODE = 0x12
+export const KECCAK_256_CODE = 0x1b
+export const DAG_CBOR_CODE = 0x71
+export const ETH_TX_CODE = 0x93
 
 export function createCidFromHexValue(value: string): CID {
   const multihash = createMultihash(SHA256_CODE, fromString(value.slice(2), 'base16'))
@@ -33,6 +34,8 @@ const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
   return createCidFromHexValue(decodedArgs[0])
 }
 
+const V1_PROOF_TYPE = 'f(bytes32)'
+
 /**
  * Parses the transaction data to recover the CID.
  * @param txType transaction type of the anchor proof. Currently support `raw` and `f(bytes32)`
@@ -45,4 +48,13 @@ export const getCidFromTransaction = (txType: string, txResponse: TransactionRes
   } else {
     return getCidFromV0Transaction(txResponse)
   }
+}
+
+/**
+ * Converts ETH address to CID
+ * @param hash - ETH hash
+ */
+export function convertEthHashToCid(hash: string): CID {
+  const multihash = createMultihash(KECCAK_256_CODE, fromString(hash, 'base16'))
+  return CID.create(1, ETH_TX_CODE, multihash)
 }
