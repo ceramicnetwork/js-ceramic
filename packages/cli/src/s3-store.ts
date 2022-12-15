@@ -3,6 +3,7 @@ import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
 import PQueue from 'p-queue'
+import AWSSDK from 'aws-sdk'
 
 /**
  * Maximum GET/HEAD requests per second to AWS S3
@@ -15,12 +16,14 @@ class S3StoreMap {
   readonly #defaultLocation
   readonly networkName: string
   readonly #map: Map<string, LevelUp.LevelUp>
+  readonly #endpoint: string
 
-  constructor(bucketName: string, networkName: string) {
+  constructor(bucketName: string, endpoint: string, networkName: string) {
     this.networkName = networkName
     this.#storeRoot = bucketName + '/ceramic/' + this.networkName
     this.#defaultLocation = 'state-store'
     this.#map = new Map<string, LevelUp.LevelUp>()
+    this.#endpoint = endpoint
   }
 
   createStore(useCaseName = DEFAULT_S3_STORE_USE_CASE_NAME) {
@@ -28,8 +31,15 @@ class S3StoreMap {
     // and others being `<bucketName + '/ceramic/' + this.networkName + '/state-store-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const fullLocation = this.getFullLocation(useCaseName)
     const storePath = `${this.#storeRoot}/${fullLocation}`
-    // @ts-ignore FIXME: CDB-2064 S3LevelDOWN is not a AbstractLevelDOWN<any, any> (it's missing a few methods)
-    const levelUp = new LevelUp(new S3LevelDOWN(storePath))
+    const levelUp = new LevelUp(
+      // @ts-ignore FIXME: CDB-2064 S3LevelDOWN is not a AbstractLevelDOWN<any, any> (it's missing a few methods)
+      new S3LevelDOWN(
+        storePath,
+        new AWSSDK.S3({
+          endpoint: this.#endpoint,
+        })
+      )
+    )
     this.#map.set(fullLocation, levelUp)
   }
 
@@ -62,8 +72,8 @@ export class S3Store implements IKVStore {
     carryoverConcurrencyCount: true,
   })
 
-  constructor(bucketName: string, networkName: string) {
-    this.#storeMap = new S3StoreMap(bucketName, networkName)
+  constructor(bucketName: string, endpoint: string, networkName: string) {
+    this.#storeMap = new S3StoreMap(bucketName, endpoint, networkName)
   }
 
   get networkName(): string {
