@@ -3,7 +3,6 @@ import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { StreamMetadata } from './stream.js'
 
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING

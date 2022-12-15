@@ -126,7 +126,6 @@ export class EthereumAnchorService implements AnchorService {
           method: 'POST',
           body: {
             streamId: params.streamID.toString(),
-            docId: params.streamID.toString(),
             cid: params.tip.toString(),
             timestamp: params.timestamp,
           },
