@@ -432,8 +432,8 @@ class Document extends EventEmitter {
     const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
 
     if (isLocalAnchored && isRemoteAnchored) {
-      const { anchorProof: localProof } = localState
-      const { anchorProof: remoteProof } = remoteState
+      const localProof = localState.anchorProof
+      const remoteProof = remoteState.anchorProof
 
       if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
         this.state = await this._applyLogToState(remoteLog, cloneDeep(canonicalState))
