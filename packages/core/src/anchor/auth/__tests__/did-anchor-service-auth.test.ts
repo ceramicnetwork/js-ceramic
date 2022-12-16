@@ -53,7 +53,7 @@ const setupAuth = async (url): Promise<any> => {
 }
 
 describe('init', () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(40000)
 
   test('initializes nonce to 0 if not retrieved by CAS', async () => {
     const { auth } = await setupAuth(mockedUrls.OFFLINE)
@@ -68,7 +68,7 @@ describe('init', () => {
 })
 
 describe('lookupLastNonce',  () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(40000)
   test('creates a signed payload without nonce for the `authorization` header', async () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()
@@ -89,7 +89,7 @@ describe('lookupLastNonce',  () => {
 })
 
 describe('sendAuthenticatedRequest', () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(40000)
   test('sends request with signed payload in `authorization` header', async () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()

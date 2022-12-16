@@ -278,10 +278,6 @@ export class DaemonCeramicNodeConfig {
     return undefined;
   }
 
-  public sensitive_didSeed(): URL {
-    return this._didSeed
-  }
-
   /**
    * Setter for seed used to sign requests to CAS.
    * A seed is randomly generated if a config file is not found.
@@ -289,6 +285,10 @@ export class DaemonCeramicNodeConfig {
    */
   public set didSeed(value: URL) {
     this._didSeed = value
+  }
+
+  public sensitive_didSeed(): URL {
+    return this._didSeed
   }
 
   /**
