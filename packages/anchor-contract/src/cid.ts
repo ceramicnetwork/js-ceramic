@@ -11,14 +11,14 @@ export const KECCAK_256_CODE = 0x1b
 export const DAG_CBOR_CODE = 0x71
 export const ETH_TX_CODE = 0x93
 
-export function createCidFromHexValue(value: string): CID {
-  const multihash = createMultihash(SHA256_CODE, fromString(value.slice(2), 'base16'))
+export function createCidFromHexValue(hexValue: string): CID {
+  const multihash = createMultihash(SHA256_CODE, fromString(hexValue.slice(2), 'base16'))
   return CID.create(1, DAG_CBOR_CODE, multihash)
 }
 
 export function getCidFromAnchorEventLog(log: Log): CID {
   const decodedArgs = contractInterface.decodeEventLog(
-    contractInterface.events['DidAnchor'] as EventFragment,
+    contractInterface.events['DidAnchor(address,bytes32)'] as EventFragment,
     log.data
   )
   return createCidFromHexValue(decodedArgs[1])
@@ -54,7 +54,7 @@ export const getCidFromTransaction = (txType: string, txResponse: TransactionRes
  * Converts ETH address to CID
  * @param hash - ETH hash
  */
-export function convertEthHashToCid(hash: string): CID {
-  const multihash = createMultihash(KECCAK_256_CODE, fromString(hash, 'base16'))
+export function convertEthHashToCid(hexValue: string): CID {
+  const multihash = createMultihash(KECCAK_256_CODE, fromString(hexValue.slice(2), 'base16'))
   return CID.create(1, ETH_TX_CODE, multihash)
 }

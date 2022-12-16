@@ -35,7 +35,11 @@
     "rxjs": "^7.6.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.14.0"
+    "@ceramicnetwork/common": "^2.14.0",
+    "@ethersproject/abi": "^5.7.0",
+    "@jest/globals": "^28.1.3",
+    "multiformats": "^9.5.8",
+    "uint8arrays": "^4.0.2"
   },
   "publishConfig": {
     "access": "public"

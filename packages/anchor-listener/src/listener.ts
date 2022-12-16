@@ -5,29 +5,31 @@ import {
   type Observable,
   type OperatorFunction,
   type RetryConfig,
-  firstValueFrom,
+  concatMap,
+  filter,
   fromEvent,
   map,
-  mergeMap,
   pipe,
   scan,
 } from 'rxjs'
 
-import { createAnchorProofsLoader, mapLoadBlocks } from './loader.js'
+import { loadBlockAnchorProofs, mapLoadBlocks } from './loader.js'
 
-export type ProcessedBlockEvent = {
-  type: 'processed-block'
+type BlockEventData = {
   block: Block
   proofs: Array<AnchorProof>
 }
 
-export type ReorganizationEvent = {
-  type: 'reorganization'
-  block: Block
+export type BlockEvent = BlockEventData & {
+  reorganized: false
+}
+
+export type ReorganizedBlockEvent = BlockEventData & {
+  reorganized: true
   expectedParentHash: string
 }
 
-export type ListenerEvent = ProcessedBlockEvent | ReorganizationEvent
+export type BlockListenerEvent = BlockEvent | ReorganizedBlockEvent
 
 export type ListenerParams = {
   chainId: SupportedNetwork
@@ -69,14 +71,18 @@ export function createContinuousBlocksListener(
             { continuous: [blockNumber], latestContinuous: blockNumber }
           : // Load range from new block number to max tracked future block number
             {
-              continuous: new Array(state.maxFuture - blockNumber).map((_, i) => blockNumber + i),
+              continuous: new Array(state.maxFuture - blockNumber + 1).fill(0).map((_, i) => {
+                return blockNumber + i
+              }),
               latestContinuous: state.maxFuture,
             }
       },
       { continuous: [] }
     ),
     // Extract continous blocks from ordering state
-    map((state) => state.continuous)
+    map((state) => state.continuous),
+    // Only push non-empty lists of blocks
+    filter((blocks) => blocks.length !== 0)
   )
 }
 
@@ -88,7 +94,7 @@ export function mapProcessBlock(
   chainId: SupportedNetwork,
   expectedParentHash?: string,
   retryConfig?: RetryConfig
-): OperatorFunction<Block, ListenerEvent> {
+): OperatorFunction<Block, BlockListenerEvent> {
   return pipe(
     // Check for blockchain reorganizations based on previous known block
     scan<Block, ProcessingState, ProcessingSeed>(
@@ -96,34 +102,24 @@ export function mapProcessBlock(
         if (state.status === 'initial') {
           // Check against initial expectedParentHash if provided
           return expectedParentHash == null || block.parentHash === expectedParentHash
-            ? { status: 'process', block, previousHash: block.parentHash }
+            ? { status: 'process', block, previousHash: block.hash }
             : { status: 'reorganized', block, previousHash: expectedParentHash }
         }
-        return {
-          status: block.parentHash === state.previousHash ? 'process' : 'reorganized',
-          block,
-          previousHash: block.parentHash,
-        }
+        return block.parentHash === state.block.hash
+          ? { status: 'process', block, previousHash: block.hash }
+          : { status: 'reorganized', block, previousHash: state.previousHash }
       },
       { status: 'initial' }
     ),
-    // Emit event based on status, loading anchor proofs for processed blocks
-    mergeMap(async ({ status, block, previousHash }) => {
-      if (status === 'process') {
-        const proofs$ = createAnchorProofsLoader(provider, chainId, block, retryConfig)
-        return {
-          type: 'processed-block',
-          block,
-          proofs: await firstValueFrom(proofs$),
-        } as ProcessedBlockEvent
+    // Emit event based on status, loading anchor proofs
+    concatMap<ProcessingState, Promise<BlockListenerEvent>>(
+      async ({ status, block, previousHash }) => {
+        const proofs = await loadBlockAnchorProofs(provider, chainId, block, retryConfig)
+        return status === 'process'
+          ? { reorganized: false, block, proofs }
+          : { reorganized: true, block, proofs, expectedParentHash: previousHash }
       }
-
-      return {
-        type: 'reorganization',
-        block,
-        expectedParentHash: previousHash,
-      } as ReorganizationEvent
-    })
+    )
   )
 }
 
@@ -133,7 +129,7 @@ export function createBlockListener({
   expectedParentHash,
   provider,
   retryConfig,
-}: ListenerParams): Observable<ListenerEvent> {
+}: ListenerParams): Observable<BlockListenerEvent> {
   return createContinuousBlocksListener(provider, confirmations).pipe(
     mapLoadBlocks(provider, retryConfig),
     mapProcessBlock(provider, chainId, expectedParentHash, retryConfig)
