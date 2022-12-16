@@ -127,7 +127,7 @@ export class EthereumAnchorService implements AnchorService {
           body: {
             streamId: params.streamID.toString(),
             cid: params.tip.toString(),
-            timestamp: params.timestamp,
+            timestamp: params.timestampMs,
           },
         })
       )

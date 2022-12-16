@@ -44,7 +44,7 @@ test('re-request an anchor till get a response', async () => {
     .requestAnchor({
       streamID: FAKE_STREAM_ID,
       tip: FAKE_CID,
-      timestamp: Date.now(),
+      timestampMs: Date.now(),
     })
     .subscribe((response) => {
       if (response.status === common.AnchorStatus.PROCESSING) {
