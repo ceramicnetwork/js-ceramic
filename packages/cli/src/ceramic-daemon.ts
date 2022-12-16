@@ -31,7 +31,7 @@ import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
-import { makeNodeDIDProvider, parseSeed, parseSeedUrl } from './daemon/did-utils.js'
+import { makeNodeDIDProvider, parseSeedUrl } from './daemon/did-utils.js'
 import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires

@@ -20,7 +20,7 @@ import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
-import { generateSeed, generateSeedUrl, makeNodeDID, parseSeed, parseSeedUrl } from './daemon/did-utils.js'
+import { generateSeedUrl } from './daemon/did-utils.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
