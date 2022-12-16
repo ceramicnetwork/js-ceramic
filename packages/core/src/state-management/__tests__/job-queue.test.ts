@@ -4,11 +4,9 @@ import { jest } from '@jest/globals'
 import { firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
 
 const createMockWorker = (): Worker => {
-  const worker = {
+  return {
     handler: jest.fn(() => Promise.resolve()),
   }
-
-  return worker
 }
 
 describe('job queue', () => {
