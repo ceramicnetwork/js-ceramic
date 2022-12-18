@@ -77,6 +77,7 @@ export function buildIndexing(
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
+        searchPath: connectionString.searchParams.has('schema') ? connectionString.searchParams.get('schema') : 'public',
       })
       return new PostgresIndexApi(
         dataSource,
