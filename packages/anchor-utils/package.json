@@ -1,7 +1,7 @@
 {
-  "name": "@ceramicnetwork/anchor-contract",
+  "name": "@ceramicnetwork/anchor-utils",
   "version": "1.0.0",
-  "description": "Ceramic anchor contract constants and interface",
+  "description": "Ceramic anchor contract constants, interface and utilities",
   "keywords": [
     "ceramic",
     "anchor"
@@ -32,10 +32,10 @@
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
     "multiformats": "^9.5.8",
-    "uint8arrays": "^4.0.2"
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ethersproject/providers": "^5.7.2"
+    "@ethersproject/providers": "^5.5.1"
   },
   "publishConfig": {
     "access": "public"

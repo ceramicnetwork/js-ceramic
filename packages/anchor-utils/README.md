@@ -1,4 +1,4 @@
-# Ceramic anchor contract
+# Ceramic anchor contract utilities
 
 ![ceramicnetwork](https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
@@ -10,12 +10,24 @@
 ### Installation
 
 ```
-$ npm install @ceramicnetwork/anchor-contract
+$ npm install @ceramicnetwork/anchor-utils
 ```
 
 ### Usage
 
-TODO
+```ts
+import {
+  ANCHOR_CONTRACT_ADDRESSES,
+  type SupportedNetwork,
+} from "@ceramicnetwork/anchor-utils";
+
+function getContractAddress(network: SupportedNetwork): string {
+  const address = ANCHOR_CONTRACT_ADDRESSES[network];
+  if (address == null) {
+    throw new Error(`Unsupported contract network: ${network}`);
+  }
+}
+```
 
 ## Development
 

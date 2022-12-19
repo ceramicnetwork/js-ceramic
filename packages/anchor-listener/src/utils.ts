@@ -2,7 +2,7 @@ import {
   type SupportedNetwork,
   convertEthHashToCid,
   getCidFromAnchorEventLog,
-} from '@ceramicnetwork/anchor-contract'
+} from '@ceramicnetwork/anchor-utils'
 import type { AnchorProof } from '@ceramicnetwork/common'
 import type { Block, Log } from '@ethersproject/providers'
 

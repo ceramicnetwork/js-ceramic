@@ -1,5 +1,4 @@
 import { EventEmitter } from 'node:events'
-import type { AnchorProof } from '@ceramicnetwork/common'
 import type { Block, Provider } from '@ethersproject/providers'
 import { jest } from '@jest/globals'
 import { firstValueFrom, from, of, toArray } from 'rxjs'
@@ -10,20 +9,10 @@ import {
   createContinuousBlocksListener,
   mapProcessBlock,
 } from '../listener.js'
-import { createAnchorProof } from '../utils.js'
 
-import { createLog } from './test-utils.js'
+import { mockedLogs, getMockedLogsProofs } from './test-utils.js'
 
 describe('listener', () => {
-  const logs = [0, 1, 2].map((i) => createLog(new Uint8Array(new Array(32).fill(i))))
-  function getProofs(block: Block): Array<AnchorProof> {
-    return [
-      createAnchorProof('eip155:1337', block, logs[0]),
-      createAnchorProof('eip155:1337', block, logs[1]),
-      createAnchorProof('eip155:1337', block, logs[2]),
-    ]
-  }
-
   test('createContinuousBlocksListener() pushes continous slices of block numbers', async () => {
     const provider = new EventEmitter() as unknown as Provider
     const blocksSlices$ = createContinuousBlocksListener(provider, 10)
@@ -71,7 +60,7 @@ describe('listener', () => {
 
   describe('mapProcessBlock() operator', () => {
     test('pushes reorganized event if block parent hash does not match provided previous hash', async () => {
-      const getLogs = jest.fn(() => Promise.resolve(logs))
+      const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
       const provider = { getLogs } as unknown as Provider
       const expectedParentHash = 'block0hash'
       const block = { parentHash: 'block1hash' } as Block
@@ -81,13 +70,13 @@ describe('listener', () => {
       expect(event).toEqual({
         reorganized: true,
         block,
-        proofs: getProofs(block),
+        proofs: getMockedLogsProofs(block),
         expectedParentHash,
       })
     })
 
     test('load logs and pushes processed block even if parent hash matches expected', async () => {
-      const getLogs = jest.fn(() => Promise.resolve(logs))
+      const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
       const provider = { getLogs } as unknown as Provider
       const expectedParentHash = 'block0hash'
       const block = { parentHash: expectedParentHash, number: 10, timestamp: 1000 } as Block
@@ -97,12 +86,12 @@ describe('listener', () => {
       expect(event).toEqual({
         reorganized: false,
         block,
-        proofs: getProofs(block),
+        proofs: getMockedLogsProofs(block),
       })
     })
 
     test('process multiple blocks with reorganization', async () => {
-      const getLogs = jest.fn(() => Promise.resolve(logs))
+      const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
       const provider = { getLogs } as unknown as Provider
       const blocks: Array<Block> = [
         { hash: 'block1', parentHash: 'block0', number: 1, timestamp: 100 } as Block,
@@ -117,16 +106,16 @@ describe('listener', () => {
       const events = await firstValueFrom(events$)
 
       expect(events).toEqual([
-        { reorganized: false, block: blocks[0], proofs: getProofs(blocks[0]) },
-        { reorganized: false, block: blocks[1], proofs: getProofs(blocks[1]) },
+        { reorganized: false, block: blocks[0], proofs: getMockedLogsProofs(blocks[0]) },
+        { reorganized: false, block: blocks[1], proofs: getMockedLogsProofs(blocks[1]) },
         {
           reorganized: true,
           block: blocks[2],
-          proofs: getProofs(blocks[2]),
+          proofs: getMockedLogsProofs(blocks[2]),
           expectedParentHash: blocks[1].hash,
         },
-        { reorganized: false, block: blocks[3], proofs: getProofs(blocks[3]) },
-        { reorganized: false, block: blocks[4], proofs: getProofs(blocks[4]) },
+        { reorganized: false, block: blocks[3], proofs: getMockedLogsProofs(blocks[3]) },
+        { reorganized: false, block: blocks[4], proofs: getMockedLogsProofs(blocks[4]) },
       ])
     })
   })
@@ -142,7 +131,7 @@ describe('listener', () => {
     ]
 
     const provider = new EventEmitter() as unknown as Provider
-    provider.getLogs = jest.fn(() => Promise.resolve(logs))
+    provider.getLogs = jest.fn(() => Promise.resolve(mockedLogs))
     provider.getBlock = jest.fn((blockNumber: number) => Promise.resolve(blocks[blockNumber - 1]))
 
     const events$ = createBlockListener({ chainId: 'eip155:1337', confirmations: 10, provider })
@@ -174,16 +163,16 @@ describe('listener', () => {
     })
 
     expect(events).toEqual([
-      { reorganized: false, block: blocks[0], proofs: getProofs(blocks[0]) },
-      { reorganized: false, block: blocks[1], proofs: getProofs(blocks[1]) },
+      { reorganized: false, block: blocks[0], proofs: getMockedLogsProofs(blocks[0]) },
+      { reorganized: false, block: blocks[1], proofs: getMockedLogsProofs(blocks[1]) },
       {
         reorganized: true,
         block: blocks[2],
-        proofs: getProofs(blocks[2]),
+        proofs: getMockedLogsProofs(blocks[2]),
         expectedParentHash: blocks[1].hash,
       },
-      { reorganized: false, block: blocks[3], proofs: getProofs(blocks[3]) },
-      { reorganized: false, block: blocks[4], proofs: getProofs(blocks[4]) },
+      { reorganized: false, block: blocks[3], proofs: getMockedLogsProofs(blocks[3]) },
+      { reorganized: false, block: blocks[4], proofs: getMockedLogsProofs(blocks[4]) },
     ])
   })
 })

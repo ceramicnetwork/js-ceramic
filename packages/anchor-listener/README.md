@@ -15,7 +15,42 @@ $ npm install @ceramicnetwork/anchor-listener
 
 ### Usage
 
-TODO
+```ts
+import {
+  createBlockListener,
+  createBlocksWithAnchorProofsLoader,
+  createAncestorBlocksWithAnchorProofsLoader,
+} from '@ceramicnetwork/anchor-listener'
+import { take, timeout } from 'rxjs'
+
+// Listen to new block events on the provider and load anchor proofs
+const subsription = createBlockListener({ chainId: 'eip155:1', confirmations: 20, provider: ... }).subscribe({
+  next(event) {
+    // event contains the `block` and `proofs`
+  }
+})
+// Unsubscribe to stop listening
+subscription.unsubscribe()
+
+// Load proofs for a range of blocks
+createBlocksWithAnchorProofsLoader({ chainId: 'eip155:1', fromBlock: 100, toBlock: 120, provider: ...  }).subscribe({
+  next(event) {
+    // event contains the `block` and `proofs`
+  }
+})
+
+// Load proofs for blocks, walking up the parents until the expected ancestor hash is found
+createAncestorBlocksWithAnchorProofsLoader({ chainId: 'eip155:1', initialBlock: 'latest', targetAncestorHash: '...', provider: ...  }).pipe(
+  // Operators can be used to add stopping conditions
+  take(50), // attempt to load maximum 50 blocks
+  timeout(300_000), // timeout after 5 minutes
+).subscribe({
+  next(event) {
+    // event contains the `block` and `proofs`
+    // unless interrupted, `block.parentHash` will be `targetAncestorHash` in the last event
+  }
+})
+```
 
 ## Development
 

@@ -1,5 +1,4 @@
-import type { SupportedNetwork } from '@ceramicnetwork/anchor-contract'
-import type { AnchorProof } from '@ceramicnetwork/common'
+import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { Block, Provider } from '@ethersproject/providers'
 import {
   type Observable,
@@ -13,18 +12,13 @@ import {
   scan,
 } from 'rxjs'
 
-import { loadBlockAnchorProofs, mapLoadBlocks } from './loader.js'
+import { type BlockWithAnchorProofs, loadAnchorProofs, mapLoadBlocks } from './loader.js'
 
-type BlockEventData = {
-  block: Block
-  proofs: Array<AnchorProof>
-}
-
-export type BlockEvent = BlockEventData & {
+export type BlockEvent = BlockWithAnchorProofs & {
   reorganized: false
 }
 
-export type ReorganizedBlockEvent = BlockEventData & {
+export type ReorganizedBlockEvent = BlockWithAnchorProofs & {
   reorganized: true
   expectedParentHash: string
 }
@@ -114,7 +108,7 @@ export function mapProcessBlock(
     // Emit event based on status, loading anchor proofs
     concatMap<ProcessingState, Promise<BlockListenerEvent>>(
       async ({ status, block, previousHash }) => {
-        const proofs = await loadBlockAnchorProofs(provider, chainId, block, retryConfig)
+        const proofs = await loadAnchorProofs(provider, chainId, block, retryConfig)
         return status === 'process'
           ? { reorganized: false, block, proofs }
           : { reorganized: true, block, proofs, expectedParentHash: previousHash }

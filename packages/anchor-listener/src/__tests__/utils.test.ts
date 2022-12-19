@@ -1,4 +1,4 @@
-import { getCidFromAnchorEventLog } from '@ceramicnetwork/anchor-contract'
+import { getCidFromAnchorEventLog } from '@ceramicnetwork/anchor-utils'
 import type { Block } from '@ethersproject/providers'
 
 import { createAnchorProof } from '../utils.js'

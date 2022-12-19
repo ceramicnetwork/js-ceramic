@@ -1,16 +1,20 @@
-import { type SupportedNetwork, ANCHOR_CONTRACT_ADDRESSES } from '@ceramicnetwork/anchor-contract'
+import { type SupportedNetwork, ANCHOR_CONTRACT_ADDRESSES } from '@ceramicnetwork/anchor-utils'
 import type { AnchorProof } from '@ceramicnetwork/common'
 import type { Block, BlockTag, Provider } from '@ethersproject/providers'
 import {
+  EMPTY,
   type Observable,
   type OperatorFunction,
   type RetryConfig,
+  bufferCount,
   concatMap,
   defer,
+  expand,
   firstValueFrom,
   map,
   mergeMap,
   pipe,
+  range,
   retry,
   throwError,
 } from 'rxjs'
@@ -67,11 +71,81 @@ export function createAnchorProofsLoader(
   )
 }
 
-export async function loadBlockAnchorProofs(
+export async function loadAnchorProofs(
   provider: Provider,
   chainId: SupportedNetwork,
   block: Block,
   retryConfig?: RetryConfig
 ): Promise<Array<AnchorProof>> {
   return await firstValueFrom(createAnchorProofsLoader(provider, chainId, block, retryConfig))
+}
+
+export type BlockWithAnchorProofs = {
+  block: Block
+  proofs: Array<AnchorProof>
+}
+
+export function mapLoadBlockAnchorProofs(
+  provider: Provider,
+  chainId: SupportedNetwork,
+  retryConfig: RetryConfig = { count: 3 }
+): OperatorFunction<Block, BlockWithAnchorProofs> {
+  return pipe(
+    concatMap(async (block) => {
+      return { block, proofs: await loadAnchorProofs(provider, chainId, block, retryConfig) }
+    })
+  )
+}
+
+export type BlocksWithAnchorProofsLoaderParams = {
+  provider: Provider
+  chainId: SupportedNetwork
+  fromBlock: number
+  toBlock: number
+  retryConfig?: RetryConfig
+  blockLoadBuffer?: number
+}
+
+export function createBlocksWithAnchorProofsLoader({
+  provider,
+  chainId,
+  fromBlock,
+  toBlock,
+  retryConfig,
+  blockLoadBuffer,
+}: BlocksWithAnchorProofsLoaderParams): Observable<BlockWithAnchorProofs> {
+  const retry = retryConfig ?? { count: 3 }
+  return range(fromBlock, toBlock - fromBlock + 1).pipe(
+    bufferCount(blockLoadBuffer ?? 5),
+    mapLoadBlocks(provider, retry),
+    mapLoadBlockAnchorProofs(provider, chainId, retry)
+  )
+}
+
+export type AncestorBlocksWithAnchorProofsLoaderParams = {
+  provider: Provider
+  chainId: SupportedNetwork
+  initialBlock: BlockTag
+  targetAncestorHash: string
+  retryConfig?: RetryConfig
+  maxConcurrency?: number
+}
+
+export function createAncestorBlocksWithAnchorProofsLoader({
+  provider,
+  chainId,
+  initialBlock,
+  targetAncestorHash,
+  retryConfig,
+  maxConcurrency,
+}: AncestorBlocksWithAnchorProofsLoaderParams): Observable<BlockWithAnchorProofs> {
+  const retry = retryConfig ?? { count: 3 }
+  return createBlockLoader(provider, initialBlock, retry).pipe(
+    expand((block) => {
+      return block.parentHash === targetAncestorHash
+        ? EMPTY
+        : createBlockLoader(provider, block.parentHash, retry)
+    }, maxConcurrency),
+    mapLoadBlockAnchorProofs(provider, chainId, retry)
+  )
 }
