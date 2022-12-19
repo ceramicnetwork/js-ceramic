@@ -29,7 +29,7 @@ describe('job queue', () => {
     if (myJobQueue) await myJobQueue._clearAllJobs()
 
     Object.values(workers).map((worker) => {
-      ;(worker.handler as any).mockReset()
+      (worker.handler as any).mockReset();
     })
   })
 

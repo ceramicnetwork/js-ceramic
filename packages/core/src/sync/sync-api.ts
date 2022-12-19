@@ -8,7 +8,10 @@ export type SyncConfig = {
   db: string
 }
 
-export interface ISyncApi {}
+export interface ISyncApi {
+  startModelSync(startBlock: number, endBlock: number, models: string | string[]): Promise<void>
+  pauseModelSync(models: string | string[]): Promise<void>
+}
 
 interface IpfsService {
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
@@ -33,5 +36,17 @@ export class SyncApi implements ISyncApi {
   async init(): Promise<void> {
     // initialize job queue with handlers from ./workers
     // start blockchain listener
+  }
+
+  async startModelSync(
+    startBlock: number,
+    endBlock: number,
+    models: string | string[]
+  ): Promise<void> {
+    // add to job queue
+  }
+
+  async pauseModelSync(models: string | string[]): Promise<void> {
+    // stop workers and remove from job queue
   }
 }

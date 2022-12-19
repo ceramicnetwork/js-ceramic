@@ -1,3 +1,0 @@
-const handler = () => {}
-
-export { handler }
