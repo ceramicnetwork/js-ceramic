@@ -73,6 +73,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       .onConflict('stream_id')
       .merge({
         stream_content: indexingArgs.streamContent,
+        tip: indexingArgs.tip.toString(),
         last_anchored_at: indexingArgs.lastAnchor,
         updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
       })
