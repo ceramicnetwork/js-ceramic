@@ -1,6 +1,13 @@
 import type { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 
+export type SyncConfig = {
+  /**
+   * Database connection string.
+   */
+  db: string
+}
+
 export interface ISyncApi {}
 
 interface IpfsService {
@@ -15,11 +22,16 @@ interface Protocol {
 }
 
 export class SyncApi implements ISyncApi {
-  constructor(private readonly ipfsService: IpfsService, private readonly protocol: Protocol) {
+  constructor(
+    private readonly syncConfig: SyncConfig,
+    private readonly ipfsService: IpfsService,
+    private readonly protocol: Protocol
+  ) {
     // create job queue
   }
 
   async init(): Promise<void> {
     // initialize job queue with handlers from ./workers
+    // start blockchain listener
   }
 }

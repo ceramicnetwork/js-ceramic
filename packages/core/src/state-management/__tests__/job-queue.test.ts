@@ -1,5 +1,6 @@
 import { JobQueue, Worker } from '../job-queue.js'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
+import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { jest } from '@jest/globals'
 import { firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
 
@@ -20,8 +21,7 @@ describe('job queue', () => {
 
   beforeAll(async () => {
     await pgSetup()
-    const syncConfig = { db: process.env.DATABASE_URL as string }
-    myJobQueue = new JobQueue(syncConfig, workers)
+    myJobQueue = new JobQueue(process.env.DATABASE_URL as string, workers)
     await myJobQueue.init()
   })
 
@@ -35,6 +35,7 @@ describe('job queue', () => {
 
   afterAll(async () => {
     if (myJobQueue) await myJobQueue.stop()
+    await pgTeardown()
   })
 
   test('Can execute different jobs', async () => {

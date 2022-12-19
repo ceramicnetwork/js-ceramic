@@ -1,4 +1,6 @@
 import { default as PgBoss } from 'pg-boss'
+import Pg from 'pg'
+import { fromEvent, firstValueFrom } from 'rxjs'
 
 export interface IJobQueue {
   init: () => Promise<void>
@@ -6,15 +8,16 @@ export interface IJobQueue {
   stop: () => Promise<void>
 }
 
-export interface SyncConfig {
-  /**
-   * Database connection string.
-   */
-  db: string
-}
-
 export type Worker = {
   handler: (any) => any
+}
+
+class PgWrapper implements PgBoss.Db {
+  constructor(private readonly db: Pg.Client) {}
+
+  executeSql(text: string, values: any[]): Promise<{ rows: any[]; rowCount: number }> {
+    return this.db.query(text, values)
+  }
 }
 
 /**
@@ -22,21 +25,23 @@ export type Worker = {
  */
 export class JobQueue implements IJobQueue {
   private queue: PgBoss
+  private dbConnection: Pg.Pool
 
-  constructor(
-    private readonly syncConfig: SyncConfig,
-    private readonly workersByJob: Record<string, Worker>
-  ) {
-    this.queue = new PgBoss({
-      connectionString: this.syncConfig.db,
+  constructor(db: string, private readonly workersByJob: Record<string, Worker>) {
+    this.dbConnection = new Pg.Pool({
+      connectionString: db,
     })
+
+    this.queue = new PgBoss({ db: new PgWrapper(this.dbConnection) })
   }
 
   /**
    * Starts the job queue and adds workers for each job
    */
   async init(): Promise<void> {
-    this.queue.start()
+    await this.dbConnection.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
+
+    await this.queue.start()
 
     await Promise.all(
       Object.entries(this.workersByJob).map(([jobName, worker]) =>
@@ -65,6 +70,8 @@ export class JobQueue implements IJobQueue {
    */
   async stop(): Promise<void> {
     await this.queue.stop()
+    await firstValueFrom(fromEvent(this.queue, 'stopped'))
+    await this.dbConnection.end()
   }
 
   async _clearAllJobs(): Promise<void> {
