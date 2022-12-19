@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@0.12.0...@ceramicnetwork/stream-model@0.13.0-rc.0) (2022-12-15)
+
+
+### Bug Fixes
+
+* **core:** StreamID comes from genesis commit CID, not tip ([#2256](https://github.com/ceramicnetwork/js-ceramic/issues/2256)) ([ff1e3db](https://github.com/ceramicnetwork/js-ceramic/commit/ff1e3dbf0011d7819ce28d4d71d94047d6d2dd6f))
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations ([#2421](https://github.com/ceramicnetwork/js-ceramic/issues/2421)) ([a4c4ce3](https://github.com/ceramicnetwork/js-ceramic/commit/a4c4ce303603c2ddad3e1e51026c4a8205a91188))
+* **model, model-instance-document:** Encode 'unique' as Uint8Array ([#2212](https://github.com/ceramicnetwork/js-ceramic/issues/2212)) ([f6eb92b](https://github.com/ceramicnetwork/js-ceramic/commit/f6eb92b05f373746da404694288e7e53053e641b))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+* **stream-model-instance, stream-model-instance-handler:** ModelInstanceDocument API ([#2196](https://github.com/ceramicnetwork/js-ceramic/issues/2196)) ([3ecf9fd](https://github.com/ceramicnetwork/js-ceramic/commit/3ecf9fdb1f0c573b9784337b80fc1c985e3d499c))
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype ([#2182](https://github.com/ceramicnetwork/js-ceramic/issues/2182)) ([65383af](https://github.com/ceramicnetwork/js-ceramic/commit/65383af69f69b730b0c54fe9d19569bfcace4f0c))
+* **stream-model:** Change Model model for indexing to use UNLOADABLE streamtype ([#2326](https://github.com/ceramicnetwork/js-ceramic/issues/2326)) ([cac8010](https://github.com/ceramicnetwork/js-ceramic/commit/cac8010afd6735af190c95025c223abe9f938f1a))
+* **stream-model:** Only allow genesis commit ([#2383](https://github.com/ceramicnetwork/js-ceramic/issues/2383)) ([f269217](https://github.com/ceramicnetwork/js-ceramic/commit/f269217b45868acb19d89a0bd62d44babc895b71))
+* **stream-model:** Remove 'unique' from Model metadata ([#2396](https://github.com/ceramicnetwork/js-ceramic/issues/2396)) ([1f0c820](https://github.com/ceramicnetwork/js-ceramic/commit/1f0c8208da8ac880168de7d47f58216c4a23223e))
+* **stream-model:** Rename ModelAccountRelation.LINK to SINGLE ([#2217](https://github.com/ceramicnetwork/js-ceramic/issues/2217)) ([a651169](https://github.com/ceramicnetwork/js-ceramic/commit/a651169fbf90d8b364c8c82e75079f5ffb584054))
+* **stream-model:** Validate relations in Model handler ([#2586](https://github.com/ceramicnetwork/js-ceramic/issues/2586)) ([af4741f](https://github.com/ceramicnetwork/js-ceramic/commit/af4741fefb4f2df6cc2db0247f89010c9ebafd06))
+
+
+### Reverts
+
+* Revert "Add model stream schema validation. (#2183)" ([16f6f14](https://github.com/ceramicnetwork/js-ceramic/commit/16f6f14f037e66adeb72b3b21f2d3b6cb4eced4e)), closes [#2183](https://github.com/ceramicnetwork/js-ceramic/issues/2183)
+
+
+
+
+
 # [0.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model@0.12.0-rc.0...@ceramicnetwork/stream-model@0.12.0) (2022-12-08)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model
