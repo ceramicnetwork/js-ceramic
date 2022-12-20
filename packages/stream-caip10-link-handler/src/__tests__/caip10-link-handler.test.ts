@@ -62,8 +62,6 @@ const COMMITS = {
   r2: { commit: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 } },
   proof: {
     value: {
-      blockNumber: 123456,
-      blockTimestamp: 1666728832,
       chainId: 'fakechain:123',
     },
   },
@@ -248,6 +246,7 @@ describe('Caip10LinkHandler', () => {
       type: CommitType.ANCHOR,
       commit: COMMITS.r2.commit,
       proof: COMMITS.proof.value,
+      timestamp: 1666728832,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
     expect(state).toMatchSnapshot()

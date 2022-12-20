@@ -3,8 +3,6 @@
 exports[`Caip10LinkHandler applies anchor commit correctly 1`] = `
 Object {
   "anchorProof": Object {
-    "blockNumber": 123456,
-    "blockTimestamp": 1666728832,
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,

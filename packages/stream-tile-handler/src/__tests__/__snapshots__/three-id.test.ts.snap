@@ -3,8 +3,6 @@
 exports[`applies anchor commit correctly 1`] = `
 Object {
   "anchorProof": Object {
-    "blockNumber": 123456,
-    "blockTimestamp": 1615799679,
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,

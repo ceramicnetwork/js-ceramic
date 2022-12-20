@@ -113,8 +113,6 @@ const COMMITS = {
   },
   r2: { commit: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 } },
   proof: {
-    blockNumber: 123456,
-    blockTimestamp: 1615799679,
     chainId: 'fakechain:123',
   },
 }
@@ -413,6 +411,7 @@ it('applies anchor commit correctly', async () => {
     type: CommitType.ANCHOR,
     commit: COMMITS.r2.commit,
     proof: COMMITS.proof,
+    timestamp: 1615799679,
   } as CommitData
   state = await tileDocumentHandler.applyCommit(anchorCommitData, context, state)
   delete state.metadata.unique

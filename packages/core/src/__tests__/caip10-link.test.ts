@@ -178,7 +178,11 @@ describe('Ceramic API', () => {
 
       expect(link.did).toEqual(DID_USED)
       expect(link.state.log).toHaveLength(4)
-      expect(link.state).toMatchSnapshot()
+
+      const anchorProof = link.state.anchorProof
+      delete anchorProof.txHash
+      delete anchorProof.root
+      expect(anchorProof).toMatchSnapshot()
     })
 
     it('Throws when linking to invalid DID ', async () => {
