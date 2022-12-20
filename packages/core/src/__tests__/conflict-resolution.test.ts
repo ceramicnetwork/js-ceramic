@@ -87,7 +87,6 @@ describe('pickLogToAccept', () => {
   it('Both logs anchored in different blockchains', async () => {
     const proof1 = {
       chainId: 'chain1',
-      blockTimestamp: 5,
     }
     const state1 = {
       anchorStatus: AnchorStatus.ANCHORED,
@@ -96,7 +95,6 @@ describe('pickLogToAccept', () => {
 
     const proof2 = {
       chainId: 'chain2',
-      blockTimestamp: 10,
     }
     const state2 = {
       anchorStatus: AnchorStatus.ANCHORED,
@@ -115,20 +113,20 @@ describe('pickLogToAccept', () => {
   it('Both logs anchored in same blockchains in different blocks', async () => {
     const proof1 = {
       chainId: 'myblockchain',
-      blockNumber: 10,
     }
     const state1 = {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof1,
+      log: [{ type: 0 }, { type: 2, timestamp: 10 }],
     } as unknown as StreamState
 
     const proof2 = {
       chainId: 'myblockchain',
-      blockNumber: 5,
     }
     const state2 = {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof2,
+      log: [{ type: 0 }, { type: 2, timestamp: 5 }],
     } as unknown as StreamState
 
     // When anchored in the same blockchain, should take log with earlier block number
@@ -139,24 +137,22 @@ describe('pickLogToAccept', () => {
   it('Both logs anchored in same blockchains in the same block with different log lengths', async () => {
     const proof1 = {
       chainId: 'myblockchain',
-      blockNumber: 10,
     }
     const state1 = {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof1,
       metadata: {},
-      log: [{ cid: cids[1] }, { cid: cids[2] }, { cid: cids[3] }],
+      log: [{ cid: cids[1] }, { cid: cids[2] }, { cid: cids[3], timestamp: 10 }],
     } as unknown as StreamState
 
     const proof2 = {
       chainId: 'myblockchain',
-      blockNumber: 10,
     }
     const state2 = {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof2,
       metadata: {},
-      log: [{ cid: cids[4] }, { cid: cids[0] }],
+      log: [{ cid: cids[4] }, { cid: cids[0], timestamp: 10 }],
     } as unknown as StreamState
 
     // When anchored in the same blockchain, same block, and with same log lengths, we should choose the one with
@@ -168,24 +164,22 @@ describe('pickLogToAccept', () => {
   it('Both logs anchored in same blockchains in the same block with same log lengths', async () => {
     const proof1 = {
       chainId: 'myblockchain',
-      blockNumber: 10,
     }
     const state1 = {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof1,
       metadata: {},
-      log: [{ cid: cids[1] }, { cid: cids[2] }],
+      log: [{ cid: cids[1] }, { cid: cids[2], timestamp: 10 }],
     } as unknown as StreamState
 
     const proof2 = {
       chainId: 'myblockchain',
-      blockNumber: 10,
     }
     const state2 = {
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof2,
       metadata: {},
-      log: [{ cid: cids[4] }, { cid: cids[0] }],
+      log: [{ cid: cids[4] }, { cid: cids[0], timestamp: 10 }],
     } as unknown as StreamState
 
     // When anchored in the same blockchain, same block, and with same log lengths, we should use

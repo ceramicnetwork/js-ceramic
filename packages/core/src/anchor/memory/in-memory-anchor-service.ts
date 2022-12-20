@@ -364,8 +364,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const txHashCid = TestUtils.randomCID()
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
-      blockNumber: timestamp, // TODO(cdb-2061) remove
-      blockTimestamp: timestamp, // TODO(cdb-2061) remove
       txHash: txHashCid,
       root: leaf.cid,
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system

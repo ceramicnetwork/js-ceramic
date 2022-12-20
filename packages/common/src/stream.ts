@@ -60,8 +60,6 @@ export interface RawCommit {
 
 export interface AnchorProof {
   chainId: string
-  blockNumber: number
-  blockTimestamp: number
   txHash: CID
   root: CID
   txType?: string
