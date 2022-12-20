@@ -72,12 +72,12 @@ export class TestUtils {
    */
   static async waitForState(
     stream: Stream,
-    timeout: number,
+    timeoutMs: number,
     predicate: (state: StreamState) => boolean,
     onFailure: (state: StreamState) => void
   ): Promise<void> {
     if (predicate(stream.state)) return
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs))
     // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
     const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
       defaultValue: undefined,

@@ -70,7 +70,7 @@ const DEFAULT_DETERMINISTIC_OPTS = {
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
   if (signer.did == null) {

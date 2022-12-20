@@ -182,7 +182,6 @@ export class Model extends Stream {
       anchor: true,
       pin: true,
       sync: SyncOptions.NEVER_SYNC,
-      throwOnInvalidCommit: true,
     }
     const commit = await Model._makeGenesis(ceramic, content, metadata)
     const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)

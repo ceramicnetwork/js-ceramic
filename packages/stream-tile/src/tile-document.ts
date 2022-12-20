@@ -76,7 +76,7 @@ const DEFAULT_CREATE_OPTS = {
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 /**
  * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
