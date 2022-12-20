@@ -26,15 +26,27 @@ export type ReorganizedBlockEvent = BlockWithAnchorProofs & {
 export type BlockListenerEvent = BlockEvent | ReorganizedBlockEvent
 
 export type ListenerParams = {
-  chainId: SupportedNetwork
-  confirmations: number
-  expectedParentHash?: string
+  /* ethers.js Provider */
   provider: Provider
+  /* supported anchor network chain ID */
+  chainId: SupportedNetwork
+  /* number of confirmations to wait for to load blocks */
+  confirmations: number
+  /* optional parent hash expected when loading the first block */
+  expectedParentHash?: string
+  /* optional Rx retry config */
   retryConfig?: RetryConfig
 }
 
 type OrderingState = { continuous: Array<number>; latestContinuous?: number; maxFuture?: number }
 
+/**
+ * Create an Observable of arrays of continuous block numbers, ensuring ordering
+ *
+ * @param provider ethers.js provider
+ * @param confirmations optional number of confirmations, defaults to 0
+ * @returns Observable<Array<number>>
+ */
 export function createContinuousBlocksListener(
   provider: Provider,
   confirmations = 0
@@ -83,6 +95,15 @@ export function createContinuousBlocksListener(
 type ProcessingState = { status: 'process' | 'reorganized'; previousHash: string; block: Block }
 type ProcessingSeed = { status: 'initial' }
 
+/**
+ * Rx operator to load anchor proofs for input blocks and detect blocks reorganizations
+ *
+ * @param provider ethers.js Provider
+ * @param chainId supported anchor network chain ID
+ * @param expectedParentHash optional expected parent hash when loading first block
+ * @param retryConfig optional Rx retry config
+ * @returns OperatorFunction<Block, BlockListenerEvent>
+ */
 export function mapProcessBlock(
   provider: Provider,
   chainId: SupportedNetwork,
@@ -117,6 +138,13 @@ export function mapProcessBlock(
   )
 }
 
+/**
+ * Create an Observable of blocks with anchor proofs from new blocks emitted by the provider,
+ * flagging reorganized blocks when detected
+ *
+ * @param params ListenerParams
+ * @returns Observable<BlockListenerEvent>
+ */
 export function createBlockListener({
   chainId,
   confirmations,
