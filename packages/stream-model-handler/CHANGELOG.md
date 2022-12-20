@@ -3,6 +3,45 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.13.0...@ceramicnetwork/stream-model-handler@0.14.0-rc.0) (2022-12-15)
+
+
+### Bug Fixes
+
+* **core:** Don't unpin anchor proof, merkle tree, or CACAO when unpinning streams ([#2307](https://github.com/ceramicnetwork/js-ceramic/issues/2307)) ([5b9773a](https://github.com/ceramicnetwork/js-ceramic/commit/5b9773aa68a5163baffb99ee05e99139865192e6))
+* evaluate string value of env vars as booleans ([#2382](https://github.com/ceramicnetwork/js-ceramic/issues/2382)) ([2837112](https://github.com/ceramicnetwork/js-ceramic/commit/28371128d867fc7102dbf614f5bc1eab6a04b94d))
+* **stream-handler-common:** Fix loading of historical commits with CACAOs ([#2523](https://github.com/ceramicnetwork/js-ceramic/issues/2523)) ([329f1c8](https://github.com/ceramicnetwork/js-ceramic/commit/329f1c8457bd04bf9619fed0bba8f89afabd0b7e))
+* **stream-tile-handler,stream-model-handler,stream-model-instance-handler:** Don't cache schemas ([#2267](https://github.com/ceramicnetwork/js-ceramic/issues/2267)) ([1744d84](https://github.com/ceramicnetwork/js-ceramic/commit/1744d849568ae8e630345677446374e39fc04055))
+
+
+### Features
+
+* **common:** Update type definitions to support simple relations ([#2421](https://github.com/ceramicnetwork/js-ceramic/issues/2421)) ([a4c4ce3](https://github.com/ceramicnetwork/js-ceramic/commit/a4c4ce303603c2ddad3e1e51026c4a8205a91188))
+* **core,model-handler,model-instance-handler:** Disable indexing and query features by default until they are ready ([#2280](https://github.com/ceramicnetwork/js-ceramic/issues/2280)) ([acb010c](https://github.com/ceramicnetwork/js-ceramic/commit/acb010ccb9ced4b2228f574e4325806a4a2d7241))
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features ([#2405](https://github.com/ceramicnetwork/js-ceramic/issues/2405)) ([f0435ac](https://github.com/ceramicnetwork/js-ceramic/commit/f0435ac38f366afc5f2115cab67d996b4095ed5f))
+* **core:** Throw when loading or updating a stream with expired CACAOs in the log ([#2574](https://github.com/ceramicnetwork/js-ceramic/issues/2574)) ([928d5e3](https://github.com/ceramicnetwork/js-ceramic/commit/928d5e338957ba361c6b33246091ac145e6740d4))
+* **model-handler:** Enforce that Model streams cannot have extra fields in their content ([#2213](https://github.com/ceramicnetwork/js-ceramic/issues/2213)) ([a4c9b4d](https://github.com/ceramicnetwork/js-ceramic/commit/a4c9b4d41b0319f2ddf87c64291e246dbb17e032))
+* **model, model-instance-document:** Encode 'unique' as Uint8Array ([#2212](https://github.com/ceramicnetwork/js-ceramic/issues/2212)) ([f6eb92b](https://github.com/ceramicnetwork/js-ceramic/commit/f6eb92b05f373746da404694288e7e53053e641b))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+* **stream-model-handler,stream-model-instance-handler:** Remove state.next from Model and MID StreamState ([#2306](https://github.com/ceramicnetwork/js-ceramic/issues/2306)) ([3e06b21](https://github.com/ceramicnetwork/js-ceramic/commit/3e06b21dee82417f2911a198058ee5fca9e269e4))
+* **stream-model-instance, stream-model-instance-handler:** ModelInstanceDocument API ([#2196](https://github.com/ceramicnetwork/js-ceramic/issues/2196)) ([3ecf9fd](https://github.com/ceramicnetwork/js-ceramic/commit/3ecf9fdb1f0c573b9784337b80fc1c985e3d499c))
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype ([#2182](https://github.com/ceramicnetwork/js-ceramic/issues/2182)) ([65383af](https://github.com/ceramicnetwork/js-ceramic/commit/65383af69f69b730b0c54fe9d19569bfcace4f0c))
+* **stream-model:** Change Model model for indexing to use UNLOADABLE streamtype ([#2326](https://github.com/ceramicnetwork/js-ceramic/issues/2326)) ([cac8010](https://github.com/ceramicnetwork/js-ceramic/commit/cac8010afd6735af190c95025c223abe9f938f1a))
+* **stream-model:** Only allow genesis commit ([#2383](https://github.com/ceramicnetwork/js-ceramic/issues/2383)) ([f269217](https://github.com/ceramicnetwork/js-ceramic/commit/f269217b45868acb19d89a0bd62d44babc895b71))
+* **stream-model:** Remove 'unique' from Model metadata ([#2396](https://github.com/ceramicnetwork/js-ceramic/issues/2396)) ([1f0c820](https://github.com/ceramicnetwork/js-ceramic/commit/1f0c8208da8ac880168de7d47f58216c4a23223e))
+* **stream-model:** Validate relations in Model handler ([#2586](https://github.com/ceramicnetwork/js-ceramic/issues/2586)) ([af4741f](https://github.com/ceramicnetwork/js-ceramic/commit/af4741fefb4f2df6cc2db0247f89010c9ebafd06))
+* Track cacao expiration times in StreamState ([#2563](https://github.com/ceramicnetwork/js-ceramic/issues/2563)) ([09f17c8](https://github.com/ceramicnetwork/js-ceramic/commit/09f17c82eb9d8b313185d028c01445b7d312517b))
+* update dids, add/register cacao verifiers ([#2452](https://github.com/ceramicnetwork/js-ceramic/issues/2452)) ([d93fedb](https://github.com/ceramicnetwork/js-ceramic/commit/d93fedbb96f17b974f7e07f78aefa67790d8930e))
+
+
+### Reverts
+
+* Revert "Add model stream schema validation. (#2183)" ([16f6f14](https://github.com/ceramicnetwork/js-ceramic/commit/16f6f14f037e66adeb72b3b21f2d3b6cb4eced4e)), closes [#2183](https://github.com/ceramicnetwork/js-ceramic/issues/2183)
+
+
+
+
+
 # [0.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@0.13.0-rc.0...@ceramicnetwork/stream-model-handler@0.13.0) (2022-12-08)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler
