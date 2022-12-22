@@ -1,10 +1,9 @@
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
-import type { Block, Provider } from '@ethersproject/providers'
+import type { Provider } from '@ethersproject/providers'
 import {
   type Observable,
   type OperatorFunction,
   type RetryConfig,
-  concatMap,
   filter,
   fromEvent,
   map,
@@ -12,18 +11,18 @@ import {
   scan,
 } from 'rxjs'
 
-import { type BlockWithAnchorProofs, loadAnchorProofs, mapLoadBlocks } from './loader.js'
+import { type BlockProofs, mapLoadBlocksProofs } from './loader.js'
 
-export type BlockEvent = BlockWithAnchorProofs & {
+export type BlockEvent = BlockProofs & {
   reorganized: false
 }
 
-export type ReorganizedBlockEvent = BlockWithAnchorProofs & {
+export type ReorganizedBlockEvent = BlockProofs & {
   reorganized: true
   expectedParentHash: string
 }
 
-export type BlockListenerEvent = BlockEvent | ReorganizedBlockEvent
+export type BlockProofsListenerEvent = BlockEvent | ReorganizedBlockEvent
 
 export type ListenerParams = {
   /* ethers.js Provider */
@@ -92,49 +91,43 @@ export function createContinuousBlocksListener(
   )
 }
 
-type ProcessingState = { status: 'process' | 'reorganized'; previousHash: string; block: Block }
+type ProcessingState = BlockProofs & {
+  status: 'process' | 'reorganized'
+  previousHash: string
+}
 type ProcessingSeed = { status: 'initial' }
 
 /**
- * Rx operator to load anchor proofs for input blocks and detect blocks reorganizations
+ * Rx operator to detect blocks reorganizations and push BlockListenerEvents
  *
- * @param provider ethers.js Provider
- * @param chainId supported anchor network chain ID
- * @param expectedParentHash optional expected parent hash when loading first block
  * @param retryConfig optional Rx retry config
- * @returns OperatorFunction<Block, BlockListenerEvent>
+ * @returns OperatorFunction<BlockProofs, BlockProofsListenerEvent>
  */
-export function mapProcessBlock(
-  provider: Provider,
-  chainId: SupportedNetwork,
-  expectedParentHash?: string,
-  retryConfig?: RetryConfig
-): OperatorFunction<Block, BlockListenerEvent> {
+export function mapProcessBlockProofs(
+  expectedParentHash?: string
+): OperatorFunction<BlockProofs, BlockProofsListenerEvent> {
   return pipe(
     // Check for blockchain reorganizations based on previous known block
-    scan<Block, ProcessingState, ProcessingSeed>(
-      (state, block) => {
+    scan<BlockProofs, ProcessingState, ProcessingSeed>(
+      (state, data) => {
         if (state.status === 'initial') {
           // Check against initial expectedParentHash if provided
-          return expectedParentHash == null || block.parentHash === expectedParentHash
-            ? { status: 'process', block, previousHash: block.hash }
-            : { status: 'reorganized', block, previousHash: expectedParentHash }
+          return expectedParentHash == null || data.block.parentHash === expectedParentHash
+            ? { ...data, status: 'process', previousHash: data.block.hash }
+            : { ...data, status: 'reorganized', previousHash: expectedParentHash }
         }
-        return block.parentHash === state.block.hash
-          ? { status: 'process', block, previousHash: block.hash }
-          : { status: 'reorganized', block, previousHash: state.previousHash }
+        return data.block.parentHash === state.block.hash
+          ? { ...data, status: 'process', previousHash: data.block.hash }
+          : { ...data, status: 'reorganized', previousHash: state.previousHash }
       },
       { status: 'initial' }
     ),
-    // Emit event based on status, loading anchor proofs
-    concatMap<ProcessingState, Promise<BlockListenerEvent>>(
-      async ({ status, block, previousHash }) => {
-        const proofs = await loadAnchorProofs(provider, chainId, block, retryConfig)
-        return status === 'process'
-          ? { reorganized: false, block, proofs }
-          : { reorganized: true, block, proofs, expectedParentHash: previousHash }
-      }
-    )
+    // Emit event based on status
+    map<ProcessingState, BlockProofsListenerEvent>(({ status, block, proofs, previousHash }) => {
+      return status === 'process'
+        ? { reorganized: false, block, proofs }
+        : { reorganized: true, block, proofs, expectedParentHash: previousHash }
+    })
   )
 }
 
@@ -143,17 +136,17 @@ export function mapProcessBlock(
  * flagging reorganized blocks when detected
  *
  * @param params ListenerParams
- * @returns Observable<BlockListenerEvent>
+ * @returns Observable<BlockProofsListenerEvent>
  */
-export function createBlockListener({
+export function createBlockProofsListener({
   chainId,
   confirmations,
   expectedParentHash,
   provider,
   retryConfig,
-}: ListenerParams): Observable<BlockListenerEvent> {
+}: ListenerParams): Observable<BlockProofsListenerEvent> {
   return createContinuousBlocksListener(provider, confirmations).pipe(
-    mapLoadBlocks(provider, retryConfig),
-    mapProcessBlock(provider, chainId, expectedParentHash, retryConfig)
+    mapLoadBlocksProofs(provider, chainId, retryConfig),
+    mapProcessBlockProofs(expectedParentHash)
   )
 }

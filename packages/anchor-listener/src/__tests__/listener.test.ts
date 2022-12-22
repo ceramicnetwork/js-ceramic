@@ -4,10 +4,10 @@ import { jest } from '@jest/globals'
 import { firstValueFrom, from, of, toArray } from 'rxjs'
 
 import {
-  type BlockListenerEvent,
-  createBlockListener,
+  type BlockProofsListenerEvent,
+  createBlockProofsListener,
   createContinuousBlocksListener,
-  mapProcessBlock,
+  mapProcessBlockProofs,
 } from '../listener.js'
 
 import { mockedLogs, getMockedLogsProofs } from './test-utils.js'
@@ -58,41 +58,28 @@ describe('listener', () => {
     ])
   })
 
-  describe('mapProcessBlock() operator', () => {
+  describe('mapProcessBlockProofs() operator', () => {
     test('pushes reorganized event if block parent hash does not match provided previous hash', async () => {
-      const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
-      const provider = { getLogs } as unknown as Provider
       const expectedParentHash = 'block0hash'
       const block = { parentHash: 'block1hash' } as Block
+      const data = { block, proofs: getMockedLogsProofs(block) }
 
-      const events$ = of(block).pipe(mapProcessBlock(provider, 'eip155:1337', expectedParentHash))
+      const events$ = of(data).pipe(mapProcessBlockProofs(expectedParentHash))
       const event = await firstValueFrom(events$)
-      expect(event).toEqual({
-        reorganized: true,
-        block,
-        proofs: getMockedLogsProofs(block),
-        expectedParentHash,
-      })
+      expect(event).toEqual({ ...data, reorganized: true, expectedParentHash })
     })
 
     test('load logs and pushes processed block even if parent hash matches expected', async () => {
-      const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
-      const provider = { getLogs } as unknown as Provider
       const expectedParentHash = 'block0hash'
       const block = { parentHash: expectedParentHash, number: 10, timestamp: 1000 } as Block
+      const data = { block, proofs: getMockedLogsProofs(block) }
 
-      const events$ = of(block).pipe(mapProcessBlock(provider, 'eip155:1337', expectedParentHash))
+      const events$ = of(data).pipe(mapProcessBlockProofs(expectedParentHash))
       const event = await firstValueFrom(events$)
-      expect(event).toEqual({
-        reorganized: false,
-        block,
-        proofs: getMockedLogsProofs(block),
-      })
+      expect(event).toEqual({ ...data, reorganized: false })
     })
 
     test('process multiple blocks with reorganization', async () => {
-      const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
-      const provider = { getLogs } as unknown as Provider
       const blocks: Array<Block> = [
         { hash: 'block1', parentHash: 'block0', number: 1, timestamp: 100 } as Block,
         { hash: 'block2', parentHash: 'block1', number: 2, timestamp: 200 } as Block,
@@ -101,26 +88,28 @@ describe('listener', () => {
         { hash: 'block4', parentHash: 'block3', number: 4, timestamp: 400 } as Block,
         { hash: 'block5', parentHash: 'block4', number: 5, timestamp: 500 } as Block,
       ]
+      const blocksWithProofs = blocks.map((block) => {
+        return { block, proofs: getMockedLogsProofs(block) }
+      })
 
-      const events$ = from(blocks).pipe(mapProcessBlock(provider, 'eip155:1337'), toArray())
+      const events$ = from(blocksWithProofs).pipe(mapProcessBlockProofs(), toArray())
       const events = await firstValueFrom(events$)
 
       expect(events).toEqual([
-        { reorganized: false, block: blocks[0], proofs: getMockedLogsProofs(blocks[0]) },
-        { reorganized: false, block: blocks[1], proofs: getMockedLogsProofs(blocks[1]) },
+        { ...blocksWithProofs[0], reorganized: false },
+        { ...blocksWithProofs[1], reorganized: false },
         {
+          ...blocksWithProofs[2],
           reorganized: true,
-          block: blocks[2],
-          proofs: getMockedLogsProofs(blocks[2]),
           expectedParentHash: blocks[1].hash,
         },
-        { reorganized: false, block: blocks[3], proofs: getMockedLogsProofs(blocks[3]) },
-        { reorganized: false, block: blocks[4], proofs: getMockedLogsProofs(blocks[4]) },
+        { ...blocksWithProofs[3], reorganized: false },
+        { ...blocksWithProofs[4], reorganized: false },
       ])
     })
   })
 
-  test('createBlockListener()', async () => {
+  test('createBlockProofsListener()', async () => {
     const blocks: Array<Block> = [
       { hash: 'block1', parentHash: 'block0', number: 1, timestamp: 100 } as Block,
       { hash: 'block2', parentHash: 'block1', number: 2, timestamp: 200 } as Block,
@@ -134,10 +123,14 @@ describe('listener', () => {
     provider.getLogs = jest.fn(() => Promise.resolve(mockedLogs))
     provider.getBlock = jest.fn((blockNumber: number) => Promise.resolve(blocks[blockNumber - 1]))
 
-    const events$ = createBlockListener({ chainId: 'eip155:1337', confirmations: 10, provider })
+    const events$ = createBlockProofsListener({
+      chainId: 'eip155:1337',
+      confirmations: 10,
+      provider,
+    })
 
     const events = await new Promise((resolve) => {
-      const events: Array<BlockListenerEvent> = []
+      const events: Array<BlockProofsListenerEvent> = []
       let i = 0
       const sub = events$.subscribe({
         next(event) {

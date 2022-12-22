@@ -21,6 +21,11 @@ import {
 
 import { createAnchorProof } from './utils.js'
 
+export type BlockProofs = {
+  block: Block
+  proofs: Array<AnchorProof>
+}
+
 /**
  * Create an Observable loading a single block, with retry logic
  *
@@ -121,9 +126,23 @@ export async function loadAnchorProofs(
   return await firstValueFrom(createAnchorProofsLoader(provider, chainId, block, retryConfig))
 }
 
-export type BlockWithAnchorProofs = {
-  block: Block
-  proofs: Array<AnchorProof>
+/**
+ * Load a block with anchor proofs for a given block tag
+ *
+ * @param provider ethers.js Provider
+ * @param chainId supported anchor network chain ID
+ * @param blockTag ethers.js BlockTag
+ * @param retryConfig optional Rx retry config
+ * @returns Promise<BlockProofs>
+ */
+export async function loadBlockProofs(
+  provider: Provider,
+  chainId: SupportedNetwork,
+  blockTag: BlockTag,
+  retryConfig?: RetryConfig
+): Promise<BlockProofs> {
+  const block = await loadBlock(provider, blockTag, retryConfig)
+  return { block, proofs: await loadAnchorProofs(provider, chainId, block, retryConfig) }
 }
 
 /**
@@ -132,13 +151,13 @@ export type BlockWithAnchorProofs = {
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
  * @param retryConfig optional Rx retry config
- * @returns OperatorFunction<Block, BlockWithAnchorProofs>
+ * @returns OperatorFunction<Block, BlockProofs>
  */
-export function mapLoadBlockAnchorProofs(
+export function mapLoadBlockProofs(
   provider: Provider,
   chainId: SupportedNetwork,
   retryConfig: RetryConfig = { count: 3 }
-): OperatorFunction<Block, BlockWithAnchorProofs> {
+): OperatorFunction<Block, BlockProofs> {
   return pipe(
     concatMap(async (block) => {
       return { block, proofs: await loadAnchorProofs(provider, chainId, block, retryConfig) }
@@ -146,7 +165,31 @@ export function mapLoadBlockAnchorProofs(
   )
 }
 
-export type BlocksWithAnchorProofsLoaderParams = {
+/**
+ * Rx operator to load anchor proofs for input blocks
+ *
+ * @param provider ethers.js Provider
+ * @param chainId supported anchor network chain ID
+ * @param retryConfig optional Rx retry config
+ * @returns OperatorFunction<Array<number>, BlockProofs>
+ */
+export function mapLoadBlocksProofs(
+  provider: Provider,
+  chainId: SupportedNetwork,
+  retryConfig: RetryConfig = { count: 3 }
+): OperatorFunction<Array<number>, BlockProofs> {
+  return pipe(
+    mergeMap((blockNumbers) => {
+      return blockNumbers.map(async (blockNumber) => {
+        return await loadBlockProofs(provider, chainId, blockNumber, retryConfig)
+      })
+    }),
+    // Use concatMap here to ensure ordering
+    concatMap(async (blockPromise) => await blockPromise)
+  )
+}
+
+export type BlocksProofsLoaderParams = {
   /* ethers.js Provider */
   provider: Provider
   /* supported anchor network chain ID */
@@ -164,26 +207,25 @@ export type BlocksWithAnchorProofsLoaderParams = {
 /**
  * Create an Observable loading blocks and their anchor proofs for a given range of blocks
  *
- * @param params BlocksWithAnchorProofsLoaderParams
- * @returns Observable<BlockWithAnchorProofs>
+ * @param params BlocksProofsLoaderParams
+ * @returns Observable<BlockProofs>
  */
-export function createBlocksWithAnchorProofsLoader({
+export function createBlocksProofsLoader({
   provider,
   chainId,
   fromBlock,
   toBlock,
   retryConfig,
   blockLoadBuffer,
-}: BlocksWithAnchorProofsLoaderParams): Observable<BlockWithAnchorProofs> {
+}: BlocksProofsLoaderParams): Observable<BlockProofs> {
   const retry = retryConfig ?? { count: 3 }
   return range(fromBlock, toBlock - fromBlock + 1).pipe(
     bufferCount(blockLoadBuffer ?? 5),
-    mapLoadBlocks(provider, retry),
-    mapLoadBlockAnchorProofs(provider, chainId, retry)
+    mapLoadBlocksProofs(provider, chainId, retry)
   )
 }
 
-export type AncestorBlocksWithAnchorProofsLoaderParams = {
+export type AncestorBlocksProofsLoaderParams = {
   /* ethers.js Provider */
   provider: Provider
   /* supported anchor network chain ID */
@@ -202,17 +244,17 @@ export type AncestorBlocksWithAnchorProofsLoaderParams = {
  * Create an Observable loading blocks and their anchor proofs, walking the ancestry of a given
  * block until the target ancestor is reached
  *
- * @param params AncestorBlocksWithAnchorProofsLoaderParams
- * @returns Observable<BlockWithAnchorProofs>
+ * @param params AncestorBlocksProofsLoaderParams
+ * @returns Observable<BlockProofs>
  */
-export function createAncestorBlocksWithAnchorProofsLoader({
+export function createAncestorBlocksProofsLoader({
   provider,
   chainId,
   initialBlock,
   targetAncestorHash,
   retryConfig,
   maxConcurrency,
-}: AncestorBlocksWithAnchorProofsLoaderParams): Observable<BlockWithAnchorProofs> {
+}: AncestorBlocksProofsLoaderParams): Observable<BlockProofs> {
   const retry = retryConfig ?? { count: 3 }
   return createBlockLoader(provider, initialBlock, retry).pipe(
     expand((block) => {
@@ -220,6 +262,6 @@ export function createAncestorBlocksWithAnchorProofsLoader({
         ? EMPTY
         : createBlockLoader(provider, block.parentHash, retry)
     }, maxConcurrency),
-    mapLoadBlockAnchorProofs(provider, chainId, retry)
+    mapLoadBlockProofs(provider, chainId, retry)
   )
 }
