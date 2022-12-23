@@ -1,6 +1,6 @@
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
-import { Memoize } from 'mapmoize'
+import { Memoize } from 'typescript-memoize'
 
 import {
   base64urlToJSON,
