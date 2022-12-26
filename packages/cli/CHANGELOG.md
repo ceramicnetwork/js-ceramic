@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.18.0-hotfix.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.18.0-hotfix.0...@ceramicnetwork/cli@2.18.0-hotfix.1) (2022-12-26)
+
+
+### Bug Fixes
+
+* Provide Access-Control-Allow-Credentials header ([76a7414](https://github.com/ceramicnetwork/js-ceramic/commit/76a741431bfa6e5ac722cadddabd8635067ff8fd))
+
+
+
+
+
 # [2.18.0-hotfix.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.17.0...@ceramicnetwork/cli@2.18.0-hotfix.0) (2022-12-23)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

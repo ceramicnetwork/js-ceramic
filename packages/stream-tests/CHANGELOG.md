@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.18.0-hotfix.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.18.0-hotfix.0...@ceramicnetwork/stream-tests@2.18.0-hotfix.1) (2022-12-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [2.18.0-hotfix.0](/compare/@ceramicnetwork/stream-tests@2.17.0...@ceramicnetwork/stream-tests@2.18.0-hotfix.0) (2022-12-23)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

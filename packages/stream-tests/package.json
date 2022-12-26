@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tests",
-  "version": "2.18.0-hotfix.0",
+  "version": "2.18.0-hotfix.1",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
@@ -17,7 +17,7 @@
     "@ceramicnetwork/3id-did-resolver": "^2.9.0-hotfix.0",
     "@ceramicnetwork/blockchain-utils-linking": "^2.8.0-hotfix.0",
     "@ceramicnetwork/blockchain-utils-validation": "^2.8.0-hotfix.0",
-    "@ceramicnetwork/cli": "^2.18.0-hotfix.0",
+    "@ceramicnetwork/cli": "^2.18.0-hotfix.1",
     "@ceramicnetwork/common": "^2.16.0-hotfix.0",
     "@ceramicnetwork/core": "^2.21.0-hotfix.0",
     "@ceramicnetwork/http-client": "^2.13.0-hotfix.0",
