@@ -73,6 +73,7 @@
     "multiformats": "^9.5.8",
     "p-queue": "^7.2.0",
     "pg": "^8.7.3",
+    "pg-boss": "^8.2.0",
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
     "uint8arrays": "^3.0.0"
