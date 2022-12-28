@@ -10,7 +10,7 @@ export type SyncConfig = {
 
 export interface ISyncApi {
   startModelSync(startBlock: number, endBlock: number, models: string | string[]): Promise<void>
-  pauseModelSync(models: string | string[]): Promise<void>
+  shutdown(): Promise<void>
 }
 
 interface IpfsService {
@@ -19,16 +19,15 @@ interface IpfsService {
   storeRecord(record: Record<string, unknown>): Promise<CID>
 }
 
-interface Protocol {
-  // will rename but this is the function we want to use
-  handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void>
-}
+// handles a commit found during a sync
+// should be similar to: https://github.com/ceramicnetwork/js-ceramic/blob/6ae6e121b33132225f256762825e1439fd84f23a/packages/core/src/state-management/state-manager.ts#L210
+type HandleCommit = (streamId: StreamID, commit: CID, model?: StreamID) => Promise<void>
 
 export class SyncApi implements ISyncApi {
   constructor(
     private readonly syncConfig: SyncConfig,
     private readonly ipfsService: IpfsService,
-    private readonly protocol: Protocol
+    private readonly handleCommit: HandleCommit
   ) {
     // create job queue
   }
@@ -46,7 +45,7 @@ export class SyncApi implements ISyncApi {
     // add to job queue
   }
 
-  async pauseModelSync(models: string | string[]): Promise<void> {
-    // stop workers and remove from job queue
+  async shutdown(): Promise<void> {
+    // stop all workers and shuts the job queue down
   }
 }

@@ -17,14 +17,6 @@ jest.setTimeout(150000)
 describe('sqlite', () => {
   let databaseFolder: tmp.DirectoryResult
 
-  beforeAll(async () => {
-    await pgSetup()
-  })
-
-  afterAll(async () => {
-    await pgTeardown()
-  })
-
   beforeEach(async () => {
     databaseFolder = await tmp.dir()
   })
@@ -60,18 +52,28 @@ describe('sqlite', () => {
   })
 })
 
-test('build for postgres connection string', async () => {
-  const { databaseURL, kill } = await getDatabase()
-  const indexingApi = buildIndexing(
-    {
-      db: databaseURL,
-      allowQueriesBeforeHistoricalSync: true,
-    },
-    diagnosticsLogger,
-    Networks.INMEMORY
-  )
-  expect(indexingApi).toBeInstanceOf(PostgresIndexApi)
-  await kill()
+describe('postgres', () => {
+  beforeAll(async () => {
+    await pgSetup()
+  })
+
+  afterAll(async () => {
+    await pgTeardown()
+  })
+
+  test('build for postgres connection string', async () => {
+    const { databaseURL, kill } = await getDatabase()
+    const indexingApi = buildIndexing(
+      {
+        db: databaseURL,
+        allowQueriesBeforeHistoricalSync: true,
+      },
+      diagnosticsLogger,
+      Networks.INMEMORY
+    )
+    expect(indexingApi).toBeInstanceOf(PostgresIndexApi)
+    await kill()
+  })
 })
 
 test('throw on unsupported protocol', () => {
