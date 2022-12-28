@@ -250,6 +250,7 @@ export class Ceramic implements CeramicApi {
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
     const conflictResolution = new ConflictResolution(
+      this.loggerProvider.getDiagnosticsLogger(),
       modules.anchorValidator,
       this.dispatcher,
       this.context,

@@ -135,12 +135,36 @@ export interface LogEntry {
  * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits.
  */
 export interface CommitData extends LogEntry {
-  commit: any
-  envelope?: DagJWS
-  proof?: AnchorProof
-  capability?: Cacao
   /**
-   * Do not time-check a signature.
+   * The underlying payload of the commit
+   */
+  commit: any
+
+  /**
+   * If this is a signed commit, then this will have the commit envelope with the signature.
+   */
+  envelope?: DagJWS
+
+  /**
+   * If this is an anchor commit, this will have the anchor proof.
+   */
+  proof?: AnchorProof
+
+  /**
+   * If this is an anchor commit and this may get set after validating the anchor commit if the
+   * validation fails for any reason.  This is so that the error can be thrown later when applying
+   * the anchor commit (which happens at a different time than when the anchor is validated).
+   */
+  anchorValidationError?: Error
+
+  /**
+   * If this is a signed commit that was signed using a CACAO, this contains it.
+   */
+  capability?: Cacao
+
+  /**
+   * An option to pass down when doing signature verification on the commit that indicated not to
+   * time-check a signature.
    */
   disableTimecheck?: boolean
 }

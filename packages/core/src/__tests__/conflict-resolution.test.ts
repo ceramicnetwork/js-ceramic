@@ -213,11 +213,8 @@ describe('fetchLog', () => {
     ])
     const cid = CID.create(1, SHA256_CODE, decodeMultiHash(body))
     if (type == CommitType.ANCHOR) {
-      const timestamp = Math.floor(Math.random() * 100000)
       const proofCID = TestUtils.randomCID()
-      cidCommits[proofCID.toString()] = {
-        blockTimestamp: timestamp,
-      }
+      cidCommits[proofCID.toString()] = {}
       cidCommits[cid.toString()] = {
         proof: proofCID,
         prev: prev,
@@ -225,7 +222,6 @@ describe('fetchLog', () => {
       return {
         cid: cid,
         type: type,
-        timestamp: timestamp,
       }
     } else {
       if (prev) {
@@ -246,35 +242,53 @@ describe('fetchLog', () => {
     }
   }
 
-  test('no anchor commit', async () => {
+  test('single new commit', async () => {
     const a = logEntry(CommitType.GENESIS)
     const b = logEntry(CommitType.SIGNED, a.cid)
     const history = new HistoryLog(fauxDispatcher, [a])
 
     const result = await fetchLog(fauxDispatcher, b.cid, history)
-    const target = result.find((entry) => entry.cid.equals(b.cid))
-    expect(target.timestamp).toBeUndefined()
+    expect(result.length).toEqual(1)
+    expect(result[0].cid).toEqual(b.cid)
   })
-  test('immediately next anchor commit', async () => {
+  test('two new commits', async () => {
     const a = logEntry(CommitType.GENESIS)
     const b = logEntry(CommitType.SIGNED, a.cid)
     const c = logEntry(CommitType.ANCHOR, b.cid)
     const history = new HistoryLog(fauxDispatcher, [a])
 
     const result = await fetchLog(fauxDispatcher, c.cid, history)
-    const target = result.find((entry) => entry.cid.equals(b.cid))
-    expect(target.timestamp).toEqual(c.timestamp)
+    expect(result.length).toEqual(2)
+    expect(result[0].cid).toEqual(b.cid)
+    expect(result[1].cid).toEqual(c.cid)
   })
-  test('next anchor commit', async () => {
+  test('two new commits on top of two existing commits', async () => {
     const a = logEntry(CommitType.GENESIS)
     const b = logEntry(CommitType.SIGNED, a.cid)
     const c = logEntry(CommitType.SIGNED, b.cid)
     const d = logEntry(CommitType.ANCHOR, c.cid)
-    const history = new HistoryLog(fauxDispatcher, [a])
+    const history = new HistoryLog(fauxDispatcher, [a, b])
 
     const result = await fetchLog(fauxDispatcher, d.cid, history)
-    const target = result.find((entry) => entry.cid.equals(b.cid))
-    expect(target.timestamp).toEqual(d.timestamp)
+    expect(result.length).toEqual(2)
+    expect(result[0].cid).toEqual(c.cid)
+    expect(result[1].cid).toEqual(d.cid)
+  })
+  test('conflicting history', async () => {
+    // Current history:            A <- B <- C <- D
+    // New conflicting history:    A <- B <- E <- F
+    const a = logEntry(CommitType.GENESIS)
+    const b = logEntry(CommitType.SIGNED, a.cid)
+    const c = logEntry(CommitType.SIGNED, b.cid)
+    const d = logEntry(CommitType.ANCHOR, c.cid)
+    const e = logEntry(CommitType.ANCHOR, b.cid)
+    const f = logEntry(CommitType.ANCHOR, e.cid)
+    const history = new HistoryLog(fauxDispatcher, [a, b, c, d])
+
+    const result = await fetchLog(fauxDispatcher, f.cid, history)
+    expect(result.length).toEqual(2)
+    expect(result[0].cid).toEqual(e.cid)
+    expect(result[1].cid).toEqual(f.cid)
   })
   test('not in log', async () => {
     const a = logEntry(CommitType.GENESIS)
