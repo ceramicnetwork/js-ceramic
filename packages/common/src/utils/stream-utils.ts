@@ -340,7 +340,14 @@ export class StreamUtils {
    * hasn't been anchored yet.
    * @param state
    */
-  static anchorTimestampFromState(state: StreamState): number | undefined {
-    return state.log.findLast(e => e.timestamp)?.timestamp
+  static anchorTimestampFromState(state: StreamState): number | null {
+    for (let i = state.log.length - 1; i >= 0; i--) {
+      const entry = state.log[i]
+      if (entry.timestamp) {
+        return entry.timestamp
+      }
+    }
+
+    return null
   }
 }
