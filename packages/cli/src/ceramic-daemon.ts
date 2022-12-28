@@ -241,6 +241,7 @@ export class CeramicDaemon {
     this.app.use(
       cors({
         origin: opts.httpApi?.corsAllowedOrigins,
+        credentials: true,
         maxAge: 7200, // 2 hours
       })
     )

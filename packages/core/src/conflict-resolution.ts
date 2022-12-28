@@ -422,8 +422,12 @@ export class ConflictResolution {
     }
 
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState)
-    const log = await fetchLog(this.dispatcher, tip, stateLog).then((log) =>
-      verifyAnchorAndApplyTimestamps(this.logger, this.dispatcher, this.anchorValidator, log)
+    const logWithoutTimestamps = await fetchLog(this.dispatcher, tip, stateLog)
+    const log = await verifyAnchorAndApplyTimestamps(
+      this.logger,
+      this.dispatcher,
+      this.anchorValidator,
+      logWithoutTimestamps
     )
 
     if (log.length) {
