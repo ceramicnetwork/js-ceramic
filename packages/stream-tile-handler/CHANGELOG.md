@@ -3,6 +3,45 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.10.1...@ceramicnetwork/stream-tile-handler@2.11.0-rc.0) (2022-12-29)
+
+
+### Bug Fixes
+
+* **core:** Don't unpin anchor proof, merkle tree, or CACAO when unpinning streams ([#2307](https://github.com/ceramicnetwork/js-ceramic/issues/2307)) ([5b9773a](https://github.com/ceramicnetwork/js-ceramic/commit/5b9773aa68a5163baffb99ee05e99139865192e6))
+* **core:** Remove obsolete tests ([#1511](https://github.com/ceramicnetwork/js-ceramic/issues/1511)) ([7d90309](https://github.com/ceramicnetwork/js-ceramic/commit/7d903091008859ce2c32bfb7133f0a9e324badb3))
+* resolve merge conflicts during merge from `main` ([#1848](https://github.com/ceramicnetwork/js-ceramic/issues/1848)) ([6772fc6](https://github.com/ceramicnetwork/js-ceramic/commit/6772fc6c61bc9daadfd3f6d6ecf3de2bb100450d))
+* **stream-handler-common:** Fix loading of historical commits with CACAOs ([#2523](https://github.com/ceramicnetwork/js-ceramic/issues/2523)) ([329f1c8](https://github.com/ceramicnetwork/js-ceramic/commit/329f1c8457bd04bf9619fed0bba8f89afabd0b7e))
+* **stream-tile-handler,stream-model-handler,stream-model-instance-handler:** Don't cache schemas ([#2267](https://github.com/ceramicnetwork/js-ceramic/issues/2267)) ([1744d84](https://github.com/ceramicnetwork/js-ceramic/commit/1744d849568ae8e630345677446374e39fc04055))
+* **stream-tile, stream-tile-handler:** don't allow updating controllers to invalid values ([#2159](https://github.com/ceramicnetwork/js-ceramic/issues/2159)) ([cd195c9](https://github.com/ceramicnetwork/js-ceramic/commit/cd195c924b3316ded5d33f708c6781e1b6f49543))
+* Wrap AJV instances in LRU cache ([#2488](https://github.com/ceramicnetwork/js-ceramic/issues/2488)) ([3a6e31a](https://github.com/ceramicnetwork/js-ceramic/commit/3a6e31a58d100a353ca4014f3bcdaa197aade6d4))
+
+
+### Features
+
+* Add support for specifying resources by family ([#2070](https://github.com/ceramicnetwork/js-ceramic/issues/2070)) ([2a17f16](https://github.com/ceramicnetwork/js-ceramic/commit/2a17f16937702225d402ce13569e7ea0c3248990))
+* Allow stream controller to differ from signer ([#1609](https://github.com/ceramicnetwork/js-ceramic/issues/1609)) ([b1c4711](https://github.com/ceramicnetwork/js-ceramic/commit/b1c4711b88ae9a3cc422cd8a8ea6b2fd8ff9286b))
+* Allow updating tile immediately after controller change ([#1619](https://github.com/ceramicnetwork/js-ceramic/issues/1619)) ([4e63e2f](https://github.com/ceramicnetwork/js-ceramic/commit/4e63e2f36dd1bd21ca52ebf988c4a54929ee5be3))
+* Check signature of a lone genesis ([#1529](https://github.com/ceramicnetwork/js-ceramic/issues/1529)) ([b55e225](https://github.com/ceramicnetwork/js-ceramic/commit/b55e225682e57aace057fb9e5e8aec0d78d63b75))
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+* **core:** optimize document handler IPFS lookups ([2cb95df](https://github.com/ceramicnetwork/js-ceramic/commit/2cb95df549a531c0727d699f7953286ed5611efa))
+* **core:** Split AnchorService from AnchorValidator ([#1505](https://github.com/ceramicnetwork/js-ceramic/issues/1505)) ([b92add9](https://github.com/ceramicnetwork/js-ceramic/commit/b92add945e5fc52943a836dfad856dc052cfbee3))
+* **core:** Throw when loading or updating a stream with expired CACAOs in the log ([#2574](https://github.com/ceramicnetwork/js-ceramic/issues/2574)) ([928d5e3](https://github.com/ceramicnetwork/js-ceramic/commit/928d5e338957ba361c6b33246091ac145e6740d4))
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+* Only allow valid CBOR in deterministic streams ([#1925](https://github.com/ceramicnetwork/js-ceramic/issues/1925)) ([7031283](https://github.com/ceramicnetwork/js-ceramic/commit/7031283637f93192e0be258eaa00dc2be33a746f))
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+* Pass time-information when checking a signature ([#1502](https://github.com/ceramicnetwork/js-ceramic/issues/1502)) ([913e091](https://github.com/ceramicnetwork/js-ceramic/commit/913e091827691f37a3e02ffcef569a22fd6f007d))
+* **stream-model, stream-model-handler:** Core APIs for Model streamtype ([#2182](https://github.com/ceramicnetwork/js-ceramic/issues/2182)) ([65383af](https://github.com/ceramicnetwork/js-ceramic/commit/65383af69f69b730b0c54fe9d19569bfcace4f0c))
+* **stream-tile-handler:** add cacao wildcard resource support ([#2137](https://github.com/ceramicnetwork/js-ceramic/issues/2137)) ([5ffb298](https://github.com/ceramicnetwork/js-ceramic/commit/5ffb2984340e298c72388bbbb88cdf251bf38aec))
+* **stream-tile-handler:** use revocationPhaseOutSec option when verifying signatures ([#2081](https://github.com/ceramicnetwork/js-ceramic/issues/2081)) ([af28f57](https://github.com/ceramicnetwork/js-ceramic/commit/af28f5741d031db2cacb39c1f4a48d08473f569d))
+* Track cacao expiration times in StreamState ([#2563](https://github.com/ceramicnetwork/js-ceramic/issues/2563)) ([09f17c8](https://github.com/ceramicnetwork/js-ceramic/commit/09f17c82eb9d8b313185d028c01445b7d312517b))
+* Transition remaining tests to pure ESM ([#2044](https://github.com/ceramicnetwork/js-ceramic/issues/2044)) ([0848eb5](https://github.com/ceramicnetwork/js-ceramic/commit/0848eb59741a2b940de9dd76df94bd8948bae637))
+* update dids, add/register cacao verifiers ([#2452](https://github.com/ceramicnetwork/js-ceramic/issues/2452)) ([d93fedb](https://github.com/ceramicnetwork/js-ceramic/commit/d93fedbb96f17b974f7e07f78aefa67790d8930e))
+
+
+
+
+
 ## [2.10.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@2.10.0...@ceramicnetwork/stream-tile-handler@2.10.1) (2022-12-29)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
