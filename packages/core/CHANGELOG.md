@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.20.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.20.0...@ceramicnetwork/core@2.20.1) (2022-12-29)
+
+
+### Reverts
+
+* Revert "chore: Make memoization slightly faster and more reliable (#2235)" ([5c64483](https://github.com/ceramicnetwork/js-ceramic/commit/5c644838da2e7e0b0d5a1a696576dd3d188f9a67)), closes [#2235](https://github.com/ceramicnetwork/js-ceramic/issues/2235)
+
+
+
+
+
 # [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.20.0-rc.0...@ceramicnetwork/core@2.20.0) (2022-12-21)
 
 **Note:** Version bump only for package @ceramicnetwork/core
