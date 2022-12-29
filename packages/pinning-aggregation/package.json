@@ -40,7 +40,7 @@
     "@ceramicnetwork/pinning-ipfs-backend": "^2.8.0-rc.0",
     "@ceramicnetwork/pinning-powergate-backend": "^2.8.0-rc.0",
     "ipfs-core-types": "~0.9.0",
-    "multiformats": "^9.5.8"
+    "multiformats": "^10.0.3"
   },
   "publishConfig": {
     "access": "public"
