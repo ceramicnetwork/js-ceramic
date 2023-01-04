@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { buildIpfsConnection } from './build-ipfs-connection.util.js'
+import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
@@ -272,7 +272,7 @@ export class CeramicDaemon {
   static async create(opts: DaemonConfig): Promise<CeramicDaemon> {
     const ceramicConfig = makeCeramicConfig(opts)
 
-    const ipfs = await buildIpfsConnection(
+    const ipfs = await IpfsConnectionFactory.buildIpfsConnection(
       opts.ipfs.mode,
       opts.network?.name,
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
@@ -300,7 +300,7 @@ export class CeramicDaemon {
         opts.stateStore?.s3Endpoint,
         params.networkOptions.name
       )
-      await ceramic.repository.injectStateStore(s3Store)
+      await ceramic.repository.injectKeyValueStore(s3Store)
     }
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     ceramic.did = did

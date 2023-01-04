@@ -301,16 +301,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const feed$ = this.#feed.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
-
     if (anchorResponse) {
       return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
     } else {
-      return of<AnchorServiceResponse>({
-        status: AnchorStatus.FAILED,
-        streamId,
-        cid: tip,
-        message: 'Request not found',
-      })
+      return feed$
     }
   }
 
