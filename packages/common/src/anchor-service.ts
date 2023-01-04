@@ -36,7 +36,7 @@ export interface AnchorServiceFailed {
 export type RequestAnchorParams = {
   streamID: StreamID
   tip: CID
-  timestampMs: number
+  timestampISO: string // a result of Date.toISOString()
 }
 
 /**
