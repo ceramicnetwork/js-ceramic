@@ -52,7 +52,7 @@ const getPathHelper = (index: number, leavesCount: number, path = []): PathDirec
 /**
  * Retrieves the leaves of a Merkle Tree based on the merkle trees metadata
  */
-export class MerkleTreeLeafLoader {
+export class MerkleTreeLoader {
   private _metadata: Metadata
   constructor(private readonly ipfsService: IpfsService, private readonly rootCid: CID) {}
 
@@ -69,11 +69,11 @@ export class MerkleTreeLeafLoader {
   }
 
   /**
-   * retreives the leaf cid found at the provided index
+   * retreives the path to the leaf and the cid found at the provided index
    * @param index index of the leaf
    * @returns promise for the cid stored in the leaf
    */
-  async getLeaf(index: number): Promise<CID> {
+  async getLeafData(index: number): Promise<{ cid: CID; path: PathDirection[] }> {
     const metadata = await this.getMetadata()
     const path = getPath(index, metadata.numEntries)
 
@@ -84,6 +84,6 @@ export class MerkleTreeLeafLoader {
     const lastPathDirection = path[path.length - 1]
     const cid = parent[lastPathDirection].toString()
 
-    return cid
+    return { cid, path }
   }
 }
