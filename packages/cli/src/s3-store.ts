@@ -4,34 +4,12 @@ import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
 import PQueue from 'p-queue'
 import AWSSDK from 'aws-sdk'
-import { AbstractIterator, AbstractIteratorOptions, ErrorValueCallback } from 'abstract-leveldown'
 
 /**
  * Maximum GET/HEAD requests per second to AWS S3
  */
 const MAX_LOAD_RPS = 4000
 const DEFAULT_S3_STORE_USE_CASE_NAME = 'default'
-
-declare module 's3leveldown' {
-  /*
-  Need to foll ts into thinking that S3LevelDOWN implements these, because otherwise it shows errors
-  when doing new LevelUp(s3LevelDown).
-   */
-  interface S3LevelDOWN {
-    /*
-    status, isOperational and getMany are not implemented in S3LevelDown, but we also don't need to use them
-     */
-    readonly status: 'new' | 'opening' | 'open' | 'closing' | 'closed'
-    isOperational(): boolean
-    getMany(key: Array<string>, cb: ErrorValueCallback<Array<string>>): void
-
-    /*
-    iterator is not compatible in S3LevelDown only because it has the db: AbstractLevelDOWN<K, V>;
-    param and S3LevelDown is not compatible with AbstractLevelDOWN<K, V>
-     */
-    iterator(options?: AbstractIteratorOptions<string>): AbstractIterator<string, string>
-  }
-}
 
 class S3StoreMap {
   readonly #storeRoot
