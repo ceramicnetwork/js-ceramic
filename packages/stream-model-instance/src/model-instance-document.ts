@@ -54,12 +54,6 @@ export interface ModelInstanceDocumentMetadata {
    * The StreamID of the Model that this ModelInstanceDocument belongs to.
    */
   model: StreamID
-
-  /**
-   * The separator key as specified in CIP-120.
-   * This is always 'model' for the model-instance-document stream type.
-   */
-  sep: string
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -115,7 +109,6 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     return { 
       controller: metadata.controllers[0],
       model: metadata.model,
-      sep: 'model'
     }
   }
 
@@ -306,6 +299,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const header: GenesisHeader = {
       controllers: [controller],
       model: metadata.model.bytes,
+      sep: 'model', // See CIP-120 for more details on this field
     }
     if (!metadata.deterministic) {
       header.unique = randomBytes(12)

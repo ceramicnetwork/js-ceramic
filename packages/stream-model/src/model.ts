@@ -44,11 +44,6 @@ export interface ModelMetadata {
    * all Models.
    */
   model: StreamID
-  
-  /**
-   * The separator key as specified in CIP-120. This is always 'model' for the model stream type.
-   */
-  sep: string
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
@@ -168,7 +163,6 @@ export class Model extends Stream {
     return {
       controller: this.state$.value.metadata.controllers[0],
       model: Model.MODEL,
-      sep: 'model'
     }
   }
 
@@ -328,6 +322,7 @@ export class Model extends Stream {
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       model: Model.MODEL.bytes,
+      sep: 'model', // See CIP-120 for more details on this field
     }
     return { data: content, header }
   }
