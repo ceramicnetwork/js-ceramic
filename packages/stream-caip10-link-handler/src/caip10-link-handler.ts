@@ -106,7 +106,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     if (
       state.signature !== SignatureStatus.GENESIS &&
       ((state.anchorStatus === AnchorStatus.ANCHORED &&
-        validProof.timestamp < state.anchorProof.blockTimestamp) ||
+        validProof.timestamp < StreamUtils.anchorTimestampFromState(state)) ||
         (state.anchorStatus !== AnchorStatus.ANCHORED &&
           validProof.timestamp < state.next.metadata.lastUpdate))
     ) {

@@ -241,6 +241,7 @@ export class CeramicDaemon {
     this.app.use(
       cors({
         origin: opts.httpApi?.corsAllowedOrigins,
+        credentials: true,
         maxAge: 7200, // 2 hours
       })
     )
@@ -294,7 +295,12 @@ export class CeramicDaemon {
 
     const ceramic = new Ceramic(modules, params)
     if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3Store = new S3Store(opts.stateStore?.s3Bucket, params.networkOptions.name)
+      const s3Store = new S3Store(
+        opts.stateStore?.s3Bucket,
+        opts.stateStore?.s3Endpoint,
+        params.networkOptions.name
+      )
+      
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
@@ -755,9 +761,6 @@ export class CeramicDaemon {
     const { docId, commit, docOpts } = req.body
     const opts = req.body.opts || docOpts
     upconvertLegacySyncOption(opts)
-    // The HTTP client generally only calls applyCommit as part of an app-requested update to a
-    // stream, so we want to throw an error if applying that commit fails for any reason.
-    opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? true
 
     const streamId = req.body.streamId || docId
     if (!(streamId && commit)) {

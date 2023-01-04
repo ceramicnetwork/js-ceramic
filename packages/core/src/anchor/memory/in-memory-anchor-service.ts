@@ -10,6 +10,7 @@ import {
   AnchorValidator,
   AnchorCommit,
   RequestAnchorParams,
+  TestUtils,
 } from '@ceramicnetwork/common'
 
 import type { Dispatcher } from '../../dispatcher.js'
@@ -18,6 +19,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
+import lru from 'lru_map'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -46,7 +48,12 @@ interface InMemoryAnchorConfig {
   verifySignatures?: boolean
 }
 
-const SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
+// Caches recent anchor txn hashes and the timestamp when they were anchored
+// This is intentionally global and not a member of InMemoryAnchorService. This is so that when
+// multiple InMemoryAnchorServices are being used simultaneously in the same process (usually by
+// tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
+// can successfully validate each others transactions.
+const txnCache: lru.LRUMap<string, number> = new lru.LRUMap(100)
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -357,15 +364,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     this._startProcessingCandidate(leaf)
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
+    const txHashCid = TestUtils.randomCID()
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
-      blockNumber: timestamp,
-      blockTimestamp: timestamp,
-      txHash: CID.parse(SAMPLE_ETH_TX_HASH),
+      txHash: txHashCid,
       root: leaf.cid,
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       txType: V1_PROOF_TYPE,
     }
+    txnCache.set(txHashCid.toString(), timestamp)
     const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
     const cid = await this._publishAnchorCommit(leaf.streamId, commit)
@@ -399,7 +406,14 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validateChainInclusion(proof: AnchorProof): Promise<void> {
-    // always valid
+  async validateChainInclusion(proof: AnchorProof): Promise<number> {
+    const txHashString = proof.txHash.toString()
+    if (!txnCache.has(txHashString)) {
+      throw new Error(
+        `Txn ${proof.txHash.toString()} was not recently anchored by the InMemoryAnchorService`
+      )
+    }
+
+    return txnCache.get(txHashString)
   }
 }
