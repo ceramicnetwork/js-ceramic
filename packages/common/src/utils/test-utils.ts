@@ -27,7 +27,7 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
 export class TestUtils {
   /**
    * Wait up to 'timeoutMs' for the given predicate to return true.  Polls the given predicate once
-   * every 100ms (plus however long it takes for the predicate itself to execute).  
+   * every 100ms (plus however long it takes for the predicate itself to execute).
    * Returns true if the predicate eventually returned true, or false if it timed out
    * without ever becoming true.
    *
@@ -72,19 +72,19 @@ export class TestUtils {
    */
   static async waitForState(
     stream: Stream,
-    timeout: number,
+    timeoutMs: number,
     predicate: (state: StreamState) => boolean,
-    onFailure: () => void
+    onFailure: (state: StreamState) => void
   ): Promise<void> {
     if (predicate(stream.state)) return
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs))
     // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
     const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
       defaultValue: undefined,
     })
     await Promise.race([timeoutPromise, completionPromise])
     if (!predicate(stream.state)) {
-      onFailure()
+      onFailure(stream.state)
     }
   }
 
