@@ -31,15 +31,13 @@ class S3StoreMap {
     // and others being `<bucketName + '/ceramic/' + this.networkName + '/state-store-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const fullLocation = this.getFullLocation(useCaseName)
     const storePath = `${this.#storeRoot}/${fullLocation}`
-    const levelUp = new LevelUp(
-      // @ts-ignore FIXME: CDB-2064 S3LevelDOWN is not a AbstractLevelDOWN<any, any> (it's missing a few methods)
-      new S3LevelDOWN(
-        storePath,
-        new AWSSDK.S3({
-          endpoint: this.#endpoint,
-        })
-      )
+    const levelDown = new S3LevelDOWN(
+      storePath,
+      new AWSSDK.S3({
+        endpoint: this.#endpoint,
+      })
     )
+    const levelUp = new LevelUp(levelDown)
     this.#map.set(fullLocation, levelUp)
   }
 
