@@ -101,6 +101,8 @@ const envs: Array<BasicIndexingTestEnv> = [
 describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) => {
   jest.setTimeout(1000 * 30)
 
+  let stateStoreURL: string
+  let dbURL: string
   let ipfs: IpfsApi
   let port: number
   let core: Ceramic
@@ -118,6 +120,23 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     await dbConnection.schema.dropTableIfExists(modelWithRelation.id.toString())
     await dbConnection.schema.dropTableIfExists(model.id.toString())
     await dbConnection.schema.dropTableIfExists(MODEL_STREAM_ID)
+  }
+
+  async function setupCeramic() {
+    core = await createCeramic(ipfs, {
+      indexing: {
+        db: dbURL,
+        allowQueriesBeforeHistoricalSync: true,
+      },
+      stateStoreDirectory: stateStoreURL,
+    })
+
+    port = await getPort()
+    const apiUrl = 'http://localhost:' + port
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    await daemon.listen()
+    ceramic = new CeramicClient(apiUrl)
+    ceramic.did = core.did
   }
 
   beforeAll(async () => {
@@ -141,8 +160,6 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
   beforeEach(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
 
-    let dbURL: string
-
     switch (env.dbEngine) {
       case DBEngine.sqlite: {
         const indexingDirectory = await tmp.tmpName()
@@ -158,20 +175,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         })
         break
     }
+    stateStoreURL = await tmp.tmpName()
 
-    core = await createCeramic(ipfs, {
-      indexing: {
-        db: dbURL,
-        allowQueriesBeforeHistoricalSync: true,
-      },
-    })
-
-    port = await getPort()
-    const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
-    await daemon.listen()
-    ceramic = new CeramicClient(apiUrl)
-    ceramic.did = core.did
+    await setupCeramic()
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
@@ -598,5 +604,59 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       },
       1000 * 30
     )
+
+    test('Index survives node restart', async () => {
+      const referencedDoc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const referencedDoc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+
+      const doc0 = await ModelInstanceDocument.create(
+        ceramic,
+        { linkedDoc: referencedDoc0.id.toString() },
+        midRelationMetadata
+      )
+      await ModelInstanceDocument.create(
+        ceramic,
+        { linkedDoc: referencedDoc1.id.toString() },
+        midRelationMetadata
+      )
+
+      await expect(
+        ceramic.index.count({ model: modelWithRelation.id.toString() })
+      ).resolves.toEqual(2)
+      let resultObj = await ceramic.index.query({
+        model: modelWithRelation.id,
+        first: 100,
+        filter: { linkedDoc: referencedDoc0.id.toString() },
+      })
+      let results = extractDocuments(ceramic, resultObj)
+      expect(results.length).toEqual(1)
+      expect(results[0].id.toString()).toEqual(doc0.id.toString())
+
+      await daemon.close()
+      await ceramic.close()
+
+      await TestUtils.delay(3000) // to give time for Ceramic to fully shut down.
+
+      await setupCeramic() // Restart Ceramic with the same index database and state store
+
+      // Reads and writes still work
+
+      await ModelInstanceDocument.create(
+        ceramic,
+        { linkedDoc: referencedDoc1.id.toString() },
+        midRelationMetadata
+      )
+      await expect(
+        ceramic.index.count({ model: modelWithRelation.id.toString() })
+      ).resolves.toEqual(3)
+      resultObj = await ceramic.index.query({
+        model: modelWithRelation.id,
+        first: 100,
+        filter: { linkedDoc: referencedDoc0.id.toString() },
+      })
+      results = extractDocuments(ceramic, resultObj)
+      expect(results.length).toEqual(1)
+      expect(results[0].id.toString()).toEqual(doc0.id.toString())
+    })
   })
 })
