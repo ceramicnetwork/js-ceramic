@@ -36,7 +36,6 @@ const STRING_MAP_SCHEMA = {
   },
 }
 
-
 describe('anchor', () => {
   let realHandleTip
   let ipfs: IpfsApi
@@ -90,7 +89,10 @@ describe('anchor', () => {
         expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 })
       )
 
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[1].cid
+      )
 
       expect(stream2.state).toEqual(stream1.state)
       await ceramic2.close()
@@ -98,7 +100,9 @@ describe('anchor', () => {
 
     test('handleTip for commit already in log', async () => {
       const newContent = { foo: 'bar' }
-      const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false })
+      const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, {
+        anchor: false,
+      })
       await stream1.update(newContent, null, { anchor: false })
 
       const ceramic2 = await createCeramic(ipfs)
@@ -108,7 +112,10 @@ describe('anchor', () => {
       const streamState2 = await ceramic2.repository.load(stream2.id, {})
 
       retrieveCommitSpy.mockClear()
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[1].cid
+      )
 
       expect(streamState2.state).toEqual(stream1.state)
       // 2 IPFS retrievals - the signed commit and its linked commit payload for the commit to be
@@ -116,8 +123,14 @@ describe('anchor', () => {
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       // Now re-apply the same commit and don't expect any additional calls to IPFS
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[0].cid)
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[1].cid
+      )
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[0].cid
+      )
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       // Add another update to stream 1
@@ -125,7 +138,10 @@ describe('anchor', () => {
       await stream1.update(moreNewContent, null, { anchor: false })
 
       retrieveCommitSpy.mockClear()
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[2].cid)
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[2].cid
+      )
 
       expect(streamState2.state).toEqual(stream1.state)
       // 2 IPFS retrievals - 1 each for linked commit/envelope for CID to be applied - since there is no lone genesis commit
@@ -133,8 +149,14 @@ describe('anchor', () => {
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       // Now re-apply the same commit and don't expect any additional calls to IPFS
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[2].cid)
-      await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[2].cid
+      )
+      await (ceramic2.repository.stateManager as any)._handleTip(
+        streamState2,
+        stream1.state.log[1].cid
+      )
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       await ceramic2.close()
@@ -272,7 +294,10 @@ describe('anchor', () => {
         const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
         const stream2 = await TileDocument.load(ceramic, stream1.id)
         const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 })
-        const snapshot = await ceramic2.repository.stateManager.atCommit(streamState2, stream1.commitId)
+        const snapshot = await ceramic2.repository.stateManager.atCommit(
+          streamState2,
+          stream1.commitId
+        )
 
         expect(StreamUtils.statesEqual(snapshot.state, stream1.state))
         const snapshotStream = streamFromState<TileDocument>(
@@ -450,7 +475,9 @@ describe('anchor', () => {
 
     test('should announce change to network', async () => {
       const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip')
-      const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false })
+      const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, {
+        anchor: false,
+      })
       stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       expect(publishTip).toHaveBeenCalledTimes(1)
@@ -530,7 +557,9 @@ describe('anchor', () => {
         ceramic.dispatcher.messageBus.queryNetwork = () =>
           from(response).pipe(
             concatMap(async (value, index) => {
-              await new Promise((resolve) => setTimeout(resolve, index * MAX_RESPONSE_INTERVAL * 0.3))
+              await new Promise((resolve) =>
+                setTimeout(resolve, index * MAX_RESPONSE_INTERVAL * 0.3)
+              )
               return value
             })
           )
@@ -569,7 +598,6 @@ describe('anchor', () => {
         expect(fakeHandleTip).toBeCalledTimes(20)
       })
     })
-
   })
 
   describe('With anchorOnRequest == false', () => {
@@ -592,9 +620,7 @@ describe('anchor', () => {
       await ceramic.repository.stateManager.anchor(stream$)
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await inMemoryAnchorService.anchor()
-
-      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+      await TestUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
@@ -606,9 +632,7 @@ describe('anchor', () => {
       await ceramic.repository.stateManager.anchor(stream$)
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await inMemoryAnchorService.anchor()
-
-      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+      await TestUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       expect(stream$.value.log.length).toEqual(2)
@@ -638,9 +662,7 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await inMemoryAnchorService.anchor()
-
-      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+      await TestUtils.anchorUpdate(ceramic, stream)
 
       // Check that fakeHandleTip was called only three times
       expect(fakeHandleTip).toHaveBeenCalledTimes(2)
@@ -663,9 +685,7 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await inMemoryAnchorService.anchor()
-
-      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+      await TestUtils.anchorUpdate(ceramic, stream)
 
       // Check that fakeHandleTip was called only three times
       expect(fakeHandleTip).toHaveBeenCalledTimes(3)
@@ -685,13 +705,17 @@ describe('anchor', () => {
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
       expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
 
-      await inMemoryAnchorService.anchor()
-
-      await TestUtils.delay(3000)  // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
+      await TestUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-      await TestUtils.delay(3000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
-      expect(await anchorRequestStore.load(stream.id)).toBeNull()
+
+      // Anchor request should be asynchronously deleted from the anchor request store
+      await TestUtils.waitForConditionOrTimeout(async function () {
+        const anchorRequest = await anchorRequestStore.load(stream.id)
+        return anchorRequest === null
+      })
+
+      await expect(anchorRequestStore.load(stream.id)).resolves.toBeNull()
     })
 
     test('anchor request is stored when created and deleted when failed', async () => {
@@ -708,8 +732,13 @@ describe('anchor', () => {
       await inMemoryAnchorService.failPendingAnchors()
       await stream.sync()
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
-      await TestUtils.delay(3000) // Needs a bit of time to delete the request from the store. TODO(CDB-2090): use less brittle approach to waiting for this condition
-      expect(await anchorRequestStore.load(stream.id)).toBeNull()
+
+      // Anchor request should be asynchronously deleted from the anchor request store
+      await TestUtils.waitForConditionOrTimeout(async function () {
+        const anchorRequest = await anchorRequestStore.load(stream.id)
+        return anchorRequest === null
+      })
+      await expect(anchorRequestStore.load(stream.id)).resolves.toBeNull()
     })
 
     test('anchor request is stored when created and not deleted when processing', async () => {
@@ -726,8 +755,8 @@ describe('anchor', () => {
       await inMemoryAnchorService.startProcessingPendingAnchors()
       await stream.sync()
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PROCESSING)
-      await TestUtils.delay(2000) // Needs a bit of time delete the request from the store (but it won't delte it in this case)
-      expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
+      await TestUtils.delay(2000) // Wait a bit to confirm that the request is *not* deleted from the anchor request store
+      await expect(anchorRequestStore.load(stream.id)).resolves.not.toBeNull()
     })
   })
 })

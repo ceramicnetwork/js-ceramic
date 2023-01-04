@@ -327,9 +327,27 @@ export class StreamUtils {
         throw new Error(
           `CACAO expired: Commit ${logEntry.cid.toString()} of Stream ${StreamUtils.streamIdFromState(
             state
-          ).toString()} has a CACAO that expired at ${logEntry.expirationTime}. Loading the stream with 'sync: SyncOptions.ALWAYS_SYNC' will restore the stream to a usable state, by discarding the invalid commits (this means losing the data from those invalid writes!)`
+          ).toString()} has a CACAO that expired at ${
+            logEntry.expirationTime
+          }. Loading the stream with 'sync: SyncOptions.ALWAYS_SYNC' will restore the stream to a usable state, by discarding the invalid commits (this means losing the data from those invalid writes!)`
         )
       }
     }
+  }
+
+  /**
+   * Given a StreamState returns the timestamp when it was last anchored, or null if the state
+   * hasn't been anchored yet.
+   * @param state
+   */
+  static anchorTimestampFromState(state: StreamState): number | null {
+    for (let i = state.log.length - 1; i >= 0; i--) {
+      const entry = state.log[i]
+      if (entry.timestamp) {
+        return entry.timestamp
+      }
+    }
+
+    return null
   }
 }

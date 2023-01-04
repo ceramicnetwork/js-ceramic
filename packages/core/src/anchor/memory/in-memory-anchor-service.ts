@@ -9,6 +9,8 @@ import {
   AnchorServiceResponse,
   AnchorValidator,
   AnchorCommit,
+  RequestAnchorParams,
+  TestUtils,
 } from '@ceramicnetwork/common'
 
 import type { Dispatcher } from '../../dispatcher.js'
@@ -17,8 +19,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
-import { PubsubMessage } from '../../index.js'
-const { serialize, MsgType } = PubsubMessage
+import lru from 'lru_map'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -26,10 +27,18 @@ const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
-  constructor(readonly cid: CID, readonly streamId?: StreamID, readonly log?: CID[]) {}
+  constructor(readonly params: RequestAnchorParams, readonly log?: CID[]) {}
+
+  get streamId(): StreamID {
+    return this.params.streamID
+  }
+
+  get cid(): CID {
+    return this.params.tip
+  }
 
   get key(): string {
-    return this.streamId.toString()
+    return this.params.streamID.toString()
   }
 }
 
@@ -39,7 +48,12 @@ interface InMemoryAnchorConfig {
   verifySignatures?: boolean
 }
 
-const SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
+// Caches recent anchor txn hashes and the timestamp when they were anchored
+// This is intentionally global and not a member of InMemoryAnchorService. This is so that when
+// multiple InMemoryAnchorServices are being used simultaneously in the same process (usually by
+// tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
+// can successfully validate each others transactions.
+const txnCache: lru.LRUMap<string, number> = new lru.LRUMap(100)
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -144,7 +158,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         }
 
         const log = await this._loadCommitHistory(req.cid, req.streamId)
-        const candidate = new Candidate(req.cid, req.streamId, log)
+        const candidate = new Candidate(req.params, log)
 
         result[candidate.key].push(candidate)
       } catch (e) {
@@ -262,8 +276,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
-    const candidate = new Candidate(tip, streamId)
+  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
+    const candidate = new Candidate(params)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
@@ -278,11 +292,11 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     this.#feed.next({
       status: AnchorStatus.PENDING,
-      streamId: streamId,
-      cid: tip,
+      streamId: params.streamID,
+      cid: params.tip,
       message: 'Sending anchoring request',
     })
-    return this.pollForAnchorResponse(streamId, tip)
+    return this.pollForAnchorResponse(params.streamID, params.tip)
   }
 
   /**
@@ -296,16 +310,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const feed$ = this.#feed.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
-
     if (anchorResponse) {
       return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
     } else {
-      return of<AnchorServiceResponse>({
-        status: AnchorStatus.FAILED,
-        streamId,
-        cid: tip,
-        message: 'Request not found',
-      })
+      return feed$
     }
   }
 
@@ -356,15 +364,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     this._startProcessingCandidate(leaf)
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
+    const txHashCid = TestUtils.randomCID()
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
-      blockNumber: timestamp,
-      blockTimestamp: timestamp,
-      txHash: CID.parse(SAMPLE_ETH_TX_HASH),
+      txHash: txHashCid,
       root: leaf.cid,
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       txType: V1_PROOF_TYPE,
     }
+    txnCache.set(txHashCid.toString(), timestamp)
     const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
     const cid = await this._publishAnchorCommit(leaf.streamId, commit)
@@ -398,7 +406,14 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validateChainInclusion(proof: AnchorProof): Promise<void> {
-    // always valid
+  async validateChainInclusion(proof: AnchorProof): Promise<number> {
+    const txHashString = proof.txHash.toString()
+    if (!txnCache.has(txHashString)) {
+      throw new Error(
+        `Txn ${proof.txHash.toString()} was not recently anchored by the InMemoryAnchorService`
+      )
+    }
+
+    return txnCache.get(txHashString)
   }
 }

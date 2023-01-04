@@ -8,7 +8,7 @@ COPY package.json package-lock.json lerna.json tsconfig.json ./
 
 RUN npm ci --ignore-scripts --production
 
-RUN npm install -g lerna
+RUN npm install -g lerna@4
 
 COPY packages ./packages
 
