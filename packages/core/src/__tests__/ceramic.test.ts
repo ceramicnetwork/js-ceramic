@@ -15,7 +15,6 @@ import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
-import tmp from 'tmp-promise'
 
 const MOCK_WAS_CALLED_DELAY = 3 * 1000
 
@@ -266,7 +265,7 @@ describe('Ceramic integration', () => {
       await ceramic1.close()
       await ceramic2.close()
     })
-  })
+  }, 20000)
 
   it('can utilize stream commit cache', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
