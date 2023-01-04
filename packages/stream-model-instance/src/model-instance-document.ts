@@ -106,10 +106,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { 
-      controller: metadata.controllers[0],
-      model: metadata.model,
-    }
+    return { controller: metadata.controllers[0], model: metadata.model }
   }
 
   /**

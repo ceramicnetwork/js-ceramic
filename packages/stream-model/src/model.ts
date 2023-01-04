@@ -160,10 +160,7 @@ export class Model extends Stream {
   }
 
   get metadata(): ModelMetadata {
-    return {
-      controller: this.state$.value.metadata.controllers[0],
-      model: Model.MODEL,
-    }
+    return { controller: this.state$.value.metadata.controllers[0], model: Model.MODEL }
   }
 
   /**
