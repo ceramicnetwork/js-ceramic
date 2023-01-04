@@ -13,7 +13,7 @@ export interface ISyncApi {
   shutdown(): Promise<void>
 }
 
-interface IpfsService {
+export interface IpfsService {
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
   storeCommit(data: any, streamId?: StreamID): Promise<CID>
   storeRecord(record: Record<string, unknown>): Promise<CID>
