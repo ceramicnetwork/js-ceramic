@@ -54,6 +54,12 @@ export interface ModelInstanceDocumentMetadata {
    * The StreamID of the Model that this ModelInstanceDocument belongs to.
    */
   model: StreamID
+
+  /**
+   * The separator key as specified in CIP-120.
+   * This is always 'model' for the model-instance-document stream type.
+   */
+  sep: string
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -106,7 +112,11 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { controller: metadata.controllers[0], model: metadata.model }
+    return { 
+      controller: metadata.controllers[0],
+      model: metadata.model,
+      sep: 'model'
+    }
   }
 
   /**
