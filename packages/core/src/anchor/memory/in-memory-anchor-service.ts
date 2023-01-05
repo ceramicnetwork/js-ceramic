@@ -9,6 +9,7 @@ import {
   AnchorServiceResponse,
   AnchorValidator,
   AnchorCommit,
+  RequestAnchorParams,
   TestUtils,
 } from '@ceramicnetwork/common'
 
@@ -26,10 +27,18 @@ const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
-  constructor(readonly cid: CID, readonly streamId?: StreamID, readonly log?: CID[]) {}
+  constructor(readonly params: RequestAnchorParams, readonly log?: CID[]) {}
+
+  get streamId(): StreamID {
+    return this.params.streamID
+  }
+
+  get cid(): CID {
+    return this.params.tip
+  }
 
   get key(): string {
-    return this.streamId.toString()
+    return this.params.streamID.toString()
   }
 }
 
@@ -149,7 +158,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         }
 
         const log = await this._loadCommitHistory(req.cid, req.streamId)
-        const candidate = new Candidate(req.cid, req.streamId, log)
+        const candidate = new Candidate(req.params, log)
 
         result[candidate.key].push(candidate)
       } catch (e) {
@@ -267,8 +276,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
-    const candidate = new Candidate(tip, streamId)
+  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
+    const candidate = new Candidate(params)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
@@ -283,11 +292,11 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     this.#feed.next({
       status: AnchorStatus.PENDING,
-      streamId: streamId,
-      cid: tip,
+      streamId: params.streamID,
+      cid: params.tip,
       message: 'Sending anchoring request',
     })
-    return this.pollForAnchorResponse(streamId, tip)
+    return this.pollForAnchorResponse(params.streamID, params.tip)
   }
 
   /**
@@ -301,16 +310,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const feed$ = this.#feed.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
-
     if (anchorResponse) {
       return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
     } else {
-      return of<AnchorServiceResponse>({
-        status: AnchorStatus.FAILED,
-        streamId,
-        cid: tip,
-        message: 'Request not found',
-      })
+      return feed$
     }
   }
 
@@ -364,8 +367,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const txHashCid = TestUtils.randomCID()
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
-      blockNumber: timestamp, // TODO(cdb-2061) remove
-      blockTimestamp: timestamp, // TODO(cdb-2061) remove
       txHash: txHashCid,
       root: leaf.cid,
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system

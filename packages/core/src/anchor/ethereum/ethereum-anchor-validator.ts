@@ -46,7 +46,7 @@ const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
 const V0_PROOF_TYPE = 'raw'
-const V1_PROOF_TYPE = 'f(bytes32)'
+const V1_PROOF_TYPE = 'f(bytes32)' // See: https://namespaces.chainagnostic.org/eip155/caip168
 
 const ABI = ['function anchorDagCbor(bytes32)']
 
@@ -226,7 +226,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       throw new Error(
         `Any anchor proofs created after block ${
           BLOCK_THRESHHOLDS[this._chainId]
-        } must include the txType field. AnchorProof blockNumber: ${anchorProof.blockNumber}`
+        } must include the txType field. Anchor txn blockNumber: ${txResponse.blockNumber}`
       )
     }
 

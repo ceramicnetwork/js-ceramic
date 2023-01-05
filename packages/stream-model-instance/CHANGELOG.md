@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.12.0-rc.0...@ceramicnetwork/stream-model-instance@0.12.0) (2023-01-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+# [0.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.11.1...@ceramicnetwork/stream-model-instance@0.12.0-rc.0) (2022-12-29)
+
+
+### Bug Fixes
+
+* **core:** StreamID comes from genesis commit CID, not tip ([#2256](https://github.com/ceramicnetwork/js-ceramic/issues/2256)) ([ff1e3db](https://github.com/ceramicnetwork/js-ceramic/commit/ff1e3dbf0011d7819ce28d4d71d94047d6d2dd6f))
+
+
+### Features
+
+* **core:** Reject client-initiated updates that build on stale state ([#2579](https://github.com/ceramicnetwork/js-ceramic/issues/2579)) ([78a3ae0](https://github.com/ceramicnetwork/js-ceramic/commit/78a3ae0ea87645d17db6c57da05f718c4611e1bf))
+* **model, model-instance-document:** Encode 'unique' as Uint8Array ([#2212](https://github.com/ceramicnetwork/js-ceramic/issues/2212)) ([f6eb92b](https://github.com/ceramicnetwork/js-ceramic/commit/f6eb92b05f373746da404694288e7e53053e641b))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+* **stream-model-instance, stream-model-instance-handler:** ModelInstanceDocument API ([#2196](https://github.com/ceramicnetwork/js-ceramic/issues/2196)) ([3ecf9fd](https://github.com/ceramicnetwork/js-ceramic/commit/3ecf9fdb1f0c573b9784337b80fc1c985e3d499c))
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+
+
+
+
+
+## [0.11.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.11.0...@ceramicnetwork/stream-model-instance@0.11.1) (2022-12-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
 # [0.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.11.0-rc.0...@ceramicnetwork/stream-model-instance@0.11.0) (2022-12-21)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance

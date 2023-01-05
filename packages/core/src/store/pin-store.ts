@@ -53,6 +53,7 @@ export class PinStore {
 
     const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
+
     await this.stateStore.saveFromStreamStateHolder(runningState)
     runningState.markAsPinned()
 

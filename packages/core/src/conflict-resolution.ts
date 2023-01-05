@@ -1,11 +1,11 @@
 import type { CID } from 'multiformats/cid'
 import {
-  AnchorProof,
   AnchorStatus,
   AnchorValidator,
   CommitData,
   CommitType,
   Context,
+  DiagnosticsLogger,
   InternalOpts,
   LogEntry,
   Stream,
@@ -99,10 +99,15 @@ export async function pickLogToAccept(
       )
     }
 
-    // Compare block heights to decide which to take
-    if (proof1.blockNumber < proof2.blockNumber) {
+    // Compare anchor block timestamp to decide which to take.  Even though blockTimestamps can
+    // drift from wallclock time, they are guaranteed to be increasing in increasing blockNumbers
+    // (see Ethereum Yellowpaper section "Block Header Validity"), so they are still safe to compare
+    // for relative ordering.
+    const anchorTimestamp1 = StreamUtils.anchorTimestampFromState(state1)
+    const anchorTimestamp2 = StreamUtils.anchorTimestampFromState(state2)
+    if (anchorTimestamp1 < anchorTimestamp2) {
       return state1
-    } else if (proof2.blockNumber < proof1.blockNumber) {
+    } else if (anchorTimestamp2 < anchorTimestamp1) {
       return state2
     }
     // If they have the same block number fall through to fallback mechanism
@@ -182,6 +187,39 @@ export class HistoryLog {
 }
 
 /**
+ * Validates all the anchor commits in the log, applying timestamp information to the CommitData
+ * entries in the log along the way. Defers throwing errors resulting from anchor validation
+ * failures until later, when the anchor commits are actually applied.
+ * @param logger
+ * @param dispatcher
+ * @param anchorValidator
+ * @param log
+ */
+async function verifyAnchorAndApplyTimestamps(
+  logger: DiagnosticsLogger,
+  dispatcher: Dispatcher,
+  anchorValidator: AnchorValidator,
+  log: CommitData[]
+): Promise<CommitData[]> {
+  let timestamp = null
+  for (let i = log.length - 1; i >= 0; i--) {
+    const commitData = log[i]
+    if (commitData.type == CommitType.ANCHOR) {
+      try {
+        timestamp = await verifyAnchorCommit(dispatcher, anchorValidator, commitData)
+      } catch (err) {
+        // Save the error for now to be thrown when trying to actually apply the anchor commit.
+        logger.warn(`Error when validating anchor commit: ${err}`)
+        commitData.anchorValidationError = err
+      }
+    }
+    commitData.timestamp = timestamp
+  }
+
+  return log
+}
+
+/**
  * Fetch log to find a connection for the given CID.
  * Expands SignedCommits and adds a CID into the log for their inner `link` commits
  *
@@ -189,24 +227,20 @@ export class HistoryLog {
  * @param cid - Commit CID
  * @param stateLog - Log from the current stream state
  * @param unappliedCommits - Unapplied commits found so far
- * @param timestamp - Previously found timestamp
  * @private
  */
 export async function fetchLog(
   dispatcher: Dispatcher,
   cid: CID,
   stateLog: HistoryLog,
-  unappliedCommits: CommitData[] = [],
-  timestamp?: number
+  unappliedCommits: CommitData[] = []
 ): Promise<CommitData[]> {
   if (stateLog.includes(cid)) {
     // already processed
     return []
   }
   // Fetch expanded `CommitData` using the CID and running timestamp
-  const nextCommitData = await Utils.getCommitData(dispatcher, cid, stateLog.streamId, timestamp)
-  // Update the running timestamp if it was updated via an anchor commit fetch
-  timestamp = nextCommitData.timestamp
+  const nextCommitData = await Utils.getCommitData(dispatcher, cid, stateLog.streamId)
   const prevCid: CID = nextCommitData.commit.prev
   if (!prevCid) {
     // Someone sent a tip that is a fake log, i.e. a log that at some point does not refer to a previous or genesis
@@ -220,7 +254,7 @@ export async function fetchLog(
     // we found the connection to the canonical log
     return unappliedCommits.reverse()
   }
-  return fetchLog(dispatcher, prevCid, stateLog, unappliedCommits, timestamp)
+  return fetchLog(dispatcher, prevCid, stateLog, unappliedCommits)
 }
 
 export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number): CommitID {
@@ -239,40 +273,12 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
 
 export class ConflictResolution {
   constructor(
+    public logger: DiagnosticsLogger,
     public anchorValidator: AnchorValidator,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,
     private readonly handlers: HandlersMap
   ) {}
-
-  /**
-   * Helper function for applying a single commit to a StreamState.
-   * TODO: Most of this logic should be pushed down into the StreamHandler so it can be StreamType-specific.
-   * @param commitData - the commit to apply
-   * @param state - the state to apply the commit to
-   * @param handler - the handler for the StreamType
-   * @private
-   */
-  private async applyCommitDataToState<T extends Stream>(
-    commitData: CommitData,
-    state: StreamState,
-    handler: StreamHandler<T>
-  ): Promise<StreamState> {
-    if (StreamUtils.isAnchorCommitData(commitData)) {
-      // It's an anchor commit
-      const anchorTimestamp = await verifyAnchorCommit(
-        this.dispatcher,
-        this.anchorValidator,
-        commitData
-      )
-      // Add the anchor's blockTimestamp that we learned when verifying the anchor commit
-      // inclusion on chain to the CommitData.  This will allow that timestamp information to be
-      // available when applying the anchor commit.
-      commitData.timestamp = anchorTimestamp
-    }
-
-    return handler.applyCommit(commitData, this.context, state)
-  }
 
   /**
    * Applies the log to the stream and updates the state.
@@ -307,12 +313,12 @@ export class ConflictResolution {
   ): Promise<StreamState> {
     for (const entry of unappliedCommits) {
       try {
-        state = await this.applyCommitDataToState(entry, state, handler)
+        state = await handler.applyCommit(entry, this.context, state)
       } catch (err) {
         const streamId = state ? StreamUtils.streamIdFromState(state).toString() : null
-        this.context.loggerProvider
-          .getDiagnosticsLogger()
-          .warn(`Error while applying commit ${entry.cid.toString()} to stream ${streamId}: ${err}`)
+        this.logger.warn(
+          `Error while applying commit ${entry.cid.toString()} to stream ${streamId}: ${err}`
+        )
         if (opts.throwOnInvalidCommit) {
           throw err
         } else {
@@ -416,7 +422,14 @@ export class ConflictResolution {
     }
 
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState)
-    const log = await fetchLog(this.dispatcher, tip, stateLog)
+    const logWithoutTimestamps = await fetchLog(this.dispatcher, tip, stateLog)
+    const log = await verifyAnchorAndApplyTimestamps(
+      this.logger,
+      this.dispatcher,
+      this.anchorValidator,
+      logWithoutTimestamps
+    )
+
     if (log.length) {
       return this.applyLog(initialState, stateLog, log, opts)
     }

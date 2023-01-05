@@ -2,8 +2,6 @@
 
 exports[`Ceramic API Caip10Link test Anchoring works 1`] = `
 Object {
-  "blockNumber": 1538352000,
-  "blockTimestamp": 1538352000,
   "chainId": "inmemory:12345",
   "txType": "f(bytes32)",
 }

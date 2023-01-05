@@ -40,7 +40,7 @@ class LevelDBStoreMap {
     }
     this.#map.set(fullLocation, new LevelC(storePath))
     // add a small delay after creating the leveldb instance before trying to use it.
-    return new Promise((res) => setTimeout(res, 100));
+    return new Promise((res) => setTimeout(res, 100))
   }
 
   private getDefaultLocation(): string {
@@ -96,7 +96,20 @@ export class LevelDbStore implements IKVStore {
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
     const keys = await this.findKeys(params)
-    return keys.length > 0
+    return keys.length === 0
+  }
+
+  async exists(key: string, useCaseName?: string): Promise<boolean> {
+    const store = await this.#storeMap.get(useCaseName)
+    try {
+      return typeof (await store.get(key)) === 'string'
+    } catch (e) {
+      if (/Key not found in database/.test(e.toString())) {
+        return false
+      } else {
+        throw e
+      }
+    }
   }
 
   async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
@@ -105,6 +118,7 @@ export class LevelDbStore implements IKVStore {
       values: true,
       limit: params?.limit,
     }
+    if (params?.gt) searchParams.gt = params.gt
     const store = await this.#storeMap.get(params?.useCaseName)
     return await store.stream(searchParams)
   }
@@ -118,9 +132,7 @@ export class LevelDbStore implements IKVStore {
 
     const store = await this.#storeMap.get(params?.useCaseName)
     // The return type of .stream is Array<{ key: , value: }>, but if values: false is used in params, then it actually returns Array<string>
-    return await store.stream(searchParams) as unknown as Promise<
-      Array<string>
-      >
+    return (await store.stream(searchParams)) as unknown as Promise<Array<string>>
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {

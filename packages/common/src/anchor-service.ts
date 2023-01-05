@@ -33,6 +33,12 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
+export type RequestAnchorParams = {
+  streamID: StreamID
+  tip: CID
+  timestampISO: string // a result of Date.toISOString()
+}
+
 /**
  * Describes anchor service response
  */
@@ -68,7 +74,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>
+  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the

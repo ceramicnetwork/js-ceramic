@@ -31,15 +31,13 @@ class S3StoreMap {
     // and others being `<bucketName + '/ceramic/' + this.networkName + '/state-store-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const fullLocation = this.getFullLocation(useCaseName)
     const storePath = `${this.#storeRoot}/${fullLocation}`
-    const levelUp = new LevelUp(
-      // @ts-ignore FIXME: CDB-2064 S3LevelDOWN is not a AbstractLevelDOWN<any, any> (it's missing a few methods)
-      new S3LevelDOWN(
-        storePath,
-        new AWSSDK.S3({
-          endpoint: this.#endpoint,
-        })
-      )
+    const levelDown = new S3LevelDOWN(
+      storePath,
+      new AWSSDK.S3({
+        endpoint: this.#endpoint,
+      })
     )
+    const levelUp = new LevelUp(levelDown)
     this.#map.set(fullLocation, levelUp)
   }
 
@@ -93,15 +91,28 @@ export class S3Store implements IKVStore {
     return result.length > 0
   }
 
+  async exists(key: string, useCaseName?: string): Promise<boolean> {
+    const store = await this.#storeMap.get(useCaseName)
+    try {
+      return typeof (await store.get(key).toString()) === 'string'
+    } catch (e) {
+      if (/Key not found in database/.test(e.toString())) {
+        return false
+      } else {
+        throw e
+      }
+    }
+  }
+
   async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
     const store = await this.#storeMap.get(params?.useCaseName)
-    const dataArray = await toArray(
-      store.createReadStream({
-        limit: params?.limit,
-      })
-    )
+    const options = {
+      limit: params?.limit,
+    }
+    if (params?.gt) (options as any).gt = params.gt
+    const dataArray = await toArray(store.createReadStream(options))
     return dataArray.map((data) => {
-      return { key: data.key.toString(), value: data.value }
+      return { key: data.key.toString(), value: JSON.parse(data.value.toString()) }
     })
   }
 

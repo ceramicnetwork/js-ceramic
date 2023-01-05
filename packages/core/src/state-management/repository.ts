@@ -1,10 +1,11 @@
-import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
   CommitType,
   Context,
   CreateOpts,
+  DiagnosticsLogger,
   LoadOpts,
   PinningOpts,
   PublishOpts,
@@ -15,7 +16,6 @@ import {
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import { StateManager } from './state-manager.js'
@@ -33,7 +33,7 @@ import { AnchorRequestStore } from '../store/anchor-request-store.js'
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
   pinStore: PinStore
-  stateStore: IKVStore
+  keyValueStore: IKVStore
   anchorRequestStore: AnchorRequestStore
   context: Context
   handlers: HandlersMap
@@ -100,17 +100,17 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async injectStateStore(stateStore: IKVStore): Promise<void> {
+  async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
-      stateStore: stateStore,
+      keyValueStore: stateStore,
     })
     await this.init()
   }
 
   async init(): Promise<void> {
-    await this.pinStore.open(this.#deps.stateStore)
-    await this.anchorRequestStore.open(this.#deps.stateStore)
+    await this.pinStore.open(this.#deps.keyValueStore)
+    await this.anchorRequestStore.open(this.#deps.keyValueStore)
     await this.index.init()
   }
 
@@ -149,14 +149,12 @@ export class Repository {
     return this.inmemory.get(streamId.toString())
   }
 
-  private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
+  private async fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.#deps.pinStore.stateStore.load(streamId)
     if (streamState) {
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
-      const toRecover =
-        runningState.value.anchorStatus === AnchorStatus.PENDING ||
-        runningState.value.anchorStatus === AnchorStatus.PROCESSING
+      const toRecover = await this.anchorRequestStore.exists(streamId)
       if (toRecover && this.stateManager.anchorService) {
         this.stateManager.confirmAnchorResponse(runningState)
       }
@@ -199,7 +197,7 @@ export class Repository {
       return [stream, true]
     }
 
-    stream = await this.fromStateStore(streamId)
+    stream = await this.fromStreamStateStore(streamId)
     if (stream) {
       return [stream, this.stateManager.wasPinnedStreamSynced(streamId)]
     }
@@ -347,7 +345,7 @@ export class Repository {
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
     const fromMemory = this.fromMemory(streamId)
     if (fromMemory) return fromMemory
-    return this.fromStateStore(streamId)
+    return this.fromStreamStateStore(streamId)
   }
 
   /**
@@ -432,7 +430,7 @@ export class Repository {
     }
 
     // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
-    const lastAnchor = asDate(state$.value.anchorProof?.blockTimestamp)
+    const lastAnchor = asDate(StreamUtils.anchorTimestampFromState(state$.value))
     const firstAnchor = asDate(
       state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
     )

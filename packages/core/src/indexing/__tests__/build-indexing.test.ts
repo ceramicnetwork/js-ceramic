@@ -52,6 +52,20 @@ describe('sqlite', () => {
   })
 })
 
+test('build for postgres connection string', async () => {
+  const { databaseURL, kill } = await getDatabase()
+  const indexingApi = buildIndexing(
+    {
+      db: databaseURL,
+      allowQueriesBeforeHistoricalSync: true,
+    },
+    diagnosticsLogger,
+    Networks.INMEMORY
+  )
+  expect(indexingApi).toBeInstanceOf(PostgresIndexApi)
+  await kill()
+}, 10000)
+
 describe('postgres', () => {
   beforeAll(async () => {
     await pgSetup()
