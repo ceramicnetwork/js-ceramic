@@ -119,8 +119,10 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     )
 
     await TestUtils.waitForConditionOrTimeout(async () => {
-      return newRunnningStates$[0].state.anchorStatus === AnchorStatus.ANCHORED
-    }, 6000)
+      return newRunnningStates$.every((runningState$) => {
+        return runningState$.value.anchorStatus === AnchorStatus.ANCHORED
+      })
+    }, 10000)
 
     // We check that the newRunningStates$ loaded from newCeramic are correctly updated, which means
     // that the anchor service needs to be polled for anchor statuses
