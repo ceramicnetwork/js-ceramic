@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Blockchain: Sui authenticate create proof for mainnet 1`] = `"0xd042f28e5ff37a2f68f7d7b96adca0d10b5cba3d4d6d056796653479d8a70c0e"`;
+
+exports[`Blockchain: Sui createLink create proof for mainnet 1`] = `
+Object {
+  "account": "Gy9JCW4+Xb0Pz6nAwM2S2as7IVRLNNXdSmXZi4eLmSI=@sui:mainnet",
+  "message": "Link this account to your identity
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "KriuHY8KAU87qNeGjdtvutl0TWgSnOPpUDI8fniN8jHGdwcKubYUooJja/hnFZoizq7q66dx5XRPxKS4EcnGDA",
+  "timestamp": 666,
+  "type": "sui",
+  "version": 2,
+}
+`;
