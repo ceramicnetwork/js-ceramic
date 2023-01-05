@@ -135,9 +135,9 @@ export class LocalIndexApi implements IndexApi {
 
     const indexModelsArgs = []
     for (const modelStreamId of models) {
+      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
       const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
       indexModelsArgs.push(indexModelArgs)
-      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
     }
     await this.databaseIndexApi?.indexModels(indexModelsArgs)
   }
