@@ -1,22 +1,12 @@
 import type { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { ISyncApi, IpfsService } from './interfaces.js'
 
 export type SyncConfig = {
   /**
    * Database connection string.
    */
   db: string
-}
-
-export interface ISyncApi {
-  startModelSync(startBlock: number, endBlock: number, models: string | string[]): Promise<void>
-  shutdown(): Promise<void>
-}
-
-export interface IpfsService {
-  retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
-  storeCommit(data: any, streamId?: StreamID): Promise<CID>
-  storeRecord(record: Record<string, unknown>): Promise<CID>
 }
 
 // handles a commit found during a sync

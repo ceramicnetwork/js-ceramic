@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { MerkleTreeLoader } from '../utils.js'
 import { TestUtils } from '@ceramicnetwork/common'
+import { IpfsService } from '../interfaces.js'
 
 const NUM_ENTRIES = 9
 const MOCK_MERKLE_TREE = [
@@ -16,24 +17,23 @@ const MOCK_MERKLE_TREE = [
 ]
 const ROOT_CID = TestUtils.randomCID()
 
-class MockIpfsServce {
-  async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
-    const splitPath = (path ?? '').split('/')
-
-    let value = MOCK_MERKLE_TREE
-    for (const index of splitPath) {
-      value = value[index]
-    }
-
-    return value
-  }
-}
-
 describe('Merkle Tree Loader', () => {
   let merkleTreeLoader: MerkleTreeLoader
 
   beforeAll(async () => {
-    const ipfsService = new MockIpfsServce()
+    const ipfsService = {
+      async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
+        const splitPath = (path ?? '').split('/')
+
+        let value = MOCK_MERKLE_TREE
+        for (const index of splitPath) {
+          value = value[index]
+        }
+
+        return value
+      },
+    } as IpfsService
+
     merkleTreeLoader = new MerkleTreeLoader(ipfsService, ROOT_CID)
   })
 

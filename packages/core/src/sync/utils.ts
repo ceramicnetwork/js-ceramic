@@ -1,14 +1,11 @@
 import { CID } from 'multiformats/cid'
+import { IpfsService } from './interfaces.js'
 
 const METADATA_PATH = '2'
 
 interface Metadata {
   numEntries: number
-  streams: string[]
-}
-
-interface IpfsService {
-  retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
+  streamIds: string[]
 }
 
 enum PathDirection {
