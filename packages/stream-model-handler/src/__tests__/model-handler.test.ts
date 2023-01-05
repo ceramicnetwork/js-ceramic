@@ -295,7 +295,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -307,7 +307,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
