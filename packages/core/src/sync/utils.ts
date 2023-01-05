@@ -1,12 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { IpfsService } from './interfaces.js'
+import { IpfsService, TreeMetadata } from './interfaces.js'
 
 const METADATA_PATH = '2'
-
-interface Metadata {
-  numEntries: number
-  streamIds: string[]
-}
 
 enum PathDirection {
   L,
@@ -50,14 +45,14 @@ const getPathHelper = (index: number, leavesCount: number, path = []): PathDirec
  * Retrieves the leaves of a Merkle Tree based on the merkle trees metadata
  */
 export class MerkleTreeLoader {
-  private _metadata: Metadata
+  private _metadata: TreeMetadata
   constructor(private readonly ipfsService: IpfsService, private readonly rootCid: CID) {}
 
   /**
    * retrieves the merkle tree's metadata. The metadata must include the number of leaves in the tree
    * @returns promise for the metadata
    */
-  async getMetadata(): Promise<Metadata> {
+  async getMetadata(): Promise<TreeMetadata> {
     if (!this._metadata) {
       this._metadata = await this.ipfsService.retrieveFromIPFS(this.rootCid, METADATA_PATH)
     }

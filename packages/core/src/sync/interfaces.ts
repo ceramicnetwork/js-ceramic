@@ -17,3 +17,8 @@ export interface IpfsService {
   storeCommit(data: any, streamId?: StreamID): Promise<CID>
   storeRecord(record: Record<string, unknown>): Promise<CID>
 }
+
+export interface TreeMetadata {
+  numEntries: number
+  streamIds: string[]
+}
