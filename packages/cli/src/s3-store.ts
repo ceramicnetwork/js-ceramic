@@ -94,7 +94,8 @@ export class S3Store implements IKVStore {
   async exists(key: string, useCaseName?: string): Promise<boolean> {
     const store = await this.#storeMap.get(useCaseName)
     try {
-      return typeof (await store.get(key).toString()) === 'string'
+      const value = await store.get(key)
+      return value !== undefined
     } catch (e) {
       if (/Key not found in database/.test(e.toString())) {
         return false
