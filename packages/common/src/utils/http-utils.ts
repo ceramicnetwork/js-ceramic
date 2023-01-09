@@ -14,7 +14,7 @@ export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promis
   if (opts.body) {
     Object.assign(opts, {
       body: JSON.stringify(opts.body),
-      headers: { ...opts.headers, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...opts.headers },
     })
   }
 
