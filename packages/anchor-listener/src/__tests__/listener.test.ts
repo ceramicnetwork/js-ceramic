@@ -10,7 +10,7 @@ import {
   mapProcessBlockProofs,
 } from '../listener.js'
 
-import { mockedLogs, getMockedLogsProofs } from './test-utils.js'
+import { mockedLogs, mockedLogsProofs } from './test-utils.js'
 
 describe('listener', () => {
   test('createContinuousBlocksListener() pushes continous slices of block numbers', async () => {
@@ -57,7 +57,7 @@ describe('listener', () => {
     test('pushes reorganized event if block parent hash does not match provided previous hash', async () => {
       const expectedParentHash = 'block0hash'
       const block = { parentHash: 'block1hash' } as Block
-      const data = { block, proofs: getMockedLogsProofs(block) }
+      const data = { block, proofs: mockedLogsProofs }
 
       const events$ = of(data).pipe(mapProcessBlockProofs(expectedParentHash))
       const event = await firstValueFrom(events$)
@@ -67,7 +67,7 @@ describe('listener', () => {
     test('load logs and pushes processed block even if parent hash matches expected', async () => {
       const expectedParentHash = 'block0hash'
       const block = { parentHash: expectedParentHash, number: 10, timestamp: 1000 } as Block
-      const data = { block, proofs: getMockedLogsProofs(block) }
+      const data = { block, proofs: mockedLogsProofs }
 
       const events$ = of(data).pipe(mapProcessBlockProofs(expectedParentHash))
       const event = await firstValueFrom(events$)
@@ -84,7 +84,7 @@ describe('listener', () => {
         { hash: 'block5', parentHash: 'block4', number: 5, timestamp: 500 } as Block,
       ]
       const blocksWithProofs = blocks.map((block) => {
-        return { block, proofs: getMockedLogsProofs(block) }
+        return { block, proofs: mockedLogsProofs }
       })
 
       const events$ = from(blocksWithProofs).pipe(mapProcessBlockProofs(), toArray())
@@ -148,16 +148,16 @@ describe('listener', () => {
     })
 
     expect(events).toEqual([
-      { reorganized: false, block: blocks[0], proofs: getMockedLogsProofs(blocks[0]) },
-      { reorganized: false, block: blocks[1], proofs: getMockedLogsProofs(blocks[1]) },
+      { reorganized: false, block: blocks[0], proofs: mockedLogsProofs },
+      { reorganized: false, block: blocks[1], proofs: mockedLogsProofs },
       {
         reorganized: true,
         block: blocks[2],
-        proofs: getMockedLogsProofs(blocks[2]),
+        proofs: mockedLogsProofs,
         expectedParentHash: blocks[1].hash,
       },
-      { reorganized: false, block: blocks[3], proofs: getMockedLogsProofs(blocks[3]) },
-      { reorganized: false, block: blocks[4], proofs: getMockedLogsProofs(blocks[4]) },
+      { reorganized: false, block: blocks[3], proofs: mockedLogsProofs },
+      { reorganized: false, block: blocks[4], proofs: mockedLogsProofs },
     ])
   })
 })

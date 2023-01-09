@@ -1,6 +1,5 @@
-import type { AnchorProof } from '@ceramicnetwork/common'
 import { defaultAbiCoder } from '@ethersproject/abi'
-import type { Block, Log } from '@ethersproject/providers'
+import type { Log } from '@ethersproject/providers'
 import { CID } from 'multiformats/cid'
 import { decode } from 'multiformats/hashes/digest'
 import { toString } from 'uint8arrays'
@@ -30,10 +29,4 @@ export const mockedLogs = [0, 1, 2].map((i) =>
   createLog(new Uint8Array(new Array(32).fill(i)))
 ) as [Log, Log, Log]
 
-export function getMockedLogsProofs(block: Block): Array<AnchorProof> {
-  return [
-    createAnchorProof('eip155:1337', block, mockedLogs[0]),
-    createAnchorProof('eip155:1337', block, mockedLogs[1]),
-    createAnchorProof('eip155:1337', block, mockedLogs[2]),
-  ]
-}
+export const mockedLogsProofs = mockedLogs.map((log) => createAnchorProof('eip155:1337', log))

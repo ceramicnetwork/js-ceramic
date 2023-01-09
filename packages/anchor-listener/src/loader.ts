@@ -83,14 +83,14 @@ export function mapLoadBlocks(
  *
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
- * @param block ethers.js Block
+ * @param block ethers.js BlockTag
  * @param retryConfig optional Rx retry config
  * @returns Observable<Array<AnchorProof>>
  */
 export function createAnchorProofsLoader(
   provider: Provider,
   chainId: SupportedNetwork,
-  block: Block,
+  block: BlockTag,
   retryConfig: RetryConfig = { count: 3 }
 ): Observable<Array<AnchorProof>> {
   const address = ANCHOR_CONTRACT_ADDRESSES[chainId]
@@ -99,11 +99,11 @@ export function createAnchorProofsLoader(
   }
 
   return defer(async () => {
-    return await provider.getLogs({ address, fromBlock: block.number, toBlock: block.number })
+    return await provider.getLogs({ address, fromBlock: block, toBlock: block })
   }).pipe(
     retry(retryConfig),
     map((logs) => {
-      return logs.map((log) => createAnchorProof(chainId, block, log))
+      return logs.map((log) => createAnchorProof(chainId, log))
     })
   )
 }
@@ -113,14 +113,14 @@ export function createAnchorProofsLoader(
  *
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
- * @param block ethers.js Block
+ * @param block ethers.js BlockTag
  * @param retryConfig optional Rx retry config
  * @returns Observable<Array<AnchorProof>>
  */
 export async function loadAnchorProofs(
   provider: Provider,
   chainId: SupportedNetwork,
-  block: Block,
+  block: BlockTag,
   retryConfig?: RetryConfig
 ): Promise<Array<AnchorProof>> {
   return await firstValueFrom(createAnchorProofsLoader(provider, chainId, block, retryConfig))
@@ -141,8 +141,11 @@ export async function loadBlockProofs(
   blockTag: BlockTag,
   retryConfig?: RetryConfig
 ): Promise<BlockProofs> {
-  const block = await loadBlock(provider, blockTag, retryConfig)
-  return { block, proofs: await loadAnchorProofs(provider, chainId, block, retryConfig) }
+  const [block, proofs] = await Promise.all([
+    loadBlock(provider, blockTag, retryConfig),
+    loadAnchorProofs(provider, chainId, blockTag, retryConfig),
+  ])
+  return { block, proofs }
 }
 
 /**
@@ -160,7 +163,7 @@ export function mapLoadBlockProofs(
 ): OperatorFunction<Block, BlockProofs> {
   return pipe(
     concatMap(async (block) => {
-      return { block, proofs: await loadAnchorProofs(provider, chainId, block, retryConfig) }
+      return { block, proofs: await loadAnchorProofs(provider, chainId, block.number, retryConfig) }
     })
   )
 }

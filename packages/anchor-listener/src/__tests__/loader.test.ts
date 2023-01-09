@@ -14,7 +14,7 @@ import {
 } from '../loader.js'
 import { createAnchorProof } from '../utils.js'
 
-import { createLog, delay, mockedLogs, getMockedLogsProofs } from './test-utils.js'
+import { createLog, delay, mockedLogs, mockedLogsProofs } from './test-utils.js'
 
 describe('loader', () => {
   describe('createBlockLoader()', () => {
@@ -101,13 +101,12 @@ describe('loader', () => {
       const logs = [0, 1, 2].map((i) => createLog(new Uint8Array(new Array(32).fill(i))))
       const getLogs = jest.fn(() => Promise.resolve(logs))
       const provider = { getLogs } as unknown as Provider
-      const block = { number: 10, timestamp: 1000 } as Block
 
-      const anchorProofs$ = createAnchorProofsLoader(provider, 'eip155:1337', block)
+      const anchorProofs$ = createAnchorProofsLoader(provider, 'eip155:1337', 10)
       await expect(firstValueFrom(anchorProofs$)).resolves.toEqual([
-        createAnchorProof('eip155:1337', block, logs[0]),
-        createAnchorProof('eip155:1337', block, logs[1]),
-        createAnchorProof('eip155:1337', block, logs[2]),
+        createAnchorProof('eip155:1337', logs[0]),
+        createAnchorProof('eip155:1337', logs[1]),
+        createAnchorProof('eip155:1337', logs[2]),
       ])
     })
   })
@@ -123,11 +122,7 @@ describe('loader', () => {
     test('Pushes an array of anchor proofs', async () => {
       const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
       const provider = { getLogs } as unknown as Provider
-      const block = { number: 10, timestamp: 1000 } as Block
-
-      await expect(loadAnchorProofs(provider, 'eip155:1337', block)).resolves.toEqual(
-        getMockedLogsProofs(block)
-      )
+      await expect(loadAnchorProofs(provider, 'eip155:1337', 10)).resolves.toEqual(mockedLogsProofs)
     })
   })
 
@@ -144,8 +139,8 @@ describe('loader', () => {
       toArray()
     )
     await expect(firstValueFrom(blocksWithProofs$)).resolves.toEqual([
-      { block: blocks[0], proofs: getMockedLogsProofs(blocks[0]) },
-      { block: blocks[1], proofs: getMockedLogsProofs(blocks[1]) },
+      { block: blocks[0], proofs: mockedLogsProofs },
+      { block: blocks[1], proofs: mockedLogsProofs },
     ])
   })
 
@@ -166,9 +161,9 @@ describe('loader', () => {
       toBlock: 102,
     })
     await expect(firstValueFrom(blocksWithProofs$.pipe(toArray()))).resolves.toEqual([
-      { block: blocks[0], proofs: getMockedLogsProofs(blocks[0]) },
-      { block: blocks[1], proofs: getMockedLogsProofs(blocks[1]) },
-      { block: blocks[2], proofs: getMockedLogsProofs(blocks[2]) },
+      { block: blocks[0], proofs: mockedLogsProofs },
+      { block: blocks[1], proofs: mockedLogsProofs },
+      { block: blocks[2], proofs: mockedLogsProofs },
     ])
   })
 
@@ -190,9 +185,9 @@ describe('loader', () => {
       targetAncestorHash: 'block0',
     })
     await expect(firstValueFrom(blocksWithProofs$.pipe(toArray()))).resolves.toEqual([
-      { block: blocks.latest, proofs: getMockedLogsProofs(blocks.latest) },
-      { block: blocks.block2, proofs: getMockedLogsProofs(blocks.block2) },
-      { block: blocks.block1, proofs: getMockedLogsProofs(blocks.block1) },
+      { block: blocks.latest, proofs: mockedLogsProofs },
+      { block: blocks.block2, proofs: mockedLogsProofs },
+      { block: blocks.block1, proofs: mockedLogsProofs },
     ])
   })
 })
