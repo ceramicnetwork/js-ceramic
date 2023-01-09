@@ -322,12 +322,16 @@ export class StateManager {
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
       return
     }
-
-    await this._saveAnchorRequestForState(state$)
+    const genesisCommit = (await this.dispatcher.retrieveCommit(
+      state$.value.log[0].cid, // genesis commit CID
+      state$.id
+    )) as GenesisCommit
+    await this._saveAnchorRequestForState(state$, genesisCommit)
     const anchorStatus$ = this.anchorService.requestAnchor({
       streamID: state$.id,
       tip: state$.tip,
       timestampISO: (new Date()).toISOString(),
+      genesis: genesisCommit
     })
     this._processAnchorResponse(state$, anchorStatus$)
   }
@@ -340,14 +344,11 @@ export class StateManager {
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private async _saveAnchorRequestForState(state$: RunningState): Promise<void> {
+  private async _saveAnchorRequestForState(state$: RunningState, genesisCommit: GenesisCommit): Promise<void> {
     await this.anchorRequestStore.save(state$.id, {
       cid: state$.tip,
       timestamp: Date.now(),
-      genesis: (await this.dispatcher.retrieveCommit(
-        state$.value.log[0].cid, // genesis commit CID
-        state$.id
-      )) as GenesisCommit,
+      genesis: genesisCommit,
     })
   }
 
