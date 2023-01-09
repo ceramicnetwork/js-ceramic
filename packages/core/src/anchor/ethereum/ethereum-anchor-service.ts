@@ -8,11 +8,11 @@ import {
   AnchorStatus,
   DiagnosticsLogger,
   fetchJson,
-  RequestAnchorParams,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
+import { CAR, CARFactory } from 'cartonne'
 
 /**
  * CID-streamId pair
@@ -81,9 +81,10 @@ export class EthereumAnchorService implements AnchorService {
    */
   requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
     const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamID }
+    const carFile = this._carFileFromRequestAnchorParams(params)
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeRequest(params),
+      this._makeAnchorRequest(params.streamID, params.tip, carFile),
       this.pollForAnchorResponse(params.streamID, params.tip)
     ).pipe(
       catchError((error) =>
@@ -105,6 +106,13 @@ export class EthereumAnchorService implements AnchorService {
     return [this._chainId]
   }
 
+  private _carFileFromRequestAnchorParams(params: RequestAnchorParams): CAR {
+    const carFactory = new CARFactory()
+    const car = carFactory.build()
+    car.put({ ...params })
+    return car
+  }
+
   private _announcePending(cidStream: CidAndStream): Observable<AnchorServiceResponse> {
     return of({
       status: AnchorStatus.PENDING,
@@ -119,16 +127,16 @@ export class EthereumAnchorService implements AnchorService {
    * @param params - a RequestAnchorParams object
    * @private
    */
-  private _makeRequest(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(
+    streamID: StreamID,
+    cid: CID,
+    carFile: CAR
+  ): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
         fetchJson(this.requestsApiEndpoint, {
           method: 'POST',
-          body: {
-            streamId: params.streamID.toString(),
-            cid: params.tip.toString(),
-            timestamp: params.timestampISO,
-          },
+          body: carFile.toString(),
         })
       )
     ).pipe(
@@ -136,7 +144,7 @@ export class EthereumAnchorService implements AnchorService {
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${params.streamID.toString()} at commit ${params.tip.toString()}: ${
+              `Error connecting to CAS while attempting to anchor ${streamID.toString()} at commit ${cid.toString()}: ${
                 error.message
               }`
             )
@@ -145,7 +153,7 @@ export class EthereumAnchorService implements AnchorService {
         },
       }),
       map((response) => {
-        return this.parseResponse({ streamId: params.streamID, cid: params.tip }, response)
+        return this.parseResponse({ streamId: streamID, cid: cid }, response)
       })
     )
   }
