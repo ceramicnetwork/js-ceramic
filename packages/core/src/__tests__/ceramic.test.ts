@@ -14,6 +14,9 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
+
+const MOCK_WAS_CALLED_DELAY = 3 * 1000
 
 function createCeramic(
   ipfs: IpfsApi,
@@ -141,8 +144,8 @@ describe('Ceramic integration', () => {
         stream3,
         2000,
         (state) => StreamUtils.statesEqual(state, stream1.state),
-        () => {
-          throw new Error(`streamtype3.state should equal streamtype1.state`)
+        (state) => {
+          expect(state).toEqual(stream1.state)
         }
       )
 
@@ -185,6 +188,84 @@ describe('Ceramic integration', () => {
       await ceramic2.close()
     })
   })
+
+  it('Throw on update based on stale state', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const content0 = { data: 0 }
+      const content1 = { data: 1 }
+      const content2 = { data: 'rejected' }
+
+      const streamOg = await TileDocument.deterministic(
+        ceramic1,
+        { family: 'test' },
+        { anchor: false, publish: false }
+      )
+      await streamOg.update(content0)
+
+      // Do a write via a different stream handle so the og handle doesn't know about it.
+      const streamCopy = await TileDocument.load(ceramic1, streamOg.id)
+      await streamCopy.update(content1)
+      const content1Cid = streamCopy.state.log[streamCopy.state.log.length - 1].cid
+
+      expect(streamCopy.content).toEqual(content1)
+      expect(streamCopy.state.log.length).toEqual(3)
+      expect(streamOg.content).toEqual(content0)
+      expect(streamOg.state.log.length).toEqual(2)
+
+      // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+      // should be rejected because it builds on a stale tip.
+      await expect(streamOg.update(content2)).rejects.toThrow(
+        /rejected because it builds on stale state/
+      )
+      expect(streamOg.state.log.length).toEqual(2)
+
+      // While we disallow creating commits based on a stale tip as part of a user request when the node already
+      // knows about an existing tip, if we hear about a conflicting tip via pubsub, we need to consider it. The node
+      // that created it may not have known about the existing tip when it did, and so now we need to use our conflict
+      // resolution rules to decide between the two equally valid tips.
+      const commit = await streamOg.makeCommit(ceramic1, content2)
+      const content2Cid = await ceramic2.dispatcher.storeCommit(commit)
+      await ceramic2.dispatcher.publishTip(streamOg.id, content2Cid)
+
+      // wait for the update to propagate to ceramic1
+      await TestUtils.waitForState(
+        streamOg,
+        10 * 1000,
+        (state) => state.next.content.data == content2.data,
+        (state) => {
+          throw new Error(
+            `content data should be ${content2.data} but was ${state.next.content.data}`
+          )
+        }
+      )
+
+      await streamOg.sync()
+      await streamCopy.sync()
+
+      // NOTE: this test relies on the commit for content2 to win the conflict resolution
+      // against the update for content1. That conflict resolution is done arbitrarily (but
+      // deterministically) by comparing the CIDs of the conflicting commits. If the IPLD encoding
+      // of these commits changed in the future for any reason and that changed the CIDs generated
+      // for these commits, then it could cause content1 to win the conflict here. That would negate
+      // the value of this test, which is designed to show that a node with an existing tip
+      // can learn about a conflicting branch of history via pubsub and still take it if it
+      // wins conflict resolution. If the CIDs changed and content1 started winning, we would need
+      // to change the commits until content2 started winning the CID comparison again.
+      expect(content2Cid.bytes < content1Cid.bytes)
+
+      expect(streamOg.content).toEqual(content2)
+      expect(streamCopy.content).toEqual(content2)
+      expect(streamOg.state.log.length).toEqual(3)
+      expect(streamCopy.state.log.length).toEqual(3)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  }, 20000)
 
   it('can utilize stream commit cache', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
@@ -421,37 +502,43 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('Loading many commits of same stream via multiquery works', async () => {
-    await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs1, ipfs2)
-      const ceramic1 = await createCeramic(ipfs1, false)
-      const ceramic2 = await createCeramic(ipfs2, false)
+  const LARGE_MULTIQUERY_TIMEOUT = 30000
 
-      const NUM_UPDATES = 20
-      const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
-      for (let i = 1; i < NUM_UPDATES; i++) {
-        await stream.update({ counter: i }, null, { anchor: false, publish: false })
-      }
+  it(
+    'Loading many commits of same stream via multiquery works',
+    async () => {
+      await withFleet(2, async ([ipfs1, ipfs2]) => {
+        await swarmConnect(ipfs1, ipfs2)
+        const ceramic1 = await createCeramic(ipfs1, false)
+        const ceramic2 = await createCeramic(ipfs2, false)
 
-      const queries: Array<MultiQuery> = [{ streamId: stream.id }]
-      for (const commitId of stream.allCommitIds) {
-        queries.push({ streamId: commitId })
-      }
+        const NUM_UPDATES = 20
+        const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
+        for (let i = 1; i < NUM_UPDATES; i++) {
+          await stream.update({ counter: i }, null, { anchor: false, publish: false })
+        }
 
-      const result = await ceramic2.multiQuery(queries, 30000)
-      expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
-      expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
+        const queries: Array<MultiQuery> = [{ streamId: stream.id }]
+        for (const commitId of stream.allCommitIds) {
+          queries.push({ streamId: commitId })
+        }
 
-      let i = 0
-      for (const commitId of stream.allCommitIds) {
-        const docAtCommit = result[commitId.toString()]
-        expect(docAtCommit.content).toEqual({ counter: i++ })
-      }
+        const result = await ceramic2.multiQuery(queries, LARGE_MULTIQUERY_TIMEOUT) // Here it starts to time out
+        expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
+        expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
 
-      await ceramic1.close()
-      await ceramic2.close()
-    })
-  })
+        let i = 0
+        for (const commitId of stream.allCommitIds) {
+          const docAtCommit = result[commitId.toString()]
+          expect(docAtCommit.content).toEqual({ counter: i++ })
+        }
+
+        await ceramic1.close()
+        await ceramic2.close()
+      })
+    },
+    LARGE_MULTIQUERY_TIMEOUT + 1000
+  )
 
   it('Multiquery with genesis commit provided', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
@@ -685,5 +772,47 @@ describe('buildStreamFromState', () => {
     expect(created).toBeInstanceOf(TileDocument)
     expect(created.id).toEqual(tile.id)
     expect(created.content).toEqual(tile.content)
+  })
+})
+
+describe('Resuming anchors', () => {
+  jest.setTimeout(10000)
+
+  let ipfs: IpfsApi
+  let mockWasCalled: boolean
+  let mockCompleted: boolean
+
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+
+    mockWasCalled = false
+    mockCompleted = false
+
+    jest
+      .spyOn(AnchorResumingService.prototype, 'resumeRunningStatesFromAnchorRequestStore')
+      .mockImplementation(() => {
+        mockWasCalled = true
+        return new Promise<void>(() => {
+          setTimeout(() => {
+            mockCompleted = true
+          }, MOCK_WAS_CALLED_DELAY)
+        })
+      })
+  })
+
+  afterEach(async () => {
+    await ipfs.stop()
+  })
+
+  it('Resume method is called (but is not blocking) when ceramic core is created', async () => {
+    const ceramic = await createCeramic(ipfs)
+    // resumeRunningStatesFromAnchorRequestStore() is not blocking for CeramicDaemon.create(...)
+    expect(mockWasCalled).toBeTruthy()
+    expect(mockCompleted).toBeFalsy()
+
+    // resumeRunningStatesFromAnchorRequestStore() is triggered by CeramicDaemon.create(...)
+    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100) // TODO(CDB-2090): use less brittle approach to waiting for this condition
+    expect(mockCompleted).toBeTruthy()
+    await ceramic.close()
   })
 })

@@ -62,8 +62,6 @@ const COMMITS = {
   r2: { commit: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 } },
   proof: {
     value: {
-      blockNumber: 123456,
-      blockTimestamp: 1666728832,
       chainId: 'fakechain:123',
     },
   },
@@ -248,6 +246,7 @@ describe('Caip10LinkHandler', () => {
       type: CommitType.ANCHOR,
       commit: COMMITS.r2.commit,
       proof: COMMITS.proof.value,
+      timestamp: 1666728832,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
     expect(state).toMatchSnapshot()
@@ -281,8 +280,6 @@ describe('Caip10LinkHandler', () => {
       r2: { proof: FAKE_CID_4, id: FAKE_CID_1, prev: FAKE_CID_2 },
       r2proof: {
         value: {
-          blockNumber: 123456,
-          blockTimestamp: 1608116723,
           chainId: 'fakechain:123',
         },
       },
@@ -306,8 +303,6 @@ describe('Caip10LinkHandler', () => {
       r4: { proof: FAKE_CID_7, id: FAKE_CID_1, prev: FAKE_CID_5 },
       r4proof: {
         value: {
-          blockNumber: 123456,
-          blockTimestamp: 1608116727,
           chainId: 'fakechain:123',
         },
       },
@@ -324,7 +319,7 @@ describe('Caip10LinkHandler', () => {
       type: CommitType.ANCHOR,
       commit: commits.r2,
       proof: commits.r2proof.value,
-      timestamp: commits.r2proof.value.blockTimestamp,
+      timestamp: 1608116723,
     }
     state = await handler.applyCommit(anchorCommitData_1, context, state)
     expect(state.content).toEqual('did:3:testdid1')

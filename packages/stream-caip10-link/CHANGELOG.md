@@ -3,6 +3,66 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.11.0-rc.0...@ceramicnetwork/stream-caip10-link@2.11.0) (2023-01-05)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.10.1...@ceramicnetwork/stream-caip10-link@2.11.0-rc.0) (2022-12-29)
+
+
+### Bug Fixes
+
+* **core:** Optimize commit application to minimize calls to IPFS ([#1528](https://github.com/ceramicnetwork/js-ceramic/issues/1528)) ([75ee50e](https://github.com/ceramicnetwork/js-ceramic/commit/75ee50eb7ec988afdab81aa23a9f792fb5c7602c))
+* **core:** StreamID comes from genesis commit CID, not tip ([#2256](https://github.com/ceramicnetwork/js-ceramic/issues/2256)) ([ff1e3db](https://github.com/ceramicnetwork/js-ceramic/commit/ff1e3dbf0011d7819ce28d4d71d94047d6d2dd6f))
+* resolve merge conflicts during merge from `main` ([#1848](https://github.com/ceramicnetwork/js-ceramic/issues/1848)) ([6772fc6](https://github.com/ceramicnetwork/js-ceramic/commit/6772fc6c61bc9daadfd3f6d6ecf3de2bb100450d))
+* Revert Caip10 upgrade ([#1895](https://github.com/ceramicnetwork/js-ceramic/issues/1895)) ([1c376ef](https://github.com/ceramicnetwork/js-ceramic/commit/1c376ef92f4e93b6da819616cef4e5c7582c97e5))
+* **stream-caip10-link:** Allow Caip10Link.fromAccount to accept atTime param ([#1495](https://github.com/ceramicnetwork/js-ceramic/issues/1495)) ([e0503c5](https://github.com/ceramicnetwork/js-ceramic/commit/e0503c5ee1883a61e37f2c2816c58d70a0f2f77a))
+* **stream-caip10-link:** better genesis determinism ([#1519](https://github.com/ceramicnetwork/js-ceramic/issues/1519)) ([8b8adce](https://github.com/ceramicnetwork/js-ceramic/commit/8b8adcea0a5852dc032ec10455c84ad406bce748))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([ff0e99f](https://github.com/ceramicnetwork/js-ceramic/commit/ff0e99fcf6167e8ca3e36217935bfd673abdf198))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([04f977f](https://github.com/ceramicnetwork/js-ceramic/commit/04f977f315592b4b0f7590c9abcb67409c212adf))
+
+
+### Features
+
+* **blockchain-utils-validation, stream-caip10-link:** add clearDid fn, add DID validation to setDid, update DID regex ([#1783](https://github.com/ceramicnetwork/js-ceramic/issues/1783)) ([f233f86](https://github.com/ceramicnetwork/js-ceramic/commit/f233f862f257bae24eb2fd1ae2a36c8f10f8a51d))
+* Check signature of a lone genesis ([#1529](https://github.com/ceramicnetwork/js-ceramic/issues/1529)) ([b55e225](https://github.com/ceramicnetwork/js-ceramic/commit/b55e225682e57aace057fb9e5e8aec0d78d63b75))
+* **common:** Remove 'controllers' accessor from Stream base class ([#2305](https://github.com/ceramicnetwork/js-ceramic/issues/2305)) ([05bf615](https://github.com/ceramicnetwork/js-ceramic/commit/05bf615110393037319b17b6e5b5ad54e7880e0f))
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+* **core:** Invalid commits don't prevent loading a stream ([#1597](https://github.com/ceramicnetwork/js-ceramic/issues/1597)) ([fb1dea1](https://github.com/ceramicnetwork/js-ceramic/commit/fb1dea15fb2587839dcca69bad829276fa790268))
+* **core:** Reject client-initiated updates that build on stale state ([#2579](https://github.com/ceramicnetwork/js-ceramic/issues/2579)) ([78a3ae0](https://github.com/ceramicnetwork/js-ceramic/commit/78a3ae0ea87645d17db6c57da05f718c4611e1bf))
+* **core:** Sync Streams with cache before returning from multiQuery ([#1548](https://github.com/ceramicnetwork/js-ceramic/issues/1548)) ([b78637d](https://github.com/ceramicnetwork/js-ceramic/commit/b78637dbb48111d8e45dc285fcd05570ad031f2e))
+* **daemon:** add raw_data endpoint ([#1395](https://github.com/ceramicnetwork/js-ceramic/issues/1395)) ([41b6109](https://github.com/ceramicnetwork/js-ceramic/commit/41b61091efc3c05ef7894ebb423fa5508cfcd689)), closes [ceramicnetwork#1394](https://github.com/ceramicnetwork/issues/1394)
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+* Pass time-information when checking a signature ([#1502](https://github.com/ceramicnetwork/js-ceramic/issues/1502)) ([913e091](https://github.com/ceramicnetwork/js-ceramic/commit/913e091827691f37a3e02ffcef569a22fd6f007d))
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
+* **stream-caip-10-link, stream-model, stream-model-instance, stream-tile:** Use 'controller' instead of 'controllers' in metadata ([#2251](https://github.com/ceramicnetwork/js-ceramic/issues/2251)) ([f0b94f6](https://github.com/ceramicnetwork/js-ceramic/commit/f0b94f62d490a8519eabc88e009ecc56a1784b11))
+* update dids, add/register cacao verifiers ([#2452](https://github.com/ceramicnetwork/js-ceramic/issues/2452)) ([d93fedb](https://github.com/ceramicnetwork/js-ceramic/commit/d93fedbb96f17b974f7e07f78aefa67790d8930e))
+
+
+
+
+
+## [2.10.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.10.0...@ceramicnetwork/stream-caip10-link@2.10.1) (2022-12-29)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.10.0-rc.0...@ceramicnetwork/stream-caip10-link@2.10.0) (2022-12-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
 # [2.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.9.0...@ceramicnetwork/stream-caip10-link@2.10.0-rc.0) (2022-12-15)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
