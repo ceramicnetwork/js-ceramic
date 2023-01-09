@@ -29,19 +29,14 @@ describe('listener', () => {
       provider.emit('block', 105)
       // 2 - previous block, ignored
       provider.emit('block', 99)
-      // 3 - future blocks, buffered
+      // 3 - future block, trigger push of load slice 96 to 100
       provider.emit('block', 110)
-      provider.emit('block', 107)
-      // 4 - trigger push of continuous slice 96 to 100
-      provider.emit('block', 106)
-      // 5 - already pushed blocks, ignored
+      // 4 - already pushed blocks, ignored
       provider.emit('block', 109)
       provider.emit('block', 108)
-      // 6 - future block, buffered
+      // 5 - future block, trigger push of load slice 101 to 103
       provider.emit('block', 113)
-      // 7 - trigger push of continuous slice 101 to 103
-      provider.emit('block', 111)
-      // 8 - single block pushed
+      // 6 - single block pushed
       provider.emit('block', 114)
 
       sub.unsubscribe()
@@ -51,10 +46,10 @@ describe('listener', () => {
     expect(slices).toEqual([
       [95], // 1
       // 2 filtered out
-      [96, 97, 98, 99, 100], // 3-4
-      // 5 filtered out
-      [101, 102, 103], // 6-7
-      [104], // 8
+      [96, 97, 98, 99, 100], // 3
+      // 4 filtered out
+      [101, 102, 103], // 5
+      [104], // 6
     ])
   })
 
@@ -146,11 +141,8 @@ describe('listener', () => {
       provider.emit('block', 11)
       // previous block, ignored
       provider.emit('block', 5)
-      // future blocks, buffered
+      // future blocks, push slice 2 to 4
       provider.emit('block', 14)
-      provider.emit('block', 13)
-      // trigger push of continuous slice 2 to 4
-      provider.emit('block', 12)
       // single block pushed
       provider.emit('block', 15)
     })

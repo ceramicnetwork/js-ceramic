@@ -37,7 +37,7 @@ export type ListenerParams = {
   retryConfig?: RetryConfig
 }
 
-type OrderingState = { continuous: Array<number>; latestContinuous?: number; maxFuture?: number }
+type LoadState = { load: Array<number>; highest?: number }
 
 /**
  * Create an Observable of arrays of continuous block numbers, ensuring ordering
@@ -53,39 +53,30 @@ export function createContinuousBlocksListener(
   return fromEvent(provider, 'block').pipe(
     // Map to latest block number minus wanted confirmations
     map((blockNumber) => (blockNumber as number) - confirmations),
-    // Order continuous block numbers, keeping track of highest block received
-    scan<number, OrderingState, OrderingState>(
+    // Track block numbers to load with highest block received
+    scan<number, LoadState, LoadState>(
       (state, blockNumber) => {
-        if (state.latestContinuous != null) {
-          if (blockNumber <= state.latestContinuous) {
-            // Already processed block number
-            return { ...state, continuous: [] }
-          }
-          if (blockNumber > state.latestContinuous + 1) {
-            // Future block number, keep track
-            return {
-              ...state,
-              continuous: [],
-              maxFuture: Math.max(state.maxFuture ?? 0, blockNumber),
-            }
-          }
+        if (state.highest == null) {
+          // Load single block
+          return { load: [blockNumber], highest: blockNumber }
         }
-
-        return state.maxFuture == null
-          ? // Load single block
-            { continuous: [blockNumber], latestContinuous: blockNumber }
-          : // Load range from new block number to max tracked future block number
-            {
-              continuous: new Array(state.maxFuture - blockNumber + 1).fill(0).map((_, i) => {
-                return blockNumber + i
-              }),
-              latestContinuous: state.maxFuture,
-            }
+        if (blockNumber <= state.highest) {
+          // Already processed block number
+          return { ...state, load: [] }
+        }
+        // Load full block range when new block is higher than previously highest seen
+        const lastLoadedNumber = state.highest
+        return {
+          load: new Array(blockNumber - lastLoadedNumber).fill(0).map((_, i) => {
+            return lastLoadedNumber + 1 + i
+          }),
+          highest: blockNumber,
+        }
       },
-      { continuous: [] }
+      { load: [] }
     ),
     // Extract continous blocks from ordering state
-    map((state) => state.continuous),
+    map((state) => state.load),
     // Only push non-empty lists of blocks
     filter((blocks) => blocks.length !== 0)
   )
