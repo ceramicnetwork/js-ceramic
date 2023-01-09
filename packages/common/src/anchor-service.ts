@@ -1,6 +1,6 @@
 import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
-import type { AnchorProof, AnchorStatus } from './stream.js'
+import type { AnchorProof, AnchorStatus, GenesisCommit } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchJson } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
@@ -38,10 +38,11 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
-export type RequestAnchorParams = {
+export type RequestAnchorParams = { // TODO: Should this be unified with AnchorRequestData?
   streamID: StreamID
   tip: CID
   timestampISO: string // a result of Date.toISOString()
+  genesis: GenesisCommit
 }
 
 /**
