@@ -139,6 +139,7 @@ export class EthereumAnchorService implements AnchorService {
       from(
         this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
+          headers: {'Content-Type': 'multipart/form-data'},
           body: carFile.toString(),
         })
       )
