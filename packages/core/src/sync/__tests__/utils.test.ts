@@ -11,31 +11,27 @@ const MOCK_MERKLE_TREE = [
   ],
   [
     ['l4', 'l5'],
-    [['l6'], ['l7', 'l8']],
+    ['l6', ['l7', 'l8']],
   ],
   { numEntries: NUM_ENTRIES },
 ]
 const ROOT_CID = TestUtils.randomCID()
 
+const MOCK_IPFS_SERVICE = {
+  async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
+    const splitPath = (path ?? '').split('/')
+
+    let value = MOCK_MERKLE_TREE
+    for (const index of splitPath) {
+      value = value[index]
+    }
+
+    return value
+  },
+} as IpfsService
+
 describe('Merkle Tree Loader', () => {
-  let merkleTreeLoader: MerkleTreeLoader
-
-  beforeAll(async () => {
-    const ipfsService = {
-      async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
-        const splitPath = (path ?? '').split('/')
-
-        let value = MOCK_MERKLE_TREE
-        for (const index of splitPath) {
-          value = value[index]
-        }
-
-        return value
-      },
-    } as IpfsService
-
-    merkleTreeLoader = new MerkleTreeLoader(ipfsService, ROOT_CID)
-  })
+  const merkleTreeLoader = new MerkleTreeLoader(MOCK_IPFS_SERVICE, ROOT_CID)
 
   test('can getMetadata', async () => {
     const metadata = await merkleTreeLoader.getMetadata()

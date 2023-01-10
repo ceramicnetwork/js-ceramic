@@ -74,7 +74,7 @@ export class MerkleTreeLoader {
       path.slice(0, -1).join('/')
     )
     const lastPathDirection = path[path.length - 1]
-    const cid = parent[lastPathDirection].toString()
+    const cid = parent[lastPathDirection]
 
     return { cid, path }
   }
