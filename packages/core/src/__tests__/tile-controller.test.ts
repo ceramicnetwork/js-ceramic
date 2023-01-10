@@ -76,9 +76,15 @@ test('prohibit controllers updated to invalid values', async () => {
   ceramic.did = alice
   const tile = await TileDocument.create(ceramic, { foo: 'blah' })
   await tile.update(tile.content, { controllers: [bob.id] })
-  await expect(tile.update({ foo: 'bar' }, {"controllers": [null]})).rejects.toThrow(/Controller cannot be updated to an undefined value./)
-  await expect(tile.update({ foo: 'bar' }, {"controllers": [undefined]})).rejects.toThrow(/Controller cannot be updated to an undefined value./)
-  await expect(tile.update({ foo: 'bar' }, {"controllers": ['']})).rejects.toThrow(/Controller cannot be updated to an undefined value./)
+  await expect(tile.update({ foo: 'bar' }, { controllers: [null] })).rejects.toThrow(
+    /Controller cannot be updated to an undefined value./
+  )
+  await expect(tile.update({ foo: 'bar' }, { controllers: [undefined] })).rejects.toThrow(
+    /Controller cannot be updated to an undefined value./
+  )
+  await expect(tile.update({ foo: 'bar' }, { controllers: [''] })).rejects.toThrow(
+    /Controller cannot be updated to an undefined value./
+  )
 })
 
 test("cannot change controller if 'forbidControllerChange' is set", async () => {
@@ -125,4 +131,15 @@ test("cannot update 'forbidControllerChange' metadata property", async () => {
   await expect(tile.update(tile.content, { forbidControllerChange: false })).rejects.toThrow(
     /Cannot change 'forbidControllerChange' property on existing Streams/
   )
+})
+
+test('Controller must be valid DID even for unsigned genesis commits (ie deterministic tiles)', async () => {
+  await expect(
+    TileDocument.create(
+      ceramic,
+      null,
+      { deterministic: true, family: 'test123', controllers: [{ invalid: 'object' }] },
+      { sync: SyncOptions.NEVER_SYNC }
+    )
+  ).rejects.toThrow(/Attempting to create a TileDocument with an invalid DID string/)
 })
