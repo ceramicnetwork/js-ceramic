@@ -119,7 +119,10 @@ export class EthereumAnchorService implements AnchorService {
     // In the testing code imitate CAS logic to check that the cid if genesis matches the cid of streamID
     const genesisBlock = new CarBlock(params.genesisCid, params.genesisPayload)
     car.blocks.put(genesisBlock)
-    car.put({ timestamp: params.timestampISO, streamId: params.streamID, cid: params.tip }, { isRoot: true })
+    car.put(
+      { timestamp: params.timestampISO, streamId: params.streamID.toString(), cid: params.tip },
+      { isRoot: true }
+    )
     return car
   }
 
@@ -137,12 +140,16 @@ export class EthereumAnchorService implements AnchorService {
    * @param params - a RequestAnchorParams object
    * @private
    */
-  private _makeAnchorRequest(streamID: StreamID, cid: CID, carFile: CAR): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(
+    streamID: StreamID,
+    cid: CID,
+    carFile: CAR
+  ): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
         this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
-          headers: {'Content-Type': 'multipart/form-data'},
+          headers: { 'Content-Type': 'multipart/form-data' },
           body: carFile.toString(),
         })
       )
