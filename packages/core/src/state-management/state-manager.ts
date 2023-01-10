@@ -326,12 +326,16 @@ export class StateManager {
       state$.value.log[0].cid, // genesis commit CID
       state$.id
     )) as GenesisCommit
+
+    const genesisPayload = await this.dispatcher._ipfs.block.get(state$.value.log[0].cid)
+
     await this._saveAnchorRequestForState(state$, genesisCommit)
     const anchorStatus$ = this.anchorService.requestAnchor({
       streamID: state$.id,
       tip: state$.tip,
       timestampISO: (new Date()).toISOString(),
-      genesis: genesisCommit
+      genesisCid: state$.value.log[0].cid,
+      genesisPayload: genesisPayload
     })
     this._processAnchorResponse(state$, anchorStatus$)
   }
