@@ -1,6 +1,4 @@
-import type { CID } from 'multiformats/cid'
-import { StreamID } from '@ceramicnetwork/streamid'
-import { ISyncApi, IpfsService } from './interfaces.js'
+import { ISyncApi, IpfsService, HandleCommit } from './interfaces.js'
 
 export type SyncConfig = {
   /**
@@ -8,10 +6,6 @@ export type SyncConfig = {
    */
   db: string
 }
-
-// handles a commit found during a sync
-// should be similar to: https://github.com/ceramicnetwork/js-ceramic/blob/6ae6e121b33132225f256762825e1439fd84f23a/packages/core/src/state-management/state-manager.ts#L210
-type HandleCommit = (streamId: StreamID, commit: CID, model?: StreamID) => Promise<void>
 
 export class SyncApi implements ISyncApi {
   constructor(
