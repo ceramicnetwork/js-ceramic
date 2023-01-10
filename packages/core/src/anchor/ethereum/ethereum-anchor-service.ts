@@ -12,7 +12,8 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
-import { CAR, CARFactory } from 'cartonne'
+import { CAR, CarBlock, CARFactory } from 'cartonne'
+import { RequestAnchorParams } from '@ceramicnetwork/common'
 
 /**
  * CID-streamId pair
@@ -109,7 +110,13 @@ export class EthereumAnchorService implements AnchorService {
   private _carFileFromRequestAnchorParams(params: RequestAnchorParams): CAR {
     const carFactory = new CARFactory()
     const car = carFactory.build()
-    car.put({ ...params })
+    // In the testing code imitate CAS logic to check that the cid if genesis matches the cid of streamID
+    const genesisBlock = new CarBlock(params.genesisCid, params.genesisPayload)
+    car.blocks.put(genesisBlock)
+    car.put(
+      { timestamp: params.timestampISO, streamId: params.streamID, cid: params.tip },
+      { isRoot: true }
+    )
     return car
   }
 
@@ -136,7 +143,7 @@ export class EthereumAnchorService implements AnchorService {
       from(
         fetchJson(this.requestsApiEndpoint, {
           method: 'POST',
-          headers: {'Content-Type': 'multipart/form-data'},
+          headers: { 'Content-Type': 'multipart/form-data' },
           body: carFile.toString(),
         })
       )

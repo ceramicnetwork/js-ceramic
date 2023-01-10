@@ -37,7 +37,8 @@ export type RequestAnchorParams = { // TODO: Should this be unified with AnchorR
   streamID: StreamID
   tip: CID
   timestampISO: string // a result of Date.toISOString()
-  genesis: GenesisCommit
+  genesisCid: CID
+  genesisPayload: Uint8Array
 }
 
 /**
