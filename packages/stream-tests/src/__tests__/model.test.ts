@@ -16,7 +16,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c62dn29qy8b6lot6m9xr98wz4hfq0htxfhpxgqo41ufqew22qe1'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c8jpwg5a5y599ft77osvuv84qr9mgjaoqghhdxix4khueex13j8'
 
 const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
   name: 'myModelWithARelation',

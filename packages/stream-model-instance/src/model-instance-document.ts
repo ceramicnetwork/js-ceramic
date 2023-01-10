@@ -296,6 +296,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const header: GenesisHeader = {
       controllers: [controller],
       model: metadata.model.bytes,
+      sep: 'model', // See CIP-120 for more details on this field
     }
     if (!metadata.deterministic) {
       header.unique = randomBytes(12)
