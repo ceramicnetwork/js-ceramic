@@ -302,7 +302,7 @@ export class CeramicDaemon {
         opts.stateStore?.s3Endpoint,
         params.networkOptions.name
       )
-      
+
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
 
