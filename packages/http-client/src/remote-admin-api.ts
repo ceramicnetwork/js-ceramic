@@ -2,6 +2,12 @@ import { AdminApi, fetchJson } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
 
+export class MissingDIDError extends Error {
+  constructor() {
+    super('Failed to get DID')
+  }
+}
+
 /**
  * AdminApi for Ceramic http client.
  */
@@ -44,7 +50,7 @@ export class RemoteAdminApi implements AdminApi {
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
     const did = this._getDidFn()
-    if (!did) throw new Error('Failed to get DID')
+    if (!did) throw new MissingDIDError()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
       body: { jws: await this.buildJWS(did, code, modelsIDs) },

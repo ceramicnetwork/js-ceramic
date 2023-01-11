@@ -1,7 +1,7 @@
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { fetchJson, TestUtils } from '@ceramicnetwork/common'
-import { RemoteAdminApi } from '../remote-admin-api.js'
+import { RemoteAdminApi, MissingDIDError } from '../remote-admin-api.js'
 import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
@@ -18,6 +18,7 @@ const GET_RESPONSE = {
 
 let did: DID
 let getDidFn
+let noDidFn
 let expectedKid: string
 
 beforeAll(async () => {
@@ -28,6 +29,9 @@ beforeAll(async () => {
   did = actingDid
   getDidFn = () => {
     return did
+  }
+  noDidFn = () => {
+    return undefined
   }
   const didKeyVerStr = did.id.split('did:key:')[1]
   expectedKid = `${did.id}#${didKeyVerStr}`
@@ -46,6 +50,12 @@ test('getIndexedModels()', async () => {
 
   const jwsResult = await did.verifyJWS(sentJws)
   expect(jwsResult.kid).toEqual(expectedKid)
+
+  const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
+  await expect(failingAdminApi.getIndexedModels())
+   .rejects
+   .toThrow(MissingDIDError)
+ 
 })
 
 test('addModelsToIndex()', async () => {
