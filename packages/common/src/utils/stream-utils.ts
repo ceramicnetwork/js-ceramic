@@ -350,4 +350,20 @@ export class StreamUtils {
 
     return null
   }
+
+  /**
+   * Checks if the given object is a string that could plausibly represent a DID.
+   * @param did
+   */
+  static validDIDString(did: any): boolean {
+    if (typeof did != 'string') {
+      return false
+    }
+
+    if (!did.startsWith('did:')) {
+      return false
+    }
+
+    return true
+  }
 }

@@ -100,6 +100,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
+    if (!StreamUtils.validDIDString(payload.header.controllers[0])) {
+      throw new Error(
+        `Attempting to create a ModelInstanceDocument with an invalid DID string: ${payload.header.controllers[0]}`
+      )
+    }
     if (modelStreamID.type != MODEL_STREAM_TYPE_ID) {
       throw new Error(`Model for ModelInstanceDocument must refer to a StreamID of a Model stream`)
     }

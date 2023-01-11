@@ -96,6 +96,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
     }
+    if (!StreamUtils.validDIDString(payload.header.controllers[0])) {
+      throw new Error(
+        `Attempting to create a TileDocument with an invalid DID string: ${payload.header.controllers[0]}`
+      )
+    }
 
     const state: StreamState = {
       type: TileDocument.STREAM_TYPE_ID,
