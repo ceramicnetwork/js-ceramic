@@ -38,12 +38,14 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
-export type RequestAnchorParams = { // TODO: Should this be unified with AnchorRequestData?
+export type RequestAnchorParams = {
+  // TODO: Should this be unified with AnchorRequestData?
   streamID: StreamID
   tip: CID
   timestampISO: string // a result of Date.toISOString()
   genesisCid: CID
   genesisPayload: Uint8Array
+  linkedBlockPayload?: Uint8Array
 }
 
 /**

@@ -322,20 +322,28 @@ export class StateManager {
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
       return
     }
-    const genesisCommit = (await this.dispatcher.retrieveCommit(
+
+    let genesisCID = state$.value.log[0].cid
+    const genesisCommit = await this.dispatcher.retrieveCommit(
       state$.value.log[0].cid, // genesis commit CID
       state$.id
-    )) as GenesisCommit
+    )
 
     const genesisPayload = await this.dispatcher._ipfs.block.get(state$.value.log[0].cid)
+    let linkedBlockPayload: Uint8Array = undefined
+    if (StreamUtils.isSignedCommitContainer(genesisCommit)) {
+      genesisCID = genesisCommit.jws.link
+      linkedBlockPayload = genesisCommit.linkedBlock
+    }
 
     await this._saveAnchorRequestForState(state$, genesisCommit)
     const anchorStatus$ = this.anchorService.requestAnchor({
       streamID: state$.id,
       tip: state$.tip,
-      timestampISO: (new Date()).toISOString(),
-      genesisCid: state$.value.log[0].cid,
-      genesisPayload: genesisPayload
+      timestampISO: new Date().toISOString(),
+      genesisCid: genesisCID,
+      genesisPayload: genesisPayload,
+      linkedBlockPayload: linkedBlockPayload,
     })
     this._processAnchorResponse(state$, anchorStatus$)
   }
@@ -348,7 +356,10 @@ export class StateManager {
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private async _saveAnchorRequestForState(state$: RunningState, genesisCommit: GenesisCommit): Promise<void> {
+  private async _saveAnchorRequestForState(
+    state$: RunningState,
+    genesisCommit: GenesisCommit
+  ): Promise<void> {
     await this.anchorRequestStore.save(state$.id, {
       cid: state$.tip,
       timestamp: Date.now(),
