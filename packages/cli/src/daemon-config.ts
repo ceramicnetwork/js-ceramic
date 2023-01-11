@@ -267,18 +267,17 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-
-  private _didSeed: URL;
+  private _didSeed: string
 
   /**
    * Disallows public access to did-seed because it is a sensitive field.
    */
   @jsonMember(String, { name: 'did-seed' })
-  public get didSeed(): any {
-    return undefined;
+  public get didSeed(): string {
+    return undefined
   }
 
-  public sensitive_didSeed(): URL {
+  public sensitive_didSeed(): string {
     return this._didSeed
   }
 
@@ -287,7 +286,7 @@ export class DaemonCeramicNodeConfig {
    * A seed is randomly generated if a config file is not found.
    * When specifying in a config file, use the name 'did-seed'.
    */
-  public set didSeed(value: URL) {
+  public set didSeed(value: string) {
     this._didSeed = value
   }
 
