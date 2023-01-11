@@ -113,6 +113,10 @@ export class EthereumAnchorService implements AnchorService {
     // In the testing code imitate CAS logic to check that the cid if genesis matches the cid of streamID
     const genesisBlock = new CarBlock(params.genesisCid, params.genesisPayload)
     car.blocks.put(genesisBlock)
+    if (params.linkedBlockPayload) {
+      const linkedBlock = new CarBlock(params.genesisCid, params.linkedBlockPayload)
+      car.blocks.put(linkedBlock)
+    }
     car.put(
       { timestamp: params.timestampISO, streamId: params.streamID, cid: params.tip },
       { isRoot: true }
