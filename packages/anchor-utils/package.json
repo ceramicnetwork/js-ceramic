@@ -31,7 +31,7 @@
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
-    "multiformats": "^9.5.8",
+    "multiformats": "^11.0.0",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
