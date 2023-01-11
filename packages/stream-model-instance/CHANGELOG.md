@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.12.0...@ceramicnetwork/stream-model-instance@0.13.0-rc.0) (2023-01-11)
+
+
+### Features
+
+* Add sep key to model stream types ([#2633](https://github.com/ceramicnetwork/js-ceramic/issues/2633)) ([36c6d5e](https://github.com/ceramicnetwork/js-ceramic/commit/36c6d5e9244cd73803ff34a512958a91242373eb))
+
+
+
+
+
 # [0.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.12.0-rc.0...@ceramicnetwork/stream-model-instance@0.12.0) (2023-01-05)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance
