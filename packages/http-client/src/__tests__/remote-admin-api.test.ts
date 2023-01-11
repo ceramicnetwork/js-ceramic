@@ -52,10 +52,43 @@ test('getIndexedModels()', async () => {
   expect(jwsResult.kid).toEqual(expectedKid)
 
   const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
+  ;(failingAdminApi as any)._fetchJson = fauxFetch
   await expect(failingAdminApi.getIndexedModels())
    .rejects
    .toThrow(MissingDIDError)
  
+})
+
+test('startIndexingModels()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+  ;(adminApi as any)._fetchJson = fauxFetch
+  await adminApi.startIndexingModels()
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+
+  const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
+  ;(failingAdminApi as any)._fetchJson = fauxFetch
+  await expect(failingAdminApi.startIndexingModels())
+   .rejects
+   .toThrow(MissingDIDError)
+})
+
+test('stopIndexingModels()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+  ;(adminApi as any)._fetchJson = fauxFetch
+  await adminApi.stopIndexingModels()
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+
+  const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
+  ;(failingAdminApi as any)._fetchJson = fauxFetch
+  await expect(failingAdminApi.stopIndexingModels())
+   .rejects
+   .toThrow(MissingDIDError)
 })
 
 test('addModelsToIndex()', async () => {
