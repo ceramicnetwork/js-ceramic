@@ -43,9 +43,11 @@ export class RemoteAdminApi implements AdminApi {
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
+    const did = this._getDidFn()
+    if (!did) throw new Error('Failed to get DID')
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
-      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
+      body: { jws: await this.buildJWS(did, code, modelsIDs) },
     })
   }
 
