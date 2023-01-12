@@ -1,7 +1,7 @@
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { fetchJson, TestUtils } from '@ceramicnetwork/common'
-import { RemoteAdminApi } from '../remote-admin-api.js'
+import { RemoteAdminApi, MissingDIDError } from '../remote-admin-api.js'
 import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
@@ -18,6 +18,7 @@ const GET_RESPONSE = {
 
 let did: DID
 let getDidFn
+let noDidFn
 let expectedKid: string
 
 beforeAll(async () => {
@@ -28,6 +29,9 @@ beforeAll(async () => {
   did = actingDid
   getDidFn = () => {
     return did
+  }
+  noDidFn = () => {
+    return undefined
   }
   const didKeyVerStr = did.id.split('did:key:')[1]
   expectedKid = `${did.id}#${didKeyVerStr}`
@@ -46,6 +50,45 @@ test('getIndexedModels()', async () => {
 
   const jwsResult = await did.verifyJWS(sentJws)
   expect(jwsResult.kid).toEqual(expectedKid)
+})
+
+test('startIndexingModels()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+  ;(adminApi as any)._fetchJson = fauxFetch
+  await adminApi.startIndexingModels()
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+})
+
+test('stopIndexingModels()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+  ;(adminApi as any)._fetchJson = fauxFetch
+  await adminApi.stopIndexingModels()
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+})
+
+test('missingDidFailureCases', async () => {
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+
+  const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
+  ;(failingAdminApi as any)._fetchJson = fauxFetch
+
+  await expect(failingAdminApi.getIndexedModels())
+   .rejects
+   .toThrow(MissingDIDError)
+ 
+  await expect(failingAdminApi.stopIndexingModels())
+   .rejects
+   .toThrow(MissingDIDError)
+
+  await expect(failingAdminApi.startIndexingModels())
+   .rejects
+   .toThrow(MissingDIDError)
 })
 
 test('addModelsToIndex()', async () => {
