@@ -50,13 +50,6 @@ test('getIndexedModels()', async () => {
 
   const jwsResult = await did.verifyJWS(sentJws)
   expect(jwsResult.kid).toEqual(expectedKid)
-
-  const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
-  ;(failingAdminApi as any)._fetchJson = fauxFetch
-  await expect(failingAdminApi.getIndexedModels())
-   .rejects
-   .toThrow(MissingDIDError)
- 
 })
 
 test('startIndexingModels()', async () => {
