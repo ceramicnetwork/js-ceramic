@@ -32,6 +32,7 @@ export class RemoteAdminApi implements AdminApi {
     code: string,
     modelsIDs?: Array<StreamID>
   ): Promise<string> {
+    if (!actingDid) throw new MissingDIDError()
     const body = modelsIDs
       ? { models: modelsIDs.map((streamID) => streamID.toString()) }
       : undefined
@@ -49,20 +50,16 @@ export class RemoteAdminApi implements AdminApi {
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
-    const did = this._getDidFn()
-    if (!did) throw new MissingDIDError()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
-      body: { jws: await this.buildJWS(did, code, modelsIDs) },
+      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
     })
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
     const code = await this.generateCode()
-    const did = this._getDidFn()
-    if (!did) throw new MissingDIDError()
     const response = await this._fetchJson(this.getModelsUrl(), {
-      headers: { Authorization: `Basic ${await this.buildJWS(did, code)}` },
+      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code)}` },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
@@ -71,11 +68,9 @@ export class RemoteAdminApi implements AdminApi {
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
-    const did = this._getDidFn()
-    if (!did) throw new MissingDIDError()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',
-      body: { jws: await this.buildJWS(did, code, modelsIDs) },
+      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
     })
   }
 }

@@ -67,12 +67,6 @@ test('startIndexingModels()', async () => {
 
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
   expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
-
-  const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
-  ;(failingAdminApi as any)._fetchJson = fauxFetch
-  await expect(failingAdminApi.startIndexingModels())
-   .rejects
-   .toThrow(MissingDIDError)
 })
 
 test('stopIndexingModels()', async () => {
@@ -83,10 +77,23 @@ test('stopIndexingModels()', async () => {
 
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
   expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+})
+
+test('missingDidFailureCases', async () => {
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
 
   const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
   ;(failingAdminApi as any)._fetchJson = fauxFetch
+
+  await expect(failingAdminApi.getIndexedModels())
+   .rejects
+   .toThrow(MissingDIDError)
+ 
   await expect(failingAdminApi.stopIndexingModels())
+   .rejects
+   .toThrow(MissingDIDError)
+
+  await expect(failingAdminApi.startIndexingModels())
    .rejects
    .toThrow(MissingDIDError)
 })
