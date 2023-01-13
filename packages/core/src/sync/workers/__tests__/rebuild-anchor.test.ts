@@ -16,6 +16,8 @@ const ANCHOR_PROOF = {
   txHash: convertEthHashToCid('0xed6b5d7a9e8b3890651f7f0d8ed9b8939e9857cdd0b48bf77917cd709ddf7afc'),
 }
 
+const MODEL = 'kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'
+
 const STREAM_USING_MODEL1 = 'kjzl6kcym7w8y5hi5n1rty3mqey8xgo0efn5cnzhkwziixqkcl4dup6pgux03e2'
 const COMMIT_USING_MODEL1 = 'bagcqcerada2vcxipsls7qprmgk66dnlo3jjdh6qyjmxnr3vcs7tianb4jiva'
 
@@ -54,8 +56,7 @@ const MOCK_MERKLE_TREE = {
   bafyreih5twvhkmyuftw2lj7jgz7dxk2ltgyviyrzxja25gikj77kpzfn7a: {
     data: { data: 444 },
     header: {
-      model: StreamID.fromString('kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374')
-        .bytes,
+      model: StreamID.fromString(MODEL).bytes,
     },
   },
 
@@ -66,7 +67,7 @@ const MOCK_MERKLE_TREE = {
   bafyreiesfdcdu7w5hfuf2k65m4d4tvpehzw5dnzyr4lmqns3wctwm6orc4: {
     data: { data: 333 },
     header: {
-      model: StreamID.fromString('kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374')
+      model: StreamID.fromString('kjzl6cwe1jw146eh68syta5ihktzur5gksfuqmgcieb7wyn4gq7aw1kvidvjjqu')
         .bytes,
     },
   },
@@ -105,53 +106,41 @@ const MOCK_IPFS_SERVICE: IpfsService = {
 describe('Rebuild Anchor Commits Worker', () => {
   jest.setTimeout(60000)
 
-  const mockIndexApi = {
-    shouldIndexStream: jest.fn((streamId: StreamID) => Promise.resolve(true)),
-  }
   const mockHandleCommit = jest.fn(() => Promise.resolve())
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  test('happy path', async () => {
+  test('Successfully recreates anchor commits for mids that use models we are interested in ', async () => {
     const job: PgBoss.Job = {
       id: '1',
       name: 'test',
       data: {
         proof: ANCHOR_PROOF,
+        models: [MODEL],
       },
     }
 
-    const worker: RebuildAnchorWorker = new RebuildAnchorWorker(
-      MOCK_IPFS_SERVICE,
-      mockIndexApi,
-      mockHandleCommit
-    )
+    const worker: RebuildAnchorWorker = new RebuildAnchorWorker(MOCK_IPFS_SERVICE, mockHandleCommit)
     await worker.handler(job)
 
     expect(MOCK_IPFS_SERVICE.storeRecord).toBeCalledTimes(1)
     expect(MOCK_IPFS_SERVICE.storeRecord).toHaveBeenCalledWith(ANCHOR_PROOF)
     const proofCid = await MOCK_IPFS_SERVICE.storeRecord.mock.results[0].value
 
-    expect(MOCK_IPFS_SERVICE.retrieveFromIPFS).toBeCalledTimes(3)
+    expect(MOCK_IPFS_SERVICE.retrieveFromIPFS).toBeCalledTimes(2)
     expect(MOCK_IPFS_SERVICE.retrieveFromIPFS).toHaveBeenCalledWith(CID.parse(ROOT_CID), '2')
     expect(MOCK_IPFS_SERVICE.retrieveFromIPFS).toHaveBeenCalledWith(CID.parse(ROOT_CID), '0')
 
     expect(MOCK_IPFS_SERVICE.retrieveCommit).toBeCalledTimes(8)
 
-    expect(MOCK_IPFS_SERVICE.storeCommit).toBeCalledTimes(2)
+    expect(MOCK_IPFS_SERVICE.storeCommit).toBeCalledTimes(1)
     expect(MOCK_IPFS_SERVICE.storeCommit).toHaveBeenCalledWith({
       id: StreamID.fromString(STREAM_USING_MODEL1).cid,
       prev: COMMIT_USING_MODEL1,
       proof: proofCid,
       path: '0/0',
-    })
-    expect(MOCK_IPFS_SERVICE.storeCommit).toHaveBeenCalledWith({
-      id: StreamID.fromString(STREAM_USING_MODEL2).cid,
-      prev: COMMIT_USING_MODEL2,
-      proof: proofCid,
-      path: '0/1',
     })
   })
 })

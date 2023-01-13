@@ -2,11 +2,12 @@ import { default as PgBoss } from 'pg-boss'
 import type { AnchorProof, AnchorCommit } from '@ceramicnetwork/common'
 import { MerkleTreeLoader } from '../utils.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { IpfsService, IndexApi, HandleCommit } from '../interfaces.js'
+import type { IpfsService, HandleCommit } from '../interfaces.js'
 import type { Worker } from '../../state-management/job-queue.js'
 
-interface JobData {
+interface RebuildAnchorJobData {
   proof: AnchorProof
+  models: string[]
 }
 
 /**
@@ -16,7 +17,6 @@ interface JobData {
 export class RebuildAnchorWorker implements Worker {
   constructor(
     private readonly ipfsService: IpfsService,
-    private readonly indexApi: IndexApi,
     private readonly handleCommit: HandleCommit
   ) {}
 
@@ -43,8 +43,8 @@ export class RebuildAnchorWorker implements Worker {
    * @returns
    */
   async handler(job: PgBoss.Job) {
-    const jobData = job.data as JobData
-    const proof = jobData.proof
+    const jobData = job.data as RebuildAnchorJobData
+    const { proof, models } = jobData
 
     const proofCid = await this.ipfsService.storeRecord(proof as any).catch(() => {
       // TODO: add failure job for root cid
@@ -52,6 +52,7 @@ export class RebuildAnchorWorker implements Worker {
     if (!proofCid) {
       return
     }
+
     const merkleTreeLeafLoader = new MerkleTreeLoader(this.ipfsService, proof.root)
     const metadata = await merkleTreeLeafLoader.getMetadata().catch(() => {
       // TODO: add failure job for root cid
@@ -67,7 +68,10 @@ export class RebuildAnchorWorker implements Worker {
         const streamId = StreamID.fromString(streams[i])
 
         const model = await this.getModelForStream(streamId)
-        const shouldIndex = model ? await this.indexApi.shouldIndexStream(model) : false
+
+        const shouldIndex = model
+          ? models.some((modelNeedingSync) => modelNeedingSync === model.toString())
+          : false
 
         if (shouldIndex) {
           const { cid, path } = await merkleTreeLeafLoader.getLeafData(i)
