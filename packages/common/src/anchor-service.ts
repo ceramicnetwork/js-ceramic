@@ -45,7 +45,8 @@ export type RequestAnchorParams = {
   timestampISO: string // a result of Date.toISOString()
   genesisCid: CID
   genesisPayload: Uint8Array
-  linkedBlockPayload?: Uint8Array
+  genesisLinkCid?: CID
+  genesisLinkPayload?: Uint8Array
 }
 
 /**
