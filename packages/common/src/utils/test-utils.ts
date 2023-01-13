@@ -26,6 +26,43 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
 
 export class TestUtils {
   /**
+   * Wait up to 'timeoutMs' for the given predicate to return true.  Polls the given predicate once
+   * every 100ms (plus however long it takes for the predicate itself to execute).
+   * Returns true if the predicate eventually returned true, or false if it timed out
+   * without ever becoming true.
+   *
+   * This test doesn't throw when it times out as that would wind up throwing a fairly uninformative
+   * "timeout" error message.  So instead, test code using this should make sure to re-check the
+   * condition that is being waited for, in case this actually did time out without the condition
+   * ever being satisfied.  That will allow tests to throw more useful errors indicating what
+   * condition actually failed.
+   */
+  static async waitForConditionOrTimeout(
+    predicate: () => Promise<boolean>,
+    timeoutMs = 1000 * 30
+  ): Promise<boolean> {
+    const startTime = new Date()
+    const deadline = new Date(startTime.getTime() + timeoutMs)
+    let now = startTime
+    while (now < deadline) {
+      await TestUtils.delay(100)
+      now = new Date()
+
+      try {
+        const res = await predicate()
+        if (res) {
+          return res
+        }
+      } catch (err) {
+        console.warn(err)
+      }
+    }
+
+    console.warn(`timed out after ${timeoutMs}ms waiting for condition to be true`)
+    return false
+  }
+
+  /**
    * Given a stream and a predicate that operates on the stream state, continuously waits for
    * changes to the stream until the predicate returns true.
    * @param stream
@@ -35,20 +72,37 @@ export class TestUtils {
    */
   static async waitForState(
     stream: Stream,
-    timeout: number,
+    timeoutMs: number,
     predicate: (state: StreamState) => boolean,
-    onFailure: () => void
+    onFailure: (state: StreamState) => void
   ): Promise<void> {
     if (predicate(stream.state)) return
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs))
     // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
     const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
       defaultValue: undefined,
     })
     await Promise.race([timeoutPromise, completionPromise])
     if (!predicate(stream.state)) {
-      onFailure()
+      onFailure(stream.state)
     }
+  }
+
+  /**
+   * Given a stream, continuously waits for
+   * the streams anchor status to be changed to ANCHORED
+   * @param stream
+   * @param timeout - how long to wait for
+   */
+  static waitForAnchor(stream: Stream, timeout: number): Promise<void> {
+    return this.waitForState(
+      stream,
+      timeout,
+      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`Expect anchored`)
+      }
+    )
   }
 
   static runningState(state: StreamState): RunningStateLike {

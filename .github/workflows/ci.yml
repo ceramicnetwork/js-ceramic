@@ -40,6 +40,7 @@ jobs:
         uses: dagger/dagger-for-github@v3
         with:
           install-only: true
+          version: "0.2.36"
       -
         name: Setup Dagger
         run: |
@@ -111,8 +112,9 @@ jobs:
         name: Publish docs
         uses: dagger/dagger-for-github@v3
         with:
+          version: "0.2.36"
           cmds: |
             project init
             project update
-            project update "github.com/3box/pipeline-tools/ci@v${{ env.PIPELINE_TOOLS_VER }}"
+            project update "github.com/3box/pipeline-tools/ci"
             do docs -p ${{ env.DAGGER_PLAN }}

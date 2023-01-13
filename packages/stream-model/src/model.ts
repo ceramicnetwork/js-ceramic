@@ -175,13 +175,13 @@ export class Model extends Stream {
     metadata?: ModelMetadataArgs
   ): Promise<Model> {
     Model.assertComplete(content)
+    Model.assertRelationsValid(content)
 
     const opts: CreateOpts = {
       publish: true,
       anchor: true,
       pin: true,
       sync: SyncOptions.NEVER_SYNC,
-      throwOnInvalidCommit: true,
     }
     const commit = await Model._makeGenesis(ceramic, content, metadata)
     const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
@@ -219,6 +219,35 @@ export class Model extends Stream {
         )
       } else {
         throw new Error(`Model ${content.name} is missing a 'accountRelation' field`)
+      }
+    }
+  }
+
+  /**
+   * Asserts that the relations properties of the given ModelDefinition are well formed, and throws
+   * an error if not.
+   */
+  static assertRelationsValid(content: ModelDefinition) {
+    if (!content.relations) {
+      return
+    }
+
+    for (const [fieldName, relationDefinition] of Object.entries(content.relations)) {
+      switch (relationDefinition.type) {
+        case 'account':
+          continue
+        case 'document':
+          try {
+            StreamID.fromString(relationDefinition.model)
+          } catch (err) {
+            throw new Error(`Relation on field ${fieldName} has invalid model: ${err.toString()}`)
+          }
+          continue
+        default:
+          throw new Error(
+            // @ts-ignore
+            `Relation on field ${fieldName} has unexpected type ${relationDefinition.type}`
+          )
       }
     }
   }
@@ -290,6 +319,7 @@ export class Model extends Stream {
     const header: GenesisHeader = {
       controllers: [metadata.controller],
       model: Model.MODEL.bytes,
+      sep: 'model', // See CIP-120 for more details on this field
     }
     return { data: content, header }
   }

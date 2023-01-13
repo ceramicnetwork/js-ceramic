@@ -8,8 +8,6 @@ const TEST_CHAIN_ID = '1337'
 const V1_PROOF_TYPE = 'f(bytes32)'
 const ANCHOR_PROOF: AnchorProof = {
   chainId: `eip155:${TEST_CHAIN_ID}`,
-  blockNumber: 3,
-  blockTimestamp: 1586784008,
   txHash: CID.parse('bagjqcgza7mvdlzewbfbq35peso2atjydg3ekalew5vmze7w2a5cbhmav4rmq'),
   root: CID.parse('bafyreic5p7grucmzx363ayxgoywb6d4qf5zjxgbqjixpkokbf5jtmdj5ni'),
   txType: V1_PROOF_TYPE,
@@ -18,7 +16,8 @@ const TX_HASH =
   '0x' + uint8arrays.toString(decode(ANCHOR_PROOF.txHash.multihash.bytes).digest, 'base16')
 const TEST_TRANSACTION = {
   data: '0x97ad09eb5d7fcd1a0999befdb062e6762c1f0f902f729b98304a2ef539412f53360d3d6a',
-  blockNumber: ANCHOR_PROOF.blockNumber,
+  blockNumber: 3,
+  blockTimestamp: 1586784008,
   blockHash: '0x752fcd3593c140db9f206b421c47d875e0f92e425983f8c72ab04c0e969b072a',
   to: '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
 }
@@ -40,7 +39,7 @@ const MockJsonRpcProvider = {
     })
     this.getBlock = jest.fn(() => {
       return Promise.resolve({
-        timestamp: ANCHOR_PROOF.blockTimestamp,
+        timestamp: TEST_TRANSACTION.blockTimestamp,
       })
     })
   },

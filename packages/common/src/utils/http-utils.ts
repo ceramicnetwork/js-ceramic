@@ -26,7 +26,7 @@ export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promis
     : timedAbortSignal.signal
 
   const res = await abortable(signal, (abortSignal) => {
-    return fetch(String(url), { ...opts, signal: abortSignal })
+    return fetch(String(url), { ...opts, signal: abortSignal, credentials: 'include' })
   }).finally(() => timedAbortSignal.clear())
 
   if (!res.ok) {

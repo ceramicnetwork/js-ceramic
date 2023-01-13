@@ -1,6 +1,6 @@
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
-import { Memoize } from 'typescript-memoize'
+import { Memoize } from 'mapmoize'
 
 import {
   base64urlToJSON,
@@ -93,7 +93,6 @@ export class Utils {
     } else if (StreamUtils.isAnchorCommit(commit)) {
       commitData.type = CommitType.ANCHOR
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
-      commitData.timestamp = commitData.proof.blockTimestamp
     }
     if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
     return commitData

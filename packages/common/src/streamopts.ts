@@ -60,6 +60,19 @@ export interface InternalOpts {
    * @private
    */
   throwOnInvalidCommit?: boolean
+
+  /**
+   * If true, when applying commits to a stream will throw an Error if any commit is rejected due to conflict resolution
+   * @private
+   */
+  throwOnConflict?: boolean
+
+  /**
+   * If true, when applying commits to a stream will throw an Error if the log does not build directly on top of the
+   * local state.
+   * @private
+   */
+  throwIfStale?: boolean
 }
 
 /**
