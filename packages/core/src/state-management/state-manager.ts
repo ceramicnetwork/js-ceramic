@@ -323,17 +323,18 @@ export class StateManager {
       return
     }
 
-    let genesisCID = state$.value.log[0].cid
+    const genesisCID = state$.value.log[0].cid
     const genesisCommit = await this.dispatcher.retrieveCommit(
       state$.value.log[0].cid, // genesis commit CID
       state$.id
     )
 
     const genesisPayload = await this.dispatcher._ipfs.block.get(state$.value.log[0].cid)
-    let linkedBlockPayload: Uint8Array = undefined
-    if (StreamUtils.isSignedCommitContainer(genesisCommit)) {
-      genesisCID = genesisCommit.jws.link
-      linkedBlockPayload = genesisCommit.linkedBlock
+    let genesisLinkCid: CID = undefined
+    let genesisLinkPayload: Uint8Array = undefined
+    if (StreamUtils.isSignedCommit(genesisCommit)) {
+      genesisLinkCid = genesisCommit.link
+      genesisLinkPayload = await this.dispatcher._ipfs.block.get(genesisLinkCid)
     }
 
     await this._saveAnchorRequestForState(state$, genesisCommit)
@@ -343,7 +344,8 @@ export class StateManager {
       timestampISO: new Date().toISOString(),
       genesisCid: genesisCID,
       genesisPayload: genesisPayload,
-      linkedBlockPayload: linkedBlockPayload,
+      genesisLinkCid: genesisLinkCid,
+      genesisLinkPayload: genesisLinkPayload,
     })
     this._processAnchorResponse(state$, anchorStatus$)
   }
