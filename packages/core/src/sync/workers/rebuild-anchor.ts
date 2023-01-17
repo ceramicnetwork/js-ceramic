@@ -29,7 +29,7 @@ export class RebuildAnchorWorker implements Worker {
     const genesisCommit = await this.ipfsService.retrieveCommit(signedCommit.link, streamId)
 
     if (!genesisCommit.header.model) {
-      return
+      return null
     }
 
     return StreamID.fromBytes(genesisCommit.header.model)
@@ -63,33 +63,35 @@ export class RebuildAnchorWorker implements Worker {
 
     const streams = metadata.streamIds
 
-    for (let i = 0; i < streams.length; i++) {
-      try {
-        const streamId = StreamID.fromString(streams[i])
+    await Promise.all(
+      streams.map(async (stream, i) => {
+        try {
+          const streamId = StreamID.fromString(streams[i])
 
-        const model = await this.getModelForStream(streamId)
+          const model = await this.getModelForStream(streamId)
 
-        const shouldIndex = model
-          ? models.some((modelNeedingSync) => modelNeedingSync === model.toString())
-          : false
+          const shouldIndex = model
+            ? models.some((modelNeedingSync) => modelNeedingSync === model.toString())
+            : false
 
-        if (shouldIndex) {
-          const { cid, path } = await merkleTreeLeafLoader.getLeafData(i)
+          if (shouldIndex) {
+            const { cid, path } = await merkleTreeLeafLoader.getLeafData(i)
 
-          const anchorCommit: AnchorCommit = {
-            id: streamId.cid,
-            prev: cid,
-            proof: proofCid,
-            path: path.join('/'),
+            const anchorCommit: AnchorCommit = {
+              id: streamId.cid,
+              prev: cid,
+              proof: proofCid,
+              path: path.join('/'),
+            }
+
+            const anchorCommitCid = await this.ipfsService.storeCommit(anchorCommit)
+
+            await this.handleCommit(streamId, anchorCommitCid, model)
           }
-
-          const anchorCommitCid = await this.ipfsService.storeCommit(anchorCommit)
-
-          await this.handleCommit(streamId, anchorCommitCid, model)
+        } catch (err) {
+          // TODO: add failure job for streamId
         }
-      } catch (err) {
-        // TODO: add failure job for streamId
-      }
-    }
+      })
+    )
   }
 }
