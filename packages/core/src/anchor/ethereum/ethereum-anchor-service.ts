@@ -87,17 +87,17 @@ export class EthereumAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
-    const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamID }
+    const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamId }
     const carFile = this._carFileFromRequestAnchorParams(params)
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeAnchorRequest(params.streamID, params.tip, carFile),
-      this.pollForAnchorResponse(params.streamID, params.tip)
+      this._makeAnchorRequest(params.streamId, params.tip, carFile),
+      this.pollForAnchorResponse(params.streamId, params.tip)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
           status: AnchorStatus.FAILED,
-          streamId: params.streamID,
+          streamId: params.streamId,
           cid: params.tip,
           message: error.message,
         })
@@ -117,14 +117,14 @@ export class EthereumAnchorService implements AnchorService {
     const carFactory = new CARFactory()
     const car = carFactory.build()
     // In the testing code imitate CAS logic to check that the cid if genesis matches the cid of streamID
-    const genesisBlock = new CarBlock(params.genesisCid, params.genesisPayload)
+    const genesisBlock = new CarBlock(params.genesisCid, params.genesisBlock)
     car.blocks.put(genesisBlock)
     if (params.genesisLinkCid) {
-      const linkedBlock = new CarBlock(params.genesisLinkCid, params.genesisLinkPayload)
+      const linkedBlock = new CarBlock(params.genesisLinkCid, params.genesisLinkBlock)
       car.blocks.put(linkedBlock)
     }
     car.put(
-      { timestamp: params.timestampISO, streamId: params.streamID.toString(), cid: params.tip },
+      { timestamp: params.timestampISO, streamId: params.streamId.toString(), cid: params.tip },
       { isRoot: true }
     )
     return car

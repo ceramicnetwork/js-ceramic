@@ -30,7 +30,7 @@ class Candidate {
   constructor(readonly params: RequestAnchorParams, readonly log?: CID[]) {}
 
   get streamId(): StreamID {
-    return this.params.streamID
+    return this.params.streamId
   }
 
   get cid(): CID {
@@ -38,7 +38,7 @@ class Candidate {
   }
 
   get key(): string {
-    return this.params.streamID.toString()
+    return this.params.streamId.toString()
   }
 }
 
@@ -292,11 +292,11 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     this.#feed.next({
       status: AnchorStatus.PENDING,
-      streamId: params.streamID,
+      streamId: params.streamId,
       cid: params.tip,
       message: 'Sending anchoring request',
     })
-    return this.pollForAnchorResponse(params.streamID, params.tip)
+    return this.pollForAnchorResponse(params.streamId, params.tip)
   }
 
   /**
