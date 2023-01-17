@@ -126,10 +126,8 @@ export class PinStore {
       }
       if (StreamUtils.isSignedCommit(commit)) {
         if (includeAnchorAndCACAO) {
-          const decodedProtectedHeader = base64urlToJSON(commit.signatures[0].protected)
-          if (decodedProtectedHeader.cap) {
-            const capIPFSUri = decodedProtectedHeader.cap
-            const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+          const capCID = StreamUtils.getCacaoCidFromCommit(commit)
+          if (capCID) {
             points.push(capCID)
           }
         }
