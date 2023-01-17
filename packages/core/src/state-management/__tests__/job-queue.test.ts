@@ -10,10 +10,15 @@ class MockWorker implements Worker {
     this.reset()
   }
 
-  handler = jest.fn((job: PgBoss.Job) => Promise.resolve())
+  handler = jest.fn((job: PgBoss.Job) => {
+    return Promise.resolve()
+  })
 
   reset() {
     this.handler.mockRestore()
+    this.handler.mockImplementation((job: PgBoss.Job) => {
+      return Promise.resolve()
+    })
   }
 }
 
