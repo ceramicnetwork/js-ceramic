@@ -221,6 +221,15 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       ).rejects.toThrow(/is not indexed on this node/)
     })
 
+    test("cannot index a stream that isn't a Model", async () => {
+      expect(core.index.indexedModels().length).toEqual(2)
+
+      const mid = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      await expect(core.index.indexModels([mid.id])).rejects.toThrow(/it is not a Model StreamID/)
+
+      expect(core.index.indexedModels().length).toEqual(2)
+    })
+
     test('basic count query', async () => {
       await expect(ceramic.index.count({ model: model.id.toString() })).resolves.toEqual(0)
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
