@@ -110,15 +110,30 @@ export class EthereumAnchorService implements AnchorService {
   private _carFileFromRequestAnchorParams(params: RequestAnchorParams): CAR {
     const carFactory = new CARFactory()
     const car = carFactory.build()
-    // In the testing code imitate CAS logic to check that the cid if genesis matches the cid of streamID
+    // In the testing code imitate CAS logic to check that the cid in genesis matches the cid of streamID
     const genesisBlock = new CarBlock(params.genesisCid, params.genesisBlock)
     car.blocks.put(genesisBlock)
+    const tipBlock = new CarBlock(params.tip, params.tipBlock)
+    car.blocks.put(tipBlock)
     if (params.genesisLinkCid) {
       const linkedBlock = new CarBlock(params.genesisLinkCid, params.genesisLinkBlock)
       car.blocks.put(linkedBlock)
     }
+    if (params.tipCacaoCid) {
+      const cacaoBlock = new CarBlock(params.tipCacaoCid, params.tipCacaoBlock)
+      car.blocks.put(cacaoBlock)
+    }
+
     car.put(
-      { timestamp: params.timestampISO, streamId: params.streamID, cid: params.tip },
+      {
+        timestamp: params.timestampISO,
+        streamId: params.streamId.toString(),
+        genesisCid: params.genesisCid.toString(),
+        genesisLinkCid: params.genesisLinkCid?.toString() ?? '',
+        tipCid: params.tip.toString(),
+        tipLinkCid: params.tipLinkCid?.toString() ?? '',
+        tipCacaoCid: params.tipCacaoCid?.toString() ?? '',
+      },
       { isRoot: true }
     )
     return car
