@@ -15,15 +15,18 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   GenesisCommit,
+  RequestAnchorParams,
+  base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
-import type { CID } from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil, tap } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import * as uint8arrays from 'uint8arrays'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -324,29 +327,15 @@ export class StateManager {
     }
 
     const genesisCID = state$.value.log[0].cid
-    const genesisCommit = await this.dispatcher.retrieveCommit(
-      state$.value.log[0].cid, // genesis commit CID
-      state$.id
-    )
-
-    const genesisPayload = await this.dispatcher._ipfs.block.get(state$.value.log[0].cid)
-    let genesisLinkCid: CID = undefined
-    let genesisLinkPayload: Uint8Array = undefined
-    if (StreamUtils.isSignedCommit(genesisCommit)) {
-      genesisLinkCid = genesisCommit.link
-      genesisLinkPayload = await this.dispatcher._ipfs.block.get(genesisLinkCid)
-    }
-
+    const genesisCommit = await this.dispatcher.retrieveCommit(genesisCID, state$.id)
     await this._saveAnchorRequestForState(state$, genesisCommit)
-    const anchorStatus$ = this.anchorService.requestAnchor({
-      streamID: state$.id,
-      tip: state$.tip,
-      timestampISO: new Date().toISOString(),
-      genesisCid: genesisCID,
-      genesisPayload: genesisPayload,
-      genesisLinkCid: genesisLinkCid,
-      genesisLinkPayload: genesisLinkPayload,
-    })
+
+    const requestAnchorParams = await this._buildRequestAnchorParams(
+      state$,
+      genesisCID,
+      genesisCommit
+    )
+    const anchorStatus$ = this.anchorService.requestAnchor(requestAnchorParams)
     this._processAnchorResponse(state$, anchorStatus$)
   }
 
@@ -356,6 +345,52 @@ export class StateManager {
   confirmAnchorResponse(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, state$.tip)
     return this._processAnchorResponse(state$, anchorStatus$)
+  }
+
+  private async _buildRequestAnchorParams(
+    state$: RunningState,
+    genesisCID: CID,
+    genesisCommit: any
+  ): Promise<RequestAnchorParams> {
+    const genesisBlock = await this.dispatcher._ipfs.block.get(state$.value.log[0].cid)
+    let genesisLinkCid: CID = undefined
+    let genesisLinkBlock: Uint8Array = undefined
+    if (StreamUtils.isSignedCommit(genesisCommit)) {
+      genesisLinkCid = genesisCommit.link
+      genesisLinkBlock = await this.dispatcher._ipfs.block.get(genesisLinkCid)
+    }
+
+    const tipCid = state$.tip
+    const tipCommit = await this.dispatcher.retrieveCommit(tipCid, state$.id)
+    const tipBlock = await this.dispatcher._ipfs.block.get(tipCid)
+    let tipLinkCid: CID = undefined
+    let tipLinkBlock: Uint8Array = undefined
+    let tipCacaoCid: CID = undefined
+    let tipCacaoBlock: Uint8Array = undefined
+    if (StreamUtils.isSignedCommit(tipCommit)) {
+      tipLinkCid = tipCommit.link
+      tipLinkBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
+      const decodedProtectedHeader = base64urlToJSON(tipCommit.signatures[0].protected)
+      if (decodedProtectedHeader.cap) {
+        const capIPFSUri = decodedProtectedHeader.cap
+        tipCacaoCid = CID.parse(capIPFSUri.replace('ipfs://', ''))
+        tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
+      }
+    }
+
+    return {
+      streamId: state$.id,
+      timestampISO: new Date().toISOString(),
+      genesisCid: genesisCID,
+      genesisBlock: genesisBlock,
+      genesisLinkCid: genesisLinkCid,
+      genesisLinkBlock: genesisLinkBlock,
+      tip: tipCid,
+      tipBlock: tipBlock,
+      tipLinkBlock: tipLinkBlock,
+      tipCacaoCid: tipCacaoCid,
+      tipCacaoBlock: tipCacaoBlock,
+    }
   }
 
   private async _saveAnchorRequestForState(

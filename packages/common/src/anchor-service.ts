@@ -35,13 +35,17 @@ export interface AnchorServiceFailed {
 
 export type RequestAnchorParams = {
   // TODO: Should this be unified with AnchorRequestData?
-  streamID: StreamID
-  tip: CID
+  streamId: StreamID
   timestampISO: string // a result of Date.toISOString()
   genesisCid: CID
-  genesisPayload: Uint8Array
+  genesisBlock: Uint8Array
   genesisLinkCid?: CID
-  genesisLinkPayload?: Uint8Array
+  genesisLinkBlock?: Uint8Array
+  tip: CID
+  tipBlock: Uint8Array
+  tipLinkBlock?: Uint8Array
+  tipCacaoCid?: CID
+  tipCacaoBlock?: Uint8Array
 }
 
 /**
