@@ -324,7 +324,11 @@ export class StateManager {
     }
 
     await this._saveAnchorRequestForState(state$)
-    const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip)
+    const anchorStatus$ = this.anchorService.requestAnchor({
+      streamID: state$.id,
+      tip: state$.tip,
+      timestampISO: (new Date()).toISOString(),
+    })
     this._processAnchorResponse(state$, anchorStatus$)
   }
 
