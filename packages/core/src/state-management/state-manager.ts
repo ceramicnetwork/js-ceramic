@@ -370,10 +370,8 @@ export class StateManager {
     if (StreamUtils.isSignedCommit(tipCommit)) {
       tipLinkCid = tipCommit.link
       tipLinkBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
-      const decodedProtectedHeader = base64urlToJSON(tipCommit.signatures[0].protected)
-      if (decodedProtectedHeader.cap) {
-        const capIPFSUri = decodedProtectedHeader.cap
-        tipCacaoCid = CID.parse(capIPFSUri.replace('ipfs://', ''))
+      tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
+      if (tipCacaoCid) {
         tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
       }
     }
