@@ -16,7 +16,6 @@ import {
   StreamUtils,
   GenesisCommit,
   RequestAnchorParams,
-  base64urlToJSON,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
@@ -26,7 +25,6 @@ import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
-import * as uint8arrays from 'uint8arrays'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
