@@ -10,7 +10,7 @@ export interface FetchOpts {
   signal?: AbortSignal
 }
 
-export type FetchRequest = {
+export type FetchRequestParams = {
   url: URL | string,
   opts?: FetchOpts
 }

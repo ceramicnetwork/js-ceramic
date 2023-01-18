@@ -3,11 +3,11 @@ import {
   CeramicApi,
   DiagnosticsLogger,
   FetchOpts,
-  HttpMethods,
   fetchJson,
-  FetchRequest
-} from "@ceramicnetwork/common"
-import { DagJWS } from "dids"
+  FetchRequestParams
+} from '@ceramicnetwork/common'
+import { DagJWS } from 'dids'
+import crypto from 'crypto'
 
 export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   private _ceramic: CeramicApi
@@ -43,7 +43,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     return await this._sendRequest(request)
   }
 
-  async signRequest(request: FetchRequest): Promise<{request: FetchRequest, jws: DagJWS}> {
+  async signRequest(request: FetchRequestParams): Promise<{request: FetchRequestParams, jws: DagJWS}> {
     const payload: any = { url: request.url, nonce: crypto.randomUUID() }
     if (request.opts) {
       if (request.opts.body) {
@@ -52,11 +52,18 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     }
     const jws = await this._ceramic.did.createJWS(payload)
     const authorization = `Bearer ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
-    request.opts = { ...request.opts, headers: {...request.opts.headers, authorization }}
+    let requestOpts: any = { headers: { authorization }}
+    if (request.opts) {
+      if (request.opts.headers) {
+        requestOpts.headers = {headers: { ...request.opts.headers, authorization }}
+      }
+      requestOpts = { ...request.opts, ...requestOpts}
+    }
+    request.opts = requestOpts
     return { request, jws }
   }
 
-  private _sendRequest = async (request: FetchRequest): Promise<any> => {
+  private _sendRequest = async (request: FetchRequestParams): Promise<any> => {
     const data = await fetchJson(request.url, request.opts)
     if (data.error) {
       this._logger.err(data.error)
