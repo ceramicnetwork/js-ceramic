@@ -385,6 +385,7 @@ export class StateManager {
       genesisLinkBlock: genesisLinkBlock,
       tip: tipCid,
       tipBlock: tipBlock,
+      tipLinkCid: tipLinkCid,
       tipLinkBlock: tipLinkBlock,
       tipCacaoCid: tipCacaoCid,
       tipCacaoBlock: tipCacaoBlock,

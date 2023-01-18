@@ -116,8 +116,12 @@ export class EthereumAnchorService implements AnchorService {
     const tipBlock = new CarBlock(params.tip, params.tipBlock)
     car.blocks.put(tipBlock)
     if (params.genesisLinkCid) {
-      const linkedBlock = new CarBlock(params.genesisLinkCid, params.genesisLinkBlock)
-      car.blocks.put(linkedBlock)
+      const genesisLinkBlock = new CarBlock(params.genesisLinkCid, params.genesisLinkBlock)
+      car.blocks.put(genesisLinkBlock)
+    }
+    if (params.tipLinkCid) {
+      const tupLinkBlock = new CarBlock(params.tipLinkCid, params.tipLinkBlock)
+      car.blocks.put(tupLinkBlock)
     }
     if (params.tipCacaoCid) {
       const cacaoBlock = new CarBlock(params.tipCacaoCid, params.tipCacaoBlock)
