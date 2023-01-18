@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.17.0-rc.0...@ceramicnetwork/common@2.18.0-rc.0) (2023-01-18)
+
+
+### Features
+
+* **common:** add tezos cacao (did-session) support ([#2652](https://github.com/ceramicnetwork/js-ceramic/issues/2652)) ([1dd5a51](https://github.com/ceramicnetwork/js-ceramic/commit/1dd5a51502fb379993e090d441fc6ada7f244720))
+
+
+
+
+
 # [2.17.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.16.0...@ceramicnetwork/common@2.17.0-rc.0) (2023-01-11)
 
 
