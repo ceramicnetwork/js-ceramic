@@ -38,14 +38,14 @@ test('re-request an anchor till get a response', async () => {
   const loggerProvider = new common.LoggerProvider()
   const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
   const errSpy = jest.spyOn(diagnosticsLogger, 'err')
-  const anchorService = new eas.EthereumAnchorService(
-    'http://example.com',
-    diagnosticsLogger,
-    100
-  )
+  const anchorService = new eas.EthereumAnchorService('http://example.com', diagnosticsLogger, 100)
   let lastResponse: any
   const subscription = anchorService
-    .requestAnchor(FAKE_STREAM_ID, FAKE_CID)
+    .requestAnchor({
+      streamID: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      timestampISO: (new Date()).toISOString(),
+    })
     .subscribe((response) => {
       if (response.status === common.AnchorStatus.PROCESSING) {
         lastResponse = response

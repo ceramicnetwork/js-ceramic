@@ -84,6 +84,8 @@ export class SqliteIndexApi implements DatabaseIndexApi {
       .insert(indexedData)
       .onConflict('stream_id')
       .merge({
+        stream_content: JSON.stringify(indexingArgs.streamContent),
+        tip: indexingArgs.tip.toString(),
         last_anchored_at: asTimestamp(indexingArgs.lastAnchor),
         updated_at: asTimestamp(indexingArgs.updatedAt) || now,
       })

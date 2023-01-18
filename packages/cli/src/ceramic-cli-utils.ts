@@ -7,7 +7,13 @@ import * as fs from 'fs/promises'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { AnchorServiceAuthMethods, CeramicApi, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/common'
+import {
+  AnchorServiceAuthMethods,
+  CeramicApi,
+  LogLevel,
+  Networks,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
@@ -20,7 +26,13 @@ import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
-import { generateSeed, generateSeedUrl, makeNodeDID, parseSeed, parseSeedUrl } from './daemon/did-utils.js'
+import {
+  generateSeed,
+  generateSeedUrl,
+  makeNodeDID,
+  parseSeed,
+  parseSeedUrl,
+} from './daemon/did-utils.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -43,7 +55,7 @@ const generateDefaultDaemonConfig = () => {
 
   return DaemonConfig.fromObject({
     anchor: {
-      auth: AnchorServiceAuthMethods.DID
+      auth: AnchorServiceAuthMethods.DID,
     },
     'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
     ipfs: { mode: IpfsMode.BUNDLED },
@@ -53,7 +65,7 @@ const generateDefaultDaemonConfig = () => {
     },
     network: { name: Networks.TESTNET_CLAY },
     node: {
-      'did-seed': didSeed
+      'did-seed': didSeed.toString(),
     },
     'state-store': {
       mode: StateStoreMode.FS,
@@ -138,7 +150,7 @@ export class CeramicCliUtils {
     if (process.env.COLLECTOR_HOSTNAME)
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
     if (process.env.CERAMIC_NODE_DID_SEED) {
-      config.node.didSeed = new URL(process.env.CERAMIC_NODE_DID_SEED)
+      config.node.didSeed = process.env.CERAMIC_NODE_DID_SEED
     }
 
     {

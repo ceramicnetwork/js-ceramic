@@ -32,6 +32,13 @@ export async function applyAnchorCommit(
   state: StreamState
 ): Promise<StreamState> {
   StreamUtils.assertCommitLinksToState(state, commitData.commit)
+
+  // If the anchor commit failed validation when the log was first fetched, we should throw that
+  // error now as part of trying to apply it.
+  if (commitData.anchorValidationError) {
+    throw commitData.anchorValidationError
+  }
+
   state = cloneDeep(state) // don't modify the source object
 
   state.anchorStatus = AnchorStatus.ANCHORED
@@ -39,7 +46,7 @@ export async function applyAnchorCommit(
   state.log.push({
     cid: commitData.cid,
     type: CommitType.ANCHOR,
-    timestamp: commitData.proof.blockTimestamp,
+    timestamp: commitData.timestamp,
   })
 
   applyAnchorTimestampsToLog(state)

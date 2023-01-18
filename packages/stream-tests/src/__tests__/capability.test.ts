@@ -570,47 +570,51 @@ describe('CACAO Integration test', () => {
       expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
     }, 30000)
 
-    test('Load anchored stream at CommitID after CACAO expiration', async () => {
-      const content0 = { a: 0 }
-      const content1 = { a: 1 }
-      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
-      const doc = await TileDocument.create(
-        ceramic,
-        content0,
-        { controllers: [`did:pkh:eip155:1:${wallet.address}`] },
-        opts
-      )
-      await doc.update(content1, null, { ...opts, anchor: true })
-      await TestUtils.anchorUpdate(ceramic, doc)
+    test(
+      'Load anchored stream at CommitID after CACAO expiration',
+      async () => {
+        const content0 = { a: 0 }
+        const content1 = { a: 1 }
+        const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+        const doc = await TileDocument.create(
+          ceramic,
+          content0,
+          { controllers: [`did:pkh:eip155:1:${wallet.address}`] },
+          opts
+        )
+        await doc.update(content1, null, { ...opts, anchor: true })
+        await TestUtils.anchorUpdate(ceramic, doc)
 
-      expireCacao()
+        expireCacao()
 
-      // Updating the doc with an expired CACAO should fail
-      await expect(doc.update({ invalidUpdate: 'shouldFail' }, null, opts)).rejects.toThrow(
-        /Capability is expired/
-      )
+        // Updating the doc with an expired CACAO should fail
+        await expect(doc.update({ invalidUpdate: 'shouldFail' }, null, opts)).rejects.toThrow(
+          /Capability is expired/
+        )
 
-      const docCopy = await TileDocument.load(ceramic, doc.id)
-      const docAtGenesisCommit = await TileDocument.load(ceramic, doc.allCommitIds[0])
-      const docAtUpdateCommit = await TileDocument.load(ceramic, doc.allCommitIds[1])
-      const docAtAnchorCommit = await TileDocument.load(ceramic, doc.allCommitIds[2])
+        const docCopy = await TileDocument.load(ceramic, doc.id, { sync: SyncOptions.SYNC_ALWAYS })
+        const docAtGenesisCommit = await TileDocument.load(ceramic, doc.allCommitIds[0])
+        const docAtUpdateCommit = await TileDocument.load(ceramic, doc.allCommitIds[1])
+        const docAtAnchorCommit = await TileDocument.load(ceramic, doc.allCommitIds[2])
 
-      expect(docCopy.content).toEqual(content1)
-      expect(docCopy.state.log.length).toEqual(3)
-      expect(docCopy.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+        expect(docCopy.content).toEqual(content1)
+        expect(docCopy.state.log.length).toEqual(3)
+        expect(docCopy.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      expect(docAtGenesisCommit.content).toEqual(content0)
-      expect(docAtGenesisCommit.state.log.length).toEqual(1)
-      expect(docAtGenesisCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+        expect(docAtGenesisCommit.content).toEqual(content0)
+        expect(docAtGenesisCommit.state.log.length).toEqual(1)
+        expect(docAtGenesisCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      expect(docAtUpdateCommit.content).toEqual(content1)
-      expect(docAtUpdateCommit.state.log.length).toEqual(2)
-      expect(docAtUpdateCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+        expect(docAtUpdateCommit.content).toEqual(content1)
+        expect(docAtUpdateCommit.state.log.length).toEqual(2)
+        expect(docAtUpdateCommit.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      expect(docAtAnchorCommit.content).toEqual(content1)
-      expect(docAtAnchorCommit.state.log.length).toEqual(3)
-      expect(docAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    })
+        expect(docAtAnchorCommit.content).toEqual(content1)
+        expect(docAtAnchorCommit.state.log.length).toEqual(3)
+        expect(docAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      },
+      1000 * 30
+    )
 
     test(
       'Genesis commit applied with valid capability that later expires without being anchored',

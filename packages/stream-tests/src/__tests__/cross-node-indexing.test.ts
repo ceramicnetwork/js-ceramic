@@ -1,5 +1,13 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, Page, StreamState, StreamUtils, TestUtils } from '@ceramicnetwork/common'
+import {
+  CeramicApi,
+  IpfsApi,
+  Page,
+  PaginationQuery,
+  StreamState,
+  StreamUtils,
+  TestUtils,
+} from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -58,6 +66,13 @@ const envs: Array<CrossNodeIndexingTestEnv> = [
   { ceramicInstanceWithPostgres: 1 },
   { ceramicInstanceWithPostgres: 2 },
 ]
+
+async function countResults(ceramic: Ceramic, query: PaginationQuery): Promise<number> {
+  const resultObj = await ceramic.index.query(query)
+  const results = extractDocuments(ceramic, resultObj)
+
+  return results.length
+}
 
 describe.each(envs)(
   'Cross-node indexing and query test with ceramic$ceramicInstanceWithPostgres running postgres',
@@ -165,8 +180,11 @@ describe.each(envs)(
       })
 
       // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
-      // in the index, instead of this race-prone sleep.
-      await TestUtils.delay(5 * 1000)
+      // in the index, instead of this polling-based approach
+      await TestUtils.waitForConditionOrTimeout(async () => {
+        const count = await countResults(ceramic2, { model: model.id, first: 100 })
+        return count > 0
+      })
 
       let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
       let results = extractDocuments(ceramic2, resultObj)
@@ -183,8 +201,11 @@ describe.each(envs)(
       })
 
       // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
-      // in the index, instead of this race-prone sleep.
-      await TestUtils.delay(5 * 1000)
+      // in the index, instead of this polling-based approach.
+      await TestUtils.waitForConditionOrTimeout(async () => {
+        const count = await countResults(ceramic2, { model: model.id, first: 100 })
+        return count > 1
+      })
 
       resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
       results = extractDocuments(ceramic2, resultObj)

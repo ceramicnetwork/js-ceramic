@@ -11,6 +11,7 @@ import {
   DiagnosticsLogger,
   fetchJson,
   FetchJson,
+  RequestAnchorParams,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
@@ -46,7 +47,7 @@ export class EthereumAnchorService implements AnchorService {
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    sendRequest: FetchJson = fetchJson,
+    sendRequest: FetchJson = fetchJson
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
@@ -84,18 +85,18 @@ export class EthereumAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
-    const cidStreamPair: CidAndStream = { cid: tip, streamId }
+  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
+    const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamID }
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeAnchorRequest(cidStreamPair),
-      this.pollForAnchorResponse(streamId, tip)
+      this._makeAnchorRequest(params),
+      this.pollForAnchorResponse(params.streamID, params.tip)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
           status: AnchorStatus.FAILED,
-          streamId: streamId,
-          cid: tip,
+          streamId: params.streamID,
+          cid: params.tip,
           message: error.message,
         })
       )
@@ -121,18 +122,18 @@ export class EthereumAnchorService implements AnchorService {
 
   /**
    * Send requests to an external Ceramic Anchor Service
-   * @param cidStreamPair - mapping
+   * @param params - a RequestAnchorParams object
    * @private
    */
-  private _makeAnchorRequest(cidStreamPair: CidAndStream): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
         this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
           body: {
-            streamId: cidStreamPair.streamId.toString(),
-            docId: cidStreamPair.streamId.toString(),
-            cid: cidStreamPair.cid.toString(),
+            streamId: params.streamID.toString(),
+            cid: params.tip.toString(),
+            timestamp: params.timestampISO,
           },
         })
       )
@@ -141,7 +142,7 @@ export class EthereumAnchorService implements AnchorService {
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${cidStreamPair.streamId.toString()} at commit ${cidStreamPair.cid.toString()}: ${
+              `Error connecting to CAS while attempting to anchor ${params.streamID.toString()} at commit ${params.tip.toString()}: ${
                 error.message
               }`
             )
@@ -150,7 +151,7 @@ export class EthereumAnchorService implements AnchorService {
         },
       }),
       map((response) => {
-        return this.parseResponse(cidStreamPair, response)
+        return this.parseResponse({ streamId: params.streamID, cid: params.tip }, response)
       })
     )
   }
@@ -236,14 +237,17 @@ export class EthereumAnchorService implements AnchorService {
 /**
  * Ethereum anchor service that authenticates requests
  */
-export class AuthenticatedEthereumAnchorService extends EthereumAnchorService implements AuthenticatedAnchorService {
+export class AuthenticatedEthereumAnchorService
+  extends EthereumAnchorService
+  implements AuthenticatedAnchorService
+{
   readonly auth: AnchorServiceAuth
 
   constructor(
     auth: AnchorServiceAuth,
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL,
+    pollInterval: number = DEFAULT_POLL_INTERVAL
   ) {
     super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest)
     this.auth = auth
