@@ -33,7 +33,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage --runInBand --forceExit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
     "build": "genversion --es6 src/version.ts && npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -63,7 +63,6 @@
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "await-semaphore": "^0.1.3",
-    "cartonne": "^1.0.2",
     "dids": "^3.4.0",
     "it-first": "^1.0.7",
     "knex": "^2.1.0",

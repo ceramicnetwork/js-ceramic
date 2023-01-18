@@ -1,6 +1,6 @@
 import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
-import type { AnchorProof, AnchorStatus, GenesisCommit } from './stream.js'
+import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchJson } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'

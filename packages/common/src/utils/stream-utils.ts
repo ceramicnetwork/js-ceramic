@@ -40,7 +40,6 @@ export class StreamUtils {
     const cloned = cloneDeep(commit)
 
     if (StreamUtils.isSignedCommitContainer(cloned)) {
-      // here
       cloned.jws.link = cloned.jws.link.toString()
       cloned.linkedBlock = uint8arrays.toString(cloned.linkedBlock, 'base64')
       if (cloned.cacaoBlock) {
@@ -80,7 +79,6 @@ export class StreamUtils {
     const cloned = cloneDeep(commit)
 
     if (StreamUtils.isSignedCommitContainer(cloned)) {
-      // here
       cloned.jws.link = toCID(cloned.jws.link)
       cloned.linkedBlock = uint8arrays.fromString(cloned.linkedBlock, 'base64')
       if (cloned.cacaoBlock) {
