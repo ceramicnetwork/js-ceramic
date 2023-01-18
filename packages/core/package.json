@@ -63,6 +63,7 @@
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "await-semaphore": "^0.1.3",
+    "cartonne": "^1.0.3",
     "dids": "^3.4.0",
     "it-first": "^1.0.7",
     "knex": "^2.1.0",
@@ -79,8 +80,8 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/anchor-utils": "^1.1.0-rc.0",
     "@ceramicnetwork/3id-did-resolver": "^2.10.0-rc.0",
+    "@ceramicnetwork/anchor-utils": "^1.1.0-rc.0",
     "@ceramicnetwork/ipfs-daemon": "^2.10.0-rc.0",
     "@databases/pg-test": "^3.1.2",
     "@didtools/cacao": "^1.0.0",
