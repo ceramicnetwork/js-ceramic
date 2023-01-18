@@ -4,7 +4,7 @@ import { createBlockProofsListener } from '@ceramicnetwork/anchor-listener'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { Provider } from '@ethersproject/providers'
-import { type Subscription, mergeMap } from 'rxjs'
+import { Subscription, mergeMap } from 'rxjs'
 
 import { ISyncApi, IpfsService } from './interfaces.js'
 
@@ -52,34 +52,40 @@ export class SyncApi implements ISyncApi {
     // start blockchain listener
     const [latestBlock, { processedBlockNumber }] = await Promise.all([
       this.provider.getBlock(-BLOCK_CONFIRMATIONS),
-      this.initStateTable(),
+      this._initStateTable(),
     ])
 
-    if (processedBlockNumber != null && processedBlockNumber < latestBlock.number) {
-      // TODO: sync missed blocks
+    this.subscription = new Subscription()
+
+    if (processedBlockNumber == null) {
+      // TODO: full sync
+    } else if (processedBlockNumber < latestBlock.number) {
+      // TODO: sync blocks between processedBlockNumber and latestBlock
     }
 
-    this.subscription = createBlockProofsListener({
-      confirmations: BLOCK_CONFIRMATIONS,
-      chainId: this.syncConfig.chainId,
-      provider: this.provider,
-      expectedParentHash: latestBlock.hash,
-    })
-      .pipe(
-        mergeMap(async ({ block }) => {
-          // TODO: start new jobs
+    this.subscription.add(
+      createBlockProofsListener({
+        confirmations: BLOCK_CONFIRMATIONS,
+        chainId: this.syncConfig.chainId,
+        provider: this.provider,
+        expectedParentHash: latestBlock.hash,
+      })
+        .pipe(
+          mergeMap(async ({ block }) => {
+            // TODO: start new jobs
 
-          // Update stored state after jobs are created
-          await this.updateStoredState({
-            processedBlockHash: block.hash,
-            processedBlockNumber: block.number,
+            // Update stored state after jobs are created
+            await this._updateStoredState({
+              processedBlockHash: block.hash,
+              processedBlockNumber: block.number,
+            })
           })
-        })
-      )
-      .subscribe()
+        )
+        .subscribe()
+    )
   }
 
-  private async initStateTable(): Promise<StoredState> {
+  async _initStateTable(): Promise<StoredState> {
     const exists = await this.dataSource.schema.hasTable(STATE_TABLE_NAME)
     if (!exists) {
       await this.dataSource.schema.createTable(STATE_TABLE_NAME, function (table) {
@@ -98,7 +104,7 @@ export class SyncApi implements ISyncApi {
     }
   }
 
-  private async updateStoredState(state: StoredState): Promise<void> {
+  async _updateStoredState(state: StoredState): Promise<void> {
     await this.dataSource.from(STATE_TABLE_NAME).update({
       processed_block_hash: state.processedBlockHash,
       processed_block_number: state.processedBlockNumber,
@@ -116,5 +122,6 @@ export class SyncApi implements ISyncApi {
   async shutdown(): Promise<void> {
     // stop all workers and shuts the job queue down
     this.subscription?.unsubscribe()
+    this.subscription = undefined
   }
 }
