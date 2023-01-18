@@ -295,7 +295,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -307,7 +307,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -474,8 +474,6 @@ describe('ModelHandler', () => {
 
     // apply anchor
     const anchorProof = {
-      blockNumber: 123456,
-      blockTimestamp: 1615799679,
       chainId: 'fakechain:123',
     }
     await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
@@ -484,6 +482,7 @@ describe('ModelHandler', () => {
       type: CommitType.ANCHOR,
       commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_1 },
       proof: anchorProof,
+      timestamp: 1615799679,
     }
     state = await handler.applyCommit(anchorCommitData, context, state)
     expect(state).toMatchSnapshot()

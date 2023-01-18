@@ -38,6 +38,12 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
+export type RequestAnchorParams = {
+  streamID: StreamID
+  tip: CID
+  timestampISO: string // a result of Date.toISOString()
+}
+
 /**
  * Describes anchor service response
  */
@@ -73,7 +79,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>
+  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
@@ -131,8 +137,11 @@ export interface AnchorValidator {
   init(chainId: string | null): Promise<void>
 
   /**
-   * Validate anchor proof commit
-   * @param anchorProof - Proof of blockchain inclusion
+   * Verifies that the given anchor proof refers to a valid ethereum transaction that actually
+   * includes the expected merkle root in the transaction data.  Throws if the transaction doesn't
+   * contain the expected data.
+   * @param anchorProof Proof of blockchain inclusion
+   * @returns The ethereum block timestamp that includes the anchor transaction from the anchorProof
    */
-  validateChainInclusion(anchorProof: AnchorProof): Promise<void>
+  validateChainInclusion(anchorProof: AnchorProof): Promise<number>
 }

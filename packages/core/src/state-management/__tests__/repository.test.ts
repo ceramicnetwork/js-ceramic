@@ -1,11 +1,11 @@
 import { jest } from '@jest/globals'
 import {
-  StreamUtils,
-  IpfsApi,
-  TestUtils,
   CommitType,
+  IpfsApi,
   StreamState,
+  StreamUtils,
   SyncOptions,
+  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
@@ -51,7 +51,7 @@ describe('#load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStreamStateStore')
     const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
     const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 })
     expect(StreamUtils.serializeState(stream1.state)).toEqual(
@@ -64,7 +64,7 @@ describe('#load', () => {
 
   test('from state store', async () => {
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStreamStateStore')
     const fromNetworkSpy = jest.spyOn(repository as any, 'fromNetwork')
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
@@ -116,7 +116,7 @@ describe('#load', () => {
     const runningState = new RunningState(streamState, true)
 
     const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStreamStateStore')
     const fromNetworkSpy = jest.spyOn(repository as any, 'fromNetwork')
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
@@ -157,9 +157,12 @@ describe('#load', () => {
 
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
         fromMemory.mockReturnValueOnce(undefined)
-        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStreamStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
+        const saveFromStreamStateHolder = jest.spyOn(
+          repository.pinStore.stateStore,
+          'saveFromStreamStateHolder'
+        )
 
         const stream2 = await repository.load(stream1.id, {
           sync: SyncOptions.SYNC_ALWAYS,
@@ -183,9 +186,12 @@ describe('#load', () => {
         await stream1.update({ a: 2 }, null, { anchor: false, pin: false })
 
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
-        const fromStateStore = jest.spyOn(repository as any, 'fromStateStore')
+        const fromStateStore = jest.spyOn(repository as any, 'fromStreamStateStore')
         const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
-        const saveFromStreamStateHolder = jest.spyOn(repository.pinStore.stateStore, 'saveFromStreamStateHolder')
+        const saveFromStreamStateHolder = jest.spyOn(
+          repository.pinStore.stateStore,
+          'saveFromStreamStateHolder'
+        )
 
         const stream2 = await repository.load(stream1.id, {
           sync: SyncOptions.SYNC_ALWAYS,

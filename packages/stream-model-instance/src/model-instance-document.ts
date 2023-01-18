@@ -70,7 +70,7 @@ const DEFAULT_DETERMINISTIC_OPTS = {
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
   if (signer.did == null) {
@@ -296,6 +296,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const header: GenesisHeader = {
       controllers: [controller],
       model: metadata.model.bytes,
+      sep: 'model', // See CIP-120 for more details on this field
     }
     if (!metadata.deterministic) {
       header.unique = randomBytes(12)

@@ -3,6 +3,57 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.9.0...@ceramicnetwork/streamid@2.10.0-rc.0) (2023-01-11)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [2.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.9.0-rc.0...@ceramicnetwork/streamid@2.9.0) (2023-01-05)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [2.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.8.1...@ceramicnetwork/streamid@2.9.0-rc.0) (2022-12-29)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [2.8.1](/compare/@ceramicnetwork/streamid@2.8.0...@ceramicnetwork/streamid@2.8.1) (2022-12-29)
+
+
+### Reverts
+
+* Revert "chore: Make memoization slightly faster and more reliable (#2235)" 5c64483, closes #2235
+
+
+
+
+
+# [2.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.8.0-rc.0...@ceramicnetwork/streamid@2.8.0) (2022-12-21)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [2.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.7.0...@ceramicnetwork/streamid@2.8.0-rc.0) (2022-12-15)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
 # [2.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.7.0-rc.0...@ceramicnetwork/streamid@2.7.0) (2022-11-09)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
