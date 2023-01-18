@@ -80,6 +80,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
+    "@ceramicnetwork/anchor-utils": "^1.1.0-rc.0",
     "@ceramicnetwork/3id-did-resolver": "^2.10.0-rc.0",
     "@ceramicnetwork/anchor-utils": "^1.1.0-rc.0",
     "@ceramicnetwork/ipfs-daemon": "^2.10.0-rc.0",

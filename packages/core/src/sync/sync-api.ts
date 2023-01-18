@@ -1,12 +1,10 @@
 import knex, { type Knex } from 'knex'
-import type { CID } from 'multiformats/cid'
 import { createBlockProofsListener } from '@ceramicnetwork/anchor-listener'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
-import { StreamID } from '@ceramicnetwork/streamid'
 import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
 
-import { ISyncApi, IpfsService } from './interfaces.js'
+import { ISyncApi, IpfsService, HandleCommit } from './interfaces.js'
 
 export const BLOCK_CONFIRMATIONS = 20
 export const STATE_TABLE_NAME = 'ceramic_indexing_state'
@@ -26,10 +24,6 @@ export type SyncConfig = {
    */
   chainId: SupportedNetwork
 }
-
-// handles a commit found during a sync
-// should be similar to: https://github.com/ceramicnetwork/js-ceramic/blob/6ae6e121b33132225f256762825e1439fd84f23a/packages/core/src/state-management/state-manager.ts#L210
-type HandleCommit = (streamId: StreamID, commit: CID, model?: StreamID) => Promise<void>
 
 export class SyncApi implements ISyncApi {
   private readonly dataSource: Knex
