@@ -48,6 +48,7 @@ export type RequestAnchorParams = {
   genesisLinkBlock?: Uint8Array
   tip: CID
   tipBlock: Uint8Array
+  tipLinkCid?: CID
   tipLinkBlock?: Uint8Array
   tipCacaoCid?: CID
   tipCacaoBlock?: Uint8Array
