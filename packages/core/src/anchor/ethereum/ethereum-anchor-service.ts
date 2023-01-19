@@ -12,6 +12,7 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
+import * as DAG_JOSE from 'dag-jose'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import { RequestAnchorParams } from '@ceramicnetwork/common'
 
@@ -109,9 +110,11 @@ export class EthereumAnchorService implements AnchorService {
 
   private _carFileFromRequestAnchorParams(params: RequestAnchorParams): CAR {
     const carFactory = new CARFactory()
+    carFactory.codecs.add(DAG_JOSE)
     const car = carFactory.build()
     // In the testing code imitate CAS logic to check that the cid in genesis matches the cid of streamID
-    const genesisBlock = new CarBlock(params.genesisCid, params.genesisBlock)
+    const genesisCid = params.streamId.cid
+    const genesisBlock = new CarBlock(genesisCid, params.genesisBlock)
     car.blocks.put(genesisBlock)
     const tipBlock = new CarBlock(params.tip, params.tipBlock)
     car.blocks.put(tipBlock)
@@ -131,12 +134,9 @@ export class EthereumAnchorService implements AnchorService {
     car.put(
       {
         timestamp: params.timestampISO,
-        streamId: params.streamId.toString(),
-        genesisCid: params.genesisCid.toString(),
-        genesisLinkCid: params.genesisLinkCid?.toString() ?? '',
-        tipCid: params.tip.toString(),
-        tipLinkCid: params.tipLinkCid?.toString() ?? '',
-        tipCacaoCid: params.tipCacaoCid?.toString() ?? '',
+        streamId: params.streamId.bytes,
+        tipCid: params.tip.bytes,
+        tipCacaoCid: params.tipCacaoCid?.bytes,
       },
       { isRoot: true }
     )

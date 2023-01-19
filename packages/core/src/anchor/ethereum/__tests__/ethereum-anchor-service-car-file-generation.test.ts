@@ -22,13 +22,6 @@ const FAKE_GENESIS_BLOCK = uint8arrays.fromString(
   'omRkYXRh9mZoZWFkZXKiZW1vZGVsWCjOAQIBhQESIDLbfW98Iv6DOOQpsnJAmr+9Ptj2CKjW3Zi/rtTNW5Sfa2NvbnRyb2xsZXJzgXg7ZGlkOnBraDplaXAxNTU6MToweDkyNmVlYjE5MmMxOGI3YmU2MDdhN2UxMGM4ZTdhN2U4ZDlmNzA3NDI',
   'base64'
 )
-const FAKE_GENESIS_LINK_CID = CID.parse(
-  'bafyreihx3kxd72tfwapoiond6nhe3gej4htmmic3em4hlpdgrg7joxsfta'
-)
-const FAKE_GENESIS_LINK_BLOCK = uint8arrays.fromString(
-  'omRkYXRhoWRkYXRhAWZoZWFkZXKjZW1vZGVsWCjOAQIBhQESIFjRTR71Ga8kn0xmRnDsaqYZmJj6dNcl6V07d8MoNjZ5ZnVuaXF1ZUx1J3ElEdZOv2mWf6trY29udHJvbGxlcnOBeDhkaWQ6a2V5Ono2TWt3YjVISFh5ZjJweHZxN05VNHVlUFhIbVJZTlpERWJWNFdXUVp3M05NZHliQQ',
-  'base64'
-)
 const FAKE_TIP_CACAO_CID = CID.parse('bafyreigwolqf4dg2eve6ph5cn2ho2kt7whq2adac6aq3zrbrt5nyiaa2hm')
 const FAKE_TIP_CACAO_BLOCK = uint8arrays.fromString(
   'o2JpZNgqWCUAAXESIKeaGTlNzSt16Bw1ZiVycvdSWAzHPD38BJMIK1oKmG9BZGRhdGGBo2JvcGdyZXBsYWNlZHBhdGhlL25hbWVldmFsdWVwQXJ0dXIgV2Rvd2lhcnNraWRwcmV22CpYJgABhQESIDfOU7kb8M0QYTAEKczNCZJsVyoIePzP4pLMSH1sMs9Q',
@@ -57,13 +50,10 @@ expect.extend({
     const rootBlock = received.get(rootCid)
     try {
       expect(rootBlock).toEqual({
-        tipCid: FAKE_TIP_CID.toString(),
-        streamId: FAKE_STREAM_ID.toString(),
         timestamp: nowISOString,
-        genesisCid: FAKE_GENESIS_CID.toString(),
-        tipLinkCid: FAKE_TIP_LINK_CID.toString(),
-        tipCacaoCid: FAKE_TIP_CACAO_CID.toString(),
-        genesisLinkCid: FAKE_GENESIS_LINK_CID.toString(),
+        streamId: FAKE_STREAM_ID.bytes,
+        tipCid: FAKE_TIP_CID.bytes,
+        tipCacaoCid: FAKE_TIP_CACAO_CID.bytes,
       })
     } catch (e) {
       return {
@@ -74,33 +64,57 @@ expect.extend({
       }
     }
 
-    const blockChecks = [
-      { name: 'genesis block', paramName: 'genesisCid', expectedValue: FAKE_GENESIS_BLOCK },
-      { name: 'tip block', paramName: 'tipCid', expectedValue: FAKE_TIP_BLOCK },
-      {
-        name: 'genesis link block',
-        paramName: 'genesisLinkCid',
-        expectedValue: FAKE_GENESIS_LINK_BLOCK,
-      },
-      { name: 'tip link block', paramName: 'tipLinkCid', expectedValue: FAKE_TIP_LINK_BLOCK },
-      { name: 'tip cacao block', paramName: 'tipCacaoCid', expectedValue: FAKE_TIP_CACAO_BLOCK },
-    ]
+    // TODO: Add try/catches
 
-    let errorMessage: string = undefined
-    blockChecks.forEach((check) => {
-      const carBlock = received.blocks.get(CID.parse(rootBlock[check.paramName]))
-      try {
-        expect(carBlock.payload).toEqual(check.expectedValue)
-      } catch (e) {
-        errorMessage = `Wrong ${check.name} in the CAR file: ${e.message}`
-      }
-    })
-
-    if (errorMessage) {
+    try {
+      const genesisCid = StreamID.fromBytes(rootBlock.streamId).cid
+      expect(genesisCid).toEqual(FAKE_GENESIS_CID)
+      expect(received.blocks.get(genesisCid).payload).toEqual(FAKE_GENESIS_BLOCK)
+    } catch (e) {
       return {
         pass: false,
         message: () => {
-          return errorMessage
+          return `Wrong genesis block in the CAR file: ${e.message}`
+        },
+      }
+    }
+
+    let tipCid: CID = undefined
+    try {
+      tipCid = CID.decode(rootBlock.tipCid)
+      expect(tipCid).toEqual(FAKE_TIP_CID)
+      expect(received.blocks.get(tipCid).payload).toEqual(FAKE_TIP_BLOCK)
+    } catch (e) {
+      return {
+        pass: false,
+        message: () => {
+          return `Wrong tip block in the CAR file: ${e.message}`
+        },
+      }
+    }
+
+    try {
+      const tipLinkCid = received.get(tipCid).link
+      expect(tipLinkCid).toEqual(FAKE_TIP_LINK_CID)
+      expect(received.blocks.get(tipLinkCid).payload).toEqual(FAKE_TIP_LINK_BLOCK)
+    } catch (e) {
+      return {
+        pass: false,
+        message: () => {
+          return `Wrong tip link block in the CAR file: ${e.message}`
+        },
+      }
+    }
+
+    try {
+      const tipCacaoCid = CID.decode(rootBlock.tipCacaoCid)
+      expect(tipCacaoCid).toEqual(FAKE_TIP_CACAO_CID)
+      expect(received.blocks.get(tipCacaoCid).payload).toEqual(FAKE_TIP_CACAO_BLOCK)
+    } catch (e) {
+      return {
+        pass: false,
+        message: () => {
+          return `Wrong cacao block in the CAR file: ${e.message}`
         },
       }
     }
@@ -164,10 +178,7 @@ test('car files are generated correctly for anchor requests', async () => {
     .requestAnchor({
       streamId: FAKE_STREAM_ID,
       timestampISO: nowISOString,
-      genesisCid: FAKE_GENESIS_CID,
       genesisBlock: FAKE_GENESIS_BLOCK,
-      genesisLinkCid: FAKE_GENESIS_LINK_CID,
-      genesisLinkBlock: FAKE_GENESIS_LINK_BLOCK,
       tip: FAKE_TIP_CID,
       tipBlock: FAKE_TIP_BLOCK,
       tipLinkCid: FAKE_TIP_LINK_CID,
