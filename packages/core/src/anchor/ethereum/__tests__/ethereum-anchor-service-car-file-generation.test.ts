@@ -52,7 +52,7 @@ expect.extend({
       expect(rootBlock).toEqual({
         timestamp: nowISOString,
         streamId: FAKE_STREAM_ID.bytes,
-        tipCid: FAKE_TIP_CID.bytes,
+        tip: FAKE_TIP_CID.bytes,
         tipCacaoCid: FAKE_TIP_CACAO_CID.bytes,
       })
     } catch (e) {
@@ -79,11 +79,11 @@ expect.extend({
       }
     }
 
-    let tipCid: CID = undefined
+    let tip: CID = undefined
     try {
-      tipCid = CID.decode(rootBlock.tipCid)
-      expect(tipCid).toEqual(FAKE_TIP_CID)
-      expect(received.blocks.get(tipCid).payload).toEqual(FAKE_TIP_BLOCK)
+      tip = CID.decode(rootBlock.tip)
+      expect(tip).toEqual(FAKE_TIP_CID)
+      expect(received.blocks.get(tip).payload).toEqual(FAKE_TIP_BLOCK)
     } catch (e) {
       return {
         pass: false,
@@ -94,7 +94,7 @@ expect.extend({
     }
 
     try {
-      const tipLinkCid = received.get(tipCid).link
+      const tipLinkCid = received.get(tip).link
       expect(tipLinkCid).toEqual(FAKE_TIP_LINK_CID)
       expect(received.blocks.get(tipLinkCid).payload).toEqual(FAKE_TIP_LINK_BLOCK)
     } catch (e) {
