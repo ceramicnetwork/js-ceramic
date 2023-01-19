@@ -165,7 +165,7 @@ export class EthereumAnchorService implements AnchorService {
    */
   private _makeAnchorRequest(
     streamID: StreamID,
-    cid: CID,
+    tip: CID,
     carFile: CAR
   ): Observable<AnchorServiceResponse> {
     return defer(() =>
@@ -181,7 +181,7 @@ export class EthereumAnchorService implements AnchorService {
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${streamID.toString()} at commit ${cid.toString()}: ${
+              `Error connecting to CAS while attempting to anchor ${streamID.toString()} at commit ${tip.toString()}: ${
                 error.message
               }`
             )
@@ -190,7 +190,7 @@ export class EthereumAnchorService implements AnchorService {
         },
       }),
       map((response) => {
-        return this.parseResponse({ streamId: streamID, cid: cid }, response)
+        return this.parseResponse({ streamId: streamID, cid: tip }, response)
       })
     )
   }
