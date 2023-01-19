@@ -19,6 +19,7 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 function getModelDef(name: string): ModelDefinition {
   return {
     name: name,
+    version: Model.VERSION,
     accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
