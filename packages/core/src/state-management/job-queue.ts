@@ -2,14 +2,14 @@ import { default as PgBoss, type SendOptions } from 'pg-boss'
 import Pg from 'pg'
 import { fromEvent, firstValueFrom } from 'rxjs'
 
-export type Job<T extends object> = {
+export type Job<T extends Record<any, any>> = {
   name: string
   data: T
   id?: string
   options?: SendOptions
 }
 
-export interface IJobQueue<T extends object> {
+export interface IJobQueue<T extends Record<any, any>> {
   init: (workersByJob: Record<string, Worker<T>>) => Promise<void>
   addJob: (job: Job<T>) => Promise<void>
   addJobs: (jobs: Job<T>[]) => Promise<void>
@@ -32,7 +32,7 @@ class PgWrapper implements PgBoss.Db {
 /**
  * Job queue which provides background processing by workers
  */
-export class JobQueue<T extends object> implements IJobQueue<T> {
+export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
   private queue: PgBoss
   private dbConnection: Pg.Pool
   private workersByJob: Record<string, Worker<T>> = {}
