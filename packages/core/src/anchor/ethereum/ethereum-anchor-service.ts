@@ -135,7 +135,7 @@ export class EthereumAnchorService implements AnchorService {
       {
         timestamp: params.timestampISO,
         streamId: params.streamId.bytes,
-        tipCid: params.tip.bytes,
+        tip: params.tip.bytes,
         tipCacaoCid: params.tipCacaoCid?.bytes,
       },
       { isRoot: true }
