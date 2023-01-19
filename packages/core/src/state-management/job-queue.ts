@@ -2,23 +2,23 @@ import { default as PgBoss, type SendOptions } from 'pg-boss'
 import Pg from 'pg'
 import { fromEvent, firstValueFrom } from 'rxjs'
 
-export type Job = {
+export type Job<T extends object> = {
   name: string
-  data: object
+  data: T
   id?: string
   options?: SendOptions
 }
 
-export interface IJobQueue {
-  init: (workersByJob: Record<string, Worker>) => Promise<void>
-  addJob: (job: Job) => Promise<void>
-  addJobs: (jobs: Job[]) => Promise<void>
-  updateJob: (jobId: string, data: object) => Promise<void>
+export interface IJobQueue<T extends object> {
+  init: (workersByJob: Record<string, Worker<T>>) => Promise<void>
+  addJob: (job: Job<T>) => Promise<void>
+  addJobs: (jobs: Job<T>[]) => Promise<void>
+  updateJob: (jobId: string, data: T) => Promise<void>
   stop: () => Promise<void>
 }
 
-export type Worker = {
-  handler: (any) => any
+export type Worker<T> = {
+  handler: (job: PgBoss.Job<T>) => any
 }
 
 class PgWrapper implements PgBoss.Db {
@@ -32,10 +32,10 @@ class PgWrapper implements PgBoss.Db {
 /**
  * Job queue which provides background processing by workers
  */
-export class JobQueue implements IJobQueue {
+export class JobQueue<T extends object> implements IJobQueue<T> {
   private queue: PgBoss
   private dbConnection: Pg.Pool
-  private workersByJob: Record<string, Worker> = {}
+  private workersByJob: Record<string, Worker<T>> = {}
 
   constructor(db: string) {
     this.dbConnection = new Pg.Pool({
@@ -48,7 +48,7 @@ export class JobQueue implements IJobQueue {
   /**
    * Starts the job queue and adds workers for each job
    */
-  async init(workersByJob: Record<string, Worker>): Promise<void> {
+  async init(workersByJob: Record<string, Worker<T>>): Promise<void> {
     this.workersByJob = workersByJob
 
     await this.dbConnection.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
@@ -69,7 +69,7 @@ export class JobQueue implements IJobQueue {
    * @param jobName
    * @param data
    */
-  async addJob(job: Job): Promise<void> {
+  async addJob(job: Job<T>): Promise<void> {
     if (!this._workerExistsForJob(job.name)) {
       throw Error(`Cannot add job ${job.name} to queue because no workers for that job exist`)
     }
@@ -82,7 +82,7 @@ export class JobQueue implements IJobQueue {
    * @param jobName
    * @param data
    */
-  async addJobs(jobs: Job[]): Promise<void> {
+  async addJobs(jobs: Job<T>[]): Promise<void> {
     const jobWithoutWorker = jobs.find((job) => !this._workerExistsForJob(job.name))
     if (jobWithoutWorker) {
       throw Error(
@@ -111,9 +111,9 @@ export class JobQueue implements IJobQueue {
    * Updates the job data for a particular job
    * @param jobId id of the job
    * @param data data to update
-   * @returns promise that results to a boolean that is true of the
+   * @returns promise that resolves if the job was successfully updated
    */
-  async updateJob(jobId: string, data: object): Promise<void> {
+  async updateJob(jobId: string, data: T): Promise<void> {
     const text = 'UPDATE pgboss.job set data = $1 WHERE id = $2'
     const values = [data, jobId]
     const result = await this.dbConnection.query(text, values)

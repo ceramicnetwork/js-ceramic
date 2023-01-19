@@ -5,7 +5,13 @@ import { jest } from '@jest/globals'
 import { firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
 import { default as PgBoss } from 'pg-boss'
 
-class MockWorker implements Worker {
+type MockEmptyJobData = Record<string, never>
+type MockRetriedJobData = {
+  retried: boolean
+}
+type MockJobData = MockEmptyJobData | MockRetriedJobData
+
+class MockWorker implements Worker<MockJobData> {
   constructor() {
     this.reset()
   }
@@ -16,13 +22,13 @@ class MockWorker implements Worker {
 
   reset() {
     this.handler.mockRestore()
-    this.handler.mockImplementation((job: PgBoss.Job) => {
+    this.handler.mockImplementation(() => {
       return Promise.resolve()
     })
   }
 }
 
-const waitForAllJobsToComplete = async (jobQueue: JobQueue) =>
+const waitForAllJobsToComplete = async (jobQueue: JobQueue<MockJobData>) =>
   await firstValueFrom(
     interval(500).pipe(
       mergeMap(() => jobQueue._getJobCounts()),
@@ -37,7 +43,7 @@ const waitForAllJobsToComplete = async (jobQueue: JobQueue) =>
 describe('job queue', () => {
   jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
   let workers: Record<string, MockWorker>
-  let myJobQueue: JobQueue
+  let myJobQueue: JobQueue<MockJobData>
 
   beforeAll(async () => {
     await pgSetup()
