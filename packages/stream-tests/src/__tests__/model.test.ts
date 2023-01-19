@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
@@ -115,6 +115,22 @@ describe('Model API http-client tests', () => {
 
     await expect(Model.create(ceramic, invalidIncompleteModelDefinition)).rejects.toThrow(
       /missing a 'schema' field/
+    )
+  })
+
+  test('Cannot create model without version', async () => {
+    const { version, ...modelDefinition } = MODEL_DEFINITION
+    // @ts-expect-error missing version field
+    await expect(Model.create(ceramic, modelDefinition)).rejects.toThrow(
+      /missing a 'version' field/
+    )
+  })
+
+  test('Cannot create model with unsupported version', async () => {
+    const [currentMajor, currentMinor] = parseModelVersion(Model.VERSION)
+    const version = `${currentMajor}.${currentMinor + 1}`
+    await expect(Model.create(ceramic, { ...MODEL_DEFINITION, version })).rejects.toThrow(
+      `Unsupported version ${version} for model myModel, the maximum version supported by the Ceramic node is ${Model.VERSION}. Please update your Ceramic node to a newer version supporting at least version ${version} of the Model definition.`
     )
   })
 

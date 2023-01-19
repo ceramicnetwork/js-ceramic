@@ -267,8 +267,8 @@ export class Model extends Stream {
     const [major, minor] = parseModelVersion(content.version)
 
     if (
-      major < expectedMajor ||
-      (satisfies === 'minor' && major === expectedMajor && minor < expectedMinor)
+      major > expectedMajor ||
+      (satisfies === 'minor' && major === expectedMajor && minor > expectedMinor)
     ) {
       throw new Error(
         `Unsupported version ${content.version} for model ${content.name}, the maximum version supported by the Ceramic node is ${Model.VERSION}. Please update your Ceramic node to a newer version supporting at least version ${content.version} of the Model definition.`
