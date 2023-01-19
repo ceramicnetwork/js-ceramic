@@ -35,6 +35,19 @@ const casProcessingResponse = {
 
 const nowISOString = new Date().toISOString()
 
+function getCacaoCidFromCommit(commit: any): CID | undefined {
+  // this is more or less copied code from @ceramicnetwork/common, but for some reason,
+  // if I import @ceramicnetwork/common here, everything blows up
+  const decodedProtectedHeader = JSON.parse(
+    uint8arrays.toString(uint8arrays.fromString(commit.signatures[0].protected, 'base64url'))
+  ) as Record<string, any>
+  if (decodedProtectedHeader.cap) {
+    const capIPFSUri = decodedProtectedHeader.cap
+    return CID.parse(capIPFSUri.replace('ipfs://', ''))
+  }
+  return undefined
+}
+
 expect.extend({
   toBeACorrectCARFile(received) {
     if (received.roots.length !== 1) {
@@ -53,7 +66,6 @@ expect.extend({
         timestamp: nowISOString,
         streamId: FAKE_STREAM_ID.bytes,
         tip: FAKE_TIP_CID.bytes,
-        tipCacaoCid: FAKE_TIP_CACAO_CID.bytes,
       })
     } catch (e) {
       return {
@@ -63,8 +75,6 @@ expect.extend({
         },
       }
     }
-
-    // TODO: Add try/catches
 
     try {
       const genesisCid = StreamID.fromBytes(rootBlock.streamId).cid
@@ -93,8 +103,9 @@ expect.extend({
       }
     }
 
+    let tipLinkCid: CID = undefined
     try {
-      const tipLinkCid = received.get(tip).link
+      tipLinkCid = received.get(tip).link
       expect(tipLinkCid).toEqual(FAKE_TIP_LINK_CID)
       expect(received.blocks.get(tipLinkCid).payload).toEqual(FAKE_TIP_LINK_BLOCK)
     } catch (e) {
@@ -107,7 +118,7 @@ expect.extend({
     }
 
     try {
-      const tipCacaoCid = CID.decode(rootBlock.tipCacaoCid)
+      const tipCacaoCid = getCacaoCidFromCommit(received.get(tip))
       expect(tipCacaoCid).toEqual(FAKE_TIP_CACAO_CID)
       expect(received.blocks.get(tipCacaoCid).payload).toEqual(FAKE_TIP_CACAO_BLOCK)
     } catch (e) {
@@ -178,6 +189,7 @@ test('car files are generated correctly for anchor requests', async () => {
     .requestAnchor({
       streamId: FAKE_STREAM_ID,
       timestampISO: nowISOString,
+      genesisCid: FAKE_GENESIS_CID,
       genesisBlock: FAKE_GENESIS_BLOCK,
       tip: FAKE_TIP_CID,
       tipBlock: FAKE_TIP_BLOCK,

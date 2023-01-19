@@ -370,7 +370,7 @@ export class StateManager {
       tipLinkBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
       tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
       if (tipCacaoCid) {
-        tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
+        tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipCacaoCid)
       }
     }
 
