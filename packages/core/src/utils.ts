@@ -127,12 +127,9 @@ export class Utils {
   static async extractCapability(commit: any, dispatcher: Dispatcher): Promise<Cacao | undefined> {
     if (!commit.signatures || commit.signatures.length === 0) return
 
-    const protectedHeader = commit.signatures[0].protected
-    const decodedProtectedHeader = base64urlToJSON(protectedHeader)
-    if (!decodedProtectedHeader.cap) return
+    const capCID = StreamUtils.getCacaoCidFromCommit(commit)
 
-    const capIPFSUri = decodedProtectedHeader.cap
-    const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+    if (!capCID) return
 
     try {
       const cacao = await dispatcher.retrieveFromIPFS(capCID)
