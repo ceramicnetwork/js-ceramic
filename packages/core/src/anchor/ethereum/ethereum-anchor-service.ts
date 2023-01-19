@@ -18,6 +18,7 @@ import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import * as DAG_JOSE from 'dag-jose'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
+import * as uint8arrays from 'uint8arrays'
 
 /**
  * CID-streamId pair
@@ -169,10 +170,10 @@ export class EthereumAnchorService implements AnchorService {
   ): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
-        this.sendRequest(this.requestsApiEndpoint, {
+        this.sendRequest('http://localhost:3000/api/hello', {
           method: 'POST',
-          headers: { 'Content-Type': 'multipart/form-data' },
-          body: carFile.toString(),
+          headers: { 'Content-Type': 'application/vnd.ipld.car' },
+          body: uint8arrays.toString(carFile.bytes, 'binary'),
         })
       )
     ).pipe(
