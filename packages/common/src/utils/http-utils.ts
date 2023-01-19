@@ -12,9 +12,11 @@ interface FetchOpts {
 
 export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {
   if (opts.body) {
+    const headers = { 'Content-Type': 'application/json', ...opts.headers }
+
     Object.assign(opts, {
-      body: JSON.stringify(opts.body),
-      headers: { 'Content-Type': 'application/json', ...opts.headers },
+      body: headers['Content-Type'] == 'application/json' ? JSON.stringify(opts.body) : opts.body,
+      headers: headers,
     })
   }
 

@@ -15,6 +15,7 @@ import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import * as DAG_JOSE from 'dag-jose'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import { RequestAnchorParams } from '@ceramicnetwork/common'
+import * as uint8arrays from 'uint8arrays'
 
 /**
  * CID-streamId pair
@@ -165,8 +166,8 @@ export class EthereumAnchorService implements AnchorService {
       from(
         fetchJson(this.requestsApiEndpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'multipart/form-data' },
-          body: carFile.toString(),
+          headers: { 'Content-Type': 'application/vnd.ipld.car' },
+          body: uint8arrays.toString(carFile.bytes, 'binary'),
         })
       )
     ).pipe(
