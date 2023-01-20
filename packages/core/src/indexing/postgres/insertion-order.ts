@@ -10,7 +10,6 @@ import {
 } from '../parse-pagination.js'
 import { asTableName } from '../as-table-name.util.js'
 import { UnsupportedOrderingError } from '../unsupported-ordering-error.js'
-import { addColumnPrefix } from '../column-name.util.js'
 
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
@@ -139,7 +138,7 @@ export class InsertionOrder {
     if (query.filter) {
       for (const [key, value] of Object.entries(query.filter)) {
         const filterObj = {}
-        filterObj[addColumnPrefix(key)] = value
+        filterObj[key] = value
         base = base.andWhere(filterObj)
       }
     }
@@ -179,7 +178,7 @@ export class InsertionOrder {
           if (query.filter) {
             for (const [key, value] of Object.entries(query.filter)) {
               const filterObj = {}
-              filterObj[addColumnPrefix(key)] = value
+              filterObj[key] = value
               subquery = subquery.andWhere(filterObj)
             }
           }

@@ -13,7 +13,6 @@ import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
-import { addColumnPrefix } from '../column-name.util.js'
 
 export class PostgresIndexApi implements DatabaseIndexApi {
   private readonly insertionOrder: InsertionOrder
@@ -66,7 +65,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
       updated_at: indexingArgs.updatedAt || new Date(), // we don't use this.dbConnection.fn.now(), because postgres datetime may have higher precision than js date; TODO: CDB-2006: set postgres created_at and updated_at precision to 3
     }
     for (const field of this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []) {
-      indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
+      indexedData[field] = indexingArgs.streamContent[field]
     }
 
     await this.dbConnection(tableName)
@@ -162,7 +161,7 @@ export class PostgresIndexApi implements DatabaseIndexApi {
     if (query.filter) {
       for (const [key, value] of Object.entries(query.filter)) {
         const filterObj = {}
-        filterObj[addColumnPrefix(key)] = value
+        filterObj[key] = value
         dbQuery = dbQuery.andWhere(filterObj)
       }
     }

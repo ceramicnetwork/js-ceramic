@@ -15,7 +15,6 @@ import {
   CONFIG_TABLE_MODEL_INDEX_STRUCTURE,
   CONFIG_TABLE_STRUCTURE,
 } from './migrations/cdb-schema-verfication.js'
-import { addColumnPrefix } from '../column-name.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
 
 /**
@@ -57,7 +56,7 @@ function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition):
     return []
   }
   return Object.keys(relations).map((keyName) => {
-    return { name: addColumnPrefix(keyName), type: ColumnType.STRING }
+    return { name: keyName, type: ColumnType.STRING }
   })
 }
 
@@ -192,7 +191,7 @@ async function _verifyMidTable(
   const expectedTableStructure = Object.assign({}, COMMON_TABLE_STRUCTURE)
   if (modelIndexArgs.relations) {
     for (const relation of Object.keys(modelIndexArgs.relations)) {
-      expectedTableStructure[addColumnPrefix(relation)] = RELATION_COLUMN_STRUCTURE
+      expectedTableStructure[relation] = RELATION_COLUMN_STRUCTURE
     }
   }
   const validSchema = JSON.stringify(expectedTableStructure)
