@@ -27,11 +27,7 @@ import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import {
-  generateSeed,
   generateSeedUrl,
-  makeNodeDID,
-  parseSeed,
-  parseSeedUrl,
 } from './daemon/did-utils.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
@@ -47,11 +43,11 @@ const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG
  * Generates a valid Daemon config.
  *
  * Most values are set to hardcoded defaults.
- * The `node.did-seed` is randomly generated.
+ * The `node.private-seed` is randomly generated.
  * @returns Daemon config with default values
  */
 const generateDefaultDaemonConfig = () => {
-  const didSeed = generateSeedUrl()
+  const privateSeedUrl = generateSeedUrl()
 
   return DaemonConfig.fromObject({
     anchor: {
@@ -65,7 +61,7 @@ const generateDefaultDaemonConfig = () => {
     },
     network: { name: Networks.TESTNET_CLAY },
     node: {
-      'did-seed': didSeed.toString(),
+      'private-seed': privateSeedUrl.toString(),
     },
     'state-store': {
       mode: StateStoreMode.FS,
@@ -150,7 +146,7 @@ export class CeramicCliUtils {
     if (process.env.COLLECTOR_HOSTNAME)
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
     if (process.env.CERAMIC_NODE_DID_SEED) {
-      config.node.didSeed = process.env.CERAMIC_NODE_DID_SEED
+      config.node.privateSeed = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
     }
 
     {

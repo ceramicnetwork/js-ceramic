@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
+import { StartupError } from './daemon/error-handler.js'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
@@ -274,27 +275,27 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-  private _didSeed: string
+  private _privateSeed: string
 
   /**
-   * Disallows public access to did-seed because it is a sensitive field.
+   * Disallows public access to private-seed because it is a sensitive field.
    */
-  @jsonMember(String, { name: 'did-seed' })
-  public get didSeed(): string {
+  @jsonMember(String, { name: 'private-seed' })
+  public get privateSeed(): string {
     return undefined
   }
 
-  public sensitive_didSeed(): string {
-    return this._didSeed
+  public sensitive_privateSeed(): string {
+    return this._privateSeed
   }
 
   /**
    * Setter for seed used to sign requests to CAS.
    * A seed is randomly generated if a config file is not found.
-   * When specifying in a config file, use the name 'did-seed'.
+   * When specifying in a config file, use the name 'private-seed'.
    */
-  public set didSeed(value: string) {
-    this._didSeed = value
+  public set privateSeed(value: string) {
+    this._privateSeed = value
   }
 
   /**
@@ -449,9 +450,9 @@ export class DaemonConfig {
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
-    // Whenever we load from a file the did-seed needs to be present even if not using an anchor auth method
-    if (!config.node) throw Error('Daemon config is missing node.did-seed')
-    if (!config.node.sensitive_didSeed()) throw Error('Daemon config is missing node.did-seed')
+    // Whenever we load from a file the private-seed needs to be present even if not using an anchor auth method
+    if (!config.node) throw new StartupError('Daemon config is missing node.private-seed')
+    if (!config.node.sensitive_privateSeed()) throw new StartupError('Daemon config is missing node.private-seed')
     expandPaths(config, filepath)
     return config
   }

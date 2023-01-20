@@ -27,7 +27,7 @@ export function generateSeedUrl(): URL {
 }
 
 /**
- * Parses DID seed url
+ * Parses seed url
  *
  * Examples:
  *   When the seed is in the url itself it must be formatted as `inplace:<scheme>#<seed>`.

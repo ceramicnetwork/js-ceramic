@@ -2,6 +2,7 @@ import { program } from 'commander'
 import pc from 'picocolors'
 
 import { CeramicCliUtils } from '../ceramic-cli-utils.js'
+import { StartupError } from '../daemon/error-handler.js'
 import { version } from '../version.js'
 
 program

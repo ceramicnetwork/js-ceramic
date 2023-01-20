@@ -306,8 +306,14 @@ export class CeramicDaemon {
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
 
-    const seedURL = new URL(opts.node.sensitive_didSeed())
-    const parsed = parseSeedUrl(seedURL)
+    let privateSeedUrl
+    try {
+      privateSeedUrl = new URL(opts.node.sensitive_privateSeed())
+    } catch (err) {
+      // Do not log URL errors here to prevent leaking seed
+      throw Error('Invalid format for node.private-seed in daemon.config.json')
+    }
+    const parsed = parseSeedUrl(privateSeedUrl)
     const provider = makeNodeDIDProvider(parsed)
     const did = new DID({ provider, resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     ceramic.did = did
