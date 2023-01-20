@@ -14,7 +14,7 @@ interface RebuildAnchorJobData {
  * Worker that recreates the anchor commits based on the anchor proof given.
  * It ensures that the data is stored and handled.
  */
-export class RebuildAnchorWorker implements Worker {
+export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
   constructor(
     private readonly ipfsService: IpfsService,
     private readonly handleCommit: HandleCommit
