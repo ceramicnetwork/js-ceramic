@@ -29,6 +29,7 @@ import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import {
   generateSeedUrl,
 } from './daemon/did-utils.js'
+import { TypedJSON } from 'typedjson'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -619,9 +620,14 @@ export class CeramicCliUtils {
     try {
       await fs.access(filepath)
     } catch (err) {
-      const defaultDaemonConfig = generateDefaultDaemonConfig()
-      await this._saveConfig(defaultDaemonConfig, filepath)
-      return defaultDaemonConfig
+      const defaultConfig = generateDefaultDaemonConfig()
+
+      // Save hidden fields to file
+      const plainConfig: any = TypedJSON.toPlainJson(defaultConfig, DaemonConfig)
+      plainConfig.node.privateSeed = defaultConfig.node.sensitive_privateSeed()
+
+      await this._saveConfig(plainConfig, filepath)
+      return defaultConfig
     }
     return DaemonConfig.fromFile(filepath)
   }

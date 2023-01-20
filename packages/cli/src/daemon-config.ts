@@ -464,6 +464,11 @@ export class DaemonConfig {
       },
     })
 
-    return serializer.parse(json)
+    // Set hidden fields before returning
+    const config = serializer.parse(json)
+    if (json.node.privateSeed) {
+      config.node.privateSeed = json.node.privateSeed
+    }
+    return config
   }
 }
