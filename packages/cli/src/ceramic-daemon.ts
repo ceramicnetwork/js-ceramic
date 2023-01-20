@@ -316,6 +316,10 @@ export class CeramicDaemon {
     const parsed = parseSeedUrl(privateSeedUrl)
     const provider = makeNodeDIDProvider(parsed)
     const did = new DID({ provider, resolver: makeResolvers(ceramic, ceramicConfig, opts) })
+    await did.authenticate()
+    diagnosticsLogger.imp(
+      `DID set to '${did.id}'`
+    )
     ceramic.did = did
     await ceramic._init(true)
 
