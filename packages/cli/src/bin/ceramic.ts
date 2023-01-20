@@ -92,9 +92,13 @@ program
         pubsubTopic,
         corsAllowedOrigins,
         syncOverride
-      ).catch((err) => {
+      ).catch((err: Error) => {
         console.error('Ceramic daemon failed to start up:')
-        console.error(err)
+        if (err instanceof StartupError) {
+          console.error(err.message)
+        } else {
+          console.error(err)
+        }
         process.exit(1)
       })
     }
