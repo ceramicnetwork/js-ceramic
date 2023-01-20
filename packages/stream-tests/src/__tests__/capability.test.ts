@@ -577,7 +577,7 @@ describe('CACAO Integration test', () => {
       const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
       const tile = await TileDocument.deterministic(
         ceramic,
-        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-one' },
+        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-two' },
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
