@@ -37,10 +37,10 @@ export function generateSeedUrl(): URL {
  * @returns base16 uint8 array
  */
 export function parseSeedUrl(seedUrl: URL): Uint8Array {
-  let seed: string
-  if (seedUrl.protocol == 'inplace:') {
-    seed = seedUrl.hash.slice(1)
+  if (seedUrl.protocol != 'inplace:' || seedUrl.pathname != 'ed25519') {
+    throw Error('Unsupported url format for seed. Must be `inplace:ed25519#seed`.')
   }
+  const seed = seedUrl.hash.slice(1)
   return parseSeed(seed)
 }
 
