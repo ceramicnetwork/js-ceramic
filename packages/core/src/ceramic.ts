@@ -750,6 +750,10 @@ export class Ceramic implements CeramicApi {
           throw err
         }
 
+        this._logger.warn(
+          `Error while loading stream ${streamRef.toString()} with SYNC_ON_ERROR flag. Resyncing stream. Error: ${err}`
+        )
+
         // Retry with a full resync
         opts.sync = SyncOptions.SYNC_ALWAYS
         const base$ = await this.repository.load(streamRef.baseID, opts)
