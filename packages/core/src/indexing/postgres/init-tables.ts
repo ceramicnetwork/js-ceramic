@@ -3,6 +3,7 @@ import {
   ColumnType,
   createConfigTable,
   createModelTable,
+  indices,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from '../as-table-name.util.js'
 import { Knex } from 'knex'
@@ -207,6 +208,32 @@ async function _verifyMidTable(
 
   const columns = await dataSource.table(tableName).columnInfo()
   if (validSchema != JSON.stringify(columns)) {
+    throw new Error(
+      `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
+    )
+  }
+
+  const expectedIndices = indices(tableName).indices.flatMap((index) => index.name)
+  const sqlIndices = expectedIndices.map(s => `'${s}'`)
+  const actualIndices = await dataSource.raw(`
+  select
+    distinct i.relname as index_name
+from
+    pg_class t,
+    pg_class i,
+    pg_index ix,
+    pg_attribute a
+where
+    t.oid = ix.indrelid
+    and i.oid = ix.indexrelid
+    and a.attrelid = t.oid
+    and a.attnum = ANY(ix.indkey)
+    and t.relkind = 'r'
+    and t.relname like '${tableName}'
+    and i.relname in (${sqlIndices})
+;
+  `)
+  if(expectedIndices.length != actualIndices.rowCount) {
     throw new Error(
       `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
     )
