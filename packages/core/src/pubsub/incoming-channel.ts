@@ -4,6 +4,7 @@ import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { pipe, MonoTypeOperatorFunction } from 'rxjs'
 import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
 import { TaskQueue } from './task-queue.js'
+import { asyncScheduler } from 'rxjs'
 
 // Typestub for pubsub message.
 // At some future time this type definition should be provided by IPFS.
@@ -67,6 +68,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     readonly ipfs: IpfsApi,
     readonly topic: string,
     readonly resubscribeEvery: number,
+    readonly lateMessageAfterSeconds: number,
     readonly pubsubLogger: ServiceLogger,
     readonly logger: DiagnosticsLogger,
     readonly tasks: TaskQueue = new TaskQueue()
@@ -74,6 +76,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     super((subscriber) => {
       new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
         .pipe(
+          checkSlowObservable(lateMessageAfterSeconds * 1000, logger, 'IPFS did not provide any messages, please check your IPFS configuration.'),
           retryWhen((errors) =>
             errors.pipe(
               tap((e) => logger.err(e)),
@@ -101,5 +104,34 @@ export function filterExternal(
     filter((data) => data.isOuter),
     // remove the data container object from the observable chain
     map((data) => data.entry)
+  )
+}
+
+export function checkSlowObservable(
+  delay: number,
+  logger: DiagnosticsLogger,
+  description: string,
+): MonoTypeOperatorFunction<IPFSPubsubMessage> {
+  let outstanding = asyncScheduler.schedule(
+    () => {
+      logger.warn(`Message was not timely. ${description}`)
+    },
+    delay
+  )
+  return pipe(
+    tap(() => {
+      if(outstanding != null) {
+        outstanding.unsubscribe()
+      }
+      const sub = asyncScheduler.schedule(
+        () => {
+          if(outstanding == sub) {
+            logger.warn(`Message was not timely. ${description}`)
+          }
+        },
+        delay
+      )
+      outstanding = sub
+    })
   )
 }
