@@ -1,22 +1,17 @@
-import { JobQueue, Worker } from '../job-queue.js'
+import { JobQueue, Worker, Job } from '../job-queue.js'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { jest } from '@jest/globals'
-import { firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
 import { default as PgBoss } from 'pg-boss'
 
-type MockEmptyJobData = Record<string, never>
-type MockRetriedJobData = {
-  retried: boolean
-}
-type MockJobData = MockEmptyJobData | MockRetriedJobData
+type MockJobData = Record<any, any>
 
 class MockWorker implements Worker<MockJobData> {
   constructor() {
     this.reset()
   }
 
-  handler = jest.fn((job: PgBoss.Job) => {
+  handler = jest.fn((job: PgBoss.Job<MockJobData>) => {
     return Promise.resolve()
   })
 
@@ -27,18 +22,6 @@ class MockWorker implements Worker<MockJobData> {
     })
   }
 }
-
-const waitForAllJobsToComplete = async (jobQueue: JobQueue<MockJobData>) =>
-  await firstValueFrom(
-    interval(500).pipe(
-      mergeMap(() => jobQueue._getJobCounts()),
-      filter((jobCounts) => Object.values(jobCounts).every((count) => count === 0)),
-      timeout({
-        each: 30000,
-        with: () => throwError(() => new Error(`Timeout waiting for jobs to complete`)),
-      })
-    )
-  )
 
 describe('job queue', () => {
   jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
@@ -70,14 +53,16 @@ describe('job queue', () => {
   })
 
   test('Can execute different jobs', async () => {
-    const jobs = ['job1', 'job2', 'job1', 'job3', 'job3', 'job1'].map((name) => ({
-      name,
-      data: {},
-    }))
+    const jobs: Job<MockJobData>[] = ['job1', 'job2', 'job1', 'job3', 'job3', 'job1'].map(
+      (name) => ({
+        name,
+        data: {},
+      })
+    )
 
     await Promise.all(jobs.map((job) => myJobQueue.addJob(job)))
 
-    await waitForAllJobsToComplete(myJobQueue)
+    await myJobQueue._waitForAllJobsToComplete()
 
     expect(workers.job1.handler).toHaveBeenCalledTimes(3)
     expect(workers.job2.handler).toHaveBeenCalledTimes(1)
@@ -102,7 +87,7 @@ describe('job queue', () => {
       options: { retryLimit: 1, retryDelay: 1, onComplete: true },
     })
 
-    await waitForAllJobsToComplete(myJobQueue)
+    await myJobQueue._waitForAllJobsToComplete()
 
     expect(workers.job1.handler).toHaveBeenCalledTimes(2)
     const firstJob = workers.job1.handler.mock.calls[0][0]
@@ -118,7 +103,7 @@ describe('job queue', () => {
     }))
     await myJobQueue.addJobs(jobs)
 
-    await waitForAllJobsToComplete(myJobQueue)
+    await myJobQueue._waitForAllJobsToComplete()
 
     expect(workers.job1.handler).toHaveBeenCalledTimes(3)
     expect(workers.job2.handler).toHaveBeenCalledTimes(1)

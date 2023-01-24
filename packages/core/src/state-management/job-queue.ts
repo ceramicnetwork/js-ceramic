@@ -1,6 +1,6 @@
 import { default as PgBoss, type SendOptions } from 'pg-boss'
 import Pg from 'pg'
-import { fromEvent, firstValueFrom } from 'rxjs'
+import { fromEvent, firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
 
 export type Job<T extends Record<any, any>> = {
   name: string
@@ -35,7 +35,7 @@ class PgWrapper implements PgBoss.Db {
 export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
   private queue: PgBoss
   private dbConnection: Pg.Pool
-  private workersByJob: Record<string, Worker<T>> = {}
+  private jobs: string[]
 
   constructor(db: string) {
     this.dbConnection = new Pg.Pool({
@@ -49,19 +49,19 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
    * Starts the job queue and adds workers for each job
    */
   async init(workersByJob: Record<string, Worker<T>>): Promise<void> {
-    this.workersByJob = workersByJob
+    this.jobs = Object.keys(workersByJob)
 
     await this.dbConnection.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
     await this.queue.start()
     await Promise.all(
       Object.entries(workersByJob).map(([jobName, worker]) =>
-        this.queue.work(jobName, worker.handler)
+        this.queue.work(jobName, worker.handler.bind(worker))
       )
     )
   }
 
   _workerExistsForJob(jobName: string): boolean {
-    return Object.keys(this.workersByJob).includes(jobName)
+    return this.jobs.includes(jobName)
   }
 
   /**
@@ -127,11 +127,20 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
     await this.queue.clearStorage()
   }
 
-  async _getJobCounts(): Promise<Record<string, number>> {
-    return Object.fromEntries(
-      await Promise.all(
-        Object.keys(this.workersByJob).map(async (jobName) => {
-          return [jobName, await this.queue.getQueueSize(jobName, { before: 'completed' })]
+  async _waitForAllJobsToComplete(): Promise<void> {
+    await firstValueFrom(
+      interval(500).pipe(
+        mergeMap(() =>
+          Promise.all(
+            this.jobs.map(async (jobName) =>
+              this.queue.getQueueSize(jobName, { before: 'completed' })
+            )
+          )
+        ),
+        filter((jobCounts) => jobCounts.every((count) => count === 0)),
+        timeout({
+          each: 30000,
+          with: () => throwError(() => new Error(`Timeout waiting for jobs to complete`)),
         })
       )
     )
