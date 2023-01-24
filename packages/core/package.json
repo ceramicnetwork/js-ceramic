@@ -41,6 +41,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/anchor-listener": "^1.2.0",
     "@ceramicnetwork/common": "^2.18.0",
     "@ceramicnetwork/ipfs-topology": "^2.12.0",
     "@ceramicnetwork/observability": "^1.0.4",
