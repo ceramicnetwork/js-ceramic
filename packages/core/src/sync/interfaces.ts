@@ -39,7 +39,7 @@ export interface RebuildAnchorJobData {
 }
 
 export const SYNC_JOB_NAME = 'sync'
-interface SyncJobData {
+export interface SyncJobData {
   fromBlock: number
   toBlock: number
   models: string[]

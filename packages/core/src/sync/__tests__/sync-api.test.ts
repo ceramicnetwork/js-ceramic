@@ -38,6 +38,7 @@ describe('Sync API', () => {
         { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
         {} as any,
         {} as any,
+        {} as any,
         {} as any
       )
       await expect(sync._initStateTable()).resolves.toEqual({})
@@ -60,6 +61,7 @@ describe('Sync API', () => {
         { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
         {} as any,
         {} as any,
+        {} as any,
         {} as any
       )
       await expect(sync._initStateTable()).resolves.toEqual({
@@ -72,6 +74,7 @@ describe('Sync API', () => {
   test('_updateStoredState() updates the state in DB', async () => {
     const sync = new SyncApi(
       { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+      {} as any,
       {} as any,
       {} as any,
       {} as any
