@@ -11,14 +11,12 @@ import {
   DiagnosticsLogger,
   fetchJson,
   FetchJson,
-  RequestAnchorParams,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
-import * as DAG_JOSE from 'dag-jose'
-import { CAR, CarBlock, CARFactory } from 'cartonne'
-import * as uint8arrays from 'uint8arrays'
+import { CAR } from 'cartonne'
+import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 
 /**
  * CID-streamId pair
@@ -88,19 +86,19 @@ export class EthereumAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
-    const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamId }
-    const carFile = this._carFileFromRequestAnchorParams(params)
+  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse> {
+    const carFileReader = new AnchorRequestCarFileReader(carFile)
+    const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeAnchorRequest(params.streamId, params.tip, carFile),
-      this.pollForAnchorResponse(params.streamId, params.tip)
+      this._makeAnchorRequest(carFileReader),
+      this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
           status: AnchorStatus.FAILED,
-          streamId: params.streamId,
-          cid: params.tip,
+          streamId: carFileReader.streamId,
+          cid: carFileReader.tip,
           message: error.message,
         })
       )
@@ -113,40 +111,6 @@ export class EthereumAnchorService implements AnchorService {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return [this._chainId]
-  }
-
-  private _carFileFromRequestAnchorParams(params: RequestAnchorParams): CAR {
-    const carFactory = new CARFactory()
-    carFactory.codecs.add(DAG_JOSE)
-    const car = carFactory.build()
-    // In the testing code imitate CAS logic to check that the cid in genesis matches the cid of streamID
-    const genesisCid = params.streamId.cid
-    const genesisBlock = new CarBlock(genesisCid, params.genesisBlock)
-    car.blocks.put(genesisBlock)
-    const tipBlock = new CarBlock(params.tip, params.tipBlock)
-    car.blocks.put(tipBlock)
-    if (params.genesisLinkCid) {
-      const genesisLinkBlock = new CarBlock(params.genesisLinkCid, params.genesisLinkBlock)
-      car.blocks.put(genesisLinkBlock)
-    }
-    if (params.tipLinkCid) {
-      const tupLinkBlock = new CarBlock(params.tipLinkCid, params.tipLinkBlock)
-      car.blocks.put(tupLinkBlock)
-    }
-    if (params.tipCacaoCid) {
-      const cacaoBlock = new CarBlock(params.tipCacaoCid, params.tipCacaoBlock)
-      car.blocks.put(cacaoBlock)
-    }
-
-    car.put(
-      {
-        timestamp: params.timestampISO,
-        streamId: params.streamId.bytes,
-        tip: params.tip.bytes,
-      },
-      { isRoot: true }
-    )
-    return car
   }
 
   private _announcePending(cidStream: CidAndStream): Observable<AnchorServiceResponse> {
@@ -164,16 +128,16 @@ export class EthereumAnchorService implements AnchorService {
    * @private
    */
   private _makeAnchorRequest(
-    streamID: StreamID,
-    tip: CID,
-    carFile: CAR
+    carFileReader: AnchorRequestCarFileReader
   ): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
-        this.sendRequest('http://localhost:3000/api/hello', {
+        this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/vnd.ipld.car' },
-          body: uint8arrays.toString(carFile.bytes, 'binary'),
+          headers: {
+            'Content-Type': 'application/vnd.ipld.car',
+          },
+          body: carFileReader.carFile.bytes,
         })
       )
     ).pipe(
@@ -181,7 +145,7 @@ export class EthereumAnchorService implements AnchorService {
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${streamID.toString()} at commit ${tip.toString()}: ${
+              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId.toString()} at commit ${carFileReader.tip.toString()}: ${
                 error.message
               }`
             )
@@ -190,7 +154,10 @@ export class EthereumAnchorService implements AnchorService {
         },
       }),
       map((response) => {
-        return this.parseResponse({ streamId: streamID, cid: tip }, response)
+        return this.parseResponse(
+          { streamId: carFileReader.streamId, cid: carFileReader.tip },
+          response
+        )
       })
     )
   }

@@ -15,7 +15,6 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   GenesisCommit,
-  RequestAnchorParams,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
@@ -25,6 +24,8 @@ import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { CAR, CarBlock, CARFactory } from 'cartonne'
+import * as DAG_JOSE from 'dag-jose'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -328,12 +329,8 @@ export class StateManager {
     const genesisCommit = await this.dispatcher.retrieveCommit(genesisCID, state$.id)
     await this._saveAnchorRequestForState(state$, genesisCommit)
 
-    const requestAnchorParams = await this._buildRequestAnchorParams(
-      state$,
-      genesisCID,
-      genesisCommit
-    )
-    const anchorStatus$ = this.anchorService.requestAnchor(requestAnchorParams)
+    const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
+    const anchorStatus$ = this.anchorService.requestAnchor(carFile)
     this._processAnchorResponse(state$, anchorStatus$)
   }
 
@@ -345,49 +342,59 @@ export class StateManager {
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private async _buildRequestAnchorParams(
-    state$: RunningState,
-    genesisCID: CID,
-    genesisCommit: any
-  ): Promise<RequestAnchorParams> {
-    const genesisBlock = await this.dispatcher._ipfs.block.get(state$.value.log[0].cid)
-    let genesisLinkCid: CID = undefined
-    let genesisLinkBlock: Uint8Array = undefined
+  private async _buildAnchorRequestCARFile(streamId: StreamID, tip: CID): Promise<CAR> {
+    const carFactory = new CARFactory()
+    carFactory.codecs.add(DAG_JOSE)
+    const car = carFactory.build()
+
+    // Root block
+    const timestampISO = new Date().toISOString()
+    car.put(
+      {
+        timestamp: timestampISO,
+        streamId: streamId.bytes,
+        tip: tip.bytes,
+      },
+      { isRoot: true }
+    )
+
+    // Genesis block
+    const genesisCid = streamId.cid
+    const genesisBlock = await this.dispatcher._ipfs.block.get(genesisCid)
+    const genesisCarBlock = new CarBlock(genesisCid, genesisBlock)
+    car.blocks.put(genesisCarBlock)
+
+    // Tip block
+    const tipBlock = await this.dispatcher._ipfs.block.get(tip)
+    const tipCarBlock = new CarBlock(tip, tipBlock)
+    car.blocks.put(tipCarBlock)
+
+    // Genesis Link Block
+    const genesisCommit = await this.dispatcher.retrieveCommit(genesisCid, streamId)
     if (StreamUtils.isSignedCommit(genesisCommit)) {
-      genesisLinkCid = genesisCommit.link
-      genesisLinkBlock = await this.dispatcher._ipfs.block.get(genesisLinkCid)
+      const genesisLinkCid = genesisCommit.link
+      const genesisLinkBlock = await this.dispatcher._ipfs.block.get(genesisLinkCid)
+      const genesisLinkCarBlock = new CarBlock(genesisLinkCid, genesisLinkBlock)
+      car.blocks.put(genesisLinkCarBlock)
     }
 
-    const tipCid = state$.tip
-    const tipCommit = await this.dispatcher.retrieveCommit(tipCid, state$.id)
-    const tipBlock = await this.dispatcher._ipfs.block.get(tipCid)
-    let tipLinkCid: CID = undefined
-    let tipLinkBlock: Uint8Array = undefined
-    let tipCacaoCid: CID = undefined
-    let tipCacaoBlock: Uint8Array = undefined
+    // Tip Link Block
+    const tipCommit = await this.dispatcher.retrieveCommit(tip, streamId)
     if (StreamUtils.isSignedCommit(tipCommit)) {
-      tipLinkCid = tipCommit.link
-      tipLinkBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
-      tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
+      const tipLinkCid = tipCommit.link
+      const tipLinkBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
+      const tipLinkCarBlock = new CarBlock(tipLinkCid, tipLinkBlock)
+      car.blocks.put(tipLinkCarBlock)
+      // Tip CACAO Block
+      const tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
       if (tipCacaoCid) {
-        tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipCacaoCid)
+        const tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipCacaoCid)
+        const tipCacaoCarBlock = new CarBlock(tipCacaoCid, tipCacaoBlock)
+        car.blocks.put(tipCacaoCarBlock)
       }
     }
 
-    return {
-      streamId: state$.id,
-      timestampISO: new Date().toISOString(),
-      genesisCid: genesisCID,
-      genesisBlock: genesisBlock,
-      genesisLinkCid: genesisLinkCid,
-      genesisLinkBlock: genesisLinkBlock,
-      tip: tipCid,
-      tipBlock: tipBlock,
-      tipLinkCid: tipLinkCid,
-      tipLinkBlock: tipLinkBlock,
-      tipCacaoCid: tipCacaoCid,
-      tipCacaoBlock: tipCacaoBlock,
-    }
+    return car
   }
 
   private async _saveAnchorRequestForState(
