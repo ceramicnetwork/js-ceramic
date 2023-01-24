@@ -3,6 +3,7 @@ import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { CAR } from 'cartonne'
 
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING
@@ -31,22 +32,6 @@ export interface AnchorServiceFailed {
   readonly streamId: StreamID
   readonly cid: CID
   readonly message: string
-}
-
-export type RequestAnchorParams = {
-  // TODO: Should this be unified with AnchorRequestData?
-  streamId: StreamID
-  timestampISO: string // a result of Date.toISOString()
-  genesisCid: CID
-  genesisBlock: Uint8Array
-  genesisLinkCid?: CID
-  genesisLinkBlock?: Uint8Array
-  tip: CID
-  tipBlock: Uint8Array
-  tipLinkCid?: CID
-  tipLinkBlock?: Uint8Array
-  tipCacaoCid?: CID
-  tipCacaoBlock?: Uint8Array
 }
 
 /**
@@ -84,7 +69,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse>
+  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
