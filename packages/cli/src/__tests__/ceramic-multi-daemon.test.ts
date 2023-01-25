@@ -13,6 +13,7 @@ import { DaemonConfig } from '../daemon-config.js'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
+const mockNodeConfig = {'private-seed': 'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad'}
 
 const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
   const core = await Ceramic.create(ipfs, {
@@ -68,9 +69,9 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     core2 = await makeCeramicCore(ipfs2, tmpFolder2.path)
     const port1 = await getPort()
     const port2 = await getPort()
-    daemon1 = new CeramicDaemon(core1, DaemonConfig.fromObject({ 'http-api': { port: port1 } }))
+    daemon1 = new CeramicDaemon(core1, DaemonConfig.fromObject({ 'http-api': { port: port1 }, node: mockNodeConfig }))
     await daemon1.listen()
-    daemon2 = new CeramicDaemon(core2, DaemonConfig.fromObject({ 'http-api': { port: port2 } }))
+    daemon2 = new CeramicDaemon(core2, DaemonConfig.fromObject({ 'http-api': { port: port2 }, node: mockNodeConfig }))
     await daemon2.listen()
     client1 = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
     client2 = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
