@@ -1,7 +1,7 @@
 import knex, { type Knex } from 'knex'
 import { createBlockProofsListener } from '@ceramicnetwork/anchor-listener'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
-import type { Provider } from '@ethersproject/providers'
+import type { Block, Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
@@ -66,30 +66,7 @@ export class SyncApi implements ISyncApi {
       this._initJobQueue(),
     ])
 
-    this.subscription = new Subscription()
-
-    this.subscription.add(
-      createBlockProofsListener({
-        confirmations: BLOCK_CONFIRMATIONS,
-        chainId: this.syncConfig.chainId,
-        provider: this.provider,
-        expectedParentHash: latestBlock.hash,
-      })
-        .pipe(
-          mergeMap(async ({ block }) => {
-            await this._addSyncJob({
-              fromBlock: block.number,
-              toBlock: block.number,
-              models: Array.from(this.modelsToSync),
-            })
-            await this._updateStoredState({
-              processedBlockHash: block.hash,
-              processedBlockNumber: block.number,
-            })
-          })
-        )
-        .subscribe()
-    )
+    this._initBlockSubscription(latestBlock.hash)
 
     if (processedBlockNumber == null) {
       await this._addSyncJob({
@@ -146,6 +123,39 @@ export class SyncApi implements ISyncApi {
       processedBlockHash: state['processed_block_hash'],
       processedBlockNumber: state['processed_block_number'],
     }
+  }
+
+  /**
+   * Initialize the subscription for handling new blocks.
+   *
+   * @param expectedParentHash
+   */
+  _initBlockSubscription(expectedParentHash?: string): void {
+    this.subscription = createBlockProofsListener({
+      confirmations: BLOCK_CONFIRMATIONS,
+      chainId: this.syncConfig.chainId,
+      provider: this.provider,
+      expectedParentHash,
+    })
+      .pipe(mergeMap(({ block }) => this._handleBlock(block)))
+      .subscribe()
+  }
+
+  /**
+   * Callback used when a block is received from the listener.
+   *
+   * @param block
+   */
+  async _handleBlock(block: Block): Promise<void> {
+    await this._addSyncJob({
+      fromBlock: block.number,
+      toBlock: block.number,
+      models: Array.from(this.modelsToSync),
+    })
+    await this._updateStoredState({
+      processedBlockHash: block.hash,
+      processedBlockNumber: block.number,
+    })
   }
 
   /**
