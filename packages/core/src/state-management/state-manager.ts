@@ -38,6 +38,8 @@ export class StateManager {
    */
   private readonly syncedPinnedStreams: Set<string> = new Set()
 
+  private readonly carFactory = new CARFactory()
+
   /**
    * @param dispatcher - currently used instance of Dispatcher
    * @param pinStore - currently used instance of PinStore
@@ -64,7 +66,9 @@ export class StateManager {
     ) => Promise<RunningState>,
     private readonly indexStreamIfNeeded,
     private readonly _index: LocalIndexApi | undefined
-  ) {}
+  ) {
+    this.carFactory.codecs.add(DAG_JOSE)
+  }
 
   /**
    * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
@@ -325,11 +329,11 @@ export class StateManager {
       return
     }
 
+    const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
     const genesisCID = state$.value.log[0].cid
-    const genesisCommit = await this.dispatcher.retrieveCommit(genesisCID, state$.id)
+    const genesisCommit = carFile.get(genesisCID)
     await this._saveAnchorRequestForState(state$, genesisCommit)
 
-    const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
     const anchorStatus$ = this.anchorService.requestAnchor(carFile)
     this._processAnchorResponse(state$, anchorStatus$)
   }
@@ -343,9 +347,7 @@ export class StateManager {
   }
 
   private async _buildAnchorRequestCARFile(streamId: StreamID, tip: CID): Promise<CAR> {
-    const carFactory = new CARFactory()
-    carFactory.codecs.add(DAG_JOSE)
-    const car = carFactory.build()
+    const car = this.carFactory.build()
 
     // Root block
     const timestampISO = new Date().toISOString()
@@ -358,39 +360,29 @@ export class StateManager {
       { isRoot: true }
     )
 
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher._ipfs.block.get(cid))
+
     // Genesis block
     const genesisCid = streamId.cid
-    const genesisBlock = await this.dispatcher._ipfs.block.get(genesisCid)
-    const genesisCarBlock = new CarBlock(genesisCid, genesisBlock)
-    car.blocks.put(genesisCarBlock)
+    car.blocks.put(await cidToBlock(genesisCid))
 
     // Tip block
-    const tipBlock = await this.dispatcher._ipfs.block.get(tip)
-    const tipCarBlock = new CarBlock(tip, tipBlock)
-    car.blocks.put(tipCarBlock)
+    car.blocks.put(await cidToBlock(tip))
 
     // Genesis Link Block
     const genesisCommit = await this.dispatcher.retrieveCommit(genesisCid, streamId)
     if (StreamUtils.isSignedCommit(genesisCommit)) {
-      const genesisLinkCid = genesisCommit.link
-      const genesisLinkBlock = await this.dispatcher._ipfs.block.get(genesisLinkCid)
-      const genesisLinkCarBlock = new CarBlock(genesisLinkCid, genesisLinkBlock)
-      car.blocks.put(genesisLinkCarBlock)
+      car.blocks.put(await cidToBlock(genesisCommit.link))
     }
 
     // Tip Link Block
     const tipCommit = await this.dispatcher.retrieveCommit(tip, streamId)
     if (StreamUtils.isSignedCommit(tipCommit)) {
-      const tipLinkCid = tipCommit.link
-      const tipLinkBlock = await this.dispatcher._ipfs.block.get(tipLinkCid)
-      const tipLinkCarBlock = new CarBlock(tipLinkCid, tipLinkBlock)
-      car.blocks.put(tipLinkCarBlock)
+      car.blocks.put(await cidToBlock(tipCommit.link))
       // Tip CACAO Block
       const tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
       if (tipCacaoCid) {
-        const tipCacaoBlock = await this.dispatcher._ipfs.block.get(tipCacaoCid)
-        const tipCacaoCarBlock = new CarBlock(tipCacaoCid, tipCacaoBlock)
-        car.blocks.put(tipCacaoCarBlock)
+        car.blocks.put(await cidToBlock(tipCacaoCid))
       }
     }
 
