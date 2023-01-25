@@ -52,7 +52,7 @@ const generateDefaultDaemonConfig = () => {
 
   return DaemonConfig.fromObject({
     anchor: {
-      auth: AnchorServiceAuthMethods.DID,
+      'auth-method': AnchorServiceAuthMethods.DID,
     },
     'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
     ipfs: { mode: IpfsMode.BUNDLED },
