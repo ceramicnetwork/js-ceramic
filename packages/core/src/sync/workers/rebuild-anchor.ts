@@ -1,20 +1,40 @@
 import { default as PgBoss } from 'pg-boss'
-import type { AnchorProof, AnchorCommit } from '@ceramicnetwork/common'
+import type { SendOptions } from 'pg-boss'
+import type { AnchorCommit } from '@ceramicnetwork/common'
 import { MerkleTreeLoader } from '../utils.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { IpfsService, HandleCommit } from '../interfaces.js'
-import type { Worker } from '../../state-management/job-queue.js'
+import {
+  type IpfsService,
+  type HandleCommit,
+  type RebuildAnchorJobData,
+  REBUILD_ANCHOR_JOB_NAME,
+} from '../interfaces.js'
+import type { Worker, Job } from '../../state-management/job-queue.js'
 
-interface RebuildAnchorJobData {
-  proof: AnchorProof
-  models: string[]
+const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
+  retryLimit: 5,
+  retryDelay: 60, // 1 minute
+  retryBackoff: true,
+  expireInHours: 12,
+  retentionDays: 3,
+}
+
+export function createRebuildAnchorJob(
+  data: RebuildAnchorJobData,
+  options: SendOptions = REBUILD_ANCHOR_JOB_OPTIONS
+): Job<RebuildAnchorJobData> {
+  return {
+    name: REBUILD_ANCHOR_JOB_NAME,
+    data,
+    options,
+  }
 }
 
 /**
  * Worker that recreates the anchor commits based on the anchor proof given.
  * It ensures that the data is stored and handled.
  */
-export class RebuildAnchorWorker implements Worker {
+export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
   constructor(
     private readonly ipfsService: IpfsService,
     private readonly handleCommit: HandleCommit

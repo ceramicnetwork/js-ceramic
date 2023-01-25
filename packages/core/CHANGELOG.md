@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.23.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0-rc.1...@ceramicnetwork/core@2.23.0) (2023-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.23.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0-rc.0...@ceramicnetwork/core@2.23.0-rc.1) (2023-01-20)
+
+
+### Features
+
+* **core:** Add SyncOption to resync stream on error ([#2661](https://github.com/ceramicnetwork/js-ceramic/issues/2661)) ([d4fdf7b](https://github.com/ceramicnetwork/js-ceramic/commit/d4fdf7bb676db90178293170f9cbd07cdfeed6b9))
+
+
+### Reverts
+
+* Revert "chore(core): prefix columns for user-defined fields (#2549)" ([f7d37f0](https://github.com/ceramicnetwork/js-ceramic/commit/f7d37f01b880ad0980398c704181f5cd9c05a547)), closes [#2549](https://github.com/ceramicnetwork/js-ceramic/issues/2549)
+
+
+
+
+
+# [2.23.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.22.0-rc.0...@ceramicnetwork/core@2.23.0-rc.0) (2023-01-18)
+
+
+### Features
+
+* **core:** create rebuild anchor worker ([#2646](https://github.com/ceramicnetwork/js-ceramic/issues/2646)) ([7d759c7](https://github.com/ceramicnetwork/js-ceramic/commit/7d759c787b21874d5b2a390d38539e2ba9c717d2))
+* **core:** merkle tree leaf loader ([#2639](https://github.com/ceramicnetwork/js-ceramic/issues/2639)) ([7077512](https://github.com/ceramicnetwork/js-ceramic/commit/70775123f37b9aa7eadb635ffb369138aedd9947))
+
+
+
+
+
 # [2.22.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.21.0...@ceramicnetwork/core@2.22.0-rc.0) (2023-01-11)
 
 

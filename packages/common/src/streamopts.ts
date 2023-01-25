@@ -15,14 +15,16 @@ export interface PinningOpts {
  */
 export enum SyncOptions {
   /**
-   *  If the stream is found in the node's in-memory cache or pin store, then return the cached version
-   *  without performing any query to the pubsub network for the current tip.
+   *  If the stream is found in the node's in-memory cache or state store, then return the cached
+   *  version without performing any query to the pubsub network for the current tip.
    */
   PREFER_CACHE,
 
   /**
    *  Always query pubsub for the current tip for the stream and wait up to 'syncTimeoutSeconds'
-   *   for the response, regardless of whether or not the stream is found in the node's cache
+   *   for the response, regardless of whether or not the stream is found in the node's cache.
+   *   Note that this can result in lost writes as commits that cannot be successfully applied are
+   *   discarded.
    */
   SYNC_ALWAYS,
 
@@ -31,6 +33,13 @@ export enum SyncOptions {
    * is not in cache or the pin store, then only the genesis commit for the stream will be returned
    */
   NEVER_SYNC,
+
+  /**
+   * If there's an error with the state in the cache or state store, then automatically trigger
+   * a full resync of the stream to restore it to a valid state (may result in lost writes as
+   * commits that cannot be successfully applied are discarded).
+   */
+  SYNC_ON_ERROR,
 }
 
 /**

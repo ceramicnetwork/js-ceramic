@@ -753,13 +753,33 @@ export class Ceramic implements CeramicApi {
       const snapshot$ = await this.repository.loadAtTime(streamRef, opts)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
-      const base$ = await this.repository.load(streamRef.baseID, opts)
-      return streamFromState<T>(
-        this.context,
-        this._streamHandlers,
-        base$.value,
-        this.repository.updates$
-      )
+      try {
+        const base$ = await this.repository.load(streamRef.baseID, opts)
+        return streamFromState<T>(
+          this.context,
+          this._streamHandlers,
+          base$.value,
+          this.repository.updates$
+        )
+      } catch (err) {
+        if (opts.sync != SyncOptions.SYNC_ON_ERROR) {
+          throw err
+        }
+
+        this._logger.warn(
+          `Error while loading stream ${streamRef.toString()} with SYNC_ON_ERROR flag. Resyncing stream. Error: ${err}`
+        )
+
+        // Retry with a full resync
+        opts.sync = SyncOptions.SYNC_ALWAYS
+        const base$ = await this.repository.load(streamRef.baseID, opts)
+        return streamFromState<T>(
+          this.context,
+          this._streamHandlers,
+          base$.value,
+          this.repository.updates$
+        )
+      }
     }
   }
 
