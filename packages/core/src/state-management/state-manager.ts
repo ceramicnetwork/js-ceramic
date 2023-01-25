@@ -355,7 +355,7 @@ export class StateManager {
       {
         timestamp: timestampISO,
         streamId: streamId.bytes,
-        tip: tip.bytes,
+        tip: tip,
       },
       { isRoot: true }
     )

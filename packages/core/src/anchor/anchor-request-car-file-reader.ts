@@ -20,6 +20,6 @@ export class AnchorRequestCarFileReader {
   }
 
   get tip(): CID {
-    return toCID(this.root.tip)
+    return this.root.tip
   }
 }
