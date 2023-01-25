@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises'
 import { DaemonConfig } from '../daemon-config.js'
 import { homedir } from 'node:os'
 
-const mockNodeConfig = {'private-seed': 'inplace://scheme#seed'}
+const mockNodeConfig = {'private-seed': 'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad'}
 
 describe('reading from file', () => {
   let folder: tmp.DirectoryResult
@@ -23,7 +23,7 @@ describe('reading from file', () => {
     await expect(DaemonConfig.fromFile(configFilepath)).resolves.toBeInstanceOf(DaemonConfig)
   })
   test('error if missing node.private-seed', async () => {
-    const config = {}
+    const config = {node: {}}
     await writeFile(configFilepath, JSON.stringify(config))
     await expect(DaemonConfig.fromFile(configFilepath)).rejects.toThrow('Daemon config is missing node.private-seed')
   })
