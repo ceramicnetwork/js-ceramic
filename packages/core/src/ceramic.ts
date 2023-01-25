@@ -32,7 +32,7 @@ import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
+import { AnchorServiceAuthMethodClasses } from './anchor/auth/methods.js'
 import { AuthenticatedEthereumAnchorService, EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
@@ -66,10 +66,6 @@ const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
   [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
   [Networks.LOCAL]: 'http://localhost:8081',
-}
-
-const DEFAULT_ANCHOR_SERVICE_AUTH_METHODS = {
-  [AnchorServiceAuthMethods.DID]: DIDAnchorServiceAuth,
 }
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
@@ -431,12 +427,12 @@ export class Ceramic implements CeramicApi {
         config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
         DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
-      if (config.anchorServiceAuthMethod) {
-        const method = DEFAULT_ANCHOR_SERVICE_AUTH_METHODS[config.anchorServiceAuthMethod]
-        if (!method) {
-          throw new Error(`Invalid auth method for anchor service: ${config.anchorServiceAuthMethod}`)
+      if (config.anchorServiceAuthMethod != AnchorServiceAuthMethods.NONE) {
+        try {
+          anchorServiceAuth = new AnchorServiceAuthMethodClasses[AnchorServiceAuthMethods.DID](anchorServiceUrl, logger)
+        } catch (error) {
+          throw new Error(`Auth method for anchor service failed to instantiate: ${config.anchorServiceAuthMethod}`)
         }
-        anchorServiceAuth = new method(anchorServiceUrl, logger)
       }
 
       if (

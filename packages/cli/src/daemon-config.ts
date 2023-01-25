@@ -207,7 +207,7 @@ export class DaemonAnchorConfig {
    * When specifying in a config file, use the name 'auth-method'.
    */
   @jsonMember(String, { name: 'auth-method' })
-  authMethod: string
+  authMethod?: string
 
   /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
