@@ -68,7 +68,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     readonly ipfs: IpfsApi,
     readonly topic: string,
     readonly resubscribeEvery: number,
-    readonly lateMessageAfterSeconds: number,
+    readonly lateMessageAfter: number,
     readonly pubsubLogger: ServiceLogger,
     readonly logger: DiagnosticsLogger,
     readonly tasks: TaskQueue = new TaskQueue()
@@ -76,7 +76,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     super((subscriber) => {
       new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
         .pipe(
-          checkSlowObservable(lateMessageAfterSeconds * 1000, logger, 'IPFS did not provide any messages, please check your IPFS configuration.'),
+          checkSlowObservable(lateMessageAfter, logger, 'IPFS did not provide any messages, please check your IPFS configuration.'),
           retryWhen((errors) =>
             errors.pipe(
               tap((e) => logger.err(e)),
@@ -112,26 +112,19 @@ export function checkSlowObservable(
   logger: DiagnosticsLogger,
   description: string,
 ): MonoTypeOperatorFunction<IPFSPubsubMessage> {
-  let outstanding = asyncScheduler.schedule(
-    () => {
-      logger.warn(`Message was not timely. ${description}`)
-    },
-    delay
-  )
+  const createTimeout = () => {
+    return setTimeout(
+      () => {
+        logger.warn(`Message was not timely. ${description}`)
+      },
+      delay
+    )
+  }
+  let outstanding = createTimeout()
   return pipe(
     tap(() => {
-      if(outstanding != null) {
-        outstanding.unsubscribe()
-      }
-      const sub = asyncScheduler.schedule(
-        () => {
-          if(outstanding == sub) {
-            logger.warn(`Message was not timely. ${description}`)
-          }
-        },
-        delay
-      )
-      outstanding = sub
+      clearTimeout(outstanding)
+      outstanding = createTimeout()
     })
   )
 }

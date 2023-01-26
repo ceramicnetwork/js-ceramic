@@ -53,18 +53,18 @@ export class Pubsub extends Observable<PubsubMessage> {
     private readonly ipfs: IpfsApi,
     private readonly topic: string,
     private readonly resubscribeEvery: number,
-    private readonly lateMessageAfterSeconds: number,
+    private readonly lateMessageAfter: number,
     private readonly pubsubLogger: ServiceLogger,
     private readonly logger: DiagnosticsLogger,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, lateMessageAfterSeconds, pubsubLogger, logger, tasks)
+      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, lateMessageAfter, pubsubLogger, logger, tasks)
 
       incoming$
         .pipe(
           filterExternal(this.peerId$),
-          checkSlowObservable(lateMessageAfterSeconds * 1000, logger, `IPFS did not provide any internal messages, please check your IPFS configuration.`),
+          checkSlowObservable(lateMessageAfter, logger, `IPFS did not provide any internal messages, please check your IPFS configuration.`),
           ipfsToPubsub(this.peerId$, pubsubLogger, topic),
         )
         .subscribe(subscriber)

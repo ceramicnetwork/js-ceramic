@@ -23,7 +23,7 @@ const PEER_ID = 'PEER_ID'
 const LENGTH = 2
 const MESSAGES = Array.from({ length: LENGTH }).map((_, index) => {
   return {
-    typ: <MsgType.QUERY>MsgType.QUERY,
+    typ: MsgType.QUERY as MsgType.QUERY,
     id: index.toString(),
     stream: FAKE_STREAM_ID,
   }
@@ -81,6 +81,12 @@ test('publish', async () => {
   expect(ipfs.id).toBeCalledTimes(1)
 })
 
+function checkLog(func: (string) => void) {
+  jest.spyOn(diagnosticsLogger, 'log')
+    .mockImplementation((_, content) => {
+      func(content.toString())
+    })
+}
 test('warn if no messages', async () => {
   const messages = [
     asIpfsMessage({
@@ -91,12 +97,11 @@ test('warn if no messages', async () => {
   ]
   const feed = from(messages)
   let sawLog = false
-  const loggerSpy = jest.spyOn(diagnosticsLogger, 'log')
-    .mockImplementation((_, content) => {
-      if(content.toString().includes("please check your IPFS configuration.")) {
-        sawLog = true
-      }
-    })
+  checkLog((s) => {
+    if(s.includes("please check your IPFS configuration.")) {
+      sawLog = true
+    }
+  })
   const ipfs = {
     pubsub: {
       subscribe: async (_, handler) => {
@@ -131,12 +136,11 @@ test('warn if no internal messages', async () => {
   ]
   const feed = from(messages)
   let sawLog = false
-  jest.spyOn(diagnosticsLogger, 'log')
-    .mockImplementation((_, content) => {
-      if(content.toString().includes("please check your IPFS configuration.")) {
-        sawLog = true
-      }
-    })
+  checkLog((s) => {
+    if(s.includes("please check your IPFS configuration.")) {
+      sawLog = true
+    }
+  })
   const ipfs = {
     pubsub: {
       subscribe: async (_, handler) => {
@@ -194,12 +198,11 @@ test('continue even if a timeout occurs', async () => {
     })
   )
   let sawLog = false
-  const loggerSpy = jest.spyOn(diagnosticsLogger, 'log')
-    .mockImplementation((_, content) => {
-      if(content.toString().includes("please check your IPFS configuration.")) {
-        sawLog = true
-      }
-    })
+  checkLog((s) => {
+    if(s.includes("please check your IPFS configuration.")) {
+      sawLog = true
+    }
+  })
   const ipfs = {
     pubsub: {
       subscribe: async (_, handler) => {
