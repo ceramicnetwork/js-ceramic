@@ -370,13 +370,13 @@ export class StateManager {
     car.blocks.put(await cidToBlock(tip))
 
     // Genesis Link Block
-    const genesisCommit = await this.dispatcher.retrieveCommit(genesisCid, streamId)
+    const genesisCommit = car.get(genesisCid)
     if (StreamUtils.isSignedCommit(genesisCommit)) {
       car.blocks.put(await cidToBlock(genesisCommit.link))
     }
 
     // Tip Link Block
-    const tipCommit = await this.dispatcher.retrieveCommit(tip, streamId)
+    const tipCommit = car.get(tip)
     if (StreamUtils.isSignedCommit(tipCommit)) {
       car.blocks.put(await cidToBlock(tipCommit.link))
       // Tip CACAO Block
