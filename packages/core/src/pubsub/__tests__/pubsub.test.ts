@@ -8,7 +8,7 @@ import { bufferCount, concatMap, delay, map } from 'rxjs/operators'
 import * as random from '@stablelib/random'
 import { asIpfsMessage } from './as-ipfs-message.js'
 import { from, first, firstValueFrom } from 'rxjs'
-import {IPFSPubsubMessage} from "../incoming-channel";
+import {IPFSPubsubMessage} from "../incoming-channel.js";
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()

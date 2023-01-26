@@ -1,4 +1,4 @@
-import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction, TimeoutError, MonoTypeOperatorFunction, SchedulerLike } from 'rxjs'
+import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction } from 'rxjs'
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
 import { IpfsApi } from '@ceramicnetwork/common'
 import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'

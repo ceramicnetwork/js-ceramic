@@ -4,7 +4,6 @@ import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { pipe, MonoTypeOperatorFunction } from 'rxjs'
 import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
 import { TaskQueue } from './task-queue.js'
-import { asyncScheduler } from 'rxjs'
 
 // Typestub for pubsub message.
 // At some future time this type definition should be provided by IPFS.
