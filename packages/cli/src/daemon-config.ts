@@ -110,8 +110,9 @@ export class DaemonStateStoreConfig {
   s3Bucket?: string
 
   /**
-   * If mode is 's3', this is the S3 endpoint used to find the bucket.
+   * If mode is 's3', this is the optional custom S3 endpoint used to find the bucket.
    * When specifying in a config file, use the name 's3-endpoint'.
+   * If not passed, 'https://s3.console.aws.amazon.com/s3/buckets/' will be used
    */
   @jsonMember(String, { name: 's3-endpoint' })
   s3Endpoint?: string
