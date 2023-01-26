@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { indices } from '../1-create-model-table'
+import { indices } from '../1-create-model-table.js'
 
 describe('indices', () => {
     test('correctly build default indices for a table name', () => {

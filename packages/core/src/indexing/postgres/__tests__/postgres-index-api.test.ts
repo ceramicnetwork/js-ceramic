@@ -214,7 +214,7 @@ describe('init', () => {
         table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
 
-        let tableIndices = indices(tableName)
+        const tableIndices = indices(tableName)
         for (const indexToCreate of tableIndices.indices) {
           table.index(indexToCreate.keys, indexToCreate.name, {
             storageEngineIndexType: indexToCreate.indexType,
@@ -248,7 +248,7 @@ describe('init', () => {
         table.dateTime('first_anchored_at').nullable()
         table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
 
-        let tableIndices = indices(tableName)
+        const tableIndices = indices(tableName)
         for (const indexToCreate of tableIndices.indices) {
           if(!indexToCreate.keys.includes("updated_at")) { //updated_at not added as part of table
             table.index(indexToCreate.keys, indexToCreate.name, {
@@ -322,7 +322,7 @@ describe('init', () => {
         table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
 
-        let tableIndices = indices(tableName)
+        const tableIndices = indices(tableName)
         for (const indexToCreate of tableIndices.indices) {
           table.index(indexToCreate.keys, indexToCreate.name, {
             storageEngineIndexType: indexToCreate.indexType,
