@@ -51,7 +51,7 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
 
   async _getActiveJobIds(): Promise<string[]> {
     const result = await this.dbConnection.query(
-      `SELECT id FROM pgboss.job WHERE state = 'active' and name IN (${['job1', 'job2']
+      `SELECT id FROM pgboss.job WHERE state = 'active' and name IN (${this.jobs
         .map((jobName) => `'${jobName}'`)
         .join(', ')})`
     )
