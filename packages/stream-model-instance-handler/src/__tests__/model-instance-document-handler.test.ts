@@ -11,7 +11,7 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
