@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance-handler",
-  "version": "0.18.0",
+  "version": "1.0.0",
   "description": "Ceramic Model Instance Document stream handler",
   "keywords": [
     "ceramic",
@@ -40,7 +40,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.18.0",
     "@ceramicnetwork/stream-handler-common": "^1.8.0",
-    "@ceramicnetwork/stream-model-instance": "^0.14.0",
+    "@ceramicnetwork/stream-model-instance": "^1.0.0",
     "@ceramicnetwork/streamid": "^2.10.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.11.0",
-    "@ceramicnetwork/stream-model": "^0.16.0",
+    "@ceramicnetwork/stream-model": "^1.0.0",
     "@didtools/cacao": "^1.0.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/sha256": "^1.0.1",

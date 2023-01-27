@@ -19,6 +19,7 @@ const CONTENT3 = { myData: 3 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -37,6 +38,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   name: 'MySingleModel',
+  version: Model.VERSION,
   accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -55,10 +57,11 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c8fk5udeg9odlm3b2h01oytfy3rngol32g0g33ob0x5n19hi36u'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
 
 const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   name: 'MyModelWithARelation',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

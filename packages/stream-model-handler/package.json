@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-handler",
-  "version": "0.17.0",
+  "version": "1.0.0",
   "description": "Ceramic Model stream handler",
   "keywords": [
     "ceramic",
@@ -40,7 +40,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.18.0",
     "@ceramicnetwork/stream-handler-common": "^1.8.0",
-    "@ceramicnetwork/stream-model": "^0.16.0",
+    "@ceramicnetwork/stream-model": "^1.0.0",
     "@ceramicnetwork/streamid": "^2.10.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
