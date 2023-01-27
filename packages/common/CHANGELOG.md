@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.18.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.18.0-rc.1...@ceramicnetwork/common@2.18.0) (2023-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.18.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.18.0-rc.0...@ceramicnetwork/common@2.18.0-rc.1) (2023-01-20)
+
+
+### Features
+
+* **core:** Add SyncOption to resync stream on error ([#2661](https://github.com/ceramicnetwork/js-ceramic/issues/2661)) ([d4fdf7b](https://github.com/ceramicnetwork/js-ceramic/commit/d4fdf7bb676db90178293170f9cbd07cdfeed6b9))
+
+
+
+
+
 # [2.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.17.0-rc.0...@ceramicnetwork/common@2.18.0-rc.0) (2023-01-18)
 
 

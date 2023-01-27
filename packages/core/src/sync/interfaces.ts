@@ -1,9 +1,14 @@
 import type { CID } from 'multiformats/cid'
-import { StreamID } from '@ceramicnetwork/streamid'
+import type { StreamID } from '@ceramicnetwork/streamid'
+import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
+import type { AnchorProof } from '@ceramicnetwork/common'
 
-export interface ISyncApi {
-  startModelSync(startBlock: number, endBlock: number, models: string | string[]): Promise<void>
-  shutdown(): Promise<void>
+export type SyncConfig = {
+  /**
+   * Database connection string.
+   */
+  db: string
+  chainId: SupportedNetwork
 }
 
 export interface ISyncApi {
@@ -22,11 +27,22 @@ export interface IpfsService {
   storeRecord(record: Record<string, unknown>): Promise<CID>
 }
 
-export interface IndexApi {
-  shouldIndexStream(streamId: StreamID): Promise<boolean>
-}
-
 export interface TreeMetadata {
   numEntries: number
   streamIds: string[]
 }
+
+export const REBUILD_ANCHOR_JOB_NAME = 'rebuildAnchor'
+export interface RebuildAnchorJobData {
+  proof: AnchorProof
+  models: string[]
+}
+
+export const SYNC_JOB_NAME = 'sync'
+export interface SyncJobData {
+  fromBlock: number
+  toBlock: number
+  models: string[]
+}
+
+export type JobData = RebuildAnchorJobData | SyncJobData
