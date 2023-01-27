@@ -3,6 +3,9 @@ import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { jest } from '@jest/globals'
 import { default as PgBoss } from 'pg-boss'
+import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { EventEmitter } from 'node:events'
+import { fromEvent, firstValueFrom } from 'rxjs'
 
 type MockJobData = Record<any, any>
 
@@ -17,7 +20,7 @@ class MockWorker implements Worker<MockJobData> {
 
   reset() {
     this.handler.mockRestore()
-    this.handler.mockImplementation(() => {
+    this.handler.mockImplementation((job: PgBoss.Job<MockJobData>) => {
       return Promise.resolve()
     })
   }
@@ -30,7 +33,10 @@ describe('job queue', () => {
 
   beforeAll(async () => {
     await pgSetup()
-    myJobQueue = new JobQueue(process.env.DATABASE_URL as string)
+    myJobQueue = new JobQueue(
+      process.env.DATABASE_URL as string,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     workers = {
       job1: new MockWorker(),
       job2: new MockWorker(),
@@ -108,5 +114,41 @@ describe('job queue', () => {
     expect(workers.job1.handler).toHaveBeenCalledTimes(3)
     expect(workers.job2.handler).toHaveBeenCalledTimes(1)
     expect(workers.job3.handler).toHaveBeenCalledTimes(2)
+  })
+
+  test('Will resume active jobs on start', async () => {
+    const midJobEventEmitter = new EventEmitter()
+    const midJobEvent = 'middle'
+
+    workers['job1'].handler.mockImplementation(async (job: PgBoss.Job<MockJobData>) => {
+      if (!job.data.fail) {
+        return
+      }
+
+      await myJobQueue.updateJob(job.id, { fail: false, id: job.data.id })
+      midJobEventEmitter.emit(midJobEvent)
+      await TestUtils.delay(40000)
+    })
+
+    await myJobQueue.addJob({ name: 'job1', data: { fail: true, id: 1 } })
+    await myJobQueue.addJob({ name: 'job1', data: { fail: false, id: 2 } })
+
+    await firstValueFrom(fromEvent(midJobEventEmitter, midJobEvent))
+    await myJobQueue.stop()
+
+    myJobQueue = new JobQueue(
+      process.env.DATABASE_URL as string,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
+    await myJobQueue.init(workers)
+    await myJobQueue._waitForAllJobsToComplete()
+    expect(workers.job1.handler).toHaveBeenCalledTimes(3)
+
+    const firstCall = workers.job1.handler.mock.calls[0][0]
+    expect(firstCall.data.id).toEqual(1)
+    const secondCall = workers.job1.handler.mock.calls[1][0]
+    expect(secondCall.data.id).toEqual(1)
+    const thirdCall = workers.job1.handler.mock.calls[2][0]
+    expect(thirdCall.data.id).toEqual(2)
   })
 })

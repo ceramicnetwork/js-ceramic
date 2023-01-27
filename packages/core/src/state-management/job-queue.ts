@@ -1,6 +1,7 @@
 import { default as PgBoss, type SendOptions } from 'pg-boss'
 import Pg from 'pg'
 import { fromEvent, firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 export type Job<T extends Record<any, any>> = {
   name: string
@@ -37,22 +38,45 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
   private dbConnection: Pg.Pool
   private jobs: string[]
 
-  constructor(db: string) {
+  constructor(db: string, private readonly logger: DiagnosticsLogger) {
     this.dbConnection = new Pg.Pool({
       connectionString: db,
     })
 
     this.queue = new PgBoss({ db: new PgWrapper(this.dbConnection) })
+    this.queue.on('error', (err) => {
+      this.logger.err(`Error received by queue: ${err}`)
+    })
+  }
+
+  async _getActiveJobIds(): Promise<string[]> {
+    const result = await this.dbConnection.query(
+      `SELECT id FROM pgboss.job WHERE state = 'active' and name IN (${this.jobs
+        .map((jobName) => `'${jobName}'`)
+        .join(', ')})`
+    )
+
+    return result.rows.map(({ id }) => id)
   }
 
   /**
    * Starts the job queue and adds workers for each job
    */
-  async init(workersByJob: Record<string, Worker<T>>): Promise<void> {
+  async init(workersByJob: Record<string, Worker<T>>, resumeActive = true): Promise<void> {
     this.jobs = Object.keys(workersByJob)
 
     await this.dbConnection.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
     await this.queue.start()
+
+    if (resumeActive) {
+      const activeJobsIds = await this._getActiveJobIds()
+
+      if (activeJobsIds.length > 0) {
+        await this.queue.cancel(activeJobsIds)
+        await this.queue.resume(activeJobsIds)
+      }
+    }
+
     await Promise.all(
       Object.entries(workersByJob).map(([jobName, worker]) =>
         this.queue.work(jobName, worker.handler.bind(worker))
@@ -99,12 +123,18 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
   }
 
   /**
-   * Stops the job queue. Waits up to 30000ms for active jobs to complete
+   * Stops the job queue. Waits up to 30000 ms for active jobs to complete
    */
   async stop(): Promise<void> {
-    await this.queue.stop()
+    await this.queue.stop({ graceful: true })
+    // If there are active workers, pgBoss does not clean up. This function must be called to do the clean up.
+    await (this.queue as any).boss.stop()
     await firstValueFrom(fromEvent(this.queue, 'stopped'))
-    await this.dbConnection.end()
+
+    if (this.dbConnection) {
+      await this.dbConnection.end()
+      this.dbConnection = null
+    }
   }
 
   /**
