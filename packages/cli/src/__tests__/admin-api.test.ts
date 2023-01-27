@@ -13,10 +13,15 @@ import { makeDID } from './make-did.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const seed = 'ADMINSEED'
-const MY_MODEL_1_CONTENT = { name: 'myModel1', schema: {}, accountRelation: { type: 'list' } }
+const MY_MODEL_1_CONTENT: ModelDefinition = {
+  name: 'myModel1',
+  version: Model.VERSION,
+  schema: {},
+  accountRelation: { type: 'list' },
+}
 
 describe('admin api', () => {
   let daemon: CeramicDaemon
