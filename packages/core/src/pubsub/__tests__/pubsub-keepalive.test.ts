@@ -11,6 +11,7 @@ const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
 const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 
 const PEER_ID = 'PEER_ID'
+const LATE_MESSAGE_AFTER = 1000
 
 describe('pubsub keepalive', () => {
   test('sends keepalive if no messages over a period of time', async () => {
@@ -27,6 +28,7 @@ describe('pubsub keepalive', () => {
       ipfs as unknown as IpfsApi,
       TOPIC,
       3000,
+      LATE_MESSAGE_AFTER,
       pubsubLogger,
       diagnosticsLogger
     )
@@ -63,6 +65,7 @@ describe('pubsub keepalive', () => {
       ipfs as unknown as IpfsApi,
       TOPIC,
       3000,
+      LATE_MESSAGE_AFTER,
       pubsubLogger,
       diagnosticsLogger
     )
@@ -100,6 +103,7 @@ describe('pubsub keepalive', () => {
       ipfs as unknown as IpfsApi,
       TOPIC,
       3000,
+      LATE_MESSAGE_AFTER,
       pubsubLogger,
       diagnosticsLogger
     )

@@ -37,6 +37,7 @@ const OUTER_GARBAGE = Array.from({ length: LENGTH }).map(() => {
     seqno: random.randomBytes(10),
   }
 })
+const LATE_MESSAGE_AFTER = 1000
 
 test('pass incoming messages, omit garbage', async () => {
   const feed$ = from(OUTER_GARBAGE.concat(OUTER_MESSAGES))
@@ -50,7 +51,7 @@ test('pass incoming messages, omit garbage', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, 1, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
   // Even if garbage is first, we only receive well-formed messages
   const received = firstValueFrom(pubsub.pipe(bufferCount(LENGTH)))
   expect(await received).toEqual(MESSAGES)
@@ -67,7 +68,7 @@ test('publish', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, 1, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
@@ -113,7 +114,7 @@ test('warn if no messages', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, 1, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = pubsub.subscribe((message) => {
     result.push(message)
@@ -152,7 +153,7 @@ test('warn if no internal messages', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, 1, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = pubsub.subscribe((message) => {
     result.push(message)
@@ -214,7 +215,7 @@ test('continue even if a timeout occurs', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, 1, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = pubsub.subscribe((message) => {
     result.push(message)

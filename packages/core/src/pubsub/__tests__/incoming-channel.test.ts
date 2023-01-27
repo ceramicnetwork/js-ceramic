@@ -18,6 +18,7 @@ const loggerProvider = new LoggerProvider()
 const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
 const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 const PEER_ID = 'PEER_ID'
+const LATE_MESSAGE_AFTER = 1000
 
 describe('connection', () => {
   let ipfs: IpfsApi
@@ -51,7 +52,7 @@ describe('connection', () => {
       ipfs,
       TOPIC,
       resubscribePeriod,
-      1,
+      LATE_MESSAGE_AFTER,
       pubsubLogger,
       diagnosticsLogger
     )
@@ -90,7 +91,7 @@ test('pass incoming message', async () => {
     },
     id: async () => ({ id: PEER_ID }),
   } as unknown as IpfsApi
-  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, 1, pubsubLogger, diagnosticsLogger)
+  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, 1000, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = incoming$.subscribe((message) => {
     result.push(message)
@@ -121,7 +122,7 @@ test('warn if no messages come from ipfs in a timely manner', async () => {
     },
     id: async () => ({ id: PEER_ID }),
   } as unknown as IpfsApi
-  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, 1, pubsubLogger, diagnosticsLogger)
+  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = incoming$.subscribe((message) => {
     result.push(message)
@@ -169,7 +170,7 @@ describe('filterOuter', () => {
       },
       id: async () => ({ id: PEER_ID }),
     } as unknown as IpfsApi
-    const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger)
+    const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
     const result: any[] = []
     const peerId$ = from(ipfs.id().then((_) => _.id))
     const subscription = incoming$.pipe(filterExternal(peerId$)).subscribe((message) => {
@@ -218,7 +219,6 @@ describe('PubsubIncoming', () => {
     const incoming$ = new PubsubIncoming(
       fauxIpfs as unknown as IpfsApi,
       TOPIC,
-      1,
       pubsubLogger,
       diagnosticsLogger,
       new TaskQueue()

@@ -121,9 +121,12 @@ export function checkSlowObservable(
   }
   let outstanding = createTimeout()
   return pipe(
-    tap(() => {
-      clearTimeout(outstanding)
-      outstanding = createTimeout()
+    tap({
+      next: () => {
+        clearTimeout(outstanding)
+        outstanding = createTimeout()
+      },
+      complete: () => clearTimeout(outstanding)
     })
   )
 }
