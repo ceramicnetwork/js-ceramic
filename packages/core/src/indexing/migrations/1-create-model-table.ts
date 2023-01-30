@@ -31,6 +31,8 @@ function createExtraColumns(
   tableName: string,
   extraColumns: Array<ColumnInfo>
 ): void {
+  // create unique index name <64 chars that are still capable of being referenced to MID table
+  const indexName = tableName.substring(tableName.length - 10)
   for (const column of extraColumns) {
     switch (column.type) {
       case ColumnType.STRING:
