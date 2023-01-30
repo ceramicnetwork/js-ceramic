@@ -1,4 +1,4 @@
-import { IndexStreamArgs } from '../../database-index-api.js'
+import { IndexStreamArgs } from '../database-index-api.js'
 import fs from 'node:fs'
 import csv from 'csv-parser'
 import { StreamID } from '@ceramicnetwork/streamid'

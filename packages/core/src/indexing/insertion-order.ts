@@ -7,10 +7,10 @@ import {
   ForwardPaginationQuery,
   PaginationKind,
   parsePagination,
-} from '../parse-pagination.js'
-import { asTableName } from '../as-table-name.util.js'
-import { UnsupportedOrderingError } from '../unsupported-ordering-error.js'
-import { addColumnPrefix } from '../column-name.util.js'
+} from './parse-pagination.js'
+import { asTableName } from './as-table-name.util.js'
+import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
+import { addColumnPrefix } from './column-name.util.js'
 
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
@@ -18,7 +18,7 @@ type Selected = { stream_id: string; last_anchored_at: number; created_at: numbe
  * Contains functions to transform (parse and stringify) GraphQL cursors
  * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
  *
- * A cursor for SQLite insertion order is a JSON having `created_at` field as number.
+ * A cursor for insertion order is a JSON having `created_at` field as number.
  */
 abstract class Cursor {
   /**
@@ -146,8 +146,9 @@ export class InsertionOrder {
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
       return base.where('created_at', '>', after.created_at)
+    } else {
+      return base
     }
-    return base
   }
 
   /**
@@ -171,6 +172,7 @@ export class InsertionOrder {
             .select('stream_id', 'last_anchored_at', 'created_at')
             .orderBy(reverseOrder(INSERTION_ORDER))
             .limit(limit + 1) // To know if we have more entries to query
+            .as('T')
           if (query.account) {
             subquery = subquery.where({ controller_did: query.account })
           }
