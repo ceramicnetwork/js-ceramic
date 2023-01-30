@@ -3,6 +3,7 @@ import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { type Knex } from 'knex'
 import { Observable } from 'rxjs'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 import { REBUILD_ANCHOR_JOB_NAME, SYNC_JOB_NAME } from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
@@ -22,6 +23,8 @@ describe('Sync API', () => {
     const { STATE_TABLE_NAME } = await import('../sync-api.js')
     await dbConnection.schema.dropTableIfExists(STATE_TABLE_NAME)
   }
+
+  const logger = new LoggerProvider().getDiagnosticsLogger()
 
   beforeAll(async () => {
     await pgSetup()
@@ -50,7 +53,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      logger
     )
 
     const init = jest.fn()
@@ -74,7 +78,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      { indexedModels } as any
+      { indexedModels } as any,
+      logger
     )
 
     await sync._initModelsToSync()
@@ -90,7 +95,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        {} as any,
+        logger
       )
       await expect(sync._initStateTable()).resolves.toEqual({})
       await expect(dbConnection.from(STATE_TABLE_NAME).first()).resolves.toEqual({
@@ -114,7 +120,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        {} as any,
+        logger
       )
       await expect(sync._initStateTable()).resolves.toEqual({
         processedBlockHash: '0x123abc',
@@ -132,7 +139,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       provider,
-      {} as any
+      {} as any,
+      logger
     )
     sync._initBlockSubscription('abc123')
     expect(createBlockProofsListener).toHaveBeenCalledWith({
@@ -154,7 +162,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        {} as any
+        {} as any,
+        logger
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 10 }))
@@ -188,7 +197,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        logger
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: null }))
@@ -218,7 +228,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        logger
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 5 }))
@@ -247,7 +258,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        logger
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 10 }))
@@ -269,7 +281,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      logger
     )
 
     const unsubscribe = jest.fn()
@@ -292,7 +305,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        {} as any,
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -311,7 +325,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        {} as any,
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -331,7 +346,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      logger
     )
 
     const addJob = jest.fn()
@@ -350,7 +366,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      logger
     )
     await sync._initStateTable()
     // Check state before update
