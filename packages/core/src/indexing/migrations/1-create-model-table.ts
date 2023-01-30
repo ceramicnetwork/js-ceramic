@@ -2,6 +2,7 @@ import type { Knex } from 'knex'
 import { UnreachableCaseError, Networks } from '@ceramicnetwork/common'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
+import { addColumnPrefix } from '../column-name.util.js'
 
 export enum DatabaseType {
   POSTGRES = 'postgres',
@@ -38,10 +39,11 @@ function createExtraColumns(
 ): void {
   const indexName = getIndexName(tableName)
   for (const column of extraColumns) {
+    const columnName = addColumnPrefix(column.name)
     switch (column.type) {
       case ColumnType.STRING:
-        table.string(column.name, 1024).notNullable()
-        table.index([column.name], `idx_${indexName}_${column.name}`)
+        table.string(columnName, 1024).notNullable()
+        table.index([columnName], `idx_${indexName}_${columnName}`)
         break
       default:
         throw new UnreachableCaseError(column.type, `Invalid column type`)

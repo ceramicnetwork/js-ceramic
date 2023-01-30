@@ -13,6 +13,7 @@ import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
+import { addColumnPrefix } from './column-name.util.js'
 
 /**
  * Compose DB Config Table Type
@@ -30,7 +31,7 @@ function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition):
     return []
   }
   return Object.keys(relations).map((keyName) => {
-    return { name: keyName, type: ColumnType.STRING }
+    return { name: addColumnPrefix(keyName), type: ColumnType.STRING }
   })
 }
 
@@ -152,7 +153,7 @@ export class TablesManager {
     const expectedTableStructure = Object.assign({}, STRUCTURES[this.dbType].COMMON_TABLE)
     if (modelIndexArgs.relations) {
       for (const relation of Object.keys(modelIndexArgs.relations)) {
-        expectedTableStructure[relation] = STRUCTURES[this.dbType].RELATION_COLUMN
+        expectedTableStructure[addColumnPrefix(relation)] = STRUCTURES[this.dbType].RELATION_COLUMN
       }
     }
     const validSchema = JSON.stringify(expectedTableStructure)
