@@ -136,7 +136,7 @@ describe('postgres', () => {
         // Also manually check table structure
         const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
         const expectedTableStructure = Object.assign({}, STRUCTURE.COMMON_TABLE, {
-          fooRelation: STRUCTURE.RELATION_COLUMN,
+          custom_fooRelation: STRUCTURE.RELATION_COLUMN,
         })
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(expectedTableStructure))
       })
@@ -712,7 +712,7 @@ describe('sqlite', () => {
         // Also manually check table structure
         const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
         const expectedTableStructure = Object.assign({}, STRUCTURE.COMMON_TABLE, {
-          fooRelation: STRUCTURE.RELATION_COLUMN,
+          custom_fooRelation: STRUCTURE.RELATION_COLUMN,
         })
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(expectedTableStructure))
       })
