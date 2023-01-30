@@ -239,7 +239,8 @@ export class CeramicCliUtils {
     streamId: string,
     content: string,
     controllers: string,
-    schemaCommitId?: string
+    schemaCommitId?: string,
+    noAnchor?: string,
   ): Promise<void> {
     const id = StreamID.fromString(streamId)
     if (id.type != TileDocument.STREAM_TYPE_ID) {
@@ -253,13 +254,15 @@ export class CeramicCliUtils {
       const parsedControllers = CeramicCliUtils._parseControllers(controllers)
       const parsedContent = CeramicCliUtils._parseContent(content)
 
+      const opts = {anchor: (noAnchor !== 'true')};
+
       const doc = await TileDocument.load(ceramic, id)
       const metadata: TileMetadataArgs = { controllers: parsedControllers }
       if (schemaCommitId) {
         const schemaId = CommitID.fromString(schemaCommitId)
         metadata.schema = schemaId
       }
-      await doc.update(parsedContent, metadata)
+      await doc.update(parsedContent, metadata, ops)
 
       console.log(JSON.stringify(doc.content, null, 2))
       deprecationNotice()

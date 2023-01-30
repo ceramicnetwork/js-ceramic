@@ -132,9 +132,10 @@ program
   .option('--content <content>', 'Update document content')
   .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
   .option('--schema <schema>', 'Change the schema CommitID')
+  .option('--no-anchor <noAnchor>', 'Skip anchoring the update')
   .description(`Update the content of a document ${pc.red(pc.bold('[Deprecated]'))}`)
-  .action(async (streamId, { content, controllers, schema }) => {
-    await CeramicCliUtils.update(streamId, content, controllers, schema)
+  .action(async (streamId, { content, controllers, schema, noAnchor }) => {
+    await CeramicCliUtils.update(streamId, content, controllers, schema, noAnchor)
   })
 
 program
