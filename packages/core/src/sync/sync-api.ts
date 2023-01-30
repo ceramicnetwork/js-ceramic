@@ -7,7 +7,6 @@ import { Subscription, mergeMap } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
 import { JobQueue } from '../state-management/job-queue.js'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 import {
   REBUILD_ANCHOR_JOB_NAME,
@@ -58,7 +57,7 @@ export class SyncApi implements ISyncApi {
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
     this.dataSource = knex({ client: 'pg', connection: syncConfig.db })
-    this.jobQueue = new JobQueue(syncConfig.db, diagnosticsLogger)
+    this.jobQueue = new JobQueue(syncConfig.db, this.diagnosticsLogger)
   }
 
   async init(): Promise<void> {

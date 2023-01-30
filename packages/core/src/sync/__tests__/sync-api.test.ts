@@ -3,7 +3,6 @@ import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { type Knex } from 'knex'
 import { Observable } from 'rxjs'
-import { LoggerProvider } from '@ceramicnetwork/common'
 
 import { REBUILD_ANCHOR_JOB_NAME, SYNC_JOB_NAME } from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
@@ -23,8 +22,6 @@ describe('Sync API', () => {
     const { STATE_TABLE_NAME } = await import('../sync-api.js')
     await dbConnection.schema.dropTableIfExists(STATE_TABLE_NAME)
   }
-
-  const logger = new LoggerProvider().getDiagnosticsLogger()
 
   beforeAll(async () => {
     await pgSetup()
