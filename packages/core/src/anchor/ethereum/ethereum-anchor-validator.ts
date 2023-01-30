@@ -7,6 +7,7 @@ import { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
+import { backOff } from 'exponential-backoff'
 
 const SHA256_CODE = 0x12
 const DAG_CBOR_CODE = 0x71
@@ -169,34 +170,42 @@ export class EthereumAnchorValidator implements AnchorValidator {
       // determine network based on a chain ID
 
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      const transaction: TransactionResponse = await this._getTransaction(provider, txHash)
-
-      if (!transaction) {
-        if (!this.ethereumRpcEndpoint) {
-          throw new Error(
-            `Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`
-          )
-        } else {
-          throw new Error(`Failed to load transaction data for transaction ${txHash}`)
+      const transaction: TransactionResponse = await backOff(async () => {
+        const tx = await this._getTransaction(provider, txHash)
+        if (!tx) {
+          if (!this.ethereumRpcEndpoint) {
+            throw new Error(
+              `Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`
+            )
+          } else {
+            throw new Error(`Failed to load transaction data for transaction ${txHash}`)
+          }
         }
-      }
+
+        return tx
+      })
 
       let block = this._blockCache.get(transaction.blockHash)
       if (!block) {
-        block = await provider.getBlock(transaction.blockHash)
+        block = await backOff(() => {
+          const blk = provider.getBlock(transaction.blockHash)
+          if (!blk) {
+            if (!this.ethereumRpcEndpoint) {
+              throw new Error(
+                `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`
+              )
+            } else {
+              throw new Error(
+                `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`
+              )
+            }
+          }
+
+          return blk
+        })
         this._blockCache.set(transaction.blockHash, block)
       }
-      if (!block) {
-        if (!this.ethereumRpcEndpoint) {
-          throw new Error(
-            `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`
-          )
-        } else {
-          throw new Error(
-            `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`
-          )
-        }
-      }
+
       return [transaction, block]
     } catch (e) {
       this._logger.err(
