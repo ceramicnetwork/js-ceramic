@@ -262,7 +262,7 @@ export class CeramicCliUtils {
         const schemaId = CommitID.fromString(schemaCommitId)
         metadata.schema = schemaId
       }
-      await doc.update(parsedContent, metadata, ops)
+      await doc.update(parsedContent, metadata, opts)
 
       console.log(JSON.stringify(doc.content, null, 2))
       deprecationNotice()

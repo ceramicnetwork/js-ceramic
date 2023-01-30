@@ -1,0 +1,26 @@
+FROM node:16
+
+RUN apt-get update && apt-get install -y netcat jq sed
+
+WORKDIR /js-ceramic
+ENV HOME=/js-ceramic
+
+COPY package.json package-lock.json lerna.json tsconfig.json ./
+
+RUN npm ci --ignore-scripts --production
+
+RUN npm install -g lerna@4
+
+COPY packages ./packages
+
+RUN lerna bootstrap --hoist --ci -- --production
+
+COPY types ./types
+
+RUN lerna run build
+
+
+COPY ./tools/test.sh ./tools/test.sh
+
+ENTRYPOINT ["./tools/test.sh"]
+
