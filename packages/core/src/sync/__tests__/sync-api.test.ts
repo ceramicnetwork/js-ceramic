@@ -49,6 +49,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
       {} as any
     )
 
@@ -73,7 +74,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      { indexedModels } as any
+      { indexedModels } as any,
+      {} as any
     )
 
     await sync._initModelsToSync()
@@ -86,6 +88,7 @@ describe('Sync API', () => {
       const { STATE_TABLE_NAME, SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
         { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
         {} as any,
         {} as any,
         {} as any,
@@ -113,6 +116,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
+        {} as any,
         {} as any
       )
       await expect(sync._initStateTable()).resolves.toEqual({
@@ -131,6 +135,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       provider,
+      {} as any,
       {} as any
     )
     sync._initBlockSubscription('abc123')
@@ -153,6 +158,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
+        {} as any,
         {} as any
       )
 
@@ -187,7 +193,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: null }))
@@ -217,7 +224,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 5 }))
@@ -246,7 +254,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 10 }))
@@ -265,6 +274,7 @@ describe('Sync API', () => {
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
       { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+      {} as any,
       {} as any,
       {} as any,
       {} as any,
@@ -291,6 +301,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
+        {} as any,
         {} as any
       )
 
@@ -307,6 +318,7 @@ describe('Sync API', () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
         { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
         {} as any,
         {} as any,
         {} as any,
@@ -330,6 +342,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
       {} as any
     )
 
@@ -349,6 +362,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
       {} as any
     )
     await sync._initStateTable()
@@ -364,6 +378,114 @@ describe('Sync API', () => {
     await expect(dbConnection.from(STATE_TABLE_NAME).first()).resolves.toEqual({
       processed_block_hash: '0x123abc',
       processed_block_number: 10,
+    })
+  })
+
+  describe('_handleBlockProofs', () => {
+    test('adds a sync job and updates the stored state', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      )
+      // @ts-ignore private field
+      sync.modelsToSync = new Set(['abc123', 'def456'])
+
+      const addSyncJob = jest.fn()
+      sync._addSyncJob = addSyncJob as any
+      const updateStoredState = jest.fn()
+      sync._updateStoredState = updateStoredState as any
+
+      await sync._handleBlockProofs({
+        block: { hash: 'abc789', number: 10 },
+        reorganized: false,
+      } as any)
+      expect(addSyncJob).toHaveBeenCalledWith({
+        fromBlock: 10,
+        toBlock: 10,
+        models: ['abc123', 'def456'],
+      })
+      expect(updateStoredState).toHaveBeenCalledWith({
+        processedBlockHash: 'abc789',
+        processedBlockNumber: 10,
+      })
+    })
+
+    test('loads the expected block to create the sync range on block reorganization', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const getBlock = jest.fn(() => Promise.resolve({ number: 10 }))
+      const sync = new SyncApi(
+        { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
+        {} as any,
+        { getBlock } as any,
+        {} as any,
+        {} as any
+      )
+      // @ts-ignore private field
+      sync.modelsToSync = new Set(['abc123', 'def456'])
+
+      const addSyncJob = jest.fn()
+      sync._addSyncJob = addSyncJob as any
+      const updateStoredState = jest.fn()
+      sync._updateStoredState = updateStoredState as any
+
+      await sync._handleBlockProofs({
+        block: { hash: 'abc789', number: 20 },
+        reorganized: true,
+        expectedParentHash: 'ghi789',
+      } as any)
+      expect(getBlock).toHaveBeenCalledWith('ghi789')
+      expect(addSyncJob).toHaveBeenCalledWith({
+        fromBlock: 10,
+        toBlock: 20,
+        models: ['abc123', 'def456'],
+      })
+      expect(updateStoredState).toHaveBeenCalledWith({
+        processedBlockHash: 'abc789',
+        processedBlockNumber: 20,
+      })
+    })
+
+    test('ensures the sync range only sets the expected block numbers on block reorganization', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      // Returns a block number higher than the one received in event
+      const getBlock = jest.fn(() => Promise.resolve({ number: 22 }))
+      const sync = new SyncApi(
+        { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
+        {} as any,
+        { getBlock } as any,
+        {} as any,
+        {} as any
+      )
+      // @ts-ignore private field
+      sync.modelsToSync = new Set(['abc123', 'def456'])
+
+      const addSyncJob = jest.fn()
+      sync._addSyncJob = addSyncJob as any
+      const updateStoredState = jest.fn()
+      sync._updateStoredState = updateStoredState as any
+
+      await sync._handleBlockProofs({
+        block: { hash: 'abc789', number: 20 },
+        reorganized: true,
+        expectedParentHash: 'ghi789',
+      } as any)
+      expect(getBlock).toHaveBeenCalledWith('ghi789')
+      expect(addSyncJob).toHaveBeenCalledWith({
+        fromBlock: 20, // Uses event block number as loaded block number is higher
+        toBlock: 20,
+        models: ['abc123', 'def456'],
+      })
+      expect(updateStoredState).toHaveBeenCalledWith({
+        processedBlockHash: 'abc789',
+        processedBlockNumber: 20,
+      })
     })
   })
 })

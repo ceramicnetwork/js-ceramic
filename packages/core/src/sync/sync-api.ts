@@ -1,7 +1,11 @@
 import knex, { type Knex } from 'knex'
-import { createBlockProofsListener } from '@ceramicnetwork/anchor-listener'
+import {
+  type BlockProofsListenerEvent,
+  createBlockProofsListener,
+} from '@ceramicnetwork/anchor-listener'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
-import type { Block, Provider } from '@ethersproject/providers'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
+import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
@@ -52,10 +56,11 @@ export class SyncApi implements ISyncApi {
     private readonly ipfsService: IpfsService,
     private readonly handleCommit: HandleCommit,
     private readonly provider: Provider,
-    private readonly localIndex: LocalIndexApi
+    private readonly localIndex: LocalIndexApi,
+    private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
     this.dataSource = knex({ client: 'pg', connection: syncConfig.db })
-    this.jobQueue = new JobQueue(syncConfig.db)
+    this.jobQueue = new JobQueue(syncConfig.db, diagnosticsLogger)
   }
 
   async init(): Promise<void> {
@@ -137,18 +142,28 @@ export class SyncApi implements ISyncApi {
       provider: this.provider,
       expectedParentHash,
     })
-      .pipe(mergeMap(({ block }) => this._handleBlock(block)))
+      .pipe(mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)))
       .subscribe()
   }
 
   /**
    * Callback used when a block is received from the listener.
    *
-   * @param block
+   * @param event: BlockProofsListenerEvent
    */
-  async _handleBlock(block: Block): Promise<void> {
+  async _handleBlockProofs(event: BlockProofsListenerEvent): Promise<void> {
+    const { block, reorganized } = event
+
+    let fromBlock = block.number
+    if (reorganized) {
+      const previousBlock = await this.provider.getBlock(event.expectedParentHash)
+      if (previousBlock.number < fromBlock) {
+        fromBlock = previousBlock.number
+      }
+    }
+
     await this._addSyncJob({
-      fromBlock: block.number,
+      fromBlock,
       toBlock: block.number,
       models: Array.from(this.modelsToSync),
     })
