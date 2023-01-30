@@ -215,7 +215,8 @@ export class Repository {
 
     const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
       switch (opts.sync) {
-        case SyncOptions.PREFER_CACHE: {
+        case SyncOptions.PREFER_CACHE:
+        case SyncOptions.SYNC_ON_ERROR: {
           const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
           if (alreadySynced) {
             return [streamState$, alreadySynced]

@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.20.0-rc.1...@ceramicnetwork/cli@2.20.0) (2023-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.20.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.20.0-rc.0...@ceramicnetwork/cli@2.20.0-rc.1) (2023-01-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.20.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.19.0-rc.0...@ceramicnetwork/cli@2.20.0-rc.0) (2023-01-18)
+
+
+### Bug Fixes
+
+* **cli:** Export S3Store type ([#2657](https://github.com/ceramicnetwork/js-ceramic/issues/2657)) ([54948af](https://github.com/ceramicnetwork/js-ceramic/commit/54948af9bfd4303648b7c2971286ca13aad03feb))
+
+
+
+
+
 # [2.19.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.18.0...@ceramicnetwork/cli@2.19.0-rc.0) (2023-01-11)
 
 
