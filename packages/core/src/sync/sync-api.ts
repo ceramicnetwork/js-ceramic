@@ -57,7 +57,7 @@ export class SyncApi implements ISyncApi {
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
     this.dataSource = knex({ client: 'pg', connection: syncConfig.db })
-    this.jobQueue = new JobQueue(syncConfig.db, diagnosticsLogger)
+    this.jobQueue = new JobQueue(syncConfig.db, this.diagnosticsLogger)
   }
 
   async init(): Promise<void> {

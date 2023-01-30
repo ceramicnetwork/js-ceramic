@@ -15,6 +15,7 @@ jest.unstable_mockModule('@ceramicnetwork/anchor-listener', () => {
 })
 
 describe('Sync API', () => {
+  jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
   let dbConnection: Knex
 
   async function dropTables() {

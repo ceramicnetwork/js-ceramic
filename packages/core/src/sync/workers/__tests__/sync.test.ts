@@ -4,7 +4,7 @@ import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { of, type Observable, map } from 'rxjs'
 import { type BlockProofs, type BlocksProofsLoaderParams } from '@ceramicnetwork/anchor-listener'
-import { TestUtils } from '@ceramicnetwork/common'
+import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
 import type { Block, Provider } from '@ethersproject/providers'
 import { REBUILD_ANCHOR_JOB_NAME, JobData } from '../../interfaces.js'
 
@@ -63,7 +63,10 @@ describe('Sync Worker', () => {
 
   beforeAll(async () => {
     await pgSetup()
-    jobQueue = new JobQueue(process.env.DATABASE_URL as string)
+    jobQueue = new JobQueue(
+      process.env.DATABASE_URL as string,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
 
     SyncPackage = await import('../sync.js')
     const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue)
