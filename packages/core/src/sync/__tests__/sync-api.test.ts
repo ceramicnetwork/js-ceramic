@@ -54,7 +54,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      logger
+      {} as any
     )
 
     const init = jest.fn()
@@ -79,7 +79,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       { indexedModels } as any,
-      logger
+      {} as any
     )
 
     await sync._initModelsToSync()
@@ -96,7 +96,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        logger
+        {} as any
       )
       await expect(sync._initStateTable()).resolves.toEqual({})
       await expect(dbConnection.from(STATE_TABLE_NAME).first()).resolves.toEqual({
@@ -121,7 +121,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        logger
+        {} as any
       )
       await expect(sync._initStateTable()).resolves.toEqual({
         processedBlockHash: '0x123abc',
@@ -140,7 +140,7 @@ describe('Sync API', () => {
       {} as any,
       provider,
       {} as any,
-      logger
+      {} as any
     )
     sync._initBlockSubscription('abc123')
     expect(createBlockProofsListener).toHaveBeenCalledWith({
@@ -163,7 +163,7 @@ describe('Sync API', () => {
         {} as any,
         { getBlock } as any,
         {} as any,
-        logger
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 10 }))
@@ -198,7 +198,7 @@ describe('Sync API', () => {
         {} as any,
         { getBlock } as any,
         { indexedModels } as any,
-        logger
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: null }))
@@ -229,7 +229,7 @@ describe('Sync API', () => {
         {} as any,
         { getBlock } as any,
         { indexedModels } as any,
-        logger
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 5 }))
@@ -259,7 +259,7 @@ describe('Sync API', () => {
         {} as any,
         { getBlock } as any,
         { indexedModels } as any,
-        logger
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 10 }))
@@ -282,7 +282,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      logger
+      {} as any
     )
 
     const unsubscribe = jest.fn()
@@ -306,7 +306,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        logger
+        {} as any
       )
 
       const addSyncJob = jest.fn()
@@ -326,7 +326,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        logger
+        {} as any
       )
 
       const addSyncJob = jest.fn()
@@ -347,7 +347,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      logger
+      {} as any
     )
 
     const addJob = jest.fn()
@@ -367,7 +367,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      logger
+      {} as any
     )
     await sync._initStateTable()
     // Check state before update
