@@ -37,7 +37,7 @@ function createExtraColumns(
     switch (column.type) {
       case ColumnType.STRING:
         table.string(column.name, 1024).notNullable()
-        table.index([column.name], `idx_${tableName}_${column.name}`)
+        table.index([column.name], `idx_${indexName}_${column.name}`)
         break
       default:
         throw new UnreachableCaseError(column.type, `Invalid column type`)
