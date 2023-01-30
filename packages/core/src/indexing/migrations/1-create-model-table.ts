@@ -26,13 +26,17 @@ export type ColumnInfo = {
   type: ColumnType
 }
 
+function getIndexName(tableName: string): string {
+  // create unique index name <64 chars that are still capable of being referenced to MID table
+  return tableName.substring(tableName.length - 10)
+}
+
 function createExtraColumns(
   table: Knex.CreateTableBuilder,
   tableName: string,
   extraColumns: Array<ColumnInfo>
 ): void {
-  // create unique index name <64 chars that are still capable of being referenced to MID table
-  const indexName = tableName.substring(tableName.length - 10)
+  const indexName = getIndexName(tableName)
   for (const column of extraColumns) {
     switch (column.type) {
       case ColumnType.STRING:
@@ -51,8 +55,7 @@ export async function createPostgresModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, function (table) {
-    // create unique index name <64 chars that are still capable of being referenced to MID table
-    const indexName = tableName.substring(tableName.length - 10)
+    const indexName = getIndexName(tableName)
 
     table.string('stream_id').primary(`idx_${indexName}_pkey`).unique(`constr_${indexName}_unique`)
     table.string('controller_did', 1024).notNullable()
@@ -96,6 +99,8 @@ export async function createSqliteModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, (table) => {
+    const indexName = getIndexName(tableName)
+
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()
     table.string('stream_content').notNullable()
@@ -107,14 +112,14 @@ export async function createSqliteModelTable(
 
     createExtraColumns(table, tableName, extraColumns)
 
-    table.index(['last_anchored_at'], `idx_${tableName}_last_anchored_at`)
-    table.index(['created_at'], `idx_${tableName}_created_at`)
-    table.index(['updated_at'], `idx_${tableName}_updated_at`)
-    table.index(['last_anchored_at', 'created_at'], `idx_${tableName}_last_anchored_at_created_at`)
-    table.index(['first_anchored_at'], `idx_${tableName}_first_anchored_at`)
+    table.index(['last_anchored_at'], `idx_${indexName}_last_anchored_at`)
+    table.index(['created_at'], `idx_${indexName}_created_at`)
+    table.index(['updated_at'], `idx_${indexName}_updated_at`)
+    table.index(['last_anchored_at', 'created_at'], `idx_${indexName}_last_anchored_at_created_at`)
+    table.index(['first_anchored_at'], `idx_${indexName}_first_anchored_at`)
     table.index(
       ['first_anchored_at', 'created_at'],
-      `idx_${tableName}_first_anchored_at_created_at`
+      `idx_${indexName}_first_anchored_at_created_at`
     )
   })
 }
