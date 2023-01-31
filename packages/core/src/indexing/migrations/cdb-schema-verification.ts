@@ -94,7 +94,7 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: 'true',
       },
-      is_hist_sync: {
+      is_hist_index: {
         type: 'boolean',
         maxLength: null,
         nullable: false,
@@ -125,32 +125,32 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
      */
     CONFIG_TABLE: {
       option: {
-        type: 'varchar',
-        maxLength: '1024',
+        type: 'character varying',
+        maxLength: 1024,
         nullable: false,
         defaultValue: null
       },
       value: {
-        type: 'varchar',
-        maxLength: '1024',
+        type: 'character varying',
+        maxLength: 1024,
         nullable: false,
         defaultValue: null
       },
       created_at: {
-        type: 'datetime',
+        type: 'timestamp with time zone',
         maxLength: null,
         nullable: false,
         defaultValue: 'CURRENT_TIMESTAMP'
       },
       updated_at: {
-        type: 'datetime',
+        type: 'timestamp with time zone',
         maxLength: null,
         nullable: false,
         defaultValue: 'CURRENT_TIMESTAMP'
       },
       updated_by: {
-        type: 'varchar',
-        maxLength: '1024',
+        type: 'character varying',
+        maxLength: 1024,
         nullable: true,
         defaultValue: null
       }
@@ -242,7 +242,7 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         type: 'boolean',
         maxLength: null,
         nullable: false,
-        defaultValue: "'1'",
+        defaultValue: "'0'",
       },
       created_at: {
         type: 'datetime',
