@@ -99,7 +99,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
         models.map((indexModelArgs) => {
           return {
             model: indexModelArgs.model.toString(),
-            updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+            updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
           }
         })
       )
@@ -107,7 +107,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
       .merge({
         updated_at: this.now(),
         is_indexed: true,
-        updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+        updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
       })
   }
 
@@ -133,7 +133,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
           return {
             model: model.toString(),
             is_indexed: false,
-            updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+            updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
           }
         })
       )
@@ -141,7 +141,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
       .merge({
         updated_at: this.now(),
         is_indexed: false,
-        updated_by: '<FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+        updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
       })
   }
 

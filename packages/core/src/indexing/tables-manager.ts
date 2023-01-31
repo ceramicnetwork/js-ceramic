@@ -91,7 +91,7 @@ export class TablesManager {
       this.logger.imp(`Creating Compose DB config table: ${table.tableName}`)
       await createConfigTable(this.dataSource, table.tableName, network)
     } else if (table.tableName === CONFIG_TABLE_NAME) {
-      const config = await this.dataSource.from(table.tableName).first('network')
+      const config = await this.dataSource.from(table.tableName).where('option').first('network')
       if (config.network !== network) {
         throw new Error(
           `Initialization failed for config table: ${table.tableName}. The database is configured to use the network ${config.network} but the current network is ${network}.`
