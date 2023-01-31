@@ -32,45 +32,43 @@ function getIndexName(tableName: string): string {
   return tableName.substring(tableName.length - 10)
 }
 
+/**
+ * Default configuration of Compose DB functionality per network.
+ * Values can be overwritten by updating them in the ceramic_config table
+ * and by restarting the node.
+ */
 function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
-  // [key: string]: any
-  /**
-   * Default configuration of Compose DB functionality per network.
-   * Values can be overwritten by updating them in the ceramic_config table
-   * and by restarting the node.
-   */
-  let NETWORK_DEFAULT_CONFIG
   switch (networkName) {
     case 'mainnet':
-      NETWORK_DEFAULT_CONFIG = {
+      return {
         is_hist_sync: true,
         allow_queries_before_historical_sync: false,
         is_run_syncing_worker: true,
       }
       break
     case 'testnet-clay':
-      NETWORK_DEFAULT_CONFIG = {
+      return {
         is_hist_sync: true,
         allow_queries_before_historical_sync: false,
         is_run_syncing_worker: true,
       }
       break
     case 'local':
-      NETWORK_DEFAULT_CONFIG = {
+      return {
         is_hist_sync: false,
         allow_queries_before_historical_sync: true,
         is_run_syncing_worker: false,
       }
       break
     case 'dev-unstable':
-      NETWORK_DEFAULT_CONFIG = {
+      return {
         is_hist_sync: false,
         allow_queries_before_historical_sync: false,
         is_run_syncing_worker: false,
       }
       break
     case 'inmemory':
-      NETWORK_DEFAULT_CONFIG = {
+      return {
         is_hist_sync: false,
         allow_queries_before_historical_sync: true,
         is_run_syncing_worker: false,
@@ -79,7 +77,6 @@ function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
     default:
       throw new Error(`Invalid network provided during table creation: ${networkName}`)
   }
-  return NETWORK_DEFAULT_CONFIG
 }
 
 function createExtraColumns(
@@ -177,7 +174,6 @@ export async function createSqliteModelTable(
 }
 
 export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {
-  //const NETWORK_DEFAULT_CONFIG: {[key: string]: any} = getNetworkDefaultConfig(network)
   const NETWORK_DEFAULT_CONFIG = getNetworkDefaultConfig(network)
 
   switch (tableName) {
