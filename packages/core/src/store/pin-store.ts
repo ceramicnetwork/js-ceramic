@@ -7,7 +7,7 @@ import { IKVStore } from './ikv-store.js'
 import { StreamStateStore } from './stream-state-store.js'
 import { Semaphore } from 'await-semaphore'
 
-const DEFAULT_CONCURRENT_PIN_LIMIT = 10
+const DEFAULT_CONCURRENT_PIN_LIMIT = 50
 
 /**
  * Encapsulates logic for pinning streams
