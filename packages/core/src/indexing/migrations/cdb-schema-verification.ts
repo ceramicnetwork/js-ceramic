@@ -94,6 +94,12 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: 'true',
       },
+      is_hist_sync: {
+        type: 'boolean',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'false',
+      },
       created_at: {
         type: 'timestamp with time zone',
         maxLength: null,
@@ -227,6 +233,12 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         defaultValue: null,
       },
       is_indexed: {
+        type: 'boolean',
+        maxLength: null,
+        nullable: false,
+        defaultValue: "'1'",
+      },
+      is_hist_index: {
         type: 'boolean',
         maxLength: null,
         nullable: false,

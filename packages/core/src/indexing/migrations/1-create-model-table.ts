@@ -186,6 +186,7 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
         // create model indexing configuration table
         table.string('model', 1024).unique().notNullable().primary()
         table.boolean('is_indexed').notNullable().defaultTo(true)
+        table.boolean('is_hist_index').notNullable().defaultTo(false)
         table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
         table.string('updated_by', 1024).notNullable()
