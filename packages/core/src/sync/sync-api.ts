@@ -1,6 +1,7 @@
 import knex, { type Knex } from 'knex'
 import { createBlockProofsListener } from '@ceramicnetwork/anchor-listener'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Block, Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
 
@@ -52,10 +53,11 @@ export class SyncApi implements ISyncApi {
     private readonly ipfsService: IpfsService,
     private readonly handleCommit: HandleCommit,
     private readonly provider: Provider,
-    private readonly localIndex: LocalIndexApi
+    private readonly localIndex: LocalIndexApi,
+    private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
     this.dataSource = knex({ client: 'pg', connection: syncConfig.db })
-    this.jobQueue = new JobQueue(syncConfig.db)
+    this.jobQueue = new JobQueue(syncConfig.db, this.diagnosticsLogger)
   }
 
   async init(): Promise<void> {

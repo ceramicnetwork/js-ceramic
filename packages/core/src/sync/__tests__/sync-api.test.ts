@@ -15,6 +15,7 @@ jest.unstable_mockModule('@ceramicnetwork/anchor-listener', () => {
 })
 
 describe('Sync API', () => {
+  jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
   let dbConnection: Knex
 
   async function dropTables() {
@@ -49,6 +50,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
       {} as any
     )
 
@@ -73,7 +75,8 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      { indexedModels } as any
+      { indexedModels } as any,
+      {} as any
     )
 
     await sync._initModelsToSync()
@@ -86,6 +89,7 @@ describe('Sync API', () => {
       const { STATE_TABLE_NAME, SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
         { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
         {} as any,
         {} as any,
         {} as any,
@@ -113,6 +117,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
+        {} as any,
         {} as any
       )
       await expect(sync._initStateTable()).resolves.toEqual({
@@ -131,6 +136,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       provider,
+      {} as any,
       {} as any
     )
     sync._initBlockSubscription('abc123')
@@ -153,6 +159,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
+        {} as any,
         {} as any
       )
 
@@ -187,7 +194,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: null }))
@@ -217,7 +225,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 5 }))
@@ -246,7 +255,8 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         { getBlock } as any,
-        { indexedModels } as any
+        { indexedModels } as any,
+        {} as any
       )
 
       const initStateTable = jest.fn(() => ({ processedBlockNumber: 10 }))
@@ -265,6 +275,7 @@ describe('Sync API', () => {
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
       { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+      {} as any,
       {} as any,
       {} as any,
       {} as any,
@@ -291,6 +302,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
+        {} as any,
         {} as any
       )
 
@@ -307,6 +319,7 @@ describe('Sync API', () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
         { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
         {} as any,
         {} as any,
         {} as any,
@@ -330,6 +343,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
       {} as any
     )
 
@@ -346,6 +360,7 @@ describe('Sync API', () => {
     const { STATE_TABLE_NAME, SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
       { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+      {} as any,
       {} as any,
       {} as any,
       {} as any,
