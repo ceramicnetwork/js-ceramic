@@ -5,18 +5,29 @@ import { RunningState } from '../state-management/running-state.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { IKVStore } from './ikv-store.js'
 import { StreamStateStore } from './stream-state-store.js'
+import { Semaphore } from 'await-semaphore'
+
+const DEFAULT_CONCURRENT_PIN_LIMIT = 10
 
 /**
  * Encapsulates logic for pinning streams
  */
 export class PinStore {
+  private readonly semaphore: Semaphore
+
   constructor(
     readonly stateStore: StreamStateStore,
     readonly pinning: PinningBackend,
     readonly retrieve: (cid: CID) => Promise<any | null>,
     readonly resolve: (path: string) => Promise<CID>,
-    readonly loadStream: (streamID: StreamID) => Promise<RunningState>
-  ) {}
+    readonly loadStream: (streamID: StreamID) => Promise<RunningState>,
+    private readonly concurrentPinsLimit: number = DEFAULT_CONCURRENT_PIN_LIMIT
+  ) {
+    const concurrencyLimit = process.env.CERAMIC_CONCURRENT_PINS_LIMIT
+      ? parseInt(process.env.CERAMIC_CONCURRENT_PINS_LIMIT)
+      : concurrentPinsLimit
+    this.semaphore = new Semaphore(concurrencyLimit)
+  }
 
   async open(store: IKVStore): Promise<void> {
     await this.stateStore.open(store)
@@ -52,7 +63,11 @@ export class PinStore {
     }
 
     const points = await this.getComponentCIDsOfCommits(newCommits)
-    await Promise.all(points.map((point) => this.pinning.pin(point)))
+    await Promise.all(
+      points.map((point) => {
+        this.semaphore.use(() => this.pinning.pin(point))
+      })
+    )
 
     await this.stateStore.saveFromStreamStateHolder(runningState)
     runningState.markAsPinned()
