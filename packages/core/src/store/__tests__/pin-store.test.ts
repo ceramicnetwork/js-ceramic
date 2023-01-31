@@ -49,9 +49,9 @@ beforeEach(() => {
   pinning = {
     id: 'test',
     open: jest.fn(),
-    close: jest.fn(),
-    pin: jest.fn(),
-    unpin: jest.fn(),
+    close: jest.fn(() => Promise.resolve()),
+    pin: jest.fn(() => Promise.resolve()),
+    unpin: jest.fn(() => Promise.resolve()),
     ls: jest.fn(),
     info: jest.fn(),
   }
@@ -81,7 +81,7 @@ test('#open', async () => {
   const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn(), jest.fn())
   const storeWrapper = {
     networkName: NETWORK,
-    ...storeWrapperTemplate
+    ...storeWrapperTemplate,
   }
   await pinStore.open(storeWrapper)
   expect(stateStore.open).toBeCalledWith(storeWrapper)
