@@ -36,7 +36,7 @@ then
 
     echo "Created stream $streamid"
 
-    ./bin/ceramic.js update $streamid --content '{ "Title": "My updated document" }' --no-anchor true
+    ./bin/ceramic.js update $streamid --content '{ "Title": "My updated document" }' --no-anchor
 
     init=$(./bin/ceramic.js state $streamid | jq -r .log[0].cid)
     update=$(./bin/ceramic.js state $streamid | jq -r .log[1].cid)
