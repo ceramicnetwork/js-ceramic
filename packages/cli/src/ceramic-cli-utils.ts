@@ -240,7 +240,7 @@ export class CeramicCliUtils {
     content: string,
     controllers: string,
     schemaCommitId?: string,
-    noAnchor?: string,
+    anchor?: boolean,
   ): Promise<void> {
     const id = StreamID.fromString(streamId)
     if (id.type != TileDocument.STREAM_TYPE_ID) {
@@ -254,7 +254,7 @@ export class CeramicCliUtils {
       const parsedControllers = CeramicCliUtils._parseControllers(controllers)
       const parsedContent = CeramicCliUtils._parseContent(content)
 
-      const opts = {anchor: (noAnchor !== 'true')};
+      const opts = {anchor: anchor};
 
       const doc = await TileDocument.load(ceramic, id)
       const metadata: TileMetadataArgs = { controllers: parsedControllers }

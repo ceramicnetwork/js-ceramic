@@ -290,6 +290,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    console.log('TileDocument.update', opts);
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
     const updateCommit = await this.makeCommit(signer, content, metadata)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)

@@ -7,6 +7,7 @@ cd $dir/../packages/cli/
 #cas_url='https://cas-qa.3boxlabs.com/api/v0/requests'
 cas_url='https://cas-dev.3boxlabs.com/api/v0/requests'
 mode=$1
+shift
 
 wait_for_anchor() {
     streamid=$1
@@ -31,7 +32,7 @@ request_anchor() {
 
 if [[ "$mode" == "create" ]]
 then
-    streamid=$(./bin/ceramic.js create tile --content '{"title":"My document"}' | grep StreamID | sed 's/StreamID(\(.*\))/\1/')
+    streamid=$(./bin/ceramic.js create tile --content '{"title":"My document"}' --only-genesis | grep StreamID | sed 's/StreamID(\(.*\))/\1/')
 
     echo "Created stream $streamid"
 
@@ -102,8 +103,8 @@ if [[ "$mode" == "non-cid" ]]
 then
 
     #cid=bagcqcera6hrv3zpbvfkyt5u5s5vvpt4nabg24lzdoxqkzfysrg2ajz3qo2zq
-    cid=bagcqcera6hrv3zpbvfkyt5u5s5vvpt4nabg24lzdoxqkzfysrg2akz3qo2zq
-    streamid=kjzl6cwe1jw147gzcj4gwmmv4pg96cvwiuo8kpojjht1du92nr7xnjvrdytresj
+    streamid=$1
+    cid=$2
 
     request_anchor $streamid $cid
     exit 0
