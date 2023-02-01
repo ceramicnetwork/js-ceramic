@@ -4,9 +4,12 @@ dir=$(cd $(dirname $BASH_SOURCE) && pwd)
 echo $dir
 cd $dir/../packages/cli/
 
+#cas_url='https://cas-qa.3boxlabs.com/api/v0/requests'
+cas_url='https://cas-dev.3boxlabs.com/api/v0/requests'
 mode=$1
 
 wait_for_anchor() {
+    streamid=$1
     anchorStatus='PENDING'
     while [[ "$anchorStatus" != "ANCHORED" ]]
     do
@@ -14,6 +17,16 @@ wait_for_anchor() {
         anchorStatus=$(./bin/ceramic.js state $streamid | jq -r .anchorStatus)
         echo "status $anchorStatus"
     done
+}
+request_anchor() {
+    streamid=$1
+    cid=$2
+    echo "anchoring cid $cid"
+    curl -X POST \
+        -H 'Content-Type: application/json' \
+        $cas_url \
+        --data-binary "{\"cid\": \"$cid\", \"streamId\":\"$streamid\"}"
+    echo
 }
 
 if [[ "$mode" == "create" ]]
@@ -45,14 +58,9 @@ then
         cid=$update
     fi
 
-    echo "anchoring cid $cid"
-    curl -X POST \
-        -H 'Content-Type: application/json'\
-        https://cas-qa.3boxlabs.com/api/v0/requests \
-        --data-binary "{\"cid\": \"$cid\", \"streamId\":\"$streamid\"}"
-    echo
+    request_anchor $streamid $cid
+    wait_for_anchor $streamid
 
-    wait_for_anchor
     exit 0
 fi
 if [[ "$mode" == "pin" ]]
@@ -85,14 +93,19 @@ then
         cid=$update
     fi
 
-    echo "anchoring cid $cid"
-    curl -X POST \
-        -H 'Content-Type: application/json'\
-        https://cas-qa.3boxlabs.com/api/v0/requests \
-        --data-binary "{\"cid\": \"$cid\", \"streamId\":\"$streamid\"}"
-    echo
+    request_anchor $streamid $cid
+    wait_for_anchor $streamid
 
-    wait_for_anchor
+    exit 0
+fi
+if [[ "$mode" == "non-cid" ]]
+then
+
+    #cid=bagcqcera6hrv3zpbvfkyt5u5s5vvpt4nabg24lzdoxqkzfysrg2ajz3qo2zq
+    cid=bagcqcera6hrv3zpbvfkyt5u5s5vvpt4nabg24lzdoxqkzfysrg2akz3qo2zq
+    streamid=kjzl6cwe1jw147gzcj4gwmmv4pg96cvwiuo8kpojjht1du92nr7xnjvrdytresj
+
+    request_anchor $streamid $cid
     exit 0
 fi
 
