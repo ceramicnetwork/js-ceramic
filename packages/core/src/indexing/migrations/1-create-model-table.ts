@@ -41,37 +41,37 @@ function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
   switch (networkName) {
     case 'mainnet':
       return {
-        is_hist_sync: true,
+        enable_historical_sync: true,
         allow_queries_before_historical_sync: false,
-        is_run_syncing_worker: true,
+        run_historical_sync_worker: true,
       }
       break
     case 'testnet-clay':
       return {
-        is_hist_sync: true,
+        enable_historical_sync: true,
         allow_queries_before_historical_sync: false,
-        is_run_syncing_worker: true,
+        run_historical_sync_worker: true,
       }
       break
     case 'local':
       return {
-        is_hist_sync: false,
+        enable_historical_sync: false,
         allow_queries_before_historical_sync: true,
-        is_run_syncing_worker: false,
+        run_historical_sync_worker: false,
       }
       break
     case 'dev-unstable':
       return {
-        is_hist_sync: false,
+        enable_historical_sync: false,
         allow_queries_before_historical_sync: false,
-        is_run_syncing_worker: false,
+        run_historical_sync_worker: false,
       }
       break
     case 'inmemory':
       return {
-        is_hist_sync: false,
+        enable_historical_sync: false,
         allow_queries_before_historical_sync: true,
-        is_run_syncing_worker: false,
+        run_historical_sync_worker: false,
       }
       break
     default:
@@ -182,7 +182,7 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
         // create model indexing configuration table
         table.string('model', 1024).unique().notNullable().primary()
         table.boolean('is_indexed').notNullable().defaultTo(true)
-        table.boolean('is_hist_index').notNullable().defaultTo(false)
+        table.boolean('enable_historical_sync').notNullable().defaultTo(false)
         table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
         table.string('updated_by', 1024).notNullable()
@@ -208,8 +208,8 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
         value: NETWORK_DEFAULT_CONFIG.allow_queries_before_historical_sync,
       })
       await dataSource.into(tableName).insert({
-        option: 'is-run-syncing-worker',
-        value: NETWORK_DEFAULT_CONFIG.is_run_syncing_worker,
+        option: 'run-historical-sync-worker',
+        value: NETWORK_DEFAULT_CONFIG.run_historical_sync_worker,
       })
       break
     default:

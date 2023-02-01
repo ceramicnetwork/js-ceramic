@@ -94,7 +94,7 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: 'true',
       },
-      is_hist_index: {
+      enable_historical_sync: {
         type: 'boolean',
         maxLength: null,
         nullable: false,
@@ -238,7 +238,7 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: "'1'",
       },
-      is_hist_index: {
+      enable_historical_sync: {
         type: 'boolean',
         maxLength: null,
         nullable: false,
