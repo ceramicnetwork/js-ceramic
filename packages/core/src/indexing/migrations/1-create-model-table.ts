@@ -203,9 +203,6 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
       })
 
       await dataSource.into(tableName).insert({ option: 'network', value: network })
-      await dataSource
-        .into(tableName)
-        .insert({ option: 'is-hist-sync', value: NETWORK_DEFAULT_CONFIG.is_hist_sync })
       await dataSource.into(tableName).insert({
         option: 'allow-queries-before-historical-sync',
         value: NETWORK_DEFAULT_CONFIG.allow_queries_before_historical_sync,
