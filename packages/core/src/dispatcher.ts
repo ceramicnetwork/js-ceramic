@@ -19,7 +19,7 @@ import {
   UpdateMessage,
 } from './pubsub/pubsub-message.js'
 import { Pubsub } from './pubsub/pubsub.js'
-import { Subscription } from 'rxjs'
+import { empty, Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus.js'
 import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
@@ -310,6 +310,10 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
+    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true') {
+      return empty().subscribe()
+    }
+
     return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip, model })
   }
 
