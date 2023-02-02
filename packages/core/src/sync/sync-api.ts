@@ -1,8 +1,11 @@
 import knex, { type Knex } from 'knex'
-import { createBlockProofsListener } from '@ceramicnetwork/anchor-listener'
+import {
+  type BlockProofsListenerEvent,
+  createBlockProofsListener,
+} from '@ceramicnetwork/anchor-listener'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
-import type { Block, Provider } from '@ethersproject/providers'
+import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
@@ -139,18 +142,18 @@ export class SyncApi implements ISyncApi {
       provider: this.provider,
       expectedParentHash,
     })
-      .pipe(mergeMap(({ block }) => this._handleBlock(block)))
+      .pipe(mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)))
       .subscribe()
   }
 
   /**
    * Callback used when a block is received from the listener.
    *
-   * @param block
+   * @param event: BlockProofsListenerEvent
    */
-  async _handleBlock(block: Block): Promise<void> {
+  async _handleBlockProofs({ block, reorganized }: BlockProofsListenerEvent): Promise<void> {
     await this._addSyncJob({
-      fromBlock: block.number,
+      fromBlock: reorganized ? block.number - BLOCK_CONFIRMATIONS : block.number,
       toBlock: block.number,
       models: Array.from(this.modelsToSync),
     })

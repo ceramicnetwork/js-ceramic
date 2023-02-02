@@ -381,4 +381,73 @@ describe('Sync API', () => {
       processed_block_number: 10,
     })
   })
+
+  describe('_handleBlockProofs', () => {
+    test('adds a sync job and updates the stored state', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      )
+      // @ts-ignore private field
+      sync.modelsToSync = new Set(['abc123', 'def456'])
+
+      const addSyncJob = jest.fn()
+      sync._addSyncJob = addSyncJob as any
+      const updateStoredState = jest.fn()
+      sync._updateStoredState = updateStoredState as any
+
+      await sync._handleBlockProofs({
+        block: { hash: 'abc789', number: 10 },
+        reorganized: false,
+      } as any)
+      expect(addSyncJob).toHaveBeenCalledWith({
+        fromBlock: 10,
+        toBlock: 10,
+        models: ['abc123', 'def456'],
+      })
+      expect(updateStoredState).toHaveBeenCalledWith({
+        processedBlockHash: 'abc789',
+        processedBlockNumber: 10,
+      })
+    })
+
+    test('loads the expected block range on block reorganization', async () => {
+      const { BLOCK_CONFIRMATIONS, SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { chainId: 'eip155:1337', db: process.env.DATABASE_URL as string },
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      )
+      // @ts-ignore private field
+      sync.modelsToSync = new Set(['abc123', 'def456'])
+
+      const addSyncJob = jest.fn()
+      sync._addSyncJob = addSyncJob as any
+      const updateStoredState = jest.fn()
+      sync._updateStoredState = updateStoredState as any
+
+      await sync._handleBlockProofs({
+        block: { hash: 'abc789', number: 100 },
+        reorganized: true,
+        expectedParentHash: 'ghi789',
+      } as any)
+      expect(addSyncJob).toHaveBeenCalledWith({
+        fromBlock: 100 - BLOCK_CONFIRMATIONS,
+        toBlock: 100,
+        models: ['abc123', 'def456'],
+      })
+      expect(updateStoredState).toHaveBeenCalledWith({
+        processedBlockHash: 'abc789',
+        processedBlockNumber: 100,
+      })
+    })
+  })
 })
