@@ -151,19 +151,9 @@ export class SyncApi implements ISyncApi {
    *
    * @param event: BlockProofsListenerEvent
    */
-  async _handleBlockProofs(event: BlockProofsListenerEvent): Promise<void> {
-    const { block, reorganized } = event
-
-    let fromBlock = block.number
-    if (reorganized) {
-      const previousBlock = await this.provider.getBlock(event.expectedParentHash)
-      if (previousBlock.number < fromBlock) {
-        fromBlock = previousBlock.number
-      }
-    }
-
+  async _handleBlockProofs({ block, reorganized }: BlockProofsListenerEvent): Promise<void> {
     await this._addSyncJob({
-      fromBlock,
+      fromBlock: reorganized ? block.number - BLOCK_CONFIRMATIONS : block.number,
       toBlock: block.number,
       models: Array.from(this.modelsToSync),
     })
