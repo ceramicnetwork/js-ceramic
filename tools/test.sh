@@ -4,7 +4,9 @@ dir=$(cd $(dirname $BASH_SOURCE) && pwd)
 echo $dir
 cd $dir/../packages/cli/
 
-cas_url='https://cas-qa.3boxlabs.com/api/v0/requests'
+#cas_url='https://cas-internal.3boxlabs.com/api/v0/requests'
+cas_url='https://cas-clay.3boxlabs.com/api/v0/requests'
+#cas_url='https://cas-qa.3boxlabs.com/api/v0/requests'
 #cas_url='https://cas-dev.3boxlabs.com/api/v0/requests'
 mode=$1
 shift
