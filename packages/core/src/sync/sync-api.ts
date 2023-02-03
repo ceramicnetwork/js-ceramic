@@ -38,10 +38,6 @@ export type SyncConfig = {
    * Database connection string.
    */
   db: string
-  /**
-   * Anchor network ID.
-   */
-  chainId: SupportedNetwork
 }
 
 export class SyncApi implements ISyncApi {
@@ -50,20 +46,26 @@ export class SyncApi implements ISyncApi {
   private readonly dataSource: Knex
   private readonly jobQueue: JobQueue<JobData>
   private subscription: Subscription | undefined
+  private provider: Provider
+  private chainId: SupportedNetwork
 
   constructor(
     private readonly syncConfig: SyncConfig,
     private readonly ipfsService: IpfsService,
     private readonly handleCommit: HandleCommit,
-    private readonly provider: Provider,
     private readonly localIndex: LocalIndexApi,
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
-    this.dataSource = knex({ client: 'pg', connection: syncConfig.db })
-    this.jobQueue = new JobQueue(syncConfig.db, this.diagnosticsLogger)
+    this.dataSource = knex({ client: 'pg', connection: this.syncConfig.db })
+    this.jobQueue = new JobQueue(this.syncConfig.db, this.diagnosticsLogger)
   }
 
-  async init(): Promise<void> {
+  async init(provider: Provider): Promise<void> {
+    this.provider = provider
+
+    const chainIdNumber = (await provider.getNetwork()).chainId
+    this.chainId = `eip155:${chainIdNumber}` as SupportedNetwork
+
     const [latestBlock, { processedBlockNumber }] = await Promise.all([
       this.provider.getBlock(-BLOCK_CONFIRMATIONS),
       this._initStateTable(),
@@ -138,7 +140,7 @@ export class SyncApi implements ISyncApi {
   _initBlockSubscription(expectedParentHash?: string): void {
     this.subscription = createBlockProofsListener({
       confirmations: BLOCK_CONFIRMATIONS,
-      chainId: this.syncConfig.chainId,
+      chainId: this.chainId,
       provider: this.provider,
       expectedParentHash,
     })

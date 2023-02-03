@@ -34,8 +34,11 @@ export interface TreeMetadata {
 
 export const REBUILD_ANCHOR_JOB_NAME = 'rebuildAnchor'
 export interface RebuildAnchorJobData {
-  proof: AnchorProof
   models: string[]
+  chainId: string
+  txHash: string
+  root: string
+  txType?: string
 }
 
 export const SYNC_JOB_NAME = 'sync'
