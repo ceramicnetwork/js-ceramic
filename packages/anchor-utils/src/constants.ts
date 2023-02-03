@@ -20,3 +20,5 @@ export const ANCHOR_CONTRACT_ADDRESSES: Record<SupportedNetwork, string> = {
   'eip155:100': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
   'eip155:1337': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
 }
+
+export const CONTRACT_TX_TYPE = 'f(bytes32)'
