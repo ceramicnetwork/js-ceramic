@@ -106,6 +106,16 @@ anchor)
 
     request_anchor $streamid $cid
     ;;
+spam)
+    streamid=$(./bin/ceramic.js create tile --content '{"title":"My document"}' | grep StreamID | sed 's/StreamID(\(.*\))/\1/')
+    ./bin/ceramic.js update $streamid --content '{ "Title": "My updated document" }' --no-anchor
+    update=$(./bin/ceramic.js state $streamid | jq -r .log[1].cid)
+
+    for j in {0..110}
+    do
+        request_anchor $streamid $update
+    done
+    ;;
 *)
     echo "Specify mode as one of: create,pin,anchor"
     exit 1
