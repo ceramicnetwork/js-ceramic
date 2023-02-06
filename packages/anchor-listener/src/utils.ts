@@ -2,6 +2,7 @@ import {
   type SupportedNetwork,
   convertEthHashToCid,
   getCidFromAnchorEventLog,
+  CONTRACT_TX_TYPE,
 } from '@ceramicnetwork/anchor-utils'
 import type { AnchorProof } from '@ceramicnetwork/common'
 import type { Log } from '@ethersproject/providers'
@@ -18,5 +19,6 @@ export function createAnchorProof(chainId: SupportedNetwork, log: Log): AnchorPr
     chainId,
     txHash: convertEthHashToCid(log.transactionHash),
     root: getCidFromAnchorEventLog(log),
+    txType: CONTRACT_TX_TYPE,
   }
 }
