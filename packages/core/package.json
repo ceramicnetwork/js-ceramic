@@ -71,7 +71,7 @@
     "lru_map": "^0.4.1",
     "mapmoize": "^1.2.1",
     "multiformats": "^9.5.8",
-    "p-queue": "^7.2.0",
+    "p-queue": "7.3.0",
     "pg": "^8.7.3",
     "pg-boss": "^8.2.0",
     "rxjs": "^7.5.2",

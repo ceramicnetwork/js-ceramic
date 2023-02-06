@@ -67,7 +67,7 @@
     "merge-options": "^3.0.4",
     "morgan": "^1.10.0",
     "nft-did-resolver": "^2.0.0",
-    "p-queue": "^7.2.0",
+    "p-queue": "7.3.0",
     "picocolors": "^1.0.0",
     "pkh-did-resolver": "^1.2.0",
     "reflect-metadata": "^0.1.13",
