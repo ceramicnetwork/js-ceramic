@@ -94,6 +94,12 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: 'true',
       },
+      enable_historical_sync: {
+        type: 'boolean',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'false',
+      },
       created_at: {
         type: 'timestamp with time zone',
         maxLength: null,
@@ -118,12 +124,36 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
      * Used to verify table integrity during node startup
      */
     CONFIG_TABLE: {
-      network: {
+      option: {
         type: 'character varying',
         maxLength: 1024,
         nullable: false,
-        defaultValue: null,
+        defaultValue: null
       },
+      value: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null
+      },
+      created_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP'
+      },
+      updated_at: {
+        type: 'timestamp with time zone',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP'
+      },
+      updated_by: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: true,
+        defaultValue: null
+      }
     },
   },
   [DatabaseType.SQLITE]: {
@@ -208,6 +238,12 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: "'1'",
       },
+      enable_historical_sync: {
+        type: 'boolean',
+        maxLength: null,
+        nullable: false,
+        defaultValue: "'0'",
+      },
       created_at: {
         type: 'datetime',
         maxLength: null,
@@ -232,12 +268,36 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
      * Used to verify table integrity during node startup
      */
     CONFIG_TABLE: {
-      network: {
+      option: {
         type: 'varchar',
         maxLength: '1024',
         nullable: false,
-        defaultValue: null,
+        defaultValue: null
       },
+      value: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null
+      },
+      created_at: {
+        type: 'datetime',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP'
+      },
+      updated_at: {
+        type: 'datetime',
+        maxLength: null,
+        nullable: false,
+        defaultValue: 'CURRENT_TIMESTAMP'
+      },
+      updated_by: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: true,
+        defaultValue: null
+      }
     },
   },
 }
