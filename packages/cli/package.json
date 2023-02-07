@@ -50,7 +50,6 @@
     "@ceramicnetwork/observability": "^1.0.6",
     "@ceramicnetwork/stream-tile": "^2.14.0",
     "@ceramicnetwork/streamid": "^2.10.0",
-    "@multiformats/multiaddr": "^11.4.0",
     "@stablelib/random": "^1.0.1",
     "aws-sdk": "^2.1049.0",
     "commander": "^9.4.1",
