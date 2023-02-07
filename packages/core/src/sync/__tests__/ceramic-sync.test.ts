@@ -230,7 +230,9 @@ const cleanTables = async (dbConnection: Knex) => {
   await dbConnection.schema.dropTableIfExists(MODEL_STREAM_ID.toString())
   try {
     await dbConnection.table('pgboss.job').truncate()
-  } catch (err) {}
+  } catch (err) {
+    // sometimes this fails beause pgboss.job doesn't exist
+  }
 }
 
 describe('Sync tests', () => {
