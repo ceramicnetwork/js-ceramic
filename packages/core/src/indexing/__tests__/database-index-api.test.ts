@@ -16,7 +16,7 @@ import {
   SqliteIndexApi,
   asTimestamp,
 } from '../database-index-api.js'
-import { DatabaseType } from '../migrations/1-create-model-table.js'
+import {DatabaseType, indices} from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
@@ -221,6 +221,13 @@ describe('postgres', () => {
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            table.index(indexToCreate.keys, indexToCreate.name, {
+              storageEngineIndexType: indexToCreate.indexType,
+            })
+          }
         })
 
         await expect(
@@ -250,11 +257,49 @@ describe('postgres', () => {
           table.dateTime('last_anchored_at').nullable()
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            if(!indexToCreate.keys.includes("updated_at")) { //updated_at not added as part of table
+              table.index(indexToCreate.keys, indexToCreate.name, {
+                storageEngineIndexType: indexToCreate.indexType,
+              })
+            }
+          }
         })
 
         await expect(
           indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
         ).rejects.toThrow(/Schema verification failed for index/)
+      })
+
+      test('Fail table validation if indices are missing', async () => {
+        const modelToIndex = StreamID.fromString(STREAM_ID_A)
+        const tableName = asTableName(modelToIndex)
+        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        await indexApi.init()
+
+        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+        await dbConnection.schema.createTable(tableName, (table) => {
+          // create unique index name <64 chars that are still capable of being referenced to MID table
+          const indexName = tableName.substring(tableName.length - 10)
+
+          table
+            .string('stream_id')
+            .primary(`idx_${indexName}_pkey`)
+            .unique(`constr_${indexName}_unique`)
+          table.string('controller_did', 1024).notNullable()
+          table.jsonb('stream_content').notNullable()
+          table.string('tip').notNullable()
+          table.dateTime('last_anchored_at').nullable()
+          table.dateTime('first_anchored_at').nullable()
+          table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+          table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+        })
+
+        await expect(indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))).rejects.toThrow(
+          /Schema verification failed for index/
+        )
       })
 
       test('Fail table validation if relation column missing', async () => {
@@ -286,6 +331,13 @@ describe('postgres', () => {
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            table.index(indexToCreate.keys, indexToCreate.name, {
+              storageEngineIndexType: indexToCreate.indexType,
+            })
+          }
         })
 
         await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).rejects.toThrow(

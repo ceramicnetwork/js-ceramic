@@ -4,7 +4,7 @@ import {
   ColumnType,
   createConfigTable,
   createPostgresModelTable,
-  createSqliteModelTable,
+  createSqliteModelTable, indices,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
 import { Knex } from 'knex'
@@ -53,6 +53,14 @@ export class TablesManager {
    * Create mid tables and corresponding indexes
    */
   async initMidTables(modelsToIndex: Array<IndexModelArgs>): Promise<void> {
+    throw new Error('Must be implemented in extending class')
+  }
+
+  /**
+   * Determine if a mid table has the indices we expect
+   * @param tableName
+   */
+  async hasMidIndices(tableName: string): Promise<boolean> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -164,6 +172,12 @@ export class TablesManager {
         `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
     }
+
+    if(!await this.hasMidIndices(tableName)) {
+      throw new Error(
+        `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
+      )
+    }
   }
 
   /**
@@ -221,6 +235,35 @@ export class PostgresTablesManager extends TablesManager {
       await createPostgresModelTable(this.dataSource, tableName, relationColumns)
     }
   }
+
+  /**
+   * Determine if a mid table has the indices we expect
+   * @param tableName
+   */
+  async hasMidIndices(tableName: string): Promise<boolean> {
+    const expectedIndices =
+      indices(tableName).indices.flatMap((index) => index.name);
+    const sqlIndices = expectedIndices.map(s => `'${s}'`)
+    const actualIndices = await this.dataSource.raw(`
+  select
+    distinct i.relname as index_name
+from
+    pg_class t,
+    pg_class i,
+    pg_index ix,
+    pg_attribute a
+where
+    t.oid = ix.indrelid
+    and i.oid = ix.indexrelid
+    and a.attrelid = t.oid
+    and a.attnum = ANY(ix.indkey)
+    and t.relkind = 'r'
+    and t.relname like '${tableName}'
+    and i.relname in (${sqlIndices})
+;
+  `)
+    return expectedIndices.length == actualIndices.rowCount
+  }
 }
 
 export class SqliteTablesManager extends TablesManager {
@@ -263,5 +306,24 @@ export class SqliteTablesManager extends TablesManager {
     this.logger.imp(`Creating Compose DB Indexing table for model: ${tableName}`)
     const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     await createSqliteModelTable(this.dataSource, tableName, relationColumns)
+  }
+
+  /**
+   * Determine if a mid table has the indices we expect
+   * @param tableName
+   */
+  async hasMidIndices(tableName: string): Promise<boolean> {
+    const expectedIndices =
+      indices(tableName).indices.flatMap((index) => index.name);
+    const sqlIndices = expectedIndices.map(s => `'${s}'`)
+    const actualIndices = await this.dataSource.raw(`
+select name, tbl_name
+FROM sqlite_master
+WHERE type='index'
+and tbl_name like '${tableName}'
+and name in (${sqlIndices})
+;
+  `)
+    return expectedIndices.length == actualIndices.rowCount
   }
 }
