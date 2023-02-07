@@ -46,7 +46,7 @@ describe('Sync API', () => {
   test('_initJobQueue() initializes the JobQueue instance with the workers', async () => {
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
-      { db: process.env.DATABASE_URL as string },
+      { db: process.env.DATABASE_URL as string, on: true },
       {} as any,
       {} as any,
       {} as any,
@@ -70,7 +70,7 @@ describe('Sync API', () => {
 
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
-      { db: process.env.DATABASE_URL as string },
+      { db: process.env.DATABASE_URL as string, on: true },
       {} as any,
       {} as any,
       { indexedModels } as any,
@@ -86,7 +86,7 @@ describe('Sync API', () => {
     test('creates the table if not existing', async () => {
       const { STATE_TABLE_NAME, SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,
@@ -110,7 +110,7 @@ describe('Sync API', () => {
         .insert({ processed_block_hash: '0x123abc', processed_block_number: 10 })
 
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,
@@ -128,7 +128,7 @@ describe('Sync API', () => {
     const provider = {} as any
 
     const sync = new SyncApi(
-      { db: process.env.DATABASE_URL as string },
+      { db: process.env.DATABASE_URL as string, on: true },
       {} as any,
       {} as any,
       {} as any,
@@ -156,7 +156,7 @@ describe('Sync API', () => {
       const getBlock = jest.fn(() => ({ number: 10, hash: 'abc123' }))
       const getNetwork = () => Promise.resolve({ chainId: 1337 })
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,
@@ -191,7 +191,7 @@ describe('Sync API', () => {
       const indexedModels = jest.fn(() => Promise.resolve(expectedModels))
 
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         { indexedModels } as any,
@@ -222,7 +222,7 @@ describe('Sync API', () => {
       const indexedModels = jest.fn(() => Promise.resolve(expectedModels))
 
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         { indexedModels } as any,
@@ -252,7 +252,7 @@ describe('Sync API', () => {
       const indexedModels = jest.fn(() => Promise.resolve(expectedModels))
 
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         { indexedModels } as any,
@@ -274,7 +274,7 @@ describe('Sync API', () => {
   test('shutdown() stops the anchor subscription and job queue', async () => {
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
-      { db: process.env.DATABASE_URL as string },
+      { db: process.env.DATABASE_URL as string, on: true },
       {} as any,
       {} as any,
       {} as any,
@@ -297,7 +297,7 @@ describe('Sync API', () => {
     test('handles a single model as input', async () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,
@@ -308,7 +308,7 @@ describe('Sync API', () => {
       sync._addSyncJob = addSyncJob as any
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123'] }
-      await sync.startModelSync(data.fromBlock, data.toBlock, 'abc123')
+      await sync.startModelSync('abc123' as any, data.fromBlock, data.toBlock)
       expect(addSyncJob).toHaveBeenCalledWith(data)
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
@@ -316,7 +316,7 @@ describe('Sync API', () => {
     test('handles multiple models as input', async () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,
@@ -327,7 +327,7 @@ describe('Sync API', () => {
       sync._addSyncJob = addSyncJob as any
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'def456'] }
-      await sync.startModelSync(data.fromBlock, data.toBlock, data.models)
+      await sync.startModelSync(data.models as any, data.fromBlock, data.toBlock)
       expect(addSyncJob).toHaveBeenCalledWith(data)
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
@@ -336,7 +336,7 @@ describe('Sync API', () => {
   test('_addSyncJob() creates a sync job and adds it to the queue', async () => {
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
-      { db: process.env.DATABASE_URL as string },
+      { db: process.env.DATABASE_URL as string, on: true },
       {} as any,
       {} as any,
       {} as any,
@@ -355,7 +355,7 @@ describe('Sync API', () => {
   test('_updateStoredState() updates the state in DB', async () => {
     const { STATE_TABLE_NAME, SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
-      { db: process.env.DATABASE_URL as string },
+      { db: process.env.DATABASE_URL as string, on: true },
       {} as any,
       {} as any,
       {} as any,
@@ -381,7 +381,7 @@ describe('Sync API', () => {
     test('adds a sync job and updates the stored state', async () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,
@@ -413,7 +413,7 @@ describe('Sync API', () => {
     test('loads the expected block range on block reorganization', async () => {
       const { BLOCK_CONFIRMATIONS, SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
-        { db: process.env.DATABASE_URL as string },
+        { db: process.env.DATABASE_URL as string, on: true },
         {} as any,
         {} as any,
         {} as any,

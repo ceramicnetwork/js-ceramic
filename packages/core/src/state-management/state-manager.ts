@@ -201,13 +201,13 @@ export class StateManager {
   }
 
   /**
-   * Handles update from the PubSub topic
+   * Handles update. Update may come from the PubSub topic or from running a sync
    *
    * @param streamId
    * @param tip - Stream Tip CID
    * @param model - Model Stream ID
    */
-  async handlePubsubUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+  async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
     let state$ = await this.fromMemoryOrStore(streamId)
     const shouldIndex = model && this._index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
@@ -327,7 +327,7 @@ export class StateManager {
     const anchorStatus$ = this.anchorService.requestAnchor({
       streamID: state$.id,
       tip: state$.tip,
-      timestampISO: (new Date()).toISOString(),
+      timestampISO: new Date().toISOString(),
     })
     this._processAnchorResponse(state$, anchorStatus$)
   }

@@ -7,6 +7,7 @@ import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
+import type { StreamID } from '@ceramicnetwork/streamid'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
 import { JobQueue } from '../state-management/job-queue.js'
@@ -38,6 +39,8 @@ export type SyncConfig = {
    * Database connection string.
    */
   db: string
+
+  on: boolean
 }
 
 export class SyncApi implements ISyncApi {
@@ -56,11 +59,14 @@ export class SyncApi implements ISyncApi {
     private readonly localIndex: LocalIndexApi,
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
+    if (!this.syncConfig.on) return
+
     this.dataSource = knex({ client: 'pg', connection: this.syncConfig.db })
     this.jobQueue = new JobQueue(this.syncConfig.db, this.diagnosticsLogger)
   }
 
   async init(provider: Provider): Promise<void> {
+    if (!this.syncConfig.on) return
     this.provider = provider
 
     const chainIdNumber = (await provider.getNetwork()).chainId
@@ -169,6 +175,10 @@ export class SyncApi implements ISyncApi {
    * Add a sync job to the queue.
    */
   async _addSyncJob(data: SyncJobData): Promise<void> {
+    if (data.models.length === 0) {
+      return
+    }
+
     const job = createSyncJob(data)
     this.jobQueue.addJob(job)
   }
@@ -188,21 +198,37 @@ export class SyncApi implements ISyncApi {
    * Also keeps in sync with new anchors.
    */
   async startModelSync(
-    startBlock: number,
-    endBlock: number,
-    models: string | string[]
+    models: StreamID | StreamID[],
+    startBlock = INITIAL_INDEXING_BLOCK,
+    endBlock?
   ): Promise<void> {
-    const modelIds = Array.isArray(models) ? models : [models]
+    if (!this.syncConfig.on) return
+
+    const modelIds = Array.isArray(models)
+      ? models.map((model) => model.toString())
+      : [models.toString()]
 
     // Keep track of all models IDs to sync
     for (const id of modelIds) {
-      this.modelsToSync.add(id.toString())
+      this.modelsToSync.add(id)
     }
 
-    await this._addSyncJob({ fromBlock: startBlock, toBlock: endBlock, models: modelIds })
+    if (!endBlock) {
+      endBlock = await this.provider
+        .getBlock('latest')
+        .then(({ number }) => number - BLOCK_CONFIRMATIONS)
+    }
+
+    await this._addSyncJob({
+      fromBlock: startBlock,
+      toBlock: endBlock,
+      models: modelIds,
+    })
   }
 
   async shutdown(): Promise<void> {
+    if (!this.syncConfig.on) return
+
     this.subscription?.unsubscribe()
     this.subscription = undefined
 

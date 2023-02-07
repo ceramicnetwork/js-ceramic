@@ -117,6 +117,12 @@ export class Dispatcher {
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
+  async storeRecord(record: Record<string, unknown>): Promise<CID> {
+    return await this._shutdownSignal.abortable((signal) => {
+      return this._ipfs.dag.put(record, { signal: signal })
+    })
+  }
+
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
@@ -360,7 +366,7 @@ export class Dispatcher {
     // Add tip to pubsub cache and continue processing
     this.pubsubCache.set(tip.toString(), streamId.toString())
 
-    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
+    await this.repository.stateManager.handleUpdate(streamId, tip, model)
   }
 
   /**
