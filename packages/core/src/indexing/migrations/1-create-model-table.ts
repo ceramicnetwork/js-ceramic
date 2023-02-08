@@ -32,6 +32,53 @@ function getIndexName(tableName: string): string {
   return tableName.substring(tableName.length - 10)
 }
 
+/**
+ * Default configuration of Compose DB functionality per network.
+ * Values can be overwritten by updating them in the ceramic_config table
+ * and by restarting the node.
+ */
+function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
+  switch (networkName) {
+    case 'mainnet':
+      return {
+        enable_historical_sync: true,
+        allow_queries_before_historical_sync: false,
+        run_historical_sync_worker: true,
+      }
+      break
+    case 'testnet-clay':
+      return {
+        enable_historical_sync: true,
+        allow_queries_before_historical_sync: false,
+        run_historical_sync_worker: true,
+      }
+      break
+    case 'local':
+      return {
+        enable_historical_sync: false,
+        allow_queries_before_historical_sync: true,
+        run_historical_sync_worker: false,
+      }
+      break
+    case 'dev-unstable':
+      return {
+        enable_historical_sync: false,
+        allow_queries_before_historical_sync: false,
+        run_historical_sync_worker: false,
+      }
+      break
+    case 'inmemory':
+      return {
+        enable_historical_sync: false,
+        allow_queries_before_historical_sync: true,
+        run_historical_sync_worker: false,
+      }
+      break
+    default:
+      throw new Error(`Invalid network provided during table creation: ${networkName}`)
+  }
+}
+
 function createExtraColumns(
   table: Knex.CreateTableBuilder,
   tableName: string,
@@ -127,12 +174,15 @@ export async function createSqliteModelTable(
 }
 
 export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {
+  const NETWORK_DEFAULT_CONFIG = getNetworkDefaultConfig(network)
+
   switch (tableName) {
     case INDEXED_MODEL_CONFIG_TABLE_NAME:
       await dataSource.schema.createTable(tableName, function (table) {
         // create model indexing configuration table
         table.string('model', 1024).unique().notNullable().primary()
         table.boolean('is_indexed').notNullable().defaultTo(true)
+        table.boolean('enable_historical_sync').notNullable().defaultTo(false)
         table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
         table.string('updated_by', 1024).notNullable()
@@ -145,9 +195,22 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
     case CONFIG_TABLE_NAME:
       await dataSource.schema.createTable(tableName, function (table) {
         // create configuration table
-        table.string('network', 1024).notNullable()
+        table.string('option', 1024).notNullable().unique(`constr_config_option_unique`)
+        table.string('value', 1024).notNullable()
+        table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
+        table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
+        table.string('updated_by', 1024).nullable()
       })
-      await dataSource.into(tableName).insert({ network })
+
+      await dataSource.into(tableName).insert({ option: 'network', value: network })
+      await dataSource.into(tableName).insert({
+        option: 'allow-queries-before-historical-sync',
+        value: NETWORK_DEFAULT_CONFIG.allow_queries_before_historical_sync,
+      })
+      await dataSource.into(tableName).insert({
+        option: 'run-historical-sync-worker',
+        value: NETWORK_DEFAULT_CONFIG.run_historical_sync_worker,
+      })
       break
     default:
       throw new Error(`Invalid config table creation requested: ${tableName}`)

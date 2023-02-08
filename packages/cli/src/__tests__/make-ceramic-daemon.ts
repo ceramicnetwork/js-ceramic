@@ -14,7 +14,6 @@ export async function makeCeramicDaemon(
     {
       'http-api': { port },
       indexing: {
-        'allow-queries-before-historical-sync': true,
       },
     },
     opts
