@@ -1,6 +1,6 @@
 import { default as PgBoss } from 'pg-boss'
 import type { SendOptions } from 'pg-boss'
-import type { AnchorCommit } from '@ceramicnetwork/common'
+import type { AnchorProof, AnchorCommit } from '@ceramicnetwork/common'
 import { MerkleTreeLoader } from '../utils.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import {
@@ -10,6 +10,7 @@ import {
   REBUILD_ANCHOR_JOB_NAME,
 } from '../interfaces.js'
 import type { Worker, Job } from '../../state-management/job-queue.js'
+import { CID } from 'multiformats/cid'
 
 const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
@@ -20,12 +21,19 @@ const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
 }
 
 export function createRebuildAnchorJob(
-  data: RebuildAnchorJobData,
+  proof: AnchorProof,
+  models: string[],
   options: SendOptions = REBUILD_ANCHOR_JOB_OPTIONS
 ): Job<RebuildAnchorJobData> {
   return {
     name: REBUILD_ANCHOR_JOB_NAME,
-    data,
+    data: {
+      models,
+      chainId: proof.chainId,
+      txHash: proof.txHash.toString(),
+      root: proof.root.toString(),
+      txType: proof.txType,
+    },
     options,
   }
 }
@@ -64,7 +72,12 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
    */
   async handler(job: PgBoss.Job) {
     const jobData = job.data as RebuildAnchorJobData
-    const { proof, models } = jobData
+    const proof: AnchorProof = {
+      chainId: jobData.chainId,
+      txHash: CID.parse(jobData.txHash),
+      root: CID.parse(jobData.root),
+      txType: jobData.txType,
+    }
 
     const proofCid = await this.ipfsService.storeRecord(proof as any).catch(() => {
       // TODO: add failure job for root cid
@@ -91,7 +104,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
           const model = await this.getModelForStream(streamId)
 
           const shouldIndex = model
-            ? models.some((modelNeedingSync) => modelNeedingSync === model.toString())
+            ? jobData.models.some((modelNeedingSync) => modelNeedingSync === model.toString())
             : false
 
           if (shouldIndex) {

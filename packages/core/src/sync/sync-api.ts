@@ -38,10 +38,8 @@ export type SyncConfig = {
    * Database connection string.
    */
   db: string
-  /**
-   * Anchor network ID.
-   */
-  chainId: SupportedNetwork
+
+  on?: boolean
 }
 
 export class SyncApi implements ISyncApi {
@@ -50,20 +48,33 @@ export class SyncApi implements ISyncApi {
   private readonly dataSource: Knex
   private readonly jobQueue: JobQueue<JobData>
   private subscription: Subscription | undefined
+  private provider: Provider
+  private chainId: SupportedNetwork
 
   constructor(
     private readonly syncConfig: SyncConfig,
     private readonly ipfsService: IpfsService,
     private readonly handleCommit: HandleCommit,
-    private readonly provider: Provider,
     private readonly localIndex: LocalIndexApi,
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
-    this.dataSource = knex({ client: 'pg', connection: syncConfig.db })
-    this.jobQueue = new JobQueue(syncConfig.db, this.diagnosticsLogger)
+    if (this.syncConfig.on === undefined) {
+      this.syncConfig.on = process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true'
+    }
+
+    if (!this.syncConfig.on) return
+
+    this.dataSource = knex({ client: 'pg', connection: this.syncConfig.db })
+    this.jobQueue = new JobQueue(this.syncConfig.db, this.diagnosticsLogger)
   }
 
-  async init(): Promise<void> {
+  async init(provider: Provider): Promise<void> {
+    if (!this.syncConfig.on) return
+    this.provider = provider
+
+    const chainIdNumber = (await provider.getNetwork()).chainId
+    this.chainId = `eip155:${chainIdNumber}` as SupportedNetwork
+
     const [latestBlock, { processedBlockNumber }] = await Promise.all([
       this.provider.getBlock(-BLOCK_CONFIRMATIONS),
       this._initStateTable(),
@@ -138,7 +149,7 @@ export class SyncApi implements ISyncApi {
   _initBlockSubscription(expectedParentHash?: string): void {
     this.subscription = createBlockProofsListener({
       confirmations: BLOCK_CONFIRMATIONS,
-      chainId: this.syncConfig.chainId,
+      chainId: this.chainId,
       provider: this.provider,
       expectedParentHash,
     })
@@ -167,6 +178,10 @@ export class SyncApi implements ISyncApi {
    * Add a sync job to the queue.
    */
   async _addSyncJob(data: SyncJobData): Promise<void> {
+    if (data.models.length === 0) {
+      return
+    }
+
     const job = createSyncJob(data)
     this.jobQueue.addJob(job)
   }
@@ -186,10 +201,12 @@ export class SyncApi implements ISyncApi {
    * Also keeps in sync with new anchors.
    */
   async startModelSync(
-    startBlock: number,
-    endBlock: number,
-    models: string | string[]
+    models: string | string[],
+    startBlock = INITIAL_INDEXING_BLOCK,
+    endBlock?
   ): Promise<void> {
+    if (!this.syncConfig.on) return
+
     const modelIds = Array.isArray(models) ? models : [models]
 
     // Keep track of all models IDs to sync
@@ -197,10 +214,22 @@ export class SyncApi implements ISyncApi {
       this.modelsToSync.add(id.toString())
     }
 
-    await this._addSyncJob({ fromBlock: startBlock, toBlock: endBlock, models: modelIds })
+    if (!endBlock) {
+      endBlock = await this.provider
+        .getBlock('latest')
+        .then(({ number }) => number - BLOCK_CONFIRMATIONS)
+    }
+
+    await this._addSyncJob({
+      fromBlock: startBlock,
+      toBlock: endBlock,
+      models: modelIds,
+    })
   }
 
   async shutdown(): Promise<void> {
+    if (!this.syncConfig.on) return
+
     this.subscription?.unsubscribe()
     this.subscription = undefined
 

@@ -66,13 +66,13 @@ export class SyncWorker implements Worker<SyncJobData> {
         }
 
         const { proofs, block } = blockProofs
-        const jobs: Job<RebuildAnchorJobData>[] = proofs.map((proof) =>
-          createRebuildAnchorJob({
-            proof,
-            models,
-          })
-        )
-        await this.jobQueue.addJobs(jobs)
+        if (proofs.length > 0) {
+          const jobs: Job<RebuildAnchorJobData>[] = proofs.map((proof) =>
+            createRebuildAnchorJob(proof, models)
+          )
+
+          await this.jobQueue.addJobs(jobs)
+        }
 
         await this.jobQueue.updateJob(job.id, {
           fromBlock: block.number + 1,

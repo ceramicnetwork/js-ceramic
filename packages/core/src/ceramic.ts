@@ -51,6 +51,8 @@ import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
+import { SyncApi } from './sync/sync-api.js'
+import { ProvidersCache } from './providers-cache.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -122,6 +124,8 @@ export interface CeramicConfig {
   gateway?: boolean
 
   indexing?: IndexingConfig
+  // TODO: Replace in CDB-2072
+  sync?: boolean
 
   networkName?: string
   pubsubTopic?: string
@@ -150,6 +154,7 @@ export interface CeramicModules {
   pinStoreFactory: PinStoreFactory
   repository: Repository
   shutdownSignal: ShutdownSignal
+  providersCache: ProvidersCache
 }
 
 /**
@@ -161,6 +166,7 @@ export interface CeramicParameters {
   gateway: boolean
   stateStoreDirectory?: string
   indexingConfig: IndexingConfig
+  sync?: boolean
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
@@ -206,6 +212,8 @@ export class Ceramic implements CeramicApi {
   public readonly admin: AdminApi
   readonly repository: Repository
   private readonly anchorResumingService: AnchorResumingService
+  private readonly providersCache: ProvidersCache
+  private readonly syncApi: SyncApi
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
@@ -228,6 +236,7 @@ export class Ceramic implements CeramicApi {
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
+    this.providersCache = modules.providersCache
 
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
@@ -266,7 +275,6 @@ export class Ceramic implements CeramicApi {
       this._logger,
       params.networkOptions.name
     )
-    this.admin = new LocalAdminApi(localIndex)
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
@@ -278,6 +286,17 @@ export class Ceramic implements CeramicApi {
       conflictResolution: conflictResolution,
       indexing: localIndex,
     })
+    this.syncApi = new SyncApi(
+      {
+        db: params.indexingConfig.db,
+        on: params.sync,
+      },
+      this.dispatcher,
+      this.repository.stateManager.handleUpdate.bind(this.repository.stateManager),
+      this.repository.index,
+      this._logger
+    )
+    this.admin = new LocalAdminApi(localIndex, this.syncApi)
   }
 
   get index(): LocalIndexApi {
@@ -440,6 +459,8 @@ export class Ceramic implements CeramicApi {
     if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
       ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
     }
+    const providersCache = new ProvidersCache(ethereumRpcUrl)
+
     let anchorValidator
     if (networkOptions.name == Networks.INMEMORY) {
       // Just use the InMemoryAnchorService as the AnchorValidator
@@ -453,6 +474,7 @@ export class Ceramic implements CeramicApi {
           `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
         )
       }
+      // TODO (CDB-2229): use providers cache
       anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     }
 
@@ -493,6 +515,7 @@ export class Ceramic implements CeramicApi {
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
+      sync: config.sync,
     }
 
     const modules: CeramicModules = {
@@ -505,6 +528,7 @@ export class Ceramic implements CeramicApi {
       pinStoreFactory,
       repository,
       shutdownSignal,
+      providersCache,
     }
 
     return [modules, params]
@@ -521,7 +545,7 @@ export class Ceramic implements CeramicApi {
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
 
-    await ceramic._init(doPeerDiscovery)
+    await ceramic._init(doPeerDiscovery, config.sync)
 
     return ceramic
   }
@@ -531,7 +555,7 @@ export class Ceramic implements CeramicApi {
    * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
    * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
    */
-  async _init(doPeerDiscovery: boolean): Promise<void> {
+  async _init(doPeerDiscovery: boolean, sync = false): Promise<void> {
     try {
       this._logger.imp(
         `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
@@ -563,7 +587,13 @@ export class Ceramic implements CeramicApi {
         )
       }
 
-      await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+      const chainId = this._supportedChains ? this._supportedChains[0] : null
+      await this._anchorValidator.init(chainId)
+
+      if (sync) {
+        const provider = await this.providersCache.getProvider(chainId)
+        await this.syncApi.init(provider)
+      }
 
       await this._startupChecks()
 
@@ -924,6 +954,7 @@ export class Ceramic implements CeramicApi {
     this._logger.imp('Closing Ceramic instance')
     this.anchorResumingService.close()
     this._shutdownSignal.abort()
+    await this.syncApi.shutdown()
     await this.dispatcher.close()
     await this.repository.close()
     this._ipfsTopology.stop()

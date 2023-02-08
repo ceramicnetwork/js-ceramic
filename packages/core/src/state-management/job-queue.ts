@@ -79,7 +79,7 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
 
     await Promise.all(
       Object.entries(workersByJob).map(([jobName, worker]) =>
-        this.queue.work(jobName, worker.handler.bind(worker))
+        this.queue.work(jobName, { teamRefill: true }, worker.handler.bind(worker))
       )
     )
   }
