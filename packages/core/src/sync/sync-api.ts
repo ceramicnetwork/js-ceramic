@@ -25,7 +25,12 @@ import { SyncWorker, createSyncJob } from './workers/sync.js'
 
 export const BLOCK_CONFIRMATIONS = 20
 // TODO: block number to be defined
-export const INITIAL_INDEXING_BLOCK = 0
+export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
+  'eip155:1': 16587130,
+  'eip155:5': 8458698,
+  'eip155:100': 26381584,
+}
+
 export const STATE_TABLE_NAME = 'ceramic_indexing_state'
 
 type StoredState = {
@@ -50,6 +55,7 @@ export class SyncApi implements ISyncApi {
   private subscription: Subscription | undefined
   private provider: Provider
   private chainId: SupportedNetwork
+  private initialIndexingBlock: number
 
   constructor(
     private readonly syncConfig: SyncConfig,
@@ -74,6 +80,7 @@ export class SyncApi implements ISyncApi {
 
     const chainIdNumber = (await provider.getNetwork()).chainId
     this.chainId = `eip155:${chainIdNumber}` as SupportedNetwork
+    this.initialIndexingBlock = INITIAL_INDEXING_BLOCKS[this.chainId] || 0
 
     const [latestBlock, { processedBlockNumber }] = await Promise.all([
       this.provider.getBlock(-BLOCK_CONFIRMATIONS),
@@ -86,7 +93,7 @@ export class SyncApi implements ISyncApi {
 
     if (processedBlockNumber == null) {
       await this._addSyncJob({
-        fromBlock: INITIAL_INDEXING_BLOCK,
+        fromBlock: this.initialIndexingBlock,
         toBlock: latestBlock.number,
         models: Array.from(this.modelsToSync),
       })
@@ -202,7 +209,7 @@ export class SyncApi implements ISyncApi {
    */
   async startModelSync(
     models: string | string[],
-    startBlock = INITIAL_INDEXING_BLOCK,
+    startBlock = this.initialIndexingBlock,
     endBlock?
   ): Promise<void> {
     if (!this.syncConfig.on) return

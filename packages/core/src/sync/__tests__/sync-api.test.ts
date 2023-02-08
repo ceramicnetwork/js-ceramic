@@ -183,7 +183,7 @@ describe('Sync API', () => {
     })
 
     test('adds a job to do a full sync if there is no previously processed block', async () => {
-      const { INITIAL_INDEXING_BLOCK, SyncApi } = await import('../sync-api.js')
+      const { SyncApi } = await import('../sync-api.js')
 
       const getBlock = jest.fn(() => ({ number: 10, hash: 'abc123' }))
       const getNetwork = () => Promise.resolve({ chainId: 1337 })
@@ -205,7 +205,7 @@ describe('Sync API', () => {
 
       await sync.init({ getBlock, getNetwork } as any)
       expect(addSyncJob).toHaveBeenCalledWith({
-        fromBlock: INITIAL_INDEXING_BLOCK,
+        fromBlock: 0,
         toBlock: 10,
         models: expectedModels,
       })
