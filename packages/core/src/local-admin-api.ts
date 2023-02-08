@@ -10,8 +10,10 @@ export class LocalAdminApi implements AdminApi {
   constructor(private readonly indexApi: LocalIndexApi, private readonly syncApi: SyncApi) {}
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await this.indexApi.indexModels(modelsIDs)
-    await this.syncApi.startModelSync(modelsIDs)
+    await Promise.all([
+      this.indexApi.indexModels(modelsIDs),
+      this.syncApi.startModelSync(modelsIDs.map((id) => id.toString())),
+    ])
   }
 
   getIndexedModels(): Promise<Array<StreamID>> {

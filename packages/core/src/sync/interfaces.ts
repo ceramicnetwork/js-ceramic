@@ -11,11 +11,7 @@ export type SyncConfig = {
 }
 
 export interface ISyncApi {
-  startModelSync(
-    models: StreamID | StreamID[],
-    startBlock?: number,
-    endBlock?: number
-  ): Promise<void>
+  startModelSync(models: string | string[], startBlock?: number, endBlock?: number): Promise<void>
   shutdown(): Promise<void>
 }
 

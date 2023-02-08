@@ -7,7 +7,6 @@ import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap } from 'rxjs'
-import type { StreamID } from '@ceramicnetwork/streamid'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
 import { JobQueue } from '../state-management/job-queue.js'
@@ -198,19 +197,17 @@ export class SyncApi implements ISyncApi {
    * Also keeps in sync with new anchors.
    */
   async startModelSync(
-    models: StreamID | StreamID[],
+    models: string | string[],
     startBlock = INITIAL_INDEXING_BLOCK,
     endBlock?
   ): Promise<void> {
     if (!this.syncConfig.on) return
 
-    const modelIds = Array.isArray(models)
-      ? models.map((model) => model.toString())
-      : [models.toString()]
+    const modelIds = Array.isArray(models) ? models : [models]
 
     // Keep track of all models IDs to sync
     for (const id of modelIds) {
-      this.modelsToSync.add(id)
+      this.modelsToSync.add(id.toString())
     }
 
     if (!endBlock) {
