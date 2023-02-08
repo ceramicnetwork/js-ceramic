@@ -39,7 +39,7 @@ export type SyncConfig = {
    */
   db: string
 
-  on: boolean
+  on?: boolean
 }
 
 export class SyncApi implements ISyncApi {
@@ -58,6 +58,10 @@ export class SyncApi implements ISyncApi {
     private readonly localIndex: LocalIndexApi,
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
+    if (this.syncConfig.on === undefined) {
+      this.syncConfig.on = process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true'
+    }
+
     if (!this.syncConfig.on) return
 
     this.dataSource = knex({ client: 'pg', connection: this.syncConfig.db })

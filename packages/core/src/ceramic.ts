@@ -166,7 +166,7 @@ export interface CeramicParameters {
   gateway: boolean
   stateStoreDirectory?: string
   indexingConfig: IndexingConfig
-  sync: boolean
+  sync?: boolean
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
