@@ -23,7 +23,6 @@ import { Resolver } from 'did-resolver'
 
 // You need an instance of Ceramic to call getResolver.
 // This can be either @ceramicnetwork/core or @ceramicnetwork/http-client.
-// You can also set an address for your own ethr-did-registry contract
 const ceramic = // ...
 
 // getResolver will return an object with a key/value pair of { '3': resolver }
