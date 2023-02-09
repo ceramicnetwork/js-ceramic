@@ -46,7 +46,6 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   },
   indexing: {
     db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
-    'allow-queries-before-historical-sync': true,
   },
 })
 

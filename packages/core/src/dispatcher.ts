@@ -19,7 +19,7 @@ import {
   UpdateMessage,
 } from './pubsub/pubsub-message.js'
 import { Pubsub } from './pubsub/pubsub.js'
-import { Subscription } from 'rxjs'
+import { empty, Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus.js'
 import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
@@ -32,6 +32,7 @@ const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
+const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
@@ -100,6 +101,7 @@ export class Dispatcher {
       _ipfs,
       topic,
       IPFS_RESUBSCRIBE_INTERVAL_DELAY,
+      IPFS_NO_MESSAGE_INTERVAL,
       _pubsubLogger,
       _logger,
       tasks
@@ -113,6 +115,12 @@ export class Dispatcher {
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
+  }
+
+  async storeRecord(record: Record<string, unknown>): Promise<CID> {
+    return await this._shutdownSignal.abortable((signal) => {
+      return this._ipfs.dag.put(record, { signal: signal })
+    })
   }
 
   /**
@@ -310,6 +318,10 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
+    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true') {
+      return empty().subscribe()
+    }
+
     return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip, model })
   }
 
@@ -354,7 +366,7 @@ export class Dispatcher {
     // Add tip to pubsub cache and continue processing
     this.pubsubCache.set(tip.toString(), streamId.toString())
 
-    await this.repository.stateManager.handlePubsubUpdate(streamId, tip, model)
+    await this.repository.stateManager.handleUpdate(streamId, tip, model)
   }
 
   /**

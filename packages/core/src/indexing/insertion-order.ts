@@ -7,9 +7,10 @@ import {
   ForwardPaginationQuery,
   PaginationKind,
   parsePagination,
-} from '../parse-pagination.js'
-import { asTableName } from '../as-table-name.util.js'
-import { UnsupportedOrderingError } from '../unsupported-ordering-error.js'
+} from './parse-pagination.js'
+import { asTableName } from './as-table-name.util.js'
+import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
+import { addColumnPrefix } from './column-name.util.js'
 
 type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
 
@@ -17,7 +18,7 @@ type Selected = { stream_id: string; last_anchored_at: number; created_at: numbe
  * Contains functions to transform (parse and stringify) GraphQL cursors
  * as per [GraphQL Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
  *
- * A cursor for Postgres insertion order is a JSON having `created_at` field as number.
+ * A cursor for insertion order is a JSON having `created_at` field as number.
  */
 abstract class Cursor {
   /**
@@ -138,7 +139,7 @@ export class InsertionOrder {
     if (query.filter) {
       for (const [key, value] of Object.entries(query.filter)) {
         const filterObj = {}
-        filterObj[key] = value
+        filterObj[addColumnPrefix(key)] = value
         base = base.andWhere(filterObj)
       }
     }
@@ -178,7 +179,7 @@ export class InsertionOrder {
           if (query.filter) {
             for (const [key, value] of Object.entries(query.filter)) {
               const filterObj = {}
-              filterObj[key] = value
+              filterObj[addColumnPrefix(key)] = value
               subquery = subquery.andWhere(filterObj)
             }
           }

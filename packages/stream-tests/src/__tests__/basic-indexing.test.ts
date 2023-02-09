@@ -29,6 +29,7 @@ const CONTENT5 = { myData: 5 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -47,7 +48,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c8fk5udeg9odlm3b2h01oytfy3rngol32g0g33ob0x5n19hi36u'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
 
 // StreamID for a model that isn't indexed by the node
 const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
@@ -56,6 +57,7 @@ const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
 
 const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   name: 'MyModelWithARelation',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -219,6 +221,15 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       await expect(
         ceramic.index.query({ model: UNINDEXED_MODEL_STREAM_ID, first: 100 })
       ).rejects.toThrow(/is not indexed on this node/)
+    })
+
+    test("cannot index a stream that isn't a Model", async () => {
+      expect(core.index.indexedModels().length).toEqual(2)
+
+      const mid = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      await expect(core.index.indexModels([mid.id])).rejects.toThrow(/it is not a Model StreamID/)
+
+      expect(core.index.indexedModels().length).toEqual(2)
     })
 
     test('basic count query', async () => {

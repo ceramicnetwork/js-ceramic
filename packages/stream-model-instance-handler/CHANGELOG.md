@@ -3,6 +3,46 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.18.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.18.0-rc.1...@ceramicnetwork/stream-model-instance-handler@0.18.0) (2023-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.18.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.18.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.18.0-rc.1) (2023-01-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.17.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.18.0-rc.0) (2023-01-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [0.17.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.16.0...@ceramicnetwork/stream-model-instance-handler@0.17.0-rc.0) (2023-01-11)
+
+
+### Bug Fixes
+
+* **stream-tile, stream-model-instance:** Enforce controller must be a string ([#2647](https://github.com/ceramicnetwork/js-ceramic/issues/2647)) ([7ad3e90](https://github.com/ceramicnetwork/js-ceramic/commit/7ad3e90ce0176abf19041bebdd67d90733ba2511))
+
+
+### Features
+
+* Add sep key to model stream types ([#2633](https://github.com/ceramicnetwork/js-ceramic/issues/2633)) ([36c6d5e](https://github.com/ceramicnetwork/js-ceramic/commit/36c6d5e9244cd73803ff34a512958a91242373eb))
+
+
+
+
+
 # [0.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@0.16.0-rc.0...@ceramicnetwork/stream-model-instance-handler@0.16.0) (2023-01-05)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

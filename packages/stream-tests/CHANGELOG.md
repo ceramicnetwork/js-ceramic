@@ -3,6 +3,68 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.20.0](/compare/@ceramicnetwork/stream-tests@2.20.0-rc.1...@ceramicnetwork/stream-tests@2.20.0) (2023-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.20.0-rc.1](/compare/@ceramicnetwork/stream-tests@2.20.0-rc.0...@ceramicnetwork/stream-tests@2.20.0-rc.1) (2023-01-20)
+
+
+### Features
+
+* **core:** Add SyncOption to resync stream on error (#2661) d4fdf7b, closes #2661
+
+
+
+
+
+# [2.20.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.19.0-rc.0...@ceramicnetwork/stream-tests@2.20.0-rc.0) (2023-01-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.19.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.18.0...@ceramicnetwork/stream-tests@2.19.0-rc.0) (2023-01-11)
+
+
+### Bug Fixes
+
+* **stream-handler-common:** Fix loading of historical commits with CACAOs ([#2523](https://github.com/ceramicnetwork/js-ceramic/issues/2523)) ([329f1c8](https://github.com/ceramicnetwork/js-ceramic/commit/329f1c8457bd04bf9619fed0bba8f89afabd0b7e))
+* **stream-tile, stream-model-instance:** Enforce controller must be a string ([#2647](https://github.com/ceramicnetwork/js-ceramic/issues/2647)) ([7ad3e90](https://github.com/ceramicnetwork/js-ceramic/commit/7ad3e90ce0176abf19041bebdd67d90733ba2511))
+
+
+### Features
+
+* Add sep key to model stream types ([#2633](https://github.com/ceramicnetwork/js-ceramic/issues/2633)) ([36c6d5e](https://github.com/ceramicnetwork/js-ceramic/commit/36c6d5e9244cd73803ff34a512958a91242373eb))
+* **common:** Update type definitions to support simple relations ([#2421](https://github.com/ceramicnetwork/js-ceramic/issues/2421)) ([a4c4ce3](https://github.com/ceramicnetwork/js-ceramic/commit/a4c4ce303603c2ddad3e1e51026c4a8205a91188))
+* **core,common,http-client:** Standardize AdminAPI implementations to not take DID argument. ([#2481](https://github.com/ceramicnetwork/js-ceramic/issues/2481)) ([52a8c50](https://github.com/ceramicnetwork/js-ceramic/commit/52a8c502ec1da7e920e1c83dfc0de2013fd09420))
+* **core,stream-model-handler,stream-model-instance-handler:** Rename env var for enabling ComposeDB features ([#2405](https://github.com/ceramicnetwork/js-ceramic/issues/2405)) ([f0435ac](https://github.com/ceramicnetwork/js-ceramic/commit/f0435ac38f366afc5f2115cab67d996b4095ed5f))
+* **core:** Cache recently processed pubsub messages ([#2559](https://github.com/ceramicnetwork/js-ceramic/issues/2559)) ([94d539b](https://github.com/ceramicnetwork/js-ceramic/commit/94d539b8df21305c7cb4f49cc8c144e9d4622cfd))
+* **core:** Extract relation fields from MIDs and add to database, plus add filter capability to queries ([#2455](https://github.com/ceramicnetwork/js-ceramic/issues/2455)) ([fbe04b5](https://github.com/ceramicnetwork/js-ceramic/commit/fbe04b526dd662a59d355e29e68d5c741d5c0dd7))
+* **core:** Load Model relations when indexing a new Model ([#2447](https://github.com/ceramicnetwork/js-ceramic/issues/2447)) ([3c87ea7](https://github.com/ceramicnetwork/js-ceramic/commit/3c87ea72ff2fa12f031ca67abe08f9b409f4486c))
+* **core:** Pinning a ModelInstanceDocument should also pin its Model ([#2319](https://github.com/ceramicnetwork/js-ceramic/issues/2319)) ([6df9ae9](https://github.com/ceramicnetwork/js-ceramic/commit/6df9ae91afaa3beea8cd70cba1aebbc0ea188dbc))
+* **core:** Throw clear error and log warning when querying a model that isn't indexed ([#2467](https://github.com/ceramicnetwork/js-ceramic/issues/2467)) ([e79f157](https://github.com/ceramicnetwork/js-ceramic/commit/e79f157b1e391c110b3acb7d638d679b517b3a44))
+* **core:** Throw when loading or updating a stream with expired CACAOs in the log ([#2574](https://github.com/ceramicnetwork/js-ceramic/issues/2574)) ([928d5e3](https://github.com/ceramicnetwork/js-ceramic/commit/928d5e338957ba361c6b33246091ac145e6740d4))
+* **core:** Validate anchors and extract timestamp information before commit application ([#2622](https://github.com/ceramicnetwork/js-ceramic/issues/2622)) ([ae3ae5e](https://github.com/ceramicnetwork/js-ceramic/commit/ae3ae5e57303f658d6fd3c332b8773ffebf98793))
+* Make SYNC_ALWAYS rewrite and revalidate local state ([#2410](https://github.com/ceramicnetwork/js-ceramic/issues/2410)) ([24caa20](https://github.com/ceramicnetwork/js-ceramic/commit/24caa202c5d7d85dba66b6f104e094316145dad5))
+* **stream-model-instance-handler:** Validate relations in MID handler ([#2587](https://github.com/ceramicnetwork/js-ceramic/issues/2587)) ([064e694](https://github.com/ceramicnetwork/js-ceramic/commit/064e694fdd6ed445cf7579806e39b9891a6c341d))
+* **stream-model-instance,stream-model-instance-handler:** Enable deterministic MIDs for models with SINGLE accountRelations ([#2356](https://github.com/ceramicnetwork/js-ceramic/issues/2356)) ([a39d5e2](https://github.com/ceramicnetwork/js-ceramic/commit/a39d5e2dc4131c7821a458861393029f45199be6))
+* **stream-model:** Change Model model for indexing to use UNLOADABLE streamtype ([#2326](https://github.com/ceramicnetwork/js-ceramic/issues/2326)) ([cac8010](https://github.com/ceramicnetwork/js-ceramic/commit/cac8010afd6735af190c95025c223abe9f938f1a))
+* **stream-model:** Only allow genesis commit ([#2383](https://github.com/ceramicnetwork/js-ceramic/issues/2383)) ([f269217](https://github.com/ceramicnetwork/js-ceramic/commit/f269217b45868acb19d89a0bd62d44babc895b71))
+* **stream-model:** Remove 'unique' from Model metadata ([#2396](https://github.com/ceramicnetwork/js-ceramic/issues/2396)) ([1f0c820](https://github.com/ceramicnetwork/js-ceramic/commit/1f0c8208da8ac880168de7d47f58216c4a23223e))
+* **stream-model:** Validate relations in Model handler ([#2586](https://github.com/ceramicnetwork/js-ceramic/issues/2586)) ([af4741f](https://github.com/ceramicnetwork/js-ceramic/commit/af4741fefb4f2df6cc2db0247f89010c9ebafd06))
+* update dids, add/register cacao verifiers ([#2452](https://github.com/ceramicnetwork/js-ceramic/issues/2452)) ([d93fedb](https://github.com/ceramicnetwork/js-ceramic/commit/d93fedbb96f17b974f7e07f78aefa67790d8930e))
+
+
+
+
+
 # [2.18.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.18.0-rc.0...@ceramicnetwork/stream-tests@2.18.0) (2023-01-05)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

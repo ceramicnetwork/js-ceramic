@@ -19,6 +19,7 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 function getModelDef(name: string): ModelDefinition {
   return {
     name: name,
+    version: Model.VERSION,
     accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -553,19 +554,49 @@ describe('CACAO Integration test', () => {
         { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-one' },
         opts
       )
-      await tile.update({ a: 2 }, null, opts)
+      await tile.update({ a: 2 }, null, { ...opts, anchor: true })
+      await TestUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
       // 1. While CACAO is valid: Loading is ok
       const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
       const loaded1 = await TileDocument.load(ceramic, tile.id)
+      expect(tile.content['a']).toEqual(3)
       expect(loaded0.state).toEqual(tile.state)
       expect(loaded1.state).toEqual(tile.state)
       // 2. It is expired: Rewrite the state!
       expireCacao()
       await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
       const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
-      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 1))
+      expect(loaded3.content['a']).toEqual(2)
+      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
+      const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
+      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+    }, 30000)
+
+    test('overwrite expired capability when using RESYNC_ON_ERROR', async () => {
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const tile = await TileDocument.deterministic(
+        ceramic,
+        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-two' },
+        opts
+      )
+      await tile.update({ a: 2 }, null, { ...opts, anchor: true })
+      await TestUtils.anchorUpdate(ceramic, tile)
+      await tile.update({ a: 3 }, null, opts)
+
+      // 1. While CACAO is valid: Loading is ok
+      const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
+      const loaded1 = await TileDocument.load(ceramic, tile.id)
+      expect(tile.content['a']).toEqual(3)
+      expect(loaded0.state).toEqual(tile.state)
+      expect(loaded1.state).toEqual(tile.state)
+      // 2. It is expired: Rewrite the state!
+      expireCacao()
+      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+      const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ON_ERROR })
+      expect(loaded3.content['a']).toEqual(2)
+      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
       const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
       expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
     }, 30000)

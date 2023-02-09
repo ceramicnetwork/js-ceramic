@@ -19,7 +19,27 @@ const CONTENT3 = { myData: 3 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'integer',
+        maximum: 10000,
+        minimum: 0,
+      },
+    },
+    required: ['myData'],
+  },
+}
+
+const MODEL_DEFINITION_SINGLE: ModelDefinition = {
+  name: 'MySingleModel',
+  version: Model.VERSION,
+  accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     type: 'object',
@@ -37,10 +57,11 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c8fk5udeg9odlm3b2h01oytfy3rngol32g0g33ob0x5n19hi36u'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
 
 const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   name: 'MyModelWithARelation',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -67,6 +88,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
   let midMetadata: ModelInstanceDocumentMetadataArgs
   let modelWithRelation: Model
   let midRelationMetadata: ModelInstanceDocumentMetadataArgs
+  let modelSingle: Model
+  let midSingleMetadata: ModelInstanceDocumentMetadataArgs
 
   beforeAll(async () => {
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
@@ -95,6 +118,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     midMetadata = { model: model.id }
     modelWithRelation = await Model.create(ceramic, MODEL_WITH_RELATION_DEFINITION)
     midRelationMetadata = { model: modelWithRelation.id }
+    modelSingle = await Model.create(ceramic, MODEL_DEFINITION_SINGLE)
+    midSingleMetadata = { model: modelSingle.id }
 
     await core.index.indexModels([model.id])
   }, 12000)
@@ -250,6 +275,22 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
 
     expect(doc1.id.toString()).not.toEqual(doc2.id.toString())
+  })
+
+  test('ModelInstanceDocuments with accountRelation Single are created deterministically', async () => {
+    const doc1 = await ModelInstanceDocument.single(ceramic, midSingleMetadata)
+    const doc2 = await ModelInstanceDocument.single(ceramic, midSingleMetadata)
+
+    expect(doc1.id.toString()).toEqual(doc2.id.toString())
+  })
+
+  test('Controller must be valid DID even for unsigned genesis commits (ie Single accountRelations)', async () => {
+    await expect(
+      ModelInstanceDocument.single(ceramic, {
+        ...midSingleMetadata,
+        controller: { invalid: 'object' },
+      })
+    ).rejects.toThrow(/Attempting to create a ModelInstanceDocument with an invalid DID string/)
   })
 
   test('Can load a stream', async () => {

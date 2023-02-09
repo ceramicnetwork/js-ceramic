@@ -2,6 +2,12 @@ import { AdminApi, fetchJson } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
 
+export class MissingDIDError extends Error {
+  constructor() {
+    super('Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached')
+  }
+}
+
 /**
  * AdminApi for Ceramic http client.
  */
@@ -26,6 +32,7 @@ export class RemoteAdminApi implements AdminApi {
     code: string,
     modelsIDs?: Array<StreamID>
   ): Promise<string> {
+    if (!actingDid) throw new MissingDIDError()
     const body = modelsIDs
       ? { models: modelsIDs.map((streamID) => streamID.toString()) }
       : undefined

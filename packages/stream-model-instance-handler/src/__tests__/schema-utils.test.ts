@@ -1,10 +1,11 @@
 import { SchemaValidation } from '../schema-utils.js'
-import { ModelDefinition } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const SCHEMA_COMMIT_ID = 'k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

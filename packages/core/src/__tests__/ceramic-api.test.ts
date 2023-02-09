@@ -41,6 +41,7 @@ describe('Ceramic API', () => {
 
   const MODEL_DEFINITION: ModelDefinition = {
     name: 'MyModel',
+    version: Model.VERSION,
     accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
