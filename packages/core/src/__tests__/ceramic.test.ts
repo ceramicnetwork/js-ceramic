@@ -245,7 +245,6 @@ describe('Ceramic integration', () => {
           /rejected because it builds on stale state/
         )
         expect(streamOg.state.log.length).toEqual(2)
-        f
         // While we disallow creating commits based on a stale tip as part of a user request when the node already
         // knows about an existing tip, if we hear about a conflicting tip via pubsub, we need to consider it. The node
         // that created it may not have known about the existing tip when it did, and so now we need to use our conflict
