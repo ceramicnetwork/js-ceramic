@@ -4,8 +4,8 @@ import type { CommitData } from '../index.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
-import { getTezosVerifier } from '@didtools/pkh-tezos'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
+import { getTezosVerifier } from '@didtools/pkh-tezos'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
 
@@ -13,8 +13,8 @@ const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
 const verifiersCACAO = {
   ...getEIP191Verifier(),
   ...getSolanaVerifier(),
-  ...getTezosVerifier(),
   ...getStacksVerifier(),
+  ...getTezosVerifier(),
 }
 
 /**
