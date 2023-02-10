@@ -108,7 +108,7 @@ export class SyncApi implements ISyncApi {
   async _initJobQueue(): Promise<void> {
     await this.jobQueue.init({
       [REBUILD_ANCHOR_JOB_NAME]: new RebuildAnchorWorker(this.ipfsService, this.handleCommit),
-      [SYNC_JOB_NAME]: new SyncWorker(this.provider, this.jobQueue),
+      [SYNC_JOB_NAME]: new SyncWorker(this.provider, this.jobQueue, this.chainId),
     })
   }
 
