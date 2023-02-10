@@ -64,10 +64,6 @@ export class SyncApi implements ISyncApi {
     private readonly localIndex: LocalIndexApi,
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
-    if (this.syncConfig.on === undefined) {
-      this.syncConfig.on = process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true'
-    }
-
     if (!this.syncConfig.on) return
 
     this.dataSource = knex({ client: 'pg', connection: this.syncConfig.db })
@@ -241,5 +237,9 @@ export class SyncApi implements ISyncApi {
     this.subscription = undefined
 
     await this.jobQueue.stop()
+  }
+
+  get enabled() {
+    return this.syncConfig.on
   }
 }
