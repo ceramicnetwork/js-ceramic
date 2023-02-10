@@ -14,6 +14,10 @@ $ npm install
 Then build all packages:
 ```
 $ npm run build
+``` 
+When you change files, you will want to run prettier for formatting
+```
+npx prettier --check "packages/**/src/**/*.ts"
 ```
 
 ## Run tests
