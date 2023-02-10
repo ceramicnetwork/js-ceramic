@@ -509,13 +509,18 @@ export class Ceramic implements CeramicApi {
       maxQueriesPerSecond
     )
 
+    const sync =
+      config.sync == undefined
+        ? process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true'
+        : config.sync
+
     const params: CeramicParameters = {
       gateway: config.gateway,
       stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
-      sync: config.sync,
+      sync,
     }
 
     const modules: CeramicModules = {
@@ -545,7 +550,7 @@ export class Ceramic implements CeramicApi {
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
 
-    await ceramic._init(doPeerDiscovery, config.sync)
+    await ceramic._init(doPeerDiscovery)
 
     return ceramic
   }
@@ -555,7 +560,7 @@ export class Ceramic implements CeramicApi {
    * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
    * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
    */
-  async _init(doPeerDiscovery: boolean, sync = false): Promise<void> {
+  async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
       this._logger.imp(
         `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
@@ -590,7 +595,7 @@ export class Ceramic implements CeramicApi {
       const chainId = this._supportedChains ? this._supportedChains[0] : null
       await this._anchorValidator.init(chainId)
 
-      if (sync) {
+      if (this.syncApi.enabled) {
         const provider = await this.providersCache.getProvider(chainId)
         await this.syncApi.init(provider)
       }
