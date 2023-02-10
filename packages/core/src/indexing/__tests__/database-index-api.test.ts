@@ -16,7 +16,7 @@ import {
   SqliteIndexApi,
   asTimestamp,
 } from '../database-index-api.js'
-import {DatabaseType, indices} from '../migrations/1-create-model-table.js'
+import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
@@ -260,7 +260,8 @@ describe('postgres', () => {
 
           const tableIndices = indices(tableName)
           for (const indexToCreate of tableIndices.indices) {
-            if(!indexToCreate.keys.includes("updated_at")) { //updated_at not added as part of table
+            if (!indexToCreate.keys.includes('updated_at')) {
+              //updated_at not added as part of table
               table.index(indexToCreate.keys, indexToCreate.name, {
                 storageEngineIndexType: indexToCreate.indexType,
               })
@@ -297,9 +298,9 @@ describe('postgres', () => {
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
         })
 
-        await expect(indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))).rejects.toThrow(
-          /Schema verification failed for index/
-        )
+        await expect(
+          indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+        ).rejects.toThrow(/Schema verification failed for index/)
       })
 
       test('Fail table validation if relation column missing', async () => {

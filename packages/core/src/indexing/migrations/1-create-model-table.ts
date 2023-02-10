@@ -28,14 +28,14 @@ export type ColumnInfo = {
 }
 
 export type TableIndex = {
-  keys: Array<string>,
-  name: string,
-  indexType: Knex.storageEngineIndexType,
+  keys: Array<string>
+  name: string
+  indexType: Knex.storageEngineIndexType
 }
 
 export type TableIndices = {
-  indexName: string,
-  indices: Array<TableIndex>,
+  indexName: string
+  indices: Array<TableIndex>
 }
 
 export function indices(tableName: string): TableIndices {
@@ -159,7 +159,10 @@ export async function createPostgresModelTable(
   await dataSource.schema.createTable(tableName, function (table) {
     const idx = indices(tableName)
 
-    table.string('stream_id').primary(`idx_${idx.indexName}_pkey`).unique(`constr_${idx.indexName}_unique`)
+    table
+      .string('stream_id')
+      .primary(`idx_${idx.indexName}_pkey`)
+      .unique(`constr_${idx.indexName}_unique`)
     table.string('controller_did', 1024).notNullable()
     table.jsonb('stream_content').notNullable()
     table.string('tip').notNullable()
