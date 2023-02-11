@@ -326,6 +326,6 @@ and tbl_name like '${tableName}'
 and name in (${sqlIndices})
 ;
   `)
-    return expectedIndices.length == actualIndices.rowCount
+    return expectedIndices.length == actualIndices.length
   }
 }
