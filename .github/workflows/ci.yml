@@ -1,4 +1,4 @@
-name: Dagger CI Workflow
+Daddyzilla
 
 on:
   repository_dispatch:
