@@ -35,7 +35,11 @@ export function createSyncJob(data: SyncJobData, options?: SendOptions): Job<Syn
  * It ensures that the data is stored and handled.
  */
 export class SyncWorker implements Worker<SyncJobData> {
-  constructor(private readonly provider: Provider, private readonly jobQueue: IJobQueue<JobData>) {}
+  constructor(
+    private readonly provider: Provider,
+    private readonly jobQueue: IJobQueue<JobData>,
+    private readonly chainId
+  ) {}
 
   /**
    * takes a sync job and retrieves the block proofs for each block between fromBlock - toBlock.
@@ -49,7 +53,7 @@ export class SyncWorker implements Worker<SyncJobData> {
 
     const blockProof$ = createBlocksProofsLoader({
       provider: this.provider,
-      chainId: 'eip155:5',
+      chainId: this.chainId,
       fromBlock,
       toBlock,
     }).pipe(
