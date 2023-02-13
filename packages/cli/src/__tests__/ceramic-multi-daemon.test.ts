@@ -160,9 +160,9 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     const doc1A = await TileDocument.create(core1, initialContent, null, { anchor: false })
 
     const doc2 = await TileDocument.load(core2, doc1A.id)
-    await doc2.update(updatedContent, null, {publish:false, anchor:false})
+    await doc2.update(updatedContent, null, { publish: false, anchor: false })
 
-    const doc1B = await TileDocument.load(core1, doc1A.id, {sync: SyncOptions.SYNC_ALWAYS})
+    const doc1B = await TileDocument.load(core1, doc1A.id, { sync: SyncOptions.SYNC_ALWAYS })
     expect(doc1B.content).toEqual(updatedContent)
     expect(doc1A.content).toEqual(initialContent)
   })
@@ -173,9 +173,9 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     const doc1A = await TileDocument.create(client1, initialContent, null, { anchor: false })
 
     const doc2 = await TileDocument.load(client2, doc1A.id)
-    await doc2.update(updatedContent, null, {publish:false, anchor:false})
+    await doc2.update(updatedContent, null, { publish: false, anchor: false })
 
-    const doc1B = await TileDocument.load(client1, doc1A.id, {sync: SyncOptions.SYNC_ALWAYS})
+    const doc1B = await TileDocument.load(client1, doc1A.id, { sync: SyncOptions.SYNC_ALWAYS })
     expect(doc1B.content).toEqual(updatedContent)
     expect(doc1A.content).toEqual(initialContent)
   })

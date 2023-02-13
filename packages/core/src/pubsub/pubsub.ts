@@ -4,8 +4,13 @@ import { IpfsApi } from '@ceramicnetwork/common'
 import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { toString as uint8ArrayToString } from 'uint8arrays'
-import {IncomingChannel, filterExternal, IPFSPubsubMessage, checkSlowObservable} from './incoming-channel.js'
-import { TaskQueue } from './task-queue.js';
+import {
+  IncomingChannel,
+  filterExternal,
+  IPFSPubsubMessage,
+  checkSlowObservable,
+} from './incoming-channel.js'
+import { TaskQueue } from './task-queue.js'
 
 const textDecoder = new TextDecoder('utf-8')
 
@@ -59,13 +64,25 @@ export class Pubsub extends Observable<PubsubMessage> {
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, lateMessageAfter, pubsubLogger, logger, tasks)
+      const incoming$ = new IncomingChannel(
+        ipfs,
+        topic,
+        resubscribeEvery,
+        lateMessageAfter,
+        pubsubLogger,
+        logger,
+        tasks
+      )
 
       incoming$
         .pipe(
           filterExternal(this.peerId$),
-          checkSlowObservable(lateMessageAfter, logger, `IPFS did not provide any internal messages, please check your IPFS configuration.`),
-          ipfsToPubsub(this.peerId$, pubsubLogger, topic),
+          checkSlowObservable(
+            lateMessageAfter,
+            logger,
+            `IPFS did not provide any internal messages, please check your IPFS configuration.`
+          ),
+          ipfsToPubsub(this.peerId$, pubsubLogger, topic)
         )
         .subscribe(subscriber)
     })
