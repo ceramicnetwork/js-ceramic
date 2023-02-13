@@ -124,13 +124,14 @@ package install. Install `pyenv` and add it to your local `PATH` prior to instal
 
 `$ brew install pyenv`
 
-To ensure that both `python` & `python3` commands work properly, add `pyenv` to your PATH:
+You will then need to install python2 and python3
 
-**ZSHR (MacOS Default):** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.zshrc`
+`pyenv install 3.11`
+`pyenv install 2.7`
 
-**BASH:** `$ echo "export PATH=\"\${HOME}/.pyenv/shims:\${PATH}\"" >> ~/.bashrc`
+You will then need to add them both to the global pyenv environment
 
-`$ reset` - OR - restart Terminal window
+`pyenv global 3.11 2.7`
 
 ## MISCELLANY
 
