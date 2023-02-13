@@ -37,6 +37,11 @@ export interface ModelMetadataArgs {
    * The DID that is allowed to author updates to this Model
    */
   controller: string
+
+  /**
+   * Version of the model definition language
+   */
+  language_version: string
 }
 
 /**
@@ -47,6 +52,11 @@ export interface ModelMetadata {
    * The DID that is allowed to author updates to this Model
    */
   controller: string
+
+  /**
+   * Version of the model definition language
+   */
+  language_version: string
 
   /**
    * The StreamID that all Model streams have as their 'model' for indexing purposes. Note that
@@ -180,7 +190,7 @@ export class Model extends Stream {
   }
 
   get metadata(): ModelMetadata {
-    return { controller: this.state$.value.metadata.controllers[0], model: Model.MODEL }
+    return { controller: this.state$.value.metadata.controllers[0], version: this.state$.value.metadata.language_version || VERSION, model: Model.MODEL }
   }
 
   /**
@@ -363,7 +373,14 @@ export class Model extends Stream {
         await _ensureAuthenticated(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        metadata = { controller: signer.did.hasParent ? signer.did.parent : signer.did.id }
+        let controller = signer.did.hasParent ? signer.did.parent : signer.did.id
+        if (!metadata) {
+          metadata = { controller: controller, language_version: this.VERSION }
+        } else {
+          metadata.controller = controller
+          metadata.language_version = metadata.language_version || this.VERSION
+        }
+
       } else {
         throw new Error('No controller specified')
       }
