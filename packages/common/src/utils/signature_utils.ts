@@ -4,16 +4,15 @@ import type { CommitData } from '../index.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
-import { getTezosVerifier }  from '@didtools/pkh-tezos'
+import { getTezosVerifier } from '@didtools/pkh-tezos'
 
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
-
 
 // Register supported CACAO Verifiers
 const verifiersCACAO = {
   ...getEIP191Verifier(),
   ...getSolanaVerifier(),
-  ...getTezosVerifier()
+  ...getTezosVerifier(),
 }
 
 /**
@@ -47,7 +46,7 @@ export class SignatureUtils {
         disableTimecheck: commitData.disableTimecheck,
         capability: cacao,
         revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
-        verifiers: verifiersCACAO
+        verifiers: verifiersCACAO,
       })
     } catch (e: any) {
       const original = e.message ? e.message : String(e)

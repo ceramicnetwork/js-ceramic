@@ -75,7 +75,11 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     super((subscriber) => {
       new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
         .pipe(
-          checkSlowObservable(lateMessageAfter, logger, 'IPFS did not provide any messages, please check your IPFS configuration.'),
+          checkSlowObservable(
+            lateMessageAfter,
+            logger,
+            'IPFS did not provide any messages, please check your IPFS configuration.'
+          ),
           retryWhen((errors) =>
             errors.pipe(
               tap((e) => logger.err(e)),
@@ -109,15 +113,12 @@ export function filterExternal(
 export function checkSlowObservable(
   delay: number,
   logger: DiagnosticsLogger,
-  description: string,
+  description: string
 ): MonoTypeOperatorFunction<IPFSPubsubMessage> {
   const createTimeout = () => {
-    return setTimeout(
-      () => {
-        logger.warn(`Message was not timely. ${description}`)
-      },
-      delay
-    )
+    return setTimeout(() => {
+      logger.warn(`Message was not timely. ${description}`)
+    }, delay)
   }
   let outstanding = createTimeout()
   return pipe(
@@ -126,7 +127,7 @@ export function checkSlowObservable(
         clearTimeout(outstanding)
         outstanding = createTimeout()
       },
-      complete: () => clearTimeout(outstanding)
+      complete: () => clearTimeout(outstanding),
     })
   )
 }

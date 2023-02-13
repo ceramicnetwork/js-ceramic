@@ -4,7 +4,7 @@ import {
   Networks,
   StreamState,
   StreamStateHolder,
-  StreamUtils
+  StreamUtils,
 } from '@ceramicnetwork/common'
 import { ObjectStore } from './object-store.js'
 import { IKVStore } from './ikv-store.js'
@@ -17,7 +17,7 @@ function serialize(value: StreamState): any {
   return StreamUtils.serializeState(value)
 }
 
-function  deserialize(serialized: string): StreamState {
+function deserialize(serialized: string): StreamState {
   return StreamUtils.deserializeState(serialized)
 }
 
