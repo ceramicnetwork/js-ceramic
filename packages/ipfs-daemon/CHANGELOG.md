@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.11.0...@ceramicnetwork/ipfs-daemon@2.12.0-rc.0) (2023-02-13)
+
+
+### Bug Fixes
+
+* bump ipfs http client ([605957f](https://github.com/ceramicnetwork/js-ceramic/commit/605957fbb6183cb6ae84ea247e1f7bdb092c12fa))
+* downgrade ipfs http client ([5bc3a5e](https://github.com/ceramicnetwork/js-ceramic/commit/5bc3a5edbfa15dcef9ff6e8ec8873b86e9cd0991))
+* downgrade ipfs http client + add newer multiaddr dep ([ad3ad35](https://github.com/ceramicnetwork/js-ceramic/commit/ad3ad3588f58b181b674440786c9649086a9078a))
+* revert all multiaddr changes ([41e1485](https://github.com/ceramicnetwork/js-ceramic/commit/41e148549552ca470d964aafd255258b18da2dd0))
+
+
+
+
+
 # [2.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.11.0-rc.1...@ceramicnetwork/ipfs-daemon@2.11.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

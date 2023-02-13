@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.2.0...@ceramicnetwork/anchor-listener@1.3.0-rc.0) (2023-02-13)
+
+
+### Features
+
+* **anchor-utils, anchor-listener:** Add tx type to anchor proof ([#2686](https://github.com/ceramicnetwork/js-ceramic/issues/2686)) ([2cd19fd](https://github.com/ceramicnetwork/js-ceramic/commit/2cd19fd71b5662c0fbf7a07e8678504af80629de))
+
+
+
+
+
 # [1.2.0](/compare/@ceramicnetwork/anchor-listener@1.2.0-rc.1...@ceramicnetwork/anchor-listener@1.2.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-listener
