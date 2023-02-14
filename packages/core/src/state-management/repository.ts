@@ -254,7 +254,9 @@ export class Repository {
       }
     })
 
-    StreamUtils.checkForCacaoExpiration(state$.state)
+    if (opts.sync == SyncOptions.SYNC_ALWAYS || opts.sync == SyncOptions.SYNC_ON_ERROR) {
+      StreamUtils.checkForCacaoExpiration(state$.state)
+    }
 
     await this.handlePinOpts(state$, opts)
     if (synced && state$.isPinned) {
