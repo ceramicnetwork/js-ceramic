@@ -14,7 +14,7 @@ const ANCHOR_PROOF = {
   txHash: convertEthHashToCid('0xed6b5d7a9e8b3890651f7f0d8ed9b8939e9857cdd0b48bf77917cd709ddf7afc'),
 }
 
-const MODEL = 'kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'
+const MODEL = 'kjzl6hvfrbw6c62v69f7velodufis69rht6cpqf534q2s757vcbdao4mi2z2i28'
 
 const STREAM_USING_MODEL1 = 'kjzl6kcym7w8y5hi5n1rty3mqey8xgo0efn5cnzhkwziixqkcl4dup6pgux03e2'
 const COMMIT_USING_MODEL1 = 'bagcqcerada2vcxipsls7qprmgk66dnlo3jjdh6qyjmxnr3vcs7tianb4jiva'
