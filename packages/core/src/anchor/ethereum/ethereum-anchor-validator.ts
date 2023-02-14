@@ -246,6 +246,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
     return block.timestamp
   }
 
+  get validationRpcEndpoint(): string | null {
+    return this.ethereumRpcEndpoint
+  }
+
   /**
    * Gets Ethereum provider based on chain ID
    * @param chain - CAIP-2 Chain ID

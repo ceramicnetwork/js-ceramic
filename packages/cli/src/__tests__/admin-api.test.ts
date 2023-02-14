@@ -114,7 +114,7 @@ describe('admin api', () => {
         )}`,
       },
     })
-    expect(statusResult).toEqual({})
+    expect(statusResult).not.toBeNull()
 
     const getResult = await fetchJson(modelsURLString, {
       headers: {

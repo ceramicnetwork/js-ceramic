@@ -96,6 +96,11 @@ export interface AnchorService {
  */
 export interface AnchorValidator {
   /**
+   * The rpc endpoint used to validate anchor transactions.
+   */
+  validationRpcEndpoint: string | null
+
+  /**
    * Performs whatever initialization work is required to validate commits anchored on the
    * configured blockchain.
    */

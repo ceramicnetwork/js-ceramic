@@ -22,6 +22,7 @@ export * from './stream-state-subject.js'
 export * from './subscription-set.js'
 export * from './index-api.js'
 export * from './non-empty-array.js'
+export * from './node-status-interface.js'
 
 import type { IPFS } from 'ipfs-core-types'
 export type IpfsApi = IPFS

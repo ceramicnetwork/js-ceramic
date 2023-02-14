@@ -271,6 +271,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     return '<inmemory>'
   }
 
+  get validationRpcEndpoint(): string | null {
+    return null
+  }
+
   /**
    * Send request to the anchoring service
    * @param streamId - Stream ID
