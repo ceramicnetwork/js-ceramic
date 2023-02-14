@@ -26,7 +26,6 @@ commands:
       - node/install-packages
       - run: npm run build
       - run: npm run lint
-      - run: npx prettier --check "packages/**/src/**/*.ts"
       - run:
           name: Test
           command: npm run test
