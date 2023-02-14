@@ -37,6 +37,21 @@ beforeAll(async () => {
   expectedKid = `${did.id}#${didKeyVerStr}`
 })
 
+test('nodeStatus()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+  ;(adminApi as any)._fetchJson = fauxFetch
+  await adminApi.nodeStatus()
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/nodeStatus`))
+  const sentPayload = fauxFetch.mock.calls[1][1]
+  const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+  const jwsResult = await did.verifyJWS(sentJws)
+  expect(jwsResult.kid).toEqual(expectedKid)
+})
+
 test('getIndexedModels()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson

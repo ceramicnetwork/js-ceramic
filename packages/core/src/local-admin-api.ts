@@ -9,6 +9,11 @@ import { SyncApi } from './sync/sync-api.js'
 export class LocalAdminApi implements AdminApi {
   constructor(private readonly indexApi: LocalIndexApi, private readonly syncApi: SyncApi) {}
 
+  // todo use stronger type
+  async nodeStatus(): Promise<any> {
+    return {}
+  }
+
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     await Promise.all([
       this.indexApi.indexModels(modelsIDs),
