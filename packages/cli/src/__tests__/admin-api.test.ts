@@ -260,7 +260,7 @@ describe('admin api', () => {
     })
 
     it('Old code used with status GET', async () => {
-      const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/code`)).code
+      const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       const now = new Date().getTime()
       MockDate.set(now + (1000 * 60 * 1 + 1000)) // One minute one second in the future
       expect(true).toBeTruthy()
