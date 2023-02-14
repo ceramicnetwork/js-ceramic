@@ -10,7 +10,9 @@ import {
   mapProcessBlockProofs,
 } from '../listener.js'
 
-import { mockedLogs, mockedLogsProofs } from './test-utils.js'
+import { mockedBlockProofs, createLog } from './test-utils.js'
+import { BlockAndBlockProofs } from '../loader.js'
+import { createAnchorProof } from '../utils.js'
 
 describe('listener', () => {
   test('createContinuousBlocksListener() pushes continous slices of block numbers', async () => {
@@ -57,7 +59,7 @@ describe('listener', () => {
     test('pushes reorganized event if block parent hash does not match provided previous hash', async () => {
       const expectedParentHash = 'block0hash'
       const block = { parentHash: 'block1hash' } as Block
-      const data = { block, proofs: mockedLogsProofs }
+      const data = { block, proofs: mockedBlockProofs[0] } as BlockAndBlockProofs
 
       const events$ = of(data).pipe(mapProcessBlockProofs(expectedParentHash))
       const event = await firstValueFrom(events$)
@@ -66,8 +68,8 @@ describe('listener', () => {
 
     test('load logs and pushes processed block even if parent hash matches expected', async () => {
       const expectedParentHash = 'block0hash'
-      const block = { parentHash: expectedParentHash, number: 10, timestamp: 1000 } as Block
-      const data = { block, proofs: mockedLogsProofs }
+      const block = { parentHash: expectedParentHash, number: 0, timestamp: 1000 } as Block
+      const data = { block, proofs: mockedBlockProofs[0] }
 
       const events$ = of(data).pipe(mapProcessBlockProofs(expectedParentHash))
       const event = await firstValueFrom(events$)
@@ -84,7 +86,7 @@ describe('listener', () => {
         { hash: 'block5', parentHash: 'block4', number: 5, timestamp: 500 } as Block,
       ]
       const blocksWithProofs = blocks.map((block) => {
-        return { block, proofs: mockedLogsProofs }
+        return { block, proofs: mockedBlockProofs[0] }
       })
 
       const events$ = from(blocksWithProofs).pipe(mapProcessBlockProofs(), toArray())
@@ -106,16 +108,28 @@ describe('listener', () => {
 
   test('createBlockProofsListener()', async () => {
     const blocks: Array<Block> = [
-      { hash: 'block1', parentHash: 'block0', number: 1, timestamp: 100 } as Block,
-      { hash: 'block2', parentHash: 'block1', number: 2, timestamp: 200 } as Block,
+      { hash: '1', parentHash: '0', number: 1, timestamp: 100 } as Block,
+      { hash: '2', parentHash: '1', number: 2, timestamp: 200 } as Block,
       // Reorganization on block 3
-      { hash: 'block3', parentHash: 'block0', number: 3, timestamp: 300 } as Block,
-      { hash: 'block4', parentHash: 'block3', number: 4, timestamp: 400 } as Block,
-      { hash: 'block5', parentHash: 'block4', number: 5, timestamp: 500 } as Block,
+      { hash: '3', parentHash: '0', number: 3, timestamp: 300 } as Block,
+      { hash: '4', parentHash: '3', number: 4, timestamp: 400 } as Block,
+      { hash: '5', parentHash: '4', number: 5, timestamp: 500 } as Block,
     ]
 
+    const mockedLogs = blocks.map((block) =>
+      createLog(block.number, new Uint8Array(new Array(32).fill(block)))
+    )
+
+    const mockedBlockProofs = mockedLogs.map((log) => ({
+      blockNumber: log.blockNumber,
+      blockHash: log.blockHash,
+      proofs: [createAnchorProof('eip155:1337', log)],
+    }))
+
     const provider = new EventEmitter() as unknown as Provider
-    provider.getLogs = jest.fn(() => Promise.resolve(mockedLogs))
+    provider.getLogs = jest.fn(({ fromBlock, toBlock }) =>
+      Promise.resolve(mockedLogs.slice(fromBlock - 1, toBlock))
+    )
     provider.getBlock = jest.fn((blockNumber: number) => Promise.resolve(blocks[blockNumber - 1]))
 
     const events$ = createBlockProofsListener({
@@ -148,16 +162,16 @@ describe('listener', () => {
     })
 
     expect(events).toEqual([
-      { reorganized: false, block: blocks[0], proofs: mockedLogsProofs },
-      { reorganized: false, block: blocks[1], proofs: mockedLogsProofs },
+      { reorganized: false, block: blocks[0], proofs: mockedBlockProofs[0] },
+      { reorganized: false, block: blocks[1], proofs: mockedBlockProofs[1] },
       {
         reorganized: true,
         block: blocks[2],
-        proofs: mockedLogsProofs,
+        proofs: mockedBlockProofs[2],
         expectedParentHash: blocks[1].hash,
       },
-      { reorganized: false, block: blocks[3], proofs: mockedLogsProofs },
-      { reorganized: false, block: blocks[4], proofs: mockedLogsProofs },
+      { reorganized: false, block: blocks[3], proofs: mockedBlockProofs[3] },
+      { reorganized: false, block: blocks[4], proofs: mockedBlockProofs[4] },
     ])
   })
 })

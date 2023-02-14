@@ -1,20 +1,23 @@
-import type { Block, Provider } from '@ethersproject/providers'
+import type { Block, Provider, Log } from '@ethersproject/providers'
 import { jest } from '@jest/globals'
 import { firstValueFrom, from, of, toArray } from 'rxjs'
 
 import {
-  createAncestorBlocksProofsLoader,
-  createAnchorProofsLoader,
   createBlockLoader,
-  createBlocksProofsLoader,
-  loadAnchorProofs,
   loadBlock,
+  mapLoadBlockForBlockProofs,
+  createBlockProofsLoaderForRange,
+  createAncestorBlocksProofsLoader,
+  createBlocksProofsLoader,
+  loadBlockProofsForRange,
   mapLoadBlockProofs,
-  mapLoadBlocks,
+  mapLoadBlockProofsForRange,
+  type BlockProofs,
+  BlockRangeFilter,
 } from '../loader.js'
 import { createAnchorProof } from '../utils.js'
 
-import { createLog, delay, mockedLogs, mockedLogsProofs } from './test-utils.js'
+import { createLog, delay, mockedLogs, mockedBlockProofs } from './test-utils.js'
 
 describe('loader', () => {
   describe('createBlockLoader()', () => {
@@ -58,113 +61,168 @@ describe('loader', () => {
     expect(getBlock).toHaveBeenCalledWith('foo')
   })
 
-  test('mapLoadBlocks() operator pushes loaded blocks in input order', async () => {
-    const blockNumbers = [100, 101, 102]
-    const loadedOrder: Array<number> = []
-    const getBlock = jest.fn(async (number: number) => {
+  test('mapLoadBlockForBlockProofs() operator adds loaded blocks to block proofs in input order', async () => {
+    const blockProofs = [
+      { blockHash: '100' },
+      { blockHash: '101' },
+      { blockHash: '102' },
+    ] as Array<BlockProofs>
+    const loadedOrder: Array<string> = []
+    const getBlock = jest.fn(async (hash: string) => {
       // Blocks will be resolved with delay so they are received out of order
       let wait = 0
-      if (number === 100) {
+      if (hash === '100') {
         wait = 200
-      } else if (number === 101) {
+      } else if (hash === '101') {
         wait = 50
-      } else if (number === 102) {
+      } else if (hash === '102') {
         wait = 100
       }
       await delay(wait)
-      loadedOrder.push(number)
-      return { number } as Block
+      loadedOrder.push(hash)
+      return { hash } as Block
     })
     const provider = { getBlock } as unknown as Provider
 
-    const loadedBlocks$ = of(blockNumbers).pipe(mapLoadBlocks(provider), toArray())
+    const loadedBlocks$ = of(blockProofs).pipe(mapLoadBlockForBlockProofs(provider), toArray())
     // Blocks should get pushed in input order...
-    await expect(firstValueFrom(loadedBlocks$)).resolves.toEqual([
-      { number: 100 },
-      { number: 101 },
-      { number: 102 },
-    ])
+    await expect(firstValueFrom(loadedBlocks$)).resolves.toEqual(
+      blockProofs.map((proofs) => ({ proofs, block: { hash: proofs.blockHash } }))
+    )
     // ... even if they got received out of order when loaded in parallel
-    expect(loadedOrder).toEqual([101, 102, 100])
+    expect(loadedOrder).toEqual(['101', '102', '100'])
   })
 
-  describe('createAnchorProofsLoader()', () => {
+  describe('createBlockProofsLoaderForRange()', () => {
     test('Pushes an error if there is no contract address for the wanted chainId', async () => {
       // @ts-expect-error invalid chainId
-      const anchorProofs$ = createAnchorProofsLoader({} as Provider, 'eip155:0', {} as Block)
+      const anchorProofs$ = createBlockProofsLoaderForRange({} as Provider, 'eip155:0', {} as Block)
       await expect(firstValueFrom(anchorProofs$)).rejects.toThrowError(
         'No known contract address for network: eip155:0'
       )
     })
 
-    test('Pushes an array of anchor proofs', async () => {
-      const logs = [0, 1, 2].map((i) => createLog(new Uint8Array(new Array(32).fill(i))))
+    test('Pushes an array of block proofs', async () => {
+      const logs = [10, 11, 12].map((blockNumber) =>
+        createLog(blockNumber, new Uint8Array(new Array(32).fill(blockNumber)))
+      )
       const getLogs = jest.fn(() => Promise.resolve(logs))
       const provider = { getLogs } as unknown as Provider
 
-      const anchorProofs$ = createAnchorProofsLoader(provider, 'eip155:1337', 10)
-      await expect(firstValueFrom(anchorProofs$)).resolves.toEqual([
-        createAnchorProof('eip155:1337', logs[0]),
-        createAnchorProof('eip155:1337', logs[1]),
-        createAnchorProof('eip155:1337', logs[2]),
-      ])
+      const blockProofs$ = createBlockProofsLoaderForRange(provider, 'eip155:1337', {
+        fromBlock: 10,
+        toBlock: 12,
+      })
+      await expect(firstValueFrom(blockProofs$)).resolves.toEqual(
+        [10, 11, 12].map((blockNumber, i) => ({
+          blockHash: blockNumber.toString(),
+          blockNumber,
+          proofs: [createAnchorProof('eip155:1337', logs[i])],
+        }))
+      )
     })
   })
 
-  describe('loadAnchorProofs()', () => {
+  describe('loadBlockProofsForRange()', () => {
     test('Pushes an error if there is no contract address for the wanted chainId', async () => {
-      // @ts-expect-error invalid chainId
-      await expect(loadAnchorProofs({} as Provider, 'eip155:0', {} as Block)).rejects.toThrowError(
-        'No known contract address for network: eip155:0'
-      )
+      await expect(
+        // @ts-expect-error invalid chainId
+        loadBlockProofsForRange({} as Provider, 'eip155:0', {} as Block)
+      ).rejects.toThrowError('No known contract address for network: eip155:0')
     })
 
-    test('Pushes an array of anchor proofs', async () => {
+    test('Pushes an array of block proofs', async () => {
       const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
       const provider = { getLogs } as unknown as Provider
-      await expect(loadAnchorProofs(provider, 'eip155:1337', 10)).resolves.toEqual(mockedLogsProofs)
+      await expect(
+        loadBlockProofsForRange(provider, 'eip155:1337', { fromBlock: 0, toBlock: 2 })
+      ).resolves.toEqual(mockedBlockProofs)
     })
   })
 
   test('mapLoadBlockProofs() operator loads the proofs', async () => {
-    const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
+    const getLogs = jest.fn(({ fromBlock, toBlock }) => {
+      expect(fromBlock).toEqual(toBlock)
+      return Promise.resolve([mockedLogs[fromBlock]])
+    })
     const provider = { getLogs } as unknown as Provider
     const blocks = [
-      { number: 10, timestamp: 1000 },
-      { number: 11, timestamp: 1100 },
+      { number: 0, timestamp: 1000 },
+      { number: 1, timestamp: 1100 },
+      { number: 2, timestamp: 1200 },
     ] as Array<Block>
 
-    const blocksWithProofs$ = from(blocks).pipe(
-      mapLoadBlockProofs(provider, 'eip155:1337'),
+    const blockProofs$ = from(blocks).pipe(mapLoadBlockProofs(provider, 'eip155:1337'), toArray())
+
+    await expect(firstValueFrom(blockProofs$)).resolves.toEqual(mockedBlockProofs)
+  })
+
+  test('mapLoadBlockProofsForRange() operator loads the proofs for a given range', async () => {
+    const logsByBlockNumber = {
+      10: [
+        createLog(10, new Uint8Array(new Array(32).fill(10))),
+        createLog(10, new Uint8Array(new Array(32).fill(20))),
+      ],
+      11: [createLog(11, new Uint8Array(new Array(32).fill(11)))],
+      12: [createLog(12, new Uint8Array(new Array(32).fill(12)))],
+    }
+
+    const getLogs = jest.fn(async ({ fromBlock, toBlock }) => {
+      const logs: Array<Log> = []
+      for (let i = fromBlock; i <= toBlock; i++) {
+        logs.push(...logsByBlockNumber[i])
+      }
+      if (fromBlock === 10) {
+        await delay(1000)
+      }
+      return logs
+    })
+
+    const provider = { getLogs } as unknown as Provider
+    const blockRanges = [
+      { fromBlock: 10, toBlock: 11 },
+      { fromBlock: 12, toBlock: 12 },
+    ] as Array<BlockRangeFilter>
+
+    const blockProofs$ = from(blockRanges).pipe(
+      mapLoadBlockProofsForRange(provider, 'eip155:1337'),
       toArray()
     )
-    await expect(firstValueFrom(blocksWithProofs$)).resolves.toEqual([
-      { block: blocks[0], proofs: mockedLogsProofs },
-      { block: blocks[1], proofs: mockedLogsProofs },
+
+    await expect(firstValueFrom(blockProofs$)).resolves.toEqual([
+      [
+        {
+          blockNumber: 10,
+          blockHash: '10',
+          proofs: logsByBlockNumber[10].map((log) => createAnchorProof('eip155:1337', log)),
+        },
+        {
+          blockNumber: 11,
+          blockHash: '11',
+          proofs: logsByBlockNumber[11].map((log) => createAnchorProof('eip155:1337', log)),
+        },
+      ],
+      [
+        {
+          blockNumber: 12,
+          blockHash: '12',
+          proofs: logsByBlockNumber[12].map((log) => createAnchorProof('eip155:1337', log)),
+        },
+      ],
     ])
   })
 
   test('createBlocksProofsLoader() loads the proofs', async () => {
-    const blocks = [
-      { number: 100, timestamp: 1000 },
-      { number: 101, timestamp: 1100 },
-      { number: 102, timestamp: 1200 },
-    ] as Array<Block>
-    const getBlock = jest.fn((blockNumber: number) => Promise.resolve(blocks[blockNumber - 100]))
     const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
-    const provider = { getBlock, getLogs } as unknown as Provider
+    const provider = { getLogs } as unknown as Provider
 
-    const blocksWithProofs$ = createBlocksProofsLoader({
+    const blockProofs$ = createBlocksProofsLoader({
       provider,
       chainId: 'eip155:1337',
       fromBlock: 100,
       toBlock: 102,
     })
-    await expect(firstValueFrom(blocksWithProofs$.pipe(toArray()))).resolves.toEqual([
-      { block: blocks[0], proofs: mockedLogsProofs },
-      { block: blocks[1], proofs: mockedLogsProofs },
-      { block: blocks[2], proofs: mockedLogsProofs },
-    ])
+    await expect(firstValueFrom(blockProofs$.pipe(toArray()))).resolves.toEqual(mockedBlockProofs)
   })
 
   test('createAncestorBlocksProofsLoader() loads the proofs', async () => {
@@ -174,8 +232,13 @@ describe('loader', () => {
       block2: { parentHash: 'block1', number: 102, timestamp: 1200 } as Block,
       latest: { parentHash: 'block2', number: 103, timestamp: 1300 } as Block,
     }
+
+    const mockedLogs = [100, 101, 102, 103].map((i) =>
+      createLog(i, new Uint8Array(new Array(32).fill(i)))
+    ) as [Log, Log, Log]
+
     const getBlock = jest.fn((blockTag: string) => Promise.resolve(blocks[blockTag]))
-    const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
+    const getLogs = jest.fn(({ fromBlock }) => Promise.resolve([mockedLogs[fromBlock - 100]]))
     const provider = { getBlock, getLogs } as unknown as Provider
 
     const blocksWithProofs$ = createAncestorBlocksProofsLoader({
@@ -184,10 +247,16 @@ describe('loader', () => {
       initialBlock: 'latest',
       targetAncestorHash: 'block0',
     })
-    await expect(firstValueFrom(blocksWithProofs$.pipe(toArray()))).resolves.toEqual([
-      { block: blocks.latest, proofs: mockedLogsProofs },
-      { block: blocks.block2, proofs: mockedLogsProofs },
-      { block: blocks.block1, proofs: mockedLogsProofs },
-    ])
+
+    await expect(firstValueFrom(blocksWithProofs$.pipe(toArray()))).resolves.toEqual(
+      mockedLogs
+        .slice(1)
+        .reverse()
+        .map((log) => ({
+          blockNumber: log.blockNumber,
+          blockHash: log.blockHash,
+          proofs: [createAnchorProof('eip155:1337', log)],
+        }))
+    )
   })
 })
