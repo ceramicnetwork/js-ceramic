@@ -29,9 +29,10 @@ async function _getIndexModelArgs(
 
   if (modelStreamId.type == Model.STREAM_TYPE_ID) {
     const modelState = await repository.load(modelStreamId, {})
-    const relations = modelState.state.next?.content.relations ?? modelState.state.content.relations
-    if (relations) {
-      return { model: modelStreamId, relations }
+    const content = modelState.state.next?.content ?? modelState.state.content
+    Model.assertVersionValid(content, 'major')
+    if (content.relations) {
+      return { model: modelStreamId, relations: content.relations }
     }
   }
 
