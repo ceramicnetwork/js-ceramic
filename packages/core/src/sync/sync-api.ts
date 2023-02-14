@@ -6,7 +6,7 @@ import {
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
-import { Subscription, mergeMap } from 'rxjs'
+import { Subscription, mergeMap, catchError } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
 import { JobQueue } from '../state-management/job-queue.js'
@@ -107,8 +107,17 @@ export class SyncApi implements ISyncApi {
    */
   async _initJobQueue(): Promise<void> {
     await this.jobQueue.init({
-      [REBUILD_ANCHOR_JOB_NAME]: new RebuildAnchorWorker(this.ipfsService, this.handleCommit),
-      [SYNC_JOB_NAME]: new SyncWorker(this.provider, this.jobQueue, this.chainId),
+      [REBUILD_ANCHOR_JOB_NAME]: new RebuildAnchorWorker(
+        this.ipfsService,
+        this.handleCommit,
+        this.diagnosticsLogger
+      ),
+      [SYNC_JOB_NAME]: new SyncWorker(
+        this.provider,
+        this.jobQueue,
+        this.chainId,
+        this.diagnosticsLogger
+      ),
     })
   }
 
@@ -156,7 +165,14 @@ export class SyncApi implements ISyncApi {
       provider: this.provider,
       expectedParentHash,
     })
-      .pipe(mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)))
+      .pipe(
+        mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)),
+        catchError((err) => {
+          this.diagnosticsLogger.err(`Error received during continuous sync: ${err}`)
+          // TODO: retry
+          throw err
+        })
+      )
       .subscribe()
   }
 

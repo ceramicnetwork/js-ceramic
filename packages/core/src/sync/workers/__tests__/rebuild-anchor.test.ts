@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { TestUtils } from '@ceramicnetwork/common'
+import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { RebuildAnchorWorker } from '../rebuild-anchor.js'
 import { IpfsService, RebuildAnchorJobData } from '../../interfaces.js'
@@ -124,7 +124,11 @@ describe('Rebuild Anchor Commits Worker', () => {
       data,
     }
 
-    const worker: RebuildAnchorWorker = new RebuildAnchorWorker(MOCK_IPFS_SERVICE, mockHandleCommit)
+    const worker: RebuildAnchorWorker = new RebuildAnchorWorker(
+      MOCK_IPFS_SERVICE,
+      mockHandleCommit,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     await worker.handler(job)
 
     expect(MOCK_IPFS_SERVICE.storeRecord).toBeCalledTimes(1)

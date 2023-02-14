@@ -5,7 +5,7 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { of, type Observable, map } from 'rxjs'
 import { type BlockProofs, type BlocksProofsLoaderParams } from '@ceramicnetwork/anchor-listener'
 import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
-import type { Block, Provider } from '@ethersproject/providers'
+import type { Provider } from '@ethersproject/providers'
 import { REBUILD_ANCHOR_JOB_NAME, JobData } from '../../interfaces.js'
 
 const ERROR_BLOCK = 100
@@ -63,14 +63,12 @@ describe('Sync Worker', () => {
   let syncWorkerSpy
 
   beforeAll(async () => {
+    const logger = new LoggerProvider().getDiagnosticsLogger()
     await pgSetup()
-    jobQueue = new JobQueue(
-      process.env.DATABASE_URL as string,
-      new LoggerProvider().getDiagnosticsLogger()
-    )
+    jobQueue = new JobQueue(process.env.DATABASE_URL as string, logger)
 
     SyncPackage = await import('../sync.js')
-    const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue)
+    const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue, 'eip155:1337', logger)
     syncWorkerSpy = jest.spyOn(syncWorker, 'handler')
 
     await jobQueue.init({
