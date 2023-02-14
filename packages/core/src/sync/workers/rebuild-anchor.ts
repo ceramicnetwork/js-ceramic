@@ -57,7 +57,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
 
     const genesisCommit = await this.ipfsService.retrieveCommit(signedCommit.link, streamId)
 
-    if (!genesisCommit.header.model) {
+    if (!genesisCommit?.header?.model) {
       return null
     }
 
@@ -129,7 +129,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
             await this.handleCommit(streamId, anchorCommitCid, model)
 
             this.logger.debug(
-              `Successfully handled anchor commit ${anchorCommitCid} for stream ${streamId.toString()} and model ${model.baseID.toString()} using merkle tree root ${
+              `Successfully handled anchor commit ${anchorCommitCid} for stream ${streamId.toString()} and model ${model.toString()} using merkle tree root ${
                 jobData.root
               }`
             )

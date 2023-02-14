@@ -73,7 +73,9 @@ const MOCK_MERKLE_TREE = {
 
 const mockRetreiveFromIpfs = async (cid: CID | string, path?: string) => {
   if (!MOCK_MERKLE_TREE[cid.toString()]) {
-    return {}
+    return {
+      link: TestUtils.randomCID(),
+    }
   }
 
   const splitPath = path && path.length > 0 ? path.split('/') : []
