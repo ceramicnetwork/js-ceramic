@@ -32,7 +32,7 @@
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
     "multiformats": "^9.5.8",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
     "@ethersproject/providers": "^5.5.1"
