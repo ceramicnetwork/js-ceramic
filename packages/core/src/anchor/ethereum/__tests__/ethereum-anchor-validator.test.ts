@@ -77,11 +77,27 @@ describe('EthereumAnchorValidator Test', () => {
         await ethAnchorValidator.validateChainInclusion(ANCHOR_PROOF)
       })
 
-      test('throws if not from correct contract address', async () => {
+      test('does not throw if not from correct contract address for txns before the threshold', async () => {
         MockJsonRpcProvider.getTransaction = jest.fn(() => {
           return Promise.resolve(
             Object.assign({}, TEST_TRANSACTION, {
               to: '0xc2Ca3c25E44a96Ea78708009AA459F7901F8De4d',
+              blockNumber: 1000000000 - 1,
+            })
+          )
+        }) as any
+
+        await expect(ethAnchorValidator.validateChainInclusion(ANCHOR_PROOF)).rejects.toThrowError(
+          'This is not the official anchoring contract address'
+        )
+      })
+
+      test('throws if not from correct contract address for txns after the threshold', async () => {
+        MockJsonRpcProvider.getTransaction = jest.fn(() => {
+          return Promise.resolve(
+            Object.assign({}, TEST_TRANSACTION, {
+              to: '0xc2Ca3c25E44a96Ea78708009AA459F7901F8De4d',
+              blockNumber: 1000000001,
             })
           )
         }) as any
