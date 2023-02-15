@@ -1,12 +1,8 @@
 import { CID } from 'multiformats/cid'
-import { IpfsService, TreeMetadata } from './interfaces.js'
+import type { IpfsService, TreeMetadata } from './interfaces.js'
+import { PathDirection, pathString } from '@ceramicnetwork/anchor-utils'
 
 const METADATA_PATH = '2'
-
-enum PathDirection {
-  L,
-  R,
-}
 
 const getPath = (index: number, leavesCount: number): PathDirection[] => {
   if (index >= leavesCount) {
@@ -71,7 +67,7 @@ export class MerkleTreeLoader {
 
     const parent = await this.ipfsService.retrieveFromIPFS(
       this.rootCid,
-      path.slice(0, -1).join('/')
+      pathString(path.slice(0, -1))
     )
     const lastPathDirection = path[path.length - 1]
     const cid = parent[lastPathDirection]
