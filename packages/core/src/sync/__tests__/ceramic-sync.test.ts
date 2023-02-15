@@ -13,7 +13,6 @@ import { BaseProvider } from '@ethersproject/providers'
 
 import { STATE_TABLE_NAME } from '../sync-api.js'
 import { Ceramic } from '../../ceramic.js'
-import { BloomMetadata, IpfsMerge } from './merkle/merkle-objects.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../indexing/database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../../indexing/config.js'
 import { BLOCK_CONFIRMATIONS } from '../sync-api.js'
@@ -30,11 +29,13 @@ import {
   Node,
   MerkleTreeFactory,
   IpfsLeafCompare,
+  IpfsMerge,
   type CIDHolder,
   type MergeFunction,
   type TreeMetadata,
   type ICandidate,
 } from '@ceramicnetwork/anchor-utils'
+import { FauxBloomMetadata } from './faux-bloom-metadata.js'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -288,10 +289,11 @@ describe('Sync tests', () => {
     await creatingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
     const ipfsMerge: MergeFunction<CIDHolder, TreeMetadata> = new IpfsMerge(
-      creatingCeramic.dispatcher
+      creatingCeramic.dispatcher,
+      logger
     )
     const ipfsCompare = new IpfsLeafCompare(logger)
-    const bloomMetadata = new BloomMetadata()
+    const bloomMetadata = new FauxBloomMetadata()
     merkleTreeFactory = new MerkleTreeFactory(ipfsMerge, ipfsCompare, bloomMetadata, 5)
 
     //create a ceramic where syncing is enabled
