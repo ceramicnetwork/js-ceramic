@@ -13,7 +13,7 @@ import { BaseProvider } from '@ethersproject/providers'
 
 import { STATE_TABLE_NAME } from '../sync-api.js'
 import { Ceramic } from '../../ceramic.js'
-import { BloomMetadata, IpfsLeafCompare, IpfsMerge } from './merkle/merkle-objects.js'
+import { BloomMetadata, IpfsMerge } from './merkle/merkle-objects.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../indexing/database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../../indexing/config.js'
 import { BLOCK_CONFIRMATIONS } from '../sync-api.js'
@@ -29,6 +29,7 @@ import {
   contractInterface,
   Node,
   MerkleTreeFactory,
+  IpfsLeafCompare,
   type CIDHolder,
   type MergeFunction,
   type TreeMetadata,
