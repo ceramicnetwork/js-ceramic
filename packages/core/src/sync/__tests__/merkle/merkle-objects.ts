@@ -1,7 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { CompareFunction, MergeFunction, MetadataFunction, Node, TreeMetadata } from './merkle.js'
 import type { DiagnosticsLogger, StreamMetadata } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
+import type { StreamID } from '@ceramicnetwork/streamid'
+import type { CIDHolder } from '@ceramicnetwork/anchor-utils'
 
 interface AbortOptions {
   signal?: AbortSignal
@@ -9,10 +10,6 @@ interface AbortOptions {
 
 interface IIpfsService {
   storeRecord(record: any, options?: AbortOptions): Promise<CID>
-}
-
-export interface CIDHolder {
-  cid: CID
 }
 
 export interface Candidate {
