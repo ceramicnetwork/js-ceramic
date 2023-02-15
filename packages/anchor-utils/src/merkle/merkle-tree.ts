@@ -115,3 +115,45 @@ export class MerkleTree<TData, TLeaf extends TData, TMetadata> {
     return this.root.data === current.data
   }
 }
+
+/**
+ * Construct path for element at `index` in a Merkle tree that contains `leavesCount` leaves.
+ * @param index - index of an element.
+ * @param leavesCount - total number of leaves in the tree.
+ */
+export function pathByIndex(index: number, leavesCount: number): PathDirection[] {
+  if (index >= leavesCount) {
+    throw Error(`Leaf at index ${index} does not exist as there are only ${leavesCount} leaves`)
+  }
+
+  // only one leaf in the entire tree
+  if (leavesCount === 1) {
+    return [PathDirection.L]
+  }
+
+  return pathByIndexHelper(index, leavesCount)
+}
+
+function pathByIndexHelper(
+  index: number,
+  leavesCount: number,
+  path: Array<PathDirection> = []
+): Array<PathDirection> {
+  if (leavesCount <= 1) {
+    return path
+  }
+
+  if (leavesCount === 2) {
+    index === 0 ? path.push(PathDirection.L) : path.push(PathDirection.R)
+    return path
+  }
+
+  const middleIndex = Math.trunc(leavesCount / 2)
+  if (index < middleIndex) {
+    path.push(PathDirection.L)
+    return pathByIndexHelper(index, middleIndex, path)
+  } else {
+    path.push(PathDirection.R)
+    return pathByIndexHelper(index - middleIndex, leavesCount - middleIndex, path)
+  }
+}
