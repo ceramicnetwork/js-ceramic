@@ -30,12 +30,14 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
+    "@ceramicnetwork/common": "^2.19.0-rc.0",
     "@ethersproject/abi": "^5.7.0",
     "multiformats": "^9.5.8",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "@ethersproject/providers": "^5.5.1"
+    "@ethersproject/providers": "^5.5.1",
+    "@ceramicnetwork/streamid": "2.11.0-rc.0"
   },
   "publishConfig": {
     "access": "public"

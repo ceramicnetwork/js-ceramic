@@ -1,7 +1,6 @@
-import { CID } from 'multiformats/cid'
-import type { DiagnosticsLogger, StreamMetadata, AbortOptions } from '@ceramicnetwork/common'
-import type { StreamID } from '@ceramicnetwork/streamid'
-import { Node } from '@ceramicnetwork/anchor-utils'
+import type { CID } from 'multiformats/cid'
+import type { DiagnosticsLogger, AbortOptions } from '@ceramicnetwork/common'
+import { type ICandidate, Node } from '@ceramicnetwork/anchor-utils'
 import type {
   MetadataFunction,
   CIDHolder,
@@ -12,12 +11,6 @@ import type {
 
 interface IIpfsService {
   storeRecord(record: any, options?: AbortOptions): Promise<CID>
-}
-
-export interface Candidate {
-  readonly cid: CID
-  readonly metadata: StreamMetadata
-  readonly streamId: StreamID
 }
 
 /**
@@ -46,10 +39,12 @@ export class IpfsMerge implements MergeFunction<CIDHolder, TreeMetadata> {
 /**
  * Implements IPFS merge CIDs
  */
-export class IpfsLeafCompare implements CompareFunction<Candidate> {
-  constructor(private readonly logger: DiagnosticsLogger) {}
+export class IpfsLeafCompare implements CompareFunction<ICandidate> {
+  constructor(private readonly logger: DiagnosticsLogger) {
+    this.compare = this.compare.bind(this)
+  }
 
-  compare(left: Node<Candidate>, right: Node<Candidate>): number {
+  compare(left: Node<ICandidate>, right: Node<ICandidate>): number {
     try {
       // Sort by model first
       const leftModel = left.data.metadata.model?.toString()
@@ -86,8 +81,8 @@ export class IpfsLeafCompare implements CompareFunction<Candidate> {
 /**
  * Implements IPFS merge CIDs
  */
-export class BloomMetadata implements MetadataFunction<Candidate, TreeMetadata> {
-  generateMetadata(leaves: Array<Node<Candidate>>): TreeMetadata {
+export class BloomMetadata implements MetadataFunction<ICandidate, TreeMetadata> {
+  generateMetadata(leaves: Array<Node<ICandidate>>): TreeMetadata {
     return {
       numEntries: leaves.length,
       bloomFilter: {
