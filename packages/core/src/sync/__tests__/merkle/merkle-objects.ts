@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import type { DiagnosticsLogger, StreamMetadata } from '@ceramicnetwork/common'
+import type { DiagnosticsLogger, StreamMetadata, AbortOptions } from '@ceramicnetwork/common'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { Node } from '@ceramicnetwork/anchor-utils'
 import type {
@@ -9,10 +9,6 @@ import type {
   CompareFunction,
   TreeMetadata,
 } from '@ceramicnetwork/anchor-utils'
-
-interface AbortOptions {
-  signal?: AbortSignal
-}
 
 interface IIpfsService {
   storeRecord(record: any, options?: AbortOptions): Promise<CID>
