@@ -14,7 +14,6 @@ import { STATE_TABLE_NAME } from '../sync-api.js'
 import { Ceramic } from '../../ceramic.js'
 import { MerkleTreeFactory } from './merkle/merkle-tree-factory.js'
 import { Candidate, BloomMetadata, IpfsLeafCompare, IpfsMerge } from './merkle/merkle-objects.js'
-import { Node, TreeMetadata, MergeFunction } from './merkle/merkle.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../indexing/database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../../indexing/config.js'
 import { BLOCK_CONFIRMATIONS } from '../sync-api.js'
@@ -26,7 +25,13 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { contractInterface, type CIDHolder } from '@ceramicnetwork/anchor-utils'
+import {
+  contractInterface,
+  Node,
+  type CIDHolder,
+  type MergeFunction,
+  type TreeMetadata,
+} from '@ceramicnetwork/anchor-utils'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',

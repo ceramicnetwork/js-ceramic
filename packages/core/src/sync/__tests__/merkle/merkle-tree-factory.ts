@@ -1,5 +1,5 @@
-import type { CompareFunction, MergeFunction, MetadataFunction } from './merkle.js'
-import { Node } from './merkle.js'
+import { Node } from '@ceramicnetwork/anchor-utils'
+import type { MetadataFunction, MergeFunction, CompareFunction } from '@ceramicnetwork/anchor-utils'
 
 export class MerkleTree<TData, TLeaf extends TData, TMetadata> {
   /**

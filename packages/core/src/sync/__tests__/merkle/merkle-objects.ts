@@ -1,8 +1,14 @@
 import { CID } from 'multiformats/cid'
-import { CompareFunction, MergeFunction, MetadataFunction, Node, TreeMetadata } from './merkle.js'
 import type { DiagnosticsLogger, StreamMetadata } from '@ceramicnetwork/common'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type { CIDHolder } from '@ceramicnetwork/anchor-utils'
+import { Node } from '@ceramicnetwork/anchor-utils'
+import type {
+  MetadataFunction,
+  CIDHolder,
+  MergeFunction,
+  CompareFunction,
+  TreeMetadata,
+} from '@ceramicnetwork/anchor-utils'
 
 interface AbortOptions {
   signal?: AbortSignal
