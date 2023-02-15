@@ -75,7 +75,7 @@
     "safe-did-resolver": "^1.0.0",
     "stream-to-array": "^2.3.0",
     "typedjson": "^1.8.0",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
     "@ceramicnetwork/stream-model": "^1.1.0-rc.0",

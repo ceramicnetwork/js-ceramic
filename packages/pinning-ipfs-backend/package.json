@@ -32,7 +32,7 @@
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
     "ipfs-http-client": "^55.0.0",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^2.19.0-rc.0",
