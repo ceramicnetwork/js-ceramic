@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { from, firstValueFrom, lastValueFrom } from 'rxjs'
+import { delay } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-channel.js'
@@ -17,6 +18,7 @@ const loggerProvider = new LoggerProvider()
 const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
 const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 const PEER_ID = 'PEER_ID'
+const LATE_MESSAGE_AFTER = 1000
 
 describe('connection', () => {
   let ipfs: IpfsApi
@@ -30,7 +32,7 @@ describe('connection', () => {
   })
 
   test('subscribe and unsubscribe', async () => {
-    const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger)
+    const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, 1, pubsubLogger, diagnosticsLogger)
     const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe')
     const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe')
     const subscription = incoming$.subscribe()
@@ -50,6 +52,7 @@ describe('connection', () => {
       ipfs,
       TOPIC,
       resubscribePeriod,
+      LATE_MESSAGE_AFTER,
       pubsubLogger,
       diagnosticsLogger
     )
@@ -88,13 +91,49 @@ test('pass incoming message', async () => {
     },
     id: async () => ({ id: PEER_ID }),
   } as unknown as IpfsApi
-  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger)
+  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, 1000, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = incoming$.subscribe((message) => {
     result.push(message)
   })
   await TestUtils.delay(200) // Wait till rxjs machinery is done
   expect(result).toEqual(messages)
+  subscription.unsubscribe()
+})
+
+test('warn if no messages come from ipfs in a timely manner', async () => {
+  let sawLog = false
+  jest.spyOn(diagnosticsLogger, 'log').mockImplementation((_, content) => {
+    if (content.toString().includes('please check your IPFS configuration.')) {
+      sawLog = true
+    }
+  })
+  const feed$ = from([]).pipe(delay(2000))
+  const ipfs = {
+    pubsub: {
+      subscribe: async (_, handler) => {
+        feed$.subscribe(handler)
+      },
+      unsubscribe: jest.fn(),
+      ls: jest.fn(() => []),
+    },
+    id: async () => ({ id: PEER_ID }),
+  } as unknown as IpfsApi
+  const incoming$ = new IncomingChannel(
+    ipfs,
+    TOPIC,
+    30000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
+  const result: any[] = []
+  const subscription = incoming$.subscribe((message) => {
+    result.push(message)
+  })
+  await TestUtils.delay(2500) // Wait till rxjs machinery is done
+  expect(sawLog).toBeTruthy()
+  expect(result.length).toEqual(0)
   subscription.unsubscribe()
 })
 
@@ -135,7 +174,14 @@ describe('filterOuter', () => {
       },
       id: async () => ({ id: PEER_ID }),
     } as unknown as IpfsApi
-    const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger)
+    const incoming$ = new IncomingChannel(
+      ipfs,
+      TOPIC,
+      30000,
+      LATE_MESSAGE_AFTER,
+      pubsubLogger,
+      diagnosticsLogger
+    )
     const result: any[] = []
     const peerId$ = from(ipfs.id().then((_) => _.id))
     const subscription = incoming$.pipe(filterExternal(peerId$)).subscribe((message) => {
@@ -149,6 +195,31 @@ describe('filterOuter', () => {
 
 describe('PubsubIncoming', () => {
   test('subscribe and unsubscribe', async () => {
+    const fauxIpfs = {
+      id: jest.fn(async () => ({ id: 'peer-id' })),
+      pubsub: {
+        subscribe: jest.fn(async () => void {}),
+        unsubscribe: jest.fn(async () => void {}),
+      },
+    }
+    const incoming$ = new PubsubIncoming(
+      fauxIpfs as unknown as IpfsApi,
+      TOPIC,
+      pubsubLogger,
+      diagnosticsLogger,
+      new TaskQueue()
+    )
+    const subscription = incoming$.subscribe()
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
+    expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
+    expect(fauxIpfs.pubsub.unsubscribe).toBeCalledTimes(0)
+    subscription.unsubscribe()
+    await TestUtils.delay(200) // Wait till rxjs machinery is done
+    expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
+    expect(fauxIpfs.pubsub.unsubscribe).toBeCalledTimes(1)
+  })
+
+  test('log if messages are not timely', async () => {
     const fauxIpfs = {
       id: jest.fn(async () => ({ id: 'peer-id' })),
       pubsub: {

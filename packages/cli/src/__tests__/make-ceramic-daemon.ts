@@ -13,9 +13,7 @@ export async function makeCeramicDaemon(
   const configObj = merge(
     {
       'http-api': { port },
-      indexing: {
-        'allow-queries-before-historical-sync': true,
-      },
+      indexing: {},
     },
     opts
   )

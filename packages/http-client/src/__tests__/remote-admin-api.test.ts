@@ -78,17 +78,11 @@ test('missingDidFailureCases', async () => {
   const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
   ;(failingAdminApi as any)._fetchJson = fauxFetch
 
-  await expect(failingAdminApi.getIndexedModels())
-   .rejects
-   .toThrow(MissingDIDError)
- 
-  await expect(failingAdminApi.stopIndexingModels())
-   .rejects
-   .toThrow(MissingDIDError)
+  await expect(failingAdminApi.getIndexedModels()).rejects.toThrow(MissingDIDError)
 
-  await expect(failingAdminApi.startIndexingModels())
-   .rejects
-   .toThrow(MissingDIDError)
+  await expect(failingAdminApi.stopIndexingModels()).rejects.toThrow(MissingDIDError)
+
+  await expect(failingAdminApi.startIndexingModels()).rejects.toThrow(MissingDIDError)
 })
 
 test('addModelsToIndex()', async () => {

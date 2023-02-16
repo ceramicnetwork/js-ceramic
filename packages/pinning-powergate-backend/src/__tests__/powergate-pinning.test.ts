@@ -21,7 +21,7 @@ const createPow = jest.fn(() => {
 
 jest.unstable_mockModule('@textile/powergate-client', () => {
   return {
-    createPow: createPow
+    createPow: createPow,
   }
 })
 

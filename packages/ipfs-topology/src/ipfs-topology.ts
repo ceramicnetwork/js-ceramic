@@ -11,9 +11,6 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
     case Networks.ELP:
       return [
         new Multiaddr(
-          '/dns4/go-ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4011/ws/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng'
-        ),
-        new Multiaddr(
           '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL'
         ),
         new Multiaddr(
@@ -26,9 +23,6 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
           '/dns4/go-ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3'
         ),
         new Multiaddr(
-          '/dns4/go-ipfs-ceramic-public-clay-external.ceramic.network/tcp/4011/ws/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk'
-        ),
-        new Multiaddr(
           '/dns4/go-ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi'
         ),
         new Multiaddr(
@@ -39,9 +33,6 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
       return [
         new Multiaddr(
           '/dns4/go-ipfs-ceramic-public-qa-external.3boxlabs.com/tcp/4011/ws/p2p/QmPP3RdaSWDkhcxZReGo591FWanLw9ucvgmUZhtSLt9t6D'
-        ),
-        new Multiaddr(
-          '/dns4/go-ipfs-ceramic-public-qa-external.ceramic.network/tcp/4011/ws/p2p/QmUSSp4CY3wBALoy71T7BU4WjP3x9L5JzDJZkEDALmxhCq'
         ),
         new Multiaddr(
           '/dns4/go-ipfs-ceramic-private-qa-external.3boxlabs.com/tcp/4011/ws/p2p/QmXcmXfLkkaGbQdj98cgGvHr5gkwJp4r79j9xbJajsoYHr'

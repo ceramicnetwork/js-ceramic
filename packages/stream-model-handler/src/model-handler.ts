@@ -19,6 +19,7 @@ import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
 const ALLOWED_CONTENT_KEYS = new Set([
+  'version',
   'name',
   'description',
   'schema',
@@ -126,6 +127,8 @@ export class ModelHandler implements StreamHandler<Model> {
 
     assertNoExtraKeys(payload.data)
     Model.assertComplete(payload.data)
+    // Only check for major version compatibility here, less restrictive
+    Model.assertVersionValid(payload.data, 'major')
     Model.assertRelationsValid(payload.data)
 
     const modelStreamId = StreamID.fromBytes(payload.header.model)

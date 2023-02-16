@@ -1,7 +1,6 @@
 import type { CID } from 'multiformats/cid'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
-import type { AnchorProof } from '@ceramicnetwork/common'
 
 export type SyncConfig = {
   /**
@@ -12,7 +11,7 @@ export type SyncConfig = {
 }
 
 export interface ISyncApi {
-  startModelSync(startBlock: number, endBlock: number, models: string | string[]): Promise<void>
+  startModelSync(models: string | string[], startBlock?: number, endBlock?: number): Promise<void>
   shutdown(): Promise<void>
 }
 
@@ -34,12 +33,15 @@ export interface TreeMetadata {
 
 export const REBUILD_ANCHOR_JOB_NAME = 'rebuildAnchor'
 export interface RebuildAnchorJobData {
-  proof: AnchorProof
   models: string[]
+  chainId: string
+  txHash: string
+  root: string
+  txType?: string
 }
 
 export const SYNC_JOB_NAME = 'sync'
-interface SyncJobData {
+export interface SyncJobData {
   fromBlock: number
   toBlock: number
   models: string[]

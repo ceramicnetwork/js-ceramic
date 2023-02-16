@@ -6,10 +6,10 @@ import { typesBundleForPolkadot } from '@crustio/type-definitions'
 import fetch from 'cross-fetch'
 import * as sha256 from '@stablelib/sha256'
 import { toString } from 'uint8arrays/to-string'
-import { KeyringPair } from '@polkadot/keyring/types';
-import { DispatchError } from '@polkadot/types/interfaces';
-import { ITuple } from '@polkadot/types/types';
-import { SubmittableExtrinsic } from '@polkadot/api/promise/types';
+import { KeyringPair } from '@polkadot/keyring/types'
+import { DispatchError } from '@polkadot/types/interfaces'
+import { ITuple } from '@polkadot/types/types'
+import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 
 // Encoder
 const textEncoder = new TextEncoder()
@@ -74,7 +74,7 @@ export class CrustPinningBackend implements PinningBackend {
     this.api = new ApiPromise({
       provider: new WsProvider(this.endpoint),
       typesBundle: typesBundleForPolkadot,
-    });
+    })
   }
 
   async close(): Promise<void> {
@@ -123,7 +123,10 @@ export class CrustPinningBackend implements PinningBackend {
     // Get a onchain keypair
     const kr = new Keyring({ type: 'sr25519', ss58Format: 66 })
     const krp = kr.addFromUri(this.seed)
-    const data = '{"query": "query MyQuery {\\n  substrate_extrinsic(where: {method: {_eq: \\"placeStorageOrder\\"}, blockNumber: {}, signer: {_eq: \\"' + krp.address + '\\"}}, order_by: {blockNumber: desc}) {\\n    args(path: \\".[0].value\\")\\n  }\\n}\\n"}';
+    const data =
+      '{"query": "query MyQuery {\\n  substrate_extrinsic(where: {method: {_eq: \\"placeStorageOrder\\"}, blockNumber: {}, signer: {_eq: \\"' +
+      krp.address +
+      '\\"}}, order_by: {blockNumber: desc}) {\\n    args(path: \\".[0].value\\")\\n  }\\n}\\n"}'
 
     // Request
     const result: CidList = {}
@@ -131,15 +134,15 @@ export class CrustPinningBackend implements PinningBackend {
     for (let i = 0; i < tryTimes; i++) {
       try {
         const res = await fetch('https://crust.indexer.gc.subsquid.io/v4/graphql/', {
-          method: "post",
+          method: 'post',
           headers: {
-            'Content-Type': 'text/plain'
+            'Content-Type': 'text/plain',
           },
-          body: data
-        });
+          body: data,
+        })
         if (res && res.status == 200) {
           const resobj: ListRes = JSON.parse(JSON.stringify(await res.json()))
-          resobj.data.substrate_extrinsic.forEach(element => {
+          resobj.data.substrate_extrinsic.forEach((element) => {
             result[this.hex2a(element.args)] = [this.id]
           })
           break
@@ -162,22 +165,20 @@ export class CrustPinningBackend implements PinningBackend {
   }
 
   hex2a(hex: string): string {
-    let str = '';
+    let str = ''
     for (let i = 2; i < hex.length; i += 2)
-      str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return str;
+      str += String.fromCharCode(parseInt(hex.substr(i, 2), 16))
+    return str
   }
 
   delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   async sendTx(tx: SubmittableExtrinsic, krp: KeyringPair): Promise<void> {
     return new Promise((resolve, reject) => {
       tx.signAndSend(krp, ({ events = [], status }) => {
-        console.log(
-          `  ↪ 💸 [tx]: Transaction status: ${status.type}, nonce: ${tx.nonce}`
-        )
+        console.log(`  ↪ 💸 [tx]: Transaction status: ${status.type}, nonce: ${tx.nonce}`)
 
         if (status.isInvalid || status.isDropped || status.isUsurped) {
           reject(new Error(`${status.type} transaction.`))
@@ -188,24 +189,22 @@ export class CrustPinningBackend implements PinningBackend {
         if (status.isInBlock) {
           events.forEach(({ event: { data, method, section } }) => {
             if (section === 'system' && method === 'ExtrinsicFailed') {
-              const [dispatchError] = data as unknown as ITuple<[DispatchError]>;
+              const [dispatchError] = data as unknown as ITuple<[DispatchError]>
               console.log(
                 `  ↪ 💸 ❌ [tx]: Send transaction(${tx.type}) failed with ${dispatchError.type}.`
-              );
-              reject(new TxError(tx.type, dispatchError.type));
+              )
+              reject(new TxError(tx.type, dispatchError.type))
             } else if (method === 'ExtrinsicSuccess') {
-              console.log(
-                `  ↪ 💸 ✅ [tx]: Send transaction(${tx.type}) success.`
-              );
+              console.log(`  ↪ 💸 ✅ [tx]: Send transaction(${tx.type}) success.`)
               resolve()
             }
-          });
+          })
         } else {
           // Pass it
         }
-      }).catch(e => {
-        reject(e);
+      }).catch((e) => {
+        reject(e)
       })
-    });
+    })
   }
 }

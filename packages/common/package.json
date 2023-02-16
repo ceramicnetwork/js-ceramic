@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "2.18.0",
+  "version": "2.20.0-rc.0",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -43,7 +43,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.10.0",
+    "@ceramicnetwork/streamid": "^2.12.0-rc.0",
     "@didtools/cacao": "^1.0.0",
     "@didtools/pkh-ethereum": "^0.0.3",
     "@didtools/pkh-solana": "^0.0.4",
@@ -58,7 +58,7 @@
     "logfmt": "^1.3.2",
     "multiformats": "^9.5.8",
     "rxjs": "^7.5.2",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.6",
