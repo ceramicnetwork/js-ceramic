@@ -19,7 +19,7 @@ export class RemoteAdminApi implements AdminApi {
 
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
-  readonly nodeStatusPath = './admin/nodeStatus'
+  readonly nodeStatusPath = './admin/status'
 
   constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
   private getCodeUrl(): URL {

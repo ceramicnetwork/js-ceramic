@@ -24,7 +24,7 @@ const MY_MODEL_1_CONTENT: ModelDefinition = {
 }
 
 const MODEL_PATH = '/api/v0/admin/models'
-const STATUS_PATH = '/api/v0/admin/nodeStatus'
+const STATUS_PATH = '/api/v0/admin/status'
 
 describe('admin api', () => {
   let daemon: CeramicDaemon
@@ -98,7 +98,7 @@ describe('admin api', () => {
   }
 
   it('admin API CRUD test', async () => {
-    const statusURLString = `http://localhost:${daemon.port}/api/v0/admin/nodeStatus`
+    const statusURLString = `http://localhost:${daemon.port}/api/v0/admin/status`
     const modelsURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
 
     const fetchCode = async (): Promise<string> => {
@@ -169,7 +169,7 @@ describe('admin api', () => {
   describe('admin API validation test', () => {
     it('No admin code for nodeStatus GET', async () => {
       await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`, {
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`, {
           headers: {
             authorization: `Authorization: Basic ${await buildJWS(adminDid, '', STATUS_PATH)}`,
           },
@@ -207,7 +207,7 @@ describe('admin api', () => {
 
     it('Arbitrary admin code for status GET', async () => {
       await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`, {
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`, {
           headers: {
             authorization: `Authorization: Basic ${await buildJWS(
               adminDid,
@@ -265,7 +265,7 @@ describe('admin api', () => {
       MockDate.set(now + (1000 * 60 * 1 + 1000)) // One minute one second in the future
       expect(true).toBeTruthy()
       await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`, {
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`, {
           headers: {
             authorization: `Authorization: Basic ${await buildJWS(adminDid, code, STATUS_PATH)}`,
           },
@@ -324,13 +324,13 @@ describe('admin api', () => {
     it('Same code used again for status GET', async () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       expect(true).toBeTruthy()
-      await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`, {
+      await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`, {
         headers: {
           authorization: `Authorization: Basic ${await buildJWS(adminDid, code, STATUS_PATH)}`,
         },
       })
       await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`, {
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`, {
           headers: {
             authorization: `Authorization: Basic ${await buildJWS(adminDid, code, STATUS_PATH)}`,
           },
@@ -388,7 +388,7 @@ describe('admin api', () => {
     it('Unauthorised DID for status GET', async () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`, {
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`, {
           headers: {
             authorization: `Authorization: Basic ${await buildJWS(nonAdminDid, code, STATUS_PATH)}`,
           },
@@ -429,7 +429,7 @@ describe('admin api', () => {
 
     it('No authorization for status GET', async () => {
       await expect(
-        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/nodeStatus`)
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/status`)
       ).rejects.toThrow(/Missing authorization header/)
     })
 

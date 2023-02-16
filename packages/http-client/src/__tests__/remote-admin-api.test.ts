@@ -44,7 +44,7 @@ test('nodeStatus()', async () => {
   await adminApi.nodeStatus()
 
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
-  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/nodeStatus`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/status`))
   const sentPayload = fauxFetch.mock.calls[1][1]
   const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
 
