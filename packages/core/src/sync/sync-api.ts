@@ -6,29 +6,31 @@ import {
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
-import { Subscription, mergeMap } from 'rxjs'
+import { Subscription, mergeMap, catchError } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
 import { JobQueue } from '../state-management/job-queue.js'
 
 import {
-  REBUILD_ANCHOR_JOB_NAME,
-  SYNC_JOB_NAME,
+  REBUILD_ANCHOR_JOB,
   ISyncApi,
   IpfsService,
   HandleCommit,
   type JobData,
-  type SyncJobData,
+  type SyncJob,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+  SyncJobData,
 } from './interfaces.js'
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
-import { SyncWorker, createSyncJob } from './workers/sync.js'
+import { SyncWorker, createHistorySyncJob, createContinuousSyncJob } from './workers/sync.js'
 
 export const BLOCK_CONFIRMATIONS = 20
-// TODO: block number to be defined
+// TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
   'eip155:1': 16587130,
-  'eip155:5': 8458698,
-  'eip155:100': 26381584,
+  'eip155:5': 8503000,
+  'eip155:100': 26511896,
 }
 
 export const STATE_TABLE_NAME = 'ceramic_indexing_state'
@@ -88,13 +90,13 @@ export class SyncApi implements ISyncApi {
     this._initBlockSubscription(latestBlock.hash)
 
     if (processedBlockNumber == null) {
-      await this._addSyncJob({
+      await this._addSyncJob(HISTORY_SYNC_JOB, {
         fromBlock: this.initialIndexingBlock,
         toBlock: latestBlock.number,
         models: Array.from(this.modelsToSync),
       })
     } else if (processedBlockNumber < latestBlock.number) {
-      await this._addSyncJob({
+      await this._addSyncJob(HISTORY_SYNC_JOB, {
         fromBlock: processedBlockNumber,
         toBlock: latestBlock.number,
         models: Array.from(this.modelsToSync),
@@ -107,8 +109,23 @@ export class SyncApi implements ISyncApi {
    */
   async _initJobQueue(): Promise<void> {
     await this.jobQueue.init({
-      [REBUILD_ANCHOR_JOB_NAME]: new RebuildAnchorWorker(this.ipfsService, this.handleCommit),
-      [SYNC_JOB_NAME]: new SyncWorker(this.provider, this.jobQueue, this.chainId),
+      [REBUILD_ANCHOR_JOB]: new RebuildAnchorWorker(
+        this.ipfsService,
+        this.handleCommit,
+        this.diagnosticsLogger
+      ),
+      [HISTORY_SYNC_JOB]: new SyncWorker(
+        this.provider,
+        this.jobQueue,
+        this.chainId,
+        this.diagnosticsLogger
+      ),
+      [CONTINUOUS_SYNC_JOB]: new SyncWorker(
+        this.provider,
+        this.jobQueue,
+        this.chainId,
+        this.diagnosticsLogger
+      ),
     })
   }
 
@@ -156,7 +173,14 @@ export class SyncApi implements ISyncApi {
       provider: this.provider,
       expectedParentHash,
     })
-      .pipe(mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)))
+      .pipe(
+        mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)),
+        catchError((err) => {
+          this.diagnosticsLogger.err(`Error received during continuous sync: ${err}`)
+          // TODO (CDB-2272): add retry logic
+          throw err
+        })
+      )
       .subscribe()
   }
 
@@ -166,11 +190,20 @@ export class SyncApi implements ISyncApi {
    * @param event: BlockProofsListenerEvent
    */
   async _handleBlockProofs({ block, reorganized }: BlockProofsListenerEvent): Promise<void> {
-    await this._addSyncJob({
-      fromBlock: reorganized ? block.number - BLOCK_CONFIRMATIONS : block.number,
-      toBlock: block.number,
-      models: Array.from(this.modelsToSync),
-    })
+    if (reorganized) {
+      await this._addSyncJob(HISTORY_SYNC_JOB, {
+        fromBlock: block.number - BLOCK_CONFIRMATIONS,
+        toBlock: block.number,
+        models: Array.from(this.modelsToSync),
+      })
+    } else {
+      await this._addSyncJob(CONTINUOUS_SYNC_JOB, {
+        fromBlock: block.number,
+        toBlock: block.number,
+        models: Array.from(this.modelsToSync),
+      })
+    }
+
     await this._updateStoredState({
       processedBlockHash: block.hash,
       processedBlockNumber: block.number,
@@ -180,12 +213,14 @@ export class SyncApi implements ISyncApi {
   /**
    * Add a sync job to the queue.
    */
-  async _addSyncJob(data: SyncJobData): Promise<void> {
+  async _addSyncJob(type: SyncJob, data: SyncJobData): Promise<void> {
     if (data.models.length === 0) {
       return
     }
 
-    const job = createSyncJob(data)
+    const job =
+      type === HISTORY_SYNC_JOB ? createHistorySyncJob(data) : createContinuousSyncJob(data)
+
     this.jobQueue.addJob(job)
   }
 
@@ -223,7 +258,7 @@ export class SyncApi implements ISyncApi {
         .then(({ number }) => number - BLOCK_CONFIRMATIONS)
     }
 
-    await this._addSyncJob({
+    await this._addSyncJob(HISTORY_SYNC_JOB, {
       fromBlock: startBlock,
       toBlock: endBlock,
       models: modelIds,

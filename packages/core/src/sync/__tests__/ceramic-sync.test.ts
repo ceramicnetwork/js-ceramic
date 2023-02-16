@@ -89,7 +89,7 @@ const parseBlockHashOrBlockTag = async (
     return parsed
   }
 
-  return parseInt(blockHashOrBlockTag.split('_')[0], 10)
+  return parseInt(blockHashOrBlockTag.split('_')[1], 10)
 }
 
 class MockProvider extends EventEmitter {

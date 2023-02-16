@@ -19,6 +19,11 @@ export class LocalAdminApi implements AdminApi {
     return this.nodeStatusFn()
   }
 
+  // todo use stronger type
+  async nodeStatus(): Promise<any> {
+    return {}
+  }
+
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     await Promise.all([
       this.indexApi.indexModels(modelsIDs),

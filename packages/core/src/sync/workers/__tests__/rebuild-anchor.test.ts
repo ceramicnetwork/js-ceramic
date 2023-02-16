@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { TestUtils } from '@ceramicnetwork/common'
+import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { RebuildAnchorWorker } from '../rebuild-anchor.js'
 import { IpfsService, RebuildAnchorJobData } from '../../interfaces.js'
@@ -73,7 +73,9 @@ const MOCK_MERKLE_TREE = {
 
 const mockRetreiveFromIpfs = async (cid: CID | string, path?: string) => {
   if (!MOCK_MERKLE_TREE[cid.toString()]) {
-    return {}
+    return {
+      link: TestUtils.randomCID(),
+    }
   }
 
   const splitPath = path && path.length > 0 ? path.split('/') : []
@@ -124,7 +126,11 @@ describe('Rebuild Anchor Commits Worker', () => {
       data,
     }
 
-    const worker: RebuildAnchorWorker = new RebuildAnchorWorker(MOCK_IPFS_SERVICE, mockHandleCommit)
+    const worker: RebuildAnchorWorker = new RebuildAnchorWorker(
+      MOCK_IPFS_SERVICE,
+      mockHandleCommit,
+      new LoggerProvider().getDiagnosticsLogger()
+    )
     await worker.handler(job)
 
     expect(MOCK_IPFS_SERVICE.storeRecord).toBeCalledTimes(1)

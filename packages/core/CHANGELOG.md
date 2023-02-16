@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.24.0-rc.0...@ceramicnetwork/core@2.25.0-rc.0) (2023-02-16)
+
+
+### Bug Fixes
+
+* **core:** Always fail to index Models with incompatible versions ([#2709](https://github.com/ceramicnetwork/js-ceramic/issues/2709)) ([13f4bba](https://github.com/ceramicnetwork/js-ceramic/commit/13f4bbabf363fa1a19c14cec7078d68d015dd5aa))
+* **core:** Update expected smart contract address ([#2720](https://github.com/ceramicnetwork/js-ceramic/issues/2720)) ([af7ae69](https://github.com/ceramicnetwork/js-ceramic/commit/af7ae69d5592b37cabf45a0dc2a9d683dac40ff8))
+
+
+
+
+
 # [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0...@ceramicnetwork/core@2.24.0-rc.0) (2023-02-13)
 
 
