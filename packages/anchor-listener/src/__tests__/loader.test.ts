@@ -94,14 +94,6 @@ describe('loader', () => {
   })
 
   describe('createBlockProofsLoaderForRange()', () => {
-    test('Pushes an error if there is no contract address for the wanted chainId', async () => {
-      // @ts-expect-error invalid chainId
-      const anchorProofs$ = createBlockProofsLoaderForRange({} as Provider, 'eip155:0', {} as Block)
-      await expect(firstValueFrom(anchorProofs$)).rejects.toThrowError(
-        'No known contract address for network: eip155:0'
-      )
-    })
-
     test('Pushes an array of block proofs', async () => {
       const logs = [10, 11, 12].map((blockNumber) =>
         createLog(blockNumber, new Uint8Array(new Array(32).fill(blockNumber)))
@@ -175,13 +167,6 @@ describe('loader', () => {
   })
 
   describe('loadBlockProofsForRange()', () => {
-    test('Pushes an error if there is no contract address for the wanted chainId', async () => {
-      await expect(
-        // @ts-expect-error invalid chainId
-        loadBlockProofsForRange({} as Provider, 'eip155:0', {} as Block)
-      ).rejects.toThrowError('No known contract address for network: eip155:0')
-    })
-
     test('Pushes an array of block proofs', async () => {
       const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
       const getBlock = jest.fn((blockNumber: number) => {

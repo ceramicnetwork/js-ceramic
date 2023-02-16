@@ -13,12 +13,6 @@ export const BLOCK_THRESHHOLDS: Record<SupportedNetwork, number> = {
   'eip155:1337': 1000000,
 }
 
-export const ANCHOR_CONTRACT_ADDRESSES: Record<SupportedNetwork, string> = {
-  'eip155:1': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
-  'eip155:3': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
-  'eip155:5': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
-  'eip155:100': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
-  'eip155:1337': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
-}
+export const ANCHOR_CONTRACT_ADDRESS = '0x231055a0852d67c7107ad0d0dfeab60278fe6adc'
 
 export const CONTRACT_TX_TYPE = 'f(bytes32)'
