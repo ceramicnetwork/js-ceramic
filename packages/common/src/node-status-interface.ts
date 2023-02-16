@@ -10,6 +10,11 @@ export interface NodeStatusResponse {
   runId: string
 
   /**
+   * How long the node has been running.
+   */
+  uptimeMs: number
+
+  /**
    * The Ceramic network the node is connected to.
    */
   network: string
@@ -47,7 +52,13 @@ export interface AnchorNodeStatus {
   anchorServiceUrl: string
 
   /**
-   * The endpoint used to validate anchor transactions (generally this is an ethereumRpcEndpoint).
+   * The ethereum rpc endpoint used to validate anchor transactions. If null, likely means
+   * the node is using the default, rate-limited ethereum provider.
    */
-  anchorValidationEndpoint: string | null
+  ethereumRpcEndpoint: string | null
+
+  /**
+   * The ethereum chainId used for anchors.
+   */
+  chainId: string
 }

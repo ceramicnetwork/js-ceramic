@@ -131,6 +131,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
     this._chainId = chainId
   }
 
+  get chainId(): string {
+    return this._chainId
+  }
+
   /**
    * isoldated method for fetching tx from cache, and if not set
    **/
@@ -232,10 +236,6 @@ export class EthereumAnchorValidator implements AnchorValidator {
     }
 
     return block.timestamp
-  }
-
-  get validationRpcEndpoint(): string | null {
-    return this.ethereumRpcEndpoint
   }
 
   /**

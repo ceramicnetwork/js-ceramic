@@ -12,16 +12,11 @@ export class LocalAdminApi implements AdminApi {
   constructor(
     private readonly indexApi: LocalIndexApi,
     private readonly syncApi: SyncApi,
-    private readonly nodeStatusFn: NodeStatusFn // TODO: circular dependency back into Ceramic
+    private readonly nodeStatusFn: NodeStatusFn // TODO(CDB-2293): circular dependency back into Ceramic
   ) {}
 
   async nodeStatus(): Promise<NodeStatusResponse> {
     return this.nodeStatusFn()
-  }
-
-  // todo use stronger type
-  async nodeStatus(): Promise<any> {
-    return {}
   }
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
