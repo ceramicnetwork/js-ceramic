@@ -1,4 +1,4 @@
-import { type SupportedNetwork, ANCHOR_CONTRACT_ADDRESSES } from '@ceramicnetwork/anchor-utils'
+import { type SupportedNetwork, ANCHOR_CONTRACT_ADDRESS } from '@ceramicnetwork/anchor-utils'
 import type { AnchorProof } from '@ceramicnetwork/common'
 import type { Block, BlockTag, Provider, Log } from '@ethersproject/providers'
 import {
@@ -16,7 +16,6 @@ import {
   mergeMap,
   range,
   retry,
-  throwError,
   from,
 } from 'rxjs'
 
@@ -125,15 +124,10 @@ export function createBlockProofsLoaderForRange(
   blockRangeFilter: BlockRangeFilter,
   retryConfig: RetryConfig = { count: 3 }
 ): Observable<Array<BlockProofs>> {
-  const address = ANCHOR_CONTRACT_ADDRESSES[chainId]
-  if (address == null) {
-    return throwError(() => new Error(`No known contract address for network: ${chainId}`))
-  }
-
   return defer(async () => {
     return await Promise.all([
       provider.getLogs({
-        address,
+        address: ANCHOR_CONTRACT_ADDRESS,
         fromBlock: blockRangeFilter.fromBlock,
         toBlock: blockRangeFilter.toBlock,
       }),
