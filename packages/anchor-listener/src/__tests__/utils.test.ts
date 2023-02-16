@@ -6,7 +6,7 @@ import { createLog, transactionHashCid } from './test-utils.js'
 
 describe('utils', () => {
   test('createAnchorProof() creates an AnchorProof object', () => {
-    const log = createLog()
+    const log = createLog(1)
     const proof = createAnchorProof('eip155:1337', log)
 
     expect(proof).toMatchObject({

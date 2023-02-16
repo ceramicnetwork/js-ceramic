@@ -1,6 +1,6 @@
 import { type SupportedNetwork, ANCHOR_CONTRACT_ADDRESSES } from '@ceramicnetwork/anchor-utils'
 import type { AnchorProof } from '@ceramicnetwork/common'
-import type { Block, BlockTag, Provider } from '@ethersproject/providers'
+import type { Block, BlockTag, Provider, Log } from '@ethersproject/providers'
 import {
   EMPTY,
   type Observable,
@@ -12,19 +12,33 @@ import {
   expand,
   firstValueFrom,
   map,
-  mergeMap,
   pipe,
+  mergeMap,
   range,
   retry,
   throwError,
+  from,
 } from 'rxjs'
 
 import { createAnchorProof } from './utils.js'
 
 export type BlockProofs = {
-  block: Block
+  blockNumber: number
+  blockHash: string
   proofs: Array<AnchorProof>
 }
+
+export type BlockRangeFilter = {
+  fromBlock: BlockTag
+  toBlock: BlockTag
+}
+
+export type BlockAndBlockProofs = {
+  block: Block
+  proofs: BlockProofs
+}
+
+const GET_LOGS_BATCH_SIZE = 100
 
 /**
  * Create an Observable loading a single block, with retry logic
@@ -59,19 +73,22 @@ export async function loadBlock(
 }
 
 /**
- * Rx operator to load blocks based on input array of block numbers
+ * Rx operator to load blocks for each input blocks proofs
  *
  * @param provider ethers.js Provider
  * @param retryConfig optional Rx retry config
- * @returns OperatorFunction<Array<number>, Block>
+ * @returns OperatorFunction<Array<BlockProofs>, BlockAndBlockProofs>
  */
-export function mapLoadBlocks(
+export function mapLoadBlockForBlockProofs(
   provider: Provider,
   retryConfig: RetryConfig = { count: 3 }
-): OperatorFunction<Array<number>, Block> {
+): OperatorFunction<Array<BlockProofs>, BlockAndBlockProofs> {
   return pipe(
-    mergeMap((blockNumbers) => {
-      return blockNumbers.map((block) => loadBlock(provider, block, retryConfig))
+    mergeMap((blockProofsForRange) => {
+      return blockProofsForRange.map(async (proofs) => {
+        const block = await loadBlock(provider, proofs.blockHash, retryConfig)
+        return { block, proofs }
+      })
     }),
     // Use concatMap here to ensure ordering
     concatMap(async (blockPromise) => await blockPromise)
@@ -79,77 +96,111 @@ export function mapLoadBlocks(
 }
 
 /**
- * Create an Observable loading anchor proofs for a given block
+ * Groups logs by their block numbers
+ * @param logs ethers.js Log
+ * @returns Record<number, Array<Log>>
+ */
+const groupLogsByBlockNumber = (logs: Array<Log>): Record<number, Array<Log>> =>
+  logs.reduce((logsByBlockNumber, log) => {
+    const { blockNumber } = log
+
+    if (!logsByBlockNumber[blockNumber]) logsByBlockNumber[blockNumber] = []
+
+    logsByBlockNumber[blockNumber]?.push(log)
+    return logsByBlockNumber
+  }, {} as Record<number, Array<Log>>)
+
+/**
+ * Create an Observable loading block proofs for a range of blocks
  *
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
- * @param block ethers.js BlockTag
+ * @param blockRangeFilter BlockRangeFilter providing the fromBlock and toBlock, each represented by ether.js BlockTag
  * @param retryConfig optional Rx retry config
- * @returns Observable<Array<AnchorProof>>
+ * @returns Observable<Array<BlockProofs>>
  */
-export function createAnchorProofsLoader(
+export function createBlockProofsLoaderForRange(
   provider: Provider,
   chainId: SupportedNetwork,
-  block: BlockTag,
+  blockRangeFilter: BlockRangeFilter,
   retryConfig: RetryConfig = { count: 3 }
-): Observable<Array<AnchorProof>> {
+): Observable<Array<BlockProofs>> {
   const address = ANCHOR_CONTRACT_ADDRESSES[chainId]
   if (address == null) {
     return throwError(() => new Error(`No known contract address for network: ${chainId}`))
   }
 
   return defer(async () => {
-    return await provider.getLogs({ address, fromBlock: block, toBlock: block })
+    return await Promise.all([
+      provider.getLogs({
+        address,
+        fromBlock: blockRangeFilter.fromBlock,
+        toBlock: blockRangeFilter.toBlock,
+      }),
+      provider.getBlock(blockRangeFilter.fromBlock),
+      blockRangeFilter.fromBlock === blockRangeFilter.toBlock
+        ? undefined
+        : provider.getBlock(blockRangeFilter.toBlock),
+    ])
   }).pipe(
     retry(retryConfig),
-    map((logs) => {
-      return logs.map((log) => createAnchorProof(chainId, log))
+    // always include first and last block
+    map(([logs, fromBlock, toBlock = fromBlock]) => {
+      const logsByBlockNumber = groupLogsByBlockNumber(logs)
+
+      if (!logsByBlockNumber[fromBlock.number]) {
+        logsByBlockNumber[fromBlock.number] = []
+      }
+
+      if (!logsByBlockNumber[toBlock.number]) {
+        logsByBlockNumber[toBlock.number] = []
+      }
+
+      return Object.keys(logsByBlockNumber)
+        .sort()
+        .map((blockNumberStr) => {
+          const blockNumber = parseInt(blockNumberStr, 10)
+          const logs = logsByBlockNumber[blockNumber] as Array<Log>
+
+          let blockHash
+          if (blockNumber === fromBlock.number) {
+            blockHash = fromBlock.hash
+          } else if (blockNumber === toBlock.number) {
+            blockHash = toBlock.hash
+          } else blockHash = logs[0]?.blockHash as string
+
+          return {
+            blockNumber: blockNumber,
+            blockHash,
+            proofs: logs.map((log) => createAnchorProof(chainId, log)),
+          }
+        })
     })
   )
 }
 
 /**
- * Load anchor proofs for a given block
+ * Load block proofs for a given block range
  *
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
- * @param block ethers.js BlockTag
+ * @param blockRangeFilter BlockRangeFilter providing the fromBlock and toBlock, each represented by ether.js BlockTag
  * @param retryConfig optional Rx retry config
  * @returns Observable<Array<AnchorProof>>
  */
-export async function loadAnchorProofs(
+export async function loadBlockProofsForRange(
   provider: Provider,
   chainId: SupportedNetwork,
-  block: BlockTag,
+  blockRangeFilter: BlockRangeFilter,
   retryConfig?: RetryConfig
-): Promise<Array<AnchorProof>> {
-  return await firstValueFrom(createAnchorProofsLoader(provider, chainId, block, retryConfig))
+): Promise<Array<BlockProofs>> {
+  return await firstValueFrom(
+    createBlockProofsLoaderForRange(provider, chainId, blockRangeFilter, retryConfig)
+  )
 }
 
 /**
- * Load a block with anchor proofs for a given block tag
- *
- * @param provider ethers.js Provider
- * @param chainId supported anchor network chain ID
- * @param blockTag ethers.js BlockTag
- * @param retryConfig optional Rx retry config
- * @returns Promise<BlockProofs>
- */
-export async function loadBlockProofs(
-  provider: Provider,
-  chainId: SupportedNetwork,
-  blockTag: BlockTag,
-  retryConfig?: RetryConfig
-): Promise<BlockProofs> {
-  const [block, proofs] = await Promise.all([
-    loadBlock(provider, blockTag, retryConfig),
-    loadAnchorProofs(provider, chainId, blockTag, retryConfig),
-  ])
-  return { block, proofs }
-}
-
-/**
- * Rx operator to load anchor proofs for input blocks
+ * Rx operator to load block proofs for input blocks
  *
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
@@ -163,32 +214,41 @@ export function mapLoadBlockProofs(
 ): OperatorFunction<Block, BlockProofs> {
   return pipe(
     concatMap(async (block) => {
-      return { block, proofs: await loadAnchorProofs(provider, chainId, block.number, retryConfig) }
+      const result = await loadBlockProofsForRange(
+        provider,
+        chainId,
+        { fromBlock: block.number, toBlock: block.number },
+        retryConfig
+      )
+
+      if (result.length !== 1) {
+        throw Error(
+          `Did not receive exactly one set of proofs for block ${block.number}. Received ${result.length} sets`
+        )
+      }
+
+      return result[0] as BlockProofs
     })
   )
 }
 
 /**
- * Rx operator to load anchor proofs for input blocks
+ * Rx operator to load block proofs for input blocks ranges
  *
  * @param provider ethers.js Provider
  * @param chainId supported anchor network chain ID
  * @param retryConfig optional Rx retry config
  * @returns OperatorFunction<Array<number>, BlockProofs>
  */
-export function mapLoadBlocksProofs(
+export function mapLoadBlockProofsForRange(
   provider: Provider,
   chainId: SupportedNetwork,
   retryConfig: RetryConfig = { count: 3 }
-): OperatorFunction<Array<number>, BlockProofs> {
+): OperatorFunction<BlockRangeFilter, Array<BlockProofs>> {
   return pipe(
-    mergeMap((blockNumbers) => {
-      return blockNumbers.map(async (blockNumber) => {
-        return await loadBlockProofs(provider, chainId, blockNumber, retryConfig)
-      })
-    }),
-    // Use concatMap here to ensure ordering
-    concatMap(async (blockPromise) => await blockPromise)
+    concatMap((blockRangeFilter: BlockRangeFilter) => {
+      return loadBlockProofsForRange(provider, chainId, blockRangeFilter, retryConfig)
+    })
   )
 }
 
@@ -208,7 +268,7 @@ export type BlocksProofsLoaderParams = {
 }
 
 /**
- * Create an Observable loading blocks and their anchor proofs for a given range of blocks
+ * Create an Observable loading blockProofs for a given range of blocks
  *
  * @param params BlocksProofsLoaderParams
  * @returns Observable<BlockProofs>
@@ -223,8 +283,13 @@ export function createBlocksProofsLoader({
 }: BlocksProofsLoaderParams): Observable<BlockProofs> {
   const retry = retryConfig ?? { count: 3 }
   return range(fromBlock, toBlock - fromBlock + 1).pipe(
-    bufferCount(blockLoadBuffer ?? 5),
-    mapLoadBlocksProofs(provider, chainId, retry)
+    bufferCount(blockLoadBuffer ?? GET_LOGS_BATCH_SIZE),
+    map((values) => ({
+      fromBlock: values[0] as number,
+      toBlock: values[values.length - 1] as number,
+    })),
+    mapLoadBlockProofsForRange(provider, chainId, retry),
+    concatMap((blockProofsForRange) => from(blockProofsForRange))
   )
 }
 

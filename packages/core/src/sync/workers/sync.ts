@@ -69,7 +69,7 @@ export class SyncWorker implements Worker<SyncJobData> {
           throw Error('Error loading block proof')
         }
 
-        const { proofs, block } = blockProofs
+        const { proofs, blockNumber } = blockProofs
         if (proofs.length > 0) {
           const jobs: Job<RebuildAnchorJobData>[] = proofs.map((proof) =>
             createRebuildAnchorJob(proof, models)
@@ -79,7 +79,7 @@ export class SyncWorker implements Worker<SyncJobData> {
         }
 
         await this.jobQueue.updateJob(job.id, {
-          fromBlock: block.number + 1,
+          fromBlock: blockNumber + 1,
           toBlock,
           models,
         })

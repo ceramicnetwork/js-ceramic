@@ -12,7 +12,8 @@ const ERROR_BLOCK = 100
 
 const createBlockProof = (chainId: string, blockNumber: number) => {
   return {
-    block: { number: blockNumber } as Block,
+    blockNumber: blockNumber,
+    blockHash: blockNumber.toString(),
     proofs: [
       {
         chainId,
@@ -34,7 +35,7 @@ const createBlocksProofsLoader = (params: BlocksProofsLoaderParams): Observable<
 
   return of(...blockProofs).pipe(
     map((blockProofs) => {
-      if (blockProofs.block.number === ERROR_BLOCK) {
+      if (blockProofs.blockNumber === ERROR_BLOCK) {
         throw Error('test error')
       }
 
