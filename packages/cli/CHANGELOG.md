@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.20.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.20.0...@ceramicnetwork/cli@2.20.1) (2023-02-16)
+
+
+### Bug Fixes
+
+* **core,cli:** pin version of p-queue library ([#2690](https://github.com/ceramicnetwork/js-ceramic/issues/2690)) ([e508878](https://github.com/ceramicnetwork/js-ceramic/commit/e50887819cf64079233afe53dda4ee80adaaef92))
+
+
+
+
+
 # [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.20.0-rc.1...@ceramicnetwork/cli@2.20.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

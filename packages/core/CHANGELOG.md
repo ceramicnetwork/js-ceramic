@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.23.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0...@ceramicnetwork/core@2.23.1) (2023-02-16)
+
+
+### Bug Fixes
+
+* **core,cli:** pin version of p-queue library ([#2690](https://github.com/ceramicnetwork/js-ceramic/issues/2690)) ([e508878](https://github.com/ceramicnetwork/js-ceramic/commit/e50887819cf64079233afe53dda4ee80adaaef92))
+* **core:** Update expected smart contract address ([#2720](https://github.com/ceramicnetwork/js-ceramic/issues/2720)) ([f9a16fb](https://github.com/ceramicnetwork/js-ceramic/commit/f9a16fbf5e47ba326bc576b9d4199ff1caec0256))
+
+
+### Features
+
+* **core:** Add flag to skip publishing updates to pubsub ([#2680](https://github.com/ceramicnetwork/js-ceramic/issues/2680)) ([095cfd1](https://github.com/ceramicnetwork/js-ceramic/commit/095cfd1a75b15c151ee17445be106f6b9a37cdf7))
+* **core:** Limit how many pin requests can be sent to ipfs at once ([#2683](https://github.com/ceramicnetwork/js-ceramic/issues/2683)) ([2dca435](https://github.com/ceramicnetwork/js-ceramic/commit/2dca4359b8e006b15d1adfebcdcd55cabc2c68e1))
+
+
+
+
+
 # [2.23.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0-rc.1...@ceramicnetwork/core@2.23.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/core
