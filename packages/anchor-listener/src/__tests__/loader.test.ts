@@ -1,4 +1,4 @@
-import type { Block, Provider, Log } from '@ethersproject/providers'
+import type { Block, Provider, Log, BlockTag } from '@ethersproject/providers'
 import { jest } from '@jest/globals'
 import { firstValueFrom, from, of, toArray } from 'rxjs'
 
@@ -107,7 +107,13 @@ describe('loader', () => {
         createLog(blockNumber, new Uint8Array(new Array(32).fill(blockNumber)))
       )
       const getLogs = jest.fn(() => Promise.resolve(logs))
-      const provider = { getLogs } as unknown as Provider
+      const getBlock = jest.fn((blockNumber: number) => {
+        return {
+          number: blockNumber,
+          hash: blockNumber.toString(),
+        } as Block
+      })
+      const provider = { getLogs, getBlock } as unknown as Provider
 
       const blockProofs$ = createBlockProofsLoaderForRange(provider, 'eip155:1337', {
         fromBlock: 10,
@@ -121,6 +127,51 @@ describe('loader', () => {
         }))
       )
     })
+
+    test('If no logs found pushes 2 block proofs if from block is different from to block', async () => {
+      const getLogs = jest.fn(() => Promise.resolve([]))
+      const getBlock = jest.fn((blockNumber: number) => {
+        return {
+          number: blockNumber,
+          hash: blockNumber.toString(),
+        } as Block
+      })
+      const provider = { getLogs, getBlock } as unknown as Provider
+
+      const blockProofs$ = createBlockProofsLoaderForRange(provider, 'eip155:1337', {
+        fromBlock: 10,
+        toBlock: 12,
+      })
+      await expect(firstValueFrom(blockProofs$)).resolves.toEqual(
+        [10, 12].map((blockNumber) => ({
+          blockHash: blockNumber.toString(),
+          blockNumber,
+          proofs: [],
+        }))
+      )
+    })
+    test('If no logs found pushes 1 block proofs if the from block and to block are the same', async () => {
+      const getLogs = jest.fn(() => Promise.resolve([]))
+      const getBlock = jest.fn((blockNumber: number) => {
+        return {
+          number: blockNumber,
+          hash: blockNumber.toString(),
+        } as Block
+      })
+      const provider = { getLogs, getBlock } as unknown as Provider
+
+      const blockProofs$ = createBlockProofsLoaderForRange(provider, 'eip155:1337', {
+        fromBlock: 10,
+        toBlock: 10,
+      })
+      await expect(firstValueFrom(blockProofs$)).resolves.toEqual([
+        {
+          blockHash: '10',
+          blockNumber: 10,
+          proofs: [],
+        },
+      ])
+    })
   })
 
   describe('loadBlockProofsForRange()', () => {
@@ -133,7 +184,13 @@ describe('loader', () => {
 
     test('Pushes an array of block proofs', async () => {
       const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
-      const provider = { getLogs } as unknown as Provider
+      const getBlock = jest.fn((blockNumber: number) => {
+        return {
+          number: blockNumber,
+          hash: blockNumber.toString(),
+        } as Block
+      })
+      const provider = { getLogs, getBlock } as unknown as Provider
       await expect(
         loadBlockProofsForRange(provider, 'eip155:1337', { fromBlock: 0, toBlock: 2 })
       ).resolves.toEqual(mockedBlockProofs)
@@ -145,7 +202,13 @@ describe('loader', () => {
       expect(fromBlock).toEqual(toBlock)
       return Promise.resolve([mockedLogs[fromBlock]])
     })
-    const provider = { getLogs } as unknown as Provider
+    const getBlock = jest.fn((blockNumber: number) => {
+      return {
+        number: blockNumber,
+        hash: blockNumber.toString(),
+      } as Block
+    })
+    const provider = { getLogs, getBlock } as unknown as Provider
     const blocks = [
       { number: 0, timestamp: 1000 },
       { number: 1, timestamp: 1100 },
@@ -177,8 +240,14 @@ describe('loader', () => {
       }
       return logs
     })
+    const getBlock = jest.fn((blockNumber: number) => {
+      return {
+        number: blockNumber,
+        hash: blockNumber.toString(),
+      } as Block
+    })
 
-    const provider = { getLogs } as unknown as Provider
+    const provider = { getLogs, getBlock } as unknown as Provider
     const blockRanges = [
       { fromBlock: 10, toBlock: 11 },
       { fromBlock: 12, toBlock: 12 },
@@ -214,13 +283,19 @@ describe('loader', () => {
 
   test('createBlocksProofsLoader() loads the proofs', async () => {
     const getLogs = jest.fn(() => Promise.resolve(mockedLogs))
-    const provider = { getLogs } as unknown as Provider
+    const getBlock = jest.fn((blockNumber: number) => {
+      return {
+        number: blockNumber,
+        hash: blockNumber.toString(),
+      } as Block
+    })
+    const provider = { getLogs, getBlock } as unknown as Provider
 
     const blockProofs$ = createBlocksProofsLoader({
       provider,
       chainId: 'eip155:1337',
-      fromBlock: 100,
-      toBlock: 102,
+      fromBlock: 0,
+      toBlock: 2,
     })
     await expect(firstValueFrom(blockProofs$.pipe(toArray()))).resolves.toEqual(mockedBlockProofs)
   })
@@ -228,16 +303,22 @@ describe('loader', () => {
   test('createAncestorBlocksProofsLoader() loads the proofs', async () => {
     const blocks: Record<string, Block> = {
       block0: { number: 100, timestamp: 1000 } as Block,
-      block1: { parentHash: 'block0', number: 101, timestamp: 1100 } as Block,
-      block2: { parentHash: 'block1', number: 102, timestamp: 1200 } as Block,
-      latest: { parentHash: 'block2', number: 103, timestamp: 1300 } as Block,
+      block1: { parentHash: 'block0', number: 101, hash: '101', timestamp: 1100 } as Block,
+      block2: { parentHash: 'block1', number: 102, hash: '102', timestamp: 1200 } as Block,
+      latest: { parentHash: 'block2', number: 103, hash: '103', timestamp: 1300 } as Block,
     }
 
     const mockedLogs = [100, 101, 102, 103].map((i) =>
       createLog(i, new Uint8Array(new Array(32).fill(i)))
     ) as [Log, Log, Log]
 
-    const getBlock = jest.fn((blockTag: string) => Promise.resolve(blocks[blockTag]))
+    const getBlock = jest.fn((blockTag: BlockTag) => {
+      if (typeof blockTag === 'number') {
+        return Promise.resolve(blocks[blockTag === 103 ? 'latest' : `block${blockTag - 100}`])
+      }
+
+      return Promise.resolve(blocks[blockTag])
+    })
     const getLogs = jest.fn(({ fromBlock }) => Promise.resolve([mockedLogs[fromBlock - 100]]))
     const provider = { getBlock, getLogs } as unknown as Provider
 
