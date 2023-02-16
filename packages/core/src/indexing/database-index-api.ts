@@ -14,6 +14,7 @@ import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
+import {ReIndexedModelError} from "./reindexed-model-error";
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
@@ -55,6 +56,7 @@ type IndexedData<DateType> = {
 export class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private modelsToIndex: Array<StreamID> = []
+  private previouslyIndexedModels = []
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
   // indexed
   private readonly modelsIndexedFields = new Map<string, Array<string>>()
@@ -79,6 +81,14 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
+    for (const modelArgs of this.previouslyIndexedModels) {
+      const modelPreviouslyIndexed = this.previouslyIndexedModels.some(function (streamId) {
+        return String(streamId) === String(modelArgs)
+      })
+      if (modelPreviouslyIndexed){
+        throw new ReIndexedModelError(modelArgs.toString())
+      }
+    }
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
       this.modelsToIndex.push(modelArgs.model)
@@ -117,6 +127,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+    models.forEach((modelStreamID) => this.previouslyIndexedModels.push(modelStreamID))
     await this.stopIndexingModelsInDatabase(models)
     const modelsAsStrings = models.map((streamID) => streamID.toString())
     this.modelsToIndex = this.modelsToIndex.filter(
@@ -197,6 +208,15 @@ export class DatabaseIndexApi<DateType = Date | number> {
       return StreamID.fromString(result.model)
     })
   }
+  private async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+    return (
+      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
+        is_indexed: false,
+      })
+    ).map((result) => {
+      return StreamID.fromString(result.model)
+    })
+  }
 
   /**
    * Ensures that the given model StreamID can be queried and throws if not.
@@ -254,6 +274,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)
     this.modelsToIndex = await this.getIndexedModelsFromDatabase()
+    this.previouslyIndexedModels = await this.getPreviouslyIndexedModelsFromDatabase()
   }
 
   /**
