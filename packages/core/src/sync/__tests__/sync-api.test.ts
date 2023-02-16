@@ -240,11 +240,14 @@ describe('Sync API', () => {
       sync._addSyncJob = addSyncJob as any
 
       await sync.init({ getBlock, getNetwork } as any)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
-        fromBlock: 5,
-        toBlock: 10,
-        models: expectedModels,
-      })
+      expect(addSyncJob).toHaveBeenCalledWith(
+        HISTORY_SYNC_JOB,
+        expect.objectContaining({
+          fromBlock: 5,
+          toBlock: 10,
+          models: expectedModels,
+        })
+      )
 
       await sync.shutdown()
     })
@@ -316,7 +319,7 @@ describe('Sync API', () => {
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123'] }
       await sync.startModelSync('abc123', data.fromBlock, data.toBlock)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
+      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
 
@@ -335,7 +338,7 @@ describe('Sync API', () => {
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'def456'] }
       await sync.startModelSync(data.models, data.fromBlock, data.toBlock)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
+      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
   })
@@ -396,6 +399,10 @@ describe('Sync API', () => {
       )
       // @ts-ignore private field
       sync.modelsToSync = new Set(['abc123', 'def456'])
+      sync.modelsToHistoricSync = new Map([
+        ['abc123', 2],
+        ['def456', 1],
+      ])
 
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
@@ -415,6 +422,8 @@ describe('Sync API', () => {
         processedBlockHash: 'abc789',
         processedBlockNumber: 10,
       })
+      expect(await sync.syncComplete('abc123')).toBeFalsy()
+      expect(await sync.syncComplete('def456')).toBeFalsy()
     })
 
     test('loads the expected block range on block reorganization', async () => {
@@ -427,7 +436,10 @@ describe('Sync API', () => {
         {} as any
       )
       // @ts-ignore private field
-      sync.modelsToSync = new Set(['abc123', 'def456'])
+      sync.modelsToHistoricSync = new Map([
+        ['abc123', 2],
+        ['def456', 1],
+      ])
 
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
@@ -439,15 +451,21 @@ describe('Sync API', () => {
         reorganized: true,
         expectedParentHash: 'ghi789',
       } as any)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
-        fromBlock: 100 - BLOCK_CONFIRMATIONS,
-        toBlock: 100,
-        models: ['abc123', 'def456'],
-      })
+      expect(addSyncJob).toHaveBeenCalledWith(
+        HISTORY_SYNC_JOB,
+        expect.objectContaining({
+          fromBlock: 100 - BLOCK_CONFIRMATIONS,
+          toBlock: 100,
+          models: ['abc123', 'def456'],
+        })
+      )
       expect(updateStoredState).toHaveBeenCalledWith({
         processedBlockHash: 'abc789',
         processedBlockNumber: 100,
       })
+
+      expect(await sync.syncComplete('abc123')).toBeFalsy()
+      expect(await sync.syncComplete('abc789')).toBeTruthy()
     })
   })
 

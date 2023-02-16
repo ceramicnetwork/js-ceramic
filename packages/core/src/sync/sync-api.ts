@@ -23,7 +23,12 @@ import {
   SyncJobData,
 } from './interfaces.js'
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
-import { SyncWorker, createHistorySyncJob, createContinuousSyncJob } from './workers/sync.js'
+import {
+  SyncWorker,
+  createHistorySyncJob,
+  createContinuousSyncJob,
+  SyncCompleteData,
+} from './workers/sync.js'
 
 const SYNC_STATUS_LOG_INTERVAL = 1000
 export const BLOCK_CONFIRMATIONS = 20
@@ -95,7 +100,7 @@ export interface SyncStatus {
 
 export class SyncApi implements ISyncApi {
   public readonly modelsToSync = new Set<string>()
-
+  public readonly modelsToHistoricSync = new Map<string, number>()
   private readonly dataSource: Knex
   private readonly jobQueue: IJobQueue<JobData>
   private subscription: Subscription | undefined
@@ -168,15 +173,27 @@ export class SyncApi implements ISyncApi {
         this.provider,
         this.jobQueue,
         this.chainId,
-        this.diagnosticsLogger
+        this.diagnosticsLogger,
+        this.syncCompletedForModel
       ),
       [CONTINUOUS_SYNC_JOB]: new SyncWorker(
         this.provider,
         this.jobQueue,
         this.chainId,
-        this.diagnosticsLogger
+        this.diagnosticsLogger,
+        this.syncCompletedForModel
       ),
     })
+  }
+
+  upsertModelForHistoricSync(model: string) {
+    let existing = this.modelsToHistoricSync.get(model)
+    if (existing) {
+      existing += 1
+    } else {
+      existing = 0
+    }
+    this.modelsToHistoricSync.set(model, existing)
   }
 
   /**
@@ -185,7 +202,9 @@ export class SyncApi implements ISyncApi {
   async _initModelsToSync(): Promise<void> {
     const streamsIds = await this.localIndex.indexedModels()
     for (const id of streamsIds) {
-      this.modelsToSync.add(id.toString())
+      const streamId = id.toString()
+      this.modelsToSync.add(streamId)
+      this.upsertModelForHistoricSync(streamId)
     }
   }
 
@@ -246,7 +265,7 @@ export class SyncApi implements ISyncApi {
       await this._addSyncJob(HISTORY_SYNC_JOB, {
         fromBlock: block.number - BLOCK_CONFIRMATIONS,
         toBlock: block.number,
-        models: Array.from(this.modelsToSync),
+        models: Array.from(this.modelsToHistoricSync.keys()),
       })
     } else {
       await this._addSyncJob(CONTINUOUS_SYNC_JOB, {
@@ -374,7 +393,9 @@ export class SyncApi implements ISyncApi {
 
     // Keep track of all models IDs to sync
     for (const id of modelIds) {
-      this.modelsToSync.add(id.toString())
+      const modelId = id.toString()
+      this.modelsToSync.add(modelId)
+      this.upsertModelForHistoricSync(modelId)
     }
 
     if (!endBlock) {
@@ -388,6 +409,23 @@ export class SyncApi implements ISyncApi {
       toBlock: endBlock,
       models: modelIds,
     })
+  }
+
+  syncCompletedForModel(data: SyncCompleteData) {
+    if (data.isHistoricSync) {
+      const existing = this.modelsToHistoricSync.get(data.modelId)
+      if (existing) {
+        if (existing <= 1) {
+          this.modelsToHistoricSync.delete(data.modelId)
+        } else {
+          this.modelsToHistoricSync.set(data.modelId, existing - 1)
+        }
+      }
+    }
+  }
+
+  async syncComplete(model: string): Promise<boolean> {
+    return Promise.resolve(!this.modelsToHistoricSync.has(model))
   }
 
   async shutdown(): Promise<void> {

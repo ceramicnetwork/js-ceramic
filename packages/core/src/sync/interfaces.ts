@@ -10,7 +10,18 @@ export type SyncConfig = {
   chainId: SupportedNetwork
 }
 
-export interface ISyncApi {
+/**
+ * Interface to determine if a sync has completed for a particular model
+ */
+export interface ISyncQueryApi {
+  syncComplete(model: string): Promise<boolean>
+}
+
+/**
+ * Interface used with historical sync'ing to start model sync on one or more models, or to
+ * shutdown the service providing the sync'ing
+ */
+export interface ISyncApi extends ISyncQueryApi {
   startModelSync(models: string | string[], startBlock?: number, endBlock?: number): Promise<void>
   shutdown(): Promise<void>
 }

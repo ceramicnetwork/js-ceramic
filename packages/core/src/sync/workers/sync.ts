@@ -41,6 +41,11 @@ export function createHistorySyncJob(data: SyncJobData, options?: SendOptions): 
   }
 }
 
+export interface SyncCompleteData {
+  isHistoricSync: boolean
+  modelId: string
+}
+
 /**
  * Worker that creates recreateAnchor jobs based on the anchor proofs  recreates the anchor commits based on the anchor proof given.
  * It ensures that the data is stored and handled.
@@ -50,7 +55,8 @@ export class SyncWorker implements Worker<SyncJobData> {
     private readonly provider: Provider,
     private readonly jobQueue: IJobQueue<JobData>,
     private readonly chainId,
-    private readonly logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger,
+    private readonly syncCompleteCallback: (SyncCompleteData) => void
   ) {}
 
   /**
@@ -107,6 +113,14 @@ export class SyncWorker implements Worker<SyncJobData> {
     )
 
     await lastValueFrom(blockProof$).then(() => {
+      if (job.name == HISTORY_SYNC_JOB) {
+        for (const model of models) {
+          this.syncCompleteCallback({
+            isHistoricSync: true,
+            modelId: model,
+          })
+        }
+      }
       this.logger.debug(
         `Sync completed for models ${models} from block ${fromBlock} to block ${toBlock}`
       )
