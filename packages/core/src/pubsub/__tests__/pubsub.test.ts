@@ -1,5 +1,5 @@
 import { jest, test, expect } from '@jest/globals'
-import {IpfsApi, LoggerProvider, TestUtils} from '@ceramicnetwork/common';
+import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub.js'
 import { MsgType, serialize } from '../pubsub-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -8,7 +8,7 @@ import { bufferCount, concatMap, delay, map } from 'rxjs/operators'
 import * as random from '@stablelib/random'
 import { asIpfsMessage } from './as-ipfs-message.js'
 import { from, first, firstValueFrom } from 'rxjs'
-import {IPFSPubsubMessage} from "../incoming-channel.js";
+import { IPFSPubsubMessage } from '../incoming-channel.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
@@ -51,7 +51,14 @@ test('pass incoming messages, omit garbage', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(
+    ipfs as unknown as IpfsApi,
+    TOPIC,
+    3000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   // Even if garbage is first, we only receive well-formed messages
   const received = firstValueFrom(pubsub.pipe(bufferCount(LENGTH)))
   expect(await received).toEqual(MESSAGES)
@@ -68,7 +75,14 @@ test('publish', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(
+    ipfs as unknown as IpfsApi,
+    TOPIC,
+    3000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
@@ -83,23 +97,22 @@ test('publish', async () => {
 })
 
 function checkLog(func: (string) => void) {
-  jest.spyOn(diagnosticsLogger, 'log')
-    .mockImplementation((_, content) => {
-      func(content.toString())
-    })
+  jest.spyOn(diagnosticsLogger, 'log').mockImplementation((_, content) => {
+    func(content.toString())
+  })
 }
 test('warn if no messages', async () => {
   const messages = [
     asIpfsMessage({
       typ: MsgType.QUERY,
-      id: "1",
+      id: '1',
       stream: FAKE_STREAM_ID,
-    })
+    }),
   ]
   const feed = from(messages)
   let sawLog = false
   checkLog((s) => {
-    if(s.includes("please check your IPFS configuration.")) {
+    if (s.includes('please check your IPFS configuration.')) {
       sawLog = true
     }
   })
@@ -114,7 +127,14 @@ test('warn if no messages', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(
+    ipfs as unknown as IpfsApi,
+    TOPIC,
+    3000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   const result: any[] = []
   const subscription = pubsub.subscribe((message) => {
     result.push(message)
@@ -129,16 +149,16 @@ test('warn if no internal messages', async () => {
   const messages = [
     asIpfsMessage({
       typ: MsgType.QUERY,
-      id: "1",
+      id: '1',
       stream: StreamID.fromString(
         'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60t'
       ),
-    })
+    }),
   ]
   const feed = from(messages)
   let sawLog = false
   checkLog((s) => {
-    if(s.includes("please check your IPFS configuration.")) {
+    if (s.includes('please check your IPFS configuration.')) {
       sawLog = true
     }
   })
@@ -153,7 +173,14 @@ test('warn if no internal messages', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(
+    ipfs as unknown as IpfsApi,
+    TOPIC,
+    3000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   const result: any[] = []
   const subscription = pubsub.subscribe((message) => {
     result.push(message)
@@ -165,7 +192,7 @@ test('warn if no internal messages', async () => {
 })
 
 type DelayedMessage = {
-  delay: number,
+  delay: number
   message: IPFSPubsubMessage
 }
 test('continue even if a timeout occurs', async () => {
@@ -174,25 +201,25 @@ test('continue even if a timeout occurs', async () => {
       delay: 0,
       message: asIpfsMessage({
         typ: MsgType.QUERY,
-        id: "1",
+        id: '1',
         stream: FAKE_STREAM_ID,
-      })
+      }),
     },
     {
       delay: 2000,
       message: asIpfsMessage({
         typ: MsgType.QUERY,
-        id: "2",
+        id: '2',
         stream: FAKE_STREAM_ID,
-      })
-    }
+      }),
+    },
   ]
   const feed = from(messages).pipe(
-    concatMap(msg => {
+    concatMap((msg) => {
       const d = msg.delay
       return of(msg.message).pipe(
         delay(msg.delay),
-        map(msg => {
+        map((msg) => {
           return msg
         })
       )
@@ -200,7 +227,7 @@ test('continue even if a timeout occurs', async () => {
   )
   let sawLog = false
   checkLog((s) => {
-    if(s.includes("please check your IPFS configuration.")) {
+    if (s.includes('please check your IPFS configuration.')) {
       sawLog = true
     }
   })
@@ -215,7 +242,14 @@ test('continue even if a timeout occurs', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(
+    ipfs as unknown as IpfsApi,
+    TOPIC,
+    3000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   const result: any[] = []
   const subscription = pubsub.subscribe((message) => {
     result.push(message)

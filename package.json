@@ -16,7 +16,7 @@
     "publish:release-candidate": "npx lerna publish --dist-tag next --preid rc --no-verify-access --conventional-prerelease bump preminor",
     "publish:release": "npx lerna publish --dist-tag latest --create-release github --no-verify-access --conventional-graduate bump minor",
     "publish:hotfix": "npx lerna publish --no-verify-access --conventional-graduate bump patch",
-    "lint": "npx lerna run lint",
+    "lint": "npx lerna run lint && npx prettier --check packages/**/src/**/*.ts",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
     "clean:install:build": "npm run clean && npm install && npm run build",
     "clean:deps": "npx --yes rimraf ./packages/*/node_modules ./node_modules",

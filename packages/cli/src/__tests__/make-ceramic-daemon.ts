@@ -13,8 +13,7 @@ export async function makeCeramicDaemon(
   const configObj = merge(
     {
       'http-api': { port },
-      indexing: {
-      },
+      indexing: {},
     },
     opts
   )

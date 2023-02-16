@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/streamid",
-  "version": "2.11.0-rc.0",
+  "version": "2.12.0-rc.0",
   "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",
@@ -33,7 +33,7 @@
     "@ipld/dag-cbor": "^7.0.0",
     "mapmoize": "^1.2.1",
     "multiformats": "^9.5.8",
-    "uint8arrays": "^3.0.0",
+    "uint8arrays": "^4.0.3",
     "varint": "^6.0.0"
   },
   "publishConfig": {

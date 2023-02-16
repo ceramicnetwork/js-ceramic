@@ -116,7 +116,6 @@ describe('LevelDB-backed StateStore', () => {
 
   describe('#list', () => {
     test('saved entries', async () => {
-
       const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
       const streams = states.map((state) => streamFromState(state))
 
