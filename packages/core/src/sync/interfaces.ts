@@ -31,7 +31,7 @@ export interface TreeMetadata {
   streamIds: string[]
 }
 
-export const REBUILD_ANCHOR_JOB = 'rebuildAnchor'
+export const REBUILD_ANCHOR_JOB = 'rebuildAnchorJob'
 export interface RebuildAnchorJobData {
   models: string[]
   chainId: string
@@ -40,8 +40,8 @@ export interface RebuildAnchorJobData {
   txType?: string
 }
 
-export const HISTORY_SYNC_JOB = 'historySync'
-export const CONTINUOUS_SYNC_JOB = 'continuousSync'
+export const HISTORY_SYNC_JOB = 'historySyncJob'
+export const CONTINUOUS_SYNC_JOB = 'continuousSyncJob'
 
 export type SyncJob = typeof HISTORY_SYNC_JOB | typeof CONTINUOUS_SYNC_JOB
 export interface SyncJobData {
