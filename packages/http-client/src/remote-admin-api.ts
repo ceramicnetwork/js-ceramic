@@ -4,7 +4,9 @@ import { DID } from 'dids'
 
 export class MissingDIDError extends Error {
   constructor() {
-    super('Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached')
+    super(
+      'Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached'
+    )
   }
 }
 

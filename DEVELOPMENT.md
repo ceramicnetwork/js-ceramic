@@ -14,6 +14,14 @@ $ npm install
 Then build all packages:
 ```
 $ npm run build
+``` 
+When you change files, you will want to run lint to check your formatting
+```
+$ npm run lint
+```
+You can also have prettier automatically update non-conforming files
+```
+npx prettier --write "packages/**/src/**/*.ts"
 ```
 
 ## Run tests

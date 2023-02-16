@@ -22,7 +22,7 @@ jest.unstable_mockModule('cross-fetch', () => {
     },
   }))
   return {
-    default: fetchFunc
+    default: fetchFunc,
   }
 })
 

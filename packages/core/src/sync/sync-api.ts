@@ -29,8 +29,8 @@ export const BLOCK_CONFIRMATIONS = 20
 // TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
   'eip155:1': 16587130,
-  'eip155:5': 8458698,
-  'eip155:100': 26381584,
+  'eip155:5': 8503000,
+  'eip155:100': 26511896,
 }
 
 export const STATE_TABLE_NAME = 'ceramic_indexing_state'
