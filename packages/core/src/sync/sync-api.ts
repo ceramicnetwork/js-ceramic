@@ -24,7 +24,7 @@ import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
 import { SyncWorker, createSyncJob } from './workers/sync.js'
 
 export const BLOCK_CONFIRMATIONS = 20
-// TODO: block number to be defined
+// TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
   'eip155:1': 16587130,
   'eip155:5': 8458698,
@@ -169,7 +169,7 @@ export class SyncApi implements ISyncApi {
         mergeMap((blockProofs) => this._handleBlockProofs(blockProofs)),
         catchError((err) => {
           this.diagnosticsLogger.err(`Error received during continuous sync: ${err}`)
-          // TODO: retry
+          // TODO (CDB-2272): add retry logic
           throw err
         })
       )

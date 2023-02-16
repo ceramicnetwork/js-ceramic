@@ -84,7 +84,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
       this.logger.err(
         `Failed to store a proof on ipfs for root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
       )
-      // TODO: add failure job for root cid
+      // TODO (CDB-2291): add failure job for root cid
     })
     if (!proofCid) {
       return
@@ -95,7 +95,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
       this.logger.err(
         `Failed to retreive the merkle tree metadata for root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
       )
-      // TODO: add failure job for root cid
+      // TODO (CDB-2291): add failure job for root cid
     })
     if (!metadata) {
       return
@@ -138,7 +138,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
           this.logger.err(
             `Failed to recreate the anchor commit for stream ${stream} using root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
           )
-          // TODO: add failure job for streamId
+          // TODO (CDB-2291): add failure job for streamId
         }
       })
     )
