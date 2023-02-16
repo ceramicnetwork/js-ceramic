@@ -45,7 +45,7 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
 
     this.queue = new PgBoss({ db: new PgWrapper(this.dbConnection) })
     this.queue.on('error', (err) => {
-      this.logger.err(`Error received by queue: ${err}`)
+      this.logger.err(`Error received by job queue: ${err}`)
     })
   }
 
