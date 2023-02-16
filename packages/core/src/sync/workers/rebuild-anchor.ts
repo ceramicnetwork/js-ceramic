@@ -7,7 +7,7 @@ import {
   type IpfsService,
   type HandleCommit,
   type RebuildAnchorJobData,
-  REBUILD_ANCHOR_JOB_NAME,
+  REBUILD_ANCHOR_JOB,
 } from '../interfaces.js'
 import type { Worker, Job } from '../../state-management/job-queue.js'
 import { CID } from 'multiformats/cid'
@@ -26,7 +26,7 @@ export function createRebuildAnchorJob(
   options: SendOptions = REBUILD_ANCHOR_JOB_OPTIONS
 ): Job<RebuildAnchorJobData> {
   return {
-    name: REBUILD_ANCHOR_JOB_NAME,
+    name: REBUILD_ANCHOR_JOB,
     data: {
       models,
       chainId: proof.chainId,

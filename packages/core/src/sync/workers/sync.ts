@@ -5,10 +5,14 @@ import { BlockProofs, createBlocksProofsLoader } from '@ceramicnetwork/anchor-li
 import type { Provider } from '@ethersproject/providers'
 import { concatMap, lastValueFrom, of, catchError } from 'rxjs'
 import { createRebuildAnchorJob } from './rebuild-anchor.js'
-import { RebuildAnchorJobData, JobData } from '../interfaces.js'
+import {
+  RebuildAnchorJobData,
+  JobData,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+} from '../interfaces.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
-export const SYNC_JOB_NAME = 'sync'
 const SYNC_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
   retryDelay: 60, // 1 minute
@@ -23,9 +27,20 @@ interface SyncJobData {
   models: string[]
 }
 
-export function createSyncJob(data: SyncJobData, options?: SendOptions): Job<SyncJobData> {
+export function createContinuousSyncJob(
+  data: SyncJobData,
+  options?: SendOptions
+): Job<SyncJobData> {
   return {
-    name: SYNC_JOB_NAME,
+    name: CONTINUOUS_SYNC_JOB,
+    data,
+    options: options || SYNC_JOB_OPTIONS,
+  }
+}
+
+export function createHistorySyncJob(data: SyncJobData, options?: SendOptions): Job<SyncJobData> {
+  return {
+    name: HISTORY_SYNC_JOB,
     data,
     options: options || SYNC_JOB_OPTIONS,
   }
