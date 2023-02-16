@@ -38,6 +38,8 @@ export type BlockAndBlockProofs = {
   proofs: BlockProofs
 }
 
+const GET_LOGS_BATCH_SIZE = 100
+
 /**
  * Create an Observable loading a single block, with retry logic
  *
@@ -129,20 +131,50 @@ export function createBlockProofsLoaderForRange(
   }
 
   return defer(async () => {
-    return await provider.getLogs({
-      address,
-      fromBlock: blockRangeFilter.fromBlock,
-      toBlock: blockRangeFilter.toBlock,
-    })
+    return await Promise.all([
+      provider.getLogs({
+        address,
+        fromBlock: blockRangeFilter.fromBlock,
+        toBlock: blockRangeFilter.toBlock,
+      }),
+      provider.getBlock(blockRangeFilter.fromBlock),
+      blockRangeFilter.fromBlock === blockRangeFilter.toBlock
+        ? undefined
+        : provider.getBlock(blockRangeFilter.toBlock),
+    ])
   }).pipe(
     retry(retryConfig),
-    map(groupLogsByBlockNumber),
-    map((logsByBlockNumber) => {
-      return Object.values(logsByBlockNumber).map((logs) => ({
-        blockNumber: logs[0]?.blockNumber as number,
-        blockHash: logs[0]?.blockHash as string,
-        proofs: logs.map((log) => createAnchorProof(chainId, log)),
-      }))
+    // always include first and last block
+    map(([logs, fromBlock, toBlock = fromBlock]) => {
+      const logsByBlockNumber = groupLogsByBlockNumber(logs)
+
+      if (!logsByBlockNumber[fromBlock.number]) {
+        logsByBlockNumber[fromBlock.number] = []
+      }
+
+      if (!logsByBlockNumber[toBlock.number]) {
+        logsByBlockNumber[toBlock.number] = []
+      }
+
+      return Object.keys(logsByBlockNumber)
+        .sort()
+        .map((blockNumberStr) => {
+          const blockNumber = parseInt(blockNumberStr, 10)
+          const logs = logsByBlockNumber[blockNumber] as Array<Log>
+
+          let blockHash
+          if (blockNumber === fromBlock.number) {
+            blockHash = fromBlock.hash
+          } else if (blockNumber === toBlock.number) {
+            blockHash = toBlock.hash
+          } else blockHash = logs[0]?.blockHash as string
+
+          return {
+            blockNumber: blockNumber,
+            blockHash,
+            proofs: logs.map((log) => createAnchorProof(chainId, log)),
+          }
+        })
     })
   )
 }
@@ -251,7 +283,7 @@ export function createBlocksProofsLoader({
 }: BlocksProofsLoaderParams): Observable<BlockProofs> {
   const retry = retryConfig ?? { count: 3 }
   return range(fromBlock, toBlock - fromBlock + 1).pipe(
-    bufferCount(blockLoadBuffer ?? 100),
+    bufferCount(blockLoadBuffer ?? GET_LOGS_BATCH_SIZE),
     map((values) => ({
       fromBlock: values[0] as number,
       toBlock: values[values.length - 1] as number,
