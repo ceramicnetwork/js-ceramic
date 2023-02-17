@@ -19,6 +19,16 @@ import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
 import multihashes from 'multihashes'
 
+export const MODEL_VERSION_REGEXP = /^[0-9]+\.[0-9]+$/
+
+export function parseModelVersion(version: string): [number, number] {
+  if (!MODEL_VERSION_REGEXP.test(version)) {
+    throw new Error(`Unsupported version format: ${version}`)
+  }
+  const [major, minor] = version.split('.').map((part) => parseInt(part, 10))
+  return [major, minor]
+}
+
 /**
  * Arguments used to generate the metadata for Model streams.
  */
@@ -126,6 +136,7 @@ export type ModelViewsDefinition = Record<string, ModelViewDefinition>
  * Contents of a Model Stream.
  */
 export interface ModelDefinition {
+  version: string
   name: string
   description?: string
   schema: JSONSchema.Object
@@ -133,6 +144,13 @@ export interface ModelDefinition {
   relations?: ModelRelationsDefinition
   views?: ModelViewsDefinition
 }
+
+/**
+ * Version check to satisfy:
+ * - 'major': only major version match needs to be satisfied
+ * - 'minor': both major and minor versions matches need to be satisfied
+ */
+export type ValidVersionSatisfies = 'major' | 'minor'
 
 /**
  * Model stream implementation
@@ -152,6 +170,8 @@ export class Model extends Stream {
     const cid = CID.createV1(code, digest)
     return new StreamID('UNLOADABLE', cid)
   })()
+
+  static readonly VERSION = '1.0'
 
   private _isReadOnly = false
 
@@ -175,6 +195,7 @@ export class Model extends Stream {
     metadata?: ModelMetadataArgs
   ): Promise<Model> {
     Model.assertComplete(content)
+    Model.assertVersionValid(content, 'minor')
     Model.assertRelationsValid(content)
 
     const opts: CreateOpts = {
@@ -190,8 +211,8 @@ export class Model extends Stream {
 
   /**
    * Asserts that all the required fields for the Model are set, and throws an error if not.
-   * @param streamId
    * @param content
+   * @param streamId
    */
   static assertComplete(content: ModelDefinition, streamId?: StreamID | CommitID | string): void {
     if (!content.name) {
@@ -199,6 +220,16 @@ export class Model extends Stream {
         throw new Error(`Model with StreamID ${streamId.toString()} is missing a 'name' field`)
       } else {
         throw new Error(`Model is missing a 'name' field`)
+      }
+    }
+
+    if (!content.version) {
+      if (streamId) {
+        throw new Error(
+          `Model ${content.name} (${streamId.toString()}) is missing a 'version' field`
+        )
+      } else {
+        throw new Error(`Model ${content.name} is missing a 'version' field`)
       }
     }
 
@@ -220,6 +251,28 @@ export class Model extends Stream {
       } else {
         throw new Error(`Model ${content.name} is missing a 'accountRelation' field`)
       }
+    }
+  }
+
+  /**
+   * Asserts that the version of the model definition is supported.
+   * @param content - Model definition object
+   * @param satisfies - Version range to satisfy
+   */
+  static assertVersionValid(
+    content: ModelDefinition,
+    satisfies: ValidVersionSatisfies = 'minor'
+  ): void {
+    const [expectedMajor, expectedMinor] = parseModelVersion(Model.VERSION)
+    const [major, minor] = parseModelVersion(content.version)
+
+    if (
+      major > expectedMajor ||
+      (satisfies === 'minor' && major === expectedMajor && minor > expectedMinor)
+    ) {
+      throw new Error(
+        `Unsupported version ${content.version} for model ${content.name}, the maximum version supported by the Ceramic node is ${Model.VERSION}. Please update your Ceramic node to a newer version supporting at least version ${content.version} of the Model definition.`
+      )
     }
   }
 

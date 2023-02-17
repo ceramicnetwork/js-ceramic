@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.22.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.21.0-rc.0...@ceramicnetwork/cli@2.22.0-rc.0) (2023-02-16)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.21.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.20.0...@ceramicnetwork/cli@2.21.0-rc.0) (2023-02-13)
+
+
+### Bug Fixes
+
+* bump ipfs http client ([605957f](https://github.com/ceramicnetwork/js-ceramic/commit/605957fbb6183cb6ae84ea247e1f7bdb092c12fa))
+* **core,cli:** pin version of p-queue library ([#2690](https://github.com/ceramicnetwork/js-ceramic/issues/2690)) ([bf3b6e6](https://github.com/ceramicnetwork/js-ceramic/commit/bf3b6e6bbe6eff8b20ad6cafe382ed09c884527c))
+* downgrade ipfs http client ([5bc3a5e](https://github.com/ceramicnetwork/js-ceramic/commit/5bc3a5edbfa15dcef9ff6e8ec8873b86e9cd0991))
+* downgrade ipfs http client + add newer multiaddr dep ([ad3ad35](https://github.com/ceramicnetwork/js-ceramic/commit/ad3ad3588f58b181b674440786c9649086a9078a))
+* revert all multiaddr changes ([41e1485](https://github.com/ceramicnetwork/js-ceramic/commit/41e148549552ca470d964aafd255258b18da2dd0))
+
+
+### Features
+
+* **stream-model,stream-model-handler:** model definition versioning ([#2660](https://github.com/ceramicnetwork/js-ceramic/issues/2660)) ([6ccbbdd](https://github.com/ceramicnetwork/js-ceramic/commit/6ccbbdd4d9e028394c14c2c1ac755236a6c80008))
+
+
+
+
+
 # [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.20.0-rc.1...@ceramicnetwork/cli@2.20.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

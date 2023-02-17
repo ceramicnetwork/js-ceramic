@@ -18,6 +18,7 @@ const CONTENT1 = { myData: 1 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel1',
+  version: Model.VERSION,
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -85,6 +86,19 @@ describe('Admin API tests', () => {
     await ceramic.close()
     await daemon.close()
     await core.close()
+  })
+
+  describe('nodeStatus tests', () => {
+    test('Fails with non-admin DID', async () => {
+      await expect(ceramic.admin.getIndexedModels()).rejects.toThrow(/Unauthorized access/)
+    })
+
+    test('basic node status test', async () => {
+      ceramic.did = adminDid
+
+      const status = await ceramic.admin.nodeStatus()
+      expect(status).toEqual({})
+    })
   })
 
   describe('Indexing config tests', () => {

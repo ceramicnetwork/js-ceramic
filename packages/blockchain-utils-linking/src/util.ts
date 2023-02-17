@@ -1,4 +1,4 @@
-import type { AccountId } from "caip"
+import type { AccountId } from 'caip'
 
 export interface LinkProof {
   version: number

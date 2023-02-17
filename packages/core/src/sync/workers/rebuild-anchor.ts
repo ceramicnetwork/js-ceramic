@@ -1,15 +1,16 @@
 import { default as PgBoss } from 'pg-boss'
 import type { SendOptions } from 'pg-boss'
-import type { AnchorCommit } from '@ceramicnetwork/common'
+import type { AnchorProof, AnchorCommit, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { MerkleTreeLoader } from '../utils.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import {
   type IpfsService,
   type HandleCommit,
   type RebuildAnchorJobData,
-  REBUILD_ANCHOR_JOB_NAME,
+  REBUILD_ANCHOR_JOB,
 } from '../interfaces.js'
 import type { Worker, Job } from '../../state-management/job-queue.js'
+import { CID } from 'multiformats/cid'
 
 const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
@@ -20,12 +21,19 @@ const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
 }
 
 export function createRebuildAnchorJob(
-  data: RebuildAnchorJobData,
+  proof: AnchorProof,
+  models: string[],
   options: SendOptions = REBUILD_ANCHOR_JOB_OPTIONS
 ): Job<RebuildAnchorJobData> {
   return {
-    name: REBUILD_ANCHOR_JOB_NAME,
-    data,
+    name: REBUILD_ANCHOR_JOB,
+    data: {
+      models,
+      chainId: proof.chainId,
+      txHash: proof.txHash.toString(),
+      root: proof.root.toString(),
+      txType: proof.txType,
+    },
     options,
   }
 }
@@ -37,7 +45,8 @@ export function createRebuildAnchorJob(
 export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
   constructor(
     private readonly ipfsService: IpfsService,
-    private readonly handleCommit: HandleCommit
+    private readonly handleCommit: HandleCommit,
+    private readonly logger: DiagnosticsLogger
   ) {}
 
   private async getModelForStream(streamId: StreamID): Promise<StreamID | null> {
@@ -46,9 +55,11 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
       streamId
     )
 
-    const genesisCommit = await this.ipfsService.retrieveCommit(signedCommit.link, streamId)
+    const genesisCommit = signedCommit?.link
+      ? await this.ipfsService.retrieveCommit(signedCommit.link, streamId)
+      : signedCommit
 
-    if (!genesisCommit.header.model) {
+    if (!genesisCommit?.header?.model) {
       return null
     }
 
@@ -64,18 +75,29 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
    */
   async handler(job: PgBoss.Job) {
     const jobData = job.data as RebuildAnchorJobData
-    const { proof, models } = jobData
+    const proof: AnchorProof = {
+      chainId: jobData.chainId,
+      txHash: CID.parse(jobData.txHash),
+      root: CID.parse(jobData.root),
+      txType: jobData.txType,
+    }
 
-    const proofCid = await this.ipfsService.storeRecord(proof as any).catch(() => {
-      // TODO: add failure job for root cid
+    const proofCid = await this.ipfsService.storeRecord(proof as any).catch((err) => {
+      this.logger.err(
+        `Failed to store a proof on ipfs for root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
+      )
+      // TODO (CDB-2291): add failure job for root cid
     })
     if (!proofCid) {
       return
     }
 
     const merkleTreeLeafLoader = new MerkleTreeLoader(this.ipfsService, proof.root)
-    const metadata = await merkleTreeLeafLoader.getMetadata().catch(() => {
-      // TODO: add failure job for root cid
+    const metadata = await merkleTreeLeafLoader.getMetadata().catch((err) => {
+      this.logger.err(
+        `Failed to retreive the merkle tree metadata for root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
+      )
+      // TODO (CDB-2291): add failure job for root cid
     })
     if (!metadata) {
       return
@@ -86,12 +108,12 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
     await Promise.all(
       streams.map(async (stream, i) => {
         try {
-          const streamId = StreamID.fromString(streams[i])
+          const streamId = StreamID.fromString(stream)
 
           const model = await this.getModelForStream(streamId)
 
           const shouldIndex = model
-            ? models.some((modelNeedingSync) => modelNeedingSync === model.toString())
+            ? jobData.models.some((modelNeedingSync) => modelNeedingSync === model.toString())
             : false
 
           if (shouldIndex) {
@@ -107,11 +129,24 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
             const anchorCommitCid = await this.ipfsService.storeCommit(anchorCommit)
 
             await this.handleCommit(streamId, anchorCommitCid, model)
+
+            this.logger.debug(
+              `Successfully handled anchor commit ${anchorCommitCid} for stream ${streamId.toString()} and model ${model.toString()} using merkle tree root ${
+                jobData.root
+              }`
+            )
           }
         } catch (err) {
-          // TODO: add failure job for streamId
+          this.logger.err(
+            `Failed to recreate the anchor commit for stream ${stream} using root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
+          )
+          // TODO (CDB-2291): add failure job for streamId
         }
       })
+    )
+
+    this.logger.debug(
+      `Rebuild anchor job completed for modes ${jobData.models}, root ${jobData.root}, and txHash ${jobData.txHash}`
     )
   }
 }

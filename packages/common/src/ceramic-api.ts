@@ -59,6 +59,12 @@ export interface CeramicSigner extends CeramicCommon {
  */
 export interface AdminApi {
   /**
+   * Returns a JSON object with various diagnostic and introspection information about the running
+   * node.
+   */
+  nodeStatus(): Promise<any> // TODO Use a typed return value
+
+  /**
    * List indexed model streams
    */
   getIndexedModels(): Promise<Array<StreamID>>

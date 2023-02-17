@@ -4,15 +4,16 @@ import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { of, type Observable, map } from 'rxjs'
 import { type BlockProofs, type BlocksProofsLoaderParams } from '@ceramicnetwork/anchor-listener'
-import { TestUtils } from '@ceramicnetwork/common'
-import type { Block, Provider } from '@ethersproject/providers'
-import { REBUILD_ANCHOR_JOB_NAME, JobData } from '../../interfaces.js'
+import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
+import type { Provider } from '@ethersproject/providers'
+import { REBUILD_ANCHOR_JOB, JobData, HISTORY_SYNC_JOB } from '../../interfaces.js'
 
 const ERROR_BLOCK = 100
 
 const createBlockProof = (chainId: string, blockNumber: number) => {
   return {
-    block: { number: blockNumber } as Block,
+    blockNumber: blockNumber,
+    blockHash: blockNumber.toString(),
     proofs: [
       {
         chainId,
@@ -34,7 +35,7 @@ const createBlocksProofsLoader = (params: BlocksProofsLoaderParams): Observable<
 
   return of(...blockProofs).pipe(
     map((blockProofs) => {
-      if (blockProofs.block.number === ERROR_BLOCK) {
+      if (blockProofs.blockNumber === ERROR_BLOCK) {
         throw Error('test error')
       }
 
@@ -62,16 +63,17 @@ describe('Sync Worker', () => {
   let syncWorkerSpy
 
   beforeAll(async () => {
+    const logger = new LoggerProvider().getDiagnosticsLogger()
     await pgSetup()
-    jobQueue = new JobQueue(process.env.DATABASE_URL as string)
+    jobQueue = new JobQueue(process.env.DATABASE_URL as string, logger)
 
     SyncPackage = await import('../sync.js')
-    const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue)
+    const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue, 'eip155:1337', logger)
     syncWorkerSpy = jest.spyOn(syncWorker, 'handler')
 
     await jobQueue.init({
-      [SyncPackage.SYNC_JOB_NAME]: syncWorker,
-      [REBUILD_ANCHOR_JOB_NAME]: mockRebuildAnchorWorker,
+      [HISTORY_SYNC_JOB]: syncWorker,
+      [REBUILD_ANCHOR_JOB]: mockRebuildAnchorWorker,
     })
   })
 
@@ -87,7 +89,7 @@ describe('Sync Worker', () => {
   })
 
   test('Can sync by creating rebuild anchor jobs', async () => {
-    const job = SyncPackage.createSyncJob({
+    const job = SyncPackage.createHistorySyncJob({
       fromBlock: 101,
       toBlock: 108,
       models: ['kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'],
@@ -106,7 +108,7 @@ describe('Sync Worker', () => {
       toBlock: 103,
       models: ['kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'],
     }
-    const job = SyncPackage.createSyncJob(jobData, {
+    const job = SyncPackage.createHistorySyncJob(jobData, {
       retryLimit: 3,
     })
 

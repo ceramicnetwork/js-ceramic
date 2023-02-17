@@ -63,6 +63,7 @@ jobs:
         uses: dagger/dagger-for-github@v3
         with:
           install-only: true
+          version: "0.2.36"
       -
         name: Verify Docker image
         run: |
@@ -142,6 +143,7 @@ jobs:
         uses: dagger/dagger-for-github@v3
         with:
           install-only: true
+          version: "0.2.36"
       -
         name: Verify Docker image
         run: |
@@ -213,6 +215,7 @@ jobs:
         uses: dagger/dagger-for-github@v3
         with:
           install-only: true
+          version: "0.2.36"
       -
         name: Verify Docker image
         run: |

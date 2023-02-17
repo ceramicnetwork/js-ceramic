@@ -25,6 +25,7 @@ Object {
       ],
       "type": "object",
     },
+    "version": "1.0",
   },
   "log": Array [
     Object {
@@ -171,6 +172,7 @@ Object {
       ],
       "type": "object",
     },
+    "version": "1.0",
   },
   "log": Array [
     Object {
@@ -273,6 +275,7 @@ Object {
       ],
       "type": "object",
     },
+    "version": "1.0",
   },
   "log": Array [
     Object {
@@ -374,6 +377,7 @@ Object {
       ],
       "type": "object",
     },
+    "version": "1.0",
     "views": Object {
       "owner": Object {
         "type": "documentAccount",

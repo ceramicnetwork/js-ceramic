@@ -70,7 +70,6 @@ const generateDefaultDaemonConfig = () => {
     },
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
-      'allow-queries-before-historical-sync': true,
     },
   })
 }

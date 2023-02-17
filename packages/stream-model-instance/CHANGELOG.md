@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@1.1.0-rc.0...@ceramicnetwork/stream-model-instance@1.2.0-rc.0) (2023-02-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance
+
+
+
+
+
+# [1.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.14.0...@ceramicnetwork/stream-model-instance@1.1.0-rc.0) (2023-02-13)
+
+
+### Features
+
+* **stream-model,stream-model-handler:** model definition versioning ([#2660](https://github.com/ceramicnetwork/js-ceramic/issues/2660)) ([6ccbbdd](https://github.com/ceramicnetwork/js-ceramic/commit/6ccbbdd4d9e028394c14c2c1ac755236a6c80008))
+
+
+
+
+
 # [0.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@0.14.0-rc.1...@ceramicnetwork/stream-model-instance@0.14.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance

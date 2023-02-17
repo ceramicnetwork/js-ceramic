@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.13.0-rc.0...@ceramicnetwork/ipfs-topology@2.14.0-rc.0) (2023-02-16)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [2.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.12.0...@ceramicnetwork/ipfs-topology@2.13.0-rc.0) (2023-02-13)
+
+
+### Bug Fixes
+
+* bump multiaddr lib ([#2691](https://github.com/ceramicnetwork/js-ceramic/issues/2691)) ([977f1b6](https://github.com/ceramicnetwork/js-ceramic/commit/977f1b6d3c38ef06529d99fd73759ee67fb5a648))
+* revert all multiaddr changes ([41e1485](https://github.com/ceramicnetwork/js-ceramic/commit/41e148549552ca470d964aafd255258b18da2dd0))
+
+
+### Features
+
+* **ipfs-topology:** Remove gateway multiaddrs from bootstrap list ([#2696](https://github.com/ceramicnetwork/js-ceramic/issues/2696)) ([ed1a304](https://github.com/ceramicnetwork/js-ceramic/commit/ed1a304399c98c62037915e2e7e585edd8b06d01))
+
+
+
+
+
 # [2.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.12.0-rc.1...@ceramicnetwork/ipfs-topology@2.12.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology

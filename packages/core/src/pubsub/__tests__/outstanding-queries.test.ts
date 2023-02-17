@@ -161,6 +161,6 @@ describe('Outstanding Queries', () => {
     expect(outstandingQueries.queryMap.size).toEqual(1)
     expect(outstandingQueries.queryQueue.size()).toEqual(1)
     //check if map has new timestamp
-    expect( outstandingQueries.queryMap.get(testQueryID).timestamp ).toEqual(t2)
+    expect(outstandingQueries.queryMap.get(testQueryID).timestamp).toEqual(t2)
   })
 })

@@ -18,15 +18,21 @@ export const transactionHashCid = CID.parse(
   'bagjqcgza7mvdlzewbfbq35peso2atjydg3ekalew5vmze7w2a5cbhmav4rmq'
 )
 
-export function createLog(bytes = bytes32, txHash = transactionHashCid): Log {
+export function createLog(blockNumber: number, bytes = bytes32, txHash = transactionHashCid): Log {
   return {
+    blockNumber,
+    blockHash: blockNumber.toString(),
     data: defaultAbiCoder.encode(['bytes32'], [bytes]),
     transactionHash: '0x' + toString(decode(txHash.multihash.bytes).digest, 'base16'),
   } as Log
 }
 
 export const mockedLogs = [0, 1, 2].map((i) =>
-  createLog(new Uint8Array(new Array(32).fill(i)))
+  createLog(i, new Uint8Array(new Array(32).fill(i)))
 ) as [Log, Log, Log]
 
-export const mockedLogsProofs = mockedLogs.map((log) => createAnchorProof('eip155:1337', log))
+export const mockedBlockProofs = mockedLogs.map((log) => ({
+  blockNumber: log.blockNumber,
+  blockHash: log.blockHash,
+  proofs: [createAnchorProof('eip155:1337', log)],
+}))

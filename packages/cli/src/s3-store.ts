@@ -16,14 +16,14 @@ class S3StoreMap {
   readonly #defaultLocation
   readonly networkName: string
   readonly #map: Map<string, LevelUp.LevelUp>
-  readonly #endpoint: string
+  readonly #customEndpoint: string
 
-  constructor(bucketName: string, endpoint: string, networkName: string) {
+  constructor(networkName: string, bucketName: string, customEndpoint?: string) {
     this.networkName = networkName
     this.#storeRoot = bucketName + '/ceramic/' + this.networkName
     this.#defaultLocation = 'state-store'
     this.#map = new Map<string, LevelUp.LevelUp>()
-    this.#endpoint = endpoint
+    this.#customEndpoint = customEndpoint
   }
 
   createStore(useCaseName = DEFAULT_S3_STORE_USE_CASE_NAME) {
@@ -31,12 +31,16 @@ class S3StoreMap {
     // and others being `<bucketName + '/ceramic/' + this.networkName + '/state-store-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const fullLocation = this.getFullLocation(useCaseName)
     const storePath = `${this.#storeRoot}/${fullLocation}`
-    const levelDown = new S3LevelDOWN(
-      storePath,
-      new AWSSDK.S3({
-        endpoint: this.#endpoint,
-      })
-    )
+
+    const levelDown = this.#customEndpoint
+      ? new S3LevelDOWN(
+          storePath,
+          new AWSSDK.S3({
+            endpoint: this.#customEndpoint,
+          })
+        )
+      : new S3LevelDOWN(storePath)
+
     const levelUp = new LevelUp(levelDown)
     this.#map.set(fullLocation, levelUp)
   }
@@ -70,8 +74,8 @@ export class S3Store implements IKVStore {
     carryoverConcurrencyCount: true,
   })
 
-  constructor(bucketName: string, endpoint: string, networkName: string) {
-    this.#storeMap = new S3StoreMap(bucketName, endpoint, networkName)
+  constructor(networkName: string, bucketName: string, customEndpoint?: string) {
+    this.#storeMap = new S3StoreMap(networkName, bucketName, customEndpoint)
   }
 
   get networkName(): string {

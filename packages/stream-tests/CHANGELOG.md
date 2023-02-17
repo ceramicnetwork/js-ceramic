@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.22.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.21.0-rc.0...@ceramicnetwork/stream-tests@2.22.0-rc.0) (2023-02-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.21.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.20.0...@ceramicnetwork/stream-tests@2.21.0-rc.0) (2023-02-13)
+
+
+### Features
+
+* **core:** enable syncing on ceramic start ([#2693](https://github.com/ceramicnetwork/js-ceramic/issues/2693)) ([c744c6e](https://github.com/ceramicnetwork/js-ceramic/commit/c744c6e36cf7ca3af6ee1f5c20d9e3b32ad308d5))
+* **stream-model,stream-model-handler:** model definition versioning ([#2660](https://github.com/ceramicnetwork/js-ceramic/issues/2660)) ([6ccbbdd](https://github.com/ceramicnetwork/js-ceramic/commit/6ccbbdd4d9e028394c14c2c1ac755236a6c80008))
+
+
+
+
+
 # [2.20.0](/compare/@ceramicnetwork/stream-tests@2.20.0-rc.1...@ceramicnetwork/stream-tests@2.20.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests
