@@ -92,11 +92,11 @@ describe('Level data store', () => {
     await TestUtils.anchorUpdate(ceramic, stream)
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add')
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(5)
 
     const unpinSpy = jest.spyOn(realIpfs.pin, 'rm')
-    await ceramic.pin.rm(stream.id)
+    await ceramic.admin.pin.rm(stream.id)
     expect(unpinSpy).toBeCalledTimes(3) // genesis commit envelope, genesis commit payload, and anchor commit
 
     await ceramic.close()
@@ -111,16 +111,16 @@ describe('Level data store', () => {
       anchor: false,
       publish: false,
     })
-    await ceramic.pin.add(stream1.id)
+    await ceramic.admin.pin.add(stream1.id)
 
     const stream2 = await TileDocument.create(ceramic, { stuff: 2 }, null, {
       anchor: false,
       publish: false,
     })
-    await ceramic.pin.add(stream2.id)
+    await ceramic.admin.pin.add(stream2.id)
 
     const pinned = []
-    const iterator = await ceramic.pin.ls()
+    const iterator = await ceramic.admin.pin.ls()
     for await (const id of iterator) {
       pinned.push(id)
     }
@@ -129,7 +129,7 @@ describe('Level data store', () => {
     expect(pinned.includes(stream2.id.toString())).toBeTruthy()
 
     const pinnedSingle = []
-    for await (const id of await ceramic.pin.ls(new StreamID('tile', FAKE_CID))) {
+    for await (const id of await ceramic.admin.pin.ls(new StreamID('tile', FAKE_CID))) {
       pinned.push(id)
     }
 
