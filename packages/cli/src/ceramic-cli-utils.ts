@@ -384,7 +384,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
-      const result = await ceramic.pin.add(id)
+      const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
   }
@@ -397,7 +397,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
-      const result = await ceramic.pin.rm(id)
+      const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
   }
@@ -411,7 +411,7 @@ export class CeramicCliUtils {
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const pinnedStreamIds = []
-      const iterator = await ceramic.pin.ls(id)
+      const iterator = await ceramic.admin.pin.ls(id)
       let i = 0
       let truncated = false
       for await (const id of iterator) {

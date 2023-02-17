@@ -1,4 +1,5 @@
-import { AdminApi, fetchJson } from '@ceramicnetwork/common'
+import { AdminApi, fetchJson, PinApi } from '@ceramicnetwork/common'
+import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
 
@@ -16,6 +17,7 @@ export class MissingDIDError extends Error {
 export class RemoteAdminApi implements AdminApi {
   // Stored as a member to make it easier to inject a mock in unit tests
   private readonly _fetchJson: typeof fetchJson = fetchJson
+  private _pinApi: PinApi
 
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
@@ -74,5 +76,11 @@ export class RemoteAdminApi implements AdminApi {
       method: 'delete',
       body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
     })
+  }
+
+  get pin(): PinApi {
+    if (this._pinApi) return this._pinApi 
+    this._pinApi = new RemotePinApi(this._apiUrl)
+    return this._pinApi 
   }
 }

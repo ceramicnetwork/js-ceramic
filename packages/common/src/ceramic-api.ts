@@ -77,13 +77,14 @@ export interface AdminApi {
    */
 
   stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  pin: PinApi
 }
 
 /**
  * Describes Ceramic node API
  */
 export interface CeramicApi extends CeramicSigner {
-  readonly pin: PinApi
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
   readonly index: IndexApi

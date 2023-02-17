@@ -232,7 +232,7 @@ describe('Ceramic stream pinning', () => {
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await ceramic.pin.rm(stream.id, { publish: false })
+    await ceramic.admin.pin.rm(stream.id, { publish: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'foobarbaz' })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
@@ -263,7 +263,7 @@ describe('Ceramic stream pinning', () => {
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await TileDocument.load(ceramic, stream.id)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await ceramic.pin.rm(stream.id, { publish: false })
+    await ceramic.admin.pin.rm(stream.id, { publish: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
@@ -294,11 +294,11 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
-    await ceramic.pin.rm(stream.id)
+    await ceramic.admin.pin.rm(stream.id)
     expect(publishTipSpy).toBeCalledTimes(0)
 
     await ceramic.close()
@@ -312,12 +312,12 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
 
-    await ceramic.pin.rm(stream.id, { publish: true })
+    await ceramic.admin.pin.rm(stream.id, { publish: true })
 
     expect(publishTipSpy).toBeCalledTimes(1)
 
@@ -333,19 +333,19 @@ describe('Ceramic stream pinning', () => {
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
 
     // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
     expect(pinSpy).toBeCalledTimes(2)
     expect(saveStateSpy).toBeCalledTimes(1)
 
     // Pin a second time, shouldn't cause any more calls to ipfs.pin.add
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(2)
     expect(saveStateSpy).toBeCalledTimes(1)
 
     // Now force re-pin and make sure underlying state and ipfs records get re-pinned
-    await ceramic.pin.add(stream.id, true)
+    await ceramic.admin.pin.add(stream.id, true)
     expect(pinSpy).toBeCalledTimes(4)
     expect(saveStateSpy).toBeCalledTimes(2)
 
@@ -361,7 +361,7 @@ describe('Ceramic stream pinning', () => {
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
 
     // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
     expect(pinSpy).toBeCalledTimes(2)
@@ -388,17 +388,17 @@ describe('Ceramic stream pinning', () => {
     const removeStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'remove')
 
     // Pin stream
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(2)
     expect(saveStateSpy).toBeCalledTimes(1)
 
     // Unpin
-    await ceramic.pin.rm(stream.id)
+    await ceramic.admin.pin.rm(stream.id)
     expect(unpinSpy).toBeCalledTimes(2)
     expect(removeStateSpy).toBeCalledTimes(1)
 
     // re-pin
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(4)
     expect(saveStateSpy).toBeCalledTimes(2)
 

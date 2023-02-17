@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import express, { Request, Response } from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
@@ -318,31 +318,31 @@ export class CeramicDaemon {
     const documentsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const multiqueriesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const nodeRouter = ErrorHandlingRouter(this.diagnosticsLogger)
-    const pinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
     baseRouter.use('/documents', documentsRouter)
     baseRouter.use('/multiqueries', multiqueriesRouter)
     baseRouter.use('/node', nodeRouter)
-    baseRouter.use('/pins', pinsRouter)
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
     baseRouter.use('/collection', collectionRouter)
     baseRouter.use('/admin/getCode', adminCodesRouter)
     baseRouter.use('/admin/models', adminModelRouter)
+    // Admin Pins Validate JWS Middleware
+    baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
+    baseRouter.use('/admin/pins', adminPinsRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
     streamsRouter.getAsync('/:streamid', this.state.bind(this))
     streamsRouter.getAsync('/:streamid/content', this.content.bind(this))
-    pinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
-    pinsRouter.getAsync('/', this.listPinned.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
     nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
@@ -355,21 +355,24 @@ export class CeramicDaemon {
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+    adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
+    adminPinsRouter.getAsync('/', this.listPinned.bind(this))
 
+    // TODO keep deprecated paths with warnings???
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
       streamsRouter.postAsync('/:streamid/anchor', this.requestAnchor.bind(this))
       commitsRouter.postAsync('/', this.applyCommit.bind(this))
-      pinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
-      pinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
+      adminPinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
+      adminPinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
 
       documentsRouter.postAsync('/', this.createDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this.applyCommit.bind(this)) // Deprecated
     } else {
       streamsRouter.postAsync('/', this.createReadOnlyStreamFromGenesis.bind(this))
       commitsRouter.postAsync('/', this._notSupported.bind(this))
-      pinsRouter.postAsync('/:streamid', this._notSupported.bind(this))
-      pinsRouter.deleteAsync('/:streamid', this._notSupported.bind(this))
+      adminPinsRouter.postAsync('/:streamid', this._notSupported.bind(this))
+      adminPinsRouter.deleteAsync('/:streamid', this._notSupported.bind(this))
 
       documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this._notSupported.bind(this)) // Deprecated
@@ -738,6 +741,32 @@ export class CeramicDaemon {
     }
   }
 
+  async validateAdminRequest(req: Request, res: Response, next:NextFunction): Promise<void> {
+    if (!req.headers.authorization) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
+      return
+    }
+    const jwsString = req.headers.authorization.split('Basic ')[1]
+    if (!jwsString) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'`,
+      })
+      return
+    }
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
+    if (jwsValidation.error) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
+    } else {
+      try {
+        this._verifyAndDiscardAdminCode(jwsValidation.code)
+        this._verifyActingDid(jwsValidation.kid)
+      } catch (e) {
+        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+      }
+      next()
+    }
+  }
+
   async startIndexingModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(
       req,
@@ -820,7 +849,7 @@ export class CeramicDaemon {
   async pinStream(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     const { force } = req.body
-    await this.ceramic.pin.add(streamId, force)
+    await this.ceramic.admin.pin.add(streamId, force)
     Metrics.count(STREAM_PINNED, 1)
     res.json({
       streamId: streamId.toString(),
@@ -835,7 +864,7 @@ export class CeramicDaemon {
   async unpinStream(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     const { opts } = req.body
-    await this.ceramic.pin.rm(streamId, opts)
+    await this.ceramic.admin.pin.rm(streamId, opts)
     Metrics.count(STREAM_UNPINNED, 1)
     res.json({
       streamId: streamId.toString(),
@@ -853,7 +882,7 @@ export class CeramicDaemon {
       streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     }
     const pinnedStreamIds = []
-    const iterator = await this.ceramic.pin.ls(streamId)
+    const iterator = await this.ceramic.admin.pin.ls(streamId)
     for await (const id of iterator) {
       pinnedStreamIds.push(id)
     }

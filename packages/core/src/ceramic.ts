@@ -208,7 +208,6 @@ export class Ceramic implements CeramicApi {
   public readonly context: Context
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
-  public readonly pin: PinApi
   public readonly admin: AdminApi
   readonly repository: Repository
   private readonly anchorResumingService: AnchorResumingService
@@ -234,7 +233,6 @@ export class Ceramic implements CeramicApi {
     this.repository = modules.repository
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
-    this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
     this.providersCache = modules.providersCache
 
@@ -296,7 +294,8 @@ export class Ceramic implements CeramicApi {
       this.repository.index,
       this._logger
     )
-    this.admin = new LocalAdminApi(localIndex, this.syncApi)
+    const pinApi = this._buildPinApi()
+    this.admin = new LocalAdminApi(localIndex, this.syncApi, pinApi)
   }
 
   get index(): LocalIndexApi {
