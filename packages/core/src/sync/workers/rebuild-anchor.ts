@@ -55,7 +55,9 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
       streamId
     )
 
-    const genesisCommit = await this.ipfsService.retrieveCommit(signedCommit.link, streamId)
+    const genesisCommit = signedCommit?.link
+      ? await this.ipfsService.retrieveCommit(signedCommit.link, streamId)
+      : signedCommit
 
     if (!genesisCommit?.header?.model) {
       return null
