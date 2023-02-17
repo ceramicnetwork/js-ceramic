@@ -58,7 +58,7 @@ export class SyncApi implements ISyncApi {
   private provider: Provider
   private chainId: SupportedNetwork
   private initialIndexingBlock: number
-  private readonly handleCommit: HandleCommit
+  private handleCommit: HandleCommit
 
   constructor(
     private readonly syncConfig: SyncConfig,

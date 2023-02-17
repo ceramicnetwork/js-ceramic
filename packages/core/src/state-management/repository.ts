@@ -98,7 +98,7 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  setKeyValueStore(keyValueStore: IKVStore): Promise<void> {
+  setKeyValueStore(keyValueStore: IKVStore) {
     this.keyValueStore = keyValueStore
   }
 
@@ -341,7 +341,7 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state
     } else {
-      return this.stateManager.pinStore.stateStore.load(streamId)
+      return this.stateManager.loadPinnedStream(streamId)
     }
   }
 
@@ -353,7 +353,7 @@ export class Repository {
   }
 
   pin(state$: RunningState, force?: boolean): Promise<void> {
-    return this.stateManager.pinStore.add(state$, force)
+    return this.stateManager.add(state$, force)
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
@@ -369,7 +369,7 @@ export class Repository {
       this.stateManager.publishTip(state$)
     }
 
-    return this.stateManager.pinStore.rm(state$)
+    return this.stateManager.rm(state$)
   }
 
   /**
@@ -468,7 +468,7 @@ export class Repository {
       this.inmemory.delete(id)
       stream.complete()
     })
-    await this.stateManager.pinStore.close()
+    await this.stateManager.close()
     await this.index.close()
   }
 }

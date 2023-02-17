@@ -95,6 +95,41 @@ export class StateManager {
   }
 
   /**
+   * Takes a StreamState and finds all the IPFS CIDs that are in any way needed to load data
+   * from the stream, pins them against the configured pinning backend, writes the
+   * StreamState itself into the state store, and updates the RunningState's pinned commits which
+   * prevents the StreamState's commits from being stored again.
+   * @param runningState - object holding the current StreamState for the stream being pinned
+   *  If the stream was previously pinned, then this will also contain a set of CIDs
+   *  (in string representation) of the commits that were pinned previously. This means
+   *  we only need to pin CIDs corresponding to the commits contained in the log of the given
+   *  StreamState that aren't contained within `pinnedCommits`
+   * @param force - optional boolean that if set to true forces all commits in the stream to pinned,
+   * regardless of whether they have been previously pinned
+   */
+  async add(runningState: RunningState, force?: boolean): Promise<void> {
+    await this.pinStore.add(runningState, force)
+  }
+
+  /**
+   * Effectively opposite of 'add' - this finds all the IPFS CIDs that are required to load the
+   * given stream and unpins them from IPFS, and them removes the stream state from the Ceramic
+   * state store. There is one notable difference of behavior however, which is that 'rm()'
+   * intentionally leaves the CIDs that make up the anchor proof and anchor merkle tree pinned.
+   * This is to avoid accidentally unpinning data that is needed by other streams, in the case where
+   * there are multiple pinned streams that contain anchor commits from the same anchor batch
+   * and therefore share the same anchor proof and merkle tree.
+   * @param runningState
+   */
+  async rm(runningState: RunningState): Promise<void> {
+    return await this.pinStore.rm(runningState)
+  }
+
+  async close(): Promise<void> {
+    return await this.pinStore.close()
+  }
+
+  /**
    * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
    * once during the lifetime of this process. As long as it's been synced once, it's guaranteed to
    * be up to date since we keep streams in the state store up to date when we hear pubsub messages
