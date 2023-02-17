@@ -15,7 +15,7 @@ export type FetchRequestParams = {
   opts?: FetchOpts
 }
 
-export type FetchJson = (url: URL | string, opts?: FetchOpts) => Promise<any>
+export type FetchRequest = (url: URL | string, opts?: FetchOpts) => Promise<any>
 
 export enum HttpMethods {
   GET = 'GET',

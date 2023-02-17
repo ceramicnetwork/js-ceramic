@@ -2,7 +2,7 @@ import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
-import type { FetchJson } from './utils/http-utils.js'
+import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 
 export enum AnchorServiceAuthMethods {
@@ -124,7 +124,7 @@ export interface AnchorServiceAuth {
    * @param url - Anchor service url as URL or string
    * @param {FetchOpts} opts - Optional options for the request
    */
-  sendAuthenticatedRequest: FetchJson
+  sendAuthenticatedRequest: FetchRequest
 }
 
 /**

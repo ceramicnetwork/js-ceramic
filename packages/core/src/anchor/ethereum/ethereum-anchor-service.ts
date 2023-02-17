@@ -9,8 +9,7 @@ import {
   AnchorStatus,
   AuthenticatedAnchorService,
   DiagnosticsLogger,
-  fetchJson,
-  FetchJson,
+  FetchRequest,
   RequestAnchorParams,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -41,13 +40,13 @@ export class EthereumAnchorService implements AnchorService {
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
   private readonly pollInterval: number
-  private readonly sendRequest: FetchJson
+  private readonly sendRequest: FetchRequest
 
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    sendRequest: FetchJson = fetchJson
+    sendRequest: FetchRequest = fetch
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
