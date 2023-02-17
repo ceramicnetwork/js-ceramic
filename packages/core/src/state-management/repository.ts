@@ -121,7 +121,7 @@ export class Repository {
     this.stateManager = stateManager
   }
 
-  setHandlers(handlers:  HandlersMap): void {
+  setHandlers(handlers: HandlersMap): void {
     this.handlers = handlers
   }
 

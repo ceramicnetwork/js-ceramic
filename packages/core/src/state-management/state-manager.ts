@@ -15,7 +15,7 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   GenesisCommit,
-  StreamState
+  StreamState,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -25,7 +25,7 @@ import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { IKVStore } from '../store/ikv-store'
+import { IKVStore } from '../store/ikv-store.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
