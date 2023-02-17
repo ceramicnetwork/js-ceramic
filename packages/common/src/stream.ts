@@ -24,11 +24,12 @@ export enum SignatureStatus {
  * Describes all anchor statuses
  */
 export enum AnchorStatus {
-  NOT_REQUESTED,
-  PENDING,
-  PROCESSING,
-  ANCHORED,
-  FAILED,
+  NOT_REQUESTED = 0,
+  PENDING = 1,
+  PROCESSING = 2,
+  ANCHORED = 3,
+  FAILED = 4,
+  REPLACED = 5,
 }
 
 export interface CommitHeader {
