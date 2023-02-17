@@ -309,7 +309,7 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  async anchor(state$: RunningState): Promise<void> {
+  async anchor(state$: RunningState): Promise<Subscription> {
     if (!this.anchorService) {
       throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }
@@ -323,7 +323,7 @@ export class StateManager {
       tip: state$.tip,
       timestampISO: new Date().toISOString(),
     })
-    this._processAnchorResponse(state$, anchorStatus$)
+    return this._processAnchorResponse(state$, anchorStatus$)
   }
 
   /**
@@ -354,18 +354,16 @@ export class StateManager {
       .pipe(
         takeUntil(stopSignal),
         concatMap(async (asr) => {
-          if (!asr.cid.equals(state$.tip) && asr.status != AnchorStatus.ANCHORED) {
-            // We don't want to change a stream's state due to changes to the anchor
-            // status of a commit that is no longer the tip of the stream, so we early return
-            // in most cases when receiving a response to an old anchor request.
-            // The one exception is if the AnchorServiceResponse indicates that the old commit
-            // is now anchored, in which case we still want to try to process the anchor commit
-            // and let the stream's conflict resolution mechanism decide whether or not to update
-            // the stream's state.
-            return
-          }
+          // We don't want to change a stream's state due to changes to the anchor
+          // status of a commit that is no longer the tip of the stream, so we early return
+          // in most cases when receiving a response to an old anchor request.
+          // The one exception is if the AnchorServiceResponse indicates that the old commit
+          // is now anchored, in which case we still want to try to process the anchor commit
+          // and let the stream's conflict resolution mechanism decide whether or not to update
+          // the stream's state.
           switch (asr.status) {
             case AnchorStatus.PENDING: {
+              if (!asr.cid.equals(state$.tip)) return
               const next = {
                 ...state$.value,
                 anchorStatus: AnchorStatus.PENDING,
@@ -375,6 +373,7 @@ export class StateManager {
               return
             }
             case AnchorStatus.PROCESSING: {
+              if (!asr.cid.equals(state$.tip)) return
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
               await this._updateStateIfPinned(state$)
               return
@@ -386,11 +385,19 @@ export class StateManager {
               return
             }
             case AnchorStatus.FAILED: {
+              if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
                 `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
               )
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
               await this.anchorRequestStore.remove(state$.id)
+              stopSignal.next()
+              return
+            }
+            case AnchorStatus.REPLACED: {
+              this.logger.verbose(
+                `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
+              )
               stopSignal.next()
               return
             }
