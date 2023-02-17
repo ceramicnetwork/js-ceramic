@@ -55,6 +55,7 @@ import { AnchorResumingService } from './state-management/anchor-resuming-servic
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
+import { StateManager } from './state-management/state-manager.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -275,33 +276,39 @@ export class Ceramic implements CeramicApi {
       this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
-    const localIndex = new LocalIndexApi(
-      params.indexingConfig,
-      this.repository,
-      this._logger,
-      params.networkOptions.name
-    )
-    this.repository.setDeps({
-      dispatcher: this.dispatcher,
-      pinStore: pinStore,
-      keyValueStore: this._levelStore,
-      anchorRequestStore: new AnchorRequestStore(),
-      context: this.context,
-      handlers: this._streamHandlers,
-      anchorService: modules.anchorService,
-      conflictResolution: conflictResolution,
-      indexing: localIndex,
-    })
     this.syncApi = new SyncApi(
       {
         db: params.indexingConfig.db,
         on: params.sync,
       },
       this.dispatcher,
-      this.repository.stateManager.handleUpdate.bind(this.repository.stateManager),
-      this.repository.index,
+      //this.repository.index,
       this._logger
     )
+    const localIndex = new LocalIndexApi(
+      params.indexingConfig,
+      this.repository,
+      this._logger,
+      params.networkOptions.name
+    )
+    const stateManager = new StateManager(
+      this.dispatcher,
+      pinStore,
+      new AnchorRequestStore(),
+      this.repository.executionQ,
+      modules.anchorService,
+      conflictResolution,
+      this._logger,
+      (streamId) => this.repository.fromMemoryOrStore(streamId),
+      (streamId, opts) => this.repository.load(streamId, opts),
+      this.repository.indexStreamIfNeeded.bind(this),
+      localIndex
+    )
+    this.syncApi.bind(stateManager.handleUpdate.bind(stateManager))
+    this.repository.setContext(this.context)
+    this.repository.setStateManager(stateManager)
+    this.repository.setHandlers(this._streamHandlers)
+    this.repository.setKeyValueStore(this._levelStore)
     this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this))
   }
 
@@ -603,7 +610,7 @@ export class Ceramic implements CeramicApi {
 
       if (this.syncApi.enabled) {
         const provider = await this.providersCache.getProvider(chainId)
-        await this.syncApi.init(provider)
+        await this.syncApi.init(provider, this.index)
       }
 
       await this._startupChecks()

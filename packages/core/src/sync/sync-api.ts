@@ -58,12 +58,11 @@ export class SyncApi implements ISyncApi {
   private provider: Provider
   private chainId: SupportedNetwork
   private initialIndexingBlock: number
+  private readonly handleCommit: HandleCommit
 
   constructor(
     private readonly syncConfig: SyncConfig,
     private readonly ipfsService: IpfsService,
-    private readonly handleCommit: HandleCommit,
-    private readonly localIndex: LocalIndexApi,
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
     if (!this.syncConfig.on) return
@@ -72,7 +71,11 @@ export class SyncApi implements ISyncApi {
     this.jobQueue = new JobQueue(this.syncConfig.db, this.diagnosticsLogger)
   }
 
-  async init(provider: Provider): Promise<void> {
+  bind(handleCommit: HandleCommit) {
+    this.handleCommit = handleCommit
+  }
+
+  async init(provider: Provider, localIndex: LocalIndexApi): Promise<void> {
     if (!this.syncConfig.on) return
     this.provider = provider
 
@@ -83,7 +86,7 @@ export class SyncApi implements ISyncApi {
     const [latestBlock, { processedBlockNumber }] = await Promise.all([
       this.provider.getBlock(-BLOCK_CONFIRMATIONS),
       this._initStateTable(),
-      this._initModelsToSync(),
+      this._initModelsToSync(localIndex),
       this._initJobQueue(),
     ])
 
@@ -132,8 +135,8 @@ export class SyncApi implements ISyncApi {
   /**
    * Load models to sync from the DB.
    */
-  async _initModelsToSync(): Promise<void> {
-    const streamsIds = await this.localIndex.indexedModels()
+  async _initModelsToSync(localIndex: LocalIndexApi): Promise<void> {
+    const streamsIds = await localIndex.indexedModels()
     for (const id of streamsIds) {
       this.modelsToSync.add(id.toString())
     }

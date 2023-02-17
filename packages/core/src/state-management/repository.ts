@@ -30,18 +30,6 @@ import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 
-export type RepositoryDependencies = {
-  dispatcher: Dispatcher
-  pinStore: PinStore
-  keyValueStore: IKVStore
-  anchorRequestStore: AnchorRequestStore
-  context: Context
-  handlers: HandlersMap
-  anchorService: AnchorService
-  conflictResolution: ConflictResolution
-  indexing: LocalIndexApi
-}
-
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 
 /**
@@ -70,14 +58,24 @@ export class Repository {
   readonly inmemory: StateCache<RunningState>
 
   /**
-   * Various dependencies.
+   * KeyValueStore
    */
-  #deps: RepositoryDependencies
+  keyValueStore: IKVStore
 
   /**
    * Instance of StateManager for performing operations on stream state.
    */
   stateManager: StateManager
+
+  /**
+   * Handlers to use
+   */
+  handlers: HandlersMap
+
+  /**
+   * Context to use
+   */
+  context: Context
 
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
@@ -100,49 +98,35 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
-    this.setDeps({
-      ...this.#deps,
-      keyValueStore: stateStore,
-    })
-    await this.init()
+  setKeyValueStore(keyValueStore: IKVStore): Promise<void> {
+    this.keyValueStore = keyValueStore
   }
 
   async init(): Promise<void> {
-    await this.pinStore.open(this.#deps.keyValueStore)
-    await this.anchorRequestStore.open(this.#deps.keyValueStore)
+    await this.stateManager.open(this.keyValueStore)
+    await this.anchorRequestStore.open(this.keyValueStore)
     await this.index.init()
   }
 
-  get pinStore(): PinStore {
-    return this.#deps.pinStore
-  }
-
   get anchorRequestStore(): AnchorRequestStore {
-    return this.#deps.anchorRequestStore
+    return this.stateManager.anchorRequestStore
   }
 
   get index(): LocalIndexApi {
-    return this.#deps.indexing
+    return this.stateManager._index
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
-  setDeps(deps: RepositoryDependencies): void {
-    this.#deps = deps
-    this.stateManager = new StateManager(
-      deps.dispatcher,
-      deps.pinStore,
-      deps.anchorRequestStore,
-      this.executionQ,
-      deps.anchorService,
-      deps.conflictResolution,
-      this.logger,
-      (streamId) => this.fromMemoryOrStore(streamId),
-      (streamId, opts) => this.load(streamId, opts),
-      // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
-      this.indexStreamIfNeeded.bind(this),
-      deps.indexing
-    )
+  setStateManager(stateManager: StateManager): void {
+    this.stateManager = stateManager
+  }
+
+  setHandlers(handlers:  HandlersMap): void {
+    this.handlers = handlers
+  }
+
+  setContext(context: Context): void {
+    this.context = context
   }
 
   private fromMemory(streamId: StreamID): RunningState | undefined {
@@ -150,7 +134,7 @@ export class Repository {
   }
 
   private async fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const streamState = await this.#deps.pinStore.stateStore.load(streamId)
+    const streamState = await this.stateManager.loadPinnedStream(streamId)
     if (streamState) {
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
@@ -165,9 +149,9 @@ export class Repository {
   }
 
   private async fromNetwork(streamId: StreamID): Promise<RunningState> {
-    const handler = this.#deps.handlers.get(streamId.typeName)
+    const handler = this.handlers.get(streamId.typeName)
     const genesisCid = streamId.cid
-    const commitData = await Utils.getCommitData(this.#deps.dispatcher, genesisCid, streamId)
+    const commitData = await Utils.getCommitData(this.stateManager.dispatcher, genesisCid, streamId)
     if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
@@ -175,7 +159,7 @@ export class Repository {
     // (or learning that the genesis commit *is* the current tip), when we will have timestamp
     // information for when the genesis commit was anchored.
     commitData.disableTimecheck = true
-    const state = await handler.applyCommit(commitData, this.#deps.context)
+    const state = await handler.applyCommit(commitData, this.context)
     const state$ = new RunningState(state, false)
     this.add(state$)
     this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
@@ -357,7 +341,7 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state
     } else {
-      return this.#deps.pinStore.stateStore.load(streamId)
+      return this.stateManager.pinStore.stateStore.load(streamId)
     }
   }
 
@@ -369,7 +353,7 @@ export class Repository {
   }
 
   pin(state$: RunningState, force?: boolean): Promise<void> {
-    return this.#deps.pinStore.add(state$, force)
+    return this.stateManager.pinStore.add(state$, force)
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
@@ -385,7 +369,7 @@ export class Repository {
       this.stateManager.publishTip(state$)
     }
 
-    return this.#deps.pinStore.rm(state$)
+    return this.stateManager.pinStore.rm(state$)
   }
 
   /**
@@ -393,7 +377,7 @@ export class Repository {
    * If `streamId` is passed, indicate if it is pinned.
    */
   async listPinned(streamId?: StreamID): Promise<string[]> {
-    return this.#deps.pinStore.ls(streamId)
+    return this.stateManager.ls(streamId)
   }
 
   /**
@@ -401,7 +385,7 @@ export class Repository {
    */
   async randomPinnedStreamState(): Promise<StreamState | null> {
     // First get a random streamID from the state store.
-    const res = await this.#deps.pinStore.stateStore.listStoredStreamIDs(null, 1)
+    const res = await this.stateManager.listStoredStreamIDs(null, 1)
     if (res.length == 0) {
       return null
     }
@@ -414,7 +398,7 @@ export class Repository {
     }
 
     const [streamID] = res
-    return this.#deps.pinStore.stateStore.load(StreamID.fromString(streamID))
+    return this.stateManager.loadPinnedStream(StreamID.fromString(streamID))
   }
 
   /**
@@ -484,7 +468,7 @@ export class Repository {
       this.inmemory.delete(id)
       stream.complete()
     })
-    await this.#deps.pinStore.close()
+    await this.stateManager.pinStore.close()
     await this.index.close()
   }
 }

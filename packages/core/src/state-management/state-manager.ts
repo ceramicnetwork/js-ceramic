@@ -15,6 +15,7 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   GenesisCommit,
+  StreamState
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
@@ -24,6 +25,7 @@ import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { IKVStore } from '../store/ikv-store'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -48,9 +50,9 @@ export class StateManager {
    * @param indexStreamIfNeeded - `Repository#indexStreamIfNeeded`
    */
   constructor(
-    private readonly dispatcher: Dispatcher,
+    readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
-    private readonly anchorRequestStore: AnchorRequestStore,
+    readonly anchorRequestStore: AnchorRequestStore,
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
@@ -61,8 +63,36 @@ export class StateManager {
       opts?: LoadOpts | CreateOpts
     ) => Promise<RunningState>,
     private readonly indexStreamIfNeeded,
-    private readonly _index: LocalIndexApi | undefined
+    readonly _index: LocalIndexApi | undefined
   ) {}
+
+  /**
+   * Open the state manager
+   */
+  async open(store: IKVStore): Promise<void> {
+    return await this.pinStore.open(store)
+  }
+  /**
+   * Load a pinned stream
+   */
+  async loadPinnedStream(streamId: StreamID): Promise<StreamState> {
+    return await this.pinStore.stateStore.load(streamId)
+  }
+
+  /**
+   * List a pinned stream
+   * @param streamId
+   */
+  async ls(streamId?: StreamID): Promise<string[]> {
+    return await this.pinStore.ls(streamId)
+  }
+
+  /**
+   * List a set of pinned streams
+   */
+  async listStoredStreamIDs(streamId?: StreamID | null, limit?: number): Promise<string[]> {
+    return await this.pinStore.stateStore.listStoredStreamIDs(streamId, limit)
+  }
 
   /**
    * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
