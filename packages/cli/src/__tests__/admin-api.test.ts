@@ -98,6 +98,16 @@ describe('admin api', () => {
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
   }
 
+  async function buildJWSPins(did: DID, code: string, requestPath:string): Promise<string> {
+    const body =  undefined
+    const jws = await did.createJWS({
+      code: code,
+      requestPath: '/api/v0/admin/pins',
+      requestBody: body,
+    })
+    return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
+  }
+
   it('admin API CRUD test', async () => {
     const statusURLString = `http://localhost:${daemon.port}/api/v0/admin/status`
     const modelsURLString = `http://localhost:${daemon.port}/api/v0/admin/models`
@@ -165,6 +175,66 @@ describe('admin api', () => {
       },
     })
     expect(getResultAfterDelete.models).toEqual([])
+  })
+
+  it('admin pin API CRUD test', async () => {
+    const adminPinURLBaseString = `http://localhost:${daemon.port}/api/v0/admin/pins`
+
+    const fetchCode = async (): Promise<string> => {
+      return (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
+    }
+
+    // Get list of pins
+    const getResult = await fetchJson(adminPinURLBaseString, {
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins`)}`,
+      },
+    })
+    expect(getResult.pinnedStreamIds).toEqual([exampleModelStreamId])
+
+    // Get single pin
+    const getIdResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
+      },
+    })
+    expect(getIdResult.pinnedStreamIds).toEqual([exampleModelStreamId])
+
+    // Delete pin
+    const deleteResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      method: 'DELETE',
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
+      }
+    })
+    expect(deleteResult.isPinned).toEqual(false)
+    expect(deleteResult.streamId).toEqual(exampleModelStreamId)
+
+    // Get single pin after delete
+    const getIdResultAfterDelete = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
+      },
+    })
+    expect(getIdResultAfterDelete.pinnedStreamIds).toEqual([])
+
+     // Add pin
+    const postResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      method: 'POST',
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
+      }
+    })
+    expect(postResult.isPinned).toEqual(true)
+    expect(postResult.streamId).toEqual(exampleModelStreamId)
+
+    // Get single pin after adding
+    const getIdResultAfterPost = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
+      },
+    })
+    expect(getIdResultAfterPost.pinnedStreamIds).toEqual([exampleModelStreamId])
   })
 
   describe('admin API validation test', () => {
