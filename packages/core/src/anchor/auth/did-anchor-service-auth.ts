@@ -33,11 +33,11 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     this._ceramic = ceramic
   }
 
-  init = async (): Promise<void> => {
+  async init(): Promise<void> {
     return
   }
 
-  sendAuthenticatedRequest = async (url: URL | string, opts?: FetchOpts): Promise<any> => {
+  async sendAuthenticatedRequest(url: URL | string, opts?: FetchOpts): Promise<any> {
     if (!this._ceramic) {
       throw new Error('Missing Ceramic instance required by this auth method')
     }
@@ -95,7 +95,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     return hash.digest('hex')
   }
 
-  private _sendRequest = async (request: FetchRequestParams): Promise<any> => {
+  private async _sendRequest(request: FetchRequestParams): Promise<any> {
     const data = await fetchJson(request.url, request.opts)
     if (data.error) {
       this._logger.err(data.error)
