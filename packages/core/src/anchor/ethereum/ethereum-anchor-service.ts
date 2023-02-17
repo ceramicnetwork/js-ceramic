@@ -9,10 +9,12 @@ import {
   DiagnosticsLogger,
   fetchJson,
   RequestAnchorParams,
+  UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
+import { RequestStatusName } from '@ceramicnetwork/anchor-utils'
 
 /**
  * CID-streamId pair
@@ -188,30 +190,39 @@ export class EthereumAnchorService implements AnchorService {
       }
     }
 
-    switch (json.status) {
-      case 'READY':
-      case 'PENDING':
+    const status = json.status as RequestStatusName
+
+    switch (status) {
+      case RequestStatusName.READY:
+      case RequestStatusName.PENDING:
         return {
           status: AnchorStatus.PENDING,
           streamId: cidStream.streamId,
           cid: cidStream.cid,
           message: json.message,
         }
-      case 'PROCESSING':
+      case RequestStatusName.PROCESSING:
         return {
           status: AnchorStatus.PROCESSING,
           streamId: cidStream.streamId,
           cid: cidStream.cid,
           message: json.message,
         }
-      case 'FAILED':
+      case RequestStatusName.FAILED:
         return {
           status: AnchorStatus.FAILED,
           streamId: cidStream.streamId,
           cid: cidStream.cid,
           message: json.message,
         }
-      case 'COMPLETED': {
+      case RequestStatusName.REPLACED:
+        return {
+          status: AnchorStatus.REPLACED,
+          streamId: cidStream.streamId,
+          cid: cidStream.cid,
+          message: json.message,
+        }
+      case RequestStatusName.COMPLETED: {
         const { anchorCommit } = json
         const anchorCommitCid = CID.parse(anchorCommit.cid.toString())
         return {
@@ -223,7 +234,7 @@ export class EthereumAnchorService implements AnchorService {
         }
       }
       default:
-        throw new Error(`Unexpected status: ${json.status}`)
+        throw new UnreachableCaseError(status, `Unexpected anchor request status`)
     }
   }
 }

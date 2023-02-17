@@ -33,6 +33,13 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
+export interface AnchorServiceReplaced {
+  readonly status: AnchorStatus.REPLACED
+  readonly streamId: StreamID
+  readonly cid: CID
+  readonly message: string
+}
+
 export type RequestAnchorParams = {
   streamID: StreamID
   tip: CID
@@ -47,6 +54,7 @@ export type AnchorServiceResponse =
   | AnchorServiceProcessing
   | AnchorServiceAnchored
   | AnchorServiceFailed
+  | AnchorServiceReplaced
 
 /**
  * Describes anchoring service behavior
