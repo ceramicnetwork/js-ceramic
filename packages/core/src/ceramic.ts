@@ -24,6 +24,7 @@ import {
   AnchorStatus,
   StreamState,
   AdminApi,
+  NodeStatusResponse,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -53,6 +54,7 @@ import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
+import crypto from 'crypto'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -225,6 +227,8 @@ export class Ceramic implements CeramicApi {
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
   private readonly _levelStore: LevelDbStore
+  private readonly _runId: string
+  private readonly _startTime: Date
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -241,6 +245,8 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+    this._runId = crypto.randomUUID()
+    this._startTime = new Date()
 
     this._levelStore = new LevelDbStore(
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
@@ -296,7 +302,7 @@ export class Ceramic implements CeramicApi {
       this.repository.index,
       this._logger
     )
-    this.admin = new LocalAdminApi(localIndex, this.syncApi)
+    this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this))
   }
 
   get index(): LocalIndexApi {
@@ -676,6 +682,22 @@ export class Ceramic implements CeramicApi {
    */
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
     this._streamHandlers.add(streamHandler)
+  }
+
+  async nodeStatus(): Promise<NodeStatusResponse> {
+    const anchor = {
+      anchorServiceUrl: this.context.anchorService.url,
+      ethereumRpcEndpoint: this._anchorValidator.ethereumRpcEndpoint,
+      chainId: this._anchorValidator.chainId,
+    }
+    const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
+    return {
+      runId: this._runId,
+      uptimeMs: new Date().getTime() - this._startTime.getTime(),
+      network: this._networkOptions.name,
+      anchor,
+      ipfs: ipfsStatus,
+    }
   }
 
   /**

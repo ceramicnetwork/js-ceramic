@@ -97,7 +97,16 @@ describe('Admin API tests', () => {
       ceramic.did = adminDid
 
       const status = await ceramic.admin.nodeStatus()
-      expect(status).toEqual({})
+      expect(typeof status.runId).toEqual('string')
+      expect(status.uptimeMs).toBeGreaterThan(0)
+      expect(status.network).toEqual('inmemory')
+      expect(status.anchor.anchorServiceUrl).toEqual('<inmemory>')
+      expect(status.anchor.ethereumRpcEndpoint).toBeNull()
+      expect(status.anchor.chainId).toEqual('inmemory:12345')
+      expect(typeof status.ipfs.peerId).toEqual('string')
+      for (const addr of status.ipfs.addresses) {
+        expect(typeof addr).toEqual('string')
+      }
     })
   })
 

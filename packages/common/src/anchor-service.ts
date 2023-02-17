@@ -96,6 +96,17 @@ export interface AnchorService {
  */
 export interface AnchorValidator {
   /**
+   * The ethereum chainId used for anchors.
+   */
+  chainId: string
+
+  /**
+   * The ethereum rpc endpoint used to validate anchor transactions. If null, likely means
+   * the node is using the default, rate-limited ethereum provider.
+   */
+  ethereumRpcEndpoint: string | null
+
+  /**
    * Performs whatever initialization work is required to validate commits anchored on the
    * configured blockchain.
    */
