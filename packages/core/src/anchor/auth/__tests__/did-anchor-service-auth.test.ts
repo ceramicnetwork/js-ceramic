@@ -5,7 +5,6 @@ import crypto from 'crypto'
 const uuids = Array.from({ length: 100 }, () => crypto.randomUUID())
 let uuidsUsed = 0
 
-// TODO: fix mocking here
 Object.defineProperty(global, 'crypto', {
   value: {
     randomUUID: () => {

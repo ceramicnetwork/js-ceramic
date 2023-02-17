@@ -1,3 +1,4 @@
+import fetch from 'cross-fetch'
 import { CID } from 'multiformats/cid'
 import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'

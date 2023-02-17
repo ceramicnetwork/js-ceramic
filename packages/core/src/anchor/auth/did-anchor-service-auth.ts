@@ -47,9 +47,9 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
 
   async signRequest(request: FetchRequestParams): Promise<{request: FetchRequestParams, jws: DagJWS}> {
     const payload: any = { url: request.url, nonce: crypto.randomUUID() }
-    const payloadBody = this._buildSignaturePayloadBody(request.opts)
-    if (payloadBody) {
-      payload.body = payloadBody
+    const payloadDigest = this._buildSignaturePayloadDigest(request.opts)
+    if (payloadDigest) {
+      payload.digest = payloadDigest
     }
 
     const jws = await this._ceramic.did.createJWS(payload)
@@ -70,7 +70,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
    * @param requestOpts Request options. Should include header and body.
    * @returns Sha256 hash as a hex code
    */
-  private _buildSignaturePayloadBody(requestOpts: FetchOpts): string | undefined {
+  private _buildSignaturePayloadDigest(requestOpts: FetchOpts): string | undefined {
     if (!requestOpts) return
     if (requestOpts.body == undefined) return
 
@@ -81,7 +81,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
       if (contentType.includes('application/vnd.ipld.car')) {
         const carFactory = new CARFactory()
         const car = carFactory.fromBytes(u8a.fromString(requestOpts.body, 'binary'))
-        hash = createHash('sha256').update(car.roots[0].toString())
+        return car.roots[0].toString()
       } else if (contentType.includes('application/json')) {
         hash = createHash('sha256').update(JSON.stringify(requestOpts.body))
       }

@@ -65,7 +65,11 @@ test('re-request an anchor till get a response', async () => {
 
   let lastResponse: any
   const subscription = anchorService
-    .requestAnchor(FAKE_STREAM_ID, FAKE_CID)
+    .requestAnchor({
+      streamID: FAKE_STREAM_ID,
+      tip: FAKE_CID,
+      timestampISO: new Date().toISOString(),
+    })
     .subscribe((response) => {
       if (response.status === common.AnchorStatus.PROCESSING) {
         lastResponse = response
