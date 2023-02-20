@@ -171,13 +171,11 @@ export class StateManager {
   async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<boolean> {
     // by default swallow and log errors applying commits
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
-    this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
+    this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
     const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
     if (next) {
       state$.next(next)
-      this.logger.verbose(
-        `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
-      )
+      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
       await this._updateStateIfPinned(state$)
       return true
     } else {
@@ -284,7 +282,7 @@ export class StateManager {
               // If we failed to apply the commit at least once, then it's worth logging when
               // we are able to do so successfully on the retry.
               this.logger.imp(
-                `Successfully applied anchor commit ${anchorCommit.toString()} for stream ${state$.id.toString()}`
+                `Successfully applied anchor commit ${anchorCommit} for stream ${state$.id}`
               )
             }
           }
@@ -292,13 +290,11 @@ export class StateManager {
         return
       } catch (error) {
         this.logger.warn(
-          `Error while applying anchor commit ${anchorCommit.toString()} for stream ${state$.id.toString()}, ${remainingRetries} retries remain. ${error}`
+          `Error while applying anchor commit ${anchorCommit} for stream ${state$.id}, ${remainingRetries} retries remain. ${error}`
         )
 
         if (remainingRetries == 0) {
-          this.logger.err(
-            `Anchor failed for commit ${tip.toString()} of stream ${state$.id.toString()}: ${error}`
-          )
+          this.logger.err(`Anchor failed for commit ${tip} of stream ${state$.id}: ${error}`)
 
           // Don't update stream's state if the commit that failed to be anchored is no longer the
           // tip of that stream.
@@ -313,11 +309,9 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  async anchor(state$: RunningState): Promise<void> {
+  async anchor(state$: RunningState): Promise<Subscription> {
     if (!this.anchorService) {
-      throw new Error(
-        `Anchor requested for stream ${state$.id.toString()} but anchoring is disabled`
-      )
+      throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
       return
@@ -329,7 +323,7 @@ export class StateManager {
       tip: state$.tip,
       timestampISO: new Date().toISOString(),
     })
-    this._processAnchorResponse(state$, anchorStatus$)
+    return this._processAnchorResponse(state$, anchorStatus$)
   }
 
   /**
@@ -360,18 +354,16 @@ export class StateManager {
       .pipe(
         takeUntil(stopSignal),
         concatMap(async (asr) => {
-          if (!asr.cid.equals(state$.tip) && asr.status != AnchorStatus.ANCHORED) {
-            // We don't want to change a stream's state due to changes to the anchor
-            // status of a commit that is no longer the tip of the stream, so we early return
-            // in most cases when receiving a response to an old anchor request.
-            // The one exception is if the AnchorServiceResponse indicates that the old commit
-            // is now anchored, in which case we still want to try to process the anchor commit
-            // and let the stream's conflict resolution mechanism decide whether or not to update
-            // the stream's state.
-            return
-          }
+          // We don't want to change a stream's state due to changes to the anchor
+          // status of a commit that is no longer the tip of the stream, so we early return
+          // in most cases when receiving a response to an old anchor request.
+          // The one exception is if the AnchorServiceResponse indicates that the old commit
+          // is now anchored, in which case we still want to try to process the anchor commit
+          // and let the stream's conflict resolution mechanism decide whether or not to update
+          // the stream's state.
           switch (asr.status) {
             case AnchorStatus.PENDING: {
+              if (!asr.cid.equals(state$.tip)) return
               const next = {
                 ...state$.value,
                 anchorStatus: AnchorStatus.PENDING,
@@ -381,6 +373,7 @@ export class StateManager {
               return
             }
             case AnchorStatus.PROCESSING: {
+              if (!asr.cid.equals(state$.tip)) return
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
               await this._updateStateIfPinned(state$)
               return
@@ -392,13 +385,19 @@ export class StateManager {
               return
             }
             case AnchorStatus.FAILED: {
+              if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
-                `Anchor failed for commit ${asr.cid.toString()} of stream ${asr.streamId}: ${
-                  asr.message
-                }`
+                `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
               )
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
               await this.anchorRequestStore.remove(state$.id)
+              stopSignal.next()
+              return
+            }
+            case AnchorStatus.REPLACED: {
+              this.logger.verbose(
+                `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
+              )
               stopSignal.next()
               return
             }
@@ -409,7 +408,7 @@ export class StateManager {
         catchError((error) => {
           // TODO: Combine these two log statements into one line so that they can't get split up in the
           // log output.
-          this.logger.warn(`Error while anchoring stream ${state$.id.toString()}:${error}`)
+          this.logger.warn(`Error while anchoring stream ${state$.id}:${error}`)
           this.logger.warn(error) // Log stack trace
 
           // TODO: This can leave a stream with AnchorStatus PENDING or PROCESSING indefinitely.
