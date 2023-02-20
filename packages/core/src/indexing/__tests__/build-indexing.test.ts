@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { jest } from '@jest/globals'
 import { buildIndexing, UnsupportedDatabaseProtocolError } from '../build-indexing.js'
 import { PostgresIndexApi, SqliteIndexApi } from '../database-index-api.js'
 import { LoggerProvider, Networks } from '@ceramicnetwork/common'
