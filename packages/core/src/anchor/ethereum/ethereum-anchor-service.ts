@@ -1,4 +1,3 @@
-import fetch from 'cross-fetch'
 import { CID } from 'multiformats/cid'
 import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
@@ -12,6 +11,7 @@ import {
   DiagnosticsLogger,
   FetchRequest,
   RequestAnchorParams,
+  fetchJson,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
@@ -47,7 +47,7 @@ export class EthereumAnchorService implements AnchorService {
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    sendRequest: FetchRequest = fetch
+    sendRequest: FetchRequest = fetchJson
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
