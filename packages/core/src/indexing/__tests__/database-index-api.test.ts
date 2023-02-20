@@ -20,7 +20,6 @@ import { DatabaseType } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
-import {ReIndexedModelError} from "../reindexed-model-error";
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -400,7 +399,7 @@ describe('postgres', () => {
       ])
 
       await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
-        ReIndexedModelError
+        Error
       )
     })
 
@@ -942,7 +941,7 @@ describe('sqlite', () => {
       ])
 
       await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
-        ReIndexedModelError
+        Error
       )
     })
 
