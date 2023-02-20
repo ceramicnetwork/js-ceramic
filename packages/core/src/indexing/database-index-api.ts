@@ -14,7 +14,6 @@ import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
-import {ReIndexedModelError} from "./reindexed-model-error";
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
