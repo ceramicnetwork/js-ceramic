@@ -249,7 +249,7 @@ export class AuthenticatedEthereumAnchorService
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL
   ) {
-    super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest)
+    super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest.bind(auth))
     this.auth = auth
   }
 
