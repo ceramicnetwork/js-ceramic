@@ -611,8 +611,8 @@ describe('anchor', () => {
         stream,
         1000,
         (s) => s.anchorStatus === status,
-        () => {
-          throw new Error(`Expect PENDING`)
+        (s) => {
+          throw new Error(`Expected anchor status ${status} but found ${s.anchorStatus}`)
         }
       )
     }
