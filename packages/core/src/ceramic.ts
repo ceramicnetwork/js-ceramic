@@ -452,6 +452,10 @@ export class Ceramic implements CeramicApi {
         } catch (error) {
           throw new Error(`Auth method for anchor service failed to instantiate: ${config.anchorServiceAuthMethod}`)
         }
+      } else {
+        logger.warn(
+          `DEPRECATION WARNING: IP address authentication will still work but will soon be deprecated. Add a private seed url to your daemon config.`
+        )
       }
 
       if (

@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
-import { StartupError } from './daemon/error-handler.js'
+import { AnchorServiceAuthMethods } from '@ceramicnetwork/common'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
@@ -451,9 +451,12 @@ export class DaemonConfig {
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
+    // TODO: Replace with commented lines below when we fully deprecate IP address access to mainnet
+    if (!config.node) config.anchor.authMethod = AnchorServiceAuthMethods.NONE
+    if (!config.node.sensitive_privateSeed()) config.anchor.authMethod = AnchorServiceAuthMethods.NONE
     // Whenever we load from a file the private-seed needs to be present even if not using an anchor auth method
-    if (!config.node) throw new StartupError('Daemon config is missing node.private-seed')
-    if (!config.node.sensitive_privateSeed()) throw new StartupError('Daemon config is missing node.private-seed')
+    // if (!config.node) throw new StartupError('Daemon config is missing node.private-seed')
+    // if (!config.node.sensitive_privateSeed()) throw new StartupError('Daemon config is missing node.private-seed')
     expandPaths(config, filepath)
     return config
   }
