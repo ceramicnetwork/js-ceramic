@@ -1,25 +1,11 @@
-import type { CompareFunction, MergeFunction, MetadataFunction } from './merkle.js'
-import { Node } from './merkle.js'
-
-export class MerkleTree<TData, TLeaf extends TData, TMetadata> {
-  /**
-   * Node corresponding to the root of the merkle tree.
-   */
-  readonly root: Node<TData>
-  /**
-   * Leaf nodes of the tree
-   */
-  readonly leafNodes: Array<Node<TLeaf>>
-  /**
-   * Tree metadata
-   */
-  readonly metadata: TMetadata
-}
+import type { CompareFunction, MergeFunction, MetadataFunction } from './merkle-elements.js'
+import { Node } from './merkle-elements.js'
+import { MerkleTree } from './merkle-tree.js'
 
 /**
  * When no leaves present.
  */
-class EmptyLeavesError extends Error {
+export class EmptyLeavesError extends Error {
   constructor() {
     super('Cannot generate Merkle structure with no elements')
   }
@@ -28,7 +14,7 @@ class EmptyLeavesError extends Error {
 /**
  * When number of leaves exceeds number of leaves available (`2^depthLimit`) for `depthLimit`.
  */
-class MerkleDepthError extends Error {
+export class MerkleDepthError extends Error {
   constructor(depthLimit: number, leavesLimit: number) {
     super(`Merkle tree exceeded configured limit of ${depthLimit} levels (${leavesLimit} nodes)`)
   }
@@ -54,14 +40,16 @@ export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata> {
     private readonly depthLimit?: number
   ) {}
 
-  async build(leaves?: Array<TLeaf>): Promise<MerkleTree<TData, TLeaf, TMetadata>> {
+  async build(
+    leaves: Array<TLeaf> | null | undefined
+  ): Promise<MerkleTree<TData, TLeaf, TMetadata>> {
     // Assert if we have any leaves
     if (!leaves || !leaves.length) throw new EmptyLeavesError()
 
     // Assert we do not overflow the tree
-    const leavesLimit = Math.pow(2, this.depthLimit)
-    if (this.depthLimit && leavesLimit < leaves.length) {
-      throw new MerkleDepthError(this.depthLimit, leavesLimit)
+    if (this.depthLimit) {
+      const leavesLimit = Math.pow(2, this.depthLimit)
+      if (leavesLimit < leaves.length) throw new MerkleDepthError(this.depthLimit, leavesLimit)
     }
 
     const nodes = leaves.map((leaf) => new Node(leaf))
@@ -72,7 +60,7 @@ export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata> {
     const metadata = this.metadataFn ? await this.metadataFn.generateMetadata(nodes) : null
 
     const root = await this.buildLevel(nodes, 0, metadata)
-    return { root, leafNodes: nodes, metadata }
+    return new MerkleTree<TData, TLeaf, TMetadata>(this.mergeFn, root, nodes, metadata)
   }
 
   private async buildLevel(
@@ -81,14 +69,14 @@ export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata> {
     metadata: TMetadata | null = null
   ): Promise<Node<TData>> {
     // if there is only one leaf for the whole tree
-    if (elements.length === 1 && currentDepth === 0) {
-      const merged = await this.mergeFn.merge(elements[0], null, metadata)
-      elements[0].parent = merged
-      return merged
-    }
-
     if (elements.length === 1) {
-      return elements[0]
+      const first = elements[0] as Node<TData>
+      if (currentDepth === 0) {
+        const merged = await this.mergeFn.merge(first, null, metadata)
+        first.parent = merged
+        return merged
+      }
+      return first
     }
 
     const middleIndex = Math.trunc(elements.length / 2)

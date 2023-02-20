@@ -46,6 +46,21 @@ export class Node<TValue> {
 }
 
 /**
+ * Path direction from the Merkle root node
+ */
+export enum PathDirection {
+  L = 0,
+  R = 1,
+}
+
+/**
+ * Serialize array of `PathDirection` entries to string.
+ */
+export function pathString(path: Array<PathDirection>): string {
+  return path.join('/')
+}
+
+/**
  * Metadata containing a bloom filter based on the metadata of the streams in the tree
  */
 export interface BloomMetadata {
