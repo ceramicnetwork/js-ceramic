@@ -85,7 +85,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
         return String(streamId) === String(modelArgs)
       })
       if (modelPreviouslyIndexed){
-        throw new ReIndexedModelError(modelArgs.toString())
+        throw new Error(`Cannot re-index model ${modelArgs.model.toString()}, data may not be up-to-date`)
       }
     }
     await this.indexModelsInDatabase(models)
