@@ -44,7 +44,7 @@ const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG
  * Generates a valid Daemon config.
  *
  * Most values are set to hardcoded defaults.
- * The `node.private-seed` is randomly generated.
+ * The `node.private-seed-url` is randomly generated.
  * @returns Daemon config with default values
  */
 const generateDefaultDaemonConfig = () => {
@@ -62,7 +62,7 @@ const generateDefaultDaemonConfig = () => {
     },
     network: { name: Networks.TESTNET_CLAY },
     node: {
-      'private-seed': privateSeedUrl.toString(),
+      'private-seed-url': privateSeedUrl.toString(),
     },
     'state-store': {
       mode: StateStoreMode.FS,
@@ -145,8 +145,8 @@ export class CeramicCliUtils {
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
     if (process.env.COLLECTOR_HOSTNAME)
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
-    if (process.env.CERAMIC_NODE_DID_SEED) {
-      config.node.privateSeed = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
+    if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL) {
+      config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
     }
 
     {
@@ -623,7 +623,7 @@ export class CeramicCliUtils {
 
       // Save hidden fields to file
       const plainConfig: any = TypedJSON.toPlainJson(defaultConfig, DaemonConfig)
-      plainConfig.node.privateSeed = defaultConfig.node.sensitive_privateSeed()
+      plainConfig.node.privateSeedUrl = defaultConfig.node.sensitive_privateSeedUrl()
 
       await this._saveConfig(plainConfig, filepath)
       return defaultConfig

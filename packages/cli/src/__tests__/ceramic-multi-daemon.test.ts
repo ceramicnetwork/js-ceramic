@@ -13,7 +13,7 @@ import { DaemonConfig } from '../daemon-config.js'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
-const mockNodeConfig = {'private-seed': 'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad'}
+const mockNodeConfig = {'private-seed-url': 'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad'}
 
 const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
   const core = await Ceramic.create(ipfs, {

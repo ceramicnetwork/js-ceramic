@@ -309,10 +309,10 @@ export class CeramicDaemon {
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic, ceramicConfig, opts) }
     let provider: DIDProvider
 
-    if (opts.node.sensitive_privateSeed()) {
+    if (opts.node.sensitive_privateSeedUrl()) {
       let seed: Uint8Array
       try {
-        const privateSeedUrl = new URL(opts.node.sensitive_privateSeed())
+        const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl())
         seed = parseSeedUrl(privateSeedUrl)
       } catch (err) {
         // Do not log URL errors here to prevent leaking seed

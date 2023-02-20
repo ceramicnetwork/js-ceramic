@@ -276,27 +276,27 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-  private _privateSeed: string
+  private _privateSeedUrl: string
 
   /**
-   * Disallows public access to private-seed because it is a sensitive field.
+   * Disallows public access to private-seed-url because it is a sensitive field.
    */
-  @jsonMember(String, { name: 'private-seed' })
-  public get privateSeed(): string {
+  @jsonMember(String, { name: 'private-seed-url' })
+  public get privateSeedUrl(): string {
     return undefined
   }
 
   /**
    * Setter for seed used to sign requests to CAS.
    * A seed is randomly generated if a config file is not found.
-   * When specifying in a config file, use the name 'private-seed'.
+   * When specifying in a config file, use the name 'private-seed-url'.
    */
-  public set privateSeed(value: string) {
-    this._privateSeed = value
+  public set privateSeedUrl(value: string) {
+    this._privateSeedUrl = value
   }
 
-  public sensitive_privateSeed(): string {
-    return this._privateSeed
+  public sensitive_privateSeedUrl(): string {
+    return this._privateSeedUrl
   }
 
   /**
@@ -453,10 +453,10 @@ export class DaemonConfig {
     const config = DaemonConfig.fromString(content)
     // TODO: Replace with commented lines below when we fully deprecate IP address access to mainnet
     if (!config.node) config.anchor.authMethod = AnchorServiceAuthMethods.NONE
-    if (!config.node.sensitive_privateSeed()) config.anchor.authMethod = AnchorServiceAuthMethods.NONE
-    // Whenever we load from a file the private-seed needs to be present even if not using an anchor auth method
-    // if (!config.node) throw new StartupError('Daemon config is missing node.private-seed')
-    // if (!config.node.sensitive_privateSeed()) throw new StartupError('Daemon config is missing node.private-seed')
+    if (!config.node.sensitive_privateSeedUrl()) config.anchor.authMethod = AnchorServiceAuthMethods.NONE
+    // Whenever we load from a file the private-seed-url needs to be present even if not using an anchor auth method
+    // if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
+    // if (!config.node.sensitive_privateSeedUrl()) throw new StartupError('Daemon config is missing node.private-seed-url')
     expandPaths(config, filepath)
     return config
   }
@@ -470,8 +470,8 @@ export class DaemonConfig {
 
     // Set hidden fields before returning
     const config = serializer.parse(json)
-    if (json.node.privateSeed) {
-      config.node.privateSeed = json.node.privateSeed
+    if (json.node.privateSeedUrl) {
+      config.node.privateSeedUrl = json.node.privateSeedUrl
     }
     return config
   }
