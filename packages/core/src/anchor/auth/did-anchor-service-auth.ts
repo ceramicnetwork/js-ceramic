@@ -47,7 +47,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   }
 
   async signRequest(request: FetchRequestParams): Promise<{request: FetchRequestParams, jws: DagJWS}> {
-    const payload: any = { url: request.url, nonce: uuid.v4() }
+    const payload: any = { url: request.url, nonce: uuid.uuid() }
     const payloadDigest = this._buildSignaturePayloadDigest(request.opts)
     if (payloadDigest) {
       payload.digest = payloadDigest
