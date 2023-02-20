@@ -6,8 +6,9 @@ import {
   fetchJson,
   FetchRequestParams
 } from '@ceramicnetwork/common'
+import * as sha256 from '@stablelib/sha256'
+import { uuid } from '@stablelib/uuid'
 import { DagJWS } from 'dids'
-import crypto, { createHash } from 'crypto'
 import { CARFactory } from 'cartonne'
 import * as u8a from 'uint8arrays'
 
@@ -46,7 +47,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   }
 
   async signRequest(request: FetchRequestParams): Promise<{request: FetchRequestParams, jws: DagJWS}> {
-    const payload: any = { url: request.url, nonce: crypto.randomUUID() }
+    const payload: any = { url: request.url, nonce: uuid() }
     const payloadDigest = this._buildSignaturePayloadDigest(request.opts)
     if (payloadDigest) {
       payload.digest = payloadDigest
@@ -74,25 +75,25 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     if (!requestOpts) return
     if (requestOpts.body == undefined) return
 
-    let hash: crypto.Hash
+    let hash: sha256.SHA256
 
     if (requestOpts.headers) {
       const contentType = requestOpts.headers['Content-Type'] as string
       if (contentType.includes('application/vnd.ipld.car')) {
         const carFactory = new CARFactory()
-        const car = carFactory.fromBytes(u8a.fromString(requestOpts.body, 'binary'))
+        const car = carFactory.fromBytes(requestOpts.body)
         return car.roots[0].toString()
       } else if (contentType.includes('application/json')) {
-        hash = createHash('sha256').update(JSON.stringify(requestOpts.body))
+        hash = new sha256.SHA256().update(u8a.fromString(JSON.stringify(requestOpts.body)))
       }
     }
 
     if (!hash) {
       // Default to hashing stringified body
-      hash = createHash('sha256').update(JSON.stringify(requestOpts.body))
+      hash = new sha256.SHA256().update(u8a.fromString(JSON.stringify(requestOpts.body)))
     }
 
-    return hash.digest('hex')
+    return `0x${u8a.toString(hash.digest(), 'base16')}`
   }
 
   private async _sendRequest(request: FetchRequestParams): Promise<any> {
