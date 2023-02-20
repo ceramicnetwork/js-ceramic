@@ -1,7 +1,7 @@
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import { MerkleTreeLoader } from '../utils.js'
 import { TestUtils } from '@ceramicnetwork/common'
-import { IpfsService } from '../interfaces.js'
+import type { IpfsService } from '../interfaces.js'
 
 const NUM_ENTRIES = 9
 const MOCK_MERKLE_TREE = [
@@ -57,7 +57,7 @@ describe('Merkle Tree Loader', () => {
   })
 
   test('cannot get leaf that does not exist', async () => {
-    expect(merkleTreeLoader.getLeafData(NUM_ENTRIES + 1)).rejects.toThrow(
+    await expect(merkleTreeLoader.getLeafData(NUM_ENTRIES + 1)).rejects.toThrow(
       'Leaf at index 10 does not exist as there are only 9 leaves'
     )
   })

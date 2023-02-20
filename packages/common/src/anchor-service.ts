@@ -39,6 +39,13 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
+export interface AnchorServiceReplaced {
+  readonly status: AnchorStatus.REPLACED
+  readonly streamId: StreamID
+  readonly cid: CID
+  readonly message: string
+}
+
 export type RequestAnchorParams = {
   streamID: StreamID
   tip: CID
@@ -53,6 +60,7 @@ export type AnchorServiceResponse =
   | AnchorServiceProcessing
   | AnchorServiceAnchored
   | AnchorServiceFailed
+  | AnchorServiceReplaced
 
 /**
  * Describes anchoring service behavior
@@ -131,6 +139,17 @@ export interface AnchorServiceAuth {
  * Describes behavior for validation anchor commit inclusion on chain
  */
 export interface AnchorValidator {
+  /**
+   * The ethereum chainId used for anchors.
+   */
+  chainId: string
+
+  /**
+   * The ethereum rpc endpoint used to validate anchor transactions. If null, likely means
+   * the node is using the default, rate-limited ethereum provider.
+   */
+  ethereumRpcEndpoint: string | null
+
   /**
    * Performs whatever initialization work is required to validate commits anchored on the
    * configured blockchain.

@@ -1,4 +1,4 @@
-import { AdminApi, fetchJson } from '@ceramicnetwork/common'
+import { AdminApi, fetchJson, NodeStatusResponse } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
 
@@ -19,7 +19,7 @@ export class RemoteAdminApi implements AdminApi {
 
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
-  readonly nodeStatusPath = './admin/nodeStatus'
+  readonly nodeStatusPath = './admin/status'
 
   constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
   private getCodeUrl(): URL {
@@ -56,8 +56,7 @@ export class RemoteAdminApi implements AdminApi {
     return (await this._fetchJson(this.getCodeUrl())).code
   }
 
-  // todo use stronger type
-  async nodeStatus(): Promise<any> {
+  async nodeStatus(): Promise<NodeStatusResponse> {
     const code = await this.generateCode()
     return this._fetchJson(this.getStatusUrl(), {
       headers: {

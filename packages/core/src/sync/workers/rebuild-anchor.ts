@@ -11,6 +11,7 @@ import {
 } from '../interfaces.js'
 import type { Worker, Job } from '../../state-management/job-queue.js'
 import { CID } from 'multiformats/cid'
+import { pathString } from '@ceramicnetwork/anchor-utils'
 
 const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
@@ -123,7 +124,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
               id: streamId.cid,
               prev: cid,
               proof: proofCid,
-              path: path.join('/'),
+              path: pathString(path),
             }
 
             const anchorCommitCid = await this.ipfsService.storeCommit(anchorCommit)

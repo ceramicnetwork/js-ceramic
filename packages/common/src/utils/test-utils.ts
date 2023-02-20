@@ -1,17 +1,14 @@
 import { BehaviorSubject, lastValueFrom, firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { CID } from 'multiformats/cid'
-import * as uint8arrays from 'uint8arrays'
 import * as random from '@stablelib/random'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import type { StreamState, Stream } from '../stream.js'
 import { RunningStateLike } from '../running-state-like.js'
 import { AnchorStatus } from '../stream.js'
 import type { CeramicApi } from '../ceramic-api.js'
 import first from 'it-first'
-
-const SHA256_CODE = 0x12
+import { create } from 'multiformats/hashes/digest'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
@@ -121,11 +118,9 @@ export class TestUtils {
   }
 
   static randomCID(): CID {
-    const body = uint8arrays.concat([
-      uint8arrays.fromString('1220', 'base16'),
-      random.randomBytes(32),
-    ])
-    return CID.create(1, SHA256_CODE, decodeMultiHash(body))
+    // 0x71 is DAG-CBOR codec identifier
+    // 0x12 is SHA-256 hashing algorithm
+    return CID.create(1, 0x71, create(0x12, random.randomBytes(32)))
   }
 
   /**

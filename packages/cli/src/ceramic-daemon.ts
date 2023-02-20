@@ -360,7 +360,7 @@ export class CeramicDaemon {
     baseRouter.use('/collection', collectionRouter)
     baseRouter.use('/admin/getCode', adminCodesRouter)
     baseRouter.use('/admin/models', adminModelRouter)
-    baseRouter.use('/admin/nodeStatus', adminNodeStatusRouter)
+    baseRouter.use('/admin/status', adminNodeStatusRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
