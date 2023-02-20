@@ -30,7 +30,7 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/common": "^2.19.0-rc.0",
+    "@ceramicnetwork/common": "^2.20.0-rc.0",
     "@ethersproject/abi": "^5.7.0",
     "multiformats": "^9.5.8",
     "uint8arrays": "^4.0.3"
