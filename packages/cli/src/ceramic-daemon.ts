@@ -20,7 +20,7 @@ import EthrDidResolver from 'ethr-did-resolver'
 import * as NftDidResolver from 'nft-did-resolver'
 import * as SafeDidResolver from 'safe-did-resolver'
 
-import { DID } from 'dids'
+import { DID, DIDOptions, DIDProvider } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync } from '@awaitjs/express'
@@ -306,20 +306,27 @@ export class CeramicDaemon {
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
 
-    let privateSeedUrl
-    try {
-      privateSeedUrl = new URL(opts.node.sensitive_privateSeed())
-    } catch (err) {
-      // Do not log URL errors here to prevent leaking seed
-      throw Error('Invalid format for node.private-seed in daemon.config.json')
+    let didOptions: DIDOptions = { resolver: makeResolvers(ceramic, ceramicConfig, opts) }
+    let provider: DIDProvider
+
+    if (opts.node.sensitive_privateSeed()) {
+      let seed: Uint8Array
+      try {
+        const privateSeedUrl = new URL(opts.node.sensitive_privateSeed())
+        seed = parseSeedUrl(privateSeedUrl)
+      } catch (err) {
+        // Do not log URL errors here to prevent leaking seed
+        throw Error('Invalid format for node.private-seed-url in daemon.config.json')
+      }
+      provider = makeNodeDIDProvider(seed)
+      didOptions = { ...didOptions, provider }
     }
-    const parsed = parseSeedUrl(privateSeedUrl)
-    const provider = makeNodeDIDProvider(parsed)
-    const did = new DID({ provider, resolver: makeResolvers(ceramic, ceramicConfig, opts) })
-    await did.authenticate()
-    diagnosticsLogger.imp(
-      `DID set to '${did.id}'`
-    )
+
+    const did = new DID(didOptions)
+    if (provider) {
+      await did.authenticate()
+      diagnosticsLogger.imp(`DID set to '${did.id}'`)
+    }
     ceramic.did = did
     await ceramic._init(true)
 
