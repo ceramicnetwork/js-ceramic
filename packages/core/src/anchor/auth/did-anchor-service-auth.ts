@@ -75,7 +75,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     if (!requestOpts) return
     if (requestOpts.body == undefined) return
 
-    let hash: sha256.SHA256
+    let hash: Uint8Array
 
     if (requestOpts.headers) {
       const contentType = requestOpts.headers['Content-Type'] as string
@@ -84,16 +84,16 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
         const car = carFactory.fromBytes(requestOpts.body)
         return car.roots[0].toString()
       } else if (contentType.includes('application/json')) {
-        hash = new sha256.SHA256().update(u8a.fromString(JSON.stringify(requestOpts.body)))
+        hash = sha256.hash(u8a.fromString(JSON.stringify(requestOpts.body)))
       }
     }
 
     if (!hash) {
       // Default to hashing stringified body
-      hash = new sha256.SHA256().update(u8a.fromString(JSON.stringify(requestOpts.body)))
+      hash = sha256.hash(u8a.fromString(JSON.stringify(requestOpts.body)))
     }
 
-    return `0x${u8a.toString(hash.digest(), 'base16')}`
+    return `0x${u8a.toString(hash, 'base16')}`
   }
 
   private async _sendRequest(request: FetchRequestParams): Promise<any> {
