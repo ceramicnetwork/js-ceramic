@@ -7,7 +7,7 @@ import {
   FetchRequestParams
 } from '@ceramicnetwork/common'
 import * as sha256 from '@stablelib/sha256'
-import { uuid } from '@stablelib/uuid'
+import * as uuid from '@stablelib/uuid'
 import { DagJWS } from 'dids'
 import { CARFactory } from 'cartonne'
 import * as u8a from 'uint8arrays'
@@ -47,7 +47,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   }
 
   async signRequest(request: FetchRequestParams): Promise<{request: FetchRequestParams, jws: DagJWS}> {
-    const payload: any = { url: request.url, nonce: uuid() }
+    const payload: any = { url: request.url, nonce: uuid.v4() }
     const payloadDigest = this._buildSignaturePayloadDigest(request.opts)
     if (payloadDigest) {
       payload.digest = payloadDigest
