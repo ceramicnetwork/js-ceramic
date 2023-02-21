@@ -83,7 +83,7 @@ jobs:
         run: echo "VERSION=$(dagger do -l error --output-format json version -p ${{ env.DAGGER_PLAN }} | jq -r '.version')" >> $GITHUB_ENV
       -
         name: Push Docker image
-        if: ${{ env.PUBLISH == 'true' }}
+#        if: ${{ env.PUBLISH == 'true' }}
         run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":prod:main:\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         name: Create deployment job
