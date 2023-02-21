@@ -301,7 +301,7 @@ export class CeramicDaemon {
         opts.stateStore?.s3Endpoint
       )
 
-      await ceramic.repository.injectKeyValueStore(s3Store)
+      await ceramic.repository.setKeyValueStore(s3Store)
     }
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     ceramic.did = did
