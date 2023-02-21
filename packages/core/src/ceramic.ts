@@ -10,7 +10,6 @@ import {
   StreamUtils,
   LoadOpts,
   AnchorService,
-  AnchorServiceAuthMethods,
   CeramicApi,
   CeramicCommit,
   IpfsApi,
@@ -33,7 +32,7 @@ import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import { AnchorServiceAuthMethodClasses } from './anchor/auth/methods.js'
+import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
 import {
   AuthenticatedEthereumAnchorService,
   EthereumAnchorService,
@@ -455,21 +454,23 @@ export class Ceramic implements CeramicApi {
         config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
         DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
-      if (config.anchorServiceAuthMethod != AnchorServiceAuthMethods.NONE) {
+      if (config.anchorServiceAuthMethod) {
         try {
-          anchorServiceAuth = new AnchorServiceAuthMethodClasses[AnchorServiceAuthMethods.DID](
+          anchorServiceAuth = new DIDAnchorServiceAuth(
             anchorServiceUrl,
             logger
           )
         } catch (error) {
           throw new Error(
-            `Auth method for anchor service failed to instantiate: ${config.anchorServiceAuthMethod}`
+            `DID auth method for anchor service failed to instantiate`
           )
         }
       } else {
-        logger.warn(
-          `DEPRECATION WARNING: IP address authentication will still work but will soon be deprecated. Add a private seed url to your daemon config.`
-        )
+        if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {
+          logger.warn(
+            `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
+          )
+        }
       }
 
       if (

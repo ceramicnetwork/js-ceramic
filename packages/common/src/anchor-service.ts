@@ -6,7 +6,6 @@ import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 
 export enum AnchorServiceAuthMethods {
-  NONE = 'none',
   DID = 'did',
 }
 
