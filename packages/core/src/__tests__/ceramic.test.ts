@@ -17,7 +17,7 @@ import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
 
 const MOCK_WAS_CALLED_DELAY = 3 * 1000
-const TEST_TIMEOUT = 1000 * 60 * 8 // 4 minutes
+const TEST_TIMEOUT = 1000 * 60 * 8 // 8 minutes
 
 function createCeramic(
   ipfs: IpfsApi,
