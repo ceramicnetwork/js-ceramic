@@ -13,11 +13,7 @@ export class RemotePinApi implements PinApi {
 
   constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
 
-  private async buildJWS(
-    actingDid: DID,
-    code: string,
-    url: URL
-  ): Promise<string> {
+  private async buildJWS(actingDid: DID, code: string, url: URL): Promise<string> {
     if (!actingDid) throw new MissingDIDError()
     const jws = await actingDid.createJWS({
       code: code,

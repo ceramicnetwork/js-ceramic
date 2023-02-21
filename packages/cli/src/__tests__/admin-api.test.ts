@@ -98,8 +98,8 @@ describe('admin api', () => {
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
   }
 
-  async function buildJWSPins(did: DID, code: string, requestPath:string): Promise<string> {
-    const body =  undefined
+  async function buildJWSPins(did: DID, code: string, requestPath: string): Promise<string> {
+    const body = undefined
     const jws = await did.createJWS({
       code: code,
       requestPath: '/api/v0/admin/pins',
@@ -187,7 +187,11 @@ describe('admin api', () => {
     // Get list of pins
     const getResult = await fetchJson(adminPinURLBaseString, {
       headers: {
-        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins`)}`,
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins`
+        )}`,
       },
     })
     expect(getResult.pinnedStreamIds).toEqual([exampleModelStreamId])
@@ -195,7 +199,11 @@ describe('admin api', () => {
     // Get single pin
     const getIdResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
       headers: {
-        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins/${exampleModelStreamId}`
+        )}`,
       },
     })
     expect(getIdResult.pinnedStreamIds).toEqual([exampleModelStreamId])
@@ -204,36 +212,58 @@ describe('admin api', () => {
     const deleteResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
       method: 'DELETE',
       headers: {
-        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
-      }
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins/${exampleModelStreamId}`
+        )}`,
+      },
     })
     expect(deleteResult.isPinned).toEqual(false)
     expect(deleteResult.streamId).toEqual(exampleModelStreamId)
 
     // Get single pin after delete
-    const getIdResultAfterDelete = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
-      headers: {
-        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
-      },
-    })
+    const getIdResultAfterDelete = await fetchJson(
+      `${adminPinURLBaseString}/${exampleModelStreamId}`,
+      {
+        headers: {
+          authorization: `Authorization: Basic ${await buildJWSPins(
+            adminDid,
+            await fetchCode(),
+            `/api/v0/admin/pins/${exampleModelStreamId}`
+          )}`,
+        },
+      }
+    )
     expect(getIdResultAfterDelete.pinnedStreamIds).toEqual([])
 
-     // Add pin
+    // Add pin
     const postResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
       method: 'POST',
       headers: {
-        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
-      }
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins/${exampleModelStreamId}`
+        )}`,
+      },
     })
     expect(postResult.isPinned).toEqual(true)
     expect(postResult.streamId).toEqual(exampleModelStreamId)
 
     // Get single pin after adding
-    const getIdResultAfterPost = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
-      headers: {
-        authorization: `Authorization: Basic ${await buildJWSPins(adminDid, await fetchCode(), `/api/v0/admin/pins/${exampleModelStreamId}`)}`,
-      },
-    })
+    const getIdResultAfterPost = await fetchJson(
+      `${adminPinURLBaseString}/${exampleModelStreamId}`,
+      {
+        headers: {
+          authorization: `Authorization: Basic ${await buildJWSPins(
+            adminDid,
+            await fetchCode(),
+            `/api/v0/admin/pins/${exampleModelStreamId}`
+          )}`,
+        },
+      }
+    )
     expect(getIdResultAfterPost.pinnedStreamIds).toEqual([exampleModelStreamId])
   })
 

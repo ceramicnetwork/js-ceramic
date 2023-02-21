@@ -51,4 +51,3 @@ export class MissingDIDError extends Error {
     )
   }
 }
-
