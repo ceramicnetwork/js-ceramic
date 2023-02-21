@@ -4,7 +4,7 @@ import { DaemonConfig } from '../daemon-config.js'
 import { homedir } from 'node:os'
 
 const mockAnchorConfig = {
-  'auth-method': 'did'
+  'auth-method': 'did',
 }
 const mockNodeConfig = {
   'private-seed-url':
