@@ -363,6 +363,8 @@ export class CeramicDaemon {
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
     baseRouter.use('/admin/pins', adminPinsRouter)
+    // Original pins paths not supported error, to be fuly removed/deprecated after
+    baseRouter.use('/pins', this._pinNotSupported.bind(this))
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -958,6 +960,12 @@ export class CeramicDaemon {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: 'Method not supported by read only Ceramic Gateway' })
+  }
+
+  async _pinNotSupported(req: Request, res: Response): Promise<void> {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: 'Method not supported: pin requests have moved to the admin API /admin/pins' })
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {
