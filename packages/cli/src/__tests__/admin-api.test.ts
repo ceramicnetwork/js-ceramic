@@ -37,7 +37,8 @@ describe('admin api', () => {
   let client: CeramicClient
   let exampleModelStreamId: string
 
-  beforeAll(async () => {
+
+  beforeEach(async () => {
     // FIXME: How should we be setting up this env var properly?
     originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
@@ -73,7 +74,7 @@ describe('admin api', () => {
     exampleModelStreamId = myModel1.id.toString()
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await ipfs.stop()
     await client.close()
     await daemon.close()

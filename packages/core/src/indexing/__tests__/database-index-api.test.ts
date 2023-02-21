@@ -361,7 +361,7 @@ describe('postgres', () => {
       ])
     })
 
-    test('re-indexing models', async () => {
+    test('Disallow re-indexing models for which indexing has been stopped', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       await indexApi.init()
@@ -398,21 +398,9 @@ describe('postgres', () => {
         },
       ])
 
-      await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
-      expect(
-        await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-          .select('model', 'is_indexed')
-          .orderBy('model', 'desc')
-      ).toEqual([
-        {
-          model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-          is_indexed: true,
-        },
-        {
-          model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
-          is_indexed: true,
-        },
-      ])
+      await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
+        Error
+      )
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
@@ -952,21 +940,9 @@ describe('sqlite', () => {
         },
       ])
 
-      await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
-      expect(
-        await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-          .select('model', 'is_indexed')
-          .orderBy('model', 'desc')
-      ).toEqual([
-        {
-          model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-          is_indexed: 1,
-        },
-        {
-          model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
-          is_indexed: 1,
-        },
-      ])
+      await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
+        Error
+      )
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
