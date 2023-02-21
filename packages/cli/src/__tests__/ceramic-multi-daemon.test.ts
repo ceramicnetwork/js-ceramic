@@ -80,12 +80,16 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     const port2 = await getPort()
     daemon1 = new CeramicDaemon(
       core1,
-      DaemonConfig.fromObject({ 'http-api': { port: port1, 'admin-dids': [adminDID.id.toString()] }, node: mockNodeConfig })
+      DaemonConfig.fromObject({
+        'http-api': { port: port1, 'admin-dids': [adminDID.id.toString()] },
+      })
     )
     await daemon1.listen()
     daemon2 = new CeramicDaemon(
       core2,
-      DaemonConfig.fromObject({ 'http-api': { port: port2, 'admin-dids': [adminDID.id.toString()] }, node: mockNodeConfig })
+      DaemonConfig.fromObject({
+        'http-api': { port: port2, 'admin-dids': [adminDID.id.toString()] },
+      })
     )
     await daemon2.listen()
     client1 = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
