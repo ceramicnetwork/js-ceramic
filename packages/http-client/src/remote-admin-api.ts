@@ -2,14 +2,7 @@ import { AdminApi, fetchJson, PinApi } from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
-
-export class MissingDIDError extends Error {
-  constructor() {
-    super(
-      'Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached'
-    )
-  }
-}
+import { MissingDIDError } from './utils'
 
 /**
  * AdminApi for Ceramic http client.
@@ -80,7 +73,7 @@ export class RemoteAdminApi implements AdminApi {
 
   get pin(): PinApi {
     if (this._pinApi) return this._pinApi 
-    this._pinApi = new RemotePinApi(this._apiUrl)
+    this._pinApi = new RemotePinApi(this._apiUrl, this._getDidFn)
     return this._pinApi 
   }
 }

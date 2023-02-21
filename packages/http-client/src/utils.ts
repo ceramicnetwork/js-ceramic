@@ -40,3 +40,15 @@ export function serializeObjectForHttpPost(query: Record<string, any>): Record<s
   }
   return result
 }
+
+/**
+ * Admin API Error
+ */
+export class MissingDIDError extends Error {
+  constructor() {
+    super(
+      'Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached'
+    )
+  }
+}
+
