@@ -454,9 +454,7 @@ describe('Sync API', () => {
   test('_createJobStatus', async () => {
     const { SyncApi } = await import('../sync-api.js')
     const logger = {
-      imp: jest.fn((x) => {
-        console.log(x)
-      }),
+      imp: jest.fn(),
     }
 
     const sync = new SyncApi(
@@ -500,7 +498,7 @@ describe('Sync API', () => {
     await sync._logSyncStatus()
 
     expect(getJobs).toHaveBeenCalledWith('active', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB])
-    expect(getJobs).toHaveBeenCalledWith('created', [HISTORY_SYNC_JOB])
+    expect(getJobs).toHaveBeenCalledWith('created', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB])
     const status = logger.imp.mock.calls[0][0]
     expect(status).toMatchSnapshot()
   })
