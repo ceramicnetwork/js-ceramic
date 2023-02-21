@@ -11,7 +11,7 @@ export interface FetchOpts {
 }
 
 export type FetchRequestParams = {
-  url: URL | string,
+  url: URL | string
   opts?: FetchOpts
 }
 
@@ -19,7 +19,7 @@ export type FetchRequest = (url: URL | string, opts?: FetchOpts) => Promise<any>
 
 export enum HttpMethods {
   GET = 'GET',
-  POST = 'POST'
+  POST = 'POST',
 }
 
 export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {
