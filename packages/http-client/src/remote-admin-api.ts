@@ -2,7 +2,7 @@ import { AdminApi, fetchJson, PinApi } from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
-import { MissingDIDError } from './utils'
+import { MissingDIDError } from './utils.js'
 
 /**
  * AdminApi for Ceramic http client.

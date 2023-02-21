@@ -2,7 +2,7 @@ import { fetchJson, PinApi } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { PublishOpts } from '@ceramicnetwork/common'
 import { DID } from 'dids'
-import { MissingDIDError } from './utils'
+import { MissingDIDError } from './utils.js'
 
 /**
  * PinApi for Ceramic HTTP client
