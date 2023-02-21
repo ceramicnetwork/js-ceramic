@@ -151,4 +151,21 @@ describe('job queue', () => {
     const thirdCall = workers.job1.handler.mock.calls[2][0]
     expect(thirdCall.data.id).toEqual(2)
   })
+
+  test('Can get jobs of different states and types', async () => {
+    const jobs = ['job1', 'job2', 'job1', 'job3', 'job3', 'job1'].map((name) => ({
+      name,
+      data: {},
+    }))
+    await myJobQueue.addJobs(jobs)
+
+    const createdJobs = await myJobQueue.getJobs('created')
+    expect(createdJobs['job1']).toHaveLength(3)
+    expect(createdJobs['job2']).toHaveLength(1)
+    expect(createdJobs['job3']).toHaveLength(2)
+
+    const createJob1Jobs = await myJobQueue.getJobs('created', ['job1'])
+    expect(createJob1Jobs['job1']).toHaveLength(3)
+    expect(createJob1Jobs['job2']).toBe(undefined)
+  })
 })

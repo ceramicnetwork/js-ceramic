@@ -168,10 +168,12 @@ describe('Sync API', () => {
       const initModelsToSync = jest.fn()
       const initJobQueue = jest.fn()
       const initBlockSubscription = jest.fn()
+      const initPeriodicStatusLogger = jest.fn()
       sync._initStateTable = initStateTable as any
       sync._initModelsToSync = initModelsToSync as any
       sync._initJobQueue = initJobQueue as any
       sync._initBlockSubscription = initBlockSubscription as any
+      sync._initPeriodicStatusLogger = initPeriodicStatusLogger as any
 
       await sync.init({ getBlock, getNetwork } as any)
       expect(getBlock).toHaveBeenCalledWith(-BLOCK_CONFIRMATIONS)
@@ -179,6 +181,8 @@ describe('Sync API', () => {
       expect(initModelsToSync).toHaveBeenCalled()
       expect(initJobQueue).toHaveBeenCalled()
       expect(initBlockSubscription).toHaveBeenCalledWith('abc123')
+      expect(initBlockSubscription).toHaveBeenCalledWith('abc123')
+      expect(initPeriodicStatusLogger).toHaveBeenCalled()
 
       await sync.shutdown()
     })
@@ -285,12 +289,14 @@ describe('Sync API', () => {
     const unsubscribe = jest.fn()
     // @ts-ignore private field
     sync.subscription = { unsubscribe }
+    // @ts-ignore private field
+    sync.periodicStatusLogger = { unsubscribe }
     const stop = jest.fn()
     // @ts-ignore private field
     sync.jobQueue = { stop }
 
     await sync.shutdown()
-    expect(unsubscribe).toHaveBeenCalled()
+    expect(unsubscribe).toHaveBeenCalledTimes(2)
     expect(stop).toHaveBeenCalled()
   })
 
@@ -443,5 +449,94 @@ describe('Sync API', () => {
         processedBlockNumber: 100,
       })
     })
+  })
+
+  test('_createJobStatus', async () => {
+    const { SyncApi } = await import('../sync-api.js')
+    const logger = {
+      imp: jest.fn((x) => {
+        console.log(x)
+      }),
+    }
+
+    const sync = new SyncApi(
+      { db: process.env.DATABASE_URL as string, on: true },
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any
+    )
+
+    const getJobs = jest.fn(() =>
+      Promise.resolve({
+        [HISTORY_SYNC_JOB]: [
+          {
+            name: HISTORY_SYNC_JOB,
+            data: { fromBlock: 100, toBlock: 200 },
+            id: '12345',
+            startedOn: new Date(1677015880491),
+            createdOn: new Date(1677015880491 - 100000),
+            completedOn: null,
+          },
+        ],
+        [CONTINUOUS_SYNC_JOB]: [
+          {
+            name: CONTINUOUS_SYNC_JOB,
+            data: { fromBlock: 500, toBlock: 500 },
+            id: '12345',
+            startedOn: new Date(1677015880491),
+            createdOn: new Date(1677015880491 - 100000),
+            completedOn: null,
+          },
+        ],
+      })
+    )
+
+    // @ts-ignore private field
+    sync.jobQueue = {
+      getJobs,
+    }
+
+    await sync._logSyncStatus()
+
+    expect(getJobs).toHaveBeenCalledWith('active', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB])
+    expect(getJobs).toHaveBeenCalledWith('created', [HISTORY_SYNC_JOB])
+    const status = logger.imp.mock.calls[0][0]
+    expect(status).toMatchSnapshot()
+  })
+
+  test('_initPeriodicStatusLogger', async () => {
+    const { SyncApi } = await import('../sync-api.js')
+    const logger = {
+      imp: jest.fn(),
+    }
+
+    const sync = new SyncApi(
+      { db: process.env.DATABASE_URL as string, on: true },
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any
+    )
+
+    const getJobs = jest.fn(() =>
+      Promise.resolve({
+        name: 'jobName',
+        data: { data: 'tests' },
+        id: '12345',
+        startedOn: new Date(),
+        createdOn: new Date(Date.now() - 100000),
+        completedOn: null,
+      })
+    )
+
+    // @ts-ignore private field
+    sync.jobQueue = {
+      getJobs,
+    }
+
+    sync._initPeriodicStatusLogger()
+    // @ts-ignore private field
+    expect(sync.periodicStatusLogger).toBeDefined()
   })
 })
