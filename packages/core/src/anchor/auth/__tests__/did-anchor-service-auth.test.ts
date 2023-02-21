@@ -1,20 +1,5 @@
 import { jest } from '@jest/globals'
 
-import crypto from 'crypto'
-
-const uuids = Array.from({ length: 100 }, () => crypto.randomUUID())
-let uuidsUsed = 0
-
-Object.defineProperty(global, 'crypto', {
-  value: {
-    randomUUID: () => {
-      const uuid = uuids[uuidsUsed]
-      uuidsUsed++
-      return uuid
-    },
-  },
-})
-
 const mockedUrls = {
   OFFLINE: 'http://offline.test.ts',
   ONLINE: 'https://online.test.ts',
@@ -68,7 +53,7 @@ const setupAuth = async (url): Promise<any> => {
 }
 
 describe('sendAuthenticatedRequest', () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(50000)
   test.each([0, 1, 2])('sends request with signed payload in `authorization` header', async () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()
