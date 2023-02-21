@@ -55,7 +55,6 @@ type IndexedData<DateType> = {
 export class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private modelsToIndex: Array<StreamID> = []
-  private previouslyIndexedModels = []
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
   // indexed
   private readonly modelsIndexedFields = new Map<string, Array<string>>()
@@ -80,12 +79,13 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
-    for (const modelArgs of this.previouslyIndexedModels) {
-      const modelPreviouslyIndexed = this.previouslyIndexedModels.some(function (streamId) {
+    const previouslyIndexedModels = await this.getPreviouslyIndexedModelsFromDatabase()
+    for (const modelArgs of previouslyIndexedModels) {
+      const modelPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
         return String(streamId) === String(modelArgs)
       })
       if (modelPreviouslyIndexed){
-        throw new Error(`Cannot re-index model ${modelArgs.model.toString()}, data may not be up-to-date`)
+        throw new Error(`Cannot re-index model ${modelArgs.toString()}, data may not be up-to-date`)
       }
     }
     await this.indexModelsInDatabase(models)
@@ -126,7 +126,6 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
-    models.forEach((modelStreamID) => this.previouslyIndexedModels.push(modelStreamID))
     await this.stopIndexingModelsInDatabase(models)
     const modelsAsStrings = models.map((streamID) => streamID.toString())
     this.modelsToIndex = this.modelsToIndex.filter(
@@ -273,7 +272,6 @@ export class DatabaseIndexApi<DateType = Date | number> {
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)
     this.modelsToIndex = await this.getIndexedModelsFromDatabase()
-    this.previouslyIndexedModels = await this.getPreviouslyIndexedModelsFromDatabase()
   }
 
   /**
