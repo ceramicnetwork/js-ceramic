@@ -109,7 +109,7 @@ describe('Sync API', () => {
 
     test('reads the state from the table if existing', async () => {
       const { STATE_TABLE_NAME, SyncApi } = await import('../sync-api.js')
-      await dbConnection.schema.createTable(STATE_TABLE_NAME, function (table) {
+      await dbConnection.schema.createTable(STATE_TABLE_NAME, function(table) {
         table.string('processed_block_hash', 1024)
         table.integer('processed_block_number')
       })
@@ -531,7 +531,233 @@ describe('Sync API', () => {
     })
   })
 
-  test('_createJobStatus', async () => {
+  test('syncStatus', async () => {
+    const { SyncApi } = await import('../sync-api.js')
+    const logger = {
+      imp: jest.fn(),
+    }
+
+    const sync = new SyncApi(
+      { db: process.env.DATABASE_URL as string, on: true },
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any
+    )
+
+    const getJobs = jest.fn((state) => {
+      switch (state) {
+        case 'active': {
+          return Promise.resolve({
+            [HISTORY_SYNC_JOB]: [
+              {
+                name: HISTORY_SYNC_JOB,
+                data: {
+                  fromBlock: 100, toBlock: 200, currentBlock: 101, models: [
+                    "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+                  ]
+                },
+                id: '12345',
+                startedOn: new Date("2023-02-21T20:58:47.867Z"),
+                createdOn: new Date("2023-02-21T20:48:47.587Z"),
+                completedOn: null,
+              },
+            ],
+            [CONTINUOUS_SYNC_JOB]: [
+              {
+                name: CONTINUOUS_SYNC_JOB,
+                data: {
+                  fromBlock: 450, toBlock: 500, models: [
+                    "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+                  ]
+                },
+                id: '23456',
+                startedOn: new Date("2023-02-21T21:43:00.491Z"),
+                createdOn: new Date("2023-02-21T21:32:00.151Z"),
+                completedOn: null,
+              },
+            ],
+          })
+        }
+        case 'created': {
+          return Promise.resolve({
+            [HISTORY_SYNC_JOB]: [
+              {
+                name: HISTORY_SYNC_JOB,
+                data: {
+                  fromBlock: 200, toBlock: 500, models: [
+                    "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+                  ]
+                },
+                id: '34567',
+                createdOn: new Date("2023-02-21T20:54:17.762Z"),
+                completedOn: null,
+              },
+            ],
+          })
+        }
+      }
+    })
+
+    // @ts-ignore private field
+    sync.jobQueue = {
+      getJobs,
+    }
+    // @ts-ignore private field
+    sync.startBlock = 400
+    // @ts-ignore private field
+    sync.currentBlock = 499
+
+    const syncStatus = await sync.syncStatus()
+
+    expect(syncStatus).toEqual(
+      {
+        "activeSyncs": [
+          {
+            "models": [
+              "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+            ],
+            "startBlock": 100,
+            "currentBlock": 101,
+            "endBlock": 200,
+            "startedAt": new Date("2023-02-21T20:58:47.867Z"),
+            "createdAt": new Date("2023-02-21T20:48:47.587Z"),
+          },
+        ],
+        "continuousSync": [
+          {
+            "confirmations": 20,
+            "currentBlock": 450,
+            "latestBlock": 499,
+            "models": [
+              "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+            ],
+            "startBlock": 400,
+          },
+        ],
+        "pendingSyncs": [
+          {
+            "models": [
+              "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+            ],
+            "startBlock": 200,
+            "endBlock": 500,
+            "createdAt": new Date("2023-02-21T20:54:17.762Z"),
+          },
+        ],
+      }
+    )
+  })
+
+  test('syncStatus when a continue sync job has not started yet', async () => {
+    const { SyncApi } = await import('../sync-api.js')
+    const logger = {
+      imp: jest.fn(),
+    }
+
+    const sync = new SyncApi(
+      { db: process.env.DATABASE_URL as string, on: true },
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any
+    )
+
+    const getJobs = jest.fn((state) => {
+      switch (state) {
+        case 'active': {
+          return Promise.resolve({
+            [HISTORY_SYNC_JOB]: [
+              {
+                name: HISTORY_SYNC_JOB,
+                data: {
+                  fromBlock: 100, toBlock: 200, currentBlock: 101, models: [
+                    "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+                  ]
+                },
+                id: '12345',
+                startedOn: new Date("2023-02-21T20:58:47.867Z"),
+                createdOn: new Date("2023-02-21T20:48:47.587Z"),
+                completedOn: null,
+              },
+            ],
+          })
+        }
+        case 'created': {
+          return Promise.resolve({
+            [HISTORY_SYNC_JOB]: [
+              {
+                name: HISTORY_SYNC_JOB,
+                data: {
+                  fromBlock: 200, toBlock: 500, models: [
+                    "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+                  ]
+                },
+                id: '34567',
+                createdOn: new Date("2023-02-21T20:54:17.762Z"),
+                completedOn: null,
+              },
+            ],
+          })
+        }
+      }
+    })
+
+    // @ts-ignore private field
+    sync.jobQueue = {
+      getJobs,
+    }
+    // @ts-ignore private field
+    sync.startBlock = 400
+    // @ts-ignore private field
+    sync.currentBlock = 499
+    // @ts-ignore private field
+    sync.modelsToSync = [
+      "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k",
+    ]
+
+    const syncStatus = await sync.syncStatus()
+
+    expect(syncStatus).toEqual(
+      {
+        "activeSyncs": [
+          {
+            "models": [
+              "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+            ],
+            "startBlock": 100,
+            "currentBlock": 101,
+            "endBlock": 200,
+            "startedAt": new Date("2023-02-21T20:58:47.867Z"),
+            "createdAt": new Date("2023-02-21T20:48:47.587Z"),
+          },
+        ],
+        "continuousSync": [
+          {
+            "confirmations": 20,
+            "currentBlock": 479,
+            "latestBlock": 499,
+            "startBlock": 400,
+            "models": [
+              "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+            ],
+          },
+        ],
+        "pendingSyncs": [
+          {
+            "models": [
+              "kjzl6hvfrbw6c6ngtt7harvn6qb4g1t5rt7wa1yt4giolyi6pxbyti1gjf9tv8k"
+            ],
+            "startBlock": 200,
+            "endBlock": 500,
+            "createdAt": new Date("2023-02-21T20:54:17.762Z"),
+          },
+        ],
+      }
+    )
+  })
+
+  test('_logSyncStatus', async () => {
     const { SyncApi } = await import('../sync-api.js')
     const logger = {
       imp: jest.fn(),

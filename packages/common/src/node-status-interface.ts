@@ -28,6 +28,8 @@ export interface NodeStatusResponse {
    * Information about the connected IPFS node.
    */
   ipfs: IpfsNodeStatus
+
+  composeDB: ComposeDBStatus
 }
 
 /**
@@ -61,4 +63,62 @@ export interface AnchorNodeStatus {
    * The ethereum chainId used for anchors.
    */
   chainId: string
+}
+
+/**
+  * Status about the ComposeDB specific operations of the node.
+  */
+export interface ComposeDBStatus {
+  /**
+    * The list of models Ids that are being indexed.
+    */
+  indexedModels: Array<string>
+  /**
+    * The set of active sync operations.
+    */
+  syncs: SyncStatus
+}
+
+export interface SyncStatus {
+  activeSyncs: Array<ActiveSyncStatus>
+  continuousSync: Array<ContinuousSyncStatus>
+  pendingSyncs: Array<PendingSyncStatus>
+}
+
+// TODO (CDB-2106): move to SyncStatus Class
+export interface ActiveSyncStatus {
+  // The block the sync starts at
+  startBlock: number
+  // The block the sync is currently processing
+  currentBlock: number
+  // The block the sync will end on
+  endBlock: number
+  // Models that are being synced
+  models: Array<string>
+  // Date when the sync was requested
+  createdAt: Date
+  // Date when the sync started
+  startedAt: Date
+}
+export interface ContinuousSyncStatus {
+  // The first block recevied form the chain on node startup
+  startBlock: number
+  // The latest block received from the chain
+  latestBlock: number
+  // The number of blocks we wait for before we process a block
+  confirmations: number
+  // The block we are currently processing (should be latestBlock - confirmations)
+  currentBlock: number
+  // Models that are being synced
+  models: Array<string>
+}
+export interface PendingSyncStatus {
+  // The block the sync starts at
+  startBlock: number
+  // The block the sync will end on
+  endBlock: number
+  // Models that are being synced
+  models: Array<string>
+  // Date when the sync was requested
+  createdAt: Date
 }

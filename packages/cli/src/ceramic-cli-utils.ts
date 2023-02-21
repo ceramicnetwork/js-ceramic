@@ -492,6 +492,12 @@ export class CeramicCliUtils {
     })
   }
 
+  static async status(): Promise<void> {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+        console.log(JSON.stringify(await ceramic.admin.nodeStatus()))
+    })
+  }
+
   /**
    * Creates an Ed25519-based key-did from a given seed for use with the CLI. The DID instance
    * has a KeyDidResolver and ThreeIdResolver pre-loaded so that the Ceramic daemon will be
@@ -546,7 +552,9 @@ export class CeramicCliUtils {
     }
 
     const seed = u8a.fromString(cliConfig.seed, 'base16')
-    await ceramic.setDID(CeramicCliUtils._makeDID(seed, ceramic))
+    const did = CeramicCliUtils._makeDID(seed, ceramic)
+    await did.authenticate()
+    await ceramic.setDID(did)
 
     try {
       await fn(ceramic)

@@ -254,4 +254,11 @@ config
     await CeramicCliUtils.unsetCliConfig(variable)
   })
 
+program
+  .command('status')
+  .description("Display the node's status")
+  .action(async () => {
+    await CeramicCliUtils.status()
+  })
+
 program.parse(process.argv)
