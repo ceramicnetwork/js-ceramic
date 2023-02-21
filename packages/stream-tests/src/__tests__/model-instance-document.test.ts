@@ -322,7 +322,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   test('unpinning indexed stream fails', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
-    await expect(ceramic.admin.pin.rm(doc.id)).rejects.toThrow(/Cannot unpin actively indexed stream/)
+    await expect(ceramic.admin.pin.rm(doc.id)).rejects.toThrow(
+      /Cannot unpin actively indexed stream/
+    )
   })
 
   test('replace respects anchor flag', async () => {

@@ -743,7 +743,7 @@ export class CeramicDaemon {
     }
   }
 
-  async validateAdminRequest(req: Request, res: Response, next:NextFunction): Promise<void> {
+  async validateAdminRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
     if (!req.headers.authorization) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
       return

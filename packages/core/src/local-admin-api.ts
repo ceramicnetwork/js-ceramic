@@ -9,7 +9,11 @@ import { LocalPinApi } from './local-pin-api.js'
  */
 
 export class LocalAdminApi implements AdminApi {
-  constructor(private readonly indexApi: LocalIndexApi, private readonly syncApi: SyncApi, private readonly pinApi: PinApi) {}
+  constructor(
+    private readonly indexApi: LocalIndexApi,
+    private readonly syncApi: SyncApi,
+    private readonly pinApi: PinApi
+  ) {}
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     await Promise.all([

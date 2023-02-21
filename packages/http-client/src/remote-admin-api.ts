@@ -72,8 +72,8 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   get pin(): PinApi {
-    if (this._pinApi) return this._pinApi 
+    if (this._pinApi) return this._pinApi
     this._pinApi = new RemotePinApi(this._apiUrl, this._getDidFn)
-    return this._pinApi 
+    return this._pinApi
   }
 }
