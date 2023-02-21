@@ -54,7 +54,7 @@ const setupAuth = async (url): Promise<any> => {
 
 describe('sendAuthenticatedRequest', () => {
   jest.setTimeout(50000)
-  test.each([0, 1, 2])('sends request with signed payload in `authorization` header', async () => {
+  test('sends request with signed payload in `authorization` header', async () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()
 
