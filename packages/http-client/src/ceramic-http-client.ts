@@ -80,7 +80,6 @@ export class CeramicClient implements CeramicApi {
     this._apiUrl = new URL(API_PATH, apiHost)
     this.context = { api: this }
 
-    this.pin = new RemotePinApi(this._apiUrl)
     this.index = new RemoteIndexApi(this._apiUrl)
     const getDidFn = (() => {
       return this.did
