@@ -654,7 +654,7 @@ export class CeramicDaemon {
       return { error: `Error while processing the authorization header ${e.message}` }
     }
     if (parsedJWS.requestPath !== basePath) {
-      return { error: `The jws block contains a request path that doesn't match the request` }
+      return { error: `The jws block contains a request path that doesn't match the request, ${parsedJWS.requestPath}, ${basePath}` }
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
     } else if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {

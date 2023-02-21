@@ -23,6 +23,7 @@ export class RemotePinApi implements PinApi {
   }
 
   readonly getCodePath = './admin/getCode'
+  readonly baseUrl =  new URL(`./admin/pins`, this._apiUrl)
 
   private getCodeUrl(): URL {
     return new URL(this.getCodePath, this._apiUrl)
@@ -40,7 +41,7 @@ export class RemotePinApi implements PinApi {
     const code = await this.generateCode()
     const url = new URL(`./admin/pins/${streamId}`, this._apiUrl)
     await this._fetchJson(url, {
-      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, url)}` },
+      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, this.baseUrl)}` },
       method: 'post',
       body: args,
     })
@@ -50,7 +51,7 @@ export class RemotePinApi implements PinApi {
     const code = await this.generateCode()
     const url = new URL(`./admin/pins/${streamId}`, this._apiUrl)
     await this._fetchJson(url, {
-      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, url)}` },
+      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, this.baseUrl)}` },
       method: 'delete',
       body: { opts },
     })
@@ -63,7 +64,7 @@ export class RemotePinApi implements PinApi {
     }
     const code = await this.generateCode()
     const result = await this._fetchJson(url, {
-      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, url)}` },
+      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, this.baseUrl)}` },
     })
     const { pinnedStreamIds } = result
     return {

@@ -23,6 +23,7 @@ import { makeDID } from './make-did.js'
 import fetch from 'cross-fetch'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
+import { DID } from 'dids'
 
 const seed = 'SEED'
 
@@ -34,12 +35,15 @@ describe('Ceramic interop: core <> http-client', () => {
   let daemon: CeramicDaemon
   let client: CeramicClient
   let originalEnvVarVal: string | undefined
+  let adminDID: DID
 
   beforeAll(async () => {
     // FIXME: How should we be setting up this env var properly?
     originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
+    adminDID = makeDID(core, seed)
+    await adminDID.authenticate()
   })
 
   afterAll(async () => {
@@ -50,7 +54,9 @@ describe('Ceramic interop: core <> http-client', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path)
-    daemon = await makeCeramicDaemon(core)
+    daemon = await makeCeramicDaemon(core, {
+      'http-api': { 'admin-dids': [adminDID.id.toString()] },
+    })
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
     await core.setDID(makeDID(core, seed))
@@ -573,14 +579,19 @@ describe('Ceramic interop: core <> http-client', () => {
 
   describe('pin api', () => {
     let docA, docB
+    let adminClient: CeramicClient
 
     beforeEach(async () => {
+      const apiUrl = `http://localhost:${daemon.port}`
+      adminClient = new CeramicClient(apiUrl, { syncInterval: 500 })
+      adminClient.did = adminDID
+
       docB = await TileDocument.create(core, { foo: 'bar' }, null, { pin: false })
       docA = await TileDocument.create(core, { foo: 'baz' }, null, { pin: false })
     })
 
     const pinLs = async (streamId?: StreamID): Promise<Array<any>> => {
-      const pinnedDocsIterator = await client.pin.ls(streamId)
+      const pinnedDocsIterator = await adminClient.admin.pin.ls(streamId)
       const docs = []
       for await (const doc of pinnedDocsIterator) {
         docs.push(doc)
@@ -594,7 +605,7 @@ describe('Ceramic interop: core <> http-client', () => {
       expect(pinnedDocs).toHaveLength(0)
 
       // Pin docA
-      await client.pin.add(docA.id)
+      await adminClient.admin.pin.add(docA.id)
 
       // Make sure docA shows up in list of all pinned docs
       pinnedDocs = await pinLs()
@@ -609,7 +620,7 @@ describe('Ceramic interop: core <> http-client', () => {
       expect(pinnedDocs).toHaveLength(0)
 
       // Now pin docB as well, and make sure 'ls' works as expected in all cases
-      await client.pin.add(docB.id)
+      await adminClient.admin.pin.add(docB.id)
 
       pinnedDocs = await pinLs()
       expect(pinnedDocs).toHaveLength(2)
@@ -623,7 +634,7 @@ describe('Ceramic interop: core <> http-client', () => {
       expect(pinnedDocs).toEqual([docB.id.toString()])
 
       // Now unpin docA
-      await client.pin.rm(docA.id)
+      await adminClient.admin.pin.rm(docA.id)
 
       pinnedDocs = await pinLs()
       expect(pinnedDocs).toEqual([docB.id.toString()])
@@ -639,17 +650,17 @@ describe('Ceramic interop: core <> http-client', () => {
 
     it('force pin', async () => {
       const pinSpy = jest.spyOn(ipfs.pin, 'add')
-      await client.pin.add(docA.id)
+      await adminClient.admin.pin.add(docA.id)
 
       // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
       expect(pinSpy).toBeCalledTimes(2)
 
       // Pin a second time, shouldn't cause any more calls to ipfs.pin.add
-      await client.pin.add(docA.id)
+      await adminClient.admin.pin.add(docA.id)
       expect(pinSpy).toBeCalledTimes(2)
 
       // Now force re-pin and make sure underlying state and ipfs records get re-pinned
-      await client.pin.add(docA.id, true)
+      await adminClient.admin.pin.add(docA.id, true)
       expect(pinSpy).toBeCalledTimes(4)
     })
   })
