@@ -11,17 +11,16 @@ Object.defineProperty(global, 'crypto', {
       const uuid = uuids[uuidsUsed]
       uuidsUsed++
       return uuid
-    }
-  }
-});
+    },
+  },
+})
 
 const mockedUrls = {
   OFFLINE: 'http://offline.test.ts',
   ONLINE: 'https://online.test.ts',
   ACCEPT: `https://online.test.ts.accept/api/v0/service-info/supported_chains`,
-  REJECT: `https://online.test.ts.reject/api/v0/service-info/supported_chains`
+  REJECT: `https://online.test.ts.reject/api/v0/service-info/supported_chains`,
 }
-
 
 jest.unstable_mockModule('cross-fetch', () => {
   const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
@@ -29,7 +28,7 @@ jest.unstable_mockModule('cross-fetch', () => {
     json: async () => {
       if (url.startsWith(mockedUrls.ONLINE)) {
         if (url.startsWith(mockedUrls.ACCEPT)) {
-          return {"supportedChains":["eip155:100"]}
+          return { supportedChains: ['eip155:100'] }
         } else {
           return 'Unauthorized'
         }
@@ -62,7 +61,9 @@ const setup = async (): Promise<any> => {
 }
 
 const setupAuth = async (url): Promise<any> => {
-  const { createDidAnchorServiceAuth } = await import('../../../__tests__/create-did-anchor-service-auth.js')
+  const { createDidAnchorServiceAuth } = await import(
+    '../../../__tests__/create-did-anchor-service-auth.js'
+  )
   return createDidAnchorServiceAuth(url, ceramic)
 }
 
@@ -73,7 +74,7 @@ describe('sendAuthenticatedRequest', () => {
     await auth.init()
 
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const getSignRequestResult = (): Promise<any> => signRequestSpy.mock.results[0].value;
+    const getSignRequestResult = (): Promise<any> => signRequestSpy.mock.results[0].value
 
     await auth.sendAuthenticatedRequest(mockedUrls.ONLINE)
     const out = await getSignRequestResult()
@@ -87,9 +88,9 @@ describe('sendAuthenticatedRequest', () => {
     await auth.init()
 
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const res0 = (): Promise<any> => signRequestSpy.mock.results[0].value;
-    const res1 = (): Promise<any> => signRequestSpy.mock.results[1].value;
-    const res2 = (): Promise<any> => signRequestSpy.mock.results[2].value;
+    const res0 = (): Promise<any> => signRequestSpy.mock.results[0].value
+    const res1 = (): Promise<any> => signRequestSpy.mock.results[1].value
+    const res2 = (): Promise<any> => signRequestSpy.mock.results[2].value
     await auth.sendAuthenticatedRequest(mockedUrls.ONLINE)
     await auth.sendAuthenticatedRequest(mockedUrls.ONLINE)
     await auth.sendAuthenticatedRequest(mockedUrls.ONLINE)
@@ -100,7 +101,7 @@ describe('sendAuthenticatedRequest', () => {
     const jws1 = await ceramic.did.verifyJWS(out1.jws)
     const jws2 = await ceramic.did.verifyJWS(out2.jws)
     const arr = [jws0, jws1, jws2]
-    const set = new Set(arr.map(jws => jws.payload.nonce))
+    const set = new Set(arr.map((jws) => jws.payload.nonce))
     expect(set.size).toBe(3)
   })
 })

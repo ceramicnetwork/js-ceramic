@@ -4,7 +4,7 @@ import {
   DiagnosticsLogger,
   FetchOpts,
   fetchJson,
-  FetchRequestParams
+  FetchRequestParams,
 } from '@ceramicnetwork/common'
 import * as sha256 from '@stablelib/sha256'
 import * as uuid from '@stablelib/uuid'
@@ -17,10 +17,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   private readonly _anchorServiceUrl: string
   private readonly _logger: DiagnosticsLogger
 
-  constructor(
-    anchorServiceUrl: string,
-    logger: DiagnosticsLogger,
-  ) {
+  constructor(anchorServiceUrl: string, logger: DiagnosticsLogger) {
     this._anchorServiceUrl = anchorServiceUrl
     this._logger = logger
   }
@@ -42,11 +39,13 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     if (!this._ceramic) {
       throw new Error('Missing Ceramic instance required by this auth method')
     }
-    const { request } = await this.signRequest({url, opts})
+    const { request } = await this.signRequest({ url, opts })
     return await this._sendRequest(request)
   }
 
-  async signRequest(request: FetchRequestParams): Promise<{request: FetchRequestParams, jws: DagJWS}> {
+  async signRequest(
+    request: FetchRequestParams
+  ): Promise<{ request: FetchRequestParams; jws: DagJWS }> {
     const payload: any = { url: request.url, nonce: uuid.uuid() }
     const payloadDigest = this._buildSignaturePayloadDigest(request.opts)
     if (payloadDigest) {
@@ -55,12 +54,12 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
 
     const jws = await this._ceramic.did.createJWS(payload)
     const authorization = `Bearer ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
-    let requestOpts: any = { headers: { authorization }}
+    let requestOpts: any = { headers: { authorization } }
     if (request.opts) {
       if (request.opts.headers) {
-        requestOpts.headers = {headers: { ...request.opts.headers, authorization }}
+        requestOpts.headers = { headers: { ...request.opts.headers, authorization } }
       }
-      requestOpts = { ...request.opts, ...requestOpts}
+      requestOpts = { ...request.opts, ...requestOpts }
     }
     request.opts = requestOpts
     return { request, jws }

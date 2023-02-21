@@ -38,8 +38,8 @@ let ipfs: any
 let ceramic: any
 
 afterAll(async () => {
-  ceramic && await ceramic.close()
-  ipfs && await ipfs.stop()
+  ceramic && (await ceramic.close())
+  ipfs && (await ipfs.stop())
 })
 
 test('re-request an anchor till get a response', async () => {
@@ -47,7 +47,9 @@ test('re-request an anchor till get a response', async () => {
   const eas = await import('../ethereum-anchor-service.js')
   const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
   const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
-  const { createDidAnchorServiceAuth } = await import('../../../__tests__/create-did-anchor-service-auth.js')
+  const { createDidAnchorServiceAuth } = await import(
+    '../../../__tests__/create-did-anchor-service-auth.js'
+  )
   const loggerProvider = new common.LoggerProvider()
   const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
   const errSpy = jest.spyOn(diagnosticsLogger, 'err')

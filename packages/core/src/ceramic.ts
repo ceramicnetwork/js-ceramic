@@ -34,7 +34,10 @@ import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
 import { AnchorServiceAuthMethodClasses } from './anchor/auth/methods.js'
-import { AuthenticatedEthereumAnchorService, EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
+import {
+  AuthenticatedEthereumAnchorService,
+  EthereumAnchorService,
+} from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
 import { randomUint32 } from '@stablelib/random'
@@ -454,9 +457,14 @@ export class Ceramic implements CeramicApi {
 
       if (config.anchorServiceAuthMethod != AnchorServiceAuthMethods.NONE) {
         try {
-          anchorServiceAuth = new AnchorServiceAuthMethodClasses[AnchorServiceAuthMethods.DID](anchorServiceUrl, logger)
+          anchorServiceAuth = new AnchorServiceAuthMethodClasses[AnchorServiceAuthMethods.DID](
+            anchorServiceUrl,
+            logger
+          )
         } catch (error) {
-          throw new Error(`Auth method for anchor service failed to instantiate: ${config.anchorServiceAuthMethod}`)
+          throw new Error(
+            `Auth method for anchor service failed to instantiate: ${config.anchorServiceAuthMethod}`
+          )
         }
       } else {
         logger.warn(
