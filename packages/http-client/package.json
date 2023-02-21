@@ -37,7 +37,7 @@
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "npx rimraf ./lib",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests && webpack --mode=development ./lib/ceramic-http-client.js"
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.20.0-rc.0",
@@ -52,7 +52,9 @@
   "devDependencies": {
     "dids": "^3.4.0",
     "key-did-resolver": "^2.3.0",
-    "multiformats": "^9.5.8"
+    "multiformats": "^9.5.8",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
