@@ -6,7 +6,7 @@ import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
-import { MissingDIDError } from '../utils'
+import { MissingDIDError } from '../utils.js'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
 const MODEL = new StreamID(1, TestUtils.randomCID())

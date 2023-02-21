@@ -27,7 +27,6 @@ import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { Model } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
-import { RemotePinApi } from './remote-pin-api.js'
 import { RemoteIndexApi } from './remote-index-api.js'
 import { RemoteAdminApi } from './remote-admin-api.js'
 
