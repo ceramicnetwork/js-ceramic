@@ -536,5 +536,7 @@ describe('Sync API', () => {
     sync._initPeriodicStatusLogger()
     // @ts-ignore private field
     expect(sync.periodicStatusLogger).toBeDefined()
+    // @ts-ignore private field
+    sync.periodicStatusLogger?.unsubscribe()
   })
 })
