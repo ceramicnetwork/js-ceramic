@@ -816,7 +816,8 @@ export class CeramicDaemon {
       })
       return
     }
-    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
+    const requestPath = req.url === '/' ? req.baseUrl : req.baseUrl + req.url
+    const jwsValidation = await this._validateAdminApiJWS(requestPath, jwsString, false)
     if (jwsValidation.error) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {

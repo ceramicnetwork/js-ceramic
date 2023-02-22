@@ -37,7 +37,6 @@ describe('admin api', () => {
   let client: CeramicClient
   let exampleModelStreamId: string
 
-
   beforeEach(async () => {
     // FIXME: How should we be setting up this env var properly?
     originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
@@ -102,7 +101,7 @@ describe('admin api', () => {
     const body = undefined
     const jws = await did.createJWS({
       code: code,
-      requestPath: '/api/v0/admin/pins',
+      requestPath: requestPath,
       requestBody: body,
     })
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
@@ -180,9 +179,8 @@ describe('admin api', () => {
   it('admin pin API CRUD test', async () => {
     const adminPinURLBaseString = `http://localhost:${daemon.port}/api/v0/admin/pins`
 
-    const fetchCode = async (): Promise<string> => {
-      return (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
-    }
+    const fetchCode = (): Promise<string> =>
+      fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`).then((r) => r.code)
 
     // Get list of pins
     const getResult = await fetchJson(adminPinURLBaseString, {
