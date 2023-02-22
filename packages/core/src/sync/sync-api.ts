@@ -9,7 +9,7 @@ import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap, catchError, interval, concatMap, defer } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
-import { JobQueue } from '../state-management/job-queue.js'
+import { type IJobQueue, JobQueue } from '../state-management/job-queue.js'
 
 import {
   REBUILD_ANCHOR_JOB,
@@ -25,6 +25,7 @@ import {
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob, createContinuousSyncJob } from './workers/sync.js'
 
+const SYNC_STATUS_LOG_INTERVAL = 60000
 export const BLOCK_CONFIRMATIONS = 20
 // TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
@@ -51,6 +52,7 @@ export type SyncConfig = {
 
 // TODO (CDB-2106): move to SyncStatus Class
 export interface ActiveSyncStatus {
+  startBlock: number
   currentBlock: number
   endBlock: number
   models: Array<string>
@@ -79,7 +81,7 @@ export class SyncApi implements ISyncApi {
   public readonly modelsToSync = new Set<string>()
 
   private readonly dataSource: Knex
-  private readonly jobQueue: JobQueue<JobData>
+  private readonly jobQueue: IJobQueue<JobData>
   private subscription: Subscription | undefined
   private provider: Provider
   private chainId: SupportedNetwork
@@ -282,7 +284,8 @@ export class SyncApi implements ISyncApi {
       activeSyncs: historySyncJobs.map((job) => {
         const jobData = job.data as SyncJobData
         return {
-          currentBlock: jobData.fromBlock,
+          currentBlock: jobData.currentBlock || jobData.fromBlock,
+          startBlock: jobData.fromBlock,
           endBlock: jobData.toBlock,
           models: jobData.models,
           created: job.createdOn,
@@ -321,11 +324,13 @@ export class SyncApi implements ISyncApi {
       }),
     }
 
-    this.diagnosticsLogger.imp(JSON.stringify(syncStatus, null, 3))
+    this.diagnosticsLogger.imp(
+      `Logging state of running ComposeDB syncs\n ${JSON.stringify(syncStatus, null, 3)}`
+    )
   }
 
   _initPeriodicStatusLogger(): void {
-    this.periodicStatusLogger = interval(60000)
+    this.periodicStatusLogger = interval(SYNC_STATUS_LOG_INTERVAL)
       .pipe(
         concatMap(() => {
           return defer(async () => await this._logSyncStatus())
