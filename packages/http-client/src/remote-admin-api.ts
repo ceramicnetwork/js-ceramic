@@ -10,13 +10,16 @@ import { MissingDIDError } from './utils.js'
 export class RemoteAdminApi implements AdminApi {
   // Stored as a member to make it easier to inject a mock in unit tests
   private readonly _fetchJson: typeof fetchJson = fetchJson
-  private _pinApi: PinApi
+  private readonly _pinApi: PinApi
 
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
   readonly nodeStatusPath = './admin/status'
 
-  constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
+  constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {
+    this._pinApi = new RemotePinApi(this._apiUrl, this._getDidFn)
+  }
+
   private getCodeUrl(): URL {
     return new URL(this.getCodePath, this._apiUrl)
   }
@@ -101,8 +104,6 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   get pin(): PinApi {
-    if (this._pinApi) return this._pinApi
-    this._pinApi = new RemotePinApi(this._apiUrl, this._getDidFn)
     return this._pinApi
   }
 }
