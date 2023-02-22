@@ -106,13 +106,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
     daemon = new CeramicDaemon(
       core,
       DaemonConfig.fromObject({
-        'http-api': { port },
+        'http-api': { port: port, 'admin-dids': [core.did.id.toString()] },
         node: {},
       })
     )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
+    ceramic.did = core.did
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
