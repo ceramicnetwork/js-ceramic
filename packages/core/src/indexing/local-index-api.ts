@@ -143,6 +143,7 @@ export class LocalIndexApi implements IndexApi {
       const streamWasPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
         return String(streamId) === String(modelStreamId)
       })
+      // TODO(CDB-2297): Handle a model's historical sync after re-indexing
       if(streamWasPreviouslyIndexed){
         throw new Error(`Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`)
       }
