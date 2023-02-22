@@ -33,6 +33,7 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
+    "postinstall": "shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && patch-package",
     "build": "genversion --es6 src/version.ts && npx tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -89,6 +90,7 @@
     "get-port": "^6.0.0",
     "lodash.merge": "^4.6.2",
     "mockdate": "^3.0.5",
+    "patch-package": "^6.5.1",
     "rxjs": "^7.5.2",
     "tmp-promise": "^3.0.3"
   },
