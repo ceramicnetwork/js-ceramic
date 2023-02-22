@@ -41,6 +41,7 @@ jobs:
         with:
           ref: main
           token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
       -
         name: Configure git
         run: |
@@ -123,6 +124,7 @@ jobs:
         with:
           ref: release-candidate
           token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
       -
         name: Configure git
         run: |
