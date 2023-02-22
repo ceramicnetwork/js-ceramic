@@ -69,7 +69,7 @@ describe('#load', () => {
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false })
-    await ceramic.pin.add(stream1.id)
+    await ceramic.admin.pin.add(stream1.id)
 
     fromMemorySpy.mockClear()
     fromStateStoreSpy.mockClear()

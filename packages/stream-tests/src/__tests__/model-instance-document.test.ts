@@ -106,13 +106,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
     daemon = new CeramicDaemon(
       core,
       DaemonConfig.fromObject({
-        'http-api': { port },
+        'http-api': { port: port, 'admin-dids': [core.did.id.toString()] },
         node: {},
       })
     )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
+    ceramic.did = core.did
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
@@ -323,7 +323,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   test('unpinning indexed stream fails', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
-    await expect(ceramic.pin.rm(doc.id)).rejects.toThrow(/Cannot unpin actively indexed stream/)
+    await expect(ceramic.admin.pin.rm(doc.id)).rejects.toThrow(
+      /Cannot unpin actively indexed stream/
+    )
   })
 
   test('replace respects anchor flag', async () => {
@@ -347,7 +349,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
   test(`Pinning a ModelInstanceDocument pins its Model`, async () => {
     // Unpin Model streams so we can test that pinning the MID causes the Model to become pinned
-    await ceramic.pin.rm(model.id)
+    await ceramic.admin.pin.rm(model.id)
     await expect(TestUtils.isPinned(ceramic, model.id)).resolves.toBeFalsy()
 
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)

@@ -1,14 +1,8 @@
-import { AdminApi, fetchJson, NodeStatusResponse } from '@ceramicnetwork/common'
+import { AdminApi, fetchJson, PinApi, NodeStatusResponse } from '@ceramicnetwork/common'
+import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
-
-export class MissingDIDError extends Error {
-  constructor() {
-    super(
-      'Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached'
-    )
-  }
-}
+import { MissingDIDError } from './utils.js'
 
 /**
  * AdminApi for Ceramic http client.
@@ -16,12 +10,16 @@ export class MissingDIDError extends Error {
 export class RemoteAdminApi implements AdminApi {
   // Stored as a member to make it easier to inject a mock in unit tests
   private readonly _fetchJson: typeof fetchJson = fetchJson
+  private readonly _pinApi: PinApi
 
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
   readonly nodeStatusPath = './admin/status'
 
-  constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
+  constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {
+    this._pinApi = new RemotePinApi(this._apiUrl, this._getDidFn)
+  }
+
   private getCodeUrl(): URL {
     return new URL(this.getCodePath, this._apiUrl)
   }
@@ -103,5 +101,9 @@ export class RemoteAdminApi implements AdminApi {
         jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, modelsIDs),
       },
     })
+  }
+
+  get pin(): PinApi {
+    return this._pinApi
   }
 }
