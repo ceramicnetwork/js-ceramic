@@ -300,7 +300,7 @@ describe('Sync API', () => {
     expect(stop).toHaveBeenCalled()
   })
 
-  describe('addModelSync() adds a model or models to sync', () => {
+  describe('startModelSync() adds a model or models to sync', () => {
     test('handles a single model as input', async () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
@@ -337,6 +337,56 @@ describe('Sync API', () => {
       await sync.startModelSync(data.models, data.fromBlock, data.toBlock)
       expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
+    })
+  })
+
+  describe('stopModelSync() removes a model or models to sync', () => {
+    test('handles a single model as input', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      )
+
+      sync.modelsToSync.add('abc123')
+      sync.modelsToSync.add('efg456')
+
+      await sync.stopModelSync('abc123')
+      expect(Array.from(sync.modelsToSync)).toEqual(['efg456'])
+    })
+
+    test('handles multiple models as input', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      )
+
+      sync.modelsToSync.add('abc123')
+      sync.modelsToSync.add('efg456')
+
+      await sync.stopModelSync(['abc123', 'efg456'])
+      expect(Array.from(sync.modelsToSync)).toEqual([])
+    })
+
+    test('Does nothing if the model is not currently being synced', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any
+      )
+
+      await sync.stopModelSync('abc123')
+      expect(Array.from(sync.modelsToSync)).toEqual([])
     })
   })
 
