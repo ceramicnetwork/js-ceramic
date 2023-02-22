@@ -1,26 +1,26 @@
 import KeyResolver from 'key-did-resolver'
-import { fetchJson, IpfsApi } from '@ceramicnetwork/common'
-import { DID } from 'dids'
-import { Ed25519Provider } from 'key-did-provider-ed25519'
+import {fetchJson, IpfsApi} from '@ceramicnetwork/common'
+import {DID} from 'dids'
+import {Ed25519Provider} from 'key-did-provider-ed25519'
 import * as sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
-import { CeramicDaemon } from '../ceramic-daemon.js'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { makeCeramicCore } from './make-ceramic-core.js'
-import { makeCeramicDaemon } from './make-ceramic-daemon.js'
-import { CeramicClient } from '@ceramicnetwork/http-client'
-import { makeDID } from './make-did.js'
-import { Ceramic } from '@ceramicnetwork/core'
+import {CeramicDaemon} from '../ceramic-daemon.js'
+import {createIPFS} from '@ceramicnetwork/ipfs-daemon'
+import {makeCeramicCore} from './make-ceramic-core.js'
+import {makeCeramicDaemon} from './make-ceramic-daemon.js'
+import {CeramicClient} from '@ceramicnetwork/http-client'
+import {makeDID} from './make-did.js'
+import {Ceramic} from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
-import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
+import {Model, type ModelDefinition} from '@ceramicnetwork/stream-model'
 
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
   name: 'myModel1',
   version: Model.VERSION,
   schema: {},
-  accountRelation: { type: 'list' },
+  accountRelation: {type: 'list'},
 }
 
 const MODEL_PATH = '/api/v0/admin/models'
@@ -57,13 +57,13 @@ describe('admin api', () => {
     await anotherDid.authenticate()
     nonAdminDid = anotherDid
 
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    tmpFolder = await tmp.dir({unsafeCleanup: true})
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     daemon = await makeCeramicDaemon(core, {
-      'http-api': { 'admin-dids': [adminDid.id.toString()] },
+      'http-api': {'admin-dids': [adminDid.id.toString()]},
     })
     const apiUrl = `http://localhost:${daemon.port}`
-    client = new CeramicClient(apiUrl, { syncInterval: 500 })
+    client = new CeramicClient(apiUrl, {syncInterval: 500})
 
     core.did = makeDID(core, seed)
     client.did = makeDID(client, seed)
@@ -88,7 +88,7 @@ describe('admin api', () => {
     requestPath,
     models?: Array<string>
   ): Promise<string> {
-    const body = models ? { models: models } : undefined
+    const body = models ? {models: models} : undefined
     const jws = await did.createJWS({
       code: code,
       requestPath,
@@ -191,7 +191,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, '', MODEL_PATH) },
+          body: {jws: await buildJWS(adminDid, '', MODEL_PATH)},
         })
       ).rejects.toThrow(/Admin code is missing from the the jws block/)
     })
@@ -200,7 +200,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, '', MODEL_PATH) },
+          body: {jws: await buildJWS(adminDid, '', MODEL_PATH)},
         })
       ).rejects.toThrow(/Admin code is missing from the the jws block/)
     })
@@ -299,7 +299,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(
         /Unauthorized access: expired admin code - admin codes are only valid for 60 seconds/
@@ -314,7 +314,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'DELETE',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(
         /Unauthorized access: expired admin code - admin codes are only valid for 60 seconds/
@@ -360,12 +360,12 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
         method: 'POST',
-        body: { jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+        body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId])},
       })
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(/Unauthorized access: invalid\/already used admin code/)
     })
@@ -375,12 +375,12 @@ describe('admin api', () => {
       expect(true).toBeTruthy()
       await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
         method: 'DELETE',
-        body: { jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+        body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId])},
       })
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'DELETE',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(/Unauthorized access: invalid\/already used admin code/)
     })
@@ -412,7 +412,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(nonAdminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(nonAdminDid, code, MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(/Unauthorized access/)
     })
@@ -422,7 +422,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'DELETE',
-          body: { jws: await buildJWS(nonAdminDid, code, MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(nonAdminDid, code, MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(/Unauthorized access/)
     })
@@ -460,7 +460,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH)},
         })
       ).rejects.toThrow(
         /The 'models' parameter is required and it has to be an array containing at least one model stream id/
@@ -472,7 +472,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [])},
         })
       ).rejects.toThrow(
         /The 'models' parameter is required and it has to be an array containing at least one model stream id/
@@ -484,7 +484,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'DELETE',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH)},
         })
       ).rejects.toThrow(
         /The 'models' parameter is required and it has to be an array containing at least one model stream id/
@@ -496,7 +496,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'DELETE',
-          body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
+          body: {jws: await buildJWS(adminDid, code, MODEL_PATH, [])},
         })
       ).rejects.toThrow(
         /The 'models' parameter is required and it has to be an array containing at least one model stream id/
@@ -528,7 +528,7 @@ describe('admin api', () => {
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
           method: 'POST',
-          body: { jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]) },
+          body: {jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId])},
         })
       ).rejects.toThrow(/Cannot re-index model kjzl6hvfrbw6c9jjl42rrylkpibnt1mjf52900nnwkt68ci1kuoc51hncgczs5q, data may not be up-to-date/)
     })

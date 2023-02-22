@@ -1,14 +1,14 @@
-import { jest } from '@jest/globals'
-import { StreamID } from '@ceramicnetwork/streamid'
-import knex, { Knex } from 'knex'
+import {jest} from '@jest/globals'
+import {StreamID} from '@ceramicnetwork/streamid'
+import knex, {Knex} from 'knex'
 import tmp from 'tmp-promise'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
-import { asTableName } from '../as-table-name.util.js'
-import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
-import { Model } from '@ceramicnetwork/stream-model'
-import { LoggerProvider, Networks } from '@ceramicnetwork/common'
-import { CID } from 'multiformats/cid'
+import {asTableName} from '../as-table-name.util.js'
+import {IndexQueryNotAvailableError} from '../index-query-not-available.error.js'
+import {Model} from '@ceramicnetwork/stream-model'
+import {LoggerProvider, Networks} from '@ceramicnetwork/common'
+import {CID} from 'multiformats/cid'
 import {
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
@@ -16,10 +16,10 @@ import {
   SqliteIndexApi,
   asTimestamp,
 } from '../database-index-api.js'
-import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
-import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
-import { readCsvFixture } from './read-csv-fixture.util.js'
-import { CONFIG_TABLE_NAME } from '../config.js'
+import {DatabaseType, indices} from '../migrations/1-create-model-table.js'
+import {STRUCTURES} from '../migrations/cdb-schema-verification.js'
+import {readCsvFixture} from './read-csv-fixture.util.js'
+import {CONFIG_TABLE_NAME} from '../config.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -54,7 +54,7 @@ jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
 
 function modelsToIndexArgs(models: Array<StreamID>): Array<IndexModelArgs> {
   return models.map((model) => {
-    return { model }
+    return {model}
   })
 }
 
@@ -121,7 +121,7 @@ describe('postgres', () => {
         const indexModelsArgs: Array<IndexModelArgs> = [
           {
             model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
+            relations: {fooRelation: {type: 'account'}},
           },
         ]
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -309,7 +309,7 @@ describe('postgres', () => {
         const indexModelsArgs: Array<IndexModelArgs> = [
           {
             model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
+            relations: {fooRelation: {type: 'account'}},
           },
         ]
 
@@ -654,16 +654,16 @@ describe('postgres', () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const mockPage = jest.fn(async () => {
-        return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
+        return {edges: [], pageInfo: {hasNextPage: false, hasPreviousPage: false}}
       })
       indexApi.insertionOrder.page = mockPage
-      await indexApi.page({ model: STREAM_ID_A, first: 100 })
+      await indexApi.page({model: STREAM_ID_A, first: 100})
       expect(mockPage).toBeCalled()
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
+      await expect(indexApi.page({model: STREAM_ID_A, first: 100})).rejects.toThrow(
         IndexQueryNotAvailableError
       )
     })
@@ -679,7 +679,7 @@ describe('postgres', () => {
       await indexApi.init()
       await indexApi.indexModels(
         MODELS_TO_INDEX.map((m) => {
-          return { model: m }
+          return {model: m}
         })
       )
       const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
@@ -687,11 +687,11 @@ describe('postgres', () => {
         await indexApi.indexStream(row)
       }
       // all
-      await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+      await expect(indexApi.count({model: MODEL})).resolves.toEqual(rows.length)
       // by account
       const account = 'did:key:blah'
       const expected = rows.filter((r) => r.controller === account).length
-      await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
+      await expect(indexApi.count({model: MODEL, account: account})).resolves.toEqual(expected)
     })
   })
 })
@@ -700,7 +700,7 @@ describe('sqlite', () => {
   const STRUCTURE = STRUCTURES[DatabaseType.SQLITE]
 
   beforeEach(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    tmpFolder = await tmp.dir({unsafeCleanup: true})
     const filename = `${tmpFolder.path}/tmp-ceramic.sqlite`
     dbConnection = knex({
       client: 'sqlite3',
@@ -750,7 +750,7 @@ describe('sqlite', () => {
         const indexModelsArgs: Array<IndexModelArgs> = [
           {
             model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
+            relations: {fooRelation: {type: 'account'}},
           },
         ]
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -917,7 +917,7 @@ describe('sqlite', () => {
         const indexModelsArgs: Array<IndexModelArgs> = [
           {
             model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
+            relations: {fooRelation: {type: 'account'}},
           },
         ]
 
@@ -1205,16 +1205,16 @@ describe('sqlite', () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const mockPage = jest.fn(async () => {
-        return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
+        return {edges: [], pageInfo: {hasNextPage: false, hasPreviousPage: false}}
       })
       indexApi.insertionOrder.page = mockPage
-      await indexApi.page({ model: STREAM_ID_A, first: 100 })
+      await indexApi.page({model: STREAM_ID_A, first: 100})
       expect(mockPage).toBeCalled()
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
-      await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
+      await expect(indexApi.page({model: STREAM_ID_A, first: 100})).rejects.toThrow(
         IndexQueryNotAvailableError
       )
     })
@@ -1230,7 +1230,7 @@ describe('sqlite', () => {
       await indexApi.init()
       await indexApi.indexModels(
         MODELS_TO_INDEX.map((m) => {
-          return { model: m }
+          return {model: m}
         })
       )
       const rows = await readCsvFixture(new URL('./insertion-order.fixture.csv', import.meta.url))
@@ -1238,11 +1238,11 @@ describe('sqlite', () => {
         await indexApi.indexStream(row)
       }
       // all
-      await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+      await expect(indexApi.count({model: MODEL})).resolves.toEqual(rows.length)
       // by account
       const account = 'did:key:blah'
       const expected = rows.filter((r) => r.controller === account).length
-      await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
+      await expect(indexApi.count({model: MODEL, account: account})).resolves.toEqual(expected)
     })
   })
 })
