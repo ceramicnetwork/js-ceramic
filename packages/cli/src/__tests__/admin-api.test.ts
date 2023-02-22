@@ -37,7 +37,6 @@ describe('admin api', () => {
   let client: CeramicClient
   let exampleModelStreamId: string
 
-
   beforeEach(async () => {
     // FIXME: How should we be setting up this env var properly?
     originalEnvVarVal = process.env.CERAMIC_ENABLE_COMPOSE_DB

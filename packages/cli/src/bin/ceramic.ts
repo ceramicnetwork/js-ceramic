@@ -47,10 +47,7 @@ program
     '--sync-override <string>',
     'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache". Deprecated.'
   )
-  .option(
-    '--composedb-enabled <boolean>',
-    'Run node with Compose DB indexing enabled.'
-  )
+  .option('--composedb-enabled <boolean>', 'Run node with Compose DB indexing enabled.')
   .description('Start the daemon')
   .action(
     async ({

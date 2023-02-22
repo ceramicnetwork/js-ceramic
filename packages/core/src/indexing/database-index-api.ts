@@ -85,7 +85,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
         return String(streamId) === String(modelArgs)
       })
       // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-      if (modelPreviouslyIndexed){
+      if (modelPreviouslyIndexed) {
         throw new Error(`Cannot re-index model ${modelArgs.toString()}, data may not be up-to-date`)
       }
     }
