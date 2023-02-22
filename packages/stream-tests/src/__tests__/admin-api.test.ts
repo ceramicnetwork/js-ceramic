@@ -55,8 +55,6 @@ describe('Admin API tests', () => {
   })
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
-
     const indexingDirectory = await tmp.tmpName()
     await fs.mkdir(indexingDirectory)
     core = await createCeramic(ipfs, {

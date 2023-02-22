@@ -33,18 +33,13 @@ describe('Ceramic interop: core <> http-client', () => {
   let core: Ceramic
   let daemon: CeramicDaemon
   let client: CeramicClient
-  let originalEnvVarVal: string | undefined
 
   beforeAll(async () => {
-    // FIXME: How should we be setting up this env var properly?
-    originalEnvVarVal = process.env.CERAMIC_ENABLE_COMPOSE_DB
-    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
-    process.env.CERAMIC_ENABLE_COMPOSE_DB = originalEnvVarVal
   })
 
   beforeEach(async () => {

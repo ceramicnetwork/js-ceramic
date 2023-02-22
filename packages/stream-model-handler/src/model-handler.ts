@@ -74,15 +74,6 @@ export class ModelHandler implements StreamHandler<Model> {
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env.CERAMIC_ENABLE_COMPOSE_DB != 'true') {
-      context.loggerProvider
-        .getDiagnosticsLogger()
-        .err(
-          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_COMPOSE_DB environment variable to `true`'
-        )
-      throw new Error('Indexing is not enabled')
-    }
-
     if (state == null) {
       // apply genesis
       return this._applyGenesis(commitData, context)
