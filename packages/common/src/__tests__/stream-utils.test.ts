@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import { AnchorStatus, CommitType, RawCommit, SignatureStatus, StreamState } from '../stream.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '../utils/stream-utils.js'
-import { exec } from 'child_process'
 
 const FAKE_DID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')

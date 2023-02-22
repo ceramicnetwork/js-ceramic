@@ -3,6 +3,47 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.24.0-rc.0...@ceramicnetwork/core@2.25.0-rc.0) (2023-02-16)
+
+
+### Bug Fixes
+
+* **core:** Always fail to index Models with incompatible versions ([#2709](https://github.com/ceramicnetwork/js-ceramic/issues/2709)) ([13f4bba](https://github.com/ceramicnetwork/js-ceramic/commit/13f4bbabf363fa1a19c14cec7078d68d015dd5aa))
+* **core:** Update expected smart contract address ([#2720](https://github.com/ceramicnetwork/js-ceramic/issues/2720)) ([af7ae69](https://github.com/ceramicnetwork/js-ceramic/commit/af7ae69d5592b37cabf45a0dc2a9d683dac40ff8))
+
+
+
+
+
+# [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0...@ceramicnetwork/core@2.24.0-rc.0) (2023-02-13)
+
+
+### Bug Fixes
+
+* **core,cli:** pin version of p-queue library ([#2690](https://github.com/ceramicnetwork/js-ceramic/issues/2690)) ([bf3b6e6](https://github.com/ceramicnetwork/js-ceramic/commit/bf3b6e6bbe6eff8b20ad6cafe382ed09c884527c))
+* **core:** job queue constructor needs logger ([#2681](https://github.com/ceramicnetwork/js-ceramic/issues/2681)) ([881a6a5](https://github.com/ceramicnetwork/js-ceramic/commit/881a6a51a17c487ce52b4bf67cf59d680078d00a))
+* **core:** sync worker should not have a constant chainId ([#2699](https://github.com/ceramicnetwork/js-ceramic/issues/2699)) ([c038465](https://github.com/ceramicnetwork/js-ceramic/commit/c0384656ad3fb2cacd1ad7072459d929c99fe89d))
+
+
+### Features
+
+* **core:** add ability to update a job's data ([#2655](https://github.com/ceramicnetwork/js-ceramic/issues/2655)) ([c502c8a](https://github.com/ceramicnetwork/js-ceramic/commit/c502c8ab466b55a836035c7141d2a9e95baa0818))
+* **core:** Add flag to skip publishing updates to pubsub ([#2680](https://github.com/ceramicnetwork/js-ceramic/issues/2680)) ([7703298](https://github.com/ceramicnetwork/js-ceramic/commit/77032983a879b4f438777c7911b21dd2e8801189))
+* **core:** Add sync worker ([#2667](https://github.com/ceramicnetwork/js-ceramic/issues/2667)) ([1a8c432](https://github.com/ceramicnetwork/js-ceramic/commit/1a8c4324639ee05030d31181a6e882732ab7f545))
+* **core:** Enable running ComposeDB on mainnet ([#2705](https://github.com/ceramicnetwork/js-ceramic/issues/2705)) ([682035b](https://github.com/ceramicnetwork/js-ceramic/commit/682035be992b9b4e0903d0f0db9389be90519c57))
+* **core:** enable syncing on ceramic start ([#2693](https://github.com/ceramicnetwork/js-ceramic/issues/2693)) ([c744c6e](https://github.com/ceramicnetwork/js-ceramic/commit/c744c6e36cf7ca3af6ee1f5c20d9e3b32ad308d5))
+* **core:** handle blocks reorganizations when creating sync jobs ([#2679](https://github.com/ceramicnetwork/js-ceramic/issues/2679)) ([ab04ed4](https://github.com/ceramicnetwork/js-ceramic/commit/ab04ed43dfc4d7a24cffc4b0876b3e56771f314e))
+* **core:** Limit how many pin requests can be sent to ipfs at once ([#2683](https://github.com/ceramicnetwork/js-ceramic/issues/2683)) ([981a180](https://github.com/ceramicnetwork/js-ceramic/commit/981a180851384a1acb4bea5a8ff27b6e792a2326))
+* **core:** make sync flag work ([#2697](https://github.com/ceramicnetwork/js-ceramic/issues/2697)) ([8cf3edf](https://github.com/ceramicnetwork/js-ceramic/commit/8cf3edf05eb4dad22e0ad34f1ffa846c39319ce5))
+* **core:** Resumes active jobs on start of job queue ([#2673](https://github.com/ceramicnetwork/js-ceramic/issues/2673)) ([c84f0b6](https://github.com/ceramicnetwork/js-ceramic/commit/c84f0b6b7a3523a5da6b0eaf1ed62d57c593627b))
+* **core:** set initial sync blocks ([#2695](https://github.com/ceramicnetwork/js-ceramic/issues/2695)) ([fbe19e0](https://github.com/ceramicnetwork/js-ceramic/commit/fbe19e05f3fba32bc6914c4e7a9976dd97e38b26))
+* **core:** store indexing sync state ([#2658](https://github.com/ceramicnetwork/js-ceramic/issues/2658)) ([c7fd8b5](https://github.com/ceramicnetwork/js-ceramic/commit/c7fd8b584ba19ee3e286275737004d9630a17db3))
+* **stream-model,stream-model-handler:** model definition versioning ([#2660](https://github.com/ceramicnetwork/js-ceramic/issues/2660)) ([6ccbbdd](https://github.com/ceramicnetwork/js-ceramic/commit/6ccbbdd4d9e028394c14c2c1ac755236a6c80008))
+
+
+
+
+
 # [2.23.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.23.0-rc.1...@ceramicnetwork/core@2.23.0) (2023-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/core

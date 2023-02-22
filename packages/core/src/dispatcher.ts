@@ -7,6 +7,7 @@ import {
   StreamUtils,
   UnreachableCaseError,
   base64urlToJSON,
+  IpfsNodeStatus,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
@@ -115,6 +116,13 @@ export class Dispatcher {
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
+  }
+
+  async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
+    const ipfsId = await this._ipfs.id()
+    const peerId = ipfsId.id
+    const multiAddrs = ipfsId.addresses.map(String)
+    return { peerId, addresses: multiAddrs }
   }
 
   async storeRecord(record: Record<string, unknown>): Promise<CID> {

@@ -103,15 +103,12 @@ test('pass incoming message', async () => {
 
 test('warn if no messages come from ipfs in a timely manner', async () => {
   let sawLog = false
-  jest.spyOn(diagnosticsLogger, 'log')
-    .mockImplementation((_, content) => {
-      if(content.toString().includes("please check your IPFS configuration.")) {
-        sawLog = true
-      }
-    })
-  const feed$ = from([]).pipe(
-    delay(2000)
-  )
+  jest.spyOn(diagnosticsLogger, 'log').mockImplementation((_, content) => {
+    if (content.toString().includes('please check your IPFS configuration.')) {
+      sawLog = true
+    }
+  })
+  const feed$ = from([]).pipe(delay(2000))
   const ipfs = {
     pubsub: {
       subscribe: async (_, handler) => {
@@ -122,7 +119,14 @@ test('warn if no messages come from ipfs in a timely manner', async () => {
     },
     id: async () => ({ id: PEER_ID }),
   } as unknown as IpfsApi
-  const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+  const incoming$ = new IncomingChannel(
+    ipfs,
+    TOPIC,
+    30000,
+    LATE_MESSAGE_AFTER,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   const result: any[] = []
   const subscription = incoming$.subscribe((message) => {
     result.push(message)
@@ -170,7 +174,14 @@ describe('filterOuter', () => {
       },
       id: async () => ({ id: PEER_ID }),
     } as unknown as IpfsApi
-    const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+    const incoming$ = new IncomingChannel(
+      ipfs,
+      TOPIC,
+      30000,
+      LATE_MESSAGE_AFTER,
+      pubsubLogger,
+      diagnosticsLogger
+    )
     const result: any[] = []
     const peerId$ = from(ipfs.id().then((_) => _.id))
     const subscription = incoming$.pipe(filterExternal(peerId$)).subscribe((message) => {

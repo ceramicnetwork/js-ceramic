@@ -55,7 +55,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port }, node: {} }))
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.setDID(core.did)

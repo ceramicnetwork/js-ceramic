@@ -13,7 +13,10 @@ export async function makeCeramicDaemon(
   const configObj = merge(
     {
       'http-api': { port },
-      indexing: {
+      indexing: {},
+      node: {
+        'private-seed-url':
+          'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad',
       },
     },
     opts

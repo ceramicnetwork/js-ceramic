@@ -5,9 +5,14 @@ import { BlockProofs, createBlocksProofsLoader } from '@ceramicnetwork/anchor-li
 import type { Provider } from '@ethersproject/providers'
 import { concatMap, lastValueFrom, of, catchError } from 'rxjs'
 import { createRebuildAnchorJob } from './rebuild-anchor.js'
-import { RebuildAnchorJobData, JobData } from '../interfaces.js'
+import {
+  RebuildAnchorJobData,
+  JobData,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+} from '../interfaces.js'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
-export const SYNC_JOB_NAME = 'sync'
 const SYNC_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
   retryDelay: 60, // 1 minute
@@ -22,9 +27,20 @@ interface SyncJobData {
   models: string[]
 }
 
-export function createSyncJob(data: SyncJobData, options?: SendOptions): Job<SyncJobData> {
+export function createContinuousSyncJob(
+  data: SyncJobData,
+  options?: SendOptions
+): Job<SyncJobData> {
   return {
-    name: SYNC_JOB_NAME,
+    name: CONTINUOUS_SYNC_JOB,
+    data,
+    options: options || SYNC_JOB_OPTIONS,
+  }
+}
+
+export function createHistorySyncJob(data: SyncJobData, options?: SendOptions): Job<SyncJobData> {
+  return {
+    name: HISTORY_SYNC_JOB,
     data,
     options: options || SYNC_JOB_OPTIONS,
   }
@@ -35,7 +51,12 @@ export function createSyncJob(data: SyncJobData, options?: SendOptions): Job<Syn
  * It ensures that the data is stored and handled.
  */
 export class SyncWorker implements Worker<SyncJobData> {
-  constructor(private readonly provider: Provider, private readonly jobQueue: IJobQueue<JobData>) {}
+  constructor(
+    private readonly provider: Provider,
+    private readonly jobQueue: IJobQueue<JobData>,
+    private readonly chainId,
+    private readonly logger: DiagnosticsLogger
+  ) {}
 
   /**
    * takes a sync job and retrieves the block proofs for each block between fromBlock - toBlock.
@@ -49,15 +70,17 @@ export class SyncWorker implements Worker<SyncJobData> {
 
     const blockProof$ = createBlocksProofsLoader({
       provider: this.provider,
-      chainId: 'eip155:5',
+      chainId: this.chainId,
       fromBlock,
       toBlock,
     }).pipe(
       // catch any errors so it doesn't stop any block proofs currently processing
-      catchError(() =>
-        // TODO: log error
-        of(null)
-      ),
+      catchError((err) => {
+        this.logger.err(
+          `Received error when retreiving block proofs for models ${models} from block ${fromBlock} to block ${toBlock}: ${err}`
+        )
+        return of(null)
+      }),
       // created rebuild anchor jobs for each block's proofs. Waits for last block to finish processing
       // before starting the next block
       concatMap(async (blockProofs: BlockProofs | null) => {
@@ -65,23 +88,31 @@ export class SyncWorker implements Worker<SyncJobData> {
           throw Error('Error loading block proof')
         }
 
-        const { proofs, block } = blockProofs
+        const { proofs, blockNumber } = blockProofs
         if (proofs.length > 0) {
           const jobs: Job<RebuildAnchorJobData>[] = proofs.map((proof) =>
             createRebuildAnchorJob(proof, models)
           )
 
           await this.jobQueue.addJobs(jobs)
+
+          this.logger.debug(
+            `Successfully created ${jobs.length} rebuild anchor commit jobs for block ${blockNumber}`
+          )
         }
 
         await this.jobQueue.updateJob(job.id, {
-          fromBlock: block.number + 1,
+          fromBlock: blockNumber + 1,
           toBlock,
           models,
         })
       })
     )
 
-    await lastValueFrom(blockProof$)
+    await lastValueFrom(blockProof$).then(() => {
+      this.logger.debug(
+        `Sync completed for models ${models} from block ${fromBlock} to block ${toBlock}`
+      )
+    })
   }
 }

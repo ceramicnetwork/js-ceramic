@@ -16,7 +16,7 @@ import {
   SqliteIndexApi,
   asTimestamp,
 } from '../database-index-api.js'
-import { DatabaseType } from '../migrations/1-create-model-table.js'
+import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
@@ -221,6 +221,13 @@ describe('postgres', () => {
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            table.index(indexToCreate.keys, indexToCreate.name, {
+              storageEngineIndexType: indexToCreate.indexType,
+            })
+          }
         })
 
         await expect(
@@ -250,6 +257,45 @@ describe('postgres', () => {
           table.dateTime('last_anchored_at').nullable()
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            if (!indexToCreate.keys.includes('updated_at')) {
+              //updated_at not added as part of table
+              table.index(indexToCreate.keys, indexToCreate.name, {
+                storageEngineIndexType: indexToCreate.indexType,
+              })
+            }
+          }
+        })
+
+        await expect(
+          indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+        ).rejects.toThrow(/Schema verification failed for index/)
+      })
+
+      test('Fail table validation if indices are missing', async () => {
+        const modelToIndex = StreamID.fromString(STREAM_ID_A)
+        const tableName = asTableName(modelToIndex)
+        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        await indexApi.init()
+
+        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+        await dbConnection.schema.createTable(tableName, (table) => {
+          // create unique index name <64 chars that are still capable of being referenced to MID table
+          const indexName = tableName.substring(tableName.length - 10)
+
+          table
+            .string('stream_id')
+            .primary(`idx_${indexName}_pkey`)
+            .unique(`constr_${indexName}_unique`)
+          table.string('controller_did', 1024).notNullable()
+          table.jsonb('stream_content').notNullable()
+          table.string('tip').notNullable()
+          table.dateTime('last_anchored_at').nullable()
+          table.dateTime('first_anchored_at').nullable()
+          table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+          table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
         })
 
         await expect(
@@ -286,6 +332,13 @@ describe('postgres', () => {
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            table.index(indexToCreate.keys, indexToCreate.name, {
+              storageEngineIndexType: indexToCreate.indexType,
+            })
+          }
         })
 
         await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).rejects.toThrow(
@@ -361,7 +414,7 @@ describe('postgres', () => {
       ])
     })
 
-    test('re-indexing models', async () => {
+    test('Disallow re-indexing models for which indexing has been stopped', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       await indexApi.init()
@@ -398,21 +451,9 @@ describe('postgres', () => {
         },
       ])
 
-      await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
-      expect(
-        await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-          .select('model', 'is_indexed')
-          .orderBy('model', 'desc')
-      ).toEqual([
-        {
-          model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-          is_indexed: true,
-        },
-        {
-          model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
-          is_indexed: true,
-        },
-      ])
+      await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
+        Error
+      )
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
@@ -781,7 +822,8 @@ describe('sqlite', () => {
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
-        await dbConnection.schema.createTable(asTableName(modelToIndex), (table) => {
+        const tableName = asTableName(modelToIndex)
+        await dbConnection.schema.createTable(tableName, (table) => {
           table.string('stream_id', 1024).primary().unique().notNullable()
           table.string('controller_did', 1024).notNullable()
           table.string('stream_content').notNullable()
@@ -790,6 +832,13 @@ describe('sqlite', () => {
           table.integer('first_anchored_at').nullable()
           table.integer('created_at').notNullable()
           table.integer('updated_at').notNullable()
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            table.index(indexToCreate.keys, indexToCreate.name, {
+              storageEngineIndexType: indexToCreate.indexType,
+            })
+          }
         })
 
         await expect(
@@ -803,7 +852,40 @@ describe('sqlite', () => {
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
-        await dbConnection.schema.createTable(asTableName(modelToIndex), (table) => {
+        const tableName = asTableName(modelToIndex)
+        await dbConnection.schema.createTable(tableName, (table) => {
+          table.string('stream_id', 1024).primary().unique().notNullable()
+          table.string('controller_did', 1024).notNullable()
+          table.string('stream_content').notNullable()
+          table.string('tip').notNullable()
+          table.integer('last_anchored_at').nullable()
+          table.integer('first_anchored_at').nullable()
+          table.integer('created_at').notNullable()
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            if (!indexToCreate.keys.includes('updated_at')) {
+              //updated_at not added as part of table
+              table.index(indexToCreate.keys, indexToCreate.name, {
+                storageEngineIndexType: indexToCreate.indexType,
+              })
+            }
+          }
+        })
+
+        await expect(
+          indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+        ).rejects.toThrow(/Schema verification failed for index/)
+      })
+
+      test('Fail table validation if indices are missing', async () => {
+        const modelToIndex = StreamID.fromString(STREAM_ID_A)
+        const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        await indexApi.init()
+
+        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+        const tableName = asTableName(modelToIndex)
+        await dbConnection.schema.createTable(tableName, (table) => {
           table.string('stream_id', 1024).primary().unique().notNullable()
           table.string('controller_did', 1024).notNullable()
           table.string('stream_content').notNullable()
@@ -831,7 +913,8 @@ describe('sqlite', () => {
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
-        await dbConnection.schema.createTable(asTableName(modelToIndex), (table) => {
+        const tableName = asTableName(modelToIndex)
+        await dbConnection.schema.createTable(tableName, (table) => {
           table.string('stream_id', 1024).primary().unique().notNullable()
           table.string('controller_did', 1024).notNullable()
           table.string('stream_content').notNullable()
@@ -840,6 +923,16 @@ describe('sqlite', () => {
           table.integer('first_anchored_at').nullable()
           table.integer('created_at').notNullable()
           table.integer('updated_at').notNullable()
+
+          const tableIndices = indices(tableName)
+          for (const indexToCreate of tableIndices.indices) {
+            if (!indexToCreate.keys.includes('updated_at')) {
+              //updated_at not added as part of table
+              table.index(indexToCreate.keys, indexToCreate.name, {
+                storageEngineIndexType: indexToCreate.indexType,
+              })
+            }
+          }
         })
 
         await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).rejects.toThrow(
@@ -952,21 +1045,9 @@ describe('sqlite', () => {
         },
       ])
 
-      await indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
-      expect(
-        await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-          .select('model', 'is_indexed')
-          .orderBy('model', 'desc')
-      ).toEqual([
-        {
-          model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-          is_indexed: 1,
-        },
-        {
-          model: 'kh4q0ozorrgaq2mezktnrmdwleo1d',
-          is_indexed: 1,
-        },
-      ])
+      await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
+        Error
+      )
     })
 
     test('modelsToIndex is properly populated after init()', async () => {

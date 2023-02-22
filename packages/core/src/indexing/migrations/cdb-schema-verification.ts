@@ -128,32 +128,32 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         type: 'character varying',
         maxLength: 1024,
         nullable: false,
-        defaultValue: null
+        defaultValue: null,
       },
       value: {
         type: 'character varying',
         maxLength: 1024,
         nullable: false,
-        defaultValue: null
+        defaultValue: null,
       },
       created_at: {
         type: 'timestamp with time zone',
         maxLength: null,
         nullable: false,
-        defaultValue: 'CURRENT_TIMESTAMP'
+        defaultValue: 'CURRENT_TIMESTAMP',
       },
       updated_at: {
         type: 'timestamp with time zone',
         maxLength: null,
         nullable: false,
-        defaultValue: 'CURRENT_TIMESTAMP'
+        defaultValue: 'CURRENT_TIMESTAMP',
       },
       updated_by: {
         type: 'character varying',
         maxLength: 1024,
         nullable: true,
-        defaultValue: null
-      }
+        defaultValue: null,
+      },
     },
   },
   [DatabaseType.SQLITE]: {
@@ -272,32 +272,32 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         type: 'varchar',
         maxLength: '1024',
         nullable: false,
-        defaultValue: null
+        defaultValue: null,
       },
       value: {
         type: 'varchar',
         maxLength: '1024',
         nullable: false,
-        defaultValue: null
+        defaultValue: null,
       },
       created_at: {
         type: 'datetime',
         maxLength: null,
         nullable: false,
-        defaultValue: 'CURRENT_TIMESTAMP'
+        defaultValue: 'CURRENT_TIMESTAMP',
       },
       updated_at: {
         type: 'datetime',
         maxLength: null,
         nullable: false,
-        defaultValue: 'CURRENT_TIMESTAMP'
+        defaultValue: 'CURRENT_TIMESTAMP',
       },
       updated_by: {
         type: 'varchar',
         maxLength: '1024',
         nullable: true,
-        defaultValue: null
-      }
+        defaultValue: null,
+      },
     },
   },
 }

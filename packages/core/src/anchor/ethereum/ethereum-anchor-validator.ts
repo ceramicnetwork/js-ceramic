@@ -60,13 +60,7 @@ const BLOCK_THRESHHOLDS = {
   'eip155:100': 1000000000, //gnosis
   'eip155:1337': 1000000, //ganache
 }
-const ANCHOR_CONTRACT_ADDRESSES = {
-  'eip155:1': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //mainnet
-  'eip155:3': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ropsten
-  'eip155:5': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //goerli
-  'eip155:100': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //gnosis
-  'eip155:1337': '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2', //ganache
-}
+const ANCHOR_CONTRACT_ADDRESS = '0x231055A0852D67C7107Ad0d0DFeab60278fE6AdC'
 
 const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
   const withoutPrefix = txResponse.data.replace(/^(0x0?)/, '')
@@ -135,6 +129,10 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
     this._chainId = chainId
+  }
+
+  get chainId(): string {
+    return this._chainId
   }
 
   /**
@@ -218,11 +216,12 @@ export class EthereumAnchorValidator implements AnchorValidator {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
 
+    if (txResponse.blockNumber <= BLOCK_THRESHHOLDS[this._chainId]) {
+      return block.timestamp
+    }
+
     // if the block number is greater than the threshold and the txType is `raw` or non existent
-    if (
-      txResponse.blockNumber > BLOCK_THRESHHOLDS[this._chainId] &&
-      (anchorProof.txType === V0_PROOF_TYPE || !anchorProof.txType)
-    ) {
+    if (anchorProof.txType !== V1_PROOF_TYPE) {
       throw new Error(
         `Any anchor proofs created after block ${
           BLOCK_THRESHHOLDS[this._chainId]
@@ -230,16 +229,9 @@ export class EthereumAnchorValidator implements AnchorValidator {
       )
     }
 
-    if (
-      anchorProof.txType === V1_PROOF_TYPE &&
-      txResponse.to !== ANCHOR_CONTRACT_ADDRESSES[this._chainId]
-    ) {
+    if (txResponse.to != ANCHOR_CONTRACT_ADDRESS) {
       throw new Error(
-        `Anchor was created using address ${
-          txResponse.to
-        }. This is not the official anchoring contract address ${
-          ANCHOR_CONTRACT_ADDRESSES[this._chainId]
-        }`
+        `Anchor was created using address ${txResponse.to}. This is not the official anchoring contract address ${ANCHOR_CONTRACT_ADDRESS}`
       )
     }
 

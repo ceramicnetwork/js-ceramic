@@ -11,12 +11,16 @@ import { DID } from 'dids'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config?: CeramicConfig & { seed?: string; anchorOnRequest?: boolean; stateStoreDirectory?: string }
+  config?: CeramicConfig & {
+    seed?: string
+    anchorOnRequest?: boolean
+    stateStoreDirectory?: string
+  }
 ): Promise<Ceramic> {
   const databaseDir = await tmp.dir({ unsafeCleanup: true })
   const databaseUrl = new URL(`sqlite://${databaseDir.path}/ceramic.sqlite`)
   const appliedConfig = {
-    stateStoreDirectory: config?.stateStoreDirectory ?? await tmp.tmpName(),
+    stateStoreDirectory: config?.stateStoreDirectory ?? (await tmp.tmpName()),
     anchorOnRequest: config?.anchorOnRequest ?? false,
     streamCacheLimit: 100,
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other

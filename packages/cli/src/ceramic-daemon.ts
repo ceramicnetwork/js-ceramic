@@ -20,7 +20,7 @@ import EthrDidResolver from 'ethr-did-resolver'
 import * as NftDidResolver from 'nft-did-resolver'
 import * as SafeDidResolver from 'safe-did-resolver'
 
-import { DID } from 'dids'
+import { DID, DIDOptions, DIDProvider } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync } from '@awaitjs/express'
@@ -31,6 +31,7 @@ import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
+import { makeNodeDIDProvider, parseSeedUrl } from './daemon/did-utils.js'
 import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -81,6 +82,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     loggerProvider,
     gateway: opts.node.gateway || false,
     anchorServiceUrl: opts.anchor.anchorServiceUrl,
+    anchorServiceAuthMethod: opts.anchor.authMethod,
     ethereumRpcUrl: opts.anchor.ethereumRpcUrl,
     ipfsPinningEndpoints: opts.ipfs.pinningEndpoints,
     networkName: opts.network.name,
@@ -296,14 +298,35 @@ export class CeramicDaemon {
     const ceramic = new Ceramic(modules, params)
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3Store = new S3Store(
+        params.networkOptions.name,
         opts.stateStore?.s3Bucket,
-        opts.stateStore?.s3Endpoint,
-        params.networkOptions.name
+        opts.stateStore?.s3Endpoint
       )
-      
+
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
-    const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
+
+    let didOptions: DIDOptions = { resolver: makeResolvers(ceramic, ceramicConfig, opts) }
+    let provider: DIDProvider
+
+    if (opts.node.sensitive_privateSeedUrl()) {
+      let seed: Uint8Array
+      try {
+        const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl())
+        seed = parseSeedUrl(privateSeedUrl)
+      } catch (err) {
+        // Do not log URL errors here to prevent leaking seed
+        throw Error('Invalid format for node.private-seed-url in daemon.config.json')
+      }
+      provider = makeNodeDIDProvider(seed)
+      didOptions = { ...didOptions, provider }
+    }
+
+    const did = new DID(didOptions)
+    if (provider) {
+      await did.authenticate()
+      diagnosticsLogger.imp(`DID set to '${did.id}'`)
+    }
     ceramic.did = did
     await ceramic._init(true)
 
@@ -324,6 +347,7 @@ export class CeramicDaemon {
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -336,6 +360,7 @@ export class CeramicDaemon {
     baseRouter.use('/collection', collectionRouter)
     baseRouter.use('/admin/getCode', adminCodesRouter)
     baseRouter.use('/admin/models', adminModelRouter)
+    baseRouter.use('/admin/status', adminNodeStatusRouter)
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -352,6 +377,7 @@ export class CeramicDaemon {
     collectionRouter.getAsync('/count', this.getCollectionCount_get.bind(this)) // Deprecated
     collectionRouter.postAsync('/count', this.getCollectionCount_post.bind(this))
     adminCodesRouter.getAsync('/', this.getAdminCode.bind(this))
+    adminNodeStatusRouter.getAsync('/', this.nodeStatus.bind(this))
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
@@ -429,6 +455,19 @@ export class CeramicDaemon {
       }
     }
     res.status(StatusCodes.SERVICE_UNAVAILABLE).send('IPFS unreachable')
+  }
+
+  /**
+   * Returns diagnostic/introspection information
+   */
+  async nodeStatus(req: Request, res: Response): Promise<void> {
+    const authorized = await this._checkAdminAPIGETRequestAuthorization(req, res)
+    if (!authorized) {
+      return
+    }
+
+    const statusResult = await this.ceramic.admin.nodeStatus()
+    res.json(statusResult)
   }
 
   /**
@@ -649,7 +688,9 @@ export class CeramicDaemon {
       return { error: `Error while processing the authorization header ${e.message}` }
     }
     if (parsedJWS.requestPath !== basePath) {
-      return { error: `The jws block contains a request path that doesn't match the request` }
+      return {
+        error: `The jws block contains a request path (${parsedJWS.requestPath}) that doesn't match the request (${basePath})`,
+      }
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
     } else if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {
@@ -709,33 +750,53 @@ export class CeramicDaemon {
     res.json({ code: await this.generateAdminCode() })
   }
 
-  async getIndexedModels(req: Request, res: Response): Promise<void> {
+  /**
+   * Ensures the given adminAPI request has the appropriate authorization header for an Admin DID.
+   * Returns true if the request is authorized.  Returns false and writes an error status into the
+   * 'res' object if the request is not valid for any reason.
+   * @param req
+   * @param res
+   * @private
+   */
+  private async _checkAdminAPIGETRequestAuthorization(
+    req: Request,
+    res: Response
+  ): Promise<boolean> {
     if (!req.headers.authorization) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
-      return
+      return false
     }
     const jwsString = req.headers.authorization.split('Basic ')[1]
     if (!jwsString) {
       res.status(StatusCodes.BAD_REQUEST).json({
         error: `Invalid authorization header format. It needs to be 'Authorization: Basic <JWS BLOCK>'`,
       })
-      return
+      return false
     }
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
     if (jwsValidation.error) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
-    } else {
-      try {
-        this._verifyAndDiscardAdminCode(jwsValidation.code)
-        this._verifyActingDid(jwsValidation.kid)
-      } catch (e) {
-        res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
-      }
-      const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
-      res.json({
-        models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
-      })
+      return false
     }
+    try {
+      this._verifyAndDiscardAdminCode(jwsValidation.code)
+      this._verifyActingDid(jwsValidation.kid)
+    } catch (e) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+    }
+    return true
+  }
+
+  async getIndexedModels(req: Request, res: Response): Promise<void> {
+    const authorized = await this._checkAdminAPIGETRequestAuthorization(req, res)
+    if (!authorized) {
+      return
+    }
+
+    const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+    res.json({
+      models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
+    })
   }
 
   async startIndexingModels(req: Request, res: Response): Promise<void> {

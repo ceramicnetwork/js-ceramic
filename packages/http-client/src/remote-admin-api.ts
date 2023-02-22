@@ -1,10 +1,12 @@
-import { AdminApi, fetchJson } from '@ceramicnetwork/common'
+import { AdminApi, fetchJson, NodeStatusResponse } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
 
 export class MissingDIDError extends Error {
   constructor() {
-    super('Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached')
+    super(
+      'Failed to get DID.  Please make sure your Ceramic client has an authenticated DID attached'
+    )
   }
 }
 
@@ -17,6 +19,7 @@ export class RemoteAdminApi implements AdminApi {
 
   readonly modelsPath = './admin/models'
   readonly getCodePath = './admin/getCode'
+  readonly nodeStatusPath = './admin/status'
 
   constructor(private readonly _apiUrl: URL, private readonly _getDidFn: () => DID) {}
   private getCodeUrl(): URL {
@@ -27,9 +30,14 @@ export class RemoteAdminApi implements AdminApi {
     return new URL(this.modelsPath, this._apiUrl)
   }
 
+  private getStatusUrl(): URL {
+    return new URL(this.nodeStatusPath, this._apiUrl)
+  }
+
   private async buildJWS(
     actingDid: DID,
     code: string,
+    requestPath: string,
     modelsIDs?: Array<StreamID>
   ): Promise<string> {
     if (!actingDid) throw new MissingDIDError()
@@ -38,7 +46,7 @@ export class RemoteAdminApi implements AdminApi {
       : undefined
     const jws = await actingDid.createJWS({
       code: code,
-      requestPath: this.getModelsUrl().pathname,
+      requestPath,
       requestBody: body,
     })
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
@@ -48,18 +56,39 @@ export class RemoteAdminApi implements AdminApi {
     return (await this._fetchJson(this.getCodeUrl())).code
   }
 
+  async nodeStatus(): Promise<NodeStatusResponse> {
+    const code = await this.generateCode()
+    return this._fetchJson(this.getStatusUrl(), {
+      headers: {
+        Authorization: `Basic ${await this.buildJWS(
+          this._getDidFn(),
+          code,
+          this.getStatusUrl().pathname
+        )}`,
+      },
+    })
+  }
+
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
-      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
+      body: {
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, modelsIDs),
+      },
     })
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
     const code = await this.generateCode()
     const response = await this._fetchJson(this.getModelsUrl(), {
-      headers: { Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code)}` },
+      headers: {
+        Authorization: `Basic ${await this.buildJWS(
+          this._getDidFn(),
+          code,
+          this.getModelsUrl().pathname
+        )}`,
+      },
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
@@ -70,7 +99,9 @@ export class RemoteAdminApi implements AdminApi {
     const code = await this.generateCode()
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',
-      body: { jws: await this.buildJWS(this._getDidFn(), code, modelsIDs) },
+      body: {
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, modelsIDs),
+      },
     })
   }
 }

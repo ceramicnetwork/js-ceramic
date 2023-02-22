@@ -24,6 +24,7 @@ import {
   AnchorStatus,
   StreamState,
   AdminApi,
+  NodeStatusResponse,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -31,7 +32,11 @@ import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import { EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
+import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
+import {
+  AuthenticatedEthereumAnchorService,
+  EthereumAnchorService,
+} from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
 import { randomUint32 } from '@stablelib/random'
@@ -53,6 +58,7 @@ import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
+import crypto from 'crypto'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -115,6 +121,7 @@ const ERROR_LOADING_STREAM = 'error_loading_stream'
 export interface CeramicConfig {
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
+  anchorServiceAuthMethod?: string
   stateStoreDirectory?: string
 
   ipfsPinningEndpoints?: string[]
@@ -225,6 +232,8 @@ export class Ceramic implements CeramicApi {
   private readonly _loadOptsOverride: LoadOpts
   private readonly _shutdownSignal: ShutdownSignal
   private readonly _levelStore: LevelDbStore
+  private readonly _runId: string
+  private readonly _startTime: Date
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -241,6 +250,8 @@ export class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
+    this._runId = crypto.randomUUID()
+    this._startTime = new Date()
 
     this._levelStore = new LevelDbStore(
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
@@ -296,7 +307,7 @@ export class Ceramic implements CeramicApi {
       this.repository.index,
       this._logger
     )
-    this.admin = new LocalAdminApi(localIndex, this.syncApi)
+    this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this))
   }
 
   get index(): LocalIndexApi {
@@ -437,10 +448,25 @@ export class Ceramic implements CeramicApi {
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
     let anchorService = null
+    let anchorServiceAuth = null
     if (!config.gateway) {
       const anchorServiceUrl =
         config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
         DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+
+      if (config.anchorServiceAuthMethod) {
+        try {
+          anchorServiceAuth = new DIDAnchorServiceAuth(anchorServiceUrl, logger)
+        } catch (error) {
+          throw new Error(`DID auth method for anchor service failed to instantiate`)
+        }
+      } else {
+        if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {
+          logger.warn(
+            `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
+          )
+        }
+      }
 
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
@@ -449,10 +475,14 @@ export class Ceramic implements CeramicApi {
       ) {
         throw new Error('Cannot use custom anchor service on Ceramic mainnet')
       }
-      anchorService =
-        networkOptions.name != Networks.INMEMORY
-          ? new EthereumAnchorService(anchorServiceUrl, logger)
-          : new InMemoryAnchorService(config as any)
+
+      if (networkOptions.name != Networks.INMEMORY) {
+        anchorService = anchorServiceAuth
+          ? new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
+          : new EthereumAnchorService(anchorServiceUrl, logger)
+      } else {
+        anchorService = new InMemoryAnchorService(config as any)
+      }
     }
 
     let ethereumRpcUrl = config.ethereumRpcUrl
@@ -509,13 +539,18 @@ export class Ceramic implements CeramicApi {
       maxQueriesPerSecond
     )
 
+    const sync =
+      config.sync == undefined
+        ? process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true'
+        : config.sync
+
     const params: CeramicParameters = {
       gateway: config.gateway,
       stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
-      sync: config.sync,
+      sync,
     }
 
     const modules: CeramicModules = {
@@ -545,7 +580,7 @@ export class Ceramic implements CeramicApi {
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
 
-    await ceramic._init(doPeerDiscovery, config.sync)
+    await ceramic._init(doPeerDiscovery)
 
     return ceramic
   }
@@ -555,7 +590,7 @@ export class Ceramic implements CeramicApi {
    * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
    * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
    */
-  async _init(doPeerDiscovery: boolean, sync = false): Promise<void> {
+  async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
       this._logger.imp(
         `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
@@ -590,7 +625,7 @@ export class Ceramic implements CeramicApi {
       const chainId = this._supportedChains ? this._supportedChains[0] : null
       await this._anchorValidator.init(chainId)
 
-      if (sync) {
+      if (this.syncApi.enabled) {
         const provider = await this.providersCache.getProvider(chainId)
         await this.syncApi.init(provider)
       }
@@ -671,6 +706,22 @@ export class Ceramic implements CeramicApi {
    */
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
     this._streamHandlers.add(streamHandler)
+  }
+
+  async nodeStatus(): Promise<NodeStatusResponse> {
+    const anchor = {
+      anchorServiceUrl: this.context.anchorService.url,
+      ethereumRpcEndpoint: this._anchorValidator.ethereumRpcEndpoint,
+      chainId: this._anchorValidator.chainId,
+    }
+    const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
+    return {
+      runId: this._runId,
+      uptimeMs: new Date().getTime() - this._startTime.getTime(),
+      network: this._networkOptions.name,
+      anchor,
+      ipfs: ipfsStatus,
+    }
   }
 
   /**

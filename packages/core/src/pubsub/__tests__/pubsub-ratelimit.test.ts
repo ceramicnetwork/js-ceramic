@@ -64,7 +64,14 @@ describe('pubsub with queries rate limited', () => {
       },
       id: jest.fn(async () => ({ id: PEER_ID })),
     } as unknown as IpfsApi
-    vanillaPubsub = new Pubsub(ipfs, TOPIC, 3000, LATE_MESSAGE_AFTER, pubsubLogger, diagnosticsLogger)
+    vanillaPubsub = new Pubsub(
+      ipfs,
+      TOPIC,
+      3000,
+      LATE_MESSAGE_AFTER,
+      pubsubLogger,
+      diagnosticsLogger
+    )
     pubsub = new PubsubRateLimit(
       vanillaPubsub,
       new LoggerProvider().getDiagnosticsLogger(),
