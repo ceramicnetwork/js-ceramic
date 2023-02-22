@@ -12,7 +12,7 @@ export class LocalAdminApi implements AdminApi {
   constructor(
     private readonly indexApi: LocalIndexApi,
     private readonly syncApi: SyncApi,
-    private readonly nodeStatusFn: NodeStatusFn, // TODO(CDB-2293): circular dependency back into Ceramic private readonly pinApi: PinApi
+    private readonly nodeStatusFn: NodeStatusFn, // TODO(CDB-2293): circular dependency back into Ceramic
     private readonly pinApi: PinApi
   ) {}
 
