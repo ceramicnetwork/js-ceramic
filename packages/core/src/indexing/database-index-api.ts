@@ -1,4 +1,4 @@
-import {StreamID} from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import type {
   BaseQuery,
   Pagination,
@@ -6,14 +6,14 @@ import type {
   DiagnosticsLogger,
   Networks,
 } from '@ceramicnetwork/common'
-import {Knex} from 'knex'
-import type {CID} from 'multiformats/cid'
-import {ModelRelationsDefinition} from '@ceramicnetwork/stream-model'
-import {InsertionOrder} from './insertion-order.js'
-import {asTableName} from './as-table-name.util.js'
-import {IndexQueryNotAvailableError} from './index-query-not-available.error.js'
-import {TablesManager, PostgresTablesManager, SqliteTablesManager} from './tables-manager.js'
-import {addColumnPrefix} from './column-name.util.js'
+import { Knex } from 'knex'
+import type { CID } from 'multiformats/cid'
+import { ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
+import { InsertionOrder } from './insertion-order.js'
+import { asTableName } from './as-table-name.util.js'
+import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
+import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
+import { addColumnPrefix } from './column-name.util.js'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
@@ -238,7 +238,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
     const tableName = asTableName(query.model)
     let dbQuery = this.dbConnection(tableName).count('*')
     if (query.account) {
-      dbQuery = dbQuery.where({controller_did: query.account})
+      dbQuery = dbQuery.where({ controller_did: query.account })
     }
     if (query.filter) {
       for (const [key, value] of Object.entries(query.filter)) {
