@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals'
+import tmp from 'tmp-promise'
 
 const mockedUrls = {
   OFFLINE: 'http://offline.test.ts',
@@ -28,50 +29,51 @@ jest.unstable_mockModule('cross-fetch', () => {
 
 let ipfs: any
 let ceramic: any
+let auth: any
+let tmpFolder: any
 
 beforeAll(async () => {
-  await setup()
+  const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
+  ipfs = await createIPFS()
 })
 
 afterAll(async () => {
-  await ceramic.close()
   await ipfs.stop()
 })
 
-const setup = async (): Promise<any> => {
-  const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
-  const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
-  ipfs = await createIPFS()
-  ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: false })
-}
-
-const setupAuth = async (url): Promise<any> => {
-  const { createDidAnchorServiceAuth } = await import(
-    '../../../__tests__/create-did-anchor-service-auth.js'
-  )
-  return createDidAnchorServiceAuth(url, ceramic)
-}
-
 describe('sendAuthenticatedRequest', () => {
   jest.setTimeout(300000) // 5mins time-out for js-ipfs
-  test('sends request with signed payload in `authorization` header', async () => {
-    const { auth } = await setupAuth(mockedUrls.ONLINE)
+
+  beforeEach(async () => {
+    const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    ceramic = await createCeramic(ipfs, {
+      stateStoreDirectory: tmpFolder.path,
+    })
+    const { createDidAnchorServiceAuth } = await import(
+      '../../../__tests__/create-did-anchor-service-auth.js'
+    )
+    const { auth: didAuth } = createDidAnchorServiceAuth(mockedUrls.ONLINE, ceramic)
+    auth = didAuth
     await auth.init()
+  })
 
+  afterEach(async () => {
+    await ceramic.close()
+    tmpFolder.cleanup()
+  })
+
+  test('sends request with signed payload in `authorization` header', async () => {
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const getSignRequestResult = (): Promise<any> => signRequestSpy.mock.results[0].value
-
     await auth.sendAuthenticatedRequest(mockedUrls.ONLINE)
-    const out = await getSignRequestResult()
+    const getSignRequestResult = (): Promise<any> => signRequestSpy.mock.results[0].value
+    const out: any = await getSignRequestResult()
     expect(out.request.url).toEqual(mockedUrls.ONLINE)
     const jws = out.request.opts.headers.authorization.split(' ')[1]
     const data = await ceramic.did.verifyJWS(jws)
     expect(data.payload.url).toEqual(mockedUrls.ONLINE)
   })
   test('does not send same nonce more than once', async () => {
-    const { auth } = await setupAuth(mockedUrls.ONLINE)
-    await auth.init()
-
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
     const res0 = (): Promise<any> => signRequestSpy.mock.results[0].value
     const res1 = (): Promise<any> => signRequestSpy.mock.results[1].value
