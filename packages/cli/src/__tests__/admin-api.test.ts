@@ -601,5 +601,39 @@ describe('admin api', () => {
         /The 'models' parameter is required and it has to be an array containing at least one model stream id/
       )
     })
+
+    it('Disallow re-indexing on POST', async () => {
+      const fetchCode = async (): Promise<string> => {
+        return (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
+      }
+
+      expect(true).toBeTruthy()
+      const postResult = await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
+        method: 'POST',
+        body: {
+          jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+        },
+      })
+      expect(postResult.result).toEqual('success')
+
+      const deleteResult = await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
+        method: 'DELETE',
+        body: {
+          jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+        },
+      })
+      expect(deleteResult.result).toEqual('success')
+
+      await expect(
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
+          method: 'POST',
+          body: {
+            jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+          },
+        })
+      ).rejects.toThrow(
+        /Cannot re-index model kjzl6hvfrbw6c9jjl42rrylkpibnt1mjf52900nnwkt68ci1kuoc51hncgczs5q, data may not be up-to-date/
+      )
+    })
   })
 })
