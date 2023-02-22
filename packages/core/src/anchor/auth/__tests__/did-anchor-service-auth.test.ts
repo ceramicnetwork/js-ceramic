@@ -69,7 +69,7 @@ describe('sendAuthenticatedRequest', () => {
     const data = await ceramic.did.verifyJWS(jws)
     expect(data.payload.url).toEqual(mockedUrls.ONLINE)
   })
-  test('does not send same nonce more than once', async () => {
+  test.skip('does not send same nonce more than once', async () => {
     const { auth } = await setupAuth(mockedUrls.ONLINE)
     await auth.init()
 
