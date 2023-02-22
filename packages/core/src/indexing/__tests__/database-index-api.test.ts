@@ -451,9 +451,9 @@ describe('postgres', () => {
         },
       ])
 
-      await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
-        Error
-      )
+      await expect(
+        indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
+      ).rejects.toThrow(Error)
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
@@ -1045,9 +1045,9 @@ describe('sqlite', () => {
         },
       ])
 
-      await expect(indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))).rejects.toThrow(
-        Error
-      )
+      await expect(
+        indexApi.indexModels(modelsToIndexArgs([StreamID.fromString(STREAM_ID_A)]))
+      ).rejects.toThrow(Error)
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
