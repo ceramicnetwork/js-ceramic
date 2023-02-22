@@ -34,6 +34,7 @@
   },
   "scripts": {
     "build": "npx tsc -p tsconfig.json",
+    "postinstall": "shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && patch-package",
     "start": "npx tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
