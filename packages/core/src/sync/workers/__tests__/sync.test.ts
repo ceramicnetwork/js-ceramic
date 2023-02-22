@@ -125,6 +125,6 @@ describe('Sync Worker', () => {
 
     // next call should be the updated job data
     const retriedJobData = syncWorkerSpy.mock.calls[1][0].data
-    expect(retriedJobData).toEqual(Object.assign({}, jobData, { fromBlock: ERROR_BLOCK }))
+    expect(retriedJobData).toEqual(Object.assign({}, jobData, { currentBlock: ERROR_BLOCK }))
   })
 })

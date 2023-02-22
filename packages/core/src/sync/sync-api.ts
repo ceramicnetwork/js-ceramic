@@ -9,7 +9,7 @@ import type { Provider } from '@ethersproject/providers'
 import { Subscription, mergeMap, catchError, interval, concatMap, defer } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
-import { JobQueue } from '../state-management/job-queue.js'
+import { type IJobQueue, JobQueue } from '../state-management/job-queue.js'
 
 import {
   REBUILD_ANCHOR_JOB,
@@ -25,6 +25,7 @@ import {
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob, createContinuousSyncJob } from './workers/sync.js'
 
+const SYNC_STATUS_LOG_INTERVAL = 1000
 export const BLOCK_CONFIRMATIONS = 20
 // TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
@@ -51,23 +52,40 @@ export type SyncConfig = {
 
 // TODO (CDB-2106): move to SyncStatus Class
 export interface ActiveSyncStatus {
+  // The block the sync starts at
+  startBlock: number
+  // The block the sync is currently processing
   currentBlock: number
+  // The block the sync will end on
   endBlock: number
+  // Models that are being synced
   models: Array<string>
-  created: Date
-  startTime: Date
+  // Date when the sync was requested
+  createdAt: Date
+  // Date when the sync started
+  startedAt: Date
 }
 export interface ContinuousSyncStatus {
+  // The first block recevied form the chain on node startup
+  startBlock: number
+  // The latest block received from the chain
   latestBlock: number
+  // The number of blocks we wait for before we process a block
   confirmations: number
+  // The block we are currently processing (should be latestBlock - confirmations)
   currentBlock: number
+  // Models that are being synced
   models: Array<string>
 }
 export interface PendingSyncStatus {
+  // The block the sync starts at
   startBlock: number
+  // The block the sync will end on
   endBlock: number
+  // Models that are being synced
   models: Array<string>
-  created: Date
+  // Date when the sync was requested
+  createdAt: Date
 }
 export interface SyncStatus {
   activeSyncs: Array<ActiveSyncStatus>
@@ -79,13 +97,14 @@ export class SyncApi implements ISyncApi {
   public readonly modelsToSync = new Set<string>()
 
   private readonly dataSource: Knex
-  private readonly jobQueue: JobQueue<JobData>
+  private readonly jobQueue: IJobQueue<JobData>
   private subscription: Subscription | undefined
   private provider: Provider
   private chainId: SupportedNetwork
   private initialIndexingBlock: number
   private periodicStatusLogger: Subscription | undefined
   private currentBlock: number
+  private startBlock: number
 
   constructor(
     private readonly syncConfig: SyncConfig,
@@ -115,6 +134,7 @@ export class SyncApi implements ISyncApi {
       this._initJobQueue(),
     ])
 
+    this.startBlock = latestBlock.number
     this._initBlockSubscription(latestBlock.hash)
 
     if (processedBlockNumber == null) {
@@ -282,11 +302,12 @@ export class SyncApi implements ISyncApi {
       activeSyncs: historySyncJobs.map((job) => {
         const jobData = job.data as SyncJobData
         return {
-          currentBlock: jobData.fromBlock,
+          currentBlock: jobData.currentBlock || jobData.fromBlock,
+          startBlock: jobData.fromBlock,
           endBlock: jobData.toBlock,
           models: jobData.models,
-          created: job.createdOn,
-          startTime: job.startedOn,
+          createdAt: job.createdOn,
+          startedAt: job.startedOn,
         }
       }),
 
@@ -295,6 +316,7 @@ export class SyncApi implements ISyncApi {
           ? continuousSyncJobs.map((job) => {
               const jobData = job.data as SyncJobData
               return {
+                startBlock: this.startBlock,
                 latestBlock: this.currentBlock,
                 confirmations: BLOCK_CONFIRMATIONS,
                 currentBlock: jobData.fromBlock,
@@ -303,6 +325,7 @@ export class SyncApi implements ISyncApi {
             })
           : [
               {
+                startBlock: this.startBlock,
                 latestBlock: this.currentBlock,
                 confirmations: BLOCK_CONFIRMATIONS,
                 currentBlock: this.currentBlock - BLOCK_CONFIRMATIONS,
@@ -316,16 +339,18 @@ export class SyncApi implements ISyncApi {
           startBlock: jobData.fromBlock,
           endBlock: jobData.toBlock,
           models: jobData.models,
-          created: job.createdOn,
+          createdAt: job.createdOn,
         }
       }),
     }
 
-    this.diagnosticsLogger.imp(JSON.stringify(syncStatus, null, 3))
+    this.diagnosticsLogger.imp(
+      `Logging state of running ComposeDB syncs\n ${JSON.stringify(syncStatus, null, 3)}`
+    )
   }
 
   _initPeriodicStatusLogger(): void {
-    this.periodicStatusLogger = interval(60000)
+    this.periodicStatusLogger = interval(SYNC_STATUS_LOG_INTERVAL)
       .pipe(
         concatMap(() => {
           return defer(async () => await this._logSyncStatus())

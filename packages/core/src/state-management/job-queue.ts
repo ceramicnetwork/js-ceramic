@@ -35,6 +35,10 @@ export interface IJobQueue<T extends Record<any, any>> {
   addJobs: (jobs: Job<T>[]) => Promise<void>
   updateJob: (jobId: string, data: T) => Promise<void>
   stop: () => Promise<void>
+  getJobs(
+    state: JobState,
+    jobTypes: Array<string>
+  ): Promise<Record<string, Array<JobWithMetadata<T>>>>
 }
 
 export type Worker<T> = {
