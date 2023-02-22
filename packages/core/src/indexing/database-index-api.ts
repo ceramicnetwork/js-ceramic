@@ -79,16 +79,6 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
-    const previouslyIndexedModels = await this.getPreviouslyIndexedModelsFromDatabase()
-    for (const modelArgs of previouslyIndexedModels) {
-      const modelPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
-        return String(streamId) === String(modelArgs)
-      })
-      // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-      if (modelPreviouslyIndexed) {
-        throw new Error(`Cannot re-index model ${modelArgs.toString()}, data may not be up-to-date`)
-      }
-    }
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
       this.modelsToIndex.push(modelArgs.model)
@@ -207,7 +197,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
       return StreamID.fromString(result.model)
     })
   }
-  private async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+  async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
     return (
       await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
         is_indexed: false,
