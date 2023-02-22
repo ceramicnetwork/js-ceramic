@@ -25,7 +25,7 @@ import {
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob, createContinuousSyncJob } from './workers/sync.js'
 
-const SYNC_STATUS_LOG_INTERVAL = 60000
+const SYNC_STATUS_LOG_INTERVAL = 1000
 export const BLOCK_CONFIRMATIONS = 20
 // TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
@@ -66,6 +66,8 @@ export interface ActiveSyncStatus {
   startedAt: Date
 }
 export interface ContinuousSyncStatus {
+  // The first block recevied form the chain on node startup
+  startBlock: number
   // The latest block received from the chain
   latestBlock: number
   // The number of blocks we wait for before we process a block
@@ -102,6 +104,7 @@ export class SyncApi implements ISyncApi {
   private initialIndexingBlock: number
   private periodicStatusLogger: Subscription | undefined
   private currentBlock: number
+  private startBlock: number
 
   constructor(
     private readonly syncConfig: SyncConfig,
@@ -131,6 +134,7 @@ export class SyncApi implements ISyncApi {
       this._initJobQueue(),
     ])
 
+    this.startBlock = latestBlock.number
     this._initBlockSubscription(latestBlock.hash)
 
     if (processedBlockNumber == null) {
@@ -312,6 +316,7 @@ export class SyncApi implements ISyncApi {
           ? continuousSyncJobs.map((job) => {
               const jobData = job.data as SyncJobData
               return {
+                startBlock: this.startBlock,
                 latestBlock: this.currentBlock,
                 confirmations: BLOCK_CONFIRMATIONS,
                 currentBlock: jobData.fromBlock,
@@ -320,6 +325,7 @@ export class SyncApi implements ISyncApi {
             })
           : [
               {
+                startBlock: this.startBlock,
                 latestBlock: this.currentBlock,
                 confirmations: BLOCK_CONFIRMATIONS,
                 currentBlock: this.currentBlock - BLOCK_CONFIRMATIONS,

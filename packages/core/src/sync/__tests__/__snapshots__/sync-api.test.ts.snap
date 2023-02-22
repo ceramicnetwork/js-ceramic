@@ -14,6 +14,7 @@ exports[`Sync API _createJobStatus 1`] = `
    ],
    \\"continuousSync\\": [
       {
+         \\"startBlock\\": 499,
          \\"confirmations\\": 20,
          \\"currentBlock\\": 500
       }

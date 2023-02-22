@@ -494,6 +494,8 @@ describe('Sync API', () => {
     sync.jobQueue = {
       getJobs,
     }
+    // @ts-ignore private field
+    sync.startBlock = 499
 
     await sync._logSyncStatus()
 
