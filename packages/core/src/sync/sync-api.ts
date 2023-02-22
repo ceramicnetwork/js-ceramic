@@ -52,23 +52,37 @@ export type SyncConfig = {
 
 // TODO (CDB-2106): move to SyncStatus Class
 export interface ActiveSyncStatus {
+  // The block the sync starts at
   startBlock: number
+  // The block the sync is currently processing
   currentBlock: number
+  // The block the sync will end on
   endBlock: number
+  // Models that are being synced
   models: Array<string>
+  // Date when the sync was requested
   created: Date
+  // Date when the sync started
   startTime: Date
 }
 export interface ContinuousSyncStatus {
+  // The latest block received from the chain
   latestBlock: number
+  // The number of blocks we wait for before we process a block
   confirmations: number
+  // The block we are currently processing (should be latestBlock - confirmations)
   currentBlock: number
+  // Models that are being synced
   models: Array<string>
 }
 export interface PendingSyncStatus {
+  // The block the sync starts at
   startBlock: number
+  // The block the sync will end on
   endBlock: number
+  // Models that are being synced
   models: Array<string>
+  // Date when the sync was requested
   created: Date
 }
 export interface SyncStatus {
