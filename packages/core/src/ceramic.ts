@@ -456,14 +456,9 @@ export class Ceramic implements CeramicApi {
 
       if (config.anchorServiceAuthMethod) {
         try {
-          anchorServiceAuth = new DIDAnchorServiceAuth(
-            anchorServiceUrl,
-            logger
-          )
+          anchorServiceAuth = new DIDAnchorServiceAuth(anchorServiceUrl, logger)
         } catch (error) {
-          throw new Error(
-            `DID auth method for anchor service failed to instantiate`
-          )
+          throw new Error(`DID auth method for anchor service failed to instantiate`)
         }
       } else {
         if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {

@@ -455,7 +455,8 @@ export class DaemonConfig {
     if (config.anchor) {
       if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {
         if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
-        if (!config.node.sensitive_privateSeedUrl()) throw new StartupError('Daemon config is missing node.private-seed-url')
+        if (!config.node.sensitive_privateSeedUrl())
+          throw new StartupError('Daemon config is missing node.private-seed-url')
       }
     }
     expandPaths(config, filepath)
