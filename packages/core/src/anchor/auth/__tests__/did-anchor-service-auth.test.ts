@@ -6,6 +6,7 @@ const mockedUrls = {
   ACCEPT: `https://online.test.ts.accept/api/v0/service-info/supported_chains`,
   REJECT: `https://online.test.ts.reject/api/v0/service-info/supported_chains`,
 }
+jest.setTimeout(150000) // 2.5mins time-out for js-ipfs
 
 jest.unstable_mockModule('cross-fetch', () => {
   const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
