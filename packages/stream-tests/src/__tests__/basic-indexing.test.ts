@@ -135,7 +135,13 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
     port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port }, node: {} }))
+    daemon = new CeramicDaemon(
+      core,
+      DaemonConfig.fromObject({
+        'http-api': { port: port, 'admin-dids': [core.did.id.toString()] },
+        node: {},
+      })
+    )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.did = core.did
@@ -204,7 +210,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     test('basic query', async () => {
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       // Indexed streams should always get pinned, regardless of the 'pin' flag
-      await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
+      await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
 
       const resultObj = await ceramic.index.query({ model: model.id, first: 100 })
       const results = extractDocuments(ceramic, resultObj)

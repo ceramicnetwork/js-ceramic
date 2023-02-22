@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-ipfs-backend",
-  "version": "2.12.0-rc.0",
+  "version": "2.12.0",
   "description": "IPFS Pinning backend",
   "keywords": [
     "ceramic",
@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "postinstall": "shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && patch-package",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -35,7 +36,7 @@
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.20.0-rc.0",
+    "@ceramicnetwork/common": "^2.20.0",
     "ipfs-core-types": "~0.9.0",
     "multiformats": "^9.5.8"
   },
