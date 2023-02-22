@@ -2,6 +2,8 @@ import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
+import { AnchorServiceAuthMethods } from '@ceramicnetwork/common'
+import { StartupError } from './daemon/error-handler.js'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
@@ -203,6 +205,13 @@ export class DaemonAnchorConfig {
   anchorServiceUrl?: string
 
   /**
+   * Controls the authentication method Ceramic uses to make requests to the Ceramic Anchor Service.
+   * When specifying in a config file, use the name 'auth-method'.
+   */
+  @jsonMember(String, { name: 'auth-method' })
+  authMethod?: string
+
+  /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
    * When specifying in a config file, use the name 'ethereum-rpc-url'.
    */
@@ -268,6 +277,29 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
+  private _privateSeedUrl: string
+
+  /**
+   * Disallows public access to private-seed-url because it is a sensitive field.
+   */
+  @jsonMember(String, { name: 'private-seed-url' })
+  public get privateSeedUrl(): string {
+    return undefined
+  }
+
+  /**
+   * Setter for seed used to sign requests to CAS.
+   * A seed is randomly generated if a config file is not found.
+   * When specifying in a config file, use the name 'private-seed-url'.
+   */
+  public set privateSeedUrl(value: string) {
+    this._privateSeedUrl = value
+  }
+
+  public sensitive_privateSeedUrl(): string {
+    return this._privateSeedUrl
+  }
+
   /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
@@ -420,6 +452,13 @@ export class DaemonConfig {
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
+    if (config.anchor) {
+      if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {
+        if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
+        if (!config.node.sensitive_privateSeedUrl())
+          throw new StartupError('Daemon config is missing node.private-seed-url')
+      }
+    }
     expandPaths(config, filepath)
     return config
   }
@@ -431,6 +470,13 @@ export class DaemonConfig {
       },
     })
 
-    return serializer.parse(json)
+    // Set hidden fields before returning
+    const config = serializer.parse(json)
+    if (json.node) {
+      if (json.node.privateSeedUrl) {
+        config.node.privateSeedUrl = json.node.privateSeedUrl
+      }
+    }
+    return config
   }
 }

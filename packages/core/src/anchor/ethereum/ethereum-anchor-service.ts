@@ -5,10 +5,13 @@ import {
   CeramicApi,
   AnchorServiceResponse,
   AnchorService,
+  AnchorServiceAuth,
   AnchorStatus,
+  AuthenticatedAnchorService,
   DiagnosticsLogger,
-  fetchJson,
+  FetchRequest,
   RequestAnchorParams,
+  fetchJson,
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -40,16 +43,19 @@ export class EthereumAnchorService implements AnchorService {
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
   private readonly pollInterval: number
+  private readonly sendRequest: FetchRequest
 
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL
+    pollInterval: number = DEFAULT_POLL_INTERVAL,
+    sendRequest: FetchRequest = fetchJson
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
     this.chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this._logger = logger
     this.pollInterval = pollInterval
+    this.sendRequest = sendRequest
   }
 
   /**
@@ -67,7 +73,7 @@ export class EthereumAnchorService implements AnchorService {
 
   async init(): Promise<void> {
     // Get the chainIds supported by our anchor service
-    const response = await fetchJson(this.chainIdApiEndpoint)
+    const response = await this.sendRequest(this.chainIdApiEndpoint)
     if (response.supportedChains.length > 1) {
       throw new Error(
         "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
@@ -85,7 +91,7 @@ export class EthereumAnchorService implements AnchorService {
     const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamID }
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeRequest(params),
+      this._makeAnchorRequest(params),
       this.pollForAnchorResponse(params.streamID, params.tip)
     ).pipe(
       catchError((error) =>
@@ -121,10 +127,10 @@ export class EthereumAnchorService implements AnchorService {
    * @param params - a RequestAnchorParams object
    * @private
    */
-  private _makeRequest(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
-        fetchJson(this.requestsApiEndpoint, {
+        this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
           body: {
             streamId: params.streamID.toString(),
@@ -170,7 +176,7 @@ export class EthereumAnchorService implements AnchorService {
         if (now > maxTime) {
           throw new Error('Exceeded max anchor polling time limit')
         } else {
-          const response = await fetchJson(requestUrl)
+          const response = await this.sendRequest(requestUrl)
           return this.parseResponse(cidStream, response)
         }
       })
@@ -236,5 +242,39 @@ export class EthereumAnchorService implements AnchorService {
       default:
         throw new UnreachableCaseError(status, `Unexpected anchor request status`)
     }
+  }
+}
+
+/**
+ * Ethereum anchor service that authenticates requests
+ */
+export class AuthenticatedEthereumAnchorService
+  extends EthereumAnchorService
+  implements AuthenticatedAnchorService
+{
+  readonly auth: AnchorServiceAuth
+
+  constructor(
+    auth: AnchorServiceAuth,
+    readonly anchorServiceUrl: string,
+    logger: DiagnosticsLogger,
+    pollInterval: number = DEFAULT_POLL_INTERVAL
+  ) {
+    super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest.bind(auth))
+    this.auth = auth
+  }
+
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  set ceramic(ceramic: CeramicApi) {
+    this.auth.ceramic = ceramic
+  }
+
+  async init(): Promise<void> {
+    await this.auth.init()
+    await super.init()
   }
 }

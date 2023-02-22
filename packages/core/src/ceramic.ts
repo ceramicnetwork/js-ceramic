@@ -32,7 +32,11 @@ import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import { EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
+import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
+import {
+  AuthenticatedEthereumAnchorService,
+  EthereumAnchorService,
+} from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
 import { randomUint32 } from '@stablelib/random'
@@ -117,6 +121,7 @@ const ERROR_LOADING_STREAM = 'error_loading_stream'
 export interface CeramicConfig {
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
+  anchorServiceAuthMethod?: string
   stateStoreDirectory?: string
 
   ipfsPinningEndpoints?: string[]
@@ -443,10 +448,25 @@ export class Ceramic implements CeramicApi {
     const networkOptions = Ceramic._generateNetworkOptions(config)
 
     let anchorService = null
+    let anchorServiceAuth = null
     if (!config.gateway) {
       const anchorServiceUrl =
         config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
         DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+
+      if (config.anchorServiceAuthMethod) {
+        try {
+          anchorServiceAuth = new DIDAnchorServiceAuth(anchorServiceUrl, logger)
+        } catch (error) {
+          throw new Error(`DID auth method for anchor service failed to instantiate`)
+        }
+      } else {
+        if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {
+          logger.warn(
+            `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
+          )
+        }
+      }
 
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
@@ -455,10 +475,14 @@ export class Ceramic implements CeramicApi {
       ) {
         throw new Error('Cannot use custom anchor service on Ceramic mainnet')
       }
-      anchorService =
-        networkOptions.name != Networks.INMEMORY
-          ? new EthereumAnchorService(anchorServiceUrl, logger)
-          : new InMemoryAnchorService(config as any)
+
+      if (networkOptions.name != Networks.INMEMORY) {
+        anchorService = anchorServiceAuth
+          ? new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
+          : new EthereumAnchorService(anchorServiceUrl, logger)
+      } else {
+        anchorService = new InMemoryAnchorService(config as any)
+      }
     }
 
     let ethereumRpcUrl = config.ethereumRpcUrl

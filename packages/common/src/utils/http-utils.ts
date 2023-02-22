@@ -2,12 +2,24 @@ import fetch from 'cross-fetch'
 import { mergeAbortSignals, TimedAbortSignal, abortable } from './abort-signal-utils.js'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
-interface FetchOpts {
+export interface FetchOpts {
   body?: any
   method?: string
   headers?: any
   timeout?: number
   signal?: AbortSignal
+}
+
+export type FetchRequestParams = {
+  url: URL | string
+  opts?: FetchOpts
+}
+
+export type FetchRequest = (url: URL | string, opts?: FetchOpts) => Promise<any>
+
+export enum HttpMethods {
+  GET = 'GET',
+  POST = 'POST',
 }
 
 export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {

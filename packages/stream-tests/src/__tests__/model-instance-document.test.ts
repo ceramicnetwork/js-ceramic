@@ -107,6 +107,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
       core,
       DaemonConfig.fromObject({
         'http-api': { port },
+        node: {},
       })
     )
     await daemon.listen()

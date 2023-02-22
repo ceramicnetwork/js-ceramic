@@ -75,7 +75,10 @@ describe('Admin API tests', () => {
     const apiUrl = 'http://localhost:' + port
     daemon = new CeramicDaemon(
       core,
-      DaemonConfig.fromObject({ 'http-api': { port, 'admin-dids': [adminDid.id.toString()] } })
+      DaemonConfig.fromObject({
+        'http-api': { port, 'admin-dids': [adminDid.id.toString()] },
+        node: {},
+      })
     )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)

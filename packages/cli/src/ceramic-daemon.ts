@@ -20,7 +20,7 @@ import EthrDidResolver from 'ethr-did-resolver'
 import * as NftDidResolver from 'nft-did-resolver'
 import * as SafeDidResolver from 'safe-did-resolver'
 
-import { DID } from 'dids'
+import { DID, DIDOptions, DIDProvider } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync } from '@awaitjs/express'
@@ -31,6 +31,7 @@ import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
+import { makeNodeDIDProvider, parseSeedUrl } from './daemon/did-utils.js'
 import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -81,6 +82,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     loggerProvider,
     gateway: opts.node.gateway || false,
     anchorServiceUrl: opts.anchor.anchorServiceUrl,
+    anchorServiceAuthMethod: opts.anchor.authMethod,
     ethereumRpcUrl: opts.anchor.ethereumRpcUrl,
     ipfsPinningEndpoints: opts.ipfs.pinningEndpoints,
     networkName: opts.network.name,
@@ -303,7 +305,28 @@ export class CeramicDaemon {
 
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
-    const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
+
+    let didOptions: DIDOptions = { resolver: makeResolvers(ceramic, ceramicConfig, opts) }
+    let provider: DIDProvider
+
+    if (opts.node.sensitive_privateSeedUrl()) {
+      let seed: Uint8Array
+      try {
+        const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl())
+        seed = parseSeedUrl(privateSeedUrl)
+      } catch (err) {
+        // Do not log URL errors here to prevent leaking seed
+        throw Error('Invalid format for node.private-seed-url in daemon.config.json')
+      }
+      provider = makeNodeDIDProvider(seed)
+      didOptions = { ...didOptions, provider }
+    }
+
+    const did = new DID(didOptions)
+    if (provider) {
+      await did.authenticate()
+      diagnosticsLogger.imp(`DID set to '${did.id}'`)
+    }
     ceramic.did = did
     await ceramic._init(true)
 
