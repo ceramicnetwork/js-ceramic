@@ -61,9 +61,9 @@ export interface ActiveSyncStatus {
   // Models that are being synced
   models: Array<string>
   // Date when the sync was requested
-  created: Date
+  createdAt: Date
   // Date when the sync started
-  startTime: Date
+  startedAt: Date
 }
 export interface ContinuousSyncStatus {
   // The latest block received from the chain
@@ -83,7 +83,7 @@ export interface PendingSyncStatus {
   // Models that are being synced
   models: Array<string>
   // Date when the sync was requested
-  created: Date
+  createdAt: Date
 }
 export interface SyncStatus {
   activeSyncs: Array<ActiveSyncStatus>
@@ -302,8 +302,8 @@ export class SyncApi implements ISyncApi {
           startBlock: jobData.fromBlock,
           endBlock: jobData.toBlock,
           models: jobData.models,
-          created: job.createdOn,
-          startTime: job.startedOn,
+          createdAt: job.createdOn,
+          startedAt: job.startedOn,
         }
       }),
 
@@ -333,7 +333,7 @@ export class SyncApi implements ISyncApi {
           startBlock: jobData.fromBlock,
           endBlock: jobData.toBlock,
           models: jobData.models,
-          created: job.createdOn,
+          createdAt: job.createdOn,
         }
       }),
     }
