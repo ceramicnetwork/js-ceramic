@@ -106,7 +106,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     daemon = new CeramicDaemon(
       core,
       DaemonConfig.fromObject({
-        'http-api': { port },
+        'http-api': { port }, 'node': {}
       })
     )
     await daemon.listen()
