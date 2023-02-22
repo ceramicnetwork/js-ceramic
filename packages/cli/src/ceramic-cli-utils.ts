@@ -212,7 +212,10 @@ export class CeramicCliUtils {
 
       config.indexing.composedbEnabled = fromBooleanInput(enableComposedb, true)
       if (process.env.CERAMIC_ENABLE_COMPOSE_DB) {
-        config.indexing.composedbEnabled = fromBooleanInput(process.env.CERAMIC_ENABLE_COMPOSE_DB, true)
+        config.indexing.composedbEnabled = fromBooleanInput(
+          process.env.CERAMIC_ENABLE_COMPOSE_DB,
+          true
+        )
       }
 
       if (stateStoreDirectory) {
