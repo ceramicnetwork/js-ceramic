@@ -200,7 +200,7 @@ describe('admin api', () => {
         authorization: `Authorization: Basic ${await buildJWSPins(
           adminDid,
           await fetchCode(),
-          `/api/v0/admin/pins/${exampleModelStreamId}`
+          `/api/v0/admin/pins`
         )}`,
       },
     })
@@ -213,7 +213,7 @@ describe('admin api', () => {
         authorization: `Authorization: Basic ${await buildJWSPins(
           adminDid,
           await fetchCode(),
-          `/api/v0/admin/pins/${exampleModelStreamId}`
+          `/api/v0/admin/pins`
         )}`,
       },
     })
@@ -228,7 +228,7 @@ describe('admin api', () => {
           authorization: `Authorization: Basic ${await buildJWSPins(
             adminDid,
             await fetchCode(),
-            `/api/v0/admin/pins/${exampleModelStreamId}`
+            `/api/v0/admin/pins`
           )}`,
         },
       }
@@ -242,7 +242,7 @@ describe('admin api', () => {
         authorization: `Authorization: Basic ${await buildJWSPins(
           adminDid,
           await fetchCode(),
-          `/api/v0/admin/pins/${exampleModelStreamId}`
+          `/api/v0/admin/pins`
         )}`,
       },
     })
@@ -257,7 +257,7 @@ describe('admin api', () => {
           authorization: `Authorization: Basic ${await buildJWSPins(
             adminDid,
             await fetchCode(),
-            `/api/v0/admin/pins/${exampleModelStreamId}`
+            `/api/v0/admin/pins`
           )}`,
         },
       }
