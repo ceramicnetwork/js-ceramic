@@ -96,7 +96,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     core = await createCeramic(ipfs, {
       indexing: {
         allowQueriesBeforeHistoricalSync: true,
-        composedbEnabled: true,
+        disableComposedb: false,
       },
     })
 

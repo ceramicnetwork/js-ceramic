@@ -12,21 +12,23 @@ export function makeIndexApi(
   logger: DiagnosticsLogger
 ): DatabaseIndexApi | undefined {
   if (!indexingConfig) {
-    logger.warn(`Indexing is not configured. Please add the indexing settings to your config file`)
-    return undefined
-  }
-
-  if (indexingConfig.composedbEnabled === false) {
     logger.warn(
-      'Indexing is actively disabled. Change the corresponding CLI flag or ENV variable to enable it.'
+      `Compose DB Indexing is not configured. Please add the indexing settings to your config file`
     )
     return undefined
   }
 
-  // TODO: extend with dynamic config check if MAINNET or sync is enabled
-  if (network === Networks.MAINNET && indexingConfig.db.toLowerCase().startsWith('sqlite')) {
+  if (indexingConfig.disableComposedb === true) {
+    logger.warn(
+      'Compose DB indexing is actively disabled. Change the corresponding CLI flag, config option or ENV variable to enable it.'
+    )
+    return undefined
+  }
+
+  // TODO(CDB-2078): extend with addt. properties from startup if MAINNET or sync is enabled
+  if (network === Networks.MAINNET && this.indexApi instanceof SqliteIndexApi) {
     logger.err(
-      'SQLite is not supported for indexing in production use. Please setup a Postgres instance and update the config file.'
+      'SQLite is not supported for the Compose DB indexing database in production use. Please setup a Postgres instance and update the config file.'
     )
     return undefined
   }
