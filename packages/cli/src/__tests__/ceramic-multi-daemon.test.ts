@@ -25,7 +25,7 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
+      composedbEnabled: true,
     },
   })
 

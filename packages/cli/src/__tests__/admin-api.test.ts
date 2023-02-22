@@ -40,8 +40,8 @@ describe('admin api', () => {
 
   beforeEach(async () => {
     // FIXME: How should we be setting up this env var properly?
-    originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+    originalEnvVarVal = process.env.CERAMIC_ENABLE_COMPOSE_DB
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
 
     const did = new DID({
@@ -80,7 +80,7 @@ describe('admin api', () => {
     await daemon.close()
     await core.close()
     await tmpFolder.cleanup()
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = originalEnvVarVal
   })
 
   async function buildJWS(

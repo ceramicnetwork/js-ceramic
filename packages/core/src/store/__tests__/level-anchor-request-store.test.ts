@@ -78,7 +78,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   let genesisCommit3: GenesisCommit
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
 
@@ -113,7 +113,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   afterAll(async () => {
     await ceramic.close()
     await ipfs.stop
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = undefined
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = undefined
   })
 
   beforeEach(async () => {

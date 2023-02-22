@@ -48,7 +48,7 @@ afterAll(async () => {
 })
 
 beforeEach(async () => {
-  process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+  process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
 
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   core = await makeCeramicCore(ipfs, tmpFolder.path)

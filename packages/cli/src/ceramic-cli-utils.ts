@@ -2,6 +2,7 @@ import os from 'os'
 import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
+import { fromBooleanInput } from '@ceramicnetwork/ipfs-daemon'
 
 import * as fs from 'fs/promises'
 
@@ -108,6 +109,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
+   * @param enableComposedb - Enable Compose DB Indexing service.
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -129,7 +131,8 @@ export class CeramicCliUtils {
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
-    syncOverride: string
+    syncOverride: string,
+    enableComposedb: string | undefined
   ): Promise<CeramicDaemon> {
     const configFilepath = configFilename
       ? new URL(configFilename, CWD)
@@ -206,6 +209,12 @@ export class CeramicCliUtils {
       if (syncOverride) {
         config.node.syncOverride = syncOverride
       }
+
+      config.indexing.composedbEnabled = fromBooleanInput(enableComposedb, true)
+      if (process.env.CERAMIC_ENABLE_COMPOSE_DB) {
+        config.indexing.composedbEnabled = fromBooleanInput(process.env.CERAMIC_ENABLE_COMPOSE_DB, true)
+      }
+
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
         config.stateStore.localDirectory = stateStoreDirectory

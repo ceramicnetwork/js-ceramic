@@ -36,7 +36,7 @@ describe('Model API http-client tests', () => {
   let ceramic: CeramicClient
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
 
     ipfs = await createIPFS()
     core = await createCeramic(ipfs)
@@ -196,7 +196,7 @@ describe('Model API multi-node tests', () => {
   }, 12000)
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
 
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)

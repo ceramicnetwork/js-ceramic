@@ -149,7 +149,7 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
+    if (process.env.CERAMIC_ENABLE_COMPOSE_DB != 'true') {
       return
     }
 

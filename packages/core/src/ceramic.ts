@@ -600,7 +600,7 @@ export class Ceramic implements CeramicApi {
         this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
       }
 
-      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB == 'true') {
+      if (process.env.CERAMIC_ENABLE_COMPOSE_DB == 'true') {
         this._logger.warn(
           `Warning: indexing and query APIs are experimental and still under active development.  Please do not create Composites, Models, or ModelInstanceDocument streams, or use any of the new GraphQL query APIs on mainnet until they are officially released`
         )

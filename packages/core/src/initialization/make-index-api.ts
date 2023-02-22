@@ -27,13 +27,25 @@ export function makeIndexApi(
   network: Networks,
   logger: DiagnosticsLogger
 ): DatabaseIndexApi | undefined {
-  if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
-    return undefined
-  }
+
   if (!indexingConfig) {
     logger.warn(`Indexing is not configured. Please add the indexing settings to your config file`)
     return undefined
   }
+
+  if (indexingConfig.composedbEnabled === false) {
+    logger.warn(
+      'Indexing is actively disabled. Change the corresponding CLI flag or ENV variable to enable it.'
+    )
+    return undefined
+  }
+
+  // TODO: extend with dynamic config check if MAINNET or sync is enabled
+  if (network === Networks.MAINNET && indexingConfig.db.toLowerCase().startsWith('sqlite')) {
+    logger.err('SQLite is not supported for indexing in production use.')
+    return undefined
+  }
+
   const indexApi = buildIndexing(indexingConfig, logger, network)
   return indexApi
 }

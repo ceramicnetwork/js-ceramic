@@ -10,10 +10,14 @@ export type IndexingConfig = {
   db: string
 
   /**
-   *
    * Allow a query only if historical sync is over.
    */
   allowQueriesBeforeHistoricalSync: boolean
+
+  /**
+   * Allow Ceramic node to start without Indexig enabled
+   */
+  composedbEnabled: boolean
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {

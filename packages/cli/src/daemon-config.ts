@@ -241,6 +241,11 @@ export class IndexingConfig {
     name: 'allow-queries-before-historical-sync',
   })
   allowQueriesBeforeHistoricalSync = false
+
+  @jsonMember(Boolean, {
+    name: 'composedb-enabled',
+  })
+  composedbEnabled: boolean
 }
 
 @jsonObject
@@ -313,6 +318,12 @@ export class DaemonCeramicNodeConfig {
    */
   @jsonMember(String, { name: 'sync-override' })
   syncOverride?: string
+
+  /**
+   * Whether to run the Ceramic node with CDB indexing enabled
+   */
+  @jsonMember(Boolean, { name: 'composedb-enabled'})
+  composedbEnabled?: boolean
 
   /**
    * Max number of streams to keep in the node's in-memory cache.

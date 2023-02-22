@@ -49,7 +49,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   }, 12000)
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
 
     core = await createCeramic(ipfs)
 
@@ -144,7 +144,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   }, 12000)
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
+    process.env.CERAMIC_ENABLE_COMPOSE_DB = 'true'
 
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
