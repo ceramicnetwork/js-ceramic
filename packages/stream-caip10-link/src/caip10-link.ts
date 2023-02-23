@@ -1,5 +1,4 @@
 import {
-  MAX_CONTENT_LENGTH,
   CeramicApi,
   CreateOpts,
   Stream,

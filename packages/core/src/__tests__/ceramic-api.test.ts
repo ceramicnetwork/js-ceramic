@@ -91,6 +91,7 @@ describe('Ceramic API', () => {
     let tmpFolder: tmp.DirectoryResult
 
     beforeEach(async () => {
+      ModelInstanceDocument.MAX_DOCUMENT_SIZE = 16_000_000
       tmpFolder = await tmp.dir({ unsafeCleanup: true })
       ceramic = await createCeramic(ipfs, {
         stateStoreDirectory: tmpFolder.path,
@@ -191,7 +192,6 @@ describe('Ceramic API', () => {
     it('can create and update stream with valid model to trigger indexing', async () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
-
       // TODO (NET-1614): Extend with targeted payload comparison
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
@@ -209,15 +209,15 @@ describe('Ceramic API', () => {
     it('can create and update stream with valid model under size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = { myData: 'ghi' }
-      const opts = { maxContentLength: 30 }
+      ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, opts)
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       expect(doc.content).toEqual(CONTENT0)
       expect(addIndexSpy).toBeCalledTimes(2)
-      await doc.replace(CONTENT1, opts)
+      await doc.replace(CONTENT1)
       expect(doc.content).toEqual(CONTENT1)
       expect(addIndexSpy).toBeCalledTimes(3)
       addIndexSpy.mockRestore()
@@ -225,29 +225,29 @@ describe('Ceramic API', () => {
 
     it('will fail to create stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
-      const opts = { maxContentLength: 10 }
+      ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
-      await expect(
-        ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, opts)
-      ).rejects.toThrow(/which exceeds maximum size/)
+      await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)).rejects.toThrow(
+        /which exceeds maximum size/
+      )
       addIndexSpy.mockRestore()
     })
 
     it('will update stream if under size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
-      const opts = { maxContentLength: 20 }
+      ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, opts)
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       expect(doc.content).toEqual(CONTENT0)
       expect(addIndexSpy).toBeCalledTimes(2)
-      await doc.patch(CONTENT1, opts)
+      await doc.patch(CONTENT1)
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
       expect(addIndexSpy).toBeCalledTimes(3)
       addIndexSpy.mockRestore()
@@ -256,15 +256,15 @@ describe('Ceramic API', () => {
     it('will fail to update stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
-      const opts = { maxContentLength: 20 }
+      ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, opts)
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       expect(doc.content).toEqual(CONTENT0)
       expect(addIndexSpy).toBeCalledTimes(2)
-      await expect(doc.patch(CONTENT1, opts)).rejects.toThrow(/which exceeds maximum size/)
+      await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })
 

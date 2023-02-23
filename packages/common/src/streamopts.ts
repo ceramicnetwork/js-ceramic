@@ -1,5 +1,4 @@
 import type { DID } from 'dids'
-import sizeof from 'object-sizeof'
 
 /**
  * Options that are related to pinning streams.
@@ -121,35 +120,9 @@ export interface AnchorOpts {
  */
 export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts, PinningOpts {
   asDID?: DID
-  /**
-   * Maximum content length when updating streams
-   */
-  maxContentLength?: number
 }
 
 /**
  * Extra options passed as part of operations that create streams
  */
 export interface CreateOpts extends UpdateOpts, SyncOpts, PinningOpts {}
-
-/**
- * Maximum content length in bytes for a stream.
- */
-export const MAX_CONTENT_LENGTH = 16_000_000
-
-/**
- * Validate that content does not exceed a specified maximum
- * @param content Content to validate
- * @param maxLength
- */
-export function validateContentLength<T>(content: T | null, maxLength?: number) {
-  if (content) {
-    const maxContentLength = maxLength || MAX_CONTENT_LENGTH
-    const contentLength = sizeof(content)
-    if (contentLength > maxContentLength) {
-      throw new Error(
-        `Content has length of ${contentLength}B which exceeds maximum size of ${maxContentLength}B`
-      )
-    }
-  }
-}

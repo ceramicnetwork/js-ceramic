@@ -3,9 +3,9 @@ import cloneDeep from 'lodash.clonedeep'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
+  validateContentLength,
 } from '@ceramicnetwork/stream-model-instance'
 import {
-  validateContentLength,
   AnchorStatus,
   CeramicApi,
   CommitData,
@@ -35,11 +35,9 @@ interface ModelInstanceDocumentHeader extends ModelInstanceDocumentMetadata {
  */
 export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstanceDocument> {
   private readonly _schemaValidator: SchemaValidation
-  private readonly _maxContentLength: number | null
 
-  constructor(maxContentLength?: number) {
+  constructor() {
     this._schemaValidator = new SchemaValidation()
-    this._maxContentLength = maxContentLength
   }
 
   get type(): number {
@@ -217,7 +215,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       return
     }
 
-    validateContentLength(content, this._maxContentLength)
+    validateContentLength(content)
 
     await this._schemaValidator.validateSchema(
       content,

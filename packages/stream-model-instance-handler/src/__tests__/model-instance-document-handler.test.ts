@@ -337,7 +337,9 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   beforeEach(() => {
-    handler = new ModelInstanceDocumentHandler(MAX_CONTENT_LENGTH)
+    ModelInstanceDocument.MAX_DOCUMENT_SIZE = 16_000_000
+
+    handler = new ModelInstanceDocumentHandler()
 
     setDidToNotRotatedState(did)
   })
@@ -425,8 +427,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       { myData: 'abcdefghijk' },
-      METADATA_BLOB,
-      MAX_CONTENT_LENGTH
+      METADATA_BLOB
     )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_BLOB)
 
@@ -722,8 +723,9 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid length', async () => {
+    ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
     await expect(
-      ModelInstanceDocument._makeGenesis(context.api, { myData: 'abcdefghijk' }, METADATA, 10)
+      ModelInstanceDocument._makeGenesis(context.api, { myData: 'abcdefghijk' }, METADATA)
     ).rejects.toThrow(/which exceeds maximum size/)
   })
 
