@@ -7,8 +7,10 @@ import { Observable } from 'rxjs'
 import { REBUILD_ANCHOR_JOB, HISTORY_SYNC_JOB, CONTINUOUS_SYNC_JOB } from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob } from '../workers/sync.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 const createBlockProofsListener = jest.fn(() => new Observable())
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 jest.unstable_mockModule('@ceramicnetwork/anchor-listener', () => {
   return { createBlockProofsListener }
@@ -308,7 +310,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -327,7 +329,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -348,7 +350,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       sync.modelsToSync.add('abc123')
@@ -365,7 +367,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       sync.modelsToSync.add('abc123')
@@ -382,7 +384,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       await sync.stopModelSync('abc123')
@@ -397,7 +399,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      logger
     )
 
     const addJob = jest.fn()
@@ -416,7 +418,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      logger
     )
     await sync._initStateTable()
     // Check state before update
