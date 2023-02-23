@@ -31,7 +31,7 @@ import {
   SyncWorker,
 } from './workers/sync.js'
 
-const SYNC_STATUS_LOG_INTERVAL = 1000
+const SYNC_STATUS_LOG_INTERVAL = 60000
 export const BLOCK_CONFIRMATIONS = 20
 // TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
@@ -423,6 +423,24 @@ export class SyncApi implements ISyncApi {
       toBlock: endBlock,
       models: modelIds,
     })
+  }
+
+  /**
+   * Stop models from being included in the continuous sync
+   * TODO (CDB-2303): Remove existing history sync jobs as well
+   */
+  async stopModelSync(models: string | string[]): Promise<void> {
+    if (!this.syncConfig.on) return
+
+    const modelIds = Array.isArray(models) ? models : [models]
+    for (const id of modelIds) {
+      this.modelsToSync.delete(id.toString())
+    }
+
+    // TODO (CDB-2303): Remove when ticket is implemented
+    this.diagnosticsLogger.warn(
+      `Stopped syncing models ${models}. Syncs that are currently running will not be stopped/cancelled but this is a temporary state and will be implemented in a future version.`
+    )
   }
 
   syncCompletedForModel(data: SyncCompleteData) {

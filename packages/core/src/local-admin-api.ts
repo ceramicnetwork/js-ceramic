@@ -32,7 +32,10 @@ export class LocalAdminApi implements AdminApi {
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await this.indexApi.stopIndexingModels(modelsIDs)
+    await Promise.all([
+      this.indexApi.stopIndexingModels(modelsIDs),
+      this.syncApi.stopModelSync(modelsIDs.map((id) => id.toString())),
+    ])
   }
 
   get pin(): PinApi {

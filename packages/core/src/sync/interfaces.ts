@@ -23,6 +23,7 @@ export interface ISyncQueryApi {
  */
 export interface ISyncApi extends ISyncQueryApi {
   startModelSync(models: string | string[], startBlock?: number, endBlock?: number): Promise<void>
+  stopModelSync(models: string | string[]): Promise<void>
   shutdown(): Promise<void>
 }
 

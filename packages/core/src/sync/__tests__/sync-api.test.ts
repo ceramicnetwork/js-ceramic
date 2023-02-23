@@ -12,8 +12,10 @@ import {
 } from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob } from '../workers/sync.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 const createBlockProofsListener = jest.fn(() => new Observable())
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 jest.unstable_mockModule('@ceramicnetwork/anchor-listener', () => {
   return { createBlockProofsListener }
@@ -309,7 +311,7 @@ describe('Sync API', () => {
     expect(stop).toHaveBeenCalled()
   })
 
-  describe('addModelSync() adds a model or models to sync', () => {
+  describe('startModelSync() adds a model or models to sync', () => {
     test('handles a single model as input', async () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
@@ -317,7 +319,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -336,7 +338,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -349,6 +351,56 @@ describe('Sync API', () => {
     })
   })
 
+  describe('stopModelSync() removes a model or models to sync', () => {
+    test('handles a single model as input', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        logger
+      )
+
+      sync.modelsToSync.add('abc123')
+      sync.modelsToSync.add('efg456')
+
+      await sync.stopModelSync('abc123')
+      expect(Array.from(sync.modelsToSync)).toEqual(['efg456'])
+    })
+
+    test('handles multiple models as input', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        logger
+      )
+
+      sync.modelsToSync.add('abc123')
+      sync.modelsToSync.add('efg456')
+
+      await sync.stopModelSync(['abc123', 'efg456'])
+      expect(Array.from(sync.modelsToSync)).toEqual([])
+    })
+
+    test('Does nothing if the model is not currently being synced', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        logger
+      )
+
+      await sync.stopModelSync('abc123')
+      expect(Array.from(sync.modelsToSync)).toEqual([])
+    })
+  })
+
   test('_addSyncJob() creates a sync job and adds it to the queue', async () => {
     const { SyncApi } = await import('../sync-api.js')
     const sync = new SyncApi(
@@ -356,7 +408,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      logger
     )
 
     const addJob = jest.fn()
@@ -381,7 +433,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      logger
     )
     await sync._initStateTable()
     // Check state before update
