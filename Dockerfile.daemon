@@ -14,6 +14,12 @@ COPY packages ./packages
 
 RUN lerna bootstrap --hoist --ci -- --production
 
+# Run postinstall steps to apply multiaddr patches
+RUN cd packages/cli && npm run postinstall
+RUN cd packages/ipfs-daemon && npm run postinstall
+RUN cd packages/ipfs-topology && npm run postinstall
+RUN cd packages/pinning-ipfs-backend && npm run postinstall
+
 COPY types ./types
 
 RUN lerna run build
