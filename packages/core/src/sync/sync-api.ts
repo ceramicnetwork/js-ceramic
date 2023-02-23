@@ -208,8 +208,7 @@ export class SyncApi implements ISyncApi {
   async _initModelsToSync(): Promise<void> {
     const streamsIds = await this.localIndex.indexedModels()
     for (const id of streamsIds) {
-      const streamId = id.toString()
-      this.modelsToSync.add(streamId)
+      this.modelsToSync.add(id.toString())
     }
   }
 
