@@ -425,7 +425,6 @@ export class SyncApi implements ISyncApi {
     })
   }
 
-
   /**
    * Stop models from being included in the continuous sync
    * TODO (CDB-2303): Remove existing history sync jobs as well
