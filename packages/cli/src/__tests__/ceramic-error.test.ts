@@ -50,7 +50,6 @@ beforeAll(async () => {
     },
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
     },
   })
 

@@ -47,6 +47,7 @@ program
     '--sync-override <string>',
     'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache". Deprecated.'
   )
+  .option('--disable-composedb', 'Run node without Compose DB indexing enabled.')
   .description('Start the daemon')
   .action(
     async ({
@@ -70,6 +71,7 @@ program
       pubsubTopic,
       corsAllowedOrigins,
       syncOverride,
+      disableComposedb,
     }) => {
       await CeramicCliUtils.createDaemon(
         config,
@@ -91,7 +93,8 @@ program
         network,
         pubsubTopic,
         corsAllowedOrigins,
-        syncOverride
+        syncOverride,
+        disableComposedb
       ).catch((err: Error) => {
         console.error('Ceramic daemon failed to start up:')
         if (err instanceof StartupError) {

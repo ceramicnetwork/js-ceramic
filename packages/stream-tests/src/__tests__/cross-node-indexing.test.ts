@@ -95,8 +95,6 @@ describe.each(envs)(
     }
 
     beforeAll(async () => {
-      process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
       await pgSetup()
 
       ipfs1 = await createIPFS()

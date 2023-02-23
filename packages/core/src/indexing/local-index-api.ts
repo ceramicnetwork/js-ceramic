@@ -163,10 +163,6 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
-      return
-    }
-
     await this.databaseIndexApi?.init()
     // FIXME: CDB-2132 - Fragile DatabaseApi initialisation
     await this.populateDatabaseApiInternalState()

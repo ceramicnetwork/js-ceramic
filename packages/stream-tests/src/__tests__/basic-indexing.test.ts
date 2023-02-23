@@ -166,8 +166,6 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
   })
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     switch (env.dbEngine) {
       case DBEngine.sqlite: {
         const indexingDirectory = await tmp.tmpName()
