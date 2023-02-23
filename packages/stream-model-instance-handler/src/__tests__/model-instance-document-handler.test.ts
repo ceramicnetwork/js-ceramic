@@ -56,6 +56,7 @@ const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54ad
 const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_BLOB = CID.parse('bafybeig6xv5nwphfmvcnektpnojts77jqcuam7bmye2pb54adnrtccjlsu')
 const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 const FAKE_MODEL_ID = StreamID.fromString(
   'kjzl6hvfrbw6cbclh3fplllid7yvf18w05xw41wvuf9b4lk6q9jkq7d1o01wg6v'
@@ -63,11 +64,15 @@ const FAKE_MODEL_ID = StreamID.fromString(
 const FAKE_MODEL_ID2 = StreamID.fromString(
   'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5a'
 )
+const FAKE_MODEL_IDBLOB = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5b'
+)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const METADATA = { controller: DID_ID, model: FAKE_MODEL_ID }
+const METADATA_BLOB = { controller: DID_ID, model: FAKE_MODEL_IDBLOB, deterministic: false }
 const DETERMINISTIC_METADATA = { controller: DID_ID, model: FAKE_MODEL_ID2, deterministic: true }
 
 const jwsForVersion0 = {
@@ -229,6 +234,25 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   },
 }
 
+const MODEL_DEFINITION_BLOB: ModelDefinition = {
+  name: 'MyBlobModel',
+  version: Model.VERSION,
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'string',
+      },
+    },
+    required: ['myData'],
+  },
+}
+
+const MAX_CONTENT_LENGTH = 25
+
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
@@ -280,6 +304,11 @@ describe('ModelInstanceDocumentHandler', () => {
             content: MODEL_DEFINITION_SINGLE,
             commitId: FAKE_MODEL_ID2,
           }
+        } else if (streamId.toString() == FAKE_MODEL_IDBLOB.toString()) {
+          return {
+            content: MODEL_DEFINITION_BLOB,
+            commitId: FAKE_MODEL_IDBLOB,
+          }
         } else {
           throw new Error(
             'Trying to load unexpected stream in model-instance-document-handler.test.ts'
@@ -306,6 +335,8 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   beforeEach(() => {
+    ModelInstanceDocument.MAX_DOCUMENT_SIZE = 16_000_000
+
     handler = new ModelInstanceDocumentHandler()
 
     setDidToNotRotatedState(did)
@@ -381,6 +412,28 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    const streamState = await handler.applyCommit(commitData, context)
+    delete streamState.metadata.unique
+    expect(streamState).toMatchSnapshot()
+  })
+
+  it('applies genesis commit correctly with small allowable content length', async () => {
+    const commit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      { myData: 'abcdefghijk' },
+      METADATA_BLOB
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_BLOB)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_BLOB,
       type: CommitType.GENESIS,
       commit: payload,
       envelope: commit.jws,
@@ -665,6 +718,13 @@ describe('ModelInstanceDocumentHandler', () => {
     await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
       /data must have required property 'myData'/
     )
+  })
+
+  test('throws error when applying genesis commit with invalid length', async () => {
+    ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
+    await expect(
+      ModelInstanceDocument._makeGenesis(context.api, { myData: 'abcdefghijk' }, METADATA)
+    ).rejects.toThrow(/which exceeds maximum size/)
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {

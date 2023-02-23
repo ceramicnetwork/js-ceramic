@@ -2,6 +2,7 @@ import jsonpatch from 'fast-json-patch'
 import type { Operation } from 'fast-json-patch'
 import * as dagCbor from '@ipld/dag-cbor'
 import { randomBytes } from '@stablelib/random'
+import sizeof from 'object-sizeof'
 import {
   CreateOpts,
   LoadOpts,
@@ -97,6 +98,7 @@ async function throwReadOnlyError(): Promise<void> {
 export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'MID'
   static STREAM_TYPE_ID = 3
+  static MAX_DOCUMENT_SIZE = 16_000_000
 
   private _isReadOnly = false
 
@@ -187,6 +189,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    validateContentLength(content)
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
     const updateCommit = await this._makeCommit(signer, content)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
@@ -201,6 +204,21 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    jsonPatch.forEach((patch) => {
+      switch (patch.op) {
+        case 'add': {
+          validateContentLength(patch.value)
+          break
+        }
+        case 'replace': {
+          validateContentLength(patch.value)
+          break
+        }
+        default: {
+          break
+        }
+      }
+    })
     const rawCommit: RawCommit = {
       data: jsonPatch,
       prev: this.tip,
@@ -254,6 +272,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param signer - Object containing the DID making (and signing) the commit
    * @param content - genesis content
    * @param metadata - genesis metadata
+   * @param maxContentLength - maximum content length in bytes of content in genesis commit
    */
   private static async _makeGenesis<T>(
     signer: CeramicSigner,
@@ -280,6 +299,8 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     if (!metadata.model) {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
     }
+
+    validateContentLength(content)
 
     let controller = metadata.controller
     if (!controller) {
@@ -317,5 +338,21 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   ): Promise<SignedCommitContainer> {
     await _ensureAuthenticated(signer)
     return signer.did.createDagJWS(commit)
+  }
+}
+
+/**
+ * Validate that content does not exceed a specified maximum
+ * @param content Content to validate
+ * @param maxLength
+ */
+export function validateContentLength<T>(content: T | null) {
+  if (content) {
+    const contentLength = sizeof(content)
+    if (contentLength > ModelInstanceDocument.MAX_DOCUMENT_SIZE) {
+      throw new Error(
+        `Content has length of ${contentLength}B which exceeds maximum size of ${ModelInstanceDocument.MAX_DOCUMENT_SIZE}B`
+      )
+    }
   }
 }
