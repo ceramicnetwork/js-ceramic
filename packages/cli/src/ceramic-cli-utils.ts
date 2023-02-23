@@ -414,12 +414,15 @@ export class CeramicCliUtils {
 
   /**
    * Pin stream
+   * @param privateKey - Admin DID private key
    * @param streamId - Stream ID
    */
-  static async pinAdd(streamId: string): Promise<void> {
+  static async pinAdd(privateKey: string, streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      const pk = u8a.fromString(privateKey, 'base16')
+      await ceramic.setDID(CeramicCliUtils._makeDID(pk, ceramic))
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -427,12 +430,15 @@ export class CeramicCliUtils {
 
   /**
    * Unpin stream
+   * @param privateKey - Admin DID private key
    * @param streamId - Stream ID
    */
-  static async pinRm(streamId: string): Promise<void> {
+  static async pinRm(privateKey: string, streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      const pk = u8a.fromString(privateKey, 'base16')
+      await ceramic.setDID(CeramicCliUtils._makeDID(pk, ceramic))
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -440,12 +446,15 @@ export class CeramicCliUtils {
 
   /**
    * List pinned streams
+   * @param privateKey - Admin DID private key
    * @param streamId - optional stream ID filter
    */
-  static async pinLs(streamId?: string): Promise<void> {
+  static async pinLs(privateKey: string, streamId?: string): Promise<void> {
     const id = streamId ? StreamID.fromString(streamId) : null
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      const pk = u8a.fromString(privateKey, 'base16')
+      await ceramic.setDID(CeramicCliUtils._makeDID(pk, ceramic))
       const pinnedStreamIds = []
       const iterator = await ceramic.admin.pin.ls(id)
       let i = 0

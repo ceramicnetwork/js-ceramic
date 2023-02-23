@@ -207,24 +207,24 @@ const pin = program.command('pin')
 pin.description(`('Ceramic local pinning API ${pc.red(pc.bold('[Deprecated]'))}`)
 
 pin
-  .command('add <streamId>')
+  .command('add <privateKey> <streamId>')
   .description(`Pin stream`)
-  .action(async (streamId) => {
-    await CeramicCliUtils.pinAdd(streamId)
+  .action(async (privateKey, streamId) => {
+    await CeramicCliUtils.pinAdd(privateKey, streamId)
   })
 
 pin
-  .command('rm <streamId>')
+  .command('rm <privateKey> <streamId>')
   .description(`Unpin stream`)
-  .action(async (streamId) => {
-    await CeramicCliUtils.pinRm(streamId)
+  .action(async (privateKey, streamId) => {
+    await CeramicCliUtils.pinRm(privateKey, streamId)
   })
 
 pin
-  .command('ls [<streamId>]')
+  .command('ls <privateKey> [<streamId>]')
   .description(`List pinned streams`)
-  .action(async (streamId) => {
-    await CeramicCliUtils.pinLs(streamId)
+  .action(async (privateKey, streamId) => {
+    await CeramicCliUtils.pinLs(privateKey, streamId)
   })
 
 const config = program.command('config')
