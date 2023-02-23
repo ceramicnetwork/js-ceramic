@@ -27,9 +27,63 @@ export type ColumnInfo = {
   type: ColumnType
 }
 
-function getIndexName(tableName: string): string {
-  // create unique index name <64 chars that are still capable of being referenced to MID table
-  return tableName.substring(tableName.length - 10)
+export type TableIndex = {
+  keys: Array<string>
+  name: string
+  indexType: Knex.storageEngineIndexType
+}
+
+export type TableIndices = {
+  indexName: string
+  indices: Array<TableIndex>
+}
+
+export function indices(tableName: string): TableIndices {
+  // create unique index name less than 64 chars that are still capable of being referenced to MID table.
+  // We are creating the unique index name by grabbing the last 10 characters of the table name
+  // which is normally the stream id. This combined with the rest of the index information should
+  // be less than 64 characters. See CDB-1600 for more information
+  const indexName = tableName.substring(tableName.length - 10)
+
+  // index names with additional naming information should be less than
+  // 64 characters, which means additional information should be less than 54 characters
+  const indices: Array<TableIndex> = [
+    {
+      keys: ['stream_id'],
+      name: `idx_${indexName}_stream_id`,
+      indexType: 'hash',
+    },
+    {
+      keys: ['last_anchored_at'],
+      name: `idx_${indexName}_last_anchored_at`,
+      indexType: 'hash',
+    },
+    {
+      keys: ['first_anchored_at'],
+      name: `idx_${indexName}_first_anchored_at`,
+      indexType: 'hash',
+    },
+    {
+      keys: ['created_at'],
+      name: `idx_${indexName}_created_at`,
+      indexType: 'hash',
+    },
+    {
+      keys: ['updated_at'],
+      name: `idx_${indexName}_updated_at`,
+      indexType: 'hash',
+    },
+    {
+      keys: ['last_anchored_at', 'created_at'],
+      name: `idx_${indexName}_last_anchored_at_created_at`,
+      indexType: 'hash',
+    },
+  ]
+
+  return {
+    indexName: indexName,
+    indices: indices,
+  }
 }
 
 /**
@@ -81,10 +135,9 @@ function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
 
 function createExtraColumns(
   table: Knex.CreateTableBuilder,
-  tableName: string,
+  indexName: string,
   extraColumns: Array<ColumnInfo>
 ): void {
-  const indexName = getIndexName(tableName)
   for (const column of extraColumns) {
     const columnName = addColumnPrefix(column.name)
     switch (column.type) {
@@ -104,9 +157,12 @@ export async function createPostgresModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, function (table) {
-    const indexName = getIndexName(tableName)
+    const idx = indices(tableName)
 
-    table.string('stream_id').primary(`idx_${indexName}_pkey`).unique(`constr_${indexName}_unique`)
+    table
+      .string('stream_id')
+      .primary(`idx_${idx.indexName}_pkey`)
+      .unique(`constr_${idx.indexName}_unique`)
     table.string('controller_did', 1024).notNullable()
     table.jsonb('stream_content').notNullable()
     table.string('tip').notNullable()
@@ -115,30 +171,13 @@ export async function createPostgresModelTable(
     table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
     table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
 
-    createExtraColumns(table, tableName, extraColumns)
+    createExtraColumns(table, idx.indexName, extraColumns)
 
-    table.index(['stream_id'], `idx_${indexName}_stream_id`, {
-      storageEngineIndexType: 'hash',
-    })
-    table.index(['last_anchored_at'], `idx_${indexName}_last_anchored_at`, {
-      storageEngineIndexType: 'hash',
-    })
-    table.index(['first_anchored_at'], `idx_${indexName}_first_anchored_at`, {
-      storageEngineIndexType: 'hash',
-    })
-    table.index(['created_at'], `idx_${indexName}_created_at`, {
-      storageEngineIndexType: 'hash',
-    })
-    table.index(['updated_at'], `idx_${indexName}_updated_at`, {
-      storageEngineIndexType: 'hash',
-    })
-    table.index(
-      ['last_anchored_at', 'created_at'],
-      `idx_${indexName}_last_anchored_at_created_at`,
-      {
-        storageEngineIndexType: 'hash',
-      }
-    )
+    for (const indexToCreate of idx.indices) {
+      table.index(indexToCreate.keys, indexToCreate.name, {
+        storageEngineIndexType: indexToCreate.indexType,
+      })
+    }
   })
 }
 
@@ -148,7 +187,7 @@ export async function createSqliteModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, (table) => {
-    const indexName = getIndexName(tableName)
+    const idx = indices(tableName)
 
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()
@@ -161,15 +200,11 @@ export async function createSqliteModelTable(
 
     createExtraColumns(table, tableName, extraColumns)
 
-    table.index(['last_anchored_at'], `idx_${indexName}_last_anchored_at`)
-    table.index(['created_at'], `idx_${indexName}_created_at`)
-    table.index(['updated_at'], `idx_${indexName}_updated_at`)
-    table.index(['last_anchored_at', 'created_at'], `idx_${indexName}_last_anchored_at_created_at`)
-    table.index(['first_anchored_at'], `idx_${indexName}_first_anchored_at`)
-    table.index(
-      ['first_anchored_at', 'created_at'],
-      `idx_${indexName}_first_anchored_at_created_at`
-    )
+    for (const indexToCreate of idx.indices) {
+      table.index(indexToCreate.keys, indexToCreate.name, {
+        storageEngineIndexType: indexToCreate.indexType,
+      })
+    }
   })
 }
 

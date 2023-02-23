@@ -11,13 +11,17 @@ import {
   scan,
 } from 'rxjs'
 
-import { type BlockProofs, mapLoadBlocksProofs } from './loader.js'
+import {
+  mapLoadBlockForBlockProofs,
+  mapLoadBlockProofsForRange,
+  type BlockAndBlockProofs,
+} from './loader.js'
 
-export type BlockEvent = BlockProofs & {
+export type BlockEvent = BlockAndBlockProofs & {
   reorganized: false
 }
 
-export type ReorganizedBlockEvent = BlockProofs & {
+export type ReorganizedBlockEvent = BlockAndBlockProofs & {
   reorganized: true
   expectedParentHash: string
 }
@@ -82,7 +86,7 @@ export function createContinuousBlocksListener(
   )
 }
 
-type ProcessingState = BlockProofs & {
+type ProcessingState = BlockAndBlockProofs & {
   status: 'process' | 'reorganized'
   previousHash: string
 }
@@ -96,10 +100,10 @@ type ProcessingSeed = { status: 'initial' }
  */
 export function mapProcessBlockProofs(
   expectedParentHash?: string
-): OperatorFunction<BlockProofs, BlockProofsListenerEvent> {
+): OperatorFunction<BlockAndBlockProofs, BlockProofsListenerEvent> {
   return pipe(
     // Check for blockchain reorganizations based on previous known block
-    scan<BlockProofs, ProcessingState, ProcessingSeed>(
+    scan<BlockAndBlockProofs, ProcessingState, ProcessingSeed>(
       (state, data) => {
         if (state.status === 'initial') {
           // Check against initial expectedParentHash if provided
@@ -137,7 +141,12 @@ export function createBlockProofsListener({
   retryConfig,
 }: ListenerParams): Observable<BlockProofsListenerEvent> {
   return createContinuousBlocksListener(provider, confirmations).pipe(
-    mapLoadBlocksProofs(provider, chainId, retryConfig),
+    map((blockNumbers) => ({
+      fromBlock: blockNumbers[0] as number,
+      toBlock: blockNumbers[blockNumbers.length - 1] as number,
+    })),
+    mapLoadBlockProofsForRange(provider, chainId, retryConfig),
+    mapLoadBlockForBlockProofs(provider, retryConfig),
     mapProcessBlockProofs(expectedParentHash)
   )
 }

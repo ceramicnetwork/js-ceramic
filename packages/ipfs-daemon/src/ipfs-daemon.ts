@@ -28,7 +28,7 @@ export interface Configuration {
   logger: DiagnosticsLogger
 }
 
-function fromBooleanInput(input: string | undefined, byDefault?: boolean): boolean {
+export function fromBooleanInput(input: string | undefined, byDefault?: boolean): boolean {
   if (input) {
     return input == 'true'
   } else {

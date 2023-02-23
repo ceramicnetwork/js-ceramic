@@ -1,14 +1,33 @@
-import { default as PgBoss, type SendOptions } from 'pg-boss'
+import {
+  default as PgBoss,
+  type SendOptions,
+  JobWithMetadata as PgBossJobWithMetadata,
+} from 'pg-boss'
 import Pg from 'pg'
 import { fromEvent, firstValueFrom, timeout, throwError, filter, interval, mergeMap } from 'rxjs'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
-export type Job<T extends Record<any, any>> = {
+export interface Job<T extends Record<any, any>> {
   name: string
   data: T
   id?: string
   options?: SendOptions
 }
+
+export interface JobWithMetadata<T> extends Job<T> {
+  startedOn: Date
+  createdOn: Date
+  completedOn: Date | null
+}
+
+export type JobState =
+  | 'created'
+  | 'retry'
+  | 'active'
+  | 'completed'
+  | 'expired'
+  | 'cancelled'
+  | 'failed'
 
 export interface IJobQueue<T extends Record<any, any>> {
   init: (workersByJob: Record<string, Worker<T>>) => Promise<void>
@@ -16,6 +35,10 @@ export interface IJobQueue<T extends Record<any, any>> {
   addJobs: (jobs: Job<T>[]) => Promise<void>
   updateJob: (jobId: string, data: T) => Promise<void>
   stop: () => Promise<void>
+  getJobs(
+    state: JobState,
+    jobTypes: Array<string>
+  ): Promise<Record<string, Array<JobWithMetadata<T>>>>
 }
 
 export type Worker<T> = {
@@ -45,18 +68,48 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
 
     this.queue = new PgBoss({ db: new PgWrapper(this.dbConnection) })
     this.queue.on('error', (err) => {
-      this.logger.err(`Error received by queue: ${err}`)
+      this.logger.err(`Error received by job queue: ${err}`)
     })
   }
 
-  async _getActiveJobIds(): Promise<string[]> {
+  async _getJobIds(state: JobState = 'active', jobTypes = this.jobs): Promise<string[]> {
     const result = await this.dbConnection.query(
-      `SELECT id FROM pgboss.job WHERE state = 'active' and name IN (${this.jobs
+      `SELECT id FROM pgboss.job WHERE state = '${state}' and name IN (${jobTypes
         .map((jobName) => `'${jobName}'`)
         .join(', ')})`
     )
 
     return result.rows.map(({ id }) => id)
+  }
+
+  /**
+   * Retrieves the active jobs being worked on organized by job name
+   * @returns Promise for an object where the keys reprsent the job names, and the values are arrays of jobs.
+   */
+  async getJobs(
+    state: JobState = 'active',
+    jobTypes = this.jobs
+  ): Promise<Record<string, Array<JobWithMetadata<T>>>> {
+    const activeJobsIds = await this._getJobIds(state, jobTypes)
+
+    const jobs = await Promise.all(activeJobsIds.map((jobId) => this.queue.getJobById(jobId)))
+
+    return jobs.reduce(
+      (jobsByJobName: Record<string, Array<JobWithMetadata<T>>>, job: PgBossJobWithMetadata) => {
+        if (!jobsByJobName[job.name]) jobsByJobName[job.name] = []
+        jobsByJobName[job.name].push({
+          name: job.name,
+          data: job.data as T,
+          id: job.id,
+          startedOn: job.startedon,
+          createdOn: job.createdon,
+          completedOn: job.completedon,
+        })
+
+        return jobsByJobName
+      },
+      {} as Record<string, Array<JobWithMetadata<T>>>
+    )
   }
 
   /**
@@ -69,7 +122,7 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
     await this.queue.start()
 
     if (resumeActive) {
-      const activeJobsIds = await this._getActiveJobIds()
+      const activeJobsIds = await this._getJobIds('active')
 
       if (activeJobsIds.length > 0) {
         await this.queue.cancel(activeJobsIds)

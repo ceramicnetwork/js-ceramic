@@ -16,17 +16,9 @@ $ npm install @ceramicnetwork/anchor-utils
 ### Usage
 
 ```ts
-import {
-  ANCHOR_CONTRACT_ADDRESSES,
-  type SupportedNetwork,
-} from "@ceramicnetwork/anchor-utils";
+import { convertEthHashToCid } from '@ceramicnetwork/anchor-utils'
 
-function getContractAddress(network: SupportedNetwork): string {
-  const address = ANCHOR_CONTRACT_ADDRESSES[network];
-  if (address == null) {
-    throw new Error(`Unsupported contract network: ${network}`);
-  }
-}
+const cidHash = convertEthHashToCid(stringHash.slice(2))
 ```
 
 ## Development

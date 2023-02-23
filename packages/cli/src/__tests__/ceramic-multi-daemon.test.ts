@@ -10,9 +10,14 @@ import getPort from 'get-port'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
 import { DaemonConfig } from '../daemon-config.js'
+import type { DID } from 'dids'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
+const mockNodeConfig = {
+  'private-seed-url':
+    'inplace:ed25519#85704d3f4712d11be488bff0590eead8d4971b2c16b32ea23d6a00d53f3e7dad',
+}
 
 const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
   const core = await Ceramic.create(ipfs, {
@@ -21,7 +26,7 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
     anchorOnRequest: false,
     indexing: {
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
-      models: [],
+      disableComposedb: false,
     },
   })
 
@@ -47,6 +52,9 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
   let daemon2: CeramicDaemon
   let client1: CeramicClient
   let client2: CeramicClient
+  let client1Admin: CeramicClient
+  let client2Admin: CeramicClient
+  let adminDID: DID
 
   beforeAll(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
@@ -66,19 +74,35 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
   beforeEach(async () => {
     core1 = await makeCeramicCore(ipfs1, tmpFolder1.path)
     core2 = await makeCeramicCore(ipfs2, tmpFolder2.path)
+    adminDID = makeDID(core1, seed)
+    await adminDID.authenticate()
     const port1 = await getPort()
     const port2 = await getPort()
-    daemon1 = new CeramicDaemon(core1, DaemonConfig.fromObject({ 'http-api': { port: port1 } }))
+    daemon1 = new CeramicDaemon(
+      core1,
+      DaemonConfig.fromObject({
+        'http-api': { port: port1, 'admin-dids': [adminDID.id.toString()] },
+      })
+    )
     await daemon1.listen()
-    daemon2 = new CeramicDaemon(core2, DaemonConfig.fromObject({ 'http-api': { port: port2 } }))
+    daemon2 = new CeramicDaemon(
+      core2,
+      DaemonConfig.fromObject({
+        'http-api': { port: port2, 'admin-dids': [adminDID.id.toString()] },
+      })
+    )
     await daemon2.listen()
     client1 = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
     client2 = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
+    client1Admin = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
+    client2Admin = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
 
     await core1.setDID(makeDID(core1, seed))
     await client1.setDID(makeDID(client1, seed))
     await core2.setDID(makeDID(core2, seed))
     await client2.setDID(makeDID(client2, seed))
+    await client1Admin.setDID(adminDID)
+    await client2Admin.setDID(adminDID)
   })
 
   afterEach(async () => {
@@ -124,8 +148,8 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     // Create a stream, pin and load it against both nodes via the http client.
     const doc1 = await TileDocument.create(client1, initialContent, null, { anchor: false })
     const doc2 = await TileDocument.load(client2, doc1.id)
-    await client1.pin.add(doc1.id)
-    await client2.pin.add(doc2.id)
+    await client1Admin.admin.pin.add(doc1.id)
+    await client2Admin.admin.pin.add(doc2.id)
 
     // Do an update on node 1, but don't publish it so node 2 still doesn't know about it.
     await doc1.update(updatedContent, null, { publish: false, anchor: false })
@@ -136,7 +160,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     expect(doc1.content).toEqual(updatedContent)
 
     // Unpin from node 1 and publish tip at the same time
-    await client1.pin.rm(doc1.id, { publish: true })
+    await client1Admin.admin.pin.rm(doc1.id, { publish: true })
 
     // wait for doc2 to learn about the new state
     const receivedUpdatePromise = new Promise((resolve) => {

@@ -5,6 +5,7 @@ import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
+import { NodeStatusResponse } from './node-status-interface.js'
 
 /**
  * Describes Ceramic pinning functionality
@@ -59,6 +60,12 @@ export interface CeramicSigner extends CeramicCommon {
  */
 export interface AdminApi {
   /**
+   * Returns a JSON object with various diagnostic and introspection information about the running
+   * node.
+   */
+  nodeStatus(): Promise<NodeStatusResponse>
+
+  /**
    * List indexed model streams
    */
   getIndexedModels(): Promise<Array<StreamID>>
@@ -77,13 +84,14 @@ export interface AdminApi {
    */
 
   stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  pin: PinApi
 }
 
 /**
  * Describes Ceramic node API
  */
 export interface CeramicApi extends CeramicSigner {
-  readonly pin: PinApi
   // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
   readonly index: IndexApi

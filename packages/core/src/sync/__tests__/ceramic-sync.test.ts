@@ -1,7 +1,8 @@
 import { EventEmitter } from 'node:events'
 import { jest } from '@jest/globals'
 import type { Block, BlockTag, Filter, Log } from '@ethersproject/providers'
-import { IpfsApi, TestUtils, AnchorProof, Page, StreamState } from '@ceramicnetwork/common'
+import { TestUtils } from '@ceramicnetwork/common'
+import type { IpfsApi, AnchorProof, Page, StreamState, Stream } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import knex, { Knex } from 'knex'
 import * as uint8arrays from 'uint8arrays'
@@ -12,15 +13,6 @@ import { BaseProvider } from '@ethersproject/providers'
 
 import { STATE_TABLE_NAME } from '../sync-api.js'
 import { Ceramic } from '../../ceramic.js'
-import { MerkleTreeFactory } from './merkle/merkle-tree-factory.js'
-import {
-  Candidate,
-  BloomMetadata,
-  CIDHolder,
-  IpfsLeafCompare,
-  IpfsMerge,
-} from './merkle/merkle-objects.js'
-import { Node, TreeMetadata, MergeFunction } from './merkle/merkle.js'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../indexing/database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../../indexing/config.js'
 import { BLOCK_CONFIRMATIONS } from '../sync-api.js'
@@ -32,7 +24,18 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { contractInterface } from '@ceramicnetwork/anchor-utils'
+import {
+  contractInterface,
+  Node,
+  MerkleTreeFactory,
+  IpfsLeafCompare,
+  IpfsMerge,
+  type CIDHolder,
+  type MergeFunction,
+  type TreeMetadata,
+  type ICandidate,
+} from '@ceramicnetwork/anchor-utils'
+import { FauxBloomMetadata } from './faux-bloom-metadata.js'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -89,7 +92,7 @@ const parseBlockHashOrBlockTag = async (
     return parsed
   }
 
-  return parseInt(blockHashOrBlockTag.split('_')[0], 10)
+  return parseInt(blockHashOrBlockTag.split('_')[1], 10)
 }
 
 class MockProvider extends EventEmitter {
@@ -235,6 +238,20 @@ const cleanTables = async (dbConnection: Knex) => {
   }
 }
 
+function candidateFromStream(stream: Stream): ICandidate {
+  return {
+    streamId: stream.id,
+    cid: stream.tip,
+    metadata: {
+      controllers: stream.metadata.controllers || stream.metadata.controller,
+      schema: stream.metadata.schema,
+      family: stream.metadata.family,
+      tags: stream.metadata.tags,
+      model: stream.metadata.model,
+    },
+  }
+}
+
 describe('Sync tests', () => {
   jest.setTimeout(150000)
   const logger = new LoggerProvider().getDiagnosticsLogger()
@@ -243,7 +260,7 @@ describe('Sync tests', () => {
   let ipfs2: IpfsApi
   let creatingCeramic: Ceramic
   let syncingCeramic: Ceramic | null
-  let merkleTreeFactory: MerkleTreeFactory<CIDHolder, Candidate, TreeMetadata>
+  let merkleTreeFactory: MerkleTreeFactory<CIDHolder, ICandidate, TreeMetadata>
   let dbConnection: Knex
   let createSyncingCeramic: () => Promise<Ceramic>
 
@@ -263,8 +280,6 @@ describe('Sync tests', () => {
     ipfs2 = await createIPFS()
     await swarmConnect(ipfs1, ipfs2)
 
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     // syncing is not enabled
     creatingCeramic = await createCeramic(ipfs2 as any)
     const model = await Model.create(creatingCeramic, MODEL_DEFINITION)
@@ -272,10 +287,11 @@ describe('Sync tests', () => {
     await creatingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
     const ipfsMerge: MergeFunction<CIDHolder, TreeMetadata> = new IpfsMerge(
-      creatingCeramic.dispatcher
+      creatingCeramic.dispatcher,
+      logger
     )
     const ipfsCompare = new IpfsLeafCompare(logger)
-    const bloomMetadata = new BloomMetadata()
+    const bloomMetadata = new FauxBloomMetadata()
     merkleTreeFactory = new MerkleTreeFactory(ipfsMerge, ipfsCompare, bloomMetadata, 5)
 
     //create a ceramic where syncing is enabled
@@ -351,22 +367,10 @@ describe('Sync tests', () => {
       }
     )
     const tile = await TileDocument.create(creatingCeramic, { foo: 'bar' })
-    const merkleTree1 = await merkleTreeFactory.build(
-      [mid, mid2, tile].map((stream) => ({
-        streamId: stream.id,
-        cid: stream.tip,
-        metadata: stream.state.metadata,
-      }))
-    )
+    const merkleTree1 = await merkleTreeFactory.build([mid, mid2, tile].map(candidateFromStream))
 
     const tile2 = await TileDocument.create(creatingCeramic, { bar: 'foo' })
-    const merkleTree2 = await merkleTreeFactory.build(
-      [tile2].map((stream) => ({
-        streamId: stream.id,
-        cid: stream.tip,
-        metadata: stream.state.metadata,
-      }))
-    )
+    const merkleTree2 = await merkleTreeFactory.build([tile2].map(candidateFromStream))
 
     const mid3 = await ModelInstanceDocument.create(
       creatingCeramic,
@@ -377,13 +381,7 @@ describe('Sync tests', () => {
     )
     await mid2.replace({ myData: 4 })
     await tile.update({ foo: 'test' })
-    const merkleTree3 = await merkleTreeFactory.build(
-      [mid3, mid2, tile].map((stream) => ({
-        streamId: stream.id,
-        cid: stream.tip,
-        metadata: stream.state.metadata,
-      }))
-    )
+    const merkleTree3 = await merkleTreeFactory.build([mid3, mid2, tile].map(candidateFromStream))
 
     await provider.mineBlocks([merkleTree1.root, merkleTree2.root, merkleTree3.root])
 
@@ -407,13 +405,7 @@ describe('Sync tests', () => {
         model: MODEL_STREAM_ID,
       }
     )
-    const merkleTree1 = await merkleTreeFactory.build(
-      [mid, mid2].map((stream) => ({
-        streamId: stream.id,
-        cid: stream.tip,
-        metadata: stream.state.metadata,
-      }))
-    )
+    const merkleTree1 = await merkleTreeFactory.build([mid, mid2].map(candidateFromStream))
 
     await provider.mineBlocks([merkleTree1.root])
 
@@ -430,22 +422,10 @@ describe('Sync tests', () => {
         model: MODEL_STREAM_ID,
       }
     )
-    const merkleTree1 = await merkleTreeFactory.build(
-      [mid].map((stream) => ({
-        streamId: stream.id,
-        cid: stream.tip,
-        metadata: stream.state.metadata,
-      }))
-    )
+    const merkleTree1 = await merkleTreeFactory.build([mid].map(candidateFromStream))
 
     await mid.replace({ myData: 2 })
-    const merkleTree2 = await merkleTreeFactory.build(
-      [mid].map((stream) => ({
-        streamId: stream.id,
-        cid: stream.tip,
-        metadata: stream.state.metadata,
-      }))
-    )
+    const merkleTree2 = await merkleTreeFactory.build([mid].map(candidateFromStream))
 
     await provider.mineBlocks()
     await provider.mineBlocks([merkleTree1.root, merkleTree2.root])

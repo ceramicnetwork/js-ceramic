@@ -79,8 +79,6 @@ describe('CACAO Integration test', () => {
   let MODEL_STREAM_ID_2: StreamID
 
   beforeAll(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
     // Create a did:pkh for the user

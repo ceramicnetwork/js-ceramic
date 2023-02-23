@@ -1,6 +1,8 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
+export class StartupError extends Error {}
+
 /**
  * Generic error handling middleware for the daemon.
  */

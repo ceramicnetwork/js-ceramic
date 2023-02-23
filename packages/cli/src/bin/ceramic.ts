@@ -2,6 +2,7 @@ import { program } from 'commander'
 import pc from 'picocolors'
 
 import { CeramicCliUtils } from '../ceramic-cli-utils.js'
+import { StartupError } from '../daemon/error-handler.js'
 import { version } from '../version.js'
 
 program
@@ -46,6 +47,7 @@ program
     '--sync-override <string>',
     'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache". Deprecated.'
   )
+  .option('--disable-composedb', 'Run node without Compose DB indexing enabled.')
   .description('Start the daemon')
   .action(
     async ({
@@ -69,6 +71,7 @@ program
       pubsubTopic,
       corsAllowedOrigins,
       syncOverride,
+      disableComposedb,
     }) => {
       await CeramicCliUtils.createDaemon(
         config,
@@ -90,10 +93,15 @@ program
         network,
         pubsubTopic,
         corsAllowedOrigins,
-        syncOverride
-      ).catch((err) => {
+        syncOverride,
+        disableComposedb
+      ).catch((err: Error) => {
         console.error('Ceramic daemon failed to start up:')
-        console.error(err)
+        if (err instanceof StartupError) {
+          console.error(err.message)
+        } else {
+          console.error(err)
+        }
         process.exit(1)
       })
     }

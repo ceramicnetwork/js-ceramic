@@ -5,9 +5,16 @@ import { BlockProofs, createBlocksProofsLoader } from '@ceramicnetwork/anchor-li
 import type { Provider } from '@ethersproject/providers'
 import { concatMap, lastValueFrom, of, catchError } from 'rxjs'
 import { createRebuildAnchorJob } from './rebuild-anchor.js'
-import { RebuildAnchorJobData, JobData } from '../interfaces.js'
+import {
+  RebuildAnchorJobData,
+  JobData,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+  SyncJobType,
+} from '../interfaces.js'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { SyncJobData } from '../interfaces.js'
 
-export const SYNC_JOB_NAME = 'sync'
 const SYNC_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
   retryDelay: 60, // 1 minute
@@ -16,18 +23,28 @@ const SYNC_JOB_OPTIONS: SendOptions = {
   retentionDays: 3,
 }
 
-interface SyncJobData {
-  fromBlock: number
-  toBlock: number
-  models: string[]
-}
-
-export function createSyncJob(data: SyncJobData, options?: SendOptions): Job<SyncJobData> {
+export function createContinuousSyncJob(
+  data: SyncJobData,
+  options?: SendOptions
+): Job<SyncJobData> {
   return {
-    name: SYNC_JOB_NAME,
+    name: CONTINUOUS_SYNC_JOB,
     data,
     options: options || SYNC_JOB_OPTIONS,
   }
+}
+
+export function createHistorySyncJob(data: SyncJobData, options?: SendOptions): Job<SyncJobData> {
+  return {
+    name: HISTORY_SYNC_JOB,
+    data,
+    options: options || SYNC_JOB_OPTIONS,
+  }
+}
+
+export interface SyncCompleteData {
+  jobType: SyncJobType
+  modelId: string
 }
 
 /**
@@ -38,7 +55,9 @@ export class SyncWorker implements Worker<SyncJobData> {
   constructor(
     private readonly provider: Provider,
     private readonly jobQueue: IJobQueue<JobData>,
-    private readonly chainId
+    private readonly chainId,
+    private readonly logger: DiagnosticsLogger,
+    private readonly syncCompleteCallback: (SyncCompleteData) => void
   ) {}
 
   /**
@@ -49,19 +68,22 @@ export class SyncWorker implements Worker<SyncJobData> {
    */
   async handler(job: PgBoss.Job) {
     const jobData = job.data as SyncJobData
-    const { fromBlock, toBlock, models } = jobData
+    const { jobType, fromBlock, toBlock, models } = jobData
+    const currentBlock = jobData.currentBlock || fromBlock
 
     const blockProof$ = createBlocksProofsLoader({
       provider: this.provider,
       chainId: this.chainId,
-      fromBlock,
+      fromBlock: currentBlock,
       toBlock,
     }).pipe(
       // catch any errors so it doesn't stop any block proofs currently processing
-      catchError(() =>
-        // TODO: log error
-        of(null)
-      ),
+      catchError((err) => {
+        this.logger.err(
+          `Received error when retrieving block proofs for models ${models} from block ${currentBlock} to block ${toBlock}: ${err}`
+        )
+        return of(null)
+      }),
       // created rebuild anchor jobs for each block's proofs. Waits for last block to finish processing
       // before starting the next block
       concatMap(async (blockProofs: BlockProofs | null) => {
@@ -69,23 +91,41 @@ export class SyncWorker implements Worker<SyncJobData> {
           throw Error('Error loading block proof')
         }
 
-        const { proofs, block } = blockProofs
+        const { proofs, blockNumber } = blockProofs
         if (proofs.length > 0) {
           const jobs: Job<RebuildAnchorJobData>[] = proofs.map((proof) =>
             createRebuildAnchorJob(proof, models)
           )
 
           await this.jobQueue.addJobs(jobs)
+
+          this.logger.debug(
+            `Successfully created ${jobs.length} rebuild anchor commit jobs for block ${blockNumber}`
+          )
         }
 
         await this.jobQueue.updateJob(job.id, {
-          fromBlock: block.number + 1,
+          fromBlock,
+          currentBlock: blockNumber + 1,
           toBlock,
           models,
-        })
+          jobType
+        } as SyncJobData)
       })
     )
 
-    await lastValueFrom(blockProof$)
+    await lastValueFrom(blockProof$).then(() => {
+      if (this.syncCompleteCallback) {
+        for (const model of models) {
+          this.syncCompleteCallback({
+            jobType: jobType,
+            modelId: model,
+          })
+        }
+      }
+      this.logger.debug(
+        `Sync completed for models ${models} from block ${fromBlock} to block ${toBlock}`
+      )
+    })
   }
 }

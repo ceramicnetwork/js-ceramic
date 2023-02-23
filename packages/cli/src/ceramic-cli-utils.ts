@@ -2,12 +2,17 @@ import os from 'os'
 import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
-
 import * as fs from 'fs/promises'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { CeramicApi, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/common'
+import {
+  AnchorServiceAuthMethods,
+  CeramicApi,
+  LogLevel,
+  Networks,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
@@ -20,6 +25,8 @@ import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
+import { generateSeedUrl } from './daemon/did-utils.js'
+import { TypedJSON } from 'typedjson'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -30,24 +37,40 @@ const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG
 const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 
-const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
-  anchor: {},
-  'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
-  ipfs: { mode: IpfsMode.BUNDLED },
-  logger: { 'log-level': LogLevel.important, 'log-to-files': false },
-  metrics: {
-    'metrics-exporter-enabled': false,
-  },
-  network: { name: Networks.TESTNET_CLAY },
-  node: {},
-  'state-store': {
-    mode: StateStoreMode.FS,
-    'local-directory': DEFAULT_STATE_STORE_DIRECTORY.pathname,
-  },
-  indexing: {
-    db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
-  },
-})
+/**
+ * Generates a valid Daemon config.
+ *
+ * Most values are set to hardcoded defaults.
+ * The `node.private-seed-url` is randomly generated.
+ * @returns Daemon config with default values
+ */
+const generateDefaultDaemonConfig = () => {
+  const privateSeedUrl = generateSeedUrl()
+
+  return DaemonConfig.fromObject({
+    anchor: {
+      'auth-method': AnchorServiceAuthMethods.DID,
+    },
+    'http-api': { 'cors-allowed-origins': [new RegExp('.*')], 'admin-dids': [] },
+    ipfs: { mode: IpfsMode.BUNDLED },
+    logger: { 'log-level': LogLevel.important, 'log-to-files': false },
+    metrics: {
+      'metrics-exporter-enabled': false,
+    },
+    network: { name: Networks.TESTNET_CLAY },
+    node: {
+      'private-seed-url': privateSeedUrl.toString(),
+    },
+    'state-store': {
+      mode: StateStoreMode.FS,
+      'local-directory': DEFAULT_STATE_STORE_DIRECTORY.pathname,
+    },
+    indexing: {
+      db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
+      'disable-composedb': false,
+    },
+  })
+}
 
 /**
  * CLI configuration
@@ -85,6 +108,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
+   * @param disableComposedb - Disable Compose DB Indexing service.
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -106,7 +130,8 @@ export class CeramicCliUtils {
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
-    syncOverride: string
+    syncOverride: string,
+    disableComposedb: boolean
   ): Promise<CeramicDaemon> {
     const configFilepath = configFilename
       ? new URL(configFilename, CWD)
@@ -120,6 +145,9 @@ export class CeramicCliUtils {
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
     if (process.env.COLLECTOR_HOSTNAME)
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
+    if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL) {
+      config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
+    }
 
     {
       // CLI flags override values from environment variables and config file
@@ -180,6 +208,14 @@ export class CeramicCliUtils {
       if (syncOverride) {
         config.node.syncOverride = syncOverride
       }
+      if (disableComposedb) {
+        config.indexing.disableComposedb = true
+      }
+
+      if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
+        config.indexing.disableComposedb = true
+      }
+
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
         config.stateStore.localDirectory = stateStoreDirectory
@@ -384,7 +420,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
-      const result = await ceramic.pin.add(id)
+      const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
   }
@@ -397,7 +433,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
-      const result = await ceramic.pin.rm(id)
+      const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
   }
@@ -411,7 +447,7 @@ export class CeramicCliUtils {
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const pinnedStreamIds = []
-      const iterator = await ceramic.pin.ls(id)
+      const iterator = await ceramic.admin.pin.ls(id)
       let i = 0
       let truncated = false
       for await (const id of iterator) {
@@ -583,14 +619,22 @@ export class CeramicCliUtils {
 
   /**
    * Load configuration file for the Ceramic Daemon.
+   *
+   * If no file is present a new one will be generated with configured defaults.
    * @private
    */
   static async _loadDaemonConfig(filepath: URL): Promise<DaemonConfig> {
     try {
       await fs.access(filepath)
     } catch (err) {
-      await this._saveConfig(DEFAULT_DAEMON_CONFIG, filepath)
-      return DEFAULT_DAEMON_CONFIG
+      const defaultConfig = generateDefaultDaemonConfig()
+
+      // Save hidden fields to file
+      const plainConfig: any = TypedJSON.toPlainJson(defaultConfig, DaemonConfig)
+      plainConfig.node.privateSeedUrl = defaultConfig.node.sensitive_privateSeedUrl()
+
+      await this._saveConfig(plainConfig, filepath)
+      return defaultConfig
     }
     return DaemonConfig.fromFile(filepath)
   }

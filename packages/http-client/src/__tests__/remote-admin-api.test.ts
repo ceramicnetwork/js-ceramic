@@ -1,11 +1,12 @@
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { fetchJson, TestUtils } from '@ceramicnetwork/common'
-import { RemoteAdminApi, MissingDIDError } from '../remote-admin-api.js'
+import { RemoteAdminApi } from '../remote-admin-api.js'
 import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
+import { MissingDIDError } from '../utils.js'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
 const MODEL = new StreamID(1, TestUtils.randomCID())
@@ -35,6 +36,21 @@ beforeAll(async () => {
   }
   const didKeyVerStr = did.id.split('did:key:')[1]
   expectedKid = `${did.id}#${didKeyVerStr}`
+})
+
+test('nodeStatus()', async () => {
+  const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+  const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+  ;(adminApi as any)._fetchJson = fauxFetch
+  await adminApi.nodeStatus()
+
+  expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/status`))
+  const sentPayload = fauxFetch.mock.calls[1][1]
+  const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+  const jwsResult = await did.verifyJWS(sentJws)
+  expect(jwsResult.kid).toEqual(expectedKid)
 })
 
 test('getIndexedModels()', async () => {
@@ -117,4 +133,90 @@ test('removeModelsFromIndex()', async () => {
   expect(jwsResult.kid).toEqual(expectedKid)
   expect(jwsResult.payload.requestBody.models.length).toEqual(1)
   expect(jwsResult.payload.requestBody.models[0]).toEqual(MODEL.toString())
+})
+
+describe('Admin Pin API', () => {
+  const STREAM = new StreamID(1, TestUtils.randomCID())
+
+  test('pin.add(streamId)', async () => {
+    const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+    const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+    ;(adminApi as any)._fetchJson = fauxFetch
+    ;(adminApi as any).pin._fetchJson = fauxFetch
+    await adminApi.pin.add(STREAM)
+
+    expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+    expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/pins/${STREAM}`))
+
+    const sentPayload = fauxFetch.mock.calls[1][1]
+    const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+    const jwsResult = await did.verifyJWS(sentJws)
+    expect(jwsResult.kid).toEqual(expectedKid)
+  })
+
+  test('pin.rm(streamId)', async () => {
+    const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+    const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+    ;(adminApi as any)._fetchJson = fauxFetch
+    ;(adminApi as any).pin._fetchJson = fauxFetch
+    await adminApi.pin.rm(STREAM)
+
+    expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+    expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/pins/${STREAM}`))
+
+    const sentPayload = fauxFetch.mock.calls[1][1]
+    const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+    const jwsResult = await did.verifyJWS(sentJws)
+    expect(jwsResult.kid).toEqual(expectedKid)
+  })
+
+  test('pin.ls(streamId)', async () => {
+    const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+    const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+    ;(adminApi as any)._fetchJson = fauxFetch
+    ;(adminApi as any).pin._fetchJson = fauxFetch
+    await adminApi.pin.ls(STREAM)
+
+    expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+    expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/pins/${STREAM}`))
+
+    const sentPayload = fauxFetch.mock.calls[1][1]
+    const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+    const jwsResult = await did.verifyJWS(sentJws)
+    expect(jwsResult.kid).toEqual(expectedKid)
+  })
+
+  test('pin.ls()', async () => {
+    const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
+    const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+    ;(adminApi as any)._fetchJson = fauxFetch
+    ;(adminApi as any).pin._fetchJson = fauxFetch
+    await adminApi.pin.ls()
+
+    expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
+    expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/pins`))
+
+    const sentPayload = fauxFetch.mock.calls[1][1]
+    const sentJws = sentPayload.headers.Authorization.split('Basic ')[1]
+
+    const jwsResult = await did.verifyJWS(sentJws)
+    expect(jwsResult.kid).toEqual(expectedKid)
+  })
+
+  test('missingDidFailureCases', async () => {
+    const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+
+    const failingAdminApi = new RemoteAdminApi(FAUX_ENDPOINT, noDidFn)
+    ;(failingAdminApi as any)._fetchJson = fauxFetch
+    ;(failingAdminApi as any).pin._fetchJson = fauxFetch
+
+    await expect(failingAdminApi.pin.add(STREAM)).rejects.toThrow(MissingDIDError)
+
+    await expect(failingAdminApi.pin.rm(STREAM)).rejects.toThrow(MissingDIDError)
+
+    await expect(failingAdminApi.pin.ls()).rejects.toThrow(MissingDIDError)
+  })
 })

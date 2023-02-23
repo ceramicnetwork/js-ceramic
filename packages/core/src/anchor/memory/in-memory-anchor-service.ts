@@ -83,6 +83,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
   }
 
+  get chainId(): string {
+    return CHAIN_ID
+  }
+
   async init(): Promise<void> {
     return
   }
@@ -270,6 +274,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   get url() {
     return '<inmemory>'
+  }
+
+  get ethereumRpcEndpoint(): string | null {
+    return null
   }
 
   /**

@@ -2,8 +2,13 @@ import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
+import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CAR } from 'cartonne'
+
+export enum AnchorServiceAuthMethods {
+  DID = 'did',
+}
 
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING
@@ -34,6 +39,19 @@ export interface AnchorServiceFailed {
   readonly message: string
 }
 
+export interface AnchorServiceReplaced {
+  readonly status: AnchorStatus.REPLACED
+  readonly streamId: StreamID
+  readonly cid: CID
+  readonly message: string
+}
+
+export type RequestAnchorParams = {
+  streamID: StreamID
+  tip: CID
+  timestampISO: string // a result of Date.toISOString()
+}
+
 /**
  * Describes anchor service response
  */
@@ -42,6 +60,7 @@ export type AnchorServiceResponse =
   | AnchorServiceProcessing
   | AnchorServiceAnchored
   | AnchorServiceFailed
+  | AnchorServiceReplaced
 
 /**
  * Describes anchoring service behavior
@@ -86,10 +105,51 @@ export interface AnchorService {
   getSupportedChains(): Promise<Array<string>>
 }
 
+export interface AuthenticatedAnchorService extends AnchorService {
+  /**
+   * Set Anchor Service Auth instance
+   *
+   * @param auth - Anchor service authentication instance
+   */
+  auth: AnchorServiceAuth
+}
+
+export interface AnchorServiceAuth {
+  /**
+   * Performs whatever initialization work is required by the specific auth implementation
+   */
+  init(): Promise<void>
+
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  ceramic: CeramicApi
+
+  /**
+   *
+   * @param url - Anchor service url as URL or string
+   * @param {FetchOpts} opts - Optional options for the request
+   */
+  sendAuthenticatedRequest: FetchRequest
+}
+
 /**
  * Describes behavior for validation anchor commit inclusion on chain
  */
 export interface AnchorValidator {
+  /**
+   * The ethereum chainId used for anchors.
+   */
+  chainId: string
+
+  /**
+   * The ethereum rpc endpoint used to validate anchor transactions. If null, likely means
+   * the node is using the default, rate-limited ethereum provider.
+   */
+  ethereumRpcEndpoint: string | null
+
   /**
    * Performs whatever initialization work is required to validate commits anchored on the
    * configured blockchain.

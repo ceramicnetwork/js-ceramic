@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.23.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.22.0...@ceramicnetwork/cli@2.23.0-rc.0) (2023-02-23)
+
+
+### Bug Fixes
+
+* add postinstall steps to dockerfile to apply multiaddr patches ([#2743](https://github.com/ceramicnetwork/js-ceramic/issues/2743)) ([67a3f9b](https://github.com/ceramicnetwork/js-ceramic/commit/67a3f9bde8d39dda8de639041bee46f04c28d204))
+* apply multiaddr patch ([#2740](https://github.com/ceramicnetwork/js-ceramic/issues/2740)) ([8002b04](https://github.com/ceramicnetwork/js-ceramic/commit/8002b044f04b388ff5d9d476c7b7b0bf943a7700))
+* move multiaddr patch to root directory ([#2744](https://github.com/ceramicnetwork/js-ceramic/issues/2744)) ([c3390a6](https://github.com/ceramicnetwork/js-ceramic/commit/c3390a641bdc8ff81a3b1e51d134632827e04e53))
+* re-indexing error on startup ([#2738](https://github.com/ceramicnetwork/js-ceramic/issues/2738)) ([15d54ba](https://github.com/ceramicnetwork/js-ceramic/commit/15d54bae6a3b28539d37b5463224582f57f4b910))
+
+
+### Features
+
+* **cli,http-client:** Add node status admin API endpoint skeleton ([#2713](https://github.com/ceramicnetwork/js-ceramic/issues/2713)) ([124b0da](https://github.com/ceramicnetwork/js-ceramic/commit/124b0da6c0c8f17ad7eb254a27eacd61b598cc98))
+* **core:** initial nodeStatus output ([#2715](https://github.com/ceramicnetwork/js-ceramic/issues/2715)) ([5ba3384](https://github.com/ceramicnetwork/js-ceramic/commit/5ba3384af4b2535a72a37324e7071117ec8c9d04))
+* Pin access control ([#2735](https://github.com/ceramicnetwork/js-ceramic/issues/2735)) ([ee505ca](https://github.com/ceramicnetwork/js-ceramic/commit/ee505cad77113b64e93925bbbc6aa6b56de63fd2))
+
+
+
+
+
+# [2.22.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.22.0-rc.0...@ceramicnetwork/cli@2.22.0) (2023-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [2.22.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.21.0-rc.0...@ceramicnetwork/cli@2.22.0-rc.0) (2023-02-16)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

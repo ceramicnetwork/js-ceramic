@@ -1,9 +1,11 @@
-import { jest } from '@jest/globals'
+import { expect, jest, beforeEach, beforeAll, afterEach, afterAll } from '@jest/globals'
 import {
+  AnchorServiceResponse,
   AnchorStatus,
   CommitType,
   IpfsApi,
   SignatureStatus,
+  Stream,
   StreamUtils,
   TestUtils,
 } from '@ceramicnetwork/common'
@@ -18,12 +20,13 @@ import { streamFromState } from '../state-management/stream-from-state.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import { from, timer } from 'rxjs'
-import { concatMap, map, tap } from 'rxjs/operators'
+import { from, Subject, timer } from 'rxjs'
+import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import cloneDeep from 'lodash.clonedeep'
 import { StateLink } from '../state-management/state-link.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+import { whenSubscriptionDone } from './when-subscription-done.util.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -603,6 +606,17 @@ describe('anchor', () => {
   describe('With anchorOnRequest == false', () => {
     let inMemoryAnchorService: InMemoryAnchorService
 
+    function expectAnchorStatus(stream: Stream, status: AnchorStatus) {
+      return TestUtils.waitForState(
+        stream,
+        1000,
+        (s) => s.anchorStatus === status,
+        (s) => {
+          throw new Error(`Expected anchor status ${status} but found ${s.anchorStatus}`)
+        }
+      )
+    }
+
     beforeAll(async () => {
       ceramic = await createCeramic(ipfs, { anchorOnRequest: false })
       controllers = [ceramic.did.id]
@@ -611,6 +625,52 @@ describe('anchor', () => {
 
     afterAll(async () => {
       await ceramic.close()
+    })
+
+    test('stop on REPLACED', async () => {
+      const tile = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
+      const stream$ = await ceramic.repository.load(tile.id, {})
+      const requestAnchorSpy = jest.spyOn(
+        ceramic.repository.stateManager.anchorService,
+        'requestAnchor'
+      )
+      // Emulate CAS responses to the 1st commit
+      const fauxCASResponse$ = new Subject<AnchorServiceResponse>()
+      requestAnchorSpy.mockReturnValueOnce(fauxCASResponse$)
+      // Subscription for the 1st commit
+      const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$)
+      // The emulated CAS accepts the request
+      fauxCASResponse$.next({
+        status: AnchorStatus.PENDING,
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+        message: 'CAS accepted the request',
+      })
+      await expectAnchorStatus(tile, AnchorStatus.PENDING)
+
+      // Now do the 2nd commit, anchor it
+      await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
+      const stillProcessingSecond = await ceramic.repository.stateManager.anchor(stream$)
+      await expectAnchorStatus(tile, AnchorStatus.PENDING)
+
+      // The emulated CAS informs Ceramic, that the 1st tip got REPLACED
+      fauxCASResponse$.next({
+        status: AnchorStatus.REPLACED,
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+        message: 'Replaced',
+      })
+
+      // Polling for the 1st commit should stop
+      await expect(whenSubscriptionDone(stillProcessingFirst)).resolves.not.toThrow()
+      expect(stillProcessingFirst.closed).toBeTruthy()
+
+      // Polling for 2nd commit should continue
+      expect(stillProcessingSecond.closed).toBeFalsy()
+
+      // Now teardown
+      fauxCASResponse$.complete()
+      stillProcessingSecond.unsubscribe()
     })
 
     test('anchor call', async () => {

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-crust-backend@2.12.0...@ceramicnetwork/pinning-crust-backend@2.13.0-rc.0) (2023-02-23)
+
+
+### Bug Fixes
+
+* apply multiaddr patch ([#2740](https://github.com/ceramicnetwork/js-ceramic/issues/2740)) ([8002b04](https://github.com/ceramicnetwork/js-ceramic/commit/8002b044f04b388ff5d9d476c7b7b0bf943a7700))
+
+
+
+
+
+# [2.12.0](/compare/@ceramicnetwork/pinning-crust-backend@2.12.0-rc.0...@ceramicnetwork/pinning-crust-backend@2.12.0) (2023-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-crust-backend
+
+
+
+
+
 # [2.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-crust-backend@2.11.0-rc.0...@ceramicnetwork/pinning-crust-backend@2.12.0-rc.0) (2023-02-16)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-crust-backend

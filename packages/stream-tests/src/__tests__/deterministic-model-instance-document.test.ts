@@ -49,16 +49,20 @@ describe('ModelInstanceDocument API http-client tests', () => {
   }, 12000)
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     core = await createCeramic(ipfs)
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
+    daemon = new CeramicDaemon(
+      core,
+      DaemonConfig.fromObject({
+        'http-api': { port: port, 'admin-dids': [core.did.id.toString()] },
+        node: {},
+      })
+    )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
-    ceramic.setDID(core.did)
+    ceramic.did = core.did
 
     model = await Model.create(ceramic, MODEL_DEFINITION)
     midMetadata = { model: model.id }
@@ -144,8 +148,6 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   }, 12000)
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
 

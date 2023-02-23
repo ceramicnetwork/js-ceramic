@@ -14,6 +14,7 @@ import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
+import { ISyncQueryApi } from '../sync/interfaces.js'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
@@ -59,6 +60,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
   // indexed
   private readonly modelsIndexedFields = new Map<string, Array<string>>()
   tablesManager: TablesManager
+  syncApi: ISyncQueryApi
 
   constructor(
     private readonly dbConnection: Knex,
@@ -67,6 +69,10 @@ export class DatabaseIndexApi<DateType = Date | number> {
     private readonly network: Networks
   ) {
     this.insertionOrder = new InsertionOrder(dbConnection)
+  }
+
+  setSyncQueryApi(api: ISyncQueryApi) {
+    this.syncApi = api
   }
 
   now(): DateType {
@@ -81,6 +87,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
+      await this.assertNoOngoingSyncForModel(modelArgs.model)
       this.modelsToIndex.push(modelArgs.model)
       if (modelArgs.relations) {
         this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
@@ -198,20 +205,50 @@ export class DatabaseIndexApi<DateType = Date | number> {
     })
   }
 
+  async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+    return (
+      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
+        is_indexed: false,
+      })
+    ).map((result) => {
+      return StreamID.fromString(result.model)
+    })
+  }
+
   /**
    * Ensures that the given model StreamID can be queried and throws if not.
    */
-  assertModelQueryable(modelStreamId: StreamID | string): void {
-    // TODO(NET-1630) Throw if historical indexing is in progress
-    if (!this.allowQueriesBeforeHistoricalSync) {
-      throw new IndexQueryNotAvailableError(modelStreamId)
-    }
+  async assertModelQueryable(modelStreamId: StreamID | string) {
+    await this.assertModelIsIndexed(modelStreamId)
+    await this.assertNoOngoingSyncForModel(modelStreamId)
+  }
 
+  /**
+   * Assert that a model has been indexed
+   * @param modelStreamId
+   */
+  async assertModelIsIndexed(modelStreamId: StreamID | string) {
     const model = modelStreamId.toString()
-    if (this.modelsToIndex.find((indexedModel) => indexedModel.toString() == model) == undefined) {
+    const foundModelToIndex = this.modelsToIndex.find(
+      (indexedModel) => indexedModel.toString() == model
+    )
+    if (foundModelToIndex == undefined) {
       const err = new Error(`Query failed: Model ${model} is not indexed on this node`)
       this.logger.debug(err)
       throw err
+    }
+  }
+
+  /**
+   * Assert that there is no ongoing historical sync for a model
+   * @param modelStreamId
+   */
+  async assertNoOngoingSyncForModel(modelStreamId: StreamID | string): Promise<void> {
+    if (
+      !this.allowQueriesBeforeHistoricalSync &&
+      !(await this.syncApi.syncComplete(modelStreamId.toString()))
+    ) {
+      throw new IndexQueryNotAvailableError(modelStreamId)
     }
   }
 
@@ -223,7 +260,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * Return number of suitable indexed records.
    */
   async count(query: BaseQuery): Promise<number> {
-    this.assertModelQueryable(query.model)
+    await this.assertModelQueryable(query.model)
 
     const tableName = asTableName(query.model)
     let dbQuery = this.dbConnection(tableName).count('*')
@@ -244,7 +281,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * Query the index.
    */
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
-    this.assertModelQueryable(query.model)
+    await this.assertModelQueryable(query.model)
     return this.insertionOrder.page(query)
   }
 
