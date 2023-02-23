@@ -20,6 +20,7 @@ import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
+import { ISyncQueryApi } from '../../sync/interfaces.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -58,6 +59,22 @@ function modelsToIndexArgs(models: Array<StreamID>): Array<IndexModelArgs> {
   })
 }
 
+class CompleteQueryApi implements ISyncQueryApi {
+  syncComplete(model: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      resolve(true)
+    })
+  }
+}
+
+class IncompleteQueryApi implements ISyncQueryApi {
+  syncComplete(model: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      resolve(false)
+    })
+  }
+}
+
 describe('postgres', () => {
   const STRUCTURE = STRUCTURES[DatabaseType.POSTGRES]
 
@@ -94,6 +111,7 @@ describe('postgres', () => {
       test('create new table from scratch', async () => {
         const modelToIndex = StreamID.fromString(STREAM_ID_A)
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
         await indexApi.indexModels(modelsToIndexArgs([modelToIndex]))
         const created = await indexApi.tablesManager.listMidTables()
@@ -125,6 +143,7 @@ describe('postgres', () => {
           },
         ]
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
         await indexApi.indexModels(indexModelsArgs)
         const created = await indexApi.tablesManager.listMidTables()
@@ -144,6 +163,7 @@ describe('postgres', () => {
       test('table creation is idempotent', async () => {
         const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
         await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
         // Index the same models again to make sure we don't error trying to re-create the tables
@@ -157,6 +177,7 @@ describe('postgres', () => {
         // First init with one model
         const modelsA = [StreamID.fromString(STREAM_ID_A)]
         const indexApiA = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiA.setSyncQueryApi(new CompleteQueryApi())
         await indexApiA.init()
         await indexApiA.indexModels(modelsToIndexArgs(modelsA))
         const createdA = await indexApiA.tablesManager.listMidTables()
@@ -166,6 +187,7 @@ describe('postgres', () => {
         // Next add another one
         const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
         const indexApiB = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiB.setSyncQueryApi(new CompleteQueryApi())
         await indexApiB.indexModels(modelsToIndexArgs(modelsB))
         const createdB = await indexApiB.tablesManager.listMidTables()
         const tableNamesB = modelsB.map(asTableName)
@@ -174,16 +196,19 @@ describe('postgres', () => {
 
       test('checks or persists the network used for indexing', async () => {
         const indexApiA = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiA.setSyncQueryApi(new CompleteQueryApi())
         await indexApiA.init()
 
         // Throws if initialized with a different network
         const indexApiB = new PostgresIndexApi(dbConnection, true, logger, Networks.MAINNET)
+        indexApiB.setSyncQueryApi(new CompleteQueryApi())
         await expect(indexApiB.init()).rejects.toThrow(
           'Initialization failed for config table: ceramic_config. The database is configured to use the network inmemory but the current network is mainnet.'
         )
 
         // Does not throw if initialized with the stored network
         const indexApiC = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiC.setSyncQueryApi(new CompleteQueryApi())
         await expect(indexApiC.init()).resolves.toBeUndefined()
       })
     })
@@ -203,6 +228,7 @@ describe('postgres', () => {
         const modelToIndex = StreamID.fromString(STREAM_ID_A)
         const tableName = asTableName(modelToIndex)
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
@@ -240,6 +266,7 @@ describe('postgres', () => {
         const tableName = asTableName(modelToIndex)
 
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
@@ -314,6 +341,7 @@ describe('postgres', () => {
         ]
 
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
@@ -354,6 +382,7 @@ describe('postgres', () => {
         destroy: jest.fn(),
       } as unknown as Knex
       const indexApi = new PostgresIndexApi(fauxDbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.close()
       expect(fauxDbConnection.destroy).toBeCalled()
     })
@@ -372,6 +401,7 @@ describe('postgres', () => {
     test('populates the INDEXED_MODEL_CONFIG_TABLE_NAME table on indexModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
@@ -394,6 +424,7 @@ describe('postgres', () => {
     test('updates the INDEXED_MODEL_CONFIG_TABLE_NAME table on stopIndexingModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
@@ -417,6 +448,7 @@ describe('postgres', () => {
     test('re-indexing models', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
 
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
@@ -471,10 +503,12 @@ describe('postgres', () => {
     test('modelsToIndex is properly populated after init()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
       const anotherIndexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await anotherIndexApi.init()
 
       expect(
@@ -491,6 +525,7 @@ describe('postgres', () => {
     test('modelsToIndex is properly updated after indexModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       expect(indexApi.getActiveModelsToIndex()).toEqual([])
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
@@ -508,6 +543,7 @@ describe('postgres', () => {
     test('modelsToIndex is properly updated after stopIndexingModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       expect(
@@ -552,6 +588,7 @@ describe('postgres', () => {
     let indexApi: PostgresIndexApi
     beforeEach(async () => {
       indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
     })
@@ -652,6 +689,7 @@ describe('postgres', () => {
 
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
@@ -662,6 +700,7 @@ describe('postgres', () => {
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new IncompleteQueryApi())
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
@@ -676,6 +715,7 @@ describe('postgres', () => {
 
     test('all', async () => {
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(
         MODELS_TO_INDEX.map((m) => {
@@ -721,6 +761,7 @@ describe('sqlite', () => {
       test('create new table from scratch', async () => {
         const modelToIndex = StreamID.fromString(STREAM_ID_A)
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
         await indexApi.indexModels(modelsToIndexArgs([modelToIndex]))
         const created = await indexApi.tablesManager.listMidTables()
@@ -754,6 +795,7 @@ describe('sqlite', () => {
           },
         ]
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
         await indexApi.indexModels(indexModelsArgs)
         const created = await indexApi.tablesManager.listMidTables()
@@ -773,6 +815,7 @@ describe('sqlite', () => {
       test('table creation is idempotent', async () => {
         const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
         await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
         // Index the same models again to make sure we don't error trying to re-create the tables
@@ -786,6 +829,7 @@ describe('sqlite', () => {
         // First init with one model
         const modelsA = [StreamID.fromString(STREAM_ID_A)]
         const indexApiA = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiA.setSyncQueryApi(new CompleteQueryApi())
         await indexApiA.init()
         await indexApiA.indexModels(modelsToIndexArgs(modelsA))
         const createdA = await indexApiA.tablesManager.listMidTables()
@@ -795,6 +839,7 @@ describe('sqlite', () => {
         // Next add another one
         const modelsB = [...modelsA, StreamID.fromString(STREAM_ID_B)]
         const indexApiB = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiB.setSyncQueryApi(new CompleteQueryApi())
         await indexApiB.indexModels(modelsToIndexArgs(modelsB))
         const createdB = await indexApiB.tablesManager.listMidTables()
         const tableNamesB = modelsB.map((m) => `${m.toString()}`)
@@ -803,16 +848,19 @@ describe('sqlite', () => {
 
       test('checks or persists the network used for indexing', async () => {
         const indexApiA = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiA.setSyncQueryApi(new CompleteQueryApi())
         await indexApiA.init()
 
         // Throws if initialized with a different network
         const indexApiB = new SqliteIndexApi(dbConnection, true, logger, Networks.MAINNET)
+        indexApiB.setSyncQueryApi(new CompleteQueryApi())
         await expect(indexApiB.init()).rejects.toThrow(
           'Initialization failed for config table: ceramic_config. The database is configured to use the network inmemory but the current network is mainnet.'
         )
 
         // Does not throw if initialized with the stored network
         const indexApiC = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApiC.setSyncQueryApi(new CompleteQueryApi())
         await expect(indexApiC.init()).resolves.toBeUndefined()
       })
     })
@@ -831,6 +879,7 @@ describe('sqlite', () => {
       test('Can manually create table that passes validation', async () => {
         const modelToIndex = StreamID.fromString(STREAM_ID_A)
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
@@ -861,6 +910,7 @@ describe('sqlite', () => {
       test('Fail table validation', async () => {
         const modelToIndex = StreamID.fromString(STREAM_ID_A)
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
@@ -922,6 +972,7 @@ describe('sqlite', () => {
         ]
 
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
 
         // Create the table in the database with all expected fields but one (leaving off 'updated_at')
@@ -960,6 +1011,7 @@ describe('sqlite', () => {
         destroy: jest.fn(),
       } as unknown as Knex
       const indexApi = new SqliteIndexApi(fauxDbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.close()
       expect(fauxDbConnection.destroy).toBeCalled()
     })
@@ -978,6 +1030,7 @@ describe('sqlite', () => {
     test('populates the INDEXED_MODEL_CONFIG_TABLE_NAME table on indexModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
@@ -1000,6 +1053,7 @@ describe('sqlite', () => {
     test('updates the INDEXED_MODEL_CONFIG_TABLE_NAME table on stopIndexingModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
@@ -1023,6 +1077,7 @@ describe('sqlite', () => {
     test('re-indexing models', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
 
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
@@ -1077,10 +1132,12 @@ describe('sqlite', () => {
     test('modelsToIndex is properly populated after init()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
 
       const anotherIndexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await anotherIndexApi.init()
 
       expect(
@@ -1097,6 +1154,7 @@ describe('sqlite', () => {
     test('modelsToIndex is properly updated after indexModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       expect(indexApi.getActiveModelsToIndex()).toEqual([])
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
@@ -1111,9 +1169,21 @@ describe('sqlite', () => {
       ])
     })
 
+    test('modelsToIndex not allowed if sync in progress', async () => {
+      const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+      const indexApi = new SqliteIndexApi(dbConnection, false, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new IncompleteQueryApi())
+      await indexApi.init()
+      expect(indexApi.getActiveModelsToIndex()).toEqual([])
+      await expect(indexApi.indexModels(modelsToIndexArgs(modelsToIndex))).rejects.toThrow(
+        /Index for historical data/
+      )
+    })
+
     test('modelsToIndex is properly updated after stopIndexingModels()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       expect(
@@ -1149,6 +1219,7 @@ describe('sqlite', () => {
     let indexApi: SqliteIndexApi
     beforeEach(async () => {
       indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
     })
@@ -1203,6 +1274,7 @@ describe('sqlite', () => {
 
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
@@ -1213,6 +1285,7 @@ describe('sqlite', () => {
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new IncompleteQueryApi())
       indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
@@ -1227,6 +1300,7 @@ describe('sqlite', () => {
 
     test('all', async () => {
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(
         MODELS_TO_INDEX.map((m) => {

@@ -14,6 +14,7 @@ import { IndexingConfig } from './build-indexing.js'
 import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
+import { ISyncQueryApi } from '../sync/interfaces.js'
 
 /**
  * Takes a Model StreamID, loads it, and returns the IndexModelArgs necessary to prepare the
@@ -52,6 +53,12 @@ export class LocalIndexApi implements IndexApi {
     networkName: Networks
   ) {
     this.databaseIndexApi = makeIndexApi(indexingConfig, networkName, logger)
+  }
+
+  setSyncQueryApi(api: ISyncQueryApi) {
+    if (this.databaseIndexApi) {
+      this.databaseIndexApi.setSyncQueryApi(api)
+    }
   }
 
   shouldIndexStream(args: StreamID): boolean {

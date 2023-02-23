@@ -10,7 +10,18 @@ export type SyncConfig = {
   chainId: SupportedNetwork
 }
 
-export interface ISyncApi {
+/**
+ * Interface to determine if a sync has completed for a particular model
+ */
+export interface ISyncQueryApi {
+  syncComplete(model: string): boolean
+}
+
+/**
+ * Interface used with historical sync'ing to start model sync on one or more models, or to
+ * shutdown the service providing the sync'ing
+ */
+export interface ISyncApi extends ISyncQueryApi {
   startModelSync(models: string | string[], startBlock?: number, endBlock?: number): Promise<void>
   shutdown(): Promise<void>
 }
@@ -44,8 +55,14 @@ export const HISTORY_SYNC_JOB = 'historySyncJob'
 export const CONTINUOUS_SYNC_JOB = 'continuousSyncJob'
 
 export type SyncJob = typeof HISTORY_SYNC_JOB | typeof CONTINUOUS_SYNC_JOB
+export enum SyncJobType {
+  Catchup,
+  Reorg,
+  Full,
+}
 export interface SyncJobData {
   currentBlock?: number
+  jobType: SyncJobType
   fromBlock: number
   toBlock: number
   models: string[]

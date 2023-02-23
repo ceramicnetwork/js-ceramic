@@ -4,7 +4,12 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { type Knex } from 'knex'
 import { Observable } from 'rxjs'
 
-import { REBUILD_ANCHOR_JOB, HISTORY_SYNC_JOB, CONTINUOUS_SYNC_JOB } from '../interfaces.js'
+import {
+  REBUILD_ANCHOR_JOB,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+  SyncJobType,
+} from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob } from '../workers/sync.js'
 
@@ -210,6 +215,7 @@ describe('Sync API', () => {
 
       await sync.init({ getBlock, getNetwork } as any)
       expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
+        jobType: SyncJobType.Catchup,
         fromBlock: 0,
         toBlock: 10,
         models: expectedModels,
@@ -240,11 +246,14 @@ describe('Sync API', () => {
       sync._addSyncJob = addSyncJob as any
 
       await sync.init({ getBlock, getNetwork } as any)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
-        fromBlock: 5,
-        toBlock: 10,
-        models: expectedModels,
-      })
+      expect(addSyncJob).toHaveBeenCalledWith(
+        HISTORY_SYNC_JOB,
+        expect.objectContaining({
+          fromBlock: 5,
+          toBlock: 10,
+          models: expectedModels,
+        })
+      )
 
       await sync.shutdown()
     })
@@ -316,7 +325,7 @@ describe('Sync API', () => {
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123'] }
       await sync.startModelSync('abc123', data.fromBlock, data.toBlock)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
+      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
 
@@ -335,7 +344,7 @@ describe('Sync API', () => {
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'def456'] }
       await sync.startModelSync(data.models, data.fromBlock, data.toBlock)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
+      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
   })
@@ -354,9 +363,15 @@ describe('Sync API', () => {
     // @ts-ignore private field
     sync.jobQueue = { addJob }
 
-    const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'abc456'] }
+    const data = {
+      jobType: SyncJobType.Full,
+      fromBlock: 1,
+      toBlock: 10,
+      models: ['abc123', 'abc456'],
+    }
     await sync._addSyncJob(HISTORY_SYNC_JOB, data)
     expect(addJob).toHaveBeenCalledWith(createHistorySyncJob(data))
+    expect(sync.modelsToHistoricSync.has('abc123')).toBeTruthy()
   })
 
   test('_updateStoredState() updates the state in DB', async () => {
@@ -396,6 +411,10 @@ describe('Sync API', () => {
       )
       // @ts-ignore private field
       sync.modelsToSync = new Set(['abc123', 'def456'])
+      sync.modelsToHistoricSync = new Map([
+        ['abc123', 2],
+        ['def456', 1],
+      ])
 
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
@@ -407,6 +426,7 @@ describe('Sync API', () => {
         reorganized: false,
       } as any)
       expect(addSyncJob).toHaveBeenCalledWith(CONTINUOUS_SYNC_JOB, {
+        jobType: SyncJobType.Reorg,
         fromBlock: 10,
         toBlock: 10,
         models: ['abc123', 'def456'],
@@ -415,6 +435,8 @@ describe('Sync API', () => {
         processedBlockHash: 'abc789',
         processedBlockNumber: 10,
       })
+      expect(await sync.syncComplete('abc123')).toBeFalsy()
+      expect(await sync.syncComplete('def456')).toBeFalsy()
     })
 
     test('loads the expected block range on block reorganization', async () => {
@@ -439,15 +461,21 @@ describe('Sync API', () => {
         reorganized: true,
         expectedParentHash: 'ghi789',
       } as any)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
-        fromBlock: 100 - BLOCK_CONFIRMATIONS,
-        toBlock: 100,
-        models: ['abc123', 'def456'],
-      })
+      expect(addSyncJob).toHaveBeenCalledWith(
+        HISTORY_SYNC_JOB,
+        expect.objectContaining({
+          fromBlock: 100 - BLOCK_CONFIRMATIONS,
+          toBlock: 100,
+          models: ['abc123', 'def456'],
+        })
+      )
       expect(updateStoredState).toHaveBeenCalledWith({
         processedBlockHash: 'abc789',
         processedBlockNumber: 100,
       })
+
+      expect(await sync.syncComplete('abc123')).toBeTruthy()
+      expect(await sync.syncComplete('abc789')).toBeTruthy()
     })
   })
 
