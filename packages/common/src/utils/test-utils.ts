@@ -113,7 +113,7 @@ export class TestUtils {
   }
 
   static async isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
-    const iterator = await ceramic.pin.ls(streamId)
+    const iterator = await ceramic.admin.pin.ls(streamId)
     return (await first(iterator)) == streamId.toString()
   }
 

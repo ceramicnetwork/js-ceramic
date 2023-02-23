@@ -46,6 +46,7 @@ export const CONTINUOUS_SYNC_JOB = 'continuousSyncJob'
 
 export type SyncJob = typeof HISTORY_SYNC_JOB | typeof CONTINUOUS_SYNC_JOB
 export interface SyncJobData {
+  currentBlock?: number
   fromBlock: number
   toBlock: number
   models: string[]

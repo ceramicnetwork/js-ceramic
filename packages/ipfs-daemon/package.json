@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-daemon",
-  "version": "2.13.0-rc.0",
+  "version": "2.13.0",
   "description": "IPFS daemon wraps js-ipfs instance with dag-jose codec enabled",
   "keywords": [
     "ipfs",
@@ -34,6 +34,7 @@
   },
   "scripts": {
     "build": "npx tsc -p tsconfig.json",
+    "postinstall": "shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && patch-package",
     "start": "npx tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -42,8 +43,8 @@
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.20.0-rc.0",
-    "@ceramicnetwork/ipfs-topology": "^2.14.0-rc.0",
+    "@ceramicnetwork/common": "^2.20.0",
+    "@ceramicnetwork/ipfs-topology": "^2.14.0",
     "dag-jose": "^2.0.0",
     "express": "^4.17.2",
     "get-port": "^6.0.0",

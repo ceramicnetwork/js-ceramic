@@ -134,10 +134,24 @@ export class LocalIndexApi implements IndexApi {
       return
     }
 
+    const previouslyIndexedModels =
+      await this.databaseIndexApi?.getPreviouslyIndexedModelsFromDatabase()
+
     const indexModelsArgs = []
     for (const modelStreamId of models) {
       this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
       const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
+      if (previouslyIndexedModels) {
+        const streamWasPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
+          return String(streamId) === String(modelStreamId)
+        })
+        // TODO(CDB-2297): Handle a model's historical sync after re-indexing
+        if (streamWasPreviouslyIndexed) {
+          throw new Error(
+            `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
+          )
+        }
+      }
       indexModelsArgs.push(indexModelArgs)
     }
     await this.databaseIndexApi?.indexModels(indexModelsArgs)

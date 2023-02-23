@@ -73,7 +73,8 @@ export function buildIndexing(
         network
       )
     }
-    case 'postgres': {
+    case 'postgres':
+    case 'postgresql': {
       logger.imp('Initializing PostgreSQL connection')
       const dataSource = knex({
         client: 'pg',

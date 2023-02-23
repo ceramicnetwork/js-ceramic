@@ -520,7 +520,7 @@ describe('Sync API', () => {
         [HISTORY_SYNC_JOB]: [
           {
             name: HISTORY_SYNC_JOB,
-            data: { fromBlock: 100, toBlock: 200 },
+            data: { fromBlock: 100, toBlock: 200, currentBlock: 101 },
             id: '12345',
             startedOn: new Date(1677015880491),
             createdOn: new Date(1677015880491 - 100000),
@@ -544,6 +544,8 @@ describe('Sync API', () => {
     sync.jobQueue = {
       getJobs,
     }
+    // @ts-ignore private field
+    sync.startBlock = 499
 
     await sync._logSyncStatus()
 
