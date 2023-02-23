@@ -66,7 +66,6 @@ describe('Sync Worker', () => {
     const logger = new LoggerProvider().getDiagnosticsLogger()
     await pgSetup()
     jobQueue = new JobQueue(process.env.DATABASE_URL as string, logger)
-    jobQueue._clearAllJobs()
 
     SyncPackage = await import('../sync.js')
     const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue, 'eip155:1337', logger)
