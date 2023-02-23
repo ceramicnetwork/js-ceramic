@@ -6,24 +6,30 @@ import {
 import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
-import { Subscription, mergeMap, catchError, interval, concatMap, defer } from 'rxjs'
+import { catchError, concatMap, defer, interval, mergeMap, Subscription } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
 import { type IJobQueue, JobQueue } from '../state-management/job-queue.js'
 
 import {
-  REBUILD_ANCHOR_JOB,
-  ISyncApi,
-  IpfsService,
-  HandleCommit,
-  type JobData,
-  type SyncJob,
-  HISTORY_SYNC_JOB,
   CONTINUOUS_SYNC_JOB,
+  HandleCommit,
+  HISTORY_SYNC_JOB,
+  IpfsService,
+  ISyncApi,
+  type JobData,
+  REBUILD_ANCHOR_JOB,
+  type SyncJob,
   SyncJobData,
+  SyncJobType,
 } from './interfaces.js'
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
-import { SyncWorker, createHistorySyncJob, createContinuousSyncJob } from './workers/sync.js'
+import {
+  createContinuousSyncJob,
+  createHistorySyncJob,
+  SyncCompleteData,
+  SyncWorker,
+} from './workers/sync.js'
 
 const SYNC_STATUS_LOG_INTERVAL = 60000
 export const BLOCK_CONFIRMATIONS = 20
@@ -95,7 +101,7 @@ export interface SyncStatus {
 
 export class SyncApi implements ISyncApi {
   public readonly modelsToSync = new Set<string>()
-
+  public readonly modelsToHistoricSync = new Map<string, number>()
   private readonly dataSource: Knex
   private readonly jobQueue: IJobQueue<JobData>
   private subscription: Subscription | undefined
@@ -137,14 +143,19 @@ export class SyncApi implements ISyncApi {
     this.startBlock = latestBlock.number
     this._initBlockSubscription(latestBlock.hash)
 
+    // catching up
     if (processedBlockNumber == null) {
+      //no sync happened before
       await this._addSyncJob(HISTORY_SYNC_JOB, {
+        jobType: SyncJobType.Catchup,
         fromBlock: this.initialIndexingBlock,
         toBlock: latestBlock.number,
         models: Array.from(this.modelsToSync),
       })
     } else if (processedBlockNumber < latestBlock.number) {
+      // sync has happened, but we still need to catch up
       await this._addSyncJob(HISTORY_SYNC_JOB, {
+        jobType: SyncJobType.Catchup,
         fromBlock: processedBlockNumber,
         toBlock: latestBlock.number,
         models: Array.from(this.modelsToSync),
@@ -168,15 +179,27 @@ export class SyncApi implements ISyncApi {
         this.provider,
         this.jobQueue,
         this.chainId,
-        this.diagnosticsLogger
+        this.diagnosticsLogger,
+        this.syncCompletedForModel
       ),
       [CONTINUOUS_SYNC_JOB]: new SyncWorker(
         this.provider,
         this.jobQueue,
         this.chainId,
-        this.diagnosticsLogger
+        this.diagnosticsLogger,
+        this.syncCompletedForModel
       ),
     })
+  }
+
+  upsertModelForHistoricSync(model: string) {
+    let existing = this.modelsToHistoricSync.get(model)
+    if (existing) {
+      existing += 1
+    } else {
+      existing = 0
+    }
+    this.modelsToHistoricSync.set(model, existing)
   }
 
   /**
@@ -242,14 +265,17 @@ export class SyncApi implements ISyncApi {
   async _handleBlockProofs({ block, reorganized }: BlockProofsListenerEvent): Promise<void> {
     this.currentBlock = block.number
 
+    // reorg
     if (reorganized) {
       await this._addSyncJob(HISTORY_SYNC_JOB, {
+        jobType: SyncJobType.Reorg,
         fromBlock: block.number - BLOCK_CONFIRMATIONS,
         toBlock: block.number,
         models: Array.from(this.modelsToSync),
       })
     } else {
       await this._addSyncJob(CONTINUOUS_SYNC_JOB, {
+        jobType: SyncJobType.Reorg,
         fromBlock: block.number,
         toBlock: block.number,
         models: Array.from(this.modelsToSync),
@@ -268,6 +294,12 @@ export class SyncApi implements ISyncApi {
   async _addSyncJob(type: SyncJob, data: SyncJobData): Promise<void> {
     if (data.models.length === 0) {
       return
+    }
+
+    if (data.jobType != SyncJobType.Reorg) {
+      for (const model of data.models) {
+        this.upsertModelForHistoricSync(model)
+      }
     }
 
     const job =
@@ -374,7 +406,8 @@ export class SyncApi implements ISyncApi {
 
     // Keep track of all models IDs to sync
     for (const id of modelIds) {
-      this.modelsToSync.add(id.toString())
+      const modelId = id.toString()
+      this.modelsToSync.add(modelId)
     }
 
     if (!endBlock) {
@@ -383,12 +416,15 @@ export class SyncApi implements ISyncApi {
         .then(({ number }) => number - BLOCK_CONFIRMATIONS)
     }
 
+    // start a new full sync on a model
     await this._addSyncJob(HISTORY_SYNC_JOB, {
+      jobType: SyncJobType.Full,
       fromBlock: startBlock,
       toBlock: endBlock,
       models: modelIds,
     })
   }
+
 
   /**
    * Stop models from being included in the continuous sync
@@ -406,6 +442,23 @@ export class SyncApi implements ISyncApi {
     this.diagnosticsLogger.warn(
       `Stopped syncing models ${models}. Syncs that are currently running will not be stopped/cancelled but this is a temporary state and will be implemented in a future version.`
     )
+  }
+
+  syncCompletedForModel(data: SyncCompleteData) {
+    if (data.jobType != SyncJobType.Reorg) {
+      const existing = this.modelsToHistoricSync.get(data.modelId)
+      if (existing) {
+        if (existing <= 1) {
+          this.modelsToHistoricSync.delete(data.modelId)
+        } else {
+          this.modelsToHistoricSync.set(data.modelId, existing - 1)
+        }
+      }
+    }
+  }
+
+  syncComplete(model: string): boolean {
+    return !this.modelsToHistoricSync.has(model)
   }
 
   async shutdown(): Promise<void> {

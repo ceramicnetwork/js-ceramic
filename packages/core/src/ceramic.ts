@@ -306,6 +306,7 @@ export class Ceramic implements CeramicApi {
       this._logger
     )
     const pinApi = this._buildPinApi()
+    this.repository.index.setSyncQueryApi(this.syncApi)
     this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this), pinApi)
   }
 
@@ -597,12 +598,6 @@ export class Ceramic implements CeramicApi {
 
       if (this._gateway) {
         this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
-      }
-
-      if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB == 'true') {
-        this._logger.warn(
-          `Warning: indexing and query APIs are experimental and still under active development.  Please do not create Composites, Models, or ModelInstanceDocument streams, or use any of the new GraphQL query APIs on mainnet until they are officially released`
-        )
       }
 
       await this.repository.init()

@@ -2,7 +2,6 @@ import os from 'os'
 import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
-
 import * as fs from 'fs/promises'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
@@ -68,6 +67,7 @@ const generateDefaultDaemonConfig = () => {
     },
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
+      'disable-composedb': false,
     },
   })
 }
@@ -108,6 +108,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
+   * @param disableComposedb - Disable Compose DB Indexing service.
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -129,7 +130,8 @@ export class CeramicCliUtils {
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
-    syncOverride: string
+    syncOverride: string,
+    disableComposedb: boolean
   ): Promise<CeramicDaemon> {
     const configFilepath = configFilename
       ? new URL(configFilename, CWD)
@@ -206,6 +208,14 @@ export class CeramicCliUtils {
       if (syncOverride) {
         config.node.syncOverride = syncOverride
       }
+      if (disableComposedb) {
+        config.indexing.disableComposedb = true
+      }
+
+      if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
+        config.indexing.disableComposedb = true
+      }
+
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
         config.stateStore.localDirectory = stateStoreDirectory

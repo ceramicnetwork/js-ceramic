@@ -30,7 +30,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "npx tsc --project tsconfig.json",
-    "postinstall": "shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && patch-package",
+    "postinstall": "npx shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && npx patch-package",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",

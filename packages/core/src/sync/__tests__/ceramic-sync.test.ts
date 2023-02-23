@@ -280,8 +280,6 @@ describe('Sync tests', () => {
     ipfs2 = await createIPFS()
     await swarmConnect(ipfs1, ipfs2)
 
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     // syncing is not enabled
     creatingCeramic = await createCeramic(ipfs2 as any)
     const model = await Model.create(creatingCeramic, MODEL_DEFINITION)
