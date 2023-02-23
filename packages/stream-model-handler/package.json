@@ -55,7 +55,7 @@
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/node": "^18.0.3",
-    "did-resolver": "^3.1.5",
+    "did-resolver": "^4.0.1",
     "dids": "^3.4.0",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",

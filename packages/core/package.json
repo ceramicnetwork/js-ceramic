@@ -90,7 +90,7 @@
     "@didtools/cacao": "^1.0.0",
     "@types/node": "^18.0.3",
     "csv-parser": "^3.0.0",
-    "did-resolver": "^3.1.5",
+    "did-resolver": "^4.0.1",
     "genversion": "^3.0.2",
     "key-did-provider-ed25519": "^2.0.0",
     "key-did-resolver": "^2.3.0",

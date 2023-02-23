@@ -55,7 +55,7 @@
     "commander": "^9.4.1",
     "cors": "^2.8.5",
     "dag-jose": "^2.0.0",
-    "did-resolver": "^3.1.5",
+    "did-resolver": "^4.0.1",
     "dids": "^3.4.0",
     "ethr-did-resolver": "^5.0.3",
     "express": "^4.17.2",
