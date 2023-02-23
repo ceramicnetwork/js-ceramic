@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.25.0...@ceramicnetwork/core@2.26.0-rc.0) (2023-02-23)
+
+
+### Bug Fixes
+
+* **anchor-listener, core:** batch get logs ([#2710](https://github.com/ceramicnetwork/js-ceramic/issues/2710)) ([c6fcaae](https://github.com/ceramicnetwork/js-ceramic/commit/c6fcaae5fdd807d913432df7f238dc7fa496a0c6))
+* **core, anchor-utils, anchor-listener:** change defaults ([#2721](https://github.com/ceramicnetwork/js-ceramic/issues/2721)) ([4fd6c24](https://github.com/ceramicnetwork/js-ceramic/commit/4fd6c24cd968aa91a10145b45e7d42e74bf6781e))
+* **core:** do not expect link when we retrieve the commit when rebuilding the anchor ([#2723](https://github.com/ceramicnetwork/js-ceramic/issues/2723)) ([4fce3b2](https://github.com/ceramicnetwork/js-ceramic/commit/4fce3b2f5fc3040cd8290ebf9476ed25034e2a09))
+* **core:** logging and job queue ([#2739](https://github.com/ceramicnetwork/js-ceramic/issues/2739)) ([52b7d2c](https://github.com/ceramicnetwork/js-ceramic/commit/52b7d2cbd86e59a10093c85a78dd8aa1efbbbb2d))
+* fix postgresql database url not accepted ([#2737](https://github.com/ceramicnetwork/js-ceramic/issues/2737)) ([c1bab2c](https://github.com/ceramicnetwork/js-ceramic/commit/c1bab2cd2d2ecb77cfb1893d6b63cb82cffb0f2c))
+* re-indexing error on startup ([#2738](https://github.com/ceramicnetwork/js-ceramic/issues/2738)) ([15d54ba](https://github.com/ceramicnetwork/js-ceramic/commit/15d54bae6a3b28539d37b5463224582f57f4b910))
+
+
+### Features
+
+* **cli,http-client:** Add node status admin API endpoint skeleton ([#2713](https://github.com/ceramicnetwork/js-ceramic/issues/2713)) ([124b0da](https://github.com/ceramicnetwork/js-ceramic/commit/124b0da6c0c8f17ad7eb254a27eacd61b598cc98))
+* **core:** add logging to syncing ([#2712](https://github.com/ceramicnetwork/js-ceramic/issues/2712)) ([b8caa1d](https://github.com/ceramicnetwork/js-ceramic/commit/b8caa1dedf9d0b84ff0a969ae5a5ec6fb6112e5a))
+* **core:** Add stop model sync to admin api ([#2741](https://github.com/ceramicnetwork/js-ceramic/issues/2741)) ([3e294ec](https://github.com/ceramicnetwork/js-ceramic/commit/3e294ecd8db1e1085b582d6ad60cc010dfc9cc55))
+* **core:** initial nodeStatus output ([#2715](https://github.com/ceramicnetwork/js-ceramic/issues/2715)) ([5ba3384](https://github.com/ceramicnetwork/js-ceramic/commit/5ba3384af4b2535a72a37324e7071117ec8c9d04))
+* **core:** logging message for sync status ([#2733](https://github.com/ceramicnetwork/js-ceramic/issues/2733)) ([6a0479f](https://github.com/ceramicnetwork/js-ceramic/commit/6a0479f0552d42cb72b9f1cd10e7dd40472c80c2))
+* **core:** separate continuous and history syncs ([#2722](https://github.com/ceramicnetwork/js-ceramic/issues/2722)) ([89c9c4d](https://github.com/ceramicnetwork/js-ceramic/commit/89c9c4d07d73a731fcad50adc46ba1654cef9f8f))
+* Handle REPLACED status from CAS ([#2725](https://github.com/ceramicnetwork/js-ceramic/issues/2725)) ([87f0566](https://github.com/ceramicnetwork/js-ceramic/commit/87f056630354b60031a69872fc91621f3c82d07d))
+* Pin access control ([#2735](https://github.com/ceramicnetwork/js-ceramic/issues/2735)) ([ee505ca](https://github.com/ceramicnetwork/js-ceramic/commit/ee505cad77113b64e93925bbbc6aa6b56de63fd2))
+
+
+
+
+
 # [2.25.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.25.0-rc.0...@ceramicnetwork/core@2.25.0) (2023-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/core

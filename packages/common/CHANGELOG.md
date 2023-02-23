@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.21.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.20.0...@ceramicnetwork/common@2.21.0-rc.0) (2023-02-23)
+
+
+### Features
+
+* **cli,http-client:** Add node status admin API endpoint skeleton ([#2713](https://github.com/ceramicnetwork/js-ceramic/issues/2713)) ([124b0da](https://github.com/ceramicnetwork/js-ceramic/commit/124b0da6c0c8f17ad7eb254a27eacd61b598cc98))
+* **core:** initial nodeStatus output ([#2715](https://github.com/ceramicnetwork/js-ceramic/issues/2715)) ([5ba3384](https://github.com/ceramicnetwork/js-ceramic/commit/5ba3384af4b2535a72a37324e7071117ec8c9d04))
+* Handle REPLACED status from CAS ([#2725](https://github.com/ceramicnetwork/js-ceramic/issues/2725)) ([87f0566](https://github.com/ceramicnetwork/js-ceramic/commit/87f056630354b60031a69872fc91621f3c82d07d))
+* Pin access control ([#2735](https://github.com/ceramicnetwork/js-ceramic/issues/2735)) ([ee505ca](https://github.com/ceramicnetwork/js-ceramic/commit/ee505cad77113b64e93925bbbc6aa6b56de63fd2))
+
+
+
+
+
 # [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.20.0-rc.0...@ceramicnetwork/common@2.20.0) (2023-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/common

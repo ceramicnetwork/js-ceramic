@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.4.0...@ceramicnetwork/anchor-listener@1.5.0-rc.0) (2023-02-23)
+
+
+### Bug Fixes
+
+* **anchor-listener, core:** batch get logs ([#2710](https://github.com/ceramicnetwork/js-ceramic/issues/2710)) ([c6fcaae](https://github.com/ceramicnetwork/js-ceramic/commit/c6fcaae5fdd807d913432df7f238dc7fa496a0c6))
+* **core, anchor-utils, anchor-listener:** change defaults ([#2721](https://github.com/ceramicnetwork/js-ceramic/issues/2721)) ([4fd6c24](https://github.com/ceramicnetwork/js-ceramic/commit/4fd6c24cd968aa91a10145b45e7d42e74bf6781e))
+
+
+
+
+
 # [1.4.0](/compare/@ceramicnetwork/anchor-listener@1.4.0-rc.0...@ceramicnetwork/anchor-listener@1.4.0) (2023-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-listener
