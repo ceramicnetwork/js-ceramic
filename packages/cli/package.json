@@ -54,7 +54,7 @@
     "aws-sdk": "^2.1049.0",
     "commander": "^9.4.1",
     "cors": "^2.8.5",
-    "dag-jose": "^2.0.0",
+    "dag-jose": "^4.0.0",
     "did-resolver": "^3.1.5",
     "dids": "^3.4.0",
     "ethr-did-resolver": "^5.0.3",
