@@ -37,10 +37,11 @@ jobs:
           node-version: 16
       -
         name: Checkout main branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: main
           token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
       -
         name: Configure git
         run: |
@@ -119,10 +120,11 @@ jobs:
           node-version: 16
       -
         name: Checkout rc branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: release-candidate
           token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
       -
         name: Configure git
         run: |
@@ -201,10 +203,12 @@ jobs:
           exit 1
       -
         name: Checkout hotfix branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
           token: ${{ secrets.GH_TOKEN }}
+          # Ref: https://github.com/lerna/lerna/issues/2532
+          fetch-depth: 0
       -
         name: Configure git
         run: |
@@ -236,6 +240,16 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:hotfix -- --yes
+      -
+        name: Get version
+        run: echo "VERSION=$(dagger do -l error --output-format json version -p ${{ env.DAGGER_PLAN }} | jq -r '.version')" >> $GITHUB_ENV
+      -
+        # Pretend to be the main branch since a hotfix is a patch for the main branch
+        name: Push Docker image
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":prod:main:\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Create deployment job
+        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":prod:\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
       -
         name: Send Discord notification
         run: |
