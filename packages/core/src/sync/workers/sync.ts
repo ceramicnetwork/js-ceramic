@@ -10,6 +10,7 @@ import {
   JobData,
   HISTORY_SYNC_JOB,
   CONTINUOUS_SYNC_JOB,
+  SyncJobType,
 } from '../interfaces.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { SyncJobData } from '../interfaces.js'
@@ -42,7 +43,7 @@ export function createHistorySyncJob(data: SyncJobData, options?: SendOptions): 
 }
 
 export interface SyncCompleteData {
-  isHistoricSync: boolean
+  jobType: SyncJobType
   modelId: string
 }
 
@@ -67,7 +68,7 @@ export class SyncWorker implements Worker<SyncJobData> {
    */
   async handler(job: PgBoss.Job) {
     const jobData = job.data as SyncJobData
-    const { fromBlock, toBlock, models } = jobData
+    const { jobType, fromBlock, toBlock, models } = jobData
     const currentBlock = jobData.currentBlock || fromBlock
 
     const blockProof$ = createBlocksProofsLoader({
@@ -108,15 +109,16 @@ export class SyncWorker implements Worker<SyncJobData> {
           currentBlock: blockNumber + 1,
           toBlock,
           models,
-        })
+          jobType
+        } as SyncJobData)
       })
     )
 
     await lastValueFrom(blockProof$).then(() => {
-      if (job.name == HISTORY_SYNC_JOB) {
+      if (this.syncCompleteCallback) {
         for (const model of models) {
           this.syncCompleteCallback({
-            isHistoricSync: true,
+            jobType: jobType,
             modelId: model,
           })
         }

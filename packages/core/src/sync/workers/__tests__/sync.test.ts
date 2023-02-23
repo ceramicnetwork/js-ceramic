@@ -6,7 +6,7 @@ import { of, type Observable, map } from 'rxjs'
 import { type BlockProofs, type BlocksProofsLoaderParams } from '@ceramicnetwork/anchor-listener'
 import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
-import { REBUILD_ANCHOR_JOB, JobData, HISTORY_SYNC_JOB } from '../../interfaces.js'
+import { REBUILD_ANCHOR_JOB, JobData, HISTORY_SYNC_JOB, SyncJobType } from '../../interfaces.js'
 
 const ERROR_BLOCK = 100
 
@@ -66,6 +66,7 @@ describe('Sync Worker', () => {
     const logger = new LoggerProvider().getDiagnosticsLogger()
     await pgSetup()
     jobQueue = new JobQueue(process.env.DATABASE_URL as string, logger)
+    jobQueue._clearAllJobs()
 
     SyncPackage = await import('../sync.js')
     const syncWorker = new SyncPackage.SyncWorker({} as Provider, jobQueue, 'eip155:1337', logger)
@@ -90,6 +91,7 @@ describe('Sync Worker', () => {
 
   test('Can sync by creating rebuild anchor jobs', async () => {
     const job = SyncPackage.createHistorySyncJob({
+      jobType: SyncJobType.Reorg,
       fromBlock: 101,
       toBlock: 108,
       models: ['kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'],
@@ -104,6 +106,7 @@ describe('Sync Worker', () => {
 
   test('Will retry if something goes wrong', async () => {
     const jobData = {
+      jobType: SyncJobType.Reorg,
       fromBlock: 98,
       toBlock: 103,
       models: ['kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'],

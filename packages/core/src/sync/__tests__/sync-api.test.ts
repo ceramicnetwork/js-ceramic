@@ -4,7 +4,12 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { type Knex } from 'knex'
 import { Observable } from 'rxjs'
 
-import { REBUILD_ANCHOR_JOB, HISTORY_SYNC_JOB, CONTINUOUS_SYNC_JOB } from '../interfaces.js'
+import {
+  REBUILD_ANCHOR_JOB,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+  SyncJobType,
+} from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob } from '../workers/sync.js'
 
@@ -210,6 +215,7 @@ describe('Sync API', () => {
 
       await sync.init({ getBlock, getNetwork } as any)
       expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
+        jobType: SyncJobType.Catchup,
         fromBlock: 0,
         toBlock: 10,
         models: expectedModels,
@@ -357,9 +363,15 @@ describe('Sync API', () => {
     // @ts-ignore private field
     sync.jobQueue = { addJob }
 
-    const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'abc456'] }
+    const data = {
+      jobType: SyncJobType.Full,
+      fromBlock: 1,
+      toBlock: 10,
+      models: ['abc123', 'abc456'],
+    }
     await sync._addSyncJob(HISTORY_SYNC_JOB, data)
     expect(addJob).toHaveBeenCalledWith(createHistorySyncJob(data))
+    expect(sync.modelsToHistoricSync.has('abc123')).toBeTruthy()
   })
 
   test('_updateStoredState() updates the state in DB', async () => {
@@ -414,6 +426,7 @@ describe('Sync API', () => {
         reorganized: false,
       } as any)
       expect(addSyncJob).toHaveBeenCalledWith(CONTINUOUS_SYNC_JOB, {
+        jobType: SyncJobType.Reorg,
         fromBlock: 10,
         toBlock: 10,
         models: ['abc123', 'def456'],
@@ -436,10 +449,7 @@ describe('Sync API', () => {
         {} as any
       )
       // @ts-ignore private field
-      sync.modelsToHistoricSync = new Map([
-        ['abc123', 2],
-        ['def456', 1],
-      ])
+      sync.modelsToSync = new Set(['abc123', 'def456'])
 
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
@@ -464,7 +474,7 @@ describe('Sync API', () => {
         processedBlockNumber: 100,
       })
 
-      expect(await sync.syncComplete('abc123')).toBeFalsy()
+      expect(await sync.syncComplete('abc123')).toBeTruthy()
       expect(await sync.syncComplete('abc789')).toBeTruthy()
     })
   })
