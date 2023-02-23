@@ -10,6 +10,7 @@ import * as random from '@stablelib/random'
  */
 export function asIpfsMessage(data: PubsubMessage, from?: string): IPFSPubsubMessage {
   return {
+    // @ts-ignore TODO Should be real PeerID
     from: from || 'outer-space',
     data: serialize(data),
     topicIDs: ['topic'],

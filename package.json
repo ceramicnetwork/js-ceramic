@@ -9,7 +9,7 @@
   },
   "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "scripts": {
-    "postinstall": "npx lerna bootstrap --hoist --ci && npx patch-package",
+    "postinstall": "npx lerna bootstrap --hoist --ci",
     "test": "npx lerna exec npm t",
     "build": "npx lerna run build",
     "docs": "npx typedoc",
@@ -41,7 +41,6 @@
     "jest": "^28.1.1",
     "jest-resolver-enhanced": "^1.0.1",
     "lerna": "^4.0.0",
-    "patch-package": "^6.5.1",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "typedoc": "^0.23.2",

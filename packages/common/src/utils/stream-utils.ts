@@ -86,6 +86,7 @@ export class StreamUtils {
     }
 
     if (StreamUtils.isSignedCommit(cloned)) {
+      // @ts-ignore TODO Update `dids` package to use latest multiformats
       cloned.link = toCID(cloned.link)
     }
 
@@ -253,7 +254,8 @@ export class StreamUtils {
     ipfs: IpfsApi
   ): Promise<CeramicCommit> {
     if (StreamUtils.isSignedCommit(commit)) {
-      const block = await ipfs.block.get((commit as DagJWS).link)
+      // @ts-ignore TODO Update `dids` package to use latest multiformats
+      const block = await ipfs.block.get(toCID((commit as DagJWS).link))
       return {
         jws: commit as DagJWS,
         linkedBlock: block,

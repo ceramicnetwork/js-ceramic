@@ -14,10 +14,6 @@ COPY packages ./packages
 
 RUN lerna bootstrap --hoist --ci -- --production
 
-COPY patches ./patches
-
-RUN npx patch-package
-
 COPY types ./types
 
 RUN lerna run build

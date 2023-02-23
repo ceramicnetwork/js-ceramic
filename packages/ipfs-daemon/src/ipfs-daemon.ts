@@ -93,15 +93,7 @@ export class IpfsDaemon {
         repo: configuration.ipfsPath,
         ipld: { codecs: [dagJose] },
         libp2p: {
-          config: {
-            dht: {
-              enabled: false,
-              clientMode: !configuration.ipfsDhtServerMode,
-            },
-            pubsub: {
-              enabled: configuration.ipfsEnablePubsub,
-            },
-          },
+          dht: null,
           addresses: {
             announce: configuration.announceAddressList,
           },

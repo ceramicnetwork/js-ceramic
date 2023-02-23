@@ -88,7 +88,7 @@ export class Pubsub extends Observable<PubsubMessage> {
     })
     // Textually, `this.peerId$` appears after it is called.
     // Really, subscription is lazy, so `this.peerId$` is populated before the actual subscription act.
-    this.peerId$ = from<Promise<string>>(this.ipfs.id().then((_) => _.id))
+    this.peerId$ = from<Promise<string>>(this.ipfs.id().then((_) => _.id.toString()))
   }
 
   /**

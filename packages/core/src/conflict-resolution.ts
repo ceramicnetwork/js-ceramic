@@ -1,4 +1,4 @@
-import type { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats'
 import {
   AnchorStatus,
   AnchorValidator,
@@ -370,7 +370,7 @@ export class ConflictResolution {
       // increases the likelihood of lost writes. Clients should always at least be in sync with
       // their Ceramic node when authoring new writes.
       throw new Error(
-        `Commit to stream ${streamId.toString()} rejected because it builds on stale state. Calling 'sync()' on the stream handle will synchronize the stream state in the client with that on the Ceramic node.  Rejected commit CID: ${conflictingTip.toString()}. Current tip: ${tip.toString()}`
+        `Commit to stream ${streamId.toString()} rejected because it builds on stale state. Calling 'sync()' on the stream handle will synchronize the stream state in the client with that on the Ceramic node.  Rejected commit CID: ${conflictingTip}. Current tip: ${tip}`
       )
     }
 
