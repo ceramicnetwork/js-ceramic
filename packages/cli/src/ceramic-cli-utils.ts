@@ -2,8 +2,6 @@ import os from 'os'
 import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
-import { fromBooleanInput } from '@ceramicnetwork/ipfs-daemon'
-
 import * as fs from 'fs/promises'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
@@ -69,7 +67,7 @@ const generateDefaultDaemonConfig = () => {
     },
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
-      'disable-composedb': false
+      'disable-composedb': false,
     },
   })
 }
@@ -133,7 +131,7 @@ export class CeramicCliUtils {
     pubsubTopic: string,
     corsAllowedOrigins: string,
     syncOverride: string,
-    disableComposedb: string | undefined
+    disableComposedb: boolean
   ): Promise<CeramicDaemon> {
     const configFilepath = configFilename
       ? new URL(configFilename, CWD)
@@ -214,11 +212,8 @@ export class CeramicCliUtils {
         config.indexing.disableComposedb = true
       }
 
-      if (process.env.CERAMIC_DISABLE_COMPOSE_DB) {
-        config.indexing.disableComposedb = fromBooleanInput(
-          process.env.CERAMIC_DISABLE_COMPOSE_DB,
-          true
-        )
+      if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
+        config.indexing.disableComposedb = true
       }
 
       if (stateStoreDirectory) {

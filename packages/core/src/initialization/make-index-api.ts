@@ -25,14 +25,14 @@ export function makeIndexApi(
     return undefined
   }
 
+  const indexApi = buildIndexing(indexingConfig, logger, network)
   // TODO(CDB-2078): extend with addt. properties from startup if MAINNET or sync is enabled
-  if (network === Networks.MAINNET && this.indexApi instanceof SqliteIndexApi) {
-    logger.err(
+  if (network === Networks.MAINNET && indexApi instanceof SqliteIndexApi) {
+    throw Error(
       'SQLite is not supported for the Compose DB indexing database in production use. Please setup a Postgres instance and update the config file.'
     )
     return undefined
   }
 
-  const indexApi = buildIndexing(indexingConfig, logger, network)
   return indexApi
 }
