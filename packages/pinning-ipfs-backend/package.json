@@ -18,7 +18,6 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
-    "postinstall": "npx shx cp -r ../../node_modules/multiaddr node_modules/multiaddr && npx patch-package",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
