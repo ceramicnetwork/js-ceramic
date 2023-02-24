@@ -106,7 +106,6 @@ const DEFAULT_APPLY_COMMIT_OPTS = {
 const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
   anchor: true,
   publish: true,
-  pin: true,
   sync: SyncOptions.PREFER_CACHE,
   ...DEFAULT_CLIENT_INITIATED_WRITE_OPTS,
 }

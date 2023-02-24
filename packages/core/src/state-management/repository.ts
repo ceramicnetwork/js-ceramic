@@ -347,7 +347,11 @@ export class Repository {
       )
     }
 
-    if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
+    if (
+      opts.pin ||
+      (opts.pin === undefined && shouldIndex(state$, this.index)) ||
+      (opts.pin === undefined && opType == OperationType.CREATE)
+    ) {
       await this.pin(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)

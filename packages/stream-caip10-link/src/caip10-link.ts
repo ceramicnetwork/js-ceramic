@@ -28,7 +28,6 @@ const throwReadOnlyError = (): Promise<void> => {
 const DEFAULT_CREATE_OPTS = {
   anchor: false,
   publish: true,
-  pin: true,
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
