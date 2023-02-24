@@ -26,6 +26,17 @@ export function makeIndexApi(
   }
 
   const indexApi = buildIndexing(indexingConfig, logger, network)
+  // TODO(CDB-2078): replace env var with config option from ceramic_config
+  if (
+    process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true' &&
+    indexApi instanceof SqliteIndexApi
+  ) {
+    throw Error(
+      'SQLite is not supported for the Compose DB indexing database with historical syncing enabled. Please setup a Postgres instance and update the config file.'
+    )
+    return undefined
+  }
+
   // TODO(CDB-2078): extend with addt. properties from startup if MAINNET or sync is enabled
   if (network === Networks.MAINNET && indexApi instanceof SqliteIndexApi) {
     throw Error(
