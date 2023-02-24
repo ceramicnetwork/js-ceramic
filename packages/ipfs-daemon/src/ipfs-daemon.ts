@@ -1,5 +1,4 @@
 import { createController } from './create-ipfs.js'
-import * as dagJose from 'dag-jose'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/common'
 import { HealthcheckServer } from './healthcheck-server.js'
@@ -91,7 +90,6 @@ export class IpfsDaemon {
           allowNew: configuration.ipfsCreateIfMissing,
         },
         repo: configuration.ipfsPath,
-        ipld: { codecs: [dagJose] },
         libp2p: {
           dht: null,
           addresses: {
