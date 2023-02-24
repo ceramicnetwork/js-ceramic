@@ -1,4 +1,3 @@
-import * as dagJose from 'dag-jose'
 import { path } from 'go-ipfs'
 import * as Ctl from 'ipfsd-ctl'
 import * as ipfsClient from 'ipfs-http-client'
@@ -15,7 +14,6 @@ const ipfsHttpModule = {
   create: (ipfsEndpoint: string) => {
     return ipfsClient.create({
       url: ipfsEndpoint,
-      ipld: { codecs: [dagJose] },
     })
   },
 }
@@ -48,9 +46,7 @@ export async function createController(
     return ipfsd
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to InitOptions from ipfs-core
-  return ipfsd.init(ipfsOptions.init)
+  return ipfsd.init()
 }
 
 /**
@@ -71,7 +67,6 @@ async function createIpfsOptions(
   return mergeOptions(
     {
       start: true,
-      ipld: { codecs: [dagJose] },
       config: {
         Addresses: {
           Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],

@@ -372,6 +372,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       }
     }
 
+    // @ts-ignore
     const patch = jsonpatch.compare(this.content, newContent)
     const genesisLogEntry = this.state.log[0]
     return {

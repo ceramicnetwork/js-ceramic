@@ -52,7 +52,8 @@
     "ipfs-http-client": "^60.0.0",
     "ipfsd-ctl": "^13.0.0",
     "merge-options": "^3.0.4",
-    "tmp-promise": "^3.0.3"
+    "tmp-promise": "^3.0.3",
+    "kubo-rpc-client": "^3.0.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",

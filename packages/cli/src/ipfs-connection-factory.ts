@@ -21,7 +21,6 @@ export class IpfsConnectionFactory {
     if (mode == IpfsMode.REMOTE) {
       return ipfsClient.create({
         url: ipfsEndpoint,
-        ipld: { codecs: [dagJose] },
         timeout: IPFS_GET_TIMEOUT,
         agent: this.ipfsHttpAgent(ipfsEndpoint),
       })
@@ -49,7 +48,6 @@ export class IpfsConnectionFactory {
     const apiPort = 5011
     const gatewayPort = 9011
     const defaultConfig = {
-      ipld: { codecs: [dagJose] },
       repo: process.env.IPFS_PATH || '~/.goipfs',
       config: {
         Pubsub: {
