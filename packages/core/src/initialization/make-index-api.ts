@@ -26,7 +26,7 @@ export function makeIndexApi(
   }
 
   const indexApi = buildIndexing(indexingConfig, logger, network)
-  // TODO(CDB-2078): replace env var with config option from ceramic_config
+  // TODO(CDB-2310): replace experimental env var with config option from ceramic_config
   if (
     process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true' &&
     indexApi instanceof SqliteIndexApi
