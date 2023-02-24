@@ -3,13 +3,8 @@ import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
 import { IpfsApi } from '@ceramicnetwork/common'
 import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
-import { toString as uint8ArrayToString } from 'uint8arrays'
-import {
-  IncomingChannel,
-  filterExternal,
-  IPFSPubsubMessage,
-  checkSlowObservable,
-} from './incoming-channel.js'
+import type { SignedMessage } from '@libp2p/interface-pubsub'
+import { IncomingChannel, filterExternal, checkSlowObservable } from './incoming-channel.js'
 import { TaskQueue } from './task-queue.js'
 
 const textDecoder = new TextDecoder('utf-8')
@@ -26,7 +21,7 @@ function ipfsToPubsub(
   peerId$: Observable<string>,
   pubsubLogger: ServiceLogger,
   topic: string
-): UnaryFunction<Observable<IPFSPubsubMessage>, Observable<PubsubMessage>> {
+): UnaryFunction<Observable<SignedMessage>, Observable<PubsubMessage>> {
   return pipe(
     withLatestFrom(peerId$),
     mergeMap(([incoming, peerId]) =>
@@ -35,7 +30,6 @@ function ipfsToPubsub(
           const message = deserialize(incoming)
           const serializedMessage = serialize(message)
           const logMessage = { ...incoming, ...JSON.parse(textDecoder.decode(serializedMessage)) }
-          logMessage.seqno = uint8ArrayToString(logMessage.seqno, 'base16')
           delete logMessage.data // Already included in serialized message
           delete logMessage.key
           delete logMessage.signature

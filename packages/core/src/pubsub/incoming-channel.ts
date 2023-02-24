@@ -6,10 +6,6 @@ import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
 import { TaskQueue } from './task-queue.js'
 import type { SignedMessage, Message } from '@libp2p/interface-pubsub'
 
-// Typestub for pubsub message.
-// At some future time this type definition should be provided by IPFS.
-export type IPFSPubsubMessage = SignedMessage
-
 /**
  * Subscription attempts must be sequential, in FIFO order.
  * Last call to unsubscribe must execute after all the attempts are done,
