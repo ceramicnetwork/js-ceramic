@@ -1,6 +1,6 @@
 import tmp from 'tmp-promise'
 import { writeFile } from 'node:fs/promises'
-import { DaemonConfig } from '../daemon-config.js'
+import { DaemonConfig, validateConfig } from '../daemon-config.js'
 import { homedir } from 'node:os'
 
 const mockAnchorConfig = {
@@ -31,9 +31,10 @@ describe('reading from file', () => {
   test('error if missing node.private-seed-url', async () => {
     const config = { anchor: mockAnchorConfig, node: {} }
     await writeFile(configFilepath, JSON.stringify(config))
-    await expect(DaemonConfig.fromFile(configFilepath)).rejects.toThrow(
-      'Daemon config is missing node.private-seed-url'
-    )
+    await expect(async () => {
+      const config = await DaemonConfig.fromFile(configFilepath)
+      validateConfig(config)
+    }).rejects.toThrow('Daemon config is missing node.private-seed-url')
   })
   test('set private-seed-url from file', async () => {
     const config = { anchor: mockAnchorConfig, node: mockNodeConfig }

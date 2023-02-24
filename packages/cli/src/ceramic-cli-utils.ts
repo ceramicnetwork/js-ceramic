@@ -16,7 +16,7 @@ import {
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
-import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
+import { DaemonConfig, IpfsMode, StateStoreMode, validateConfig } from './daemon-config.js'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -149,6 +149,10 @@ export class CeramicCliUtils {
       config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
     }
 
+    // Validate the config after applying all the overrides
+    validateConfig(config)
+
+
     {
       // CLI flags override values from environment variables and config file
       // todo: Make interface for CLI flags, separate flag validation into helper function, separate
@@ -279,8 +283,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
     if (id.type != TileDocument.STREAM_TYPE_ID) {
       throw new Error(
-        `CLI does not currently support updating stream types other than 'tile'. StreamID ${id.toString()} has streamtype '${
-          id.typeName
+        `CLI does not currently support updating stream types other than 'tile'. StreamID ${id.toString()} has streamtype '${id.typeName
         }'`
       )
     }
