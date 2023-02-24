@@ -1,8 +1,6 @@
 import { path } from 'go-ipfs'
 import * as Ctl from 'ipfsd-ctl'
 import * as ipfsClient from 'ipfs-http-client'
-import type { Options } from 'ipfs-core'
-import { create as createJsIpfs } from 'ipfs-core'
 import getPort from 'get-port'
 import mergeOpts from 'merge-options'
 import type { IpfsApi } from '@ceramicnetwork/common'
@@ -32,13 +30,12 @@ const createFactory = () => {
 }
 
 export async function createController(
-  ipfsOptions: Options,
+  ipfsOptions: Ctl.IPFSOptions,
   disposable = true
 ): Promise<Ctl.Controller> {
   const ipfsd = await createFactory().spawn({
     type: 'go',
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
     ipfsOptions,
     disposable,
   })
@@ -57,9 +54,9 @@ export async function createController(
  */
 
 async function createIpfsOptions(
-  override: Partial<Options> = {},
+  override: Partial<Ctl.IPFSOptions> = {},
   repoPath?: string
-): Promise<Options> {
+): Promise<Ctl.IPFSOptions> {
   const swarmPort = await getPort()
   const apiPort = await getPort()
   const gatewayPort = await getPort()
@@ -84,9 +81,18 @@ async function createIpfsOptions(
   )
 }
 
+async function createInstance(ipfsOptions: Ctl.IPFSOptions, disposable = true): Promise<IpfsApi> {
+  if (!ipfsOptions.start) {
+    throw Error('go IPFS instances must be started')
+  }
+  const ipfsd = await createController(ipfsOptions, disposable)
+  // API is only set on started controllers
+  const started = await ipfsd.start()
+  return started.api
+}
+
 const createInstanceByType = {
-  js: (ipfsOptions: Options): Promise<IpfsApi> => createJsIpfs(ipfsOptions),
-  go: async (ipfsOptions: Options, disposable = true): Promise<IpfsApi> => {
+  go: async (ipfsOptions: Ctl.IPFSOptions, disposable = true): Promise<IpfsApi> => {
     if (!ipfsOptions.start) {
       throw Error('go IPFS instances must be started')
     }
@@ -101,17 +107,15 @@ const createInstanceByType = {
  * @param overrideConfig - IFPS config for override
  */
 export async function createIPFS(
-  overrideConfig: Partial<Options> = {},
+  overrideConfig: Partial<Ctl.IPFSOptions> = {},
   disposable = true
 ): Promise<IpfsApi> {
-  const flavor = process.env.IPFS_FLAVOR || 'go'
-
   if (!overrideConfig.repo) {
     const tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
     const ipfsOptions = await createIpfsOptions(overrideConfig, tmpFolder.path)
 
-    const instance = await createInstanceByType[flavor](ipfsOptions, disposable)
+    const instance = await createInstance(ipfsOptions, disposable)
 
     // IPFS does not notify you when it stops.
     // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
@@ -131,7 +135,7 @@ export async function createIPFS(
 
   const ipfsOptions = await createIpfsOptions(overrideConfig)
 
-  return createInstanceByType[flavor](ipfsOptions, disposable)
+  return createInstance(ipfsOptions, disposable)
 }
 
 /**
