@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/http-client": "^2.18.0-rc.0",
-    "did-resolver": "^3.1.5"
+    "did-resolver": "^4.0.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
