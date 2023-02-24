@@ -44,6 +44,11 @@ export type RepositoryDependencies = {
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 
+enum OperationType {
+  CREATE,
+  UPDATE,
+  LOAD,
+}
 /**
  * Indicate if the stream should be indexed.
  */
@@ -255,8 +260,6 @@ export class Repository {
     })
 
     StreamUtils.checkForCacaoExpiration(state$.state)
-
-    await this.handlePinOpts(state$, opts)
     if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)
     }
@@ -302,7 +305,7 @@ export class Repository {
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
-    await this.applyWriteOpts(state$, opts)
+    await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
     return state$
   }
 
@@ -313,17 +316,38 @@ export class Repository {
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
    * @private
    */
-  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
+  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts, opType: OperationType) {
     await this.stateManager.applyWriteOpts(state$, opts)
 
-    await this.handlePinOpts(state$, opts)
+    await this.handlePinOpts(state$, opts as PinningOpts, opType)
   }
 
-  async handlePinOpts(state$: RunningState, opts: PinningOpts): Promise<void> {
+  /**
+   * Applies the given PinningOpts that the user provided to pin or unpin the stream.
+   * Unpinning streams isn't allowed through the CRUD API, so if unpin is false this will
+   * generally throw an Error.  The one exception is for creates.  When creating a brand
+   * new stream it is okay to set that stream to not be pinned. To unpin an existing stream
+   * one must use the AdminAPI.
+   * @param state$
+   * @param opts
+   */
+  async handlePinOpts(
+    state$: RunningState,
+    opts: PinningOpts,
+    opType: OperationType
+  ): Promise<void> {
     if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
-      await this.unpin(state$)
+      if (opType === OperationType.CREATE) {
+        await this.unpin(state$)
+      } else {
+        throw new Error(
+          `Cannot unpin streams through the CRUD APIs. To unpin a stream use the admin.pin.rm API with an authenticated admin DID. Attempting to unpin ${StreamUtils.streamIdFromState(
+            state$.state
+          ).toString()}`
+        )
+      }
     }
   }
 
@@ -335,7 +359,10 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
-    await this.applyWriteOpts(state, opts)
+    // Create operations can actually be load operations when using deterministic streams, so we
+    // ensure that the stream only has a single commit in its log to properly consider it a create.
+    const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
+    await this.applyWriteOpts(state, opts, opType)
     return state
   }
 

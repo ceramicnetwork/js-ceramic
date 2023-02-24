@@ -183,7 +183,7 @@ describe('#load', () => {
           anchor: false,
           pin: false,
         })
-        await stream1.update({ a: 2 }, null, { anchor: false, pin: false })
+        await stream1.update({ a: 2 }, null, { anchor: false })
 
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
         const fromStateStore = jest.spyOn(repository as any, 'fromStreamStateStore')

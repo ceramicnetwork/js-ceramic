@@ -51,7 +51,8 @@ const createCeramic = async (
     anchorOnRequest,
     indexing: {
       db: connectionString.href,
-      models: [],
+      allowQueriesBeforeHistoricalSync: true,
+      disableComposedb: true,
     },
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
@@ -210,6 +211,23 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
+  it('Deterministic stream can be created without pinning', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test123', false)
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeFalsy()
+
+    // 'createDeterministicStream uses TileDocument.create API, we should also test the
+    // TileDocument.deterministic API
+    const stream2 = await TileDocument.deterministic(
+      ceramic,
+      { family: 'test321' },
+      { anchor: false, publish: false, pin: false }
+    )
+    await expect(TestUtils.isPinned(ceramic, stream2.id)).resolves.toBeFalsy()
+
+    await ceramic.close()
+  })
+
   it('Updating stream does not pin by default', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
@@ -239,7 +257,7 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
-  it('Stream can be pinned and unpinned on update', async () => {
+  it('Stream can be pinned but not unpinned on update', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
@@ -249,7 +267,9 @@ describe('Ceramic stream pinning', () => {
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false, pin: true })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
+    await expect(
+      stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
+    ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
@@ -271,17 +291,48 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
-  it('Stream can be pinned and unpinned on load', async () => {
+  it('Stream cannot be pinned and unpinned on load', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
       pin: false,
     })
+    //todo this will fail
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+
+    await ceramic.close()
+  })
+
+  it('Existing stream cannot be pinned and unpinned on deterministic load', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      {
+        anchor: false,
+        publish: false,
+        pin: false,
+      }
+    )
+    await stream.update({ foo: 'bar' }, { anchor: false, publish: false })
+    //todo this will fail
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      { sync: SyncOptions.NEVER_SYNC, pin: true }
+    )
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      { sync: SyncOptions.NEVER_SYNC, pin: false }
+    )
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
