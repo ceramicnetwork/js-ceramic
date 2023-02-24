@@ -65,7 +65,7 @@
     "levelup": "^5.1.1",
     "merge-options": "^3.0.4",
     "morgan": "^1.10.0",
-    "nft-did-resolver": "^2.0.0",
+    "nft-did-resolver": "^3.0.0",
     "p-queue": "7.3.0",
     "picocolors": "^1.0.0",
     "pkh-did-resolver": "^1.2.0",
