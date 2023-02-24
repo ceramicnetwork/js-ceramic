@@ -144,7 +144,6 @@ export class PinStore {
             points.push(capCID)
           }
         }
-        // @ts-ignore TODO Update `dids` package to use latest multiformats
         points.push(commit.link)
       }
     }

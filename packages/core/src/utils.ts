@@ -85,7 +85,6 @@ export class Utils {
     // The default applies to all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
     const commitData: CommitData = { cid, type: CommitType.SIGNED, commit, timestamp }
     if (StreamUtils.isSignedCommit(commit)) {
-      // @ts-ignore TODO Update `dids` package to use latest multiformats
       const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
       if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
       commitData.commit = linkedCommit

@@ -50,7 +50,7 @@
     "rxjs": "^7.5.2"
   },
   "devDependencies": {
-    "dids": "^3.4.0",
+    "dids": "3.4.0-alpha.0",
     "key-did-resolver": "^2.3.0",
     "multiformats": "^11.0.1"
   },
