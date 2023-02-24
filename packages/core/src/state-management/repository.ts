@@ -415,6 +415,7 @@ export class Repository {
       this.stateManager.publishTip(state$)
     }
 
+    this.stateManager.markUnpinned(state$.id)
     return this.#deps.pinStore.rm(state$)
   }
 
