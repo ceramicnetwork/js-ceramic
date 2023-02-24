@@ -28,7 +28,7 @@ export class IpfsConnectionFactory {
     }
   }
 
-  private static ipfsHttpAgent(ipfsEndpoint: string | typeof ipfsClient.multiaddr): http.Agent {
+  private static ipfsHttpAgent(ipfsEndpoint: string): http.Agent {
     const agentOptions = {
       keepAlive: false,
       maxSockets: Infinity,
