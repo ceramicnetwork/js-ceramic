@@ -208,21 +208,21 @@ pin.description(`('Ceramic local pinning API ${pc.red(pc.bold('[Deprecated]'))}`
 
 pin
   .command('add <privateKey> <streamId>')
-  .description(`Pin stream`)
+  .description(`Pin stream using a hexadecimal-encoded admin DID private key`)
   .action(async (privateKey, streamId) => {
     await CeramicCliUtils.pinAdd(privateKey, streamId)
   })
 
 pin
   .command('rm <privateKey> <streamId>')
-  .description(`Unpin stream`)
+  .description(`Unpin stream using a hexadecimal-encoded admin DID private key`)
   .action(async (privateKey, streamId) => {
     await CeramicCliUtils.pinRm(privateKey, streamId)
   })
 
 pin
   .command('ls <privateKey> [<streamId>]')
-  .description(`List pinned streams`)
+  .description(`List pinned streams using a hexadecimal-encoded admin DID private key`)
   .action(async (privateKey, streamId) => {
     await CeramicCliUtils.pinLs(privateKey, streamId)
   })

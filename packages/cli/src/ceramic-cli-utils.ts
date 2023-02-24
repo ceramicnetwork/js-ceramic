@@ -421,8 +421,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
-      const pk = u8a.fromString(privateKey, 'base16')
-      await ceramic.setDID(CeramicCliUtils._makeDID(pk, ceramic))
+      await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -437,8 +436,7 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
-      const pk = u8a.fromString(privateKey, 'base16')
-      await ceramic.setDID(CeramicCliUtils._makeDID(pk, ceramic))
+      await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -453,8 +451,7 @@ export class CeramicCliUtils {
     const id = streamId ? StreamID.fromString(streamId) : null
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
-      const pk = u8a.fromString(privateKey, 'base16')
-      await ceramic.setDID(CeramicCliUtils._makeDID(pk, ceramic))
+      await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       const pinnedStreamIds = []
       const iterator = await ceramic.admin.pin.ls(id)
       let i = 0
@@ -494,6 +491,18 @@ export class CeramicCliUtils {
       ...keyDidResolver,
     })
     return new DID({ provider, resolver })
+  }
+
+  /**
+   * Authenticates the Ceramic client with the hex-encoded DID private key.
+   * @param ceramic
+   * @param privateKey
+   */
+  static async _authenticateClient(ceramic: CeramicClient, privateKey: string): Promise<void> {
+    const pk = u8a.fromString(privateKey, 'base16')
+    const did = CeramicCliUtils._makeDID(pk, ceramic)
+    await did.authenticate()
+    await ceramic.setDID(did)
   }
 
   /**
