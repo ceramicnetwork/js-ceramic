@@ -117,10 +117,10 @@ export class TestUtils {
     return (await first(iterator)) == streamId.toString()
   }
 
-  static randomCID(): CID {
+  static randomCID(version: 0 | 1 = 1, codec = 0x71, hasher = 0x12): CID {
     // 0x71 is DAG-CBOR codec identifier
     // 0x12 is SHA-256 hashing algorithm
-    return CID.create(1, 0x71, create(0x12, random.randomBytes(32)))
+    return CID.create(version, codec, create(hasher, random.randomBytes(32)))
   }
 
   /**

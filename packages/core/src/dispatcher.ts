@@ -120,7 +120,7 @@ export class Dispatcher {
 
   async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
     const ipfsId = await this._ipfs.id()
-    const peerId = ipfsId.id
+    const peerId = ipfsId.id.toString()
     const multiAddrs = ipfsId.addresses.map(String)
     return { peerId, addresses: multiAddrs }
   }

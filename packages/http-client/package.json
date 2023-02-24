@@ -50,9 +50,9 @@
     "rxjs": "^7.5.2"
   },
   "devDependencies": {
-    "dids": "^3.4.0",
-    "key-did-resolver": "^2.3.0",
-    "multiformats": "^9.5.8"
+    "dids": "^4.0.0",
+    "key-did-resolver": "^3.0.0",
+    "multiformats": "^11.0.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

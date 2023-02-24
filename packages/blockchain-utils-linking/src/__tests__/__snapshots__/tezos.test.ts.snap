@@ -7,7 +7,7 @@ exports[`Blockchain: Tezos authenticate entropy replication for NetXdQprcVkpaWU 
 exports[`Blockchain: Tezos authenticate entropy replication for NetXdQprcVkpaWU 2`] = `"0x56db1b9d98064056438a5a9245c9be1e5116d63493959bb8387198d7dc5111a0"`;
 
 exports[`Blockchain: Tezos createLink create proof for NetXdQprcVkpaWU 1`] = `
-Object {
+{
   "account": "tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At@tezos:NetXdQprcVkpaWU",
   "message": "Link this account to your identity
 

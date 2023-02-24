@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId handle bls mainnet 1`] = `
-Object {
+{
   "address": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka",
-  "chainId": Object {
+  "chainId": {
     "namespace": "fil",
     "reference": "f",
   },
@@ -11,9 +11,9 @@ Object {
 `;
 
 exports[`accountId handle mainnet 1`] = `
-Object {
+{
   "address": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy",
-  "chainId": Object {
+  "chainId": {
     "namespace": "fil",
     "reference": "f",
   },
@@ -21,9 +21,9 @@ Object {
 `;
 
 exports[`accountId handle testnet 1`] = `
-Object {
+{
   "address": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
-  "chainId": Object {
+  "chainId": {
     "namespace": "fil",
     "reference": "t",
   },
@@ -37,7 +37,7 @@ exports[`authenticate mainnet BLS 1`] = `"l0T9NqhSymgeeLpI1RCVmiaeAJtOkhHv4dDSIz
 exports[`authenticate testnet 1`] = `"APHUqaCLuyqunqfYJl8YAq3/p6oO9iiEAGkGQILzZAEMR/L28/F+iN2ismhMJCm9yr8VjIqgneiaFIkr65fimgA="`;
 
 exports[`createLink generate proof on mainnet 1`] = `
-Object {
+{
   "account": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy@fil:f",
   "message": "Link this account to your identity
 
@@ -51,7 +51,7 @@ Timestamp: 0",
 `;
 
 exports[`createLink generate proof on mainnet for BLS key 1`] = `
-Object {
+{
   "account": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka@fil:f",
   "message": "Link this account to your identity
 
@@ -65,7 +65,7 @@ Timestamp: 0",
 `;
 
 exports[`createLink generate proof on testnet 1`] = `
-Object {
+{
   "account": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka@fil:t",
   "message": "Link this account to your identity
 
@@ -79,9 +79,9 @@ Timestamp: 0",
 `;
 
 exports[`withAddress 1`] = `
-Object {
+{
   "address": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
-  "chainId": Object {
+  "chainId": {
     "namespace": "fil",
     "reference": "t",
   },
@@ -89,9 +89,9 @@ Object {
 `;
 
 exports[`withAddress 2`] = `
-Object {
+{
   "address": "f123",
-  "chainId": Object {
+  "chainId": {
     "namespace": "fil",
     "reference": "f",
   },
