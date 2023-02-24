@@ -322,7 +322,7 @@ export class DaemonCeramicNodeConfig {
   /**
    * Whether to run the Ceramic node with CDB indexing enabled
    */
-  @jsonMember(Boolean, { name: 'disable-composedb'})
+  @jsonMember(Boolean, { name: 'disable-composedb' })
   disableComposedb?: boolean
 
   /**
@@ -463,13 +463,6 @@ export class DaemonConfig {
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
-    if (config.anchor) {
-      if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {
-        if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
-        if (!config.node.sensitive_privateSeedUrl())
-          throw new StartupError('Daemon config is missing node.private-seed-url')
-      }
-    }
     expandPaths(config, filepath)
     return config
   }
@@ -489,5 +482,19 @@ export class DaemonConfig {
       }
     }
     return config
+  }
+}
+
+/**
+  * Validate the config object has the expected settings.
+  *
+  */
+export function validateConfig(config: DaemonConfig) {
+  if (config.anchor) {
+    if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {
+      if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
+      if (!config.node.sensitive_privateSeedUrl())
+        throw new StartupError('Daemon config is missing node.private-seed-url')
+    }
   }
 }
