@@ -100,12 +100,15 @@ export async function createIPFS(
   overrideConfig: Partial<Ctl.IPFSOptions> = {},
   disposable = true
 ): Promise<IpfsApi> {
+  const flavor = process.env.IPFS_FLAVOR || 'go'
+  if (!(flavor in createInstanceByType)) throw new Error(`Unsupported IPFS flavor "${flavor}"`)
+
   if (!overrideConfig.repo) {
     const tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
     const ipfsOptions = await createIpfsOptions(overrideConfig, tmpFolder.path)
 
-    const instance = await createInstanceByType['go'](ipfsOptions, disposable)
+    const instance = await createInstanceByType[flavor](ipfsOptions, disposable)
 
     // IPFS does not notify you when it stops.
     // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
@@ -125,7 +128,7 @@ export async function createIPFS(
 
   const ipfsOptions = await createIpfsOptions(overrideConfig)
 
-  return createInstanceByType['go'](ipfsOptions, disposable)
+  return createInstanceByType[flavor](ipfsOptions, disposable)
 }
 
 /**
