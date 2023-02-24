@@ -94,12 +94,14 @@ export function indices(tableName: string): TableIndices {
 function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
   switch (networkName) {
     case 'mainnet':
+    case 'elp': {
       return {
         enable_historical_sync: true,
         allow_queries_before_historical_sync: false,
         run_historical_sync_worker: true,
       }
       break
+    }
     case 'testnet-clay':
       return {
         enable_historical_sync: true,
