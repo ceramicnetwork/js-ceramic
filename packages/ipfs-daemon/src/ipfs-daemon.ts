@@ -91,7 +91,15 @@ export class IpfsDaemon {
         },
         repo: configuration.ipfsPath,
         libp2p: {
-          dht: null,
+          config: {
+            dht: {
+              enabled: false,
+              clientMode: !configuration.ipfsDhtServerMode,
+            },
+            pubsub: {
+              enabled: configuration.ipfsEnablePubsub,
+            },
+          },
           addresses: {
             announce: configuration.announceAddressList,
           },

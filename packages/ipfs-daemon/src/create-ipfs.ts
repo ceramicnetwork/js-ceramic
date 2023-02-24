@@ -35,7 +35,6 @@ export async function createController(
 ): Promise<Ctl.Controller> {
   const ipfsd = await createFactory().spawn({
     type: 'go',
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     ipfsOptions,
     disposable,
   })
