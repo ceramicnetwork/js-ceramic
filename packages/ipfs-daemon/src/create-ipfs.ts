@@ -81,16 +81,6 @@ async function createIpfsOptions(
   )
 }
 
-async function createInstance(ipfsOptions: Ctl.IPFSOptions, disposable = true): Promise<IpfsApi> {
-  if (!ipfsOptions.start) {
-    throw Error('go IPFS instances must be started')
-  }
-  const ipfsd = await createController(ipfsOptions, disposable)
-  // API is only set on started controllers
-  const started = await ipfsd.start()
-  return started.api
-}
-
 const createInstanceByType = {
   go: async (ipfsOptions: Ctl.IPFSOptions, disposable = true): Promise<IpfsApi> => {
     if (!ipfsOptions.start) {
@@ -115,7 +105,7 @@ export async function createIPFS(
 
     const ipfsOptions = await createIpfsOptions(overrideConfig, tmpFolder.path)
 
-    const instance = await createInstance(ipfsOptions, disposable)
+    const instance = await createInstanceByType['go'](ipfsOptions, disposable)
 
     // IPFS does not notify you when it stops.
     // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
@@ -135,7 +125,7 @@ export async function createIPFS(
 
   const ipfsOptions = await createIpfsOptions(overrideConfig)
 
-  return createInstance(ipfsOptions, disposable)
+  return createInstanceByType['go'](ipfsOptions, disposable)
 }
 
 /**
