@@ -330,24 +330,27 @@ export class Repository {
    * one must use the AdminAPI.
    * @param state$
    * @param opts
+   * @param opType - what type of operation is being performed
    */
   async handlePinOpts(
     state$: RunningState,
     opts: PinningOpts,
     opType: OperationType
   ): Promise<void> {
+    if (opts.pin !== undefined && opType !== OperationType.CREATE) {
+      const pinStr = opts.pin ? 'pin' : 'unpin'
+      const opStr = opType == OperationType.UPDATE ? 'update' : 'load'
+      throw new Error(
+        `Cannot pin or unpin streams through the CRUD APIs. To change stream pin state use the admin.pin API with an authenticated admin DID. Attempting to ${pinStr} stream ${StreamUtils.streamIdFromState(
+          state$.state
+        ).toString()} as part of a ${opStr} operation`
+      )
+    }
+
     if (opts.pin || (opts.pin === undefined && shouldIndex(state$, this.index))) {
       await this.pin(state$)
     } else if (opts.pin === false) {
-      if (opType === OperationType.CREATE) {
-        await this.unpin(state$)
-      } else {
-        throw new Error(
-          `Cannot unpin streams through the CRUD APIs. To unpin a stream use the admin.pin.rm API with an authenticated admin DID. Attempting to unpin ${StreamUtils.streamIdFromState(
-            state$.state
-          ).toString()}`
-        )
-      }
+      await this.unpin(state$)
     }
   }
 
