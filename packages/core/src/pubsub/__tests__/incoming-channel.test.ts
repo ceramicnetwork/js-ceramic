@@ -104,7 +104,7 @@ test('pass incoming message', async () => {
 test('warn if no messages come from ipfs in a timely manner', async () => {
   let sawLog = false
   jest.spyOn(diagnosticsLogger, 'log').mockImplementation((_, content) => {
-    if (content.toString().includes('please check your IPFS configuration.')) {
+    if (content.toString().includes('please check your IPFS configuration')) {
       sawLog = true
     }
   })

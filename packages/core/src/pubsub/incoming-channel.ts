@@ -68,7 +68,7 @@ export class IncomingChannel extends Observable<Message> {
           checkSlowObservable(
             lateMessageAfter,
             logger,
-            'IPFS did not provide any messages, please check your IPFS configuration and ensure it is well connected to the rest of the Ceramic network.'
+            'IPFS did not provide any messages, please check your IPFS configuration and ensure your node is well connected to the rest of the Ceramic network.'
           ),
           retryWhen((errors) =>
             errors.pipe(
