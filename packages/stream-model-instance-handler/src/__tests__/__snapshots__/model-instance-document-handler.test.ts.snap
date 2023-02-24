@@ -149,6 +149,7 @@ Object {
   },
   "log": Array [
     Object {
+      "cid": Object {
         "/": "bafybeig6xv5nwphfmvcnektpnojts77jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
