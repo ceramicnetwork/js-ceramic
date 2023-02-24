@@ -1,45 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`applies anchor commit correctly 1`] = `
-Object {
-  "anchorProof": Object {
+{
+  "anchorProof": {
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
-  "content": Object {
+  "content": {
     "other": "data",
-    "publicKeys": Object {
+    "publicKeys": {
       "test": "0xabc",
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1615799679,
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1615799679,
       "type": 1,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1615799679,
       "type": 2,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
-    "tags": Array [
+    "tags": [
       "3id",
     ],
   },
@@ -49,26 +49,26 @@ Object {
 `;
 
 exports[`applies genesis commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
-    "publicKeys": Object {
+  "content": {
+    "publicKeys": {
       "test": "0xabc",
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
-    "tags": Array [
+    "tags": [
       "3id",
     ],
   },
@@ -78,47 +78,47 @@ Object {
 `;
 
 exports[`applies signed commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
-    "publicKeys": Object {
+  "content": {
+    "publicKeys": {
       "test": "0xabc",
     },
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
-    "tags": Array [
+    "tags": [
       "3id",
     ],
   },
-  "next": Object {
-    "content": Object {
+  "next": {
+    "content": {
       "other": "data",
-      "publicKeys": Object {
+      "publicKeys": {
         "test": "0xabc",
       },
     },
-    "metadata": Object {
-      "controllers": Array [
+    "metadata": {
+      "controllers": [
         "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
       ],
-      "tags": Array [
+      "tags": [
         "3id",
       ],
     },

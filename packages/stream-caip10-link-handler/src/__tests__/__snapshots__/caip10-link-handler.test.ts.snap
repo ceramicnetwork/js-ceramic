@@ -1,37 +1,37 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Caip10LinkHandler applies anchor commit correctly 1`] = `
-Object {
-  "anchorProof": Object {
+{
+  "anchorProof": {
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
   "content": "did:3:testdid1",
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1666728832,
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1666728832,
       "type": 1,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1666728832,
       "type": 2,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
@@ -43,24 +43,24 @@ Object {
 `;
 
 exports[`Caip10LinkHandler applies genesis commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
-  "next": Object {
+  "next": {
     "content": null,
   },
   "signature": 0,
@@ -69,33 +69,33 @@ Object {
 `;
 
 exports[`Caip10LinkHandler applies signed commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
-  "next": Object {
+  "next": {
     "content": "did:3:testdid1",
-    "metadata": Object {
-      "controllers": Array [
+    "metadata": {
+      "controllers": [
         "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
       ],
       "family": "caip10-eip155:1",

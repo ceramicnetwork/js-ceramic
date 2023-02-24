@@ -1,6 +1,5 @@
 {
   "testEnvironment": "node",
-  "resolver": "jest-resolver-enhanced",
   "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
   "extensionsToTreatAsEsm": [".ts"],
   "moduleNameMapper": {

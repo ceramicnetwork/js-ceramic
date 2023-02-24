@@ -1,43 +1,43 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ModelInstanceDocumentHandler applies anchor commit correctly 1`] = `
-Object {
-  "anchorProof": Object {
+{
+  "anchorProof": {
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
-  "content": Object {
+  "content": {
     "myData": 1,
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1615799679,
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1615799679,
       "type": 1,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1615799679,
       "type": 2,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqcera7y53g6hy35jak6zwdgniw7a6qzgbcdvnsfaay5fw5wxbkgxbpl3q",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
@@ -50,26 +50,26 @@ Object {
 `;
 
 exports[`ModelInstanceDocumentHandler applies commit made using an old key if it is applied within the revocation period 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
+  "content": {
     "myData": 0,
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "timestamp": 1647037687,
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqcera7y53g6hy35jak6zwdgniw7a6qzgbcdvnsfaay5fw5wxbkgxbpl3q",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
@@ -82,23 +82,23 @@ Object {
 `;
 
 exports[`ModelInstanceDocumentHandler applies deterministic genesis commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {},
-  "log": Array [
-    Object {
-      "cid": Object {
+  "content": {},
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqceravogecfyp4jyciu7cqljixlpymtmisoxikuxyzikxkups6afcncha",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
@@ -111,25 +111,25 @@ Object {
 `;
 
 exports[`ModelInstanceDocumentHandler applies genesis commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
+  "content": {
     "myData": 0,
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqcera7y53g6hy35jak6zwdgniw7a6qzgbcdvnsfaay5fw5wxbkgxbpl3q",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
@@ -142,25 +142,25 @@ Object {
 `;
 
 exports[`ModelInstanceDocumentHandler applies genesis commit correctly with small allowable content length 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
+  "content": {
     "myData": "abcdefghijk",
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts77jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqceravogecfyp4jyciu7cqljixlpymtmisoxikuxyzikxkups6afcnchq",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
@@ -173,31 +173,31 @@ Object {
 `;
 
 exports[`ModelInstanceDocumentHandler applies signed commit correctly 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
+  "content": {
     "myData": 1,
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqcera7y53g6hy35jak6zwdgniw7a6qzgbcdvnsfaay5fw5wxbkgxbpl3q",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
@@ -210,37 +210,37 @@ Object {
 `;
 
 exports[`ModelInstanceDocumentHandler multiple consecutive updates 1`] = `
-Object {
+{
   "anchorStatus": 0,
-  "content": Object {
+  "content": {
     "myData": 2,
   },
-  "log": Array [
-    Object {
-      "cid": Object {
+  "log": [
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 1,
     },
-    Object {
-      "cid": Object {
+    {
+      "cid": {
         "/": "bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu",
       },
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
     "model": StreamID {
-      "_cid": Object {
+      "_cid": {
         "/": "bagcqcera7y53g6hy35jak6zwdgniw7a6qzgbcdvnsfaay5fw5wxbkgxbpl3q",
       },
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),

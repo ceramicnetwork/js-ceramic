@@ -251,8 +251,6 @@ const MODEL_DEFINITION_BLOB: ModelDefinition = {
   },
 }
 
-const MAX_CONTENT_LENGTH = 25
-
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
