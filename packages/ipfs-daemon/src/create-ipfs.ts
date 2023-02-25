@@ -20,6 +20,9 @@ const createFactory = () => {
   return Ctl.createFactory(
     {
       ipfsHttpModule,
+      ipfsOptions: {
+        repoAutoMigrate: true,
+      },
     },
     {
       go: {
