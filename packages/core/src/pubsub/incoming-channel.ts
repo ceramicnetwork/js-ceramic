@@ -68,7 +68,7 @@ export class IncomingChannel extends Observable<Message> {
           checkSlowObservable(
             lateMessageAfter,
             logger,
-            'IPFS did not provide any messages, please check your IPFS configuration.'
+            'IPFS did not provide any messages, please check your IPFS configuration and ensure your node is well connected to the rest of the Ceramic network.'
           ),
           retryWhen((errors) =>
             errors.pipe(
@@ -112,7 +112,7 @@ export function checkSlowObservable(
 ): MonoTypeOperatorFunction<Message> {
   const createTimeout = () => {
     return setTimeout(() => {
-      logger.warn(`Message was not timely. ${description}`)
+      logger.warn(`Did not receive any pubsub messages in more than ${delay}ms. ${description}`)
     }, delay)
   }
   let outstanding = createTimeout()
