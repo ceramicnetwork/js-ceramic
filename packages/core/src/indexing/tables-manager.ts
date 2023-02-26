@@ -17,7 +17,7 @@ import { CONFIG_TABLE_NAME } from './config.js'
 import { addColumnPrefix } from './column-name.util.js'
 
 /**
- * Compose DB Config Table Type
+ * ComposeDB Config Table Type
  */
 type ConfigTable = {
   readonly tableName: string
@@ -80,7 +80,7 @@ export class TablesManager {
   }
 
   /**
-   * Create Compose DB config tables
+   * Create ComposeDB config tables
    */
   async initConfigTables(network: Networks) {
     const configTables = this.listConfigTables()
@@ -97,7 +97,7 @@ export class TablesManager {
   async initConfigTable(table: ConfigTable, network: Networks) {
     const exists = await this.dataSource.schema.hasTable(table.tableName)
     if (!exists) {
-      this.logger.imp(`Creating Compose DB config table: ${table.tableName}`)
+      this.logger.imp(`Creating ComposeDB config table: ${table.tableName}`)
       await createConfigTable(this.dataSource, table.tableName, network)
     } else if (table.tableName === CONFIG_TABLE_NAME) {
       const config = await this.dataSource
@@ -113,7 +113,7 @@ export class TablesManager {
   }
 
   /**
-   * Compose DB configuration table schema verification
+   * ComposeDB configuration table schema verification
    */
   async _verifyConfigTables() {
     const configTables = this.listConfigTables()
@@ -139,7 +139,7 @@ export class TablesManager {
   }
 
   /**
-   * Compose DB Model Instance Document table schema verification
+   * ComposeDB Model Instance Document table schema verification
    */
   async _verifyMidTables(modelsToIndex: Array<IndexModelArgs>) {
     const tableNames = await this.listMidTables()
@@ -234,7 +234,7 @@ export class PostgresTablesManager extends TablesManager {
 
     const exists = await this.dataSource.schema.hasTable(tableName)
     if (!exists) {
-      this.logger.imp(`Creating Compose DB Indexing table for model: ${tableName}`)
+      this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
       const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
       await createPostgresModelTable(this.dataSource, tableName, relationColumns)
     }
@@ -306,7 +306,7 @@ export class SqliteTablesManager extends TablesManager {
     if (existingTables.includes(tableName)) {
       return
     }
-    this.logger.imp(`Creating Compose DB Indexing table for model: ${tableName}`)
+    this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
     const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     await createSqliteModelTable(this.dataSource, tableName, relationColumns)
   }
