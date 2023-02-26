@@ -315,7 +315,7 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
-  it('Existing stream cannot be pinned and unpinned on deterministic load', async () => {
+  it('Existing stream with updates cannot be pinned and unpinned on deterministic load', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.deterministic(
       ceramic,
@@ -337,6 +337,10 @@ describe('Ceramic stream pinning', () => {
       )
     ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+
+    await ceramic.admin.pin.add(stream.id)
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+
     await expect(
       TileDocument.deterministic(
         ceramic,
@@ -344,7 +348,36 @@ describe('Ceramic stream pinning', () => {
         { sync: SyncOptions.NEVER_SYNC, pin: false }
       )
     ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+
+    await ceramic.close()
+  })
+
+  it('Can pin an existing deterministic stream that has no updates yet', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream1 = await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      {
+        anchor: false,
+        publish: false,
+        pin: false,
+      }
+    )
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeFalsy()
+
+    const stream2 = await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      {
+        anchor: false,
+        publish: false,
+        pin: true,
+      }
+    )
+
+    expect(stream2.id).toEqual(stream1.id)
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })
