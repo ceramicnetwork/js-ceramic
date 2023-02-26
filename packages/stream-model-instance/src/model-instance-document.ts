@@ -60,14 +60,12 @@ export interface ModelInstanceDocumentMetadata {
 const DEFAULT_CREATE_OPTS = {
   anchor: true,
   publish: true,
-  pin: true,
   sync: SyncOptions.NEVER_SYNC,
   syncTimeoutSeconds: 0,
 }
 const DEFAULT_DETERMINISTIC_OPTS = {
   anchor: false,
   publish: false,
-  pin: true,
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
