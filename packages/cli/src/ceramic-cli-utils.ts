@@ -108,7 +108,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
-   * @param disableComposedb - Disable Compose DB Indexing service.
+   * @param disableComposedb - Disable ComposeDB Indexing service.
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -151,7 +151,6 @@ export class CeramicCliUtils {
 
     // Validate the config after applying all the overrides
     validateConfig(config)
-
 
     {
       // CLI flags override values from environment variables and config file
@@ -283,7 +282,8 @@ export class CeramicCliUtils {
     const id = StreamID.fromString(streamId)
     if (id.type != TileDocument.STREAM_TYPE_ID) {
       throw new Error(
-        `CLI does not currently support updating stream types other than 'tile'. StreamID ${id.toString()} has streamtype '${id.typeName
+        `CLI does not currently support updating stream types other than 'tile'. StreamID ${id.toString()} has streamtype '${
+          id.typeName
         }'`
       )
     }

@@ -87,7 +87,7 @@ export function indices(tableName: string): TableIndices {
 }
 
 /**
- * Default configuration of Compose DB functionality per network.
+ * Default configuration of ComposeDB functionality per network.
  * Values can be overwritten by updating them in the ceramic_config table
  * and by restarting the node.
  */
