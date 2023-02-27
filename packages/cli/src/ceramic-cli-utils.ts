@@ -27,7 +27,7 @@ import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import { generateSeedUrl } from './daemon/did-utils.js'
 import { TypedJSON } from 'typedjson'
-import { getNetworkDefaultConfig } from '../../core/lib/indexing/migrations/1-create-model-table.js' //'@ceramicnetwork/core/lib/indexing/migrations/1-create-model-table.js'
+import { getNetworkDefaultConfig } from '../../core/lib/indexing/migrations/1-create-model-table.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)

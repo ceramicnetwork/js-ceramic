@@ -95,7 +95,7 @@ export function indices(tableName: string): TableIndices {
  *   allow_queries_before_historical_sync - allow data to be queried before models have been fully synced
  *   run_historical_sync_worker - enable historical data sync on a node level
  */
-function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
+export function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
   switch (networkName) {
     case 'mainnet':
     case 'elp': {
