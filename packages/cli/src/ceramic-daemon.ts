@@ -347,6 +347,7 @@ export class CeramicDaemon {
     const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const legacyPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
@@ -363,8 +364,14 @@ export class CeramicDaemon {
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
     baseRouter.use('/admin/pins', adminPinsRouter)
+
     // Original pins paths not supported error, to be fuly removed/deprecated after
-    baseRouter.use('/pins', this._pinNotSupported.bind(this))
+    // pin add returns empty 200 for now, to support 3id-connect, to be removed
+    baseRouter.use('/pins', legacyPinsRouter)
+    legacyPinsRouter.getAsync('/:streamid', this._pinNotSupported.bind(this))
+    legacyPinsRouter.getAsync('/', this._pinNotSupported.bind(this))
+    legacyPinsRouter.postAsync('/:streamid',  this._empty200.bind(this))
+    legacyPinsRouter.deleteAsync('/:streamid', this._pinNotSupported.bind(this))
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
@@ -386,7 +393,6 @@ export class CeramicDaemon {
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
 
-    // TODO keep deprecated paths with warnings???
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
       streamsRouter.postAsync('/:streamid/anchor', this.requestAnchor.bind(this))
@@ -399,8 +405,6 @@ export class CeramicDaemon {
     } else {
       streamsRouter.postAsync('/', this.createReadOnlyStreamFromGenesis.bind(this))
       commitsRouter.postAsync('/', this._notSupported.bind(this))
-      adminPinsRouter.postAsync('/:streamid', this._notSupported.bind(this))
-      adminPinsRouter.deleteAsync('/:streamid', this._notSupported.bind(this))
 
       documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this._notSupported.bind(this)) // Deprecated
@@ -966,6 +970,10 @@ export class CeramicDaemon {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: 'Method not supported: pin requests have moved to the admin API /admin/pins' })
+  }
+
+  async _empty200(req: Request, res: Response): Promise<void> {
+    res.sendStatus(StatusCodes.OK)
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {
