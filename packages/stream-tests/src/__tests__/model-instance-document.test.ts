@@ -97,6 +97,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
       indexing: {
         allowQueriesBeforeHistoricalSync: true,
         disableComposedb: false,
+        enableHistoricalSync: false,
       },
     })
 

@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 import { AnchorServiceAuthMethods } from '@ceramicnetwork/common'
 import { StartupError } from './daemon/error-handler.js'
+import { json } from 'express'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
@@ -242,10 +243,21 @@ export class IndexingConfig {
   })
   allowQueriesBeforeHistoricalSync = false
 
+  /**
+   * Allow Ceramic node to run in stand-along mode without Compose DB enabled
+   */
   @jsonMember(Boolean, {
     name: 'disable-composedb',
   })
   disableComposedb = false
+
+  /**
+   * Enable Historical data sync worker for Compose DB indexing
+   */
+  @jsonMember(Boolean, {
+    name: 'enable-historical-sync',
+  })
+  enableHistoricalSync = false
 }
 
 @jsonObject
@@ -486,9 +498,9 @@ export class DaemonConfig {
 }
 
 /**
-  * Validate the config object has the expected settings.
-  *
-  */
+ * Validate the config object has the expected settings.
+ *
+ */
 export function validateConfig(config: DaemonConfig) {
   if (config.anchor) {
     if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {

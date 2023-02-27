@@ -27,6 +27,7 @@ import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import { generateSeedUrl } from './daemon/did-utils.js'
 import { TypedJSON } from 'typedjson'
+import { getDefaultCDBDatabaseConfig } from '../../core/lib/indexing/migrations/1-create-model-table.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -46,6 +47,7 @@ const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG
  */
 const generateDefaultDaemonConfig = () => {
   const privateSeedUrl = generateSeedUrl()
+  const defaultIndexingConfig = getDefaultCDBDatabaseConfig(Networks.TESTNET_CLAY)
 
   return DaemonConfig.fromObject({
     anchor: {
@@ -68,6 +70,9 @@ const generateDefaultDaemonConfig = () => {
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
       'disable-composedb': false,
+      'enable-historical-sync': defaultIndexingConfig.run_historical_sync_worker,
+      'allow-queries-before-historical-sync':
+        defaultIndexingConfig.allow_queries_before_historical_sync,
     },
   })
 }
@@ -214,11 +219,9 @@ export class CeramicCliUtils {
       if (disableComposedb) {
         config.indexing.disableComposedb = true
       }
-
       if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
         config.indexing.disableComposedb = true
       }
-
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
         config.stateStore.localDirectory = stateStoreDirectory

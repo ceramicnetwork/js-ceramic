@@ -300,6 +300,7 @@ describe('Sync tests', () => {
         indexing: {
           db: process.env.DATABASE_URL as string,
           allowQueriesBeforeHistoricalSync: true,
+          enableHistoricalSync: false,
         },
         sync: true,
         // change pubsub topic so that we aren't getting updates via pubsub
