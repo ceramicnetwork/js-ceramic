@@ -102,7 +102,7 @@ export function getNetworkDefaultConfig(networkName: string): { [key: string]: a
       return {
         enable_historical_sync: true,
         allow_queries_before_historical_sync: true,
-        run_historical_sync_worker: true,
+        run_historical_sync_worker: false,
       }
       break
     }
