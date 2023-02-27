@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 import { AnchorServiceAuthMethods } from '@ceramicnetwork/common'
 import { StartupError } from './daemon/error-handler.js'
+import { json } from 'express'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
@@ -242,10 +243,21 @@ export class IndexingConfig {
   })
   allowQueriesBeforeHistoricalSync = false
 
+  /**
+   * Allow Ceramic node to run in stand-along mode without Compose DB enabled
+   */
   @jsonMember(Boolean, {
     name: 'disable-composedb',
   })
   disableComposedb = false
+
+  /**
+   * Enable Historical data sync worker for Compose DB indexing
+   */
+  @jsonMember(Boolean, {
+    name: 'enable-historical-sync',
+  })
+  enableHistoricalSync = false
 }
 
 @jsonObject
@@ -322,7 +334,7 @@ export class DaemonCeramicNodeConfig {
   /**
    * Whether to run the Ceramic node with CDB indexing enabled
    */
-  @jsonMember(Boolean, { name: 'disable-composedb'})
+  @jsonMember(Boolean, { name: 'disable-composedb' })
   disableComposedb?: boolean
 
   /**
@@ -463,13 +475,6 @@ export class DaemonConfig {
   static async fromFile(filepath: URL): Promise<DaemonConfig> {
     const content = await readFile(filepath, { encoding: 'utf8' })
     const config = DaemonConfig.fromString(content)
-    if (config.anchor) {
-      if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {
-        if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
-        if (!config.node.sensitive_privateSeedUrl())
-          throw new StartupError('Daemon config is missing node.private-seed-url')
-      }
-    }
     expandPaths(config, filepath)
     return config
   }
@@ -489,5 +494,19 @@ export class DaemonConfig {
       }
     }
     return config
+  }
+}
+
+/**
+ * Validate the config object has the expected settings.
+ *
+ */
+export function validateConfig(config: DaemonConfig) {
+  if (config.anchor) {
+    if (config.anchor.authMethod == AnchorServiceAuthMethods.DID) {
+      if (!config.node) throw new StartupError('Daemon config is missing node.private-seed-url')
+      if (!config.node.sensitive_privateSeedUrl())
+        throw new StartupError('Daemon config is missing node.private-seed-url')
+    }
   }
 }

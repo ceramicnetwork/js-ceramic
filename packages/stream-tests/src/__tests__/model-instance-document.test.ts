@@ -97,6 +97,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
       indexing: {
         allowQueriesBeforeHistoricalSync: true,
         disableComposedb: false,
+        enableHistoricalSync: false,
       },
     })
 
@@ -342,8 +343,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     )
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: nonIndexedModel.id })
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
-    await doc.replace(CONTENT1, { pin: false })
-    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeFalsy()
+    await expect(doc.replace(CONTENT1, { pin: false })).rejects.toThrow(
+      /Cannot pin or unpin streams through the CRUD APIs/
+    )
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
   test(`Pinning a ModelInstanceDocument pins its Model`, async () => {

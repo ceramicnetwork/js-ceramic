@@ -213,7 +213,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const txCid = getCidFromTransaction(anchorProof.txType, txResponse)
 
     if (!txCid.equals(anchorProof.root)) {
-      throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
+      throw new Error(`The root CID ${anchorProof.root} is not in the transaction`)
     }
 
     if (txResponse.blockNumber <= BLOCK_THRESHHOLDS[this._chainId]) {

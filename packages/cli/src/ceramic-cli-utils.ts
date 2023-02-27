@@ -16,7 +16,7 @@ import {
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
-import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
+import { DaemonConfig, IpfsMode, StateStoreMode, validateConfig } from './daemon-config.js'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -27,6 +27,7 @@ import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import { generateSeedUrl } from './daemon/did-utils.js'
 import { TypedJSON } from 'typedjson'
+import { getDefaultCDBDatabaseConfig } from '../../core/lib/indexing/migrations/1-create-model-table.js'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -46,6 +47,7 @@ const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG
  */
 const generateDefaultDaemonConfig = () => {
   const privateSeedUrl = generateSeedUrl()
+  const defaultIndexingConfig = getDefaultCDBDatabaseConfig(Networks.TESTNET_CLAY)
 
   return DaemonConfig.fromObject({
     anchor: {
@@ -68,6 +70,9 @@ const generateDefaultDaemonConfig = () => {
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
       'disable-composedb': false,
+      'enable-historical-sync': defaultIndexingConfig.run_historical_sync_worker,
+      'allow-queries-before-historical-sync':
+        defaultIndexingConfig.allow_queries_before_historical_sync,
     },
   })
 }
@@ -108,7 +113,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
-   * @param disableComposedb - Disable Compose DB Indexing service.
+   * @param disableComposedb - Disable ComposeDB Indexing service.
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -148,6 +153,9 @@ export class CeramicCliUtils {
     if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL) {
       config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
     }
+
+    // Validate the config after applying all the overrides
+    validateConfig(config)
 
     {
       // CLI flags override values from environment variables and config file
@@ -211,11 +219,9 @@ export class CeramicCliUtils {
       if (disableComposedb) {
         config.indexing.disableComposedb = true
       }
-
       if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
         config.indexing.disableComposedb = true
       }
-
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
         config.stateStore.localDirectory = stateStoreDirectory

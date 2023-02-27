@@ -3,16 +3,16 @@ version: 2.1
 parameters:
   GHA_Event:
     type: string
-    default: ""
+    default: ''
   GHA_Actor:
     type: string
-    default: ""
+    default: ''
   GHA_Action:
     type: string
-    default: ""
+    default: ''
   GHA_Meta:
     type: string
-    default: ""
+    default: ''
 
 orbs:
   node: circleci/node@5.0.0
@@ -22,7 +22,7 @@ commands:
     steps:
       - checkout
       - node/install:
-          node-version: "16"
+          node-version: '16'
       - node/install-packages
       - run: npm run build
       - run: npm run lint
@@ -58,14 +58,6 @@ jobs:
           command: npm run docs
           environment:
             NODE_OPTIONS: '--max_old_space_size=4096'
-  with-js-ipfs:
-    machine:
-      image: ubuntu-2004:202107-02
-    environment:
-      NODE_OPTIONS: '--max_old_space_size=4096'
-      IPFS_FLAVOR: js
-    steps:
-      - build-and-test
   dispatch-event:
     machine:
       image: ubuntu-2004:202107-02
@@ -78,8 +70,6 @@ workflows:
     when: << pipeline.parameters.GHA_Event >>
     jobs:
       - with-go-ipfs
-      - with-js-ipfs
       - dispatch-event:
           requires:
             - with-go-ipfs
-            - with-js-ipfs

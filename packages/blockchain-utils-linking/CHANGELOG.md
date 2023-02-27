@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.12.0-rc.0...@ceramicnetwork/blockchain-utils-linking@2.13.0-rc.0) (2023-02-24)
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
 # [2.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.11.0...@ceramicnetwork/blockchain-utils-linking@2.12.0-rc.0) (2023-02-23)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

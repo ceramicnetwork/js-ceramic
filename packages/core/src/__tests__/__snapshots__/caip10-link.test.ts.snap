@@ -1,114 +1,40 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Ceramic API Caip10Link test Anchoring works 1`] = `
-Object {
+{
   "chainId": "inmemory:12345",
   "txType": "f(bytes32)",
 }
 `;
 
 exports[`Ceramic API Caip10Link test Create and link DID 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
-        "code": 113,
-        "hash": Uint8Array [
-          18,
-          32,
-          220,
-          69,
-          11,
-          211,
-          217,
-          11,
-          32,
-          171,
-          217,
-          181,
-          63,
-          193,
-          60,
-          28,
-          62,
-          144,
-          62,
-          101,
-          140,
-          47,
-          33,
-          57,
-          154,
-          254,
-          131,
-          167,
-          84,
-          49,
-          14,
-          178,
-          67,
-          157,
-        ],
-        "version": 1,
+  "log": [
+    {
+      "cid": {
+        "/": "bafyreig4iuf5hwilecv5tnj7ye6bypuqhzsyylzbhgnp5a5hkqyq5msdtu",
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
-        "code": 113,
-        "hash": Uint8Array [
-          18,
-          32,
-          79,
-          176,
-          3,
-          183,
-          245,
-          175,
-          148,
-          158,
-          151,
-          111,
-          100,
-          108,
-          165,
-          35,
-          6,
-          223,
-          111,
-          125,
-          124,
-          204,
-          67,
-          32,
-          16,
-          177,
-          79,
-          108,
-          247,
-          92,
-          111,
-          33,
-          168,
-          170,
-        ],
-        "version": 1,
+    {
+      "cid": {
+        "/": "bafyreicpwab3p5npsspjo33ensssgbw7n56xztcdeailct3m65og6inivi",
       },
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": "did:3:bafysdfwefwe",
-    "metadata": Object {
-      "controllers": Array [
+    "metadata": {
+      "controllers": [
         "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       ],
       "family": "caip10-eip155:1337",
@@ -121,107 +47,33 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create and link DID with legacy CAIP proof 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
-        "code": 113,
-        "hash": Uint8Array [
-          18,
-          32,
-          220,
-          69,
-          11,
-          211,
-          217,
-          11,
-          32,
-          171,
-          217,
-          181,
-          63,
-          193,
-          60,
-          28,
-          62,
-          144,
-          62,
-          101,
-          140,
-          47,
-          33,
-          57,
-          154,
-          254,
-          131,
-          167,
-          84,
-          49,
-          14,
-          178,
-          67,
-          157,
-        ],
-        "version": 1,
+  "log": [
+    {
+      "cid": {
+        "/": "bafyreig4iuf5hwilecv5tnj7ye6bypuqhzsyylzbhgnp5a5hkqyq5msdtu",
       },
       "type": 0,
     },
-    Object {
-      "cid": Object {
-        "code": 113,
-        "hash": Uint8Array [
-          18,
-          32,
-          129,
-          61,
-          78,
-          166,
-          67,
-          96,
-          81,
-          131,
-          252,
-          108,
-          54,
-          180,
-          74,
-          78,
-          6,
-          6,
-          46,
-          244,
-          173,
-          168,
-          246,
-          204,
-          9,
-          186,
-          83,
-          90,
-          227,
-          162,
-          129,
-          77,
-          220,
-          239,
-        ],
-        "version": 1,
+    {
+      "cid": {
+        "/": "bafyreiebhvhkmq3akgb7y3bwwrfe4bqgf32k3khwzqe3uu224oricto454",
       },
       "type": 1,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": "did:3:bafysdfwefwe",
-    "metadata": Object {
-      "controllers": Array [
+    "metadata": {
+      "controllers": [
         "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
       ],
       "family": "caip10-eip155:1337",
@@ -234,61 +86,24 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create from legacy account id 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
-        "code": 113,
-        "hash": Uint8Array [
-          18,
-          32,
-          220,
-          69,
-          11,
-          211,
-          217,
-          11,
-          32,
-          171,
-          217,
-          181,
-          63,
-          193,
-          60,
-          28,
-          62,
-          144,
-          62,
-          101,
-          140,
-          47,
-          33,
-          57,
-          154,
-          254,
-          131,
-          167,
-          84,
-          49,
-          14,
-          178,
-          67,
-          157,
-        ],
-        "version": 1,
+  "log": [
+    {
+      "cid": {
+        "/": "bafyreig4iuf5hwilecv5tnj7ye6bypuqhzsyylzbhgnp5a5hkqyq5msdtu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": null,
   },
   "signature": 0,
@@ -297,61 +112,24 @@ Object {
 `;
 
 exports[`Ceramic API Caip10Link test Create from valid account id 1`] = `
-Object {
+{
   "anchorStatus": 0,
   "content": null,
-  "log": Array [
-    Object {
-      "cid": Object {
-        "code": 113,
-        "hash": Uint8Array [
-          18,
-          32,
-          220,
-          69,
-          11,
-          211,
-          217,
-          11,
-          32,
-          171,
-          217,
-          181,
-          63,
-          193,
-          60,
-          28,
-          62,
-          144,
-          62,
-          101,
-          140,
-          47,
-          33,
-          57,
-          154,
-          254,
-          131,
-          167,
-          84,
-          49,
-          14,
-          178,
-          67,
-          157,
-        ],
-        "version": 1,
+  "log": [
+    {
+      "cid": {
+        "/": "bafyreig4iuf5hwilecv5tnj7ye6bypuqhzsyylzbhgnp5a5hkqyq5msdtu",
       },
       "type": 0,
     },
   ],
-  "metadata": Object {
-    "controllers": Array [
+  "metadata": {
+    "controllers": [
       "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
     ],
     "family": "caip10-eip155:1337",
   },
-  "next": Object {
+  "next": {
     "content": null,
   },
   "signature": 0,

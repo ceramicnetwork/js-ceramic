@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.23.0-rc.0...@ceramicnetwork/cli@2.24.0-rc.0) (2023-02-24)
+
+
+### Bug Fixes
+
+* **cli:** validate daemon config after applying env overrides ([#2747](https://github.com/ceramicnetwork/js-ceramic/issues/2747)) ([89ffe58](https://github.com/ceramicnetwork/js-ceramic/commit/89ffe583350bb4bc3d9f9977ddd71dbb8804f58d))
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
 # [2.23.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.22.0...@ceramicnetwork/cli@2.23.0-rc.0) (2023-02-23)
 
 

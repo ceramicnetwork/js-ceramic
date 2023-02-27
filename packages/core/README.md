@@ -22,11 +22,8 @@ import Ceramic from '@ceramicnetwork/core'
 import TileDocument from '@ceramicnetwork/stream-tile'
 
 import { create as createIPFS } from 'ipfs-core'
-import * as dagJose from 'dag-jose'
 
-const ipfs = createIPFS({
-    ipld: { codecs: [dagJose] },
-})
+const ipfs = createIPFS()
 
 const config: CeramicConfig = {}
 const ceramic = await Ceramic.create(ipfs, config)

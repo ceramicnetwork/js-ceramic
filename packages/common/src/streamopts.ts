@@ -87,7 +87,7 @@ export interface InternalOpts {
 /**
  * Extra options passed as part of operations that load a stream.
  */
-export interface LoadOpts extends SyncOpts, PinningOpts {
+export interface LoadOpts extends SyncOpts {
   /**
    * Load a previous version of the stream based on unix timestamp
    */
@@ -118,7 +118,7 @@ export interface AnchorOpts {
 /**
  * Extra options passed as part of operations that update streams.
  */
-export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts, PinningOpts {
+export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts {
   asDID?: DID
 }
 

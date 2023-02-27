@@ -4,24 +4,14 @@ import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { pipe, MonoTypeOperatorFunction } from 'rxjs'
 import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
 import { TaskQueue } from './task-queue.js'
-
-// Typestub for pubsub message.
-// At some future time this type definition should be provided by IPFS.
-export type IPFSPubsubMessage = {
-  from: string
-  seqno: Uint8Array
-  data: Uint8Array
-  topicIDs: string[]
-  signature: Uint8Array
-  key: Uint8Array
-}
+import type { SignedMessage, Message } from '@libp2p/interface-pubsub'
 
 /**
  * Subscription attempts must be sequential, in FIFO order.
  * Last call to unsubscribe must execute after all the attempts are done,
  * and all the attempts yet inactive are cleared. Serialized via TaskQueue.
  */
-export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
+export class PubsubIncoming extends Observable<Message> {
   constructor(
     readonly ipfs: IpfsApi,
     readonly topic: string,
@@ -30,7 +20,7 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
     readonly tasks: TaskQueue
   ) {
     super((subscriber) => {
-      const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
+      const onMessage = (message: Message) => subscriber.next(message)
       const onError = (error: Error) => subscriber.error(error)
 
       // For some reason ipfs.id() throws an error directly if the
@@ -62,7 +52,7 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
 /**
  * Incoming IPFS PubSub message stream as Observable.  Adds retry logic on top of base PubsubIncoming.
  */
-export class IncomingChannel extends Observable<IPFSPubsubMessage> {
+export class IncomingChannel extends Observable<Message> {
   constructor(
     readonly ipfs: IpfsApi,
     readonly topic: string,
@@ -78,7 +68,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
           checkSlowObservable(
             lateMessageAfter,
             logger,
-            'IPFS did not provide any messages, please check your IPFS configuration.'
+            'IPFS did not provide any messages, please check your IPFS configuration and ensure your node is well connected to the rest of the Ceramic network.'
           ),
           retryWhen((errors) =>
             errors.pipe(
@@ -98,10 +88,15 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
  */
 export function filterExternal(
   ownPeerId$: Observable<string>
-): MonoTypeOperatorFunction<IPFSPubsubMessage> {
+): MonoTypeOperatorFunction<SignedMessage> {
   return pipe(
-    concatMap((data: IPFSPubsubMessage) => {
-      return ownPeerId$.pipe(map((peerId) => ({ isOuter: data.from !== peerId, entry: data })))
+    filter((message) => message.type === 'signed'),
+    concatMap((data: SignedMessage) => {
+      return ownPeerId$.pipe(
+        map((peerId) => {
+          return { isOuter: data.from.toString() !== peerId, entry: data }
+        })
+      )
     }),
     // Filter the container object synchronously for the value in each data container object
     filter((data) => data.isOuter),
@@ -114,10 +109,10 @@ export function checkSlowObservable(
   delay: number,
   logger: DiagnosticsLogger,
   description: string
-): MonoTypeOperatorFunction<IPFSPubsubMessage> {
+): MonoTypeOperatorFunction<Message> {
   const createTimeout = () => {
     return setTimeout(() => {
-      logger.warn(`Message was not timely. ${description}`)
+      logger.warn(`Did not receive any pubsub messages in more than ${delay}ms. ${description}`)
     }, delay)
   }
   let outstanding = createTimeout()
