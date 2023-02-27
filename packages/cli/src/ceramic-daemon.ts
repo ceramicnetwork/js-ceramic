@@ -370,7 +370,7 @@ export class CeramicDaemon {
     baseRouter.use('/pins', legacyPinsRouter)
     legacyPinsRouter.getAsync('/:streamid', this._pinNotSupported.bind(this))
     legacyPinsRouter.getAsync('/', this._pinNotSupported.bind(this))
-    legacyPinsRouter.postAsync('/:streamid',  this._empty200.bind(this))
+    legacyPinsRouter.postAsync('/:streamid', this._pinWarningOk.bind(this))
     legacyPinsRouter.deleteAsync('/:streamid', this._pinNotSupported.bind(this))
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
@@ -972,8 +972,12 @@ export class CeramicDaemon {
       .json({ error: 'Method not supported: pin requests have moved to the admin API /admin/pins' })
   }
 
-  async _empty200(req: Request, res: Response): Promise<void> {
-    res.sendStatus(StatusCodes.OK)
+  async _pinWarningOk(req: Request, res: Response): Promise<void> {
+    res
+      .status(StatusCodes.OK)
+      .send(
+        'Pin requests have moved to the admin API /admin/pins, please make requests there. Any requests here will not pin, API returns 200 for tooling backwards compatibility, and will be removed soon.'
+      )
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {
