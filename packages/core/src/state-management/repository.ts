@@ -340,11 +340,13 @@ export class Repository {
     if (opts.pin !== undefined && opType !== OperationType.CREATE) {
       const pinStr = opts.pin ? 'pin' : 'unpin'
       const opStr = opType == OperationType.UPDATE ? 'update' : 'load'
-      throw new Error(
+      //TODO(CDB-2314): An error should be thrown once fully deprecated
+      console.warn(
         `Cannot pin or unpin streams through the CRUD APIs. To change stream pin state use the admin.pin API with an authenticated admin DID. Attempting to ${pinStr} stream ${StreamUtils.streamIdFromState(
           state$.state
         ).toString()} as part of a ${opStr} operation`
       )
+      return
     }
 
     if (
