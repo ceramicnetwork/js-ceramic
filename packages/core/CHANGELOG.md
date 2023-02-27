@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.27.0-rc.0...@ceramicnetwork/core@2.28.0-rc.0) (2023-02-27)
+
+
+### Bug Fixes
+
+* added disallow HDS with SQLite check ([#2749](https://github.com/ceramicnetwork/js-ceramic/issues/2749)) ([2a560da](https://github.com/ceramicnetwork/js-ceramic/commit/2a560da80385b03253a3ff1895a8e5802cc65311))
+* Disallow pinning and unpinning through CRUD APIs ([#2750](https://github.com/ceramicnetwork/js-ceramic/issues/2750)) ([25d9ebf](https://github.com/ceramicnetwork/js-ceramic/commit/25d9ebfdc8017274ed4dde3ed11e0248c5019f5c))
+
+
+### Features
+
+* **cli, core:** add sync worker flag to config file with default values ([#2757](https://github.com/ceramicnetwork/js-ceramic/issues/2757)) ([5375c88](https://github.com/ceramicnetwork/js-ceramic/commit/5375c886ecf58fa646ab3afe0796b0d2edc17af4))
+
+
+
+
+
 # [2.27.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.26.0-rc.0...@ceramicnetwork/core@2.27.0-rc.0) (2023-02-24)
 
 

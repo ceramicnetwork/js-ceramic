@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.17.0-rc.0...@ceramicnetwork/stream-caip10-link@2.18.0-rc.0) (2023-02-27)
+
+
+### Bug Fixes
+
+* Disallow pinning and unpinning through CRUD APIs ([#2750](https://github.com/ceramicnetwork/js-ceramic/issues/2750)) ([25d9ebf](https://github.com/ceramicnetwork/js-ceramic/commit/25d9ebfdc8017274ed4dde3ed11e0248c5019f5c))
+
+
+
+
+
 # [2.17.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.16.0-rc.0...@ceramicnetwork/stream-caip10-link@2.17.0-rc.0) (2023-02-24)
 
 

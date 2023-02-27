@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.24.0-rc.0...@ceramicnetwork/stream-tests@2.25.0-rc.0) (2023-02-27)
+
+
+### Bug Fixes
+
+* Disallow pinning and unpinning through CRUD APIs ([#2750](https://github.com/ceramicnetwork/js-ceramic/issues/2750)) ([25d9ebf](https://github.com/ceramicnetwork/js-ceramic/commit/25d9ebfdc8017274ed4dde3ed11e0248c5019f5c))
+
+
+### Features
+
+* **cli, core:** add sync worker flag to config file with default values ([#2757](https://github.com/ceramicnetwork/js-ceramic/issues/2757)) ([5375c88](https://github.com/ceramicnetwork/js-ceramic/commit/5375c886ecf58fa646ab3afe0796b0d2edc17af4))
+
+
+
+
+
 # [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.23.0-rc.0...@ceramicnetwork/stream-tests@2.24.0-rc.0) (2023-02-24)
 
 

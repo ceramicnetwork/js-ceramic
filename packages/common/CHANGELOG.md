@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.23.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.22.0-rc.0...@ceramicnetwork/common@2.23.0-rc.0) (2023-02-27)
+
+
+### Bug Fixes
+
+* **common:** webpack build issues ([#2753](https://github.com/ceramicnetwork/js-ceramic/issues/2753)) ([8e654d2](https://github.com/ceramicnetwork/js-ceramic/commit/8e654d27b1f2effa1afcdd0dd0118d855a1bde01))
+* Disallow pinning and unpinning through CRUD APIs ([#2750](https://github.com/ceramicnetwork/js-ceramic/issues/2750)) ([25d9ebf](https://github.com/ceramicnetwork/js-ceramic/commit/25d9ebfdc8017274ed4dde3ed11e0248c5019f5c))
+
+
+
+
+
 # [2.22.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.21.0-rc.0...@ceramicnetwork/common@2.22.0-rc.0) (2023-02-24)
 
 

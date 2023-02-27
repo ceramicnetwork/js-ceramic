@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.15.0-rc.0...@ceramicnetwork/ipfs-daemon@2.16.0-rc.0) (2023-02-27)
+
+
+### Features
+
+* add pubsub cache ttl and bootstrap peers to bundled kubo config ([#2756](https://github.com/ceramicnetwork/js-ceramic/issues/2756)) ([d720074](https://github.com/ceramicnetwork/js-ceramic/commit/d7200747c069b8211a1c7f4ca18903b2838bdff1))
+
+
+
+
+
 # [2.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.14.0-rc.0...@ceramicnetwork/ipfs-daemon@2.15.0-rc.0) (2023-02-24)
 
 

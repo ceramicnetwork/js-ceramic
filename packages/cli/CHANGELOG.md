@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.24.0-rc.0...@ceramicnetwork/cli@2.25.0-rc.0) (2023-02-27)
+
+
+### Features
+
+* **cli, core:** add sync worker flag to config file with default values ([#2757](https://github.com/ceramicnetwork/js-ceramic/issues/2757)) ([5375c88](https://github.com/ceramicnetwork/js-ceramic/commit/5375c886ecf58fa646ab3afe0796b0d2edc17af4))
+
+
+
+
+
 # [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.23.0-rc.0...@ceramicnetwork/cli@2.24.0-rc.0) (2023-02-24)
 
 
