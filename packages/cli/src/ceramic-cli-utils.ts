@@ -421,11 +421,17 @@ export class CeramicCliUtils {
   /**
    * Pin stream
    * @param streamId - Stream ID
+   * @param privateKey - optional admin DID private key
    */
-  static async pinAdd(streamId: string): Promise<void> {
+  static async pinAdd(streamId: string, privateKey?: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -434,11 +440,17 @@ export class CeramicCliUtils {
   /**
    * Unpin stream
    * @param streamId - Stream ID
+   * @param privateKey - optional admin DID private key
    */
-  static async pinRm(streamId: string): Promise<void> {
+  static async pinRm(streamId: string, privateKey?: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -447,11 +459,17 @@ export class CeramicCliUtils {
   /**
    * List pinned streams
    * @param streamId - optional stream ID filter
+   * @param privateKey - optional admin DID private key
    */
-  static async pinLs(streamId?: string): Promise<void> {
+  static async pinLs(streamId?: string, privateKey?: string): Promise<void> {
     const id = streamId ? StreamID.fromString(streamId) : null
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const pinnedStreamIds = []
       const iterator = await ceramic.admin.pin.ls(id)
       let i = 0
@@ -491,6 +509,18 @@ export class CeramicCliUtils {
       ...keyDidResolver,
     })
     return new DID({ provider, resolver })
+  }
+
+  /**
+   * Authenticates the Ceramic client with the hex-encoded DID private key.
+   * @param ceramic
+   * @param privateKey
+   */
+  static async _authenticateClient(ceramic: CeramicClient, privateKey: string): Promise<void> {
+    const pk = u8a.fromString(privateKey, 'base16')
+    const did = CeramicCliUtils._makeDID(pk, ceramic)
+    await did.authenticate()
+    await ceramic.setDID(did)
   }
 
   /**
@@ -681,9 +711,8 @@ export class CeramicCliUtils {
 
 const deprecationNotice = () => {
   console.log(
-    `${pc.red(pc.bold('This command has been deprecated.'))}
-Please use the upgraded Glaze CLI instead.
-Please test with the new CLI before reporting any problems.
-${pc.green('npm i -g @glazed/cli')}`
+    `${pc.red(
+      pc.bold('This command has been deprecated.')
+    )} It will be removed in a future version of the CLI.`
   )
 }
