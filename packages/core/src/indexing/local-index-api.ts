@@ -99,10 +99,12 @@ export class LocalIndexApi implements IndexApi {
       const edges = await Promise.all(
         // For database queries we bypass the stream cache and repository loading queue
         page.edges.map(async (edge) => {
-          let node: StreamState = await this.repository.streamState(edge.node)
-          if (node === undefined) {
+          let node = await this.repository.streamState(edge.node)
+          if (!node) {
             this.logger.warn(`
-            Did not find stream state in our state store when serving an indexed query.
+            Did not find stream state for streamid ${
+              edge.node
+            } in our state store when serving an indexed query.
             This may indicate a problem with data persistence of your state store, which can result in data loss.
             Please check that your state store is properly configured with strong persistence guarantees.
             This query may have incomplete results. Affected query: ${JSON.stringify(query)}
