@@ -14,7 +14,7 @@ export async function makeCeramicCore(
       db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
       allowQueriesBeforeHistoricalSync: true,
       disableComposedb: false,
-      runHistoricalSyncWorker: false,
+      enableHistoricalSync: false,
     },
   })
 

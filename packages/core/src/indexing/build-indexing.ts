@@ -22,7 +22,7 @@ export type IndexingConfig = {
   /**
    * Setting this to true allows a Ceramic node to sync historical data for actively indexed models
    */
-  runHistoricalSyncWorker: boolean
+  enableHistoricalSync: boolean
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {

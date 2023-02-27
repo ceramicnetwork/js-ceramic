@@ -53,7 +53,7 @@ const createCeramic = async (
       db: connectionString.href,
       allowQueriesBeforeHistoricalSync: true,
       disableComposedb: true,
-      runHistoricalSyncWorker: false,
+      enableHistoricalSync: false,
     },
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })

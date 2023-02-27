@@ -30,7 +30,7 @@ describe('sqlite', () => {
       {
         db: databaseUrl.href,
         allowQueriesBeforeHistoricalSync: true,
-        runHistoricalSyncWorker: false,
+        enableHistoricalSync: false,
       },
       diagnosticsLogger,
       Networks.INMEMORY
@@ -44,7 +44,7 @@ describe('sqlite', () => {
       {
         db: databaseUrl.href,
         allowQueriesBeforeHistoricalSync: true,
-        runHistoricalSyncWorker: false,
+        enableHistoricalSync: false,
       },
       diagnosticsLogger,
       Networks.INMEMORY
@@ -59,7 +59,7 @@ test('build for postgres connection string', async () => {
     {
       db: databaseURL,
       allowQueriesBeforeHistoricalSync: true,
-      runHistoricalSyncWorker: false,
+      enableHistoricalSync: false,
     },
     diagnosticsLogger,
     Networks.INMEMORY
@@ -83,7 +83,7 @@ describe('postgres', () => {
       {
         db: databaseURL,
         allowQueriesBeforeHistoricalSync: true,
-        runHistoricalSyncWorker: false,
+        enableHistoricalSync: false,
       },
       diagnosticsLogger,
       Networks.INMEMORY

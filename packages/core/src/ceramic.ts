@@ -542,7 +542,7 @@ export class Ceramic implements CeramicApi {
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
-      sync: config.indexing.runHistoricalSyncWorker,
+      sync: config.indexing.enableHistoricalSync,
     }
 
     const modules: CeramicModules = {

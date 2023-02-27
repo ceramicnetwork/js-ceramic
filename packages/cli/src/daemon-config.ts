@@ -257,7 +257,7 @@ export class IndexingConfig {
   @jsonMember(Boolean, {
     name: 'enable-historical-sync',
   })
-  runHistoricalSyncWorker = false
+  enableHistoricalSync = false
 }
 
 @jsonObject

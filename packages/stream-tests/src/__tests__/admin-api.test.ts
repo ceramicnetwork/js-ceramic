@@ -61,7 +61,7 @@ describe('Admin API tests', () => {
       indexing: {
         db: `sqlite://${indexingDirectory}/ceramic.sqlite`,
         allowQueriesBeforeHistoricalSync: true,
-        runHistoricalSyncWorker: false,
+        enableHistoricalSync: false,
       },
     })
 
