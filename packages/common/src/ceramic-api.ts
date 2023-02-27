@@ -200,5 +200,5 @@ export interface MultiQuery {
   /**
    * Load a previous version of the stream based on unix timestamp
    */
-  atTime?: number
+  loadOpts?: LoadOpts
 }

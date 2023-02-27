@@ -873,7 +873,7 @@ export class Ceramic implements CeramicApi {
       let stream
       try {
         stream = await promiseTimeout(
-          this.loadStream(streamId, { atTime: query.atTime }),
+          this.loadStream(streamId, { atTime: query.loadOpts?.atTime }),
           timeout,
           `Timeout after ${timeout}ms`
         )
@@ -881,20 +881,20 @@ export class Ceramic implements CeramicApi {
         if (CommitID.isInstance(streamId)) {
           this._logger.warn(
             `Error loading stream ${streamId.baseID.toString()} at commit ${streamId.commit.toString()} at time ${
-              query.atTime
+              query.loadOpts?.atTime
             } as part of a multiQuery request: ${e.toString()}`
           )
         } else {
           this._logger.warn(
             `Error loading stream ${streamId.toString()} at time ${
-              query.atTime
+              query.loadOpts?.atTime
             } as part of a multiQuery request: ${e.toString()}`
           )
         }
         Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
-      const streamRef = query.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
+      const streamRef = query.loadOpts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
       index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map((key) => {
