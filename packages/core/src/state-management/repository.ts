@@ -346,6 +346,7 @@ export class Repository {
           state$.state
         ).toString()} as part of a ${opStr} operation`
       )
+      return
     }
 
     if (
