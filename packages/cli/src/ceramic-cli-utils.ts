@@ -69,8 +69,9 @@ const generateDefaultDaemonConfig = () => {
     },
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
-      'disable-composedb': getIndexingConfig.allow_queries_before_historical_sync,
+      'disable-composedb': false,
       'run-historical-sync-worker': getIndexingConfig.run_historical_sync_worker,
+      'allow-queries-before-historical-sync': getIndexingConfig.allow_queries_before_historical_sync,
     },
   })
 }
