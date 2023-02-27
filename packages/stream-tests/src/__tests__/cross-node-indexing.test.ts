@@ -107,6 +107,7 @@ describe.each(envs)(
           indexing: {
             db: process.env.DATABASE_URL,
             allowQueriesBeforeHistoricalSync: true,
+            runHistoricalSyncWorker: false,
           },
         })
       } else {
@@ -153,6 +154,7 @@ describe.each(envs)(
           db: ceramic1DbUrl,
           models: [],
           allowQueriesBeforeHistoricalSync: true,
+          runHistoricalSyncWorker: false,
         },
       })
       await ceramic1.index.indexModels([model.id])
@@ -161,6 +163,7 @@ describe.each(envs)(
         indexing: {
           db: ceramic2DbUrl,
           allowQueriesBeforeHistoricalSync: true,
+          runHistoricalSyncWorker: false,
         },
       })
       await ceramic2.index.indexModels([model.id])

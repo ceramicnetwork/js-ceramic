@@ -130,8 +130,6 @@ export interface CeramicConfig {
   gateway?: boolean
 
   indexing?: IndexingConfig
-  // TODO: Replace in CDB-2072
-  sync?: boolean
 
   networkName?: string
   pubsubTopic?: string
@@ -538,18 +536,13 @@ export class Ceramic implements CeramicApi {
       maxQueriesPerSecond
     )
 
-    const sync =
-      config.sync == undefined
-        ? process.env.CERAMIC_ENABLE_EXPERIMENTAL_SYNC === 'true'
-        : config.sync
-
     const params: CeramicParameters = {
       gateway: config.gateway,
       stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
       networkOptions,
       loadOptsOverride,
-      sync,
+      sync: config.indexing.runHistoricalSyncWorker,
     }
 
     const modules: CeramicModules = {

@@ -129,6 +129,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       indexing: {
         db: dbURL,
         allowQueriesBeforeHistoricalSync: true,
+        runHistoricalSyncWorker: false,
       },
       stateStoreDirectory: stateStoreURL,
     })

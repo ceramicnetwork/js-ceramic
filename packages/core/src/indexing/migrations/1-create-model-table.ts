@@ -90,6 +90,10 @@ export function indices(tableName: string): TableIndices {
  * Default configuration of ComposeDB functionality per network.
  * Values can be overwritten by updating them in the ceramic_config table
  * and by restarting the node.
+ *
+ *   enable_historical_sync - enable historical data sync on a per model basis (ceramic_models)
+ *   allow_queries_before_historical_sync - allow data to be queried before models have been fully synced
+ *   run_historical_sync_worker - enable historical data sync on a node level
  */
 function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
   switch (networkName) {
@@ -97,7 +101,7 @@ function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
     case 'elp': {
       return {
         enable_historical_sync: true,
-        allow_queries_before_historical_sync: false,
+        allow_queries_before_historical_sync: true,
         run_historical_sync_worker: true,
       }
       break
@@ -105,8 +109,8 @@ function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
     case 'testnet-clay':
       return {
         enable_historical_sync: true,
-        allow_queries_before_historical_sync: false,
-        run_historical_sync_worker: true,
+        allow_queries_before_historical_sync: true,
+        run_historical_sync_worker: false,
       }
       break
     case 'local':

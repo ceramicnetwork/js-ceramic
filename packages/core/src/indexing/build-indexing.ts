@@ -18,6 +18,11 @@ export type IndexingConfig = {
    * Setting this to true allows a Ceramic node to start without indexing enabled
    */
   disableComposedb: boolean
+
+  /**
+   * Setting this to true allows a Ceramic node to sync historical data for actively indexed models
+   */
+  runHistoricalSyncWorker: boolean
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {
