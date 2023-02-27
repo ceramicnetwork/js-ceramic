@@ -95,7 +95,7 @@ export function indices(tableName: string): TableIndices {
  *   allow_queries_before_historical_sync - allow data to be queried before models have been fully synced
  *   run_historical_sync_worker - enable historical data sync on a node level
  */
-export function getNetworkDefaultConfig(networkName: string): { [key: string]: any } {
+export function getDefaultCDBDatabaseConfig(networkName: string): { [key: string]: any } {
   switch (networkName) {
     case 'mainnet':
     case 'elp': {
@@ -123,7 +123,7 @@ export function getNetworkDefaultConfig(networkName: string): { [key: string]: a
     case 'dev-unstable':
       return {
         enable_historical_sync: false,
-        allow_queries_before_historical_sync: false,
+        allow_queries_before_historical_sync: true,
         run_historical_sync_worker: false,
       }
       break
@@ -215,7 +215,7 @@ export async function createSqliteModelTable(
 }
 
 export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {
-  const NETWORK_DEFAULT_CONFIG = getNetworkDefaultConfig(network)
+  const NETWORK_DEFAULT_CONFIG = getDefaultCDBDatabaseConfig(network)
 
   switch (tableName) {
     case INDEXED_MODEL_CONFIG_TABLE_NAME:
