@@ -343,9 +343,6 @@ describe('ModelInstanceDocument API http-client tests', () => {
     )
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: nonIndexedModel.id })
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
-    // await expect(doc.replace(CONTENT1, { pin: false })).rejects.toThrow(
-    //   /Cannot pin or unpin streams through the CRUD APIs/
-    // )
     await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
