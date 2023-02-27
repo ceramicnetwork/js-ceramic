@@ -204,7 +204,7 @@ schemas
   })
 
 const pin = program.command('pin')
-pin.description(`Ceramic local pinning API ${pc.red(pc.bold('[Deprecated]'))}`)
+pin.description(`Ceramic local pinning API`)
 
 pin
   .command('add <streamId>')

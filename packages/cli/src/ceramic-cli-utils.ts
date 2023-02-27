@@ -711,9 +711,8 @@ export class CeramicCliUtils {
 
 const deprecationNotice = () => {
   console.log(
-    `${pc.red(pc.bold('This command has been deprecated.'))}
-Please use the upgraded Glaze CLI instead.
-Please test with the new CLI before reporting any problems.
-${pc.green('npm i -g @glazed/cli')}`
+    `${pc.red(
+      pc.bold('This command has been deprecated.')
+    )} It will be removed in a future version of the CLI.`
   )
 }
