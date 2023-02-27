@@ -420,14 +420,18 @@ export class CeramicCliUtils {
 
   /**
    * Pin stream
-   * @param privateKey - Admin DID private key
    * @param streamId - Stream ID
+   * @param privateKey - optional admin DID private key
    */
-  static async pinAdd(privateKey: string, streamId: string): Promise<void> {
+  static async pinAdd(streamId: string, privateKey?: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
-      await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -435,14 +439,18 @@ export class CeramicCliUtils {
 
   /**
    * Unpin stream
-   * @param privateKey - Admin DID private key
    * @param streamId - Stream ID
+   * @param privateKey - optional admin DID private key
    */
-  static async pinRm(privateKey: string, streamId: string): Promise<void> {
+  static async pinRm(streamId: string, privateKey?: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
-      await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -450,14 +458,18 @@ export class CeramicCliUtils {
 
   /**
    * List pinned streams
-   * @param privateKey - Admin DID private key
    * @param streamId - optional stream ID filter
+   * @param privateKey - optional admin DID private key
    */
-  static async pinLs(privateKey: string, streamId?: string): Promise<void> {
+  static async pinLs(streamId?: string, privateKey?: string): Promise<void> {
     const id = streamId ? StreamID.fromString(streamId) : null
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
-      await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const pinnedStreamIds = []
       const iterator = await ceramic.admin.pin.ls(id)
       let i = 0

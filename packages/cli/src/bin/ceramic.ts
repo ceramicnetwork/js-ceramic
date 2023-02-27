@@ -211,13 +211,7 @@ pin
   .option('--did-private-key <private-key>', 'Hexadecimal-encoded admin DID private key')
   .description(`Pin stream`)
   .action(async (streamId, { didPrivateKey }) => {
-    if (!didPrivateKey) {
-      console.log(
-        `Error: an admin DID private key must be provided as an hexadecimal-encoded string using the --did-private-key flag`
-      )
-      return
-    }
-    await CeramicCliUtils.pinAdd(didPrivateKey, streamId)
+    await CeramicCliUtils.pinAdd(streamId, didPrivateKey)
   })
 
 pin
@@ -225,13 +219,7 @@ pin
   .option('--did-private-key <private-key>', 'Hexadecimal-encoded admin DID private key')
   .description(`Unpin stream`)
   .action(async (streamId, { didPrivateKey }) => {
-    if (!didPrivateKey) {
-      console.log(
-        `Error: an admin DID private key must be provided as an hexadecimal-encoded string using the --did-private-key flag`
-      )
-      return
-    }
-    await CeramicCliUtils.pinRm(didPrivateKey, streamId)
+    await CeramicCliUtils.pinRm(streamId, didPrivateKey)
   })
 
 pin
@@ -239,13 +227,7 @@ pin
   .option('--did-private-key <private-key>', 'Hexadecimal-encoded admin DID private key')
   .description(`List pinned streams`)
   .action(async (streamId, { didPrivateKey }) => {
-    if (!didPrivateKey) {
-      console.log(
-        `Error: an admin DID private key must be provided as an hexadecimal-encoded string using the --did-private-key flag`
-      )
-      return
-    }
-    await CeramicCliUtils.pinLs(didPrivateKey, streamId)
+    await CeramicCliUtils.pinLs(streamId, didPrivateKey)
   })
 
 const config = program.command('config')
