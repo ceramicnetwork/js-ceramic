@@ -255,7 +255,7 @@ export class IndexingConfig {
    * Enable Historical data sync worker for Compose DB indexing
    */
   @jsonMember(Boolean, {
-    name: 'run-historical-sync-worker',
+    name: 'enable-historical-sync',
   })
   runHistoricalSyncWorker = false
 }
