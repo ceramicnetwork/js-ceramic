@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.27.0...@ceramicnetwork/cli@2.28.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **cli:** legacy pin, must return json for 200 ([#2769](https://github.com/ceramicnetwork/js-ceramic/issues/2769) ([e6124eb](https://github.com/ceramicnetwork/js-ceramic/commit/e6124ebe179d75a19993947f4a4f6626214ffced))
+
+
+
+
+
 # [2.27.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.27.0-rc.0...@ceramicnetwork/cli@2.27.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
