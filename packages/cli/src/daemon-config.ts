@@ -230,7 +230,7 @@ export class IndexingConfig {
    * Connection string to a database. Only sqlite and postgres are supported.
    * Examples:
    *  - `sqlite:///path/to/database.sqlite`,
-   *  - `postgres:///user:password@host:5432/database`
+   *  - `postgres://user:password@host:5432/database`
    */
   @jsonMember(String)
   db: string
