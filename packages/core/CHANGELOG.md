@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.29.0...@ceramicnetwork/core@2.30.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* If config.indexing is absent, do not expect enableHistoricalSync ([#2767](https://github.com/ceramicnetwork/js-ceramic/issues/2767)) ([7942f75](https://github.com/ceramicnetwork/js-ceramic/commit/7942f757b024b316402f73a49421524b2074d956))
+
+
+
+
+
 # [2.29.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.29.0-rc.0...@ceramicnetwork/core@2.29.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/core
