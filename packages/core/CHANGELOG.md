@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.29.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.28.0-rc.0...@ceramicnetwork/core@2.29.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **core, anchor-listener:** fix hds bugs ([#2765](https://github.com/ceramicnetwork/js-ceramic/issues/2765)) ([c346c6c](https://github.com/ceramicnetwork/js-ceramic/commit/c346c6cbc34c41207fb27e12cef2e3e6fc1cbd10))
+* **core:** warn instead of throw on pin opts for stream crud ([#2764](https://github.com/ceramicnetwork/js-ceramic/issues/2764) ([4ecfbc1](https://github.com/ceramicnetwork/js-ceramic/commit/4ecfbc1442fa098bfacdfb7488d5d59525288650))
+
+
+
+
+
 # [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.27.0-rc.0...@ceramicnetwork/core@2.28.0-rc.0) (2023-02-27)
 
 

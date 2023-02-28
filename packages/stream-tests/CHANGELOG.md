@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.25.0-rc.0...@ceramicnetwork/stream-tests@2.26.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **core:** warn instead of throw on pin opts for stream crud ([#2764](https://github.com/ceramicnetwork/js-ceramic/issues/2764) ([4ecfbc1](https://github.com/ceramicnetwork/js-ceramic/commit/4ecfbc1442fa098bfacdfb7488d5d59525288650))
+
+
+
+
+
 # [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.24.0-rc.0...@ceramicnetwork/stream-tests@2.25.0-rc.0) (2023-02-27)
 
 

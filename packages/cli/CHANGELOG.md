@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.25.0-rc.0...@ceramicnetwork/cli@2.26.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **cli:** legacy pin api, empty 200 on add to support 3id-connect, ot… ([#2762](https://github.com/ceramicnetwork/js-ceramic/issues/2762)) ([d5f076a](https://github.com/ceramicnetwork/js-ceramic/commit/d5f076a37f3a4b0367c796277e56e3ce0b9cb355))
+
+
+
+
+
 # [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.24.0-rc.0...@ceramicnetwork/cli@2.25.0-rc.0) (2023-02-27)
 
 
