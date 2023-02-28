@@ -973,11 +973,9 @@ export class CeramicDaemon {
   }
 
   async _pinWarningOk(req: Request, res: Response): Promise<void> {
-    res
-      .status(StatusCodes.OK)
-      .send(
-        'Pin requests have moved to the admin API /admin/pins, please make requests there. Any requests here will not pin, API returns 200 for tooling backwards compatibility, and will be removed soon.'
-      )
+    res.status(StatusCodes.OK).json({
+      warn: 'Pin requests have moved to the admin API /admin/pins, please make requests there. Any requests here will not pin, API returns 200 for tooling backwards compatibility, and will be removed soon.',
+    })
   }
 
   async getSupportedChains(req: Request, res: Response): Promise<void> {
