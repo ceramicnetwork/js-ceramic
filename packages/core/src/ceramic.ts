@@ -894,7 +894,7 @@ export class Ceramic implements CeramicApi {
         Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
-      const streamRef = query.loadOpts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
+      const streamRef = query.loadOpts?.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
       index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map((key) => {

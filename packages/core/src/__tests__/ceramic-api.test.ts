@@ -584,15 +584,15 @@ describe('Ceramic API', () => {
       const queries = [
         {
           streamId: streamF.id,
-          atTime: streamFTimestamps[0],
+          loadOpts: {atTime: streamFTimestamps[0]},
         },
         {
           streamId: streamF.id,
-          atTime: streamFTimestamps[1],
+          loadOpts: {atTime: streamFTimestamps[1]},
         },
         {
           streamId: streamF.id,
-          atTime: streamFTimestamps[2],
+          loadOpts: {atTime: streamFTimestamps[2]},
         },
         {
           streamId: streamF.id,
