@@ -35,7 +35,7 @@ const SYNC_STATUS_LOG_INTERVAL = 60000
 export const BLOCK_CONFIRMATIONS = 20
 // TODO (CDB-2292): block number to be defined
 export const INITIAL_INDEXING_BLOCKS: Record<string, number> = {
-  'eip155:1': 16587130,
+  'eip155:1': 16695723,
   'eip155:5': 8503000,
   'eip155:100': 26511896,
 }
@@ -180,24 +180,24 @@ export class SyncApi implements ISyncApi {
         this.jobQueue,
         this.chainId,
         this.diagnosticsLogger,
-        this.syncCompletedForModel
+        this.syncCompletedForModel.bind(this)
       ),
       [CONTINUOUS_SYNC_JOB]: new SyncWorker(
         this.provider,
         this.jobQueue,
         this.chainId,
         this.diagnosticsLogger,
-        this.syncCompletedForModel
+        this.syncCompletedForModel.bind(this)
       ),
     })
   }
 
-  upsertModelForHistoricSync(model: string) {
+  _upsertModelForHistoricSync(model: string) {
     let existing = this.modelsToHistoricSync.get(model)
     if (existing) {
       existing += 1
     } else {
-      existing = 0
+      existing = 1
     }
     this.modelsToHistoricSync.set(model, existing)
   }
@@ -275,7 +275,7 @@ export class SyncApi implements ISyncApi {
       })
     } else {
       await this._addSyncJob(CONTINUOUS_SYNC_JOB, {
-        jobType: SyncJobType.Reorg,
+        jobType: SyncJobType.Continuous,
         fromBlock: block.number,
         toBlock: block.number,
         models: Array.from(this.modelsToSync),
@@ -296,9 +296,9 @@ export class SyncApi implements ISyncApi {
       return
     }
 
-    if (data.jobType != SyncJobType.Reorg) {
+    if (data.jobType != SyncJobType.Reorg && data.jobType != SyncJobType.Continuous) {
       for (const model of data.models) {
-        this.upsertModelForHistoricSync(model)
+        this._upsertModelForHistoricSync(model)
       }
     }
 
@@ -444,7 +444,7 @@ export class SyncApi implements ISyncApi {
   }
 
   syncCompletedForModel(data: SyncCompleteData) {
-    if (data.jobType != SyncJobType.Reorg) {
+    if (data.jobType !== SyncJobType.Reorg && data.jobType !== SyncJobType.Continuous) {
       const existing = this.modelsToHistoricSync.get(data.modelId)
       if (existing) {
         if (existing <= 1) {
@@ -457,7 +457,8 @@ export class SyncApi implements ISyncApi {
   }
 
   syncComplete(model: string): boolean {
-    return !this.modelsToHistoricSync.has(model)
+    const count = this.modelsToHistoricSync.get(model) || 0
+    return count === 0
   }
 
   async shutdown(): Promise<void> {
