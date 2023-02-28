@@ -60,6 +60,7 @@ export enum SyncJobType {
   Catchup,
   Reorg,
   Full,
+  Continuous,
 }
 export interface SyncJobData {
   currentBlock?: number
