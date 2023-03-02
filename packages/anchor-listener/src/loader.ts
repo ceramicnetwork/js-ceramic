@@ -37,7 +37,7 @@ export type BlockAndBlockProofs = {
   proofs: BlockProofs
 }
 
-const GET_LOGS_BATCH_SIZE = 100
+const GET_LOGS_BATCH_SIZE = 1000
 
 /**
  * Create an Observable loading a single block, with retry logic

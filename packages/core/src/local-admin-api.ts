@@ -21,10 +21,8 @@ export class LocalAdminApi implements AdminApi {
   }
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await Promise.all([
-      this.indexApi.indexModels(modelsIDs),
-      this.syncApi.startModelSync(modelsIDs.map((id) => id.toString())),
-    ])
+    await this.indexApi.indexModels(modelsIDs)
+    await this.syncApi.startModelSync(modelsIDs.map((id) => id.toString()))
   }
 
   getIndexedModels(): Promise<Array<StreamID>> {

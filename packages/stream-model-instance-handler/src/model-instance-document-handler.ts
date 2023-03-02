@@ -3,6 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
+  validateContentLength,
 } from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
@@ -204,6 +205,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       }
       return
     }
+
+    validateContentLength(content)
 
     await this._schemaValidator.validateSchema(
       content,

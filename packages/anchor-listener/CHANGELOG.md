@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.8.0-rc.0...@ceramicnetwork/anchor-listener@1.8.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-listener
+
+
+
+
+
+# [1.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.7.0-rc.0...@ceramicnetwork/anchor-listener@1.8.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **core, anchor-listener:** fix hds bugs ([#2765](https://github.com/ceramicnetwork/js-ceramic/issues/2765)) ([c346c6c](https://github.com/ceramicnetwork/js-ceramic/commit/c346c6cbc34c41207fb27e12cef2e3e6fc1cbd10))
+
+
+
+
+
+# [1.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.6.0-rc.0...@ceramicnetwork/anchor-listener@1.7.0-rc.0) (2023-02-27)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-listener
+
+
+
+
+
+# [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.5.0-rc.0...@ceramicnetwork/anchor-listener@1.6.0-rc.0) (2023-02-24)
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
 # [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@1.4.0...@ceramicnetwork/anchor-listener@1.5.0-rc.0) (2023-02-23)
 
 

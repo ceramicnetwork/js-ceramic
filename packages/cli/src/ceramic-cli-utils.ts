@@ -16,7 +16,7 @@ import {
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
-import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
+import { DaemonConfig, IpfsMode, StateStoreMode, validateConfig } from './daemon-config.js'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -27,6 +27,7 @@ import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import { generateSeedUrl } from './daemon/did-utils.js'
 import { TypedJSON } from 'typedjson'
+import { getDefaultCDBDatabaseConfig } from '@ceramicnetwork/core'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -46,6 +47,7 @@ const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG
  */
 const generateDefaultDaemonConfig = () => {
   const privateSeedUrl = generateSeedUrl()
+  const defaultIndexingConfig = getDefaultCDBDatabaseConfig(Networks.TESTNET_CLAY)
 
   return DaemonConfig.fromObject({
     anchor: {
@@ -68,6 +70,9 @@ const generateDefaultDaemonConfig = () => {
     indexing: {
       db: `sqlite://${DEFAULT_INDEXING_DB_FILENAME.pathname}`,
       'disable-composedb': false,
+      'enable-historical-sync': defaultIndexingConfig.run_historical_sync_worker,
+      'allow-queries-before-historical-sync':
+        defaultIndexingConfig.allow_queries_before_historical_sync,
     },
   })
 }
@@ -108,7 +113,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
-   * @param disableComposedb - Disable Compose DB Indexing service.
+   * @param disableComposedb - Disable ComposeDB Indexing service.
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -148,6 +153,9 @@ export class CeramicCliUtils {
     if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL) {
       config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
     }
+
+    // Validate the config after applying all the overrides
+    validateConfig(config)
 
     {
       // CLI flags override values from environment variables and config file
@@ -211,11 +219,9 @@ export class CeramicCliUtils {
       if (disableComposedb) {
         config.indexing.disableComposedb = true
       }
-
       if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
         config.indexing.disableComposedb = true
       }
-
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
         config.stateStore.localDirectory = stateStoreDirectory
@@ -415,11 +421,17 @@ export class CeramicCliUtils {
   /**
    * Pin stream
    * @param streamId - Stream ID
+   * @param privateKey - optional admin DID private key
    */
-  static async pinAdd(streamId: string): Promise<void> {
+  static async pinAdd(streamId: string, privateKey?: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -428,11 +440,17 @@ export class CeramicCliUtils {
   /**
    * Unpin stream
    * @param streamId - Stream ID
+   * @param privateKey - optional admin DID private key
    */
-  static async pinRm(streamId: string): Promise<void> {
+  static async pinRm(streamId: string, privateKey?: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -441,11 +459,17 @@ export class CeramicCliUtils {
   /**
    * List pinned streams
    * @param streamId - optional stream ID filter
+   * @param privateKey - optional admin DID private key
    */
-  static async pinLs(streamId?: string): Promise<void> {
+  static async pinLs(streamId?: string, privateKey?: string): Promise<void> {
     const id = streamId ? StreamID.fromString(streamId) : null
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
+      if (privateKey) {
+        await CeramicCliUtils._authenticateClient(ceramic, privateKey)
+      } else {
+        await ceramic.did.authenticate()
+      }
       const pinnedStreamIds = []
       const iterator = await ceramic.admin.pin.ls(id)
       let i = 0
@@ -485,6 +509,18 @@ export class CeramicCliUtils {
       ...keyDidResolver,
     })
     return new DID({ provider, resolver })
+  }
+
+  /**
+   * Authenticates the Ceramic client with the hex-encoded DID private key.
+   * @param ceramic
+   * @param privateKey
+   */
+  static async _authenticateClient(ceramic: CeramicClient, privateKey: string): Promise<void> {
+    const pk = u8a.fromString(privateKey, 'base16')
+    const did = CeramicCliUtils._makeDID(pk, ceramic)
+    await did.authenticate()
+    await ceramic.setDID(did)
   }
 
   /**
@@ -675,9 +711,8 @@ export class CeramicCliUtils {
 
 const deprecationNotice = () => {
   console.log(
-    `${pc.red(pc.bold('This command has been deprecated.'))}
-Please use the upgraded Glaze CLI instead.
-Please test with the new CLI before reporting any problems.
-${pc.green('npm i -g @glazed/cli')}`
+    `${pc.red(
+      pc.bold('This command has been deprecated.')
+    )} It will be removed in a future version of the CLI.`
   )
 }

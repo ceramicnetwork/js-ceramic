@@ -3,7 +3,7 @@
 exports[`EthereumAuthProvider authenticate 1`] = `"0x92d414fa574ea420dae28a58454aaed02cab50ff2c13f0af728cfd15e4816ca5"`;
 
 exports[`EthereumAuthProvider createLink 1`] = `
-Object {
+{
   "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
   "message": "Link this account to your identity
 
@@ -17,18 +17,18 @@ Timestamp: 1538352000",
 `;
 
 exports[`Ocap requestCapability 1`] = `
-Object {
-  "h": Object {
+{
+  "h": {
     "t": "eip4361",
   },
-  "p": Object {
+  "p": {
     "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
     "domain": "https://service.org/",
     "exp": "2018-10-02T00:00:00.000Z",
     "iat": "2018-10-01T00:00:00.000Z",
     "iss": "did:pkh:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
     "nonce": "12345",
-    "resources": Array [
+    "resources": [
       "ipfs://ABCDEF",
       "ar://1234",
       "ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s",
@@ -36,7 +36,7 @@ Object {
     "statement": "Give this application access to some of your data on Ceramic",
     "version": "1",
   },
-  "s": Object {
+  "s": {
     "s": "0x697fb64869a38364740152d26a0e5e05c0d20a064d25c3f7d8085d5224f8c98e31f09b34b4ba3aa2f496ee1f20cedf59e5e3678c5074d70021df248d39bd8efd1c",
     "t": "eip191",
   },
@@ -46,7 +46,7 @@ Object {
 exports[`authenticate correctly sign auth message 1`] = `"0xcf54e7560501fa53e3f7092672a920c346034ba93d001919f0cb5445851b5685"`;
 
 exports[`createLink create erc1271 proof correctly 1`] = `
-Object {
+{
   "account": "0xbe6c27620b271dd76f1787cdef1f4375cff3fa1f@eip155:1337",
   "message": "Link this account to your identity
 
@@ -58,7 +58,7 @@ did:3:bafysdfwefwe",
 `;
 
 exports[`createLink create ethereumEOA proof correctly 1`] = `
-Object {
+{
   "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1",
   "message": "Link this account to your identity
 

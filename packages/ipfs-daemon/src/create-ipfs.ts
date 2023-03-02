@@ -1,9 +1,6 @@
-import * as dagJose from 'dag-jose'
 import { path } from 'go-ipfs'
 import * as Ctl from 'ipfsd-ctl'
 import * as ipfsClient from 'ipfs-http-client'
-import type { Options } from 'ipfs-core'
-import { create as createJsIpfs } from 'ipfs-core'
 import getPort from 'get-port'
 import mergeOpts from 'merge-options'
 import type { IpfsApi } from '@ceramicnetwork/common'
@@ -15,7 +12,6 @@ const ipfsHttpModule = {
   create: (ipfsEndpoint: string) => {
     return ipfsClient.create({
       url: ipfsEndpoint,
-      ipld: { codecs: [dagJose] },
     })
   },
 }
@@ -24,6 +20,9 @@ const createFactory = () => {
   return Ctl.createFactory(
     {
       ipfsHttpModule,
+      ipfsOptions: {
+        repoAutoMigrate: true,
+      },
     },
     {
       go: {
@@ -34,13 +33,11 @@ const createFactory = () => {
 }
 
 export async function createController(
-  ipfsOptions: Options,
+  ipfsOptions: Ctl.IPFSOptions,
   disposable = true
 ): Promise<Ctl.Controller> {
   const ipfsd = await createFactory().spawn({
     type: 'go',
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
     ipfsOptions,
     disposable,
   })
@@ -48,9 +45,7 @@ export async function createController(
     return ipfsd
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to InitOptions from ipfs-core
-  return ipfsd.init(ipfsOptions.init)
+  return ipfsd.init()
 }
 
 /**
@@ -61,9 +56,9 @@ export async function createController(
  */
 
 async function createIpfsOptions(
-  override: Partial<Options> = {},
+  override: Partial<Ctl.IPFSOptions> = {},
   repoPath?: string
-): Promise<Options> {
+): Promise<Ctl.IPFSOptions> {
   const swarmPort = await getPort()
   const apiPort = await getPort()
   const gatewayPort = await getPort()
@@ -71,7 +66,6 @@ async function createIpfsOptions(
   return mergeOptions(
     {
       start: true,
-      ipld: { codecs: [dagJose] },
       config: {
         Addresses: {
           Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],
@@ -80,8 +74,43 @@ async function createIpfsOptions(
         },
         Pubsub: {
           Enabled: true,
+          SeenMessagesTTL: "10m"
         },
         Bootstrap: [],
+        "Peering": {
+          "Peers": [
+            {
+              "Addrs": [
+                "/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL"
+              ],
+              "ID": "QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL"
+            },
+            {
+              "Addrs": [
+                "/dns4/go-ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8"
+              ],
+              "ID": "QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8"
+            },
+            {
+              "Addrs": [
+                "/dns4/go-ipfs-ceramic-elp-1-1-external.3boxlabs.com/tcp/4011/ws/p2p/QmUiF8Au7wjhAF9BYYMNQRW5KhY7o8fq4RUozzkWvHXQrZ"
+              ],
+              "ID": "QmUiF8Au7wjhAF9BYYMNQRW5KhY7o8fq4RUozzkWvHXQrZ"
+            },
+            {
+              "Addrs": [
+                "/dns4/go-ipfs-ceramic-elp-1-2-external.3boxlabs.com/tcp/4011/ws/p2p/QmRNw9ZimjSwujzS3euqSYxDW9EHDU5LB3NbLQ5vJ13hwJ"
+              ],
+              "ID": "QmRNw9ZimjSwujzS3euqSYxDW9EHDU5LB3NbLQ5vJ13hwJ"
+            },
+            {
+              "Addrs": [
+                "/dns4/go-ipfs-ceramic-private-cas-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd"
+              ],
+              "ID": "QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd"
+            }
+          ]
+        },
       },
     },
     repoPath ? { repo: `${repoPath}/ipfs${swarmPort}/` } : {},
@@ -90,8 +119,7 @@ async function createIpfsOptions(
 }
 
 const createInstanceByType = {
-  js: (ipfsOptions: Options): Promise<IpfsApi> => createJsIpfs(ipfsOptions),
-  go: async (ipfsOptions: Options, disposable = true): Promise<IpfsApi> => {
+  go: async (ipfsOptions: Ctl.IPFSOptions, disposable = true): Promise<IpfsApi> => {
     if (!ipfsOptions.start) {
       throw Error('go IPFS instances must be started')
     }
@@ -106,10 +134,11 @@ const createInstanceByType = {
  * @param overrideConfig - IFPS config for override
  */
 export async function createIPFS(
-  overrideConfig: Partial<Options> = {},
+  overrideConfig: Partial<Ctl.IPFSOptions> = {},
   disposable = true
 ): Promise<IpfsApi> {
   const flavor = process.env.IPFS_FLAVOR || 'go'
+  if (!(flavor in createInstanceByType)) throw new Error(`Unsupported IPFS flavor "${flavor}"`)
 
   if (!overrideConfig.repo) {
     const tmpFolder = await tmp.dir({ unsafeCleanup: true })

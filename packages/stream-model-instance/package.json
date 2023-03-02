@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model-instance",
-  "version": "1.3.0-rc.0",
+  "version": "1.5.0",
   "description": "Ceramic Model Instance Document stream type",
   "keywords": [
     "ceramic",
@@ -38,11 +38,12 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.21.0-rc.0",
-    "@ceramicnetwork/streamid": "^2.13.0-rc.0",
+    "@ceramicnetwork/common": "^2.23.0",
+    "@ceramicnetwork/streamid": "^2.14.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
+    "object-sizeof": "^2.6.1",
     "uint8arrays": "^4.0.3"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

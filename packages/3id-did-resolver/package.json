@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "2.14.0-rc.0",
+  "version": "2.16.0",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -40,17 +40,17 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.21.0-rc.0",
-    "@ceramicnetwork/stream-tile": "^2.17.0-rc.0",
-    "@ceramicnetwork/streamid": "^2.13.0-rc.0",
+    "@ceramicnetwork/common": "^2.23.0",
+    "@ceramicnetwork/stream-tile": "^2.19.0",
+    "@ceramicnetwork/streamid": "^2.14.0",
     "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
-    "multiformats": "^9.5.8",
+    "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "@ceramicnetwork/http-client": "^2.18.0-rc.0",
-    "did-resolver": "^3.1.5"
+    "@ceramicnetwork/http-client": "^2.20.0",
+    "did-resolver": "^4.0.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

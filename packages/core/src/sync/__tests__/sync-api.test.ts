@@ -478,7 +478,7 @@ describe('Sync API', () => {
         reorganized: false,
       } as any)
       expect(addSyncJob).toHaveBeenCalledWith(CONTINUOUS_SYNC_JOB, {
-        jobType: SyncJobType.Reorg,
+        jobType: SyncJobType.Continuous,
         fromBlock: 10,
         toBlock: 10,
         models: ['abc123', 'def456'],

@@ -3,6 +3,84 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.28.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.28.0-rc.0...@ceramicnetwork/stream-tests@2.28.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.27.0...@ceramicnetwork/stream-tests@2.28.0-rc.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.27.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.27.0-rc.0...@ceramicnetwork/stream-tests@2.27.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.27.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.26.0...@ceramicnetwork/stream-tests@2.27.0-rc.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.26.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.26.0-rc.0...@ceramicnetwork/stream-tests@2.26.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.25.0-rc.0...@ceramicnetwork/stream-tests@2.26.0-rc.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **core:** warn instead of throw on pin opts for stream crud ([#2764](https://github.com/ceramicnetwork/js-ceramic/issues/2764) ([4ecfbc1](https://github.com/ceramicnetwork/js-ceramic/commit/4ecfbc1442fa098bfacdfb7488d5d59525288650))
+
+
+
+
+
+# [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.24.0-rc.0...@ceramicnetwork/stream-tests@2.25.0-rc.0) (2023-02-27)
+
+
+### Bug Fixes
+
+* Disallow pinning and unpinning through CRUD APIs ([#2750](https://github.com/ceramicnetwork/js-ceramic/issues/2750)) ([25d9ebf](https://github.com/ceramicnetwork/js-ceramic/commit/25d9ebfdc8017274ed4dde3ed11e0248c5019f5c))
+
+
+### Features
+
+* **cli, core:** add sync worker flag to config file with default values ([#2757](https://github.com/ceramicnetwork/js-ceramic/issues/2757)) ([5375c88](https://github.com/ceramicnetwork/js-ceramic/commit/5375c886ecf58fa646ab3afe0796b0d2edc17af4))
+
+
+
+
+
+# [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.23.0-rc.0...@ceramicnetwork/stream-tests@2.24.0-rc.0) (2023-02-24)
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
 # [2.23.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.22.0...@ceramicnetwork/stream-tests@2.23.0-rc.0) (2023-02-23)
 
 

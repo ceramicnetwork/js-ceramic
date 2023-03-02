@@ -286,7 +286,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Run Compose DB config/startup operations
+   * Run ComposeDB config/startup operations
    */
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)

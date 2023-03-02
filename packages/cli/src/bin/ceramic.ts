@@ -47,7 +47,7 @@ program
     '--sync-override <string>',
     'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache". Deprecated.'
   )
-  .option('--disable-composedb', 'Run node without Compose DB indexing enabled.')
+  .option('--disable-composedb', 'Run node without ComposeDB indexing enabled.')
   .description('Start the daemon')
   .action(
     async ({
@@ -174,7 +174,7 @@ program
   })
 
 const schemas = program.command('schema')
-schemas.description(`('Ceramic schemas ${pc.red(pc.bold('[Deprecated]'))}`)
+schemas.description(`Ceramic schemas ${pc.red(pc.bold('[Deprecated]'))}`)
 
 schemas
   .command('create <new-content>')
@@ -204,27 +204,30 @@ schemas
   })
 
 const pin = program.command('pin')
-pin.description(`('Ceramic local pinning API ${pc.red(pc.bold('[Deprecated]'))}`)
+pin.description(`Ceramic local pinning API`)
 
 pin
   .command('add <streamId>')
+  .option('--did-private-key <private-key>', 'Hexadecimal-encoded admin DID private key')
   .description(`Pin stream`)
-  .action(async (streamId) => {
-    await CeramicCliUtils.pinAdd(streamId)
+  .action(async (streamId, { didPrivateKey }) => {
+    await CeramicCliUtils.pinAdd(streamId, didPrivateKey)
   })
 
 pin
   .command('rm <streamId>')
+  .option('--did-private-key <private-key>', 'Hexadecimal-encoded admin DID private key')
   .description(`Unpin stream`)
-  .action(async (streamId) => {
-    await CeramicCliUtils.pinRm(streamId)
+  .action(async (streamId, { didPrivateKey }) => {
+    await CeramicCliUtils.pinRm(streamId, didPrivateKey)
   })
 
 pin
   .command('ls [<streamId>]')
+  .option('--did-private-key <private-key>', 'Hexadecimal-encoded admin DID private key')
   .description(`List pinned streams`)
-  .action(async (streamId) => {
-    await CeramicCliUtils.pinLs(streamId)
+  .action(async (streamId, { didPrivateKey }) => {
+    await CeramicCliUtils.pinLs(streamId, didPrivateKey)
   })
 
 const config = program.command('config')

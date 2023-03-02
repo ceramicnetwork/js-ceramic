@@ -1176,7 +1176,7 @@ describe('sqlite', () => {
       await indexApi.init()
       expect(indexApi.getActiveModelsToIndex()).toEqual([])
       await expect(indexApi.indexModels(modelsToIndexArgs(modelsToIndex))).rejects.toThrow(
-        /Index for historical data/
+        /historical data for that model is still syncing/
       )
     })
 

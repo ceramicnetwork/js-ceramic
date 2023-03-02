@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.6.0-rc.0...@ceramicnetwork/anchor-utils@1.6.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.5.0-rc.0...@ceramicnetwork/anchor-utils@1.6.0-rc.0) (2023-02-27)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.4.0-rc.0...@ceramicnetwork/anchor-utils@1.5.0-rc.0) (2023-02-24)
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
 # [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.3.0...@ceramicnetwork/anchor-utils@1.4.0-rc.0) (2023-02-23)
 
 
