@@ -53,7 +53,7 @@ type IndexedData<DateType> = {
 /**
  * Base class for an index backend.
  */
-export class DatabaseIndexApi<DateType = Date | number> {
+export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private modelsToIndex: Array<StreamID> = []
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
@@ -62,8 +62,8 @@ export class DatabaseIndexApi<DateType = Date | number> {
   tablesManager: TablesManager
   syncApi: ISyncQueryApi
 
-  constructor(
-    private readonly dbConnection: Knex,
+  protected constructor(
+    protected readonly dbConnection: Knex,
     private readonly allowQueriesBeforeHistoricalSync: boolean,
     private readonly logger: DiagnosticsLogger,
     private readonly network: Networks
@@ -71,12 +71,13 @@ export class DatabaseIndexApi<DateType = Date | number> {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
+  abstract getIndexedData(
+    indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
+  ): IndexedData<DateType>
+  abstract now(): DateType
+
   setSyncQueryApi(api: ISyncQueryApi) {
     this.syncApi = api
-  }
-
-  now(): DateType {
-    throw new Error('Must be implemented in extending class')
   }
 
   /**
@@ -155,32 +156,22 @@ export class DatabaseIndexApi<DateType = Date | number> {
   /**
    * This method inserts the stream if it is not present in the index, or updates
    * the 'content' if the stream already exists in the index.
-   * @param args
+   * @param indexingArgs
    */
-  async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
-    const tableName = asTableName(args.model)
-    await this.indexDocumentInDatabase(tableName, args)
-  }
-
-  private async indexDocumentInDatabase(
-    tableName: string,
+  async indexStream(
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
+    const tableName = asTableName(indexingArgs.model)
     const indexedData = this.getIndexedData(indexingArgs)
-    for (const field of this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []) {
+    const fields = this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []
+    for (const field of fields) {
       indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
     }
-
     await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge({
       last_anchored_at: indexedData.last_anchored_at,
       updated_at: indexedData.updated_at,
+      stream_content: indexedData.stream_content,
     })
-  }
-
-  getIndexedData(
-    indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
-  ): IndexedData<DateType> {
-    throw new Error('Must be implemented in extending class')
   }
 
   /**
@@ -252,9 +243,7 @@ export class DatabaseIndexApi<DateType = Date | number> {
     }
   }
 
-  getCountFromResult(response: Array<Record<string, string | number>>): number {
-    throw new Error('Must be implemented in extending class')
-  }
+  abstract getCountFromResult(response: Array<Record<string, string | number>>): number
 
   /**
    * Return number of suitable indexed records.
