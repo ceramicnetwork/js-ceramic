@@ -167,11 +167,10 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     for (const field of fields) {
       indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
     }
-    await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge({
-      last_anchored_at: indexedData.last_anchored_at,
-      updated_at: indexedData.updated_at,
-      stream_content: indexedData.stream_content,
-    })
+    await this.dbConnection(tableName)
+      .insert(indexedData)
+      .onConflict('stream_id')
+      .merge(indexedData)
   }
 
   /**
