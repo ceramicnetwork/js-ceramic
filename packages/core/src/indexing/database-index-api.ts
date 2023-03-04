@@ -170,10 +170,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     }
     const toMerge = cloneDeep(indexedData)
     delete toMerge.created_at
-    await this.dbConnection(tableName)
-      .insert(indexedData)
-      .onConflict('stream_id')
-      .merge(toMerge)
+    await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
   }
 
   /**
