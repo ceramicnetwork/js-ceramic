@@ -341,9 +341,9 @@ export class Ceramic implements CeramicApi {
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
     const networkName = config.networkName || DEFAULT_NETWORK
 
-    if (config.pubsubTopic && networkName !== Networks.INMEMORY && networkName !== Networks.LOCAL) {
+    if (config.pubsubTopic && networkName !== Networks.INMEMORY && networkName !== Networks.LOCAL && networkName !== Networks.CUSTOM) {
       throw new Error(
-        "Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks"
+        "Specifying pub/sub topic is only supported for the 'custom', 'inmemory' and 'local' networks"
       )
     }
 
@@ -386,6 +386,17 @@ export class Ceramic implements CeramicApi {
         } else {
           const rand = randomUint32()
           pubsubTopic = '/ceramic/inmemory-' + rand
+        }
+        break
+      }
+      case Networks.CUSTOM: {
+        // Require a pub/sub topic for CUSTOM networks
+        if (config.pubsubTopic) {
+          pubsubTopic = config.pubsubTopic
+        } else {
+          throw new Error(
+            "A pub/sub topic must be provided for 'custom' networks"
+          )
         }
         break
       }
