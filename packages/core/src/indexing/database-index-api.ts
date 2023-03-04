@@ -15,6 +15,7 @@ import { IndexQueryNotAvailableError } from './index-query-not-available.error.j
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
 import { ISyncQueryApi } from '../sync/interfaces.js'
+import cloneDeep from 'lodash.clonedeep'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
@@ -167,10 +168,12 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     for (const field of fields) {
       indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
     }
+    const toMerge = cloneDeep(indexedData)
+    delete toMerge.created_at
     await this.dbConnection(tableName)
       .insert(indexedData)
       .onConflict('stream_id')
-      .merge(indexedData)
+      .merge(toMerge)
   }
 
   /**
