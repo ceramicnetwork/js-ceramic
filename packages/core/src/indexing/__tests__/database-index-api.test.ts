@@ -617,6 +617,10 @@ describe('postgres', () => {
       const updateTime = new Date(createTime.valueOf() + 5000)
       const updatedStreamContent = {
         ...STREAM_CONTENT_A,
+        streamContent: {
+          ...STREAM_CONTENT_A.streamContent,
+          name: STREAM_CONTENT_A.streamContent.name.concat(' Fauci'),
+        },
         updatedAt: updateTime,
         lastAnchor: updateTime,
         firstAnchor: updateTime,
@@ -636,6 +640,7 @@ describe('postgres', () => {
       expect(closeDates(updatedAt, updateTime)).toBeTruthy()
       const createdAt = new Date(raw.created_at)
       expect(closeDates(createdAt, createTime)).toBeTruthy()
+      expect(raw.stream_content).toEqual(updatedStreamContent.streamContent)
     })
 
     test('verify jsonb index creation and invocation while querying', async () => {
@@ -1247,6 +1252,10 @@ describe('sqlite', () => {
       const updateTime = new Date(createTime.valueOf() + 5000)
       const updatedStreamContent = {
         ...STREAM_CONTENT,
+        streamContent: {
+          ...STREAM_CONTENT.streamContent,
+          name: STREAM_CONTENT.streamContent.name.concat(' Fauci'),
+        },
         updatedAt: updateTime,
         lastAnchor: updateTime,
         firstAnchor: updateTime,
@@ -1266,6 +1275,7 @@ describe('sqlite', () => {
       expect(closeDates(updatedAt, updateTime)).toBeTruthy()
       const createdAt = new Date(raw.created_at)
       expect(closeDates(createdAt, createTime)).toBeTruthy()
+      expect(JSON.parse(raw.stream_content)).toEqual(updatedStreamContent.streamContent)
     })
   })
 
