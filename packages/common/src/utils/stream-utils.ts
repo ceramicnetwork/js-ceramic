@@ -15,6 +15,8 @@ import {
 import { AnchorStatus, LogEntry, StreamState } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
+import { CID } from 'multiformats/cid'
+import { base64urlToJSON } from '@ceramicnetwork/common'
 
 const TILE_TYPE_ID = 0
 
@@ -276,6 +278,17 @@ export class StreamUtils {
    */
   static isSignedCommit(commit: CeramicCommit): commit is SignedCommit {
     return commit && (commit as SignedCommit).link !== undefined
+  }
+
+  static getCacaoCidFromCommit(commit: CeramicCommit): CID | undefined {
+    if (StreamUtils.isSignedCommit(commit)) {
+      const decodedProtectedHeader = base64urlToJSON(commit.signatures[0].protected)
+      if (decodedProtectedHeader.cap) {
+        const capIPFSUri = decodedProtectedHeader.cap
+        return CID.parse(capIPFSUri.replace('ipfs://', ''))
+      }
+    }
+    return undefined
   }
 
   /**

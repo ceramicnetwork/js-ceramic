@@ -17,13 +17,15 @@ import {
   GenesisCommit,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
-import type { CID } from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil, tap } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { CAR, CarBlock, CARFactory } from 'cartonne'
+import * as DAG_JOSE from 'dag-jose'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -35,6 +37,8 @@ export class StateManager {
    * @private
    */
   private readonly syncedPinnedStreams: Set<string> = new Set()
+
+  private readonly carFactory = new CARFactory()
 
   /**
    * @param dispatcher - currently used instance of Dispatcher
@@ -62,7 +66,9 @@ export class StateManager {
     ) => Promise<RunningState>,
     private readonly indexStreamIfNeeded,
     private readonly _index: LocalIndexApi | undefined
-  ) {}
+  ) {
+    this.carFactory.codecs.add(DAG_JOSE)
+  }
 
   /**
    * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
@@ -321,12 +327,13 @@ export class StateManager {
       return
     }
 
-    await this._saveAnchorRequestForState(state$)
-    const anchorStatus$ = this.anchorService.requestAnchor({
-      streamID: state$.id,
-      tip: state$.tip,
-      timestampISO: new Date().toISOString(),
-    })
+    const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
+    const genesisCID = state$.value.log[0].cid
+    const genesisCommit = carFile.get(genesisCID)
+    await this._saveAnchorRequestForState(state$, genesisCommit)
+
+    const anchorStatus$ = this.anchorService.requestAnchor(carFile)
+
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
@@ -338,14 +345,57 @@ export class StateManager {
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
-  private async _saveAnchorRequestForState(state$: RunningState): Promise<void> {
+  private async _buildAnchorRequestCARFile(streamId: StreamID, tip: CID): Promise<CAR> {
+    const car = this.carFactory.build()
+
+    // Root block
+    const timestampISO = new Date().toISOString()
+    car.put(
+      {
+        timestamp: timestampISO,
+        streamId: streamId.bytes,
+        tip: tip,
+      },
+      { isRoot: true }
+    )
+
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher._ipfs.block.get(cid))
+
+    // Genesis block
+    const genesisCid = streamId.cid
+    car.blocks.put(await cidToBlock(genesisCid))
+
+    // Tip block
+    car.blocks.put(await cidToBlock(tip))
+
+    // Genesis Link Block
+    const genesisCommit = car.get(genesisCid)
+    if (StreamUtils.isSignedCommit(genesisCommit)) {
+      car.blocks.put(await cidToBlock(genesisCommit.link))
+    }
+
+    // Tip Link Block
+    const tipCommit = car.get(tip)
+    if (StreamUtils.isSignedCommit(tipCommit)) {
+      car.blocks.put(await cidToBlock(tipCommit.link))
+      // Tip CACAO Block
+      const tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
+      if (tipCacaoCid) {
+        car.blocks.put(await cidToBlock(tipCacaoCid))
+      }
+    }
+
+    return car
+  }
+
+  private async _saveAnchorRequestForState(
+    state$: RunningState,
+    genesisCommit: GenesisCommit
+  ): Promise<void> {
     await this.anchorRequestStore.save(state$.id, {
       cid: state$.tip,
       timestamp: Date.now(),
-      genesis: (await this.dispatcher.retrieveCommit(
-        state$.value.log[0].cid, // genesis commit CID
-        state$.id
-      )) as GenesisCommit,
+      genesis: genesisCommit,
     })
   }
 

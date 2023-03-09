@@ -4,6 +4,7 @@ import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { CAR } from 'cartonne'
 
 export enum AnchorServiceAuthMethods {
   DID = 'did',
@@ -87,7 +88,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse>
+  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the

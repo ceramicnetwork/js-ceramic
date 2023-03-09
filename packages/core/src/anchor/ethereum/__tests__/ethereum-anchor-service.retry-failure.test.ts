@@ -1,12 +1,6 @@
 import { jest } from '@jest/globals'
-import { CID } from 'multiformats/cid'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
-
-const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-)
+import { generateFakeCarFile } from './generateFakeCarFile.js'
 
 const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
@@ -40,18 +34,12 @@ test('re-request an anchor till get a response', async () => {
   const errSpy = jest.spyOn(diagnosticsLogger, 'err')
   const anchorService = new eas.EthereumAnchorService('http://example.com', diagnosticsLogger, 100)
   let lastResponse: any
-  const subscription = anchorService
-    .requestAnchor({
-      streamID: FAKE_STREAM_ID,
-      tip: FAKE_CID,
-      timestampISO: new Date().toISOString(),
-    })
-    .subscribe((response) => {
-      if (response.status === common.AnchorStatus.PROCESSING) {
-        lastResponse = response
-        subscription.unsubscribe()
-      }
-    })
+  const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
+    if (response.status === common.AnchorStatus.PROCESSING) {
+      lastResponse = response
+      subscription.unsubscribe()
+    }
+  })
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
   expect(errSpy).toBeCalledTimes(3)

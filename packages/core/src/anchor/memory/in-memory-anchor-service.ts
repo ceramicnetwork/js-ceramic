@@ -9,7 +9,6 @@ import {
   AnchorServiceResponse,
   AnchorValidator,
   AnchorCommit,
-  RequestAnchorParams,
   TestUtils,
 } from '@ceramicnetwork/common'
 
@@ -20,6 +19,8 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
 import lru from 'lru_map'
+import { CAR } from 'cartonne'
+import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -27,18 +28,18 @@ const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
-  constructor(readonly params: RequestAnchorParams, readonly log?: CID[]) {}
+  constructor(readonly carFileReader: AnchorRequestCarFileReader, readonly log?: CID[]) {}
 
   get streamId(): StreamID {
-    return this.params.streamID
+    return this.carFileReader.streamId
   }
 
   get cid(): CID {
-    return this.params.tip
+    return this.carFileReader.tip
   }
 
   get key(): string {
-    return this.params.streamID.toString()
+    return this.carFileReader.streamId.toString()
   }
 }
 
@@ -162,7 +163,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         }
 
         const log = await this._loadCommitHistory(req.cid, req.streamId)
-        const candidate = new Candidate(req.params, log)
+        const candidate = new Candidate(req.carFileReader, log)
 
         result[candidate.key].push(candidate)
       } catch (e) {
@@ -284,8 +285,9 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
-    const candidate = new Candidate(params)
+  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse> {
+    const carFileReader = new AnchorRequestCarFileReader(carFile)
+    const candidate = new Candidate(carFileReader)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
@@ -300,11 +302,11 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
     this.#feed.next({
       status: AnchorStatus.PENDING,
-      streamId: params.streamID,
-      cid: params.tip,
+      streamId: carFileReader.streamId,
+      cid: carFileReader.tip,
       message: 'Sending anchoring request',
     })
-    return this.pollForAnchorResponse(params.streamID, params.tip)
+    return this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
   }
 
   /**

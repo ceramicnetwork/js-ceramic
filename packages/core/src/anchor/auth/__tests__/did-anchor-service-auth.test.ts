@@ -69,7 +69,7 @@ describe('sendAuthenticatedRequest', () => {
     const getSignRequestResult = (): Promise<any> => signRequestSpy.mock.results[0].value
     const out: any = await getSignRequestResult()
     expect(out.request.url).toEqual(mockedUrls.ONLINE)
-    const jws = out.request.opts.headers.authorization.split(' ')[1]
+    const jws = out.request.opts.headers['Authorization'].split(' ')[1]
     const data = await ceramic.did.verifyJWS(jws)
     expect(data.payload.url).toEqual(mockedUrls.ONLINE)
   })

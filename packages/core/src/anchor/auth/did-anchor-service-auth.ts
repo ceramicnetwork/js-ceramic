@@ -53,11 +53,11 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
     }
 
     const jws = await this._ceramic.did.createJWS(payload)
-    const authorization = `Bearer ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
-    let requestOpts: any = { headers: { authorization } }
+    const Authorization = `Bearer ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
+    let requestOpts: any = { headers: { Authorization } }
     if (request.opts) {
       if (request.opts.headers) {
-        requestOpts.headers = { headers: { ...request.opts.headers, authorization } }
+        requestOpts.headers = { ...request.opts.headers, Authorization }
       }
       requestOpts = { ...request.opts, ...requestOpts }
     }

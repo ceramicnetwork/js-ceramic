@@ -9,14 +9,15 @@ import {
   AnchorStatus,
   AuthenticatedAnchorService,
   DiagnosticsLogger,
-  FetchRequest,
-  RequestAnchorParams,
   fetchJson,
+  FetchRequest,
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
+import { CAR } from 'cartonne'
+import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { RequestStatusName } from '@ceramicnetwork/anchor-utils'
 
 /**
@@ -87,18 +88,19 @@ export class EthereumAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  requestAnchor(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
-    const cidStreamPair: CidAndStream = { cid: params.tip, streamId: params.streamID }
+  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse> {
+    const carFileReader = new AnchorRequestCarFileReader(carFile)
+    const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(
       this._announcePending(cidStreamPair),
-      this._makeAnchorRequest(params),
-      this.pollForAnchorResponse(params.streamID, params.tip)
+      this._makeAnchorRequest(carFileReader),
+      this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
           status: AnchorStatus.FAILED,
-          streamId: params.streamID,
-          cid: params.tip,
+          streamId: carFileReader.streamId,
+          cid: carFileReader.tip,
           message: error.message,
         })
       )
@@ -127,16 +129,17 @@ export class EthereumAnchorService implements AnchorService {
    * @param params - a RequestAnchorParams object
    * @private
    */
-  private _makeAnchorRequest(params: RequestAnchorParams): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(
+    carFileReader: AnchorRequestCarFileReader
+  ): Observable<AnchorServiceResponse> {
     return defer(() =>
       from(
         this.sendRequest(this.requestsApiEndpoint, {
           method: 'POST',
-          body: {
-            streamId: params.streamID.toString(),
-            cid: params.tip.toString(),
-            timestamp: params.timestampISO,
+          headers: {
+            'Content-Type': 'application/vnd.ipld.car',
           },
+          body: carFileReader.carFile.bytes,
         })
       )
     ).pipe(
@@ -144,7 +147,7 @@ export class EthereumAnchorService implements AnchorService {
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${params.streamID.toString()} at commit ${params.tip.toString()}: ${
+              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId.toString()} at commit ${carFileReader.tip.toString()}: ${
                 error.message
               }`
             )
@@ -153,7 +156,10 @@ export class EthereumAnchorService implements AnchorService {
         },
       }),
       map((response) => {
-        return this.parseResponse({ streamId: params.streamID, cid: params.tip }, response)
+        return this.parseResponse(
+          { streamId: carFileReader.streamId, cid: carFileReader.tip },
+          response
+        )
       })
     )
   }
