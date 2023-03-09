@@ -201,7 +201,6 @@ export class Model extends Stream {
     const opts: CreateOpts = {
       publish: true,
       anchor: true,
-      pin: true,
       sync: SyncOptions.NEVER_SYNC,
     }
     const commit = await Model._makeGenesis(ceramic, content, metadata)

@@ -27,6 +27,8 @@ export async function createCeramic(
     indexing: {
       db: databaseUrl.href,
       allowQueriesBeforeHistoricalSync: false,
+      disableComposedb: false,
+      enableHistoricalSync: false,
     },
     ...config,
   }

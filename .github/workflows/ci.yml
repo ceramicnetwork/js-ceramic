@@ -96,25 +96,3 @@ jobs:
         name: Set commit status "failure"
         if: ${{ failure() }}
         run: dagger do failure -p ${{ env.STATUS_PLAN }}
-
-  docs:
-    name: Publish docs
-    runs-on: ubuntu-latest
-    if: ${{ github.event.client_payload.branch == 'main' || github.ref_name == 'main' }}
-    needs: image
-    steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          ref: main
-      -
-        name: Publish docs
-        uses: dagger/dagger-for-github@v3
-        with:
-          version: "0.2.36"
-          cmds: |
-            project init
-            project update
-            project update "github.com/3box/pipeline-tools/ci"
-            do docs -p ${{ env.DAGGER_PLAN }}

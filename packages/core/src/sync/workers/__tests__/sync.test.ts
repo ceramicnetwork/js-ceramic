@@ -6,7 +6,7 @@ import { of, type Observable, map } from 'rxjs'
 import { type BlockProofs, type BlocksProofsLoaderParams } from '@ceramicnetwork/anchor-listener'
 import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
 import type { Provider } from '@ethersproject/providers'
-import { REBUILD_ANCHOR_JOB, JobData, HISTORY_SYNC_JOB } from '../../interfaces.js'
+import { REBUILD_ANCHOR_JOB, JobData, HISTORY_SYNC_JOB, SyncJobType } from '../../interfaces.js'
 
 const ERROR_BLOCK = 100
 
@@ -90,9 +90,10 @@ describe('Sync Worker', () => {
 
   test('Can sync by creating rebuild anchor jobs', async () => {
     const job = SyncPackage.createHistorySyncJob({
+      jobType: SyncJobType.Reorg,
       fromBlock: 101,
       toBlock: 108,
-      models: ['kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'],
+      models: ['kjzl6hvfrbw6c62v69f7velodufis69rht6cpqf534q2s757vcbdao4mi2z2i28'],
     })
 
     await jobQueue.addJob(job)
@@ -104,9 +105,10 @@ describe('Sync Worker', () => {
 
   test('Will retry if something goes wrong', async () => {
     const jobData = {
+      jobType: SyncJobType.Reorg,
       fromBlock: 98,
       toBlock: 103,
-      models: ['kjzl6hvfrbw6c8c48hg1u62lhnc95g4ntslc861i5feo7tev0fyh9mvsbjtw374'],
+      models: ['kjzl6hvfrbw6c62v69f7velodufis69rht6cpqf534q2s757vcbdao4mi2z2i28'],
     }
     const job = SyncPackage.createHistorySyncJob(jobData, {
       retryLimit: 3,
@@ -125,6 +127,6 @@ describe('Sync Worker', () => {
 
     // next call should be the updated job data
     const retriedJobData = syncWorkerSpy.mock.calls[1][0].data
-    expect(retriedJobData).toEqual(Object.assign({}, jobData, { fromBlock: ERROR_BLOCK }))
+    expect(retriedJobData).toEqual(Object.assign({}, jobData, { currentBlock: ERROR_BLOCK }))
   })
 })

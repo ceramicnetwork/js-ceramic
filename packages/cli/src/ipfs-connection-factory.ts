@@ -1,5 +1,4 @@
 import mergeOpts from 'merge-options'
-import * as dagJose from 'dag-jose'
 import * as ipfsClient from 'ipfs-http-client'
 import { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
 import { IpfsMode } from './daemon-config.js'
@@ -21,7 +20,6 @@ export class IpfsConnectionFactory {
     if (mode == IpfsMode.REMOTE) {
       return ipfsClient.create({
         url: ipfsEndpoint,
-        ipld: { codecs: [dagJose] },
         timeout: IPFS_GET_TIMEOUT,
         agent: this.ipfsHttpAgent(ipfsEndpoint),
       })
@@ -30,7 +28,7 @@ export class IpfsConnectionFactory {
     }
   }
 
-  private static ipfsHttpAgent(ipfsEndpoint: string | ipfsClient.multiaddr): http.Agent {
+  private static ipfsHttpAgent(ipfsEndpoint: string): http.Agent {
     const agentOptions = {
       keepAlive: false,
       maxSockets: Infinity,
@@ -49,7 +47,6 @@ export class IpfsConnectionFactory {
     const apiPort = 5011
     const gatewayPort = 9011
     const defaultConfig = {
-      ipld: { codecs: [dagJose] },
       repo: process.env.IPFS_PATH || '~/.goipfs',
       config: {
         Pubsub: {

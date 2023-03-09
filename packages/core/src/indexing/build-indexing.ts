@@ -10,10 +10,19 @@ export type IndexingConfig = {
   db: string
 
   /**
-   *
    * Allow a query only if historical sync is over.
    */
   allowQueriesBeforeHistoricalSync: boolean
+
+  /**
+   * Setting this to true allows a Ceramic node to start without indexing enabled
+   */
+  disableComposedb: boolean
+
+  /**
+   * Setting this to true allows a Ceramic node to sync historical data for actively indexed models
+   */
+  enableHistoricalSync: boolean
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {
@@ -73,7 +82,8 @@ export function buildIndexing(
         network
       )
     }
-    case 'postgres': {
+    case 'postgres':
+    case 'postgresql': {
       logger.imp('Initializing PostgreSQL connection')
       const dataSource = knex({
         client: 'pg',

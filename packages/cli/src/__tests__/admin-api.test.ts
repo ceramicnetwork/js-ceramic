@@ -30,18 +30,13 @@ describe('admin api', () => {
   let daemon: CeramicDaemon
   let adminDid: DID
   let nonAdminDid: DID
-  let originalEnvVarVal: string | undefined
   let ipfs: IpfsApi
   let tmpFolder: tmp.DirectoryResult
   let core: Ceramic
   let client: CeramicClient
   let exampleModelStreamId: string
 
-
   beforeEach(async () => {
-    // FIXME: How should we be setting up this env var properly?
-    originalEnvVarVal = process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
     ipfs = await createIPFS()
 
     const did = new DID({
@@ -80,7 +75,6 @@ describe('admin api', () => {
     await daemon.close()
     await core.close()
     await tmpFolder.cleanup()
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = originalEnvVarVal
   })
 
   async function buildJWS(
@@ -93,6 +87,16 @@ describe('admin api', () => {
     const jws = await did.createJWS({
       code: code,
       requestPath,
+      requestBody: body,
+    })
+    return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
+  }
+
+  async function buildJWSPins(did: DID, code: string, requestPath: string): Promise<string> {
+    const body = undefined
+    const jws = await did.createJWS({
+      code: code,
+      requestPath: requestPath,
       requestBody: body,
     })
     return `${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
@@ -165,6 +169,104 @@ describe('admin api', () => {
       },
     })
     expect(getResultAfterDelete.models).toEqual([])
+  })
+
+  it('legacy pin API should warn', async () => {
+    const legacyPinURLBaseString = `http://localhost:${daemon.port}/api/v0/pins`
+    // Legacy Pin Add
+    const postResult = await fetchJson(`${legacyPinURLBaseString}/${exampleModelStreamId}`, {
+      method: 'POST',
+    })
+    expect(Object.keys(postResult).includes('warn')).toEqual(true)
+  })
+
+  it('admin pin API CRUD test', async () => {
+    const adminPinURLBaseString = `http://localhost:${daemon.port}/api/v0/admin/pins`
+
+    const fetchCode = (): Promise<string> =>
+      fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`).then((r) => r.code)
+
+    // Get list of pins
+    const getResult = await fetchJson(adminPinURLBaseString, {
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins`
+        )}`,
+      },
+    })
+    expect(getResult.pinnedStreamIds).toEqual([exampleModelStreamId])
+
+    // Get single pin
+    const getIdResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins`
+        )}`,
+      },
+    })
+    expect(getIdResult.pinnedStreamIds).toEqual([exampleModelStreamId])
+
+    // Delete pin
+    const deleteResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      method: 'DELETE',
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins`
+        )}`,
+      },
+    })
+    expect(deleteResult.isPinned).toEqual(false)
+    expect(deleteResult.streamId).toEqual(exampleModelStreamId)
+
+    // Get single pin after delete
+    const getIdResultAfterDelete = await fetchJson(
+      `${adminPinURLBaseString}/${exampleModelStreamId}`,
+      {
+        headers: {
+          authorization: `Authorization: Basic ${await buildJWSPins(
+            adminDid,
+            await fetchCode(),
+            `/api/v0/admin/pins`
+          )}`,
+        },
+      }
+    )
+    expect(getIdResultAfterDelete.pinnedStreamIds).toEqual([])
+
+    // Add pin
+    const postResult = await fetchJson(`${adminPinURLBaseString}/${exampleModelStreamId}`, {
+      method: 'POST',
+      headers: {
+        authorization: `Authorization: Basic ${await buildJWSPins(
+          adminDid,
+          await fetchCode(),
+          `/api/v0/admin/pins`
+        )}`,
+      },
+    })
+    expect(postResult.isPinned).toEqual(true)
+    expect(postResult.streamId).toEqual(exampleModelStreamId)
+
+    // Get single pin after adding
+    const getIdResultAfterPost = await fetchJson(
+      `${adminPinURLBaseString}/${exampleModelStreamId}`,
+      {
+        headers: {
+          authorization: `Authorization: Basic ${await buildJWSPins(
+            adminDid,
+            await fetchCode(),
+            `/api/v0/admin/pins`
+          )}`,
+        },
+      }
+    )
+    expect(getIdResultAfterPost.pinnedStreamIds).toEqual([exampleModelStreamId])
   })
 
   describe('admin API validation test', () => {
@@ -501,6 +603,40 @@ describe('admin api', () => {
         })
       ).rejects.toThrow(
         /The 'models' parameter is required and it has to be an array containing at least one model stream id/
+      )
+    })
+
+    it('Disallow re-indexing on POST', async () => {
+      const fetchCode = async (): Promise<string> => {
+        return (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
+      }
+
+      expect(true).toBeTruthy()
+      const postResult = await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
+        method: 'POST',
+        body: {
+          jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+        },
+      })
+      expect(postResult.result).toEqual('success')
+
+      const deleteResult = await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
+        method: 'DELETE',
+        body: {
+          jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+        },
+      })
+      expect(deleteResult.result).toEqual('success')
+
+      await expect(
+        fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
+          method: 'POST',
+          body: {
+            jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+          },
+        })
+      ).rejects.toThrow(
+        /Cannot re-index model kjzl6hvfrbw6c9jjl42rrylkpibnt1mjf52900nnwkt68ci1kuoc51hncgczs5q, data may not be up-to-date/
       )
     })
   })

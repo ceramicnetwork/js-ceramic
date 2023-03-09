@@ -14,6 +14,8 @@ import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
+import { ISyncQueryApi } from '../sync/interfaces.js'
+import cloneDeep from 'lodash.clonedeep'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
@@ -52,16 +54,17 @@ type IndexedData<DateType> = {
 /**
  * Base class for an index backend.
  */
-export class DatabaseIndexApi<DateType = Date | number> {
+export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private modelsToIndex: Array<StreamID> = []
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
   // indexed
   private readonly modelsIndexedFields = new Map<string, Array<string>>()
   tablesManager: TablesManager
+  syncApi: ISyncQueryApi
 
-  constructor(
-    private readonly dbConnection: Knex,
+  protected constructor(
+    protected readonly dbConnection: Knex,
     private readonly allowQueriesBeforeHistoricalSync: boolean,
     private readonly logger: DiagnosticsLogger,
     private readonly network: Networks
@@ -69,8 +72,13 @@ export class DatabaseIndexApi<DateType = Date | number> {
     this.insertionOrder = new InsertionOrder(dbConnection)
   }
 
-  now(): DateType {
-    throw new Error('Must be implemented in extending class')
+  abstract getIndexedData(
+    indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
+  ): IndexedData<DateType>
+  abstract now(): DateType
+
+  setSyncQueryApi(api: ISyncQueryApi) {
+    this.syncApi = api
   }
 
   /**
@@ -79,18 +87,9 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
-    const previouslyIndexedModels = await this.getPreviouslyIndexedModelsFromDatabase()
-    for (const modelArgs of previouslyIndexedModels) {
-      const modelPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
-        return String(streamId) === String(modelArgs)
-      })
-      // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-      if (modelPreviouslyIndexed){
-        throw new Error(`Cannot re-index model ${modelArgs.toString()}, data may not be up-to-date`)
-      }
-    }
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
+      await this.assertNoOngoingSyncForModel(modelArgs.model)
       this.modelsToIndex.push(modelArgs.model)
       if (modelArgs.relations) {
         this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
@@ -158,32 +157,20 @@ export class DatabaseIndexApi<DateType = Date | number> {
   /**
    * This method inserts the stream if it is not present in the index, or updates
    * the 'content' if the stream already exists in the index.
-   * @param args
+   * @param indexingArgs
    */
-  async indexStream(args: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }): Promise<void> {
-    const tableName = asTableName(args.model)
-    await this.indexDocumentInDatabase(tableName, args)
-  }
-
-  private async indexDocumentInDatabase(
-    tableName: string,
+  async indexStream(
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
+    const tableName = asTableName(indexingArgs.model)
     const indexedData = this.getIndexedData(indexingArgs)
-    for (const field of this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []) {
+    const fields = this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []
+    for (const field of fields) {
       indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
     }
-
-    await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge({
-      last_anchored_at: indexedData.last_anchored_at,
-      updated_at: indexedData.updated_at,
-    })
-  }
-
-  getIndexedData(
-    indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
-  ): IndexedData<DateType> {
-    throw new Error('Must be implemented in extending class')
+    const toMerge = cloneDeep(indexedData)
+    delete toMerge.created_at
+    await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
   }
 
   /**
@@ -207,7 +194,8 @@ export class DatabaseIndexApi<DateType = Date | number> {
       return StreamID.fromString(result.model)
     })
   }
-  private async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+
+  async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
     return (
       await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
         is_indexed: false,
@@ -220,29 +208,47 @@ export class DatabaseIndexApi<DateType = Date | number> {
   /**
    * Ensures that the given model StreamID can be queried and throws if not.
    */
-  assertModelQueryable(modelStreamId: StreamID | string): void {
-    // TODO(NET-1630) Throw if historical indexing is in progress
-    if (!this.allowQueriesBeforeHistoricalSync) {
-      throw new IndexQueryNotAvailableError(modelStreamId)
-    }
+  async assertModelQueryable(modelStreamId: StreamID | string) {
+    await this.assertModelIsIndexed(modelStreamId)
+    await this.assertNoOngoingSyncForModel(modelStreamId)
+  }
 
+  /**
+   * Assert that a model has been indexed
+   * @param modelStreamId
+   */
+  async assertModelIsIndexed(modelStreamId: StreamID | string) {
     const model = modelStreamId.toString()
-    if (this.modelsToIndex.find((indexedModel) => indexedModel.toString() == model) == undefined) {
+    const foundModelToIndex = this.modelsToIndex.find(
+      (indexedModel) => indexedModel.toString() == model
+    )
+    if (foundModelToIndex == undefined) {
       const err = new Error(`Query failed: Model ${model} is not indexed on this node`)
       this.logger.debug(err)
       throw err
     }
   }
 
-  getCountFromResult(response: Array<Record<string, string | number>>): number {
-    throw new Error('Must be implemented in extending class')
+  /**
+   * Assert that there is no ongoing historical sync for a model
+   * @param modelStreamId
+   */
+  async assertNoOngoingSyncForModel(modelStreamId: StreamID | string): Promise<void> {
+    if (
+      !this.allowQueriesBeforeHistoricalSync &&
+      !(await this.syncApi.syncComplete(modelStreamId.toString()))
+    ) {
+      throw new IndexQueryNotAvailableError(modelStreamId)
+    }
   }
+
+  abstract getCountFromResult(response: Array<Record<string, string | number>>): number
 
   /**
    * Return number of suitable indexed records.
    */
   async count(query: BaseQuery): Promise<number> {
-    this.assertModelQueryable(query.model)
+    await this.assertModelQueryable(query.model)
 
     const tableName = asTableName(query.model)
     let dbQuery = this.dbConnection(tableName).count('*')
@@ -263,12 +269,12 @@ export class DatabaseIndexApi<DateType = Date | number> {
    * Query the index.
    */
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
-    this.assertModelQueryable(query.model)
+    await this.assertModelQueryable(query.model)
     return this.insertionOrder.page(query)
   }
 
   /**
-   * Run Compose DB config/startup operations
+   * Run ComposeDB config/startup operations
    */
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)

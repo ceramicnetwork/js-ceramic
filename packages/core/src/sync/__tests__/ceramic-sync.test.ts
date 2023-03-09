@@ -280,8 +280,6 @@ describe('Sync tests', () => {
     ipfs2 = await createIPFS()
     await swarmConnect(ipfs1, ipfs2)
 
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     // syncing is not enabled
     creatingCeramic = await createCeramic(ipfs2 as any)
     const model = await Model.create(creatingCeramic, MODEL_DEFINITION)
@@ -302,6 +300,7 @@ describe('Sync tests', () => {
         indexing: {
           db: process.env.DATABASE_URL as string,
           allowQueriesBeforeHistoricalSync: true,
+          enableHistoricalSync: false,
         },
         sync: true,
         // change pubsub topic so that we aren't getting updates via pubsub

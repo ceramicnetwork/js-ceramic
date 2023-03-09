@@ -3,6 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
+  validateContentLength,
 } from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
@@ -62,15 +63,6 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB != 'true') {
-      context.loggerProvider
-        .getDiagnosticsLogger()
-        .err(
-          'Indexing is an experimental feature and is not yet supported in production. To enable for testing purposes only, set the CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB environment variable to `true`'
-        )
-      throw new Error('Indexing is not enabled')
-    }
-
     if (state == null) {
       // apply genesis
       return this._applyGenesis(commitData, context)
@@ -213,6 +205,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       }
       return
     }
+
+    validateContentLength(content)
 
     await this._schemaValidator.validateSchema(
       content,

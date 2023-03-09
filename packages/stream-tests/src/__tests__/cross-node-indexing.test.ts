@@ -95,8 +95,6 @@ describe.each(envs)(
     }
 
     beforeAll(async () => {
-      process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
       await pgSetup()
 
       ipfs1 = await createIPFS()
@@ -109,6 +107,7 @@ describe.each(envs)(
           indexing: {
             db: process.env.DATABASE_URL,
             allowQueriesBeforeHistoricalSync: true,
+            enableHistoricalSync: false,
           },
         })
       } else {
@@ -155,6 +154,7 @@ describe.each(envs)(
           db: ceramic1DbUrl,
           models: [],
           allowQueriesBeforeHistoricalSync: true,
+          enableHistoricalSync: false,
         },
       })
       await ceramic1.index.indexModels([model.id])
@@ -163,6 +163,7 @@ describe.each(envs)(
         indexing: {
           db: ceramic2DbUrl,
           allowQueriesBeforeHistoricalSync: true,
+          enableHistoricalSync: false,
         },
       })
       await ceramic2.index.indexModels([model.id])

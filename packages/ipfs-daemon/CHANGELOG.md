@@ -3,6 +3,58 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.16.0-rc.0...@ceramicnetwork/ipfs-daemon@2.16.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [2.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.15.0-rc.0...@ceramicnetwork/ipfs-daemon@2.16.0-rc.0) (2023-02-27)
+
+
+### Features
+
+* add pubsub cache ttl and bootstrap peers to bundled kubo config ([#2756](https://github.com/ceramicnetwork/js-ceramic/issues/2756)) ([d720074](https://github.com/ceramicnetwork/js-ceramic/commit/d7200747c069b8211a1c7f4ca18903b2838bdff1))
+
+
+
+
+
+# [2.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.14.0-rc.0...@ceramicnetwork/ipfs-daemon@2.15.0-rc.0) (2023-02-24)
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
+# [2.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.13.0...@ceramicnetwork/ipfs-daemon@2.14.0-rc.0) (2023-02-23)
+
+
+### Bug Fixes
+
+* add postinstall steps to dockerfile to apply multiaddr patches ([#2743](https://github.com/ceramicnetwork/js-ceramic/issues/2743)) ([67a3f9b](https://github.com/ceramicnetwork/js-ceramic/commit/67a3f9bde8d39dda8de639041bee46f04c28d204))
+* apply multiaddr patch ([#2740](https://github.com/ceramicnetwork/js-ceramic/issues/2740)) ([8002b04](https://github.com/ceramicnetwork/js-ceramic/commit/8002b044f04b388ff5d9d476c7b7b0bf943a7700))
+* downgrade go-ipfs to 15 ([#2742](https://github.com/ceramicnetwork/js-ceramic/issues/2742)) ([c995cc0](https://github.com/ceramicnetwork/js-ceramic/commit/c995cc017851f830991992903ad5dc97975721ce))
+* move multiaddr patch to root directory ([#2744](https://github.com/ceramicnetwork/js-ceramic/issues/2744)) ([c3390a6](https://github.com/ceramicnetwork/js-ceramic/commit/c3390a641bdc8ff81a3b1e51d134632827e04e53))
+
+
+
+
+
+# [2.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.13.0-rc.0...@ceramicnetwork/ipfs-daemon@2.13.0) (2023-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
 # [2.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@2.12.0-rc.0...@ceramicnetwork/ipfs-daemon@2.13.0-rc.0) (2023-02-16)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

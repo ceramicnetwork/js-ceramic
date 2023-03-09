@@ -1,4 +1,4 @@
-import { AdminApi, NodeStatusResponse } from '@ceramicnetwork/common'
+import { AdminApi, NodeStatusResponse, PinApi } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { SyncApi } from './sync/sync-api.js'
@@ -12,7 +12,8 @@ export class LocalAdminApi implements AdminApi {
   constructor(
     private readonly indexApi: LocalIndexApi,
     private readonly syncApi: SyncApi,
-    private readonly nodeStatusFn: NodeStatusFn // TODO(CDB-2293): circular dependency back into Ceramic
+    private readonly nodeStatusFn: NodeStatusFn, // TODO(CDB-2293): circular dependency back into Ceramic
+    private readonly pinApi: PinApi
   ) {}
 
   async nodeStatus(): Promise<NodeStatusResponse> {
@@ -20,10 +21,8 @@ export class LocalAdminApi implements AdminApi {
   }
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await Promise.all([
-      this.indexApi.indexModels(modelsIDs),
-      this.syncApi.startModelSync(modelsIDs.map((id) => id.toString())),
-    ])
+    await this.indexApi.indexModels(modelsIDs)
+    await this.syncApi.startModelSync(modelsIDs.map((id) => id.toString()))
   }
 
   getIndexedModels(): Promise<Array<StreamID>> {
@@ -31,6 +30,13 @@ export class LocalAdminApi implements AdminApi {
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await this.indexApi.stopIndexingModels(modelsIDs)
+    await Promise.all([
+      this.indexApi.stopIndexingModels(modelsIDs),
+      this.syncApi.stopModelSync(modelsIDs.map((id) => id.toString())),
+    ])
+  }
+
+  get pin(): PinApi {
+    return this.pinApi
   }
 }

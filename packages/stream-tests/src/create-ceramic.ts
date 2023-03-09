@@ -18,6 +18,8 @@ export async function createCeramic(
       indexing: {
         db: `sqlite://${stateStoreDirectory}/ceramic.sqlite`,
         allowQueriesBeforeHistoricalSync: false,
+        disableComposedb: false,
+        enableHistoricalSync: false,
       },
       sync: false,
     },

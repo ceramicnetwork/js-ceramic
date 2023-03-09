@@ -147,7 +147,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
     )
 
     this.logger.debug(
-      `Rebuild anchor job completed for modes ${jobData.models}, root ${jobData.root}, and txHash ${jobData.txHash}`
+      `Rebuild anchor job completed for models ${jobData.models}, root ${jobData.root}, and txHash ${jobData.txHash}`
     )
   }
 }

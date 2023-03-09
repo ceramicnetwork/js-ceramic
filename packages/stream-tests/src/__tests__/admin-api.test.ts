@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { IpfsApi, Page, StreamState, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
@@ -55,14 +55,13 @@ describe('Admin API tests', () => {
   })
 
   beforeEach(async () => {
-    process.env.CERAMIC_ENABLE_EXPERIMENTAL_COMPOSE_DB = 'true'
-
     const indexingDirectory = await tmp.tmpName()
     await fs.mkdir(indexingDirectory)
     core = await createCeramic(ipfs, {
       indexing: {
         db: `sqlite://${indexingDirectory}/ceramic.sqlite`,
         allowQueriesBeforeHistoricalSync: true,
+        enableHistoricalSync: false,
       },
     })
 

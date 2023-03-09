@@ -4,11 +4,18 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { type Knex } from 'knex'
 import { Observable } from 'rxjs'
 
-import { REBUILD_ANCHOR_JOB, HISTORY_SYNC_JOB, CONTINUOUS_SYNC_JOB } from '../interfaces.js'
+import {
+  REBUILD_ANCHOR_JOB,
+  HISTORY_SYNC_JOB,
+  CONTINUOUS_SYNC_JOB,
+  SyncJobType,
+} from '../interfaces.js'
 import { RebuildAnchorWorker } from '../workers/rebuild-anchor.js'
 import { SyncWorker, createHistorySyncJob } from '../workers/sync.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 const createBlockProofsListener = jest.fn(() => new Observable())
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 jest.unstable_mockModule('@ceramicnetwork/anchor-listener', () => {
   return { createBlockProofsListener }
@@ -168,10 +175,12 @@ describe('Sync API', () => {
       const initModelsToSync = jest.fn()
       const initJobQueue = jest.fn()
       const initBlockSubscription = jest.fn()
+      const initPeriodicStatusLogger = jest.fn()
       sync._initStateTable = initStateTable as any
       sync._initModelsToSync = initModelsToSync as any
       sync._initJobQueue = initJobQueue as any
       sync._initBlockSubscription = initBlockSubscription as any
+      sync._initPeriodicStatusLogger = initPeriodicStatusLogger as any
 
       await sync.init({ getBlock, getNetwork } as any)
       expect(getBlock).toHaveBeenCalledWith(-BLOCK_CONFIRMATIONS)
@@ -179,6 +188,8 @@ describe('Sync API', () => {
       expect(initModelsToSync).toHaveBeenCalled()
       expect(initJobQueue).toHaveBeenCalled()
       expect(initBlockSubscription).toHaveBeenCalledWith('abc123')
+      expect(initBlockSubscription).toHaveBeenCalledWith('abc123')
+      expect(initPeriodicStatusLogger).toHaveBeenCalled()
 
       await sync.shutdown()
     })
@@ -206,6 +217,7 @@ describe('Sync API', () => {
 
       await sync.init({ getBlock, getNetwork } as any)
       expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
+        jobType: SyncJobType.Catchup,
         fromBlock: 0,
         toBlock: 10,
         models: expectedModels,
@@ -236,11 +248,14 @@ describe('Sync API', () => {
       sync._addSyncJob = addSyncJob as any
 
       await sync.init({ getBlock, getNetwork } as any)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
-        fromBlock: 5,
-        toBlock: 10,
-        models: expectedModels,
-      })
+      expect(addSyncJob).toHaveBeenCalledWith(
+        HISTORY_SYNC_JOB,
+        expect.objectContaining({
+          fromBlock: 5,
+          toBlock: 10,
+          models: expectedModels,
+        })
+      )
 
       await sync.shutdown()
     })
@@ -285,16 +300,18 @@ describe('Sync API', () => {
     const unsubscribe = jest.fn()
     // @ts-ignore private field
     sync.subscription = { unsubscribe }
+    // @ts-ignore private field
+    sync.periodicStatusLogger = { unsubscribe }
     const stop = jest.fn()
     // @ts-ignore private field
     sync.jobQueue = { stop }
 
     await sync.shutdown()
-    expect(unsubscribe).toHaveBeenCalled()
+    expect(unsubscribe).toHaveBeenCalledTimes(2)
     expect(stop).toHaveBeenCalled()
   })
 
-  describe('addModelSync() adds a model or models to sync', () => {
+  describe('startModelSync() adds a model or models to sync', () => {
     test('handles a single model as input', async () => {
       const { SyncApi } = await import('../sync-api.js')
       const sync = new SyncApi(
@@ -302,7 +319,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -310,7 +327,7 @@ describe('Sync API', () => {
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123'] }
       await sync.startModelSync('abc123', data.fromBlock, data.toBlock)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
+      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
 
@@ -321,7 +338,7 @@ describe('Sync API', () => {
         {} as any,
         {} as any,
         {} as any,
-        {} as any
+        logger
       )
 
       const addSyncJob = jest.fn()
@@ -329,8 +346,58 @@ describe('Sync API', () => {
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'def456'] }
       await sync.startModelSync(data.models, data.fromBlock, data.toBlock)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, data)
+      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
+    })
+  })
+
+  describe('stopModelSync() removes a model or models to sync', () => {
+    test('handles a single model as input', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        logger
+      )
+
+      sync.modelsToSync.add('abc123')
+      sync.modelsToSync.add('efg456')
+
+      await sync.stopModelSync('abc123')
+      expect(Array.from(sync.modelsToSync)).toEqual(['efg456'])
+    })
+
+    test('handles multiple models as input', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        logger
+      )
+
+      sync.modelsToSync.add('abc123')
+      sync.modelsToSync.add('efg456')
+
+      await sync.stopModelSync(['abc123', 'efg456'])
+      expect(Array.from(sync.modelsToSync)).toEqual([])
+    })
+
+    test('Does nothing if the model is not currently being synced', async () => {
+      const { SyncApi } = await import('../sync-api.js')
+      const sync = new SyncApi(
+        { db: process.env.DATABASE_URL as string, on: true },
+        {} as any,
+        {} as any,
+        {} as any,
+        logger
+      )
+
+      await sync.stopModelSync('abc123')
+      expect(Array.from(sync.modelsToSync)).toEqual([])
     })
   })
 
@@ -341,16 +408,22 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      logger
     )
 
     const addJob = jest.fn()
     // @ts-ignore private field
     sync.jobQueue = { addJob }
 
-    const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'abc456'] }
+    const data = {
+      jobType: SyncJobType.Full,
+      fromBlock: 1,
+      toBlock: 10,
+      models: ['abc123', 'abc456'],
+    }
     await sync._addSyncJob(HISTORY_SYNC_JOB, data)
     expect(addJob).toHaveBeenCalledWith(createHistorySyncJob(data))
+    expect(sync.modelsToHistoricSync.has('abc123')).toBeTruthy()
   })
 
   test('_updateStoredState() updates the state in DB', async () => {
@@ -360,7 +433,7 @@ describe('Sync API', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      logger
     )
     await sync._initStateTable()
     // Check state before update
@@ -390,6 +463,10 @@ describe('Sync API', () => {
       )
       // @ts-ignore private field
       sync.modelsToSync = new Set(['abc123', 'def456'])
+      sync.modelsToHistoricSync = new Map([
+        ['abc123', 2],
+        ['def456', 1],
+      ])
 
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
@@ -401,6 +478,7 @@ describe('Sync API', () => {
         reorganized: false,
       } as any)
       expect(addSyncJob).toHaveBeenCalledWith(CONTINUOUS_SYNC_JOB, {
+        jobType: SyncJobType.Continuous,
         fromBlock: 10,
         toBlock: 10,
         models: ['abc123', 'def456'],
@@ -409,6 +487,8 @@ describe('Sync API', () => {
         processedBlockHash: 'abc789',
         processedBlockNumber: 10,
       })
+      expect(await sync.syncComplete('abc123')).toBeFalsy()
+      expect(await sync.syncComplete('def456')).toBeFalsy()
     })
 
     test('loads the expected block range on block reorganization', async () => {
@@ -433,15 +513,112 @@ describe('Sync API', () => {
         reorganized: true,
         expectedParentHash: 'ghi789',
       } as any)
-      expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, {
-        fromBlock: 100 - BLOCK_CONFIRMATIONS,
-        toBlock: 100,
-        models: ['abc123', 'def456'],
-      })
+      expect(addSyncJob).toHaveBeenCalledWith(
+        HISTORY_SYNC_JOB,
+        expect.objectContaining({
+          fromBlock: 100 - BLOCK_CONFIRMATIONS,
+          toBlock: 100,
+          models: ['abc123', 'def456'],
+        })
+      )
       expect(updateStoredState).toHaveBeenCalledWith({
         processedBlockHash: 'abc789',
         processedBlockNumber: 100,
       })
+
+      expect(await sync.syncComplete('abc123')).toBeTruthy()
+      expect(await sync.syncComplete('abc789')).toBeTruthy()
     })
+  })
+
+  test('_createJobStatus', async () => {
+    const { SyncApi } = await import('../sync-api.js')
+    const logger = {
+      imp: jest.fn(),
+    }
+
+    const sync = new SyncApi(
+      { db: process.env.DATABASE_URL as string, on: true },
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any
+    )
+
+    const getJobs = jest.fn(() =>
+      Promise.resolve({
+        [HISTORY_SYNC_JOB]: [
+          {
+            name: HISTORY_SYNC_JOB,
+            data: { fromBlock: 100, toBlock: 200, currentBlock: 101 },
+            id: '12345',
+            startedOn: new Date(1677015880491),
+            createdOn: new Date(1677015880491 - 100000),
+            completedOn: null,
+          },
+        ],
+        [CONTINUOUS_SYNC_JOB]: [
+          {
+            name: CONTINUOUS_SYNC_JOB,
+            data: { fromBlock: 500, toBlock: 500 },
+            id: '12345',
+            startedOn: new Date(1677015880491),
+            createdOn: new Date(1677015880491 - 100000),
+            completedOn: null,
+          },
+        ],
+      })
+    )
+
+    // @ts-ignore private field
+    sync.jobQueue = {
+      getJobs,
+    }
+    // @ts-ignore private field
+    sync.startBlock = 499
+
+    await sync._logSyncStatus()
+
+    expect(getJobs).toHaveBeenCalledWith('active', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB])
+    expect(getJobs).toHaveBeenCalledWith('created', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB])
+    const status = logger.imp.mock.calls[0][0]
+    expect(status).toMatchSnapshot()
+  })
+
+  test('_initPeriodicStatusLogger', async () => {
+    const { SyncApi } = await import('../sync-api.js')
+    const logger = {
+      imp: jest.fn(),
+    }
+
+    const sync = new SyncApi(
+      { db: process.env.DATABASE_URL as string, on: true },
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any
+    )
+
+    const getJobs = jest.fn(() =>
+      Promise.resolve({
+        name: 'jobName',
+        data: { data: 'tests' },
+        id: '12345',
+        startedOn: new Date(),
+        createdOn: new Date(Date.now() - 100000),
+        completedOn: null,
+      })
+    )
+
+    // @ts-ignore private field
+    sync.jobQueue = {
+      getJobs,
+    }
+
+    sync._initPeriodicStatusLogger()
+    // @ts-ignore private field
+    expect(sync.periodicStatusLogger).toBeDefined()
+    // @ts-ignore private field
+    sync.periodicStatusLogger?.unsubscribe()
   })
 })

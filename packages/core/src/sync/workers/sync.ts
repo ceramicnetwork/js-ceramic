@@ -10,8 +10,10 @@ import {
   JobData,
   HISTORY_SYNC_JOB,
   CONTINUOUS_SYNC_JOB,
+  SyncJobType,
 } from '../interfaces.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { SyncJobData } from '../interfaces.js'
 
 const SYNC_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
@@ -19,12 +21,6 @@ const SYNC_JOB_OPTIONS: SendOptions = {
   retryBackoff: true,
   expireInHours: 12,
   retentionDays: 3,
-}
-
-interface SyncJobData {
-  fromBlock: number
-  toBlock: number
-  models: string[]
 }
 
 export function createContinuousSyncJob(
@@ -46,6 +42,11 @@ export function createHistorySyncJob(data: SyncJobData, options?: SendOptions): 
   }
 }
 
+export interface SyncCompleteData {
+  jobType: SyncJobType
+  modelId: string
+}
+
 /**
  * Worker that creates recreateAnchor jobs based on the anchor proofs  recreates the anchor commits based on the anchor proof given.
  * It ensures that the data is stored and handled.
@@ -55,7 +56,8 @@ export class SyncWorker implements Worker<SyncJobData> {
     private readonly provider: Provider,
     private readonly jobQueue: IJobQueue<JobData>,
     private readonly chainId,
-    private readonly logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger,
+    private readonly syncCompleteCallback: (SyncCompleteData) => void
   ) {}
 
   /**
@@ -66,18 +68,19 @@ export class SyncWorker implements Worker<SyncJobData> {
    */
   async handler(job: PgBoss.Job) {
     const jobData = job.data as SyncJobData
-    const { fromBlock, toBlock, models } = jobData
+    const { jobType, fromBlock, toBlock, models } = jobData
+    const currentBlock = jobData.currentBlock || fromBlock
 
     const blockProof$ = createBlocksProofsLoader({
       provider: this.provider,
       chainId: this.chainId,
-      fromBlock,
+      fromBlock: currentBlock,
       toBlock,
     }).pipe(
       // catch any errors so it doesn't stop any block proofs currently processing
       catchError((err) => {
         this.logger.err(
-          `Received error when retreiving block proofs for models ${models} from block ${fromBlock} to block ${toBlock}: ${err}`
+          `Received error when retrieving block proofs for models ${models} from block ${currentBlock} to block ${toBlock}: ${err}`
         )
         return of(null)
       }),
@@ -102,14 +105,24 @@ export class SyncWorker implements Worker<SyncJobData> {
         }
 
         await this.jobQueue.updateJob(job.id, {
-          fromBlock: blockNumber + 1,
+          fromBlock,
+          currentBlock: blockNumber + 1,
           toBlock,
           models,
-        })
+          jobType
+        } as SyncJobData)
       })
     )
 
     await lastValueFrom(blockProof$).then(() => {
+      if (this.syncCompleteCallback) {
+        for (const model of models) {
+          this.syncCompleteCallback({
+            jobType: jobType,
+            modelId: model,
+          })
+        }
+      }
       this.logger.debug(
         `Sync completed for models ${models} from block ${fromBlock} to block ${toBlock}`
       )

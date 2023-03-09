@@ -69,7 +69,7 @@ describe('#load', () => {
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false })
-    await ceramic.pin.add(stream1.id)
+    await ceramic.admin.pin.add(stream1.id)
 
     fromMemorySpy.mockClear()
     fromStateStoreSpy.mockClear()
@@ -146,6 +146,49 @@ describe('#load', () => {
     expect(syncSpy).toBeCalledTimes(1)
   })
 
+  test('Pinning a stream prevents it from needing to be synced', async () => {
+    const content = { foo: 'bar' }
+    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' })
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
+    const streamId = new StreamID('tile', genesisCid)
+    const syncSpy = jest.spyOn(repository.stateManager, 'sync')
+
+    const stream1 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
+    expect(stream1.state.content).toEqual(content)
+    // Needs to sync with the network the first time a pinned stream is loaded
+    // (in case there were updates while the node was offline)
+    expect(syncSpy).toBeCalledTimes(1)
+
+    const stream2 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
+    expect(StreamUtils.serializeState(stream2.state)).toEqual(
+      StreamUtils.serializeState(stream1.state)
+    )
+    // Doesn't need to sync because stream is in the cache
+    expect(syncSpy).toBeCalledTimes(1)
+
+    // Remove stream from the cache
+    repository.inmemory.delete(streamId.toString())
+    const stream3 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
+    expect(StreamUtils.serializeState(stream3.state)).toEqual(
+      StreamUtils.serializeState(stream2.state)
+    )
+    // Now needs to sync because stream is no longer in the cache and isn't pinned
+    expect(syncSpy).toBeCalledTimes(2)
+
+    // Now pin the stream
+    await ceramic.admin.pin.add(streamId)
+    // No sync needed when loading for pin since already in the cache
+    expect(syncSpy).toBeCalledTimes(2)
+    repository.inmemory.delete(streamId.toString())
+    const stream4 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
+    expect(StreamUtils.serializeState(stream4.state)).toEqual(
+      StreamUtils.serializeState(stream3.state)
+    )
+    // Even though stream was removed from the cache, it was in the syncedPinnedStreams
+    // set so doesn't need to be synced again
+    expect(syncSpy).toBeCalledTimes(2)
+  }, 30000)
+
   describe('sync: SYNC_ALWAYS', () => {
     describe('pinned', () => {
       test('revalidate current state, rewrite', async () => {
@@ -183,7 +226,7 @@ describe('#load', () => {
           anchor: false,
           pin: false,
         })
-        await stream1.update({ a: 2 }, null, { anchor: false, pin: false })
+        await stream1.update({ a: 2 }, null, { anchor: false })
 
         const fromMemory = jest.spyOn(repository as any, 'fromMemory')
         const fromStateStore = jest.spyOn(repository as any, 'fromStreamStateStore')

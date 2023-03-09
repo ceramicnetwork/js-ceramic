@@ -51,7 +51,9 @@ const createCeramic = async (
     anchorOnRequest,
     indexing: {
       db: connectionString.href,
-      models: [],
+      allowQueriesBeforeHistoricalSync: true,
+      disableComposedb: true,
+      enableHistoricalSync: false,
     },
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
@@ -65,7 +67,7 @@ async function createDeterministicStream(
   ceramic: CeramicApi,
   controller: string,
   family: string,
-  pin: boolean
+  pin?: boolean
 ): Promise<TileDocument> {
   return TileDocument.create(
     ceramic,
@@ -130,7 +132,7 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
 
     ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const stream2 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', true)
+    const stream2 = await createDeterministicStream(ceramic, ceramic.did.id, 'test')
     expect(stream2.content).toEqual(content)
     await ceramic.close()
   })
@@ -210,6 +212,23 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
+  it('Deterministic stream can be created without pinning', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test123', false)
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeFalsy()
+
+    // 'createDeterministicStream uses TileDocument.create API, we should also test the
+    // TileDocument.deterministic API
+    const stream2 = await TileDocument.deterministic(
+      ceramic,
+      { family: 'test321' },
+      { anchor: false, publish: false, pin: false }
+    )
+    await expect(TestUtils.isPinned(ceramic, stream2.id)).resolves.toBeFalsy()
+
+    await ceramic.close()
+  })
+
   it('Updating stream does not pin by default', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
@@ -232,14 +251,14 @@ describe('Ceramic stream pinning', () => {
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await ceramic.pin.rm(stream.id, { publish: false })
+    await ceramic.admin.pin.rm(stream.id, { publish: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'foobarbaz' })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
 
-  it('Stream can be pinned and unpinned on update', async () => {
+  it('Stream cannot be pinned and unpinned on update', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
@@ -247,9 +266,8 @@ describe('Ceramic stream pinning', () => {
       pin: false,
     })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-    await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false, pin: true })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await stream.sync()
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
@@ -263,7 +281,7 @@ describe('Ceramic stream pinning', () => {
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await TileDocument.load(ceramic, stream.id)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await ceramic.pin.rm(stream.id, { publish: false })
+    await ceramic.admin.pin.rm(stream.id, { publish: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
@@ -271,18 +289,76 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
-  it('Stream can be pinned and unpinned on load', async () => {
+  it('Stream cannot be pinned and unpinned on load', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
       publish: false,
       pin: false,
     })
+
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-    await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
+    // pin:true flag will be ignored
+    TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await ceramic.admin.pin.add(stream.id)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
-    await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
+    // pin:false flag will be ignored
+    TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+
+    await ceramic.close()
+  })
+
+  it('Existing stream with updates cannot be pinned and unpinned on deterministic load', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      {
+        anchor: false,
+        publish: false,
+        pin: false,
+      }
+    )
+    await stream.update({ foo: 'bar' }, null, { anchor: false, publish: false })
+
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+
+    await ceramic.admin.pin.add(stream.id)
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+
+    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+
+    await ceramic.close()
+  })
+
+  it('Can pin an existing deterministic stream that has no updates yet', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream1 = await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      {
+        anchor: false,
+        publish: false,
+        pin: false,
+      }
+    )
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeFalsy()
+
+    const stream2 = await TileDocument.deterministic(
+      ceramic,
+      { family: 'testAbc' },
+      {
+        anchor: false,
+        publish: false,
+        pin: true,
+      }
+    )
+
+    expect(stream2.id).toEqual(stream1.id)
+    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })
@@ -294,11 +370,11 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
-    await ceramic.pin.rm(stream.id)
+    await ceramic.admin.pin.rm(stream.id)
     expect(publishTipSpy).toBeCalledTimes(0)
 
     await ceramic.close()
@@ -312,12 +388,12 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
 
-    await ceramic.pin.rm(stream.id, { publish: true })
+    await ceramic.admin.pin.rm(stream.id, { publish: true })
 
     expect(publishTipSpy).toBeCalledTimes(1)
 
@@ -333,19 +409,19 @@ describe('Ceramic stream pinning', () => {
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
 
     // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
     expect(pinSpy).toBeCalledTimes(2)
     expect(saveStateSpy).toBeCalledTimes(1)
 
     // Pin a second time, shouldn't cause any more calls to ipfs.pin.add
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(2)
     expect(saveStateSpy).toBeCalledTimes(1)
 
     // Now force re-pin and make sure underlying state and ipfs records get re-pinned
-    await ceramic.pin.add(stream.id, true)
+    await ceramic.admin.pin.add(stream.id, true)
     expect(pinSpy).toBeCalledTimes(4)
     expect(saveStateSpy).toBeCalledTimes(2)
 
@@ -361,7 +437,7 @@ describe('Ceramic stream pinning', () => {
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
 
     // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
     expect(pinSpy).toBeCalledTimes(2)
@@ -388,17 +464,17 @@ describe('Ceramic stream pinning', () => {
     const removeStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'remove')
 
     // Pin stream
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(2)
     expect(saveStateSpy).toBeCalledTimes(1)
 
     // Unpin
-    await ceramic.pin.rm(stream.id)
+    await ceramic.admin.pin.rm(stream.id)
     expect(unpinSpy).toBeCalledTimes(2)
     expect(removeStateSpy).toBeCalledTimes(1)
 
     // re-pin
-    await ceramic.pin.add(stream.id)
+    await ceramic.admin.pin.add(stream.id)
     expect(pinSpy).toBeCalledTimes(4)
     expect(saveStateSpy).toBeCalledTimes(2)
 

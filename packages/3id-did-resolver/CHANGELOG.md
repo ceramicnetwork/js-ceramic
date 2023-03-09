@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.16.0-rc.0...@ceramicnetwork/3id-did-resolver@2.16.0) (2023-02-28)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [2.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.15.0-rc.0...@ceramicnetwork/3id-did-resolver@2.16.0-rc.0) (2023-02-27)
+
+
+### Bug Fixes
+
+* Disallow pinning and unpinning through CRUD APIs ([#2750](https://github.com/ceramicnetwork/js-ceramic/issues/2750)) ([25d9ebf](https://github.com/ceramicnetwork/js-ceramic/commit/25d9ebfdc8017274ed4dde3ed11e0248c5019f5c))
+
+
+
+
+
+# [2.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.14.0-rc.0...@ceramicnetwork/3id-did-resolver@2.15.0-rc.0) (2023-02-24)
+
+
+### Features
+
+* Bump IPFS/IPLD deps ([#2746](https://github.com/ceramicnetwork/js-ceramic/issues/2746)) ([ef23e50](https://github.com/ceramicnetwork/js-ceramic/commit/ef23e509556f32e6b1f6c1ed6f87116a3bc7e26a))
+
+
+
+
+
+# [2.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.13.0...@ceramicnetwork/3id-did-resolver@2.14.0-rc.0) (2023-02-23)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [2.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.13.0-rc.0...@ceramicnetwork/3id-did-resolver@2.13.0) (2023-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
 # [2.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.12.0-rc.0...@ceramicnetwork/3id-did-resolver@2.13.0-rc.0) (2023-02-16)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
