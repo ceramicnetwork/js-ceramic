@@ -42,6 +42,7 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
         ),
       ]
     case Networks.LOCAL:
+    case Networks.CUSTOM:
     case Networks.INMEMORY:
       return null
     default: {
