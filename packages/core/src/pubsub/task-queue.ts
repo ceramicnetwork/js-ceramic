@@ -30,17 +30,23 @@ export interface TaskQueueLike {
  * PQueue with synchronous `add` and a common error-handler.
  */
 export class TaskQueue implements TaskQueueLike {
-  #pq = new PQueue({ concurrency: 1 })
+  #pq: PQueue
 
   /**
    * Construct the queue.
    *
+   * @param concurrency - Number of tasks allowed to run simultaneously.
    * @param onError - Common error handler for all the tasks, it is called whenever a task errors.
    *   The first parameter is an error object.
    *   The second parameter, if called, would re-add the task to the queue again.
    *   Useful if you know an error indicates another attempt to execute the task is necessary.
    */
-  constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
+  constructor(
+    concurrency = 1,
+    private readonly onError: (error: Error, retry: () => void) => void = noop
+  ) {
+    this.#pq = new PQueue({ concurrency: concurrency })
+  }
 
   /**
    * Size of the queue. Counts both deferred and currently running tasks.
