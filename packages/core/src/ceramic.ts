@@ -989,7 +989,7 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
-    this.anchorResumingService.close()
+    await this.anchorResumingService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()
     await this.dispatcher.close()

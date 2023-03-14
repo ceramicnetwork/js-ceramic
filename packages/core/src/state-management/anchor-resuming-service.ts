@@ -45,10 +45,7 @@ export class AnchorResumingService {
       batch.forEach((listResult) => {
         this.resumeQ.add(async () => {
           await repository.fromMemoryOrStore(listResult.key)
-          this.logger.log(
-            LogStyle.verbose,
-            `Resumed running state for stream id: ${listResult.key.toString()}`
-          )
+          this.logger.verbose(`Resumed running state for stream id: ${listResult.key.toString()}`)
         })
       })
       gt = batch[batch.length - 1]?.key
@@ -56,8 +53,12 @@ export class AnchorResumingService {
     } while (batch.length > 0 && !this.#shouldBeClosed)
   }
 
-  close(): void {
+  async close(): Promise<void> {
+    this.logger.debug('Closing AnchorResumingService')
     this.#shouldBeClosed = true
     this.resumeQ.clear()
+    this.logger.debug('Waiting for remaining AnchorResumingService tasks to stop')
+    await this.resumeQ.onIdle()
+    this.logger.debug('AnchorResumingService closed')
   }
 }
