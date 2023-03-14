@@ -61,8 +61,7 @@ export class TaskQueue implements TaskQueueLike {
   add(task, onFinally?): void {
     this.run(task)
       .catch((error) => {
-        const retry = () => this.add(task, onFinally)
-        this.onError(error, retry)
+        this.onError(error, this.add.bind(this, task, onFinally))
       })
       .finally(() => onFinally?.())
   }
