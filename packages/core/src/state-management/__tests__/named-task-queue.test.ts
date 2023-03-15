@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import { NamedTaskQueue } from '../named-task-queue.js'
-import { noop, TaskQueue } from '../../pubsub/task-queue.js'
+import { noop, TaskQueue } from '../../ancillary/task-queue.js'
 
 const N = 10
 const name = 'foo'

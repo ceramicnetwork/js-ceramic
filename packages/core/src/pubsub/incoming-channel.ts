@@ -3,7 +3,7 @@ import type { IpfsApi } from '@ceramicnetwork/common'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { pipe, MonoTypeOperatorFunction } from 'rxjs'
 import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
-import { TaskQueue } from './task-queue.js'
+import { TaskQueue } from '../ancillary/task-queue.js'
 import type { SignedMessage, Message } from '@libp2p/interface-pubsub'
 
 /**

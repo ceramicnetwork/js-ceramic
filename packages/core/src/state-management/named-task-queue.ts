@@ -1,4 +1,4 @@
-import { noop, TaskQueue } from '../pubsub/task-queue.js'
+import { noop, TaskQueue } from '../ancillary/task-queue.js'
 
 /**
  * Set of named PQueues.

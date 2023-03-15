@@ -2,7 +2,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import type { AnchorRequestStoreListResult } from '../store/anchor-request-store.js'
 import type { Repository } from './repository.js'
 import { LogStyle, type DiagnosticsLogger } from '@ceramicnetwork/common'
-import { TaskQueue } from '../pubsub/task-queue.js'
+import { TaskQueue } from '../ancillary/task-queue.js'
 
 const RESUME_QUEUE_CONCURRENCY = 30
 const RESUME_BATCH_SIZE = RESUME_QUEUE_CONCURRENCY * 5
