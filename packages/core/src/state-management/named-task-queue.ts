@@ -1,4 +1,4 @@
-import { noop, TaskQueue } from '../pubsub/task-queue.js'
+import { noop, TaskQueue } from '../ancillary/task-queue.js'
 
 /**
  * Set of named PQueues.
@@ -21,7 +21,7 @@ export class NamedTaskQueue {
     if (found) {
       return found
     } else {
-      const queue = new TaskQueue(this.onError.bind(this))
+      const queue = new TaskQueue(1, this.onError.bind(this))
       this.lanes.set(name, queue)
       return queue
     }

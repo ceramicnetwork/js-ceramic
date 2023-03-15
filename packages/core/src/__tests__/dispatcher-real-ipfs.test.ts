@@ -6,7 +6,7 @@ import { Repository, RepositoryDependencies } from '../state-management/reposito
 import tmp from 'tmp-promise'
 import { PinStore } from '../store/pin-store.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { TaskQueue } from '../pubsub/task-queue.js'
+import { TaskQueue } from '../ancillary/task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { LevelDbStore } from '../store/level-db-store.js'

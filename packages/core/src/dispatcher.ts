@@ -25,7 +25,7 @@ import { MessageBus } from './pubsub/message-bus.js'
 import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
-import { TaskQueue } from './pubsub/task-queue.js'
+import { TaskQueue } from './ancillary/task-queue.js'
 import { Utils } from './utils.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
 
