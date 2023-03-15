@@ -47,6 +47,7 @@
     "@didtools/cacao": "^2.0.0",
     "@didtools/pkh-ethereum": "^0.1.0",
     "@didtools/pkh-solana": "^0.1.0",
+    "@didtools/pkh-stacks": "^0.1.0",
     "@didtools/pkh-tezos": "^0.2.1",
     "@stablelib/random": "^1.0.1",
     "caip": "~1.1.0",
