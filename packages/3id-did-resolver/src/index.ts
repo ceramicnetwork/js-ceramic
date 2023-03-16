@@ -189,7 +189,7 @@ const resolve = async (
   } else if (verNfo.timestamp) {
     query.push({
       streamId,
-      loadOpts: {atTime: verNfo.timestamp},
+      opts: { atTime: verNfo.timestamp },
     })
   }
   const resp = await ceramic.multiQuery(query)

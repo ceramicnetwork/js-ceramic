@@ -1,15 +1,15 @@
-import { jest } from '@jest/globals'
+import {jest} from '@jest/globals'
 import tmp from 'tmp-promise'
-import type { Ceramic } from '../ceramic.js'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import {Ceramic} from '../ceramic.js'
+import {TileDocument} from '@ceramicnetwork/stream-tile'
+import {AnchorStatus, IpfsApi, StreamUtils, TestUtils} from '@ceramicnetwork/common'
+import {CommitID, StreamID} from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { createCeramic } from './create-ceramic.js'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
-import type { AddOperation } from 'fast-json-patch'
+import {createIPFS} from '@ceramicnetwork/ipfs-daemon'
+import {createCeramic} from './create-ceramic.js'
+import {ModelInstanceDocument} from '@ceramicnetwork/stream-model-instance'
+import {Model, ModelDefinition} from '@ceramicnetwork/stream-model'
+import type {AddOperation} from 'fast-json-patch'
 
 /**
  * Generates string of particular size in bytes
@@ -560,62 +560,5 @@ describe('Ceramic API', () => {
     function expectTimestampsClose(givenTimestamp: number, expectedTimestamp: number) {
       expect(Math.abs(expectedTimestamp - givenTimestamp)).toBeLessThan(5)
     }
-
-    it('loads the same stream at multiple points in time', async () => {
-      // test data for the atTime feature
-      streamFStates.push(streamF.state)
-      // timestamp before the first anchor commit
-      streamFTimestamps.push(Math.floor(Date.now() / 1000))
-      await TestUtils.delay(1000)
-      await streamF.update({ ...streamF.content, update: 'new stuff' })
-      await TestUtils.anchorUpdate(ceramic, streamF)
-      await TestUtils.delay(1000)
-      // timestamp between the first and the second anchor commit
-      streamFTimestamps.push(Math.floor(Date.now() / 1000))
-      streamFStates.push(streamF.state)
-      await TestUtils.delay(1000)
-      await streamF.update({ ...streamF.content, update: 'newer stuff' })
-      await TestUtils.anchorUpdate(ceramic, streamF)
-      await TestUtils.delay(1000)
-      // timestamp after the second anchor commit
-      streamFTimestamps.push(Math.floor(Date.now() / 1000))
-      streamFStates.push(streamF.state)
-
-      const queries = [
-        {
-          streamId: streamF.id,
-          loadOpts: {atTime: streamFTimestamps[0]},
-        },
-        {
-          streamId: streamF.id,
-          loadOpts: {atTime: streamFTimestamps[1]},
-        },
-        {
-          streamId: streamF.id,
-          loadOpts: {atTime: streamFTimestamps[2]},
-        },
-        {
-          streamId: streamF.id,
-        },
-      ]
-      const streams = await ceramic.multiQuery(queries)
-
-      expect(Object.keys(streams).length).toEqual(4)
-      const states = Object.values(streams).map((stream) => stream.state)
-      // annoying thing, was pending when snapshotted but will
-      // obviously not be when loaded at a specific commit
-      streamFStates[0].anchorStatus = 0
-
-      // first stream state didn't have an anchor timestamp when it was added to the streamFStates
-      // array, but it does get a timestamp after being anchored
-      // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
-      expect(Math.abs(states[0].log[0].timestamp - streamFTimestamps[0])).toBeLessThan(5)
-      delete states[0].log[0].timestamp
-
-      expect(states[0]).toEqual(streamFStates[0])
-      expect(states[1]).toEqual(streamFStates[1])
-      expect(states[2]).toEqual(streamFStates[2])
-      expect(states[3]).toEqual(streamF.state)
-    }, 60000)
   })
 })

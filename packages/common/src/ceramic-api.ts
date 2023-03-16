@@ -198,7 +198,12 @@ export interface MultiQuery {
   paths?: Array<string>
 
   /**
+   *   @deprecated Use opts.atTime to load streams by unix timestamp
+   */
+  atTime?: number
+
+  /**
    * Load a previous version of the stream based on unix timestamp
    */
-  loadOpts?: LoadOpts
+  opts?: LoadOpts
 }
