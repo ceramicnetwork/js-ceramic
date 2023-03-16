@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.30.0...@ceramicnetwork/core@2.31.0-rc.0) (2023-03-16)
+
+
+### Features
+
+* Change MID content in the indexing DB on update ([#2770](https://github.com/ceramicnetwork/js-ceramic/issues/2770)) ([ce7f401](https://github.com/ceramicnetwork/js-ceramic/commit/ce7f40104479613548f8adc5d4d1ab434df9bc1c))
+
+
+
+
+
 # [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.30.0-rc.0...@ceramicnetwork/core@2.30.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/core
