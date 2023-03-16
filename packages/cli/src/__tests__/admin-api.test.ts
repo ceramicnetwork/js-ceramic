@@ -171,6 +171,15 @@ describe('admin api', () => {
     expect(getResultAfterDelete.models).toEqual([])
   })
 
+  it('legacy pin API should warn', async () => {
+    const legacyPinURLBaseString = `http://localhost:${daemon.port}/api/v0/pins`
+    // Legacy Pin Add
+    const postResult = await fetchJson(`${legacyPinURLBaseString}/${exampleModelStreamId}`, {
+      method: 'POST',
+    })
+    expect(Object.keys(postResult).includes('warn')).toEqual(true)
+  })
+
   it('admin pin API CRUD test', async () => {
     const adminPinURLBaseString = `http://localhost:${daemon.port}/api/v0/admin/pins`
 

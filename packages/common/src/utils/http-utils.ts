@@ -24,9 +24,11 @@ export enum HttpMethods {
 
 export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {
   if (opts.body) {
+    const headers = { 'Content-Type': 'application/json', ...opts.headers }
+
     Object.assign(opts, {
-      body: JSON.stringify(opts.body),
-      headers: { ...opts.headers, 'Content-Type': 'application/json' },
+      body: headers['Content-Type'] == 'application/json' ? JSON.stringify(opts.body) : opts.body,
+      headers: headers,
     })
   }
 

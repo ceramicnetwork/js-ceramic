@@ -266,14 +266,8 @@ describe('Ceramic stream pinning', () => {
       pin: false,
     })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-    await expect(
-      stream.update({ foo: 'baz' }, null, { anchor: false, publish: false, pin: true })
-    ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.sync()
-    await expect(
-      stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
-    ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
@@ -330,25 +324,11 @@ describe('Ceramic stream pinning', () => {
     await stream.update({ foo: 'bar' }, null, { anchor: false, publish: false })
 
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-    await expect(
-      TileDocument.deterministic(
-        ceramic,
-        { family: 'testAbc' },
-        { sync: SyncOptions.NEVER_SYNC, pin: true }
-      )
-    ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
 
     await ceramic.admin.pin.add(stream.id)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
 
-    await expect(
-      TileDocument.deterministic(
-        ceramic,
-        { family: 'testAbc' },
-        { sync: SyncOptions.NEVER_SYNC, pin: false }
-      )
-    ).rejects.toThrow(/Cannot pin or unpin streams through the CRUD APIs/)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
 
     await ceramic.close()
