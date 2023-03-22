@@ -10,6 +10,8 @@ RUN npm ci --ignore-scripts --production
 
 RUN npm install -g lerna@4
 
+COPY tools/commitHash.js ./tools/commitHash.js
+
 COPY packages ./packages
 
 RUN lerna bootstrap --hoist --ci -- --production
