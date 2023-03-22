@@ -189,6 +189,7 @@ const resolve = async (
   } else if (verNfo.timestamp) {
     query.push({
       streamId,
+      atTime: verNfo.timestamp,
       opts: { atTime: verNfo.timestamp },
     })
   }

@@ -870,10 +870,12 @@ export class Ceramic implements CeramicApi {
 
     const index = {}
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
+      const queryAtTime = query.opts?.atTime ? query.opts?.atTime : query.atTime
+      const opts = queryAtTime ? { atTime: queryAtTime } : {}
       let stream
       try {
         stream = await promiseTimeout(
-          this.loadStream(streamId, query.opts),
+          this.loadStream(streamId, opts),
           timeout,
           `Timeout after ${timeout}ms`
         )
