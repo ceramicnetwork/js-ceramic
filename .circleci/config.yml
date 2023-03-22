@@ -66,6 +66,10 @@ jobs:
 
 workflows:
   build-and-test:
+    when:
+      and:
+        - not:
+            equal: [ ukstv, << pipeline.parameters.GHA_Actor >> ]
     jobs:
       - with-go-ipfs
       - dispatch-event:
