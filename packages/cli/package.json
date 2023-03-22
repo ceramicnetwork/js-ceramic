@@ -33,7 +33,7 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --runInBand --forceExit",
-    "build": "genversion --es6 src/version.ts && node ../../tools/commitHash.js && npx tsc -p tsconfig.json",
+    "build": "genversion --es6 src/version.ts && node src/commitHash.js && npx tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
