@@ -39,6 +39,11 @@ const MAX_INTERVAL_WITHOUT_KEEPALIVE = 24 * 60 * 60 * 1000 // one day
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 const IPFS_OFFLINE_GET_TIMEOUT = 200 // low timeout to work around lack of 'offline' flag support in js-ipfs
 const PUBSUB_CACHE_SIZE = 500
+const DEFAULT_RESPONSE_DELAY_MS = 1000 // 1 second
+const MINIMUM_RESPONSE_DELAY_MS = 0
+const MAXIMUM_RESPONSE_DELAY_MS = 16040 // 16 seconds and change
+const RESPONSE_DELAY_INCREMENT_MS = 200 // walk faster by 200 ms at a time
+const RESPONSE_DELAY_SLOWDOWN_FACTOR = 2  // get slower by doubling
 
 const ERROR_IPFS_TIMEOUT = 'ipfs_timeout'
 const ERROR_STORING_COMMIT = 'error_storing_commit'
@@ -85,6 +90,18 @@ export class Dispatcher {
     PUBSUB_CACHE_SIZE
   )
 
+  /**
+   * Cache all the responses seen to a query
+   *
+   * maps streamid to array of tips
+   *
+   * @private
+   */
+  private readonly queryResponsesCache: lru.LRUMap<string, string[]> = new lru.LRUMap<string, string[]>(
+    PUBSUB_CACHE_SIZE
+  )
+
+
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -96,7 +113,8 @@ export class Dispatcher {
     private readonly _shutdownSignal: ShutdownSignal,
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue(),
-    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
+    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT,
+    private responseDelayMS = DEFAULT_RESPONSE_DELAY_MS
   ) {
     const pubsub = new Pubsub(
       _ipfs,
@@ -125,6 +143,7 @@ export class Dispatcher {
     return { peerId, addresses: multiAddrs }
   }
 
+  // this function is unused and might have errors?
   async storeRecord(record: Record<string, unknown>): Promise<CID> {
     return await this._shutdownSignal.abortable((signal) => {
       return this._ipfs.dag.put(record, { signal: signal })
@@ -267,6 +286,7 @@ export class Dispatcher {
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
         dagResult = await this._shutdownSignal.abortable((signal) => {
+          // @ts-ignore
           return this._ipfs.dag.get(asCid, {
             timeout: this._ipfsTimeout,
             path,
@@ -366,13 +386,23 @@ export class Dispatcher {
   /**
    * Handle a new tip learned about from pubsub, either via an UPDATE or a RESPONSE message
    */
-  async _handleTip(tip: CID, streamId: StreamID, model?: StreamID) {
+  async _handleTip(tip: CID, streamId: StreamID, model?: StreamID, isResponse=false) {
     if (this.pubsubCache.get(tip.toString()) === streamId.toString()) {
       // This tip was already processed for this streamid recently, no need to re-process it.
       return
     }
     // Add tip to pubsub cache and continue processing
     this.pubsubCache.set(tip.toString(), streamId.toString())
+
+    // If this was a response, add tip to the response tips seen
+    if (isResponse) {
+        const existingResponses = this.queryResponsesCache.get(streamId.toString())
+        if (existingResponses !== undefined) {
+            existingResponses.push(tip.toString()) // this updates the cache
+        } else {
+            this.queryResponsesCache.set(streamId.toString(), [tip.toString()])
+        }
+    }
 
     await this.repository.stateManager.handleUpdate(streamId, tip, model)
   }
@@ -387,6 +417,51 @@ export class Dispatcher {
     const { stream: streamId, tip, model } = message
     return this._handleTip(tip, streamId, model)
     // TODO: Handle 'anchorService' if present in message
+  }
+
+  _speedUpResponses() {
+    if (this.responseDelayMS - RESPONSE_DELAY_INCREMENT_MS > MINIMUM_RESPONSE_DELAY_MS) {
+        this.responseDelayMS -= RESPONSE_DELAY_INCREMENT_MS
+    } else {
+        this.responseDelayMS = MINIMUM_RESPONSE_DELAY_MS
+    }
+  }
+
+  _slowDownResponses() {
+    const newResponseDelayMS = (this.responseDelayMS + 1) * RESPONSE_DELAY_SLOWDOWN_FACTOR
+    if (newResponseDelayMS < MAXIMUM_RESPONSE_DELAY_MS) {
+        this.responseDelayMS = newResponseDelayMS
+    } else {
+        this.responseDelayMS = MAXIMUM_RESPONSE_DELAY_MS
+    }
+  }
+
+  _shouldAnswer (streamId, tip, streamState) {
+     // do we have the best answer for this?  was it already answered?
+
+     const answers = this.queryResponsesCache.get(streamId.toString())
+     // no one else answered, we should
+     if (answers == undefined) {
+         return true
+     }
+
+     // someone else already gave the same answer, we should not
+     if (answers.includes(tip)) {
+         return false
+     }
+
+     // ok we disagree, but whose answer is better?  now we have to look at the streamState
+
+     // if we know about every answer someone else gave, but we have a different answer
+     // then we know best
+     if (answers.every((answerTip) => streamState.log.includes(answerTip))) {
+         return true
+     }
+
+     // we didn't know about all the answers someone else gave so they probably know better
+     // note we have to prune attackers who are just saying junk, that should be separate thing
+     // the guy whose query it was will report them when he tries to anchor it and checks the sig
+     return false
   }
 
   /**
@@ -404,12 +479,12 @@ export class Dispatcher {
 
       const tip = streamState.log[streamState.log.length - 1].cid
 
-      const responseDelay = Math.floor(Math.random() * (this.responseDelay + 1))
+      const responseDelayMS = Math.floor(Math.random() * (this.responseDelayMS + 1))
 
       // Push the message onto a random and variable length time delay
       setTimeout(() => {
         // Are we a good one to answer this message?
-        if (this._shouldAnswer(tip)) {
+        if (this._shouldAnswer(streamId, tip, streamState)) {
           // Build RESPONSE message and send it out on the pub/sub topic
           // TODO: Handle 'paths' for multiquery support
           const tipMap = new Map().set(streamId.toString(), tip)
@@ -418,7 +493,7 @@ export class Dispatcher {
         } else {
           this._slowDownResponses()
         }
-      }, responseDelay)
+      }, responseDelayMS)
     }
   }
   /**
@@ -430,8 +505,6 @@ export class Dispatcher {
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID
-
-    this._noteResponse(message)
 
     if (expectedStreamID) {
       const newTip = tips.get(expectedStreamID.toString())
@@ -445,7 +518,7 @@ export class Dispatcher {
         )
       }
 
-      return this._handleTip(newTip, expectedStreamID)
+      return this._handleTip(newTip, expectedStreamID, isResponse=true)
       // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }
