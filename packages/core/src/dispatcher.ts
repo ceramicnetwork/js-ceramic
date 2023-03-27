@@ -406,7 +406,7 @@ export class Dispatcher {
 
       const responseDelay = Math.floor(Math.random() * (this.responseDelay + 1))
 
-      // Push the message onto a time delay of 5 seconds
+      // Push the message onto a random and variable length time delay
       setTimeout(() => {
         // Are we a good one to answer this message?
         if (this._shouldAnswer(tip)) {
