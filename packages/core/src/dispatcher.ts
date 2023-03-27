@@ -403,13 +403,24 @@ export class Dispatcher {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
       const tip = streamState.log[streamState.log.length - 1].cid
-      // Build RESPONSE message and send it out on the pub/sub topic
-      // TODO: Handle 'paths' for multiquery support
-      const tipMap = new Map().set(streamId.toString(), tip)
-      this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap })
+
+      const responseDelay = Math.floor(Math.random() * (this.responseDelay + 1))
+
+      // Push the message onto a time delay of 5 seconds
+      setTimeout(() => {
+        // Are we a good one to answer this message?
+        if (this._shouldAnswer(tip)) {
+          // Build RESPONSE message and send it out on the pub/sub topic
+          // TODO: Handle 'paths' for multiquery support
+          const tipMap = new Map().set(streamId.toString(), tip)
+          this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap })
+          this._speedUpResponses()
+        } else {
+          this._slowDownResponses()
+        }
+      }, responseDelay)
     }
   }
-
   /**
    * Handles an incoming Response message from the pub/sub topic.
    * @param message
@@ -419,6 +430,9 @@ export class Dispatcher {
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID
+
+    this._noteResponse(message)
+
     if (expectedStreamID) {
       const newTip = tips.get(expectedStreamID.toString())
       if (!newTip) {
