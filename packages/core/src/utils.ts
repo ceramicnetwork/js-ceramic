@@ -110,12 +110,12 @@ export class Utils {
     block: Uint8Array,
     ipfsApi: IpfsApi,
     signal: AbortSignal
-  ) {
+  ): Promise<CID> {
     if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
     const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
     const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
     const version = cid.version
-    await ipfsApi.block.put(block, { format, mhtype, version, signal })
+    return await ipfsApi.block.put(block, { format, mhtype, version, signal })
   }
 
   /**

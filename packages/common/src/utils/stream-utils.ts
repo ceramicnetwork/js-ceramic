@@ -78,6 +78,10 @@ export class StreamUtils {
   static deserializeCommit(commit: any): any {
     const cloned = cloneDeep(commit)
 
+    if (cloned.header?.model) {
+      cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
+    }
+
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = toCID(cloned.jws.link)
       cloned.linkedBlock = uint8arrays.fromString(cloned.linkedBlock, 'base64')
@@ -101,10 +105,6 @@ export class StreamUtils {
 
     if (cloned.prev) {
       cloned.prev = toCID(cloned.prev)
-    }
-
-    if (cloned.header?.model) {
-      cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
     }
 
     return cloned
