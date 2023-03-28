@@ -109,7 +109,7 @@ export class SyncWorker implements Worker<SyncJobData> {
           currentBlock: blockNumber + 1,
           toBlock,
           models,
-          jobType
+          jobType,
         } as SyncJobData)
       })
     )
