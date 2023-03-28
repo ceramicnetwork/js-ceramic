@@ -15,3 +15,4 @@ packages/*/logs/
 packages/*/package-lock.json
 packages/core/src/version.ts
 packages/cli/src/version.ts
+packages/cli/src/commitHash.ts

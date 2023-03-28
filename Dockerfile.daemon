@@ -16,6 +16,8 @@ RUN lerna bootstrap --hoist --ci -- --production
 
 COPY types ./types
 
+ARG GIT_COMMIT_HASH
+
 RUN lerna run build
 
 EXPOSE 7007
