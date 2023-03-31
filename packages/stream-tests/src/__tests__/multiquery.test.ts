@@ -243,7 +243,6 @@ describe('multiquery API http-client tests', () => {
         streamId: streamF.id,
         opts: {
           sync: SyncOptions.SYNC_ON_ERROR,
-          atTime: streamFTimestamps[3]
         },
       }
     ]
