@@ -1,14 +1,14 @@
 import tmp from 'tmp-promise'
-import type {Ceramic} from '../../../core/src/ceramic.js'
+import type { Ceramic } from '../../../core/src/ceramic.js'
 import { createCeramic } from '../../../core/src/__tests__/create-ceramic.js'
-import {TileDocument} from '@ceramicnetwork/stream-tile'
-import {IpfsApi, SyncOptions, TestUtils} from '@ceramicnetwork/common'
-import {StreamID} from '@ceramicnetwork/streamid'
-import {createIPFS} from '@ceramicnetwork/ipfs-daemon'
+import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import getPort from 'get-port'
-import {CeramicDaemon, DaemonConfig} from "@ceramicnetwork/cli";
-import {CeramicClient} from "@ceramicnetwork/http-client";
-import {jest} from '@jest/globals'
+import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
+import { CeramicClient } from '@ceramicnetwork/http-client'
+import { jest } from '@jest/globals'
 describe('multiquery API http-client tests', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicClient
@@ -160,15 +160,15 @@ describe('multiquery API http-client tests', () => {
     const queries = [
       {
         streamId: streamF.id,
-        opts: {atTime: streamFTimestamps[0]},
+        opts: { atTime: streamFTimestamps[0] },
       },
       {
         streamId: streamF.id,
-        opts: {atTime: streamFTimestamps[1]},
+        opts: { atTime: streamFTimestamps[1] },
       },
       {
         streamId: streamF.id,
-        opts: {atTime: streamFTimestamps[2]},
+        opts: { atTime: streamFTimestamps[2] },
       },
       {
         streamId: streamF.id,
@@ -194,7 +194,6 @@ describe('multiquery API http-client tests', () => {
     expect(states[3]).toEqual(streamF.state)
   }, 60000)
 
-
   it('serailizes syncopts correctly', async () => {
     // test data for the atTime feature
     streamFStates.push(streamF.state)
@@ -215,28 +214,28 @@ describe('multiquery API http-client tests', () => {
     streamFTimestamps.push(Math.floor(Date.now() / 1000))
     streamFStates.push(streamF.state)
 
-    const loadStreamSpy = jest.spyOn(core, "loadStream")
+    const loadStreamSpy = jest.spyOn(core, 'loadStream')
 
     const queries = [
       {
         streamId: streamF.id,
         opts: {
-            sync: SyncOptions.PREFER_CACHE,
-            atTime: streamFTimestamps[0]
-          },
+          sync: SyncOptions.PREFER_CACHE,
+          atTime: streamFTimestamps[0],
+        },
       },
       {
         streamId: streamF.id,
         opts: {
           sync: SyncOptions.SYNC_ALWAYS,
-          atTime: streamFTimestamps[1]
+          atTime: streamFTimestamps[1],
         },
       },
       {
         streamId: streamF.id,
         opts: {
           sync: SyncOptions.NEVER_SYNC,
-          atTime: streamFTimestamps[2]
+          atTime: streamFTimestamps[2],
         },
       },
       {
@@ -244,40 +243,28 @@ describe('multiquery API http-client tests', () => {
         opts: {
           sync: SyncOptions.SYNC_ON_ERROR,
         },
-      }
+      },
     ]
     const streams = await ceramic.multiQuery(queries)
 
-    expect(loadStreamSpy).toHaveBeenNthCalledWith( 1,
-      streamF.id,
-      {
-        sync: SyncOptions.PREFER_CACHE,
-        atTime: streamFTimestamps[0],
-      },
-    )
+    expect(loadStreamSpy).toHaveBeenNthCalledWith(1, streamF.id, {
+      sync: SyncOptions.PREFER_CACHE,
+      atTime: streamFTimestamps[0],
+    })
 
-    expect(loadStreamSpy).toHaveBeenNthCalledWith( 2,
-      streamF.id,
-      {
-        sync: SyncOptions.SYNC_ALWAYS,
-        atTime: streamFTimestamps[1],
-      },
-    )
+    expect(loadStreamSpy).toHaveBeenNthCalledWith(2, streamF.id, {
+      sync: SyncOptions.SYNC_ALWAYS,
+      atTime: streamFTimestamps[1],
+    })
 
-    expect(loadStreamSpy).toHaveBeenNthCalledWith( 3,
-      streamF.id,
-      {
-        sync: SyncOptions.NEVER_SYNC,
-        atTime: streamFTimestamps[2],
-      },
-    )
+    expect(loadStreamSpy).toHaveBeenNthCalledWith(3, streamF.id, {
+      sync: SyncOptions.NEVER_SYNC,
+      atTime: streamFTimestamps[2],
+    })
 
-    expect(loadStreamSpy).toHaveBeenNthCalledWith( 4,
-      streamF.id,
-      {
-        sync: SyncOptions.SYNC_ON_ERROR,
-      },
-    )
+    expect(loadStreamSpy).toHaveBeenNthCalledWith(4, streamF.id, {
+      sync: SyncOptions.SYNC_ON_ERROR,
+    })
 
     const states = Object.values(streams).map((stream) => stream.state)
     // annoying thing, was pending when snapshotted but will

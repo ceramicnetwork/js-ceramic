@@ -1,15 +1,15 @@
-import {jest} from '@jest/globals'
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import {Ceramic} from '../ceramic.js'
-import {TileDocument} from '@ceramicnetwork/stream-tile'
-import {AnchorStatus, IpfsApi, StreamUtils, TestUtils} from '@ceramicnetwork/common'
-import {CommitID, StreamID} from '@ceramicnetwork/streamid'
+import { Ceramic } from '../ceramic.js'
+import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { AnchorStatus, IpfsApi, StreamUtils, TestUtils } from '@ceramicnetwork/common'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
-import {createIPFS} from '@ceramicnetwork/ipfs-daemon'
-import {createCeramic} from './create-ceramic.js'
-import {ModelInstanceDocument} from '@ceramicnetwork/stream-model-instance'
-import {Model, ModelDefinition} from '@ceramicnetwork/stream-model'
-import type {AddOperation} from 'fast-json-patch'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createCeramic } from './create-ceramic.js'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import type { AddOperation } from 'fast-json-patch'
 
 /**
  * Generates string of particular size in bytes
@@ -404,8 +404,6 @@ describe('Ceramic API', () => {
       await ceramic.close()
       await tmpFolder.cleanup()
     }, 120000)
-
-
 
     it('can load linked stream path, returns expected form', async () => {
       const streams = await ceramic._loadLinkedStreams(
