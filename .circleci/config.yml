@@ -69,7 +69,7 @@ workflows:
     when:
       or:
         - equal: [ bypass, << pipeline.parameters.GHA_Meta >> ]
-        - and
+        - and:
           - not:
               equal: [ ukstv, << pipeline.parameters.GHA_Actor >> ]
     jobs:
