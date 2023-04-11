@@ -66,6 +66,11 @@ jobs:
 
 workflows:
   build-and-test:
+    when:
+      or:
+        - equal: [ bypass, << pipeline.parameters.GHA_Meta >> ]
+        - not:
+            equal: [ ukstv, << pipeline.parameters.GHA_Actor >> ]
     jobs:
       - with-go-ipfs
       - dispatch-event:
