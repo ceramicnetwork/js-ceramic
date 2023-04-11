@@ -65,13 +65,19 @@ jobs:
       - send-dispatch-event
 
 workflows:
-  build-and-test:
+  build-and-test-ukstv:
     when:
-      or:
-        - equal: [ bypass, << pipeline.parameters.GHA_Meta >> ]
-        - and:
-          - not:
-              equal: [ ukstv, << pipeline.parameters.GHA_Actor >> ]
+      equal: [ bypass, << pipeline.parameters.GHA_Meta >> ]
+    jobs:
+      - with-go-ipfs
+      - dispatch-event:
+          requires:
+            - with-go-ipfs
+
+  build-and-test-all:
+    when:
+      not:
+        equal: [ ukstv, << pipeline.parameters.GHA_Actor >> ]
     jobs:
       - with-go-ipfs
       - dispatch-event:
