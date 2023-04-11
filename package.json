@@ -8,6 +8,7 @@
     "url": "https://github.com/ceramicnetwork/js-ceramic/issues"
   },
   "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
+  "private": true,
   "scripts": {
     "postinstall": "npx lerna bootstrap --hoist --ci",
     "test": "npx lerna exec npm t",
