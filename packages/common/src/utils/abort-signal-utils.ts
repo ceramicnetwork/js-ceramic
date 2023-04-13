@@ -1,5 +1,6 @@
 import { timer, fromEvent, merge, Subscription } from 'rxjs'
 import { first } from 'rxjs/operators'
+import { setMaxListeners } from 'node:events'
 
 export function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
   const controller = new AbortController()
@@ -62,6 +63,7 @@ export async function abortable<T>(
   }
   original.addEventListener('abort', onAbort)
   if (original.aborted) controller.abort()
+  setMaxListeners(Infinity, controller.signal)
   return fn(controller.signal).finally(() => {
     original.removeEventListener('abort', onAbort)
   })
