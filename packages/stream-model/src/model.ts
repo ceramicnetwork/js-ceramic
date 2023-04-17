@@ -19,7 +19,7 @@ import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
 import multihashes from 'multihashes'
 
-export const MODEL_VERSION_REGEXP = /^[0-9]+\.[0-9]+(\.[0-9]+)?/
+export const MODEL_VERSION_REGEXP = /^[0-9]+\.[0-9]+/
 
 export function parseModelVersion(version: string): [number, number] {
   if (!MODEL_VERSION_REGEXP.test(version)) {
