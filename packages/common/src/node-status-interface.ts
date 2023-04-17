@@ -29,7 +29,7 @@ export interface NodeStatusResponse {
    */
   ipfs: IpfsNodeStatus
 
-  composeDB: ComposeDBStatus
+  composeDB?: ComposeDBStatus
 }
 
 /**
@@ -66,17 +66,17 @@ export interface AnchorNodeStatus {
 }
 
 /**
-  * Status about the ComposeDB specific operations of the node.
-  */
+ * Status about the ComposeDB specific operations of the node.
+ */
 export interface ComposeDBStatus {
   /**
-    * The list of models Ids that are being indexed.
-    */
+   * The list of models Ids that are being indexed.
+   */
   indexedModels: Array<string>
   /**
-    * The set of active sync operations.
-    */
-  syncs: SyncStatus
+   * The set of active sync operations.
+   */
+  syncs?: SyncStatus
 }
 
 export interface SyncStatus {
