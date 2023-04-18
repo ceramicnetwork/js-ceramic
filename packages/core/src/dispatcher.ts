@@ -155,8 +155,8 @@ export class Dispatcher {
         const returnedLink = await this._shutdownSignal.abortable((signal) => {
           return Utils.putIPFSBlock(jws.link, linkedBlock, this._ipfs, signal)
         })
-        if(jws.link != returnedLink) {
-          throw new Error('Link field returned by IPFS did not match provided link field. Payload is incorrect')
+        if(jws.link != null && !jws.link.equals(returnedLink)) {
+          throw new Error(`invalid_jws: Payload incorrect. Link field returned by IPFS did not match provided link field(.`)
         }
         // put the JWS into the ipfs dag
         const cid = await this._shutdownSignal.abortable((signal) => {
