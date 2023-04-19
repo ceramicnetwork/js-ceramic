@@ -17,7 +17,7 @@ import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
 import { CID } from 'multiformats/cid'
 import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
-import multihashes from 'multihashes'
+import { identity } from 'multiformats/hashes/identity'
 
 export const MODEL_VERSION_REGEXP = /^[0-9]+\.[0-9]+$/
 
@@ -165,8 +165,8 @@ export class Model extends Stream {
   // The StreamID uses the "UNLOADABLE" StreamType, and has string representation: "kh4q0ozorrgaq2mezktnrmdwleo1d"
   static readonly MODEL: StreamID = (function () {
     const data = encode('model-v1')
-    const multihash = multihashes.encode(data, 'identity')
-    const digest = create(code, multihash)
+    const multihash = identity.digest(data)
+    const digest = create(code, multihash.bytes)
     const cid = CID.createV1(code, digest)
     return new StreamID('UNLOADABLE', cid)
   })()

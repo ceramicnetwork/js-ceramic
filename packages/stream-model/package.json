@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model",
-  "version": "1.6.0-rc.0",
+  "version": "1.6.0",
   "description": "Ceramic Model stream type",
   "keywords": [
     "ceramic",
@@ -29,7 +29,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "exit 0",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -37,14 +37,13 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.24.0-rc.0",
+    "@ceramicnetwork/common": "^2.24.0",
     "@ceramicnetwork/streamid": "^2.14.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
     "multiformats": "^11.0.1",
-    "multihashes": "^4.0.3",
     "uint8arrays": "^4.0.3"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Model.MODEL 1`] = `
+Uint8Array [
+  206,
+  1,
+  4,
+  1,
+  113,
+  113,
+  11,
+  0,
+  9,
+  104,
+  109,
+  111,
+  100,
+  101,
+  108,
+  45,
+  118,
+  49,
+]
+`;
+
+exports[`Model.MODEL 2`] = `"kh4q0ozorrgaq2mezktnrmdwleo1d"`;
