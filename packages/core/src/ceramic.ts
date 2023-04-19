@@ -231,7 +231,6 @@ export class Ceramic implements CeramicApi {
   private readonly _levelStore: LevelDbStore
   private readonly _runId: string
   private readonly _startTime: Date
-  private readonly _params: CeramicParameters
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -249,7 +248,6 @@ export class Ceramic implements CeramicApi {
     this._loadOptsOverride = params.loadOptsOverride
     this._runId = crypto.randomUUID()
     this._startTime = new Date()
-    this._params = params
 
     this._levelStore = new LevelDbStore(
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
@@ -706,11 +704,11 @@ export class Ceramic implements CeramicApi {
     const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
 
     let composeDB = undefined
-    if (!this._params.indexingConfig.disableComposedb) {
+    if (this.repository.index.enabled) {
       composeDB = {
         indexedModels: this.repository.index.indexedModels().map((stream) => stream.toString()),
       }
-      if (this._params.sync) {
+      if (this.syncApi.enabled) {
         composeDB.syncs = await this.syncApi.syncStatus()
       }
     }

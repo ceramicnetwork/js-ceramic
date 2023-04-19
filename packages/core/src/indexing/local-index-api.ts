@@ -45,6 +45,7 @@ async function _getIndexModelArgs(
  */
 export class LocalIndexApi implements IndexApi {
   private readonly databaseIndexApi: DatabaseIndexApi | undefined
+  public readonly enabled: boolean
 
   constructor(
     private readonly indexingConfig: IndexingConfig,
@@ -53,6 +54,7 @@ export class LocalIndexApi implements IndexApi {
     networkName: Networks
   ) {
     this.databaseIndexApi = makeIndexApi(indexingConfig, networkName, logger)
+    this.enabled = !indexingConfig.disableComposedb
   }
 
   setSyncQueryApi(api: ISyncQueryApi) {
