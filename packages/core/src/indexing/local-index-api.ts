@@ -54,7 +54,7 @@ export class LocalIndexApi implements IndexApi {
     networkName: Networks
   ) {
     this.databaseIndexApi = makeIndexApi(indexingConfig, networkName, logger)
-    this.enabled = !indexingConfig?.disableComposedb
+    this.enabled = indexingConfig != null && !indexingConfig.disableComposedb
   }
 
   setSyncQueryApi(api: ISyncQueryApi) {
