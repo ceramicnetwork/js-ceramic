@@ -90,7 +90,12 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
       await this.assertNoOngoingSyncForModel(modelArgs.model)
-      this.modelsToIndex.push(modelArgs.model)
+      const foundModelToIndex = this.modelsToIndex.find((indexedModel) =>
+        indexedModel.equals(modelArgs.model)
+      )
+      if (!foundModelToIndex) {
+        this.modelsToIndex.push(modelArgs.model)
+      }
       if (modelArgs.relations) {
         this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }

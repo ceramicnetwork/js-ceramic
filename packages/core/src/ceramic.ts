@@ -59,6 +59,7 @@ import { AnchorResumingService } from './state-management/anchor-resuming-servic
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
+import { SyncJobData } from './sync/interfaces.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -701,12 +702,24 @@ export class Ceramic implements CeramicApi {
       chainId: this._anchorValidator.chainId,
     }
     const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
+
+    let composeDB = undefined
+    if (this.repository.index.enabled) {
+      composeDB = {
+        indexedModels: this.repository.index.indexedModels().map((stream) => stream.toString()),
+      }
+      if (this.syncApi.enabled) {
+        composeDB.syncs = await this.syncApi.syncStatus()
+      }
+    }
+
     return {
       runId: this._runId,
       uptimeMs: new Date().getTime() - this._startTime.getTime(),
       network: this._networkOptions.name,
       anchor,
       ipfs: ipfsStatus,
+      composeDB,
     }
   }
 

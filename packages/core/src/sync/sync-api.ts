@@ -9,19 +9,19 @@ import type { Provider } from '@ethersproject/providers'
 import { catchError, concatMap, defer, interval, mergeMap, Subscription } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
-import { type IJobQueue, JobQueue } from '../state-management/job-queue.js'
+import { type IJobQueue, JobQueue, JobWithMetadata } from '../state-management/job-queue.js'
 
 import {
   CONTINUOUS_SYNC_JOB,
-  HandleCommit,
   HISTORY_SYNC_JOB,
-  IpfsService,
+  HandleCommit,
   ISyncApi,
-  type JobData,
+  IpfsService,
   REBUILD_ANCHOR_JOB,
-  type SyncJob,
   SyncJobData,
   SyncJobType,
+  type JobData,
+  type SyncJob,
 } from './interfaces.js'
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
 import {
@@ -320,6 +320,12 @@ export class SyncApi implements ISyncApi {
 
   // TODO (CDB-2106): move to SyncStatus Class
   async _logSyncStatus(): Promise<void> {
+    const syncStatus = this.syncStatus()
+    this.diagnosticsLogger.imp(
+      `Logging state of running ComposeDB syncs\n ${JSON.stringify(syncStatus, null, 3)}`
+    )
+  }
+  async syncStatus(): Promise<SyncStatus> {
     const [activeJobs, pendingJobs] = await Promise.all([
       this.jobQueue.getJobs('active', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB]),
       this.jobQueue.getJobs('created', [CONTINUOUS_SYNC_JOB, HISTORY_SYNC_JOB]),
@@ -330,7 +336,7 @@ export class SyncApi implements ISyncApi {
       activeJobs[CONTINUOUS_SYNC_JOB] || pendingJobs[CONTINUOUS_SYNC_JOB] || []
     const pendingSyncJobs = pendingJobs[HISTORY_SYNC_JOB] || []
 
-    const syncStatus: SyncStatus = {
+    return {
       activeSyncs: historySyncJobs.map((job) => {
         const jobData = job.data as SyncJobData
         return {
@@ -375,10 +381,6 @@ export class SyncApi implements ISyncApi {
         }
       }),
     }
-
-    this.diagnosticsLogger.imp(
-      `Logging state of running ComposeDB syncs\n ${JSON.stringify(syncStatus, null, 3)}`
-    )
   }
 
   _initPeriodicStatusLogger(): void {
