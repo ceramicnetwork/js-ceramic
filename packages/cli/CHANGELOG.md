@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.29.0...@ceramicnetwork/cli@2.30.0-rc.0) (2023-04-26)
+
+
+### Features
+
+* add composeDB section to node status endpoint ([#2787](https://github.com/ceramicnetwork/js-ceramic/issues/2787)) ([4025aee](https://github.com/ceramicnetwork/js-ceramic/commit/4025aee935c5727fc65ef4cf765b8a0fbadc9b14))
+* **cli:** inject latest git hash during builds ([#2786](https://github.com/ceramicnetwork/js-ceramic/issues/2786)) ([90e77ee](https://github.com/ceramicnetwork/js-ceramic/commit/90e77ee5b5bb14d3711c14ef6852bd5c9442f3ca))
+
+
+
+
+
 # [2.29.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.29.0-rc.0...@ceramicnetwork/cli@2.29.0) (2023-03-22)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
