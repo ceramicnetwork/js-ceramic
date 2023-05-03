@@ -28,6 +28,11 @@ import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import { Utils } from './utils.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
+import { CARFactory } from 'cartonne'
+import * as dagJoseCodec from 'dag-jose'
+
+const carFactory = new CARFactory()
+carFactory.codecs.add(dagJoseCodec)
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -132,9 +137,12 @@ export class Dispatcher {
   }
 
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
-    console.time('storeCommit.original')
-    const result = await this.storeCommit0(data, streamId)
-    console.timeEnd('storeCommit.original')
+    console.time('storeCommit.1')
+    const result = await this.storeCommit1(data, streamId)
+    console.timeEnd('storeCommit.1')
+    // console.time('storeCommit.original')
+    // const result = await this.storeCommit0(data, streamId)
+    // console.timeEnd('storeCommit.original')
     return result
   }
 
@@ -166,6 +174,54 @@ export class Dispatcher {
             signal: signal,
           })
         })
+        // put the payload into the ipfs dag
+        const linkCid = jws.link
+        await this._shutdownSignal.abortable((signal) => {
+          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
+        })
+        await this._restrictCommitSize(jws.link.toString())
+        await this._restrictCommitSize(cid)
+        return cid
+      }
+      const cid = await this._shutdownSignal.abortable((signal) => {
+        return this._ipfs.dag.put(data, { signal: signal })
+      })
+      await this._restrictCommitSize(cid)
+      return cid
+    } catch (e) {
+      if (streamId) {
+        this._logger.err(
+          `Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`
+        )
+      } else {
+        this._logger.err(`Error while storing commit to IPFS: ${e}`)
+      }
+      Metrics.count(ERROR_STORING_COMMIT, 1)
+      throw e
+    }
+  }
+
+  async storeCommit1(data: any, streamId?: StreamID): Promise<CID> {
+    const carFile = carFactory.build()
+    Metrics.count(COMMITS_STORED, 1)
+    try {
+      if (StreamUtils.isSignedCommitContainer(data)) {
+        const { jws, linkedBlock, cacaoBlock } = data
+        // if cacao is present, put it into ipfs dag
+        if (cacaoBlock) {
+          const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
+          const capIPFSUri = decodedProtectedHeader.cap
+          await this._shutdownSignal.abortable((signal) => {
+            return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
+          })
+        }
+
+        // put the JWS into the ipfs dag
+        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256' })
+        await this._shutdownSignal.abortable((signal) => {
+          return Utils.putIPFSBlock(cid, carFile.blocks.get(cid).payload, this._ipfs, signal)
+        })
+
         // put the payload into the ipfs dag
         const linkCid = jws.link
         await this._shutdownSignal.abortable((signal) => {
