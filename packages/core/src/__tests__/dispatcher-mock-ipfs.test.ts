@@ -12,6 +12,7 @@ import { StateManager } from '../state-management/state-manager.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { LevelDbStore } from '../store/level-db-store.js'
 import { StreamStateStore } from '../store/stream-state-store.js'
+import { CARFactory } from 'cartonne'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -33,6 +34,9 @@ const mock_ipfs = {
   dag: {
     put: jest.fn(),
     get: jest.fn(),
+    import: jest.fn(() => {
+      return []
+    }),
   },
   block: {
     stat: jest.fn(async () => ({ size: 10 })),
@@ -92,11 +96,13 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('store commit correctly', async () => {
-    ipfs.dag.put.mockReturnValueOnce(Promise.resolve(FAKE_CID))
-    expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
+    const carFactory = new CARFactory()
+    const carFile = carFactory.build()
+    const expectedCID = carFile.put('data')
+    expect(await dispatcher.storeCommit('data')).toEqual(expectedCID)
 
-    expect(ipfs.dag.put.mock.calls.length).toEqual(1)
-    expect(ipfs.dag.put.mock.calls[0][0]).toEqual('data')
+    expect(ipfs.dag.import.mock.calls.length).toEqual(1)
+    expect(ipfs.dag.import.mock.calls[0][0]).toEqual(carFile)
   })
 
   it('retrieves commit correctly', async () => {

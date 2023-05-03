@@ -172,9 +172,8 @@ export class Dispatcher {
         }
 
         carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
-        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
-
         restrictCommitBlockSize(carFile, jws.link)
+        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
         restrictCommitBlockSize(carFile, cid)
         await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
         return cid
