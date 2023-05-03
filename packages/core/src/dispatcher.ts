@@ -28,8 +28,9 @@ import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import { Utils } from './utils.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CARFactory } from 'cartonne'
+import { CARFactory, CarBlock } from 'cartonne'
 import * as dagJoseCodec from 'dag-jose'
+import all from 'it-all'
 
 const carFactory = new CARFactory()
 carFactory.codecs.add(dagJoseCodec)
@@ -136,72 +137,13 @@ export class Dispatcher {
     })
   }
 
-  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
-    console.time('storeCommit.1')
-    const result = await this.storeCommit1(data, streamId)
-    console.timeEnd('storeCommit.1')
-    // console.time('storeCommit.original')
-    // const result = await this.storeCommit0(data, streamId)
-    // console.timeEnd('storeCommit.original')
-    return result
-  }
-
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
    * @param data - Ceramic commit data
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async storeCommit0(data: any, streamId?: StreamID): Promise<CID> {
-    Metrics.count(COMMITS_STORED, 1)
-    try {
-      if (StreamUtils.isSignedCommitContainer(data)) {
-        const { jws, linkedBlock, cacaoBlock } = data
-        // if cacao is present, put it into ipfs dag
-        if (cacaoBlock) {
-          const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
-          const capIPFSUri = decodedProtectedHeader.cap
-          await this._shutdownSignal.abortable((signal) => {
-            return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
-          })
-        }
-
-        // put the JWS into the ipfs dag
-        const cid = await this._shutdownSignal.abortable((signal) => {
-          return this._ipfs.dag.put(jws, {
-            storeCodec: 'dag-jose',
-            hashAlg: 'sha2-256',
-            signal: signal,
-          })
-        })
-        // put the payload into the ipfs dag
-        const linkCid = jws.link
-        await this._shutdownSignal.abortable((signal) => {
-          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
-        })
-        await this._restrictCommitSize(jws.link.toString())
-        await this._restrictCommitSize(cid)
-        return cid
-      }
-      const cid = await this._shutdownSignal.abortable((signal) => {
-        return this._ipfs.dag.put(data, { signal: signal })
-      })
-      await this._restrictCommitSize(cid)
-      return cid
-    } catch (e) {
-      if (streamId) {
-        this._logger.err(
-          `Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`
-        )
-      } else {
-        this._logger.err(`Error while storing commit to IPFS: ${e}`)
-      }
-      Metrics.count(ERROR_STORING_COMMIT, 1)
-      throw e
-    }
-  }
-
-  async storeCommit1(data: any, streamId?: StreamID): Promise<CID> {
+  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
     const carFile = carFactory.build()
     Metrics.count(COMMITS_STORED, 1)
     try {
@@ -210,30 +152,20 @@ export class Dispatcher {
         // if cacao is present, put it into ipfs dag
         if (cacaoBlock) {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
-          const capIPFSUri = decodedProtectedHeader.cap
-          await this._shutdownSignal.abortable((signal) => {
-            return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
-          })
+          const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
+          carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
         }
 
-        // put the JWS into the ipfs dag
-        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256' })
-        await this._shutdownSignal.abortable((signal) => {
-          return Utils.putIPFSBlock(cid, carFile.blocks.get(cid).payload, this._ipfs, signal)
-        })
+        carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
+        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
 
-        // put the payload into the ipfs dag
-        const linkCid = jws.link
-        await this._shutdownSignal.abortable((signal) => {
-          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
-        })
+        await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
       }
-      const cid = await this._shutdownSignal.abortable((signal) => {
-        return this._ipfs.dag.put(data, { signal: signal })
-      })
+      const cid = carFile.put(data)
+      await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
       await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
