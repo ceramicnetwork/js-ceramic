@@ -131,13 +131,20 @@ export class Dispatcher {
     })
   }
 
+  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
+    console.time('storeCommit.original')
+    const result = await this.storeCommit0(data, streamId)
+    console.timeEnd('storeCommit.original')
+    return result
+  }
+
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
    * @param data - Ceramic commit data
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
+  async storeCommit0(data: any, streamId?: StreamID): Promise<CID> {
     Metrics.count(COMMITS_STORED, 1)
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
