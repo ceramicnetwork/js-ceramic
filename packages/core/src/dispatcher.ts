@@ -26,9 +26,8 @@ import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
-import { Utils } from './utils.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CARFactory, CarBlock } from 'cartonne'
+import { CARFactory, CarBlock, CAR } from 'cartonne'
 import * as dagJoseCodec from 'dag-jose'
 import all from 'it-all'
 
@@ -63,6 +62,22 @@ function messageTypeToString(type: MsgType): string {
     default:
       throw new UnreachableCaseError(type, `Unsupported message type`)
   }
+}
+
+export class CommitSizeError extends Error {
+  constructor(cid: CID | string, size: number) {
+    super(`${cid} commit size ${size} exceeds the maximum block size of ${IPFS_MAX_COMMIT_SIZE}`)
+  }
+}
+
+/**
+ * Restricts block size to IPFS_MAX_COMMIT_SIZE
+ * @param cid - Commit CID
+ * @private
+ */
+function restrictCommitBlockSize(carFile: CAR, cid: CID): void {
+  const size = carFile.blocks.get(cid).payload.byteLength
+  if (size > IPFS_MAX_COMMIT_SIZE) throw new CommitSizeError(cid, size)
 }
 
 /**
@@ -159,14 +174,14 @@ export class Dispatcher {
         carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
 
+        restrictCommitBlockSize(carFile, jws.link)
+        restrictCommitBlockSize(carFile, cid)
         await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
-        await this._restrictCommitSize(jws.link.toString())
-        await this._restrictCommitSize(cid)
         return cid
       }
       const cid = carFile.put(data)
+      restrictCommitBlockSize(carFile, cid)
       await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
-      await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
       if (streamId) {
@@ -191,9 +206,8 @@ export class Dispatcher {
    */
   async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
     try {
-      const result = await this._getFromIpfs(cid)
       await this._restrictCommitSize(cid)
-      return result
+      return await this._getFromIpfs(cid)
     } catch (e) {
       this._logger.err(
         `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
@@ -297,21 +311,16 @@ export class Dispatcher {
    * @param cid - Commit CID
    * @private
    */
-  async _restrictCommitSize(cid: CID | string): Promise<void> {
+  async _restrictCommitSize(cid: CID | string): Promise<number> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await this._shutdownSignal.abortable((signal) => {
+    const { size } = await this._shutdownSignal.abortable((signal) => {
       return this._ipfs.block.stat(asCid, {
         timeout: this._ipfsTimeout,
         signal: signal,
       })
     })
-    if (stat.size > IPFS_MAX_COMMIT_SIZE) {
-      throw new Error(
-        `${cid.toString()} commit size ${
-          stat.size
-        } exceeds the maximum block size of ${IPFS_MAX_COMMIT_SIZE}`
-      )
-    }
+    if (size > IPFS_MAX_COMMIT_SIZE) throw new CommitSizeError(cid, size)
+    return size
   }
 
   /**

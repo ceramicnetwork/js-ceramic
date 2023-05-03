@@ -99,26 +99,6 @@ export class Utils {
   }
 
   /**
-   * Puts a block on IPFS
-   * @param cid the CID of the block to put
-   * @param block bytes array of block to put
-   * @param ipfsApi the IPFS Api instance to use
-   * @param signal AbortSignal
-   */
-  static async putIPFSBlock(
-    cid: CID | string,
-    block: Uint8Array,
-    ipfsApi: IpfsApi,
-    signal: AbortSignal
-  ) {
-    if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
-    const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
-    const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
-    const version = cid.version
-    await ipfsApi.block.put(block, { format, mhtype, version, signal })
-  }
-
-  /**
    * Attempts to load CACAO capability from IPFS if present in protected header of commit
    * @param commit the commit to load the capability for
    * @param dispatcher instance of dispatcher to load from IPFS
