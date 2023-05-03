@@ -315,7 +315,9 @@ describe('anchor', () => {
         )
 
         // We fast-forward streamState2, because the commit is legit
-        expect(streamState2.state).toEqual(stream1.state)
+        expect(StreamUtils.serializeState(streamState2.state)).toEqual(
+          StreamUtils.serializeState(stream1.state)
+        )
 
         await ceramic2.close()
       })
