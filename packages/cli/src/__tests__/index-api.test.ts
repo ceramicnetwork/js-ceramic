@@ -88,10 +88,9 @@ test('model in query', async () => {
     model: modelStreamId,
     first: 100,
   })
-  expect(indexSpy).toBeCalledWith({
-    first: 100,
-    model: modelStreamId,
-  })
+  const callParameters: any = indexSpy.mock.lastCall[0]
+  expect(callParameters.model.toString()).toEqual(modelStreamId.toString())
+  expect(callParameters.first).toEqual(100)
 })
 test('too much entries requested: forward pagination', async () => {
   await expect(
@@ -117,11 +116,10 @@ test('model, account in query', async () => {
     account: account,
     first: 100,
   })
-  expect(indexSpy).toBeCalledWith({
-    first: 100,
-    model: modelStreamId,
-    account: account,
-  })
+  const callParameters: any = indexSpy.mock.lastCall[0]
+  expect(callParameters.first).toEqual(100)
+  expect(callParameters.model.toString()).toEqual(modelStreamId.toString())
+  expect(callParameters.account).toEqual(account)
 })
 test('serialize StreamState', async () => {
   const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
