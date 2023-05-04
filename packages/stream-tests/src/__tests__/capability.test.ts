@@ -1,4 +1,11 @@
-import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  CeramicApi,
+  IpfsApi,
+  StreamUtils,
+  SyncOptions,
+  TestUtils,
+} from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -560,16 +567,20 @@ describe('CACAO Integration test', () => {
       const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
       const loaded1 = await TileDocument.load(ceramic, tile.id)
       expect(tile.content['a']).toEqual(3)
-      expect(loaded0.state).toEqual(tile.state)
-      expect(loaded1.state).toEqual(tile.state)
+      expect(StreamUtils.serializeState(loaded0.state)).toEqual(
+        StreamUtils.serializeState(tile.state)
+      )
+      expect(StreamUtils.serializeState(loaded1.state)).toEqual(
+        StreamUtils.serializeState(tile.state)
+      )
       // 2. It is expired: Rewrite the state!
       expireCacao()
       await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
       const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
       expect(loaded3.content['a']).toEqual(2)
-      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
+      expect(JSON.stringify(loaded3.state.log)).toEqual(JSON.stringify(tile.state.log.slice(0, 3)))
       const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
-      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+      expect(JSON.stringify(loaded4.state.log)).toEqual(JSON.stringify(loaded3.state.log)) // Rewritten!
     }, 30000)
 
     test('overwrite expired capability when using RESYNC_ON_ERROR', async () => {
@@ -587,16 +598,20 @@ describe('CACAO Integration test', () => {
       const loaded0 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ALWAYS })
       const loaded1 = await TileDocument.load(ceramic, tile.id)
       expect(tile.content['a']).toEqual(3)
-      expect(loaded0.state).toEqual(tile.state)
-      expect(loaded1.state).toEqual(tile.state)
+      expect(StreamUtils.serializeState(loaded0.state)).toEqual(
+        StreamUtils.serializeState(tile.state)
+      )
+      expect(StreamUtils.serializeState(loaded1.state)).toEqual(
+        StreamUtils.serializeState(tile.state)
+      )
       // 2. It is expired: Rewrite the state!
       expireCacao()
       await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
       const loaded3 = await TileDocument.load(ceramic, tile.id, { sync: SyncOptions.SYNC_ON_ERROR })
       expect(loaded3.content['a']).toEqual(2)
-      expect(loaded3.state.log).toEqual(tile.state.log.slice(0, 3))
+      expect(JSON.stringify(loaded3.state.log)).toEqual(JSON.stringify(tile.state.log.slice(0, 3)))
       const loaded4 = await TileDocument.load(ceramic, tile.id) // Has the state been rewritten?
-      expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
+      expect(JSON.stringify(loaded4.state.log)).toEqual(JSON.stringify(loaded3.state.log)) // Rewritten!
     }, 30000)
 
     test(
