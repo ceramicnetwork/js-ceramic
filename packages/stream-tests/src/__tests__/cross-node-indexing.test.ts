@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import {
-  CeramicApi,
   IpfsApi,
   Page,
   PaginationQuery,
@@ -194,7 +193,7 @@ describe.each(envs)(
       expect(results.length).toEqual(1)
       expect(results[0].id.toString()).toEqual(doc1.id.toString())
       expect(results[0].content).toEqual(CONTENT0)
-      expect(results[0].state).toEqual(doc1.state)
+      expect(StreamUtils.serializeState(results[0].state)).toEqual(StreamUtils.serializeState(doc1.state))
 
       // Now update an existing stream and create a new stream and make sure the index updates properly
       await doc1.replace(CONTENT1, { anchor: false })
@@ -221,7 +220,7 @@ describe.each(envs)(
       )
       expect(results[1].id.toString()).toEqual(doc2.id.toString())
       expect(results[1].content).toEqual(CONTENT2)
-      expect(results[1].state).toEqual(doc2.state)
+      expect(StreamUtils.serializeState(results[1].state)).toEqual(StreamUtils.serializeState(doc2.state))
     })
 
     test('Loading a stream adds it to the index', async () => {
