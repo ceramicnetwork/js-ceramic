@@ -98,7 +98,7 @@ describe('Dispatcher with mock ipfs', () => {
   it('store commit correctly', async () => {
     const carFactory = new CARFactory()
     const carFile = carFactory.build()
-    const expectedCID = carFile.put('data')
+    const expectedCID = carFile.put('data', { isRoot: true })
     expect(await dispatcher.storeCommit('data')).toEqual(expectedCID)
 
     expect(ipfs.dag.import.mock.calls.length).toEqual(1)
