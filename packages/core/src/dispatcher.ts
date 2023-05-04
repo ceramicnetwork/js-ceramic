@@ -178,7 +178,7 @@ export class Dispatcher {
         await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
         return cid
       }
-      const cid = carFile.put(data)
+      const cid = carFile.put(data, { isRoot: true })
       restrictCommitBlockSize(carFile, cid)
       await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
       return cid
