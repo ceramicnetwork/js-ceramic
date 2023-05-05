@@ -1,6 +1,5 @@
 import { refinement, string } from 'codeco'
-
-import type { Opaque } from './types.js'
+import type { Opaque } from 'ts-essentials'
 
 export type DIDString = Opaque<string, 'DIDString'>
 

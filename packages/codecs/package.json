@@ -35,6 +35,9 @@
     "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"
   },
+  "devDependencies": {
+    "ts-essentials": "^9.3.2"
+  },
   "publishConfig": {
     "access": "public"
   }
