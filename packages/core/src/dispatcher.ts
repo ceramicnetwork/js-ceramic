@@ -160,7 +160,6 @@ export class Dispatcher {
    */
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
     const carFile = carFactory.build()
-    Metrics.count(COMMITS_STORED, 1)
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
         const { jws, linkedBlock, cacaoBlock } = data
@@ -181,6 +180,7 @@ export class Dispatcher {
       const cid = carFile.put(data, { isRoot: true })
       restrictCommitBlockSize(carFile, cid)
       await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
+      Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {
       if (streamId) {
