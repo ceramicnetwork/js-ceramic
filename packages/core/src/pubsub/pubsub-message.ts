@@ -62,7 +62,13 @@ export const UpdateMessageCodec = co.intersection(
   ],
   'UpdateMessage'
 )
-export type UpdateMessage = co.TypeOf<typeof UpdateMessageCodec>
+// Note: co.TypeOf<typeof UpdateMessageCodec> returns {} so we need to define the type explicitly
+export type UpdateMessage = {
+  typ: MsgType.UPDATE
+  stream: StreamID
+  tip: CID
+  model?: StreamID
+}
 
 export const QueryMessageCodec = co.strict(
   {
@@ -99,7 +105,7 @@ export const PubsubMessageCodec = co.union(
   [UpdateMessageCodec, QueryMessageCodec, ResponseMessageCodec, KeepaliveMessageCodec],
   'PubsubMessage'
 )
-export type PubsubMessage = co.TypeOf<typeof PubsubMessageCodec>
+export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage | KeepaliveMessage
 
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder('utf-8')
@@ -140,5 +146,5 @@ export function deserialize(message: any): PubsubMessage {
   const asString = textDecoder.decode(message.data)
   const parsed = JSON.parse(asString)
   Metrics.count(PUBSUB_RECEIVED, 1, { typ: parsed.typ })
-  return co.decode(PubsubMessageCodec, parsed)
+  return co.decode(PubsubMessageCodec, parsed) as PubsubMessage
 }
