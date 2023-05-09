@@ -51,13 +51,15 @@ export enum MsgType {
   KEEPALIVE,
 }
 
-export const UpdateMessageCodec = co.strict(
-  {
-    typ: co.literal(MsgType.UPDATE),
-    stream: streamIdAsString,
-    tip: cidAsString,
-    model: co.optional(streamIdAsString),
-  },
+export const UpdateMessageCodec = co.intersection(
+  [
+    co.strict({
+      typ: co.literal(MsgType.UPDATE),
+      stream: streamIdAsString,
+      tip: cidAsString,
+    }),
+    co.partial({ model: streamIdAsString }),
+  ],
   'UpdateMessage'
 )
 export type UpdateMessage = co.TypeOf<typeof UpdateMessageCodec>
