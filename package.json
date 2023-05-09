@@ -12,7 +12,7 @@
     "postinstall": "npx lerna bootstrap --hoist --ci",
     "test": "npx lerna exec npm t",
     "build": "npx lerna run build",
-    "docs": "npx typedoc",
+    "docs": "NODE_OPTIONS=--max-old-space-size=8192 npx typedoc",
     "publish:release-candidate": "npx lerna publish --dist-tag next --preid rc --no-verify-access --conventional-prerelease bump preminor",
     "publish:release": "npx lerna publish --dist-tag latest --create-release github --no-verify-access --conventional-graduate bump minor",
     "publish:hotfix": "npx lerna publish --dist-tag latest --no-verify-access --conventional-graduate bump patch",
