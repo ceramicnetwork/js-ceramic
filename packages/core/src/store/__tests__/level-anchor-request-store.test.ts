@@ -225,10 +225,10 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     ].sort(sortByKeyStreamId)
 
     const retrieved = await anchorRequestStore.list()
-    expect(JSON.stringify(retrieved.sort(sortByKeyStreamId))).toEqual(JSON.stringify(sortedParams))
+    expect(retrieved.sort(sortByKeyStreamId)).toEqual(sortedParams)
 
     const retrievedWithLimit = await anchorRequestStore.list(1)
-    expect(JSON.stringify(retrievedWithLimit)).toEqual(JSON.stringify(sortedParams.slice(0, 1)))
+    expect(retrievedWithLimit).toEqual(sortedParams.slice(0, 1))
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
