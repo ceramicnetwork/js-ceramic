@@ -211,8 +211,7 @@ export class Dispatcher {
    */
   async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
     try {
-      const data = await this._getFromIpfs(cid)
-      return data
+      return await this._getFromIpfs(cid)
     } catch (e) {
       this._logger.err(
         `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
