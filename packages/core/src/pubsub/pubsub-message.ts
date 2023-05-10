@@ -58,7 +58,7 @@ export const UpdateMessageCodec = co.intersection(
       stream: streamIdAsString,
       tip: cidAsString,
     }),
-    co.partial({ model: streamIdAsString }),
+    co.partial({ model: co.optional(streamIdAsString) }),
   ],
   'UpdateMessage'
 )
