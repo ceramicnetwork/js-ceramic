@@ -209,7 +209,6 @@ export class Dispatcher {
   async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
     try {
       const data = await this._getFromIpfs(cid)
-      await this._restrictCommitSize(cid)
       return data
     } catch (e) {
       this._logger.err(
@@ -285,6 +284,7 @@ export class Dispatcher {
         const block = await this._shutdownSignal.abortable((signal) =>
           this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
         )
+        restrictBlockSize(block, blockCid)
         dagResult = codec.decode(block)
       } catch (err) {
         if (
@@ -308,23 +308,6 @@ export class Dispatcher {
     // CID loaded successfully, store in cache
     this.dagNodeCache.set(resolutionPath, dagResult)
     return cloneDeep(dagResult)
-  }
-
-  /**
-   * Restricts commit size to IPFS_MAX_COMMIT_SIZE
-   * @param cid - Commit CID
-   * @private
-   */
-  async _restrictCommitSize(cid: CID | string): Promise<number> {
-    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const { size } = await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.block.stat(asCid, {
-        timeout: this._ipfsTimeout,
-        signal: signal,
-      })
-    })
-    if (size > IPFS_MAX_COMMIT_SIZE) throw new CommitSizeError(cid, size)
-    return size
   }
 
   /**
