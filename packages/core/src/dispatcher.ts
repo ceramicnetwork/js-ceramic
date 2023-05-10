@@ -279,9 +279,17 @@ export class Dispatcher {
     let result = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && result == null; retries--) {
       try {
-        const { cid: blockCid } = await this._shutdownSignal.abortable((signal) =>
-          this._ipfs.dag.resolve(asCid, { timeout: this._ipfsTimeout, path: path, signal: signal })
-        )
+        let blockCid: CID = asCid
+        if (path) {
+          const resolution = await this._shutdownSignal.abortable((signal) =>
+            this._ipfs.dag.resolve(asCid, {
+              timeout: this._ipfsTimeout,
+              path: path,
+              signal: signal,
+            })
+          )
+          blockCid = resolution.cid
+        }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
         const block = await this._shutdownSignal.abortable((signal) =>
           this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
