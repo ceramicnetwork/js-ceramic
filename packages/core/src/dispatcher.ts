@@ -71,12 +71,14 @@ export class CommitSizeError extends Error {
 }
 
 /**
- * Restricts block size to IPFS_MAX_COMMIT_SIZE
+ * Restricts block size to +IPFS_MAX_COMMIT_SIZE+.
+ *
+ * @param block - Uint8Array of IPLD block
  * @param cid - Commit CID
- * @private
+ * @internal
  */
-function restrictCommitBlockSize(carFile: CAR, cid: CID): void {
-  const size = carFile.blocks.get(cid).payload.byteLength
+function restrictBlockSize(block: Uint8Array, cid: CID): void {
+  const size = block.byteLength
   if (size > IPFS_MAX_COMMIT_SIZE) throw new CommitSizeError(cid, size)
 }
 
@@ -168,17 +170,18 @@ export class Dispatcher {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
           const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
           carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
+          restrictBlockSize(cacaoBlock, capCID)
         }
 
         carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
-        restrictCommitBlockSize(carFile, jws.link)
+        restrictBlockSize(linkedBlock, jws.link)
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
-        restrictCommitBlockSize(carFile, cid)
+        restrictBlockSize(carFile.blocks.get(cid).payload, cid)
         await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
         return cid
       }
       const cid = carFile.put(data, { isRoot: true })
-      restrictCommitBlockSize(carFile, cid)
+      restrictBlockSize(carFile.blocks.get(cid).payload, cid)
       await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
       Metrics.count(COMMITS_STORED, 1)
       return cid
@@ -263,8 +266,8 @@ export class Dispatcher {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
 
     // Lookup CID in cache before looking it up IPFS
-    const cidAndPath = path ? asCid.toString() + path : asCid.toString()
-    const cachedDagNode = await this.dagNodeCache.get(cidAndPath)
+    const resolutionPath = `${asCid}${path || ''}`
+    const cachedDagNode = this.dagNodeCache.get(resolutionPath)
     if (cachedDagNode) return cloneDeep(cachedDagNode)
 
     // Now lookup CID in IPFS, with retry logic
@@ -275,13 +278,14 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._shutdownSignal.abortable((signal) => {
-          return this._ipfs.dag.get(asCid, {
-            timeout: this._ipfsTimeout,
-            path,
-            signal: signal,
-          })
-        })
+        const { cid: blockCid } = await this._shutdownSignal.abortable((signal) =>
+          this._ipfs.dag.resolve(asCid, { timeout: this._ipfsTimeout, path: path, signal: signal })
+        )
+        const codec = await this._ipfs.codecs.getCodec(blockCid.code)
+        const block = await this._shutdownSignal.abortable((signal) =>
+          this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
+        )
+        dagResult = codec.decode(block)
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
@@ -302,8 +306,8 @@ export class Dispatcher {
       }
     }
     // CID loaded successfully, store in cache
-    await this.dagNodeCache.set(cidAndPath, dagResult.value)
-    return cloneDeep(dagResult.value)
+    this.dagNodeCache.set(resolutionPath, dagResult)
+    return cloneDeep(dagResult)
   }
 
   /**
