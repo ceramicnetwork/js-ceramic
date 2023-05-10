@@ -27,12 +27,8 @@ import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CARFactory, CarBlock, CAR } from 'cartonne'
-import * as dagJoseCodec from 'dag-jose'
+import { CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
-
-const carFactory = new CARFactory()
-carFactory.codecs.add(dagJoseCodec)
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -108,6 +104,8 @@ export class Dispatcher {
     PUBSUB_CACHE_SIZE
   )
 
+  private readonly carFactory: CARFactory
+
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -139,6 +137,10 @@ export class Dispatcher {
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.carFactory = new CARFactory()
+    this._ipfs.codecs.listCodecs().forEach((codec) => {
+      this.carFactory.codecs.add(codec)
+    })
   }
 
   async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
@@ -161,7 +163,7 @@ export class Dispatcher {
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
-    const carFile = carFactory.build()
+    const carFile = this.carFactory.build()
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
         const { jws, linkedBlock, cacaoBlock } = data
