@@ -51,26 +51,18 @@ export enum MsgType {
   KEEPALIVE,
 }
 
-export const UpdateMessageCodec = co.intersection(
-  [
-    co.strict({
-      typ: co.literal(MsgType.UPDATE),
-      stream: streamIdAsString,
-      tip: cidAsString,
-    }),
-    co.partial({ model: co.optional(streamIdAsString) }),
-  ],
+export const UpdateMessage = co.sparse(
+  {
+    typ: co.literal(MsgType.UPDATE),
+    stream: streamIdAsString,
+    tip: cidAsString,
+    model: co.optional(streamIdAsString),
+  },
   'UpdateMessage'
 )
-// Note: co.TypeOf<typeof UpdateMessageCodec> returns {} so we need to define the type explicitly
-export type UpdateMessage = {
-  typ: MsgType.UPDATE
-  stream: StreamID
-  tip: CID
-  model?: StreamID
-}
+export type UpdateMessage = co.TypeOf<typeof UpdateMessage>
 
-export const QueryMessageCodec = co.strict(
+export const QueryMessage = co.strict(
   {
     typ: co.literal(MsgType.QUERY),
     id: co.string,
@@ -78,9 +70,9 @@ export const QueryMessageCodec = co.strict(
   },
   'QueryMessage'
 )
-export type QueryMessage = co.TypeOf<typeof QueryMessageCodec>
+export type QueryMessage = co.TypeOf<typeof QueryMessage>
 
-export const ResponseMessageCodec = co.strict(
+export const ResponseMessage = co.strict(
   {
     typ: co.literal(MsgType.RESPONSE),
     id: co.string,
@@ -88,10 +80,10 @@ export const ResponseMessageCodec = co.strict(
   },
   'ResponseMessage'
 )
-export type ResponseMessage = co.TypeOf<typeof ResponseMessageCodec>
+export type ResponseMessage = co.TypeOf<typeof ResponseMessage>
 
 // All nodes will always ignore this message
-export const KeepaliveMessageCodec = co.strict(
+export const KeepaliveMessage = co.strict(
   {
     typ: co.literal(MsgType.KEEPALIVE),
     ts: co.number, // current time
@@ -99,13 +91,13 @@ export const KeepaliveMessageCodec = co.strict(
   },
   'KeepaliveMessage'
 )
-export type KeepaliveMessage = co.TypeOf<typeof KeepaliveMessageCodec>
+export type KeepaliveMessage = co.TypeOf<typeof KeepaliveMessage>
 
-export const PubsubMessageCodec = co.union(
-  [UpdateMessageCodec, QueryMessageCodec, ResponseMessageCodec, KeepaliveMessageCodec],
+export const PubsubMessage = co.union(
+  [UpdateMessage, QueryMessage, ResponseMessage, KeepaliveMessage],
   'PubsubMessage'
 )
-export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage | KeepaliveMessage
+export type PubsubMessage = co.TypeOf<typeof PubsubMessage>
 
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder('utf-8')
@@ -138,7 +130,7 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 
 export function serialize(message: PubsubMessage): Uint8Array {
   Metrics.count(PUBSUB_PUBLISHED, 1, { typ: message.typ }) // really attempted to publish...
-  const payload = PubsubMessageCodec.encode(message)
+  const payload = PubsubMessage.encode(message)
   return textEncoder.encode(JSON.stringify(payload))
 }
 
@@ -146,5 +138,5 @@ export function deserialize(message: any): PubsubMessage {
   const asString = textDecoder.decode(message.data)
   const parsed = JSON.parse(asString)
   Metrics.count(PUBSUB_RECEIVED, 1, { typ: parsed.typ })
-  return co.decode(PubsubMessageCodec, parsed) as PubsubMessage
+  return co.decode(PubsubMessage, parsed) as PubsubMessage
 }
