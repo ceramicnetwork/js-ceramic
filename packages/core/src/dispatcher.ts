@@ -276,8 +276,8 @@ export class Dispatcher {
     // allow IPFS to use the extra time to find the CID, doing internal retries if needed.
     // Anecdotally, however, we've seen evidence that IPFS sometimes finds CIDs on retry that it
     // doesn't on the first attempt, even when given plenty of time to load it.
-    let dagResult = null
-    for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
+    let result = null
+    for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && result == null; retries--) {
       try {
         const { cid: blockCid } = await this._shutdownSignal.abortable((signal) =>
           this._ipfs.dag.resolve(asCid, { timeout: this._ipfsTimeout, path: path, signal: signal })
@@ -287,7 +287,7 @@ export class Dispatcher {
           this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
         )
         restrictBlockSize(block, blockCid)
-        dagResult = codec.decode(block)
+        result = codec.decode(block)
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
@@ -308,8 +308,8 @@ export class Dispatcher {
       }
     }
     // CID loaded successfully, store in cache
-    this.dagNodeCache.set(resolutionPath, dagResult)
-    return cloneDeep(dagResult)
+    this.dagNodeCache.set(resolutionPath, result)
+    return cloneDeep(result)
   }
 
   /**
