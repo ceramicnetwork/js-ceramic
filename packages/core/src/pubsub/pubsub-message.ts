@@ -1,11 +1,45 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { UnreachableCaseError, toCID } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
+import { cidAsString, streamIdAsString } from '@ceramicnetwork/codecs'
+import * as co from 'codeco'
+
+class CIDAsStringMap extends co.Codec<Map<string, CID>, Record<string, string>> {
+  constructor() {
+    super('CIDAsStringMap')
+  }
+  is(input): input is Map<string, CID> {
+    return input instanceof Map
+  }
+  encode(value: Map<string, CID>): Record<string, string> {
+    const encoded: Record<string, string> = {}
+    for (const [key, val] of value.entries()) {
+      encoded[key] = cidAsString.encode(val)
+    }
+    return encoded
+  }
+  decode(input: unknown, context: co.Context): co.Validation<Map<string, CID>> {
+    try {
+      const decoded = new Map<string, CID>()
+      for (const [key, val] of Object.entries(input)) {
+        const valValidation = cidAsString.decode(val, context)
+        if (co.isValid(valValidation)) {
+          decoded.set(key, valValidation.right)
+        } else {
+          return valValidation
+        }
+      }
+      return context.success(decoded)
+    } catch (err) {
+      return context.failure(err.message)
+    }
+  }
+}
+const cidAsStringMap = new CIDAsStringMap()
 
 /**
  * Ceramic Pub/Sub message type.
@@ -17,33 +51,53 @@ export enum MsgType {
   KEEPALIVE,
 }
 
-export type UpdateMessage = {
-  typ: MsgType.UPDATE
-  stream: StreamID
-  tip: CID
-  model?: StreamID
-}
+export const UpdateMessage = co.sparse(
+  {
+    typ: co.literal(MsgType.UPDATE),
+    stream: streamIdAsString,
+    tip: cidAsString,
+    model: co.optional(streamIdAsString),
+  },
+  'UpdateMessage'
+)
+export type UpdateMessage = co.TypeOf<typeof UpdateMessage>
 
-export type QueryMessage = {
-  typ: MsgType.QUERY
-  id: string
-  stream: StreamID
-}
+export const QueryMessage = co.strict(
+  {
+    typ: co.literal(MsgType.QUERY),
+    id: co.string,
+    stream: streamIdAsString,
+  },
+  'QueryMessage'
+)
+export type QueryMessage = co.TypeOf<typeof QueryMessage>
 
-export type ResponseMessage = {
-  typ: MsgType.RESPONSE
-  id: string
-  tips: Map<string, CID>
-}
+export const ResponseMessage = co.strict(
+  {
+    typ: co.literal(MsgType.RESPONSE),
+    id: co.string,
+    tips: cidAsStringMap,
+  },
+  'ResponseMessage'
+)
+export type ResponseMessage = co.TypeOf<typeof ResponseMessage>
 
 // All nodes will always ignore this message
-export type KeepaliveMessage = {
-  typ: MsgType.KEEPALIVE
-  ts: number // current time
-  ver: string // current ceramic version
-}
+export const KeepaliveMessage = co.strict(
+  {
+    typ: co.literal(MsgType.KEEPALIVE),
+    ts: co.number, // current time
+    ver: co.string, // current ceramic version
+  },
+  'KeepaliveMessage'
+)
+export type KeepaliveMessage = co.TypeOf<typeof KeepaliveMessage>
 
-export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage | KeepaliveMessage
+export const PubsubMessage = co.union(
+  [UpdateMessage, QueryMessage, ResponseMessage, KeepaliveMessage],
+  'PubsubMessage'
+)
+export type PubsubMessage = co.TypeOf<typeof PubsubMessage>
 
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder('utf-8')
@@ -76,93 +130,13 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 
 export function serialize(message: PubsubMessage): Uint8Array {
   Metrics.count(PUBSUB_PUBLISHED, 1, { typ: message.typ }) // really attempted to publish...
-  switch (message.typ) {
-    case MsgType.QUERY: {
-      return textEncoder.encode(
-        JSON.stringify({
-          ...message,
-          doc: message.stream.toString(), // todo remove once we no longer support interop with nodes older than v1.0.0
-          stream: message.stream.toString(),
-        })
-      )
-    }
-    case MsgType.RESPONSE: {
-      const tips = {}
-      message.tips.forEach((value, key) => (tips[key] = value.toString()))
-      const payload = {
-        ...message,
-        tips: tips,
-      }
-      return textEncoder.encode(JSON.stringify(payload))
-    }
-    case MsgType.UPDATE: {
-      // todo remove 'doc' once we no longer support interop with nodes older than v1.0.0
-      const payload = {
-        typ: MsgType.UPDATE,
-        doc: message.stream.toString(),
-        stream: message.stream.toString(),
-        tip: message.tip.toString(),
-        ...(message.model && { model: message.model.toString() }),
-      }
-      return textEncoder.encode(JSON.stringify(payload))
-    }
-    case MsgType.KEEPALIVE: {
-      const payload = {
-        typ: MsgType.KEEPALIVE,
-        ts: message.ts,
-        ver: message.ver,
-      }
-      return textEncoder.encode(JSON.stringify(payload))
-    }
-    default:
-      throw new UnreachableCaseError(message, 'Unknown message type')
-  }
+  const payload = PubsubMessage.encode(message)
+  return textEncoder.encode(JSON.stringify(payload))
 }
 
 export function deserialize(message: any): PubsubMessage {
   const asString = textDecoder.decode(message.data)
   const parsed = JSON.parse(asString)
-
-  const typ = parsed.typ as MsgType
-  Metrics.count(PUBSUB_RECEIVED, 1, { typ: typ })
-  switch (typ) {
-    case MsgType.UPDATE: {
-      // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
-      const stream = StreamID.fromString(parsed.stream || parsed.doc)
-
-      return {
-        typ: MsgType.UPDATE,
-        stream,
-        tip: toCID(parsed.tip),
-        ...(parsed.model && { model: StreamID.fromString(parsed.model) }),
-      }
-    }
-    case MsgType.RESPONSE: {
-      const tips: Map<string, CID> = new Map()
-      Object.entries<string>(parsed.tips).forEach(([key, value]) => tips.set(key, toCID(value)))
-      return {
-        typ: MsgType.RESPONSE,
-        id: parsed.id,
-        tips: tips,
-      }
-    }
-    case MsgType.QUERY: {
-      // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
-      const stream = StreamID.fromString(parsed.stream || parsed.doc)
-      return {
-        typ: MsgType.QUERY,
-        id: parsed.id,
-        stream,
-      }
-    }
-    case MsgType.KEEPALIVE: {
-      return {
-        typ: MsgType.KEEPALIVE,
-        ts: parsed.ts,
-        ver: parsed.ver,
-      }
-    }
-    default:
-      throw new UnreachableCaseError(typ, 'Unknown message type')
-  }
+  Metrics.count(PUBSUB_RECEIVED, 1, { typ: parsed.typ })
+  return co.decode(PubsubMessage, parsed) as PubsubMessage
 }
