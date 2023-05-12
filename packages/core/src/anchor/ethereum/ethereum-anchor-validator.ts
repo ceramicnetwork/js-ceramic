@@ -145,11 +145,28 @@ export class EthereumAnchorValidator implements AnchorValidator {
   ): Promise<TransactionResponse> {
     let tx = this._transactionCache.get(txHash)
     if (!tx) {
-      tx = await provider.getTransaction(txHash)
+      tx = await backOff(async () => {
+        try {
+          return provider.getTransaction(txHash)
+        } catch (e) {
+          this._logger.warn(`Failed to get transaction: ${e}`)
+          throw e
+        }
+      })
       this._transactionCache.set(txHash, tx)
     }
     return tx
   }
+
+  private async _getValidTransaction(provider: providers.BaseProvider, txHash: string): Promise<TransactionResponse> {
+    const tx = await this._getTransaction(provider, txHash)
+    if (!tx) {
+      throw new Error(`Failed to load transaction data for transaction ${txHash}`)
+    }
+
+    return tx
+  }
+
 
   /**
    * Given a chainId and a transaction hash, loads information from ethereum about the transaction
@@ -168,40 +185,21 @@ export class EthereumAnchorValidator implements AnchorValidator {
   ): Promise<[TransactionResponse, Block]> {
     try {
       // determine network based on a chain ID
-
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      const transaction: TransactionResponse = await backOff(async () => {
-        const tx = await this._getTransaction(provider, txHash)
-        if (!tx) {
-          if (!this.ethereumRpcEndpoint) {
-            throw new Error(
-              `Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`
-            )
-          } else {
-            throw new Error(`Failed to load transaction data for transaction ${txHash}`)
-          }
-        }
-
-        return tx
+      const transaction: TransactionResponse = await backOff(() => this._getValidTransaction(provider, txHash), {
+        retry: (e) => {
+          this._logger.warn(`Failed to get transaction from provider: ${e}`)
+          return true
+        },
       })
 
       let block = this._blockCache.get(transaction.blockHash)
       if (!block) {
-        block = await backOff(() => {
-          const blk = provider.getBlock(transaction.blockHash)
-          if (!blk) {
-            if (!this.ethereumRpcEndpoint) {
-              throw new Error(
-                `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`
-              )
-            } else {
-              throw new Error(
-                `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`
-              )
-            }
-          }
-
-          return blk
+        block = await backOff(async () => { return provider.getBlock(transaction.blockHash) }, {
+          retry: (e) => {
+            this._logger.warn(`Failed to get block from provider: ${e}`)
+            return true
+          },
         })
         this._blockCache.set(transaction.blockHash, block)
       }
