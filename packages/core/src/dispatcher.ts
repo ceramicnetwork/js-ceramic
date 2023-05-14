@@ -151,6 +151,13 @@ export class Dispatcher {
           })
         }
 
+        // put the payload into ipfs
+        const returnedLink = await this._shutdownSignal.abortable((signal) => {
+          return Utils.putIPFSBlock(jws.link, linkedBlock, this._ipfs, signal)
+        })
+        if(jws.link != null && !jws.link.equals(returnedLink)) {
+          throw new Error(`invalid_jws: Payload incorrect. Link field returned by IPFS did not match provided link field(.`)
+        }
         // put the JWS into the ipfs dag
         const cid = await this._shutdownSignal.abortable((signal) => {
           return this._ipfs.dag.put(jws, {
@@ -159,12 +166,7 @@ export class Dispatcher {
             signal: signal,
           })
         })
-        // put the payload into the ipfs dag
-        const linkCid = jws.link
-        await this._shutdownSignal.abortable((signal) => {
-          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
-        })
-        await this._restrictCommitSize(jws.link.toString())
+        await this._restrictCommitSize(jws.link)
         await this._restrictCommitSize(cid)
         return cid
       }

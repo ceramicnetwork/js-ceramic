@@ -122,14 +122,13 @@ export class ModelHandler implements StreamHandler<Model> {
     Model.assertVersionValid(payload.data, 'major')
     Model.assertRelationsValid(payload.data)
 
-    const modelStreamId = StreamID.fromBytes(payload.header.model)
-    if (!modelStreamId.equals(Model.MODEL)) {
+    if (!modelStreamID.equals(Model.MODEL)) {
       throw new Error(
-        `Invalid 'model' metadata property in Model stream: ${modelStreamId.toString()}`
+        `Invalid 'model' metadata property in Model stream: ${modelStreamID.toString()}`
       )
     }
 
-    const metadata = { controllers: [controller], model: modelStreamId }
+    const metadata = { controllers: [controller], model: modelStreamID }
     const state: StreamState = {
       type: Model.STREAM_TYPE_ID,
       content: payload.data,
