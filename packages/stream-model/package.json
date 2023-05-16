@@ -37,14 +37,21 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/codecs": "^1.0.0",
     "@ceramicnetwork/common": "^2.25.0",
     "@ceramicnetwork/streamid": "^2.14.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
+    "ajv": "^8.8.2",
+    "ajv-formats": "^2.1.1",
+    "codeco": "^1.1.0",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
     "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"
+  },
+  "devDependencies": {
+    "json-schema-typed": "^8.0.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }
