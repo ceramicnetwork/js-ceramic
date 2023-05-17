@@ -19,7 +19,7 @@ const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
   name: 'myModel1',
   version: Model.VERSION,
-  schema: {},
+  schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
 }
 
