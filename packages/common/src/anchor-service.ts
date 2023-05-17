@@ -1,66 +1,24 @@
 import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
-import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CAR } from 'cartonne'
+import type { AnchorProof, AnchorServiceResponse } from '@ceramicnetwork/codecs'
+
+export type {
+  AnchorServiceAnchored,
+  AnchorServiceFailed,
+  AnchorServicePending,
+  AnchorServiceProcessing,
+  AnchorServiceReplaced,
+  AnchorServiceResponse,
+  RequestAnchorParams,
+} from '@ceramicnetwork/codecs'
 
 export enum AnchorServiceAuthMethods {
   DID = 'did',
 }
-
-export interface AnchorServicePending {
-  readonly status: AnchorStatus.PENDING
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export interface AnchorServiceProcessing {
-  readonly status: AnchorStatus.PROCESSING
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export interface AnchorServiceAnchored {
-  readonly status: AnchorStatus.ANCHORED
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-  readonly anchorCommit: CID
-}
-
-export interface AnchorServiceFailed {
-  readonly status: AnchorStatus.FAILED
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export interface AnchorServiceReplaced {
-  readonly status: AnchorStatus.REPLACED
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export type RequestAnchorParams = {
-  streamID: StreamID
-  tip: CID
-  timestampISO: string // a result of Date.toISOString()
-}
-
-/**
- * Describes anchor service response
- */
-export type AnchorServiceResponse =
-  | AnchorServicePending
-  | AnchorServiceProcessing
-  | AnchorServiceAnchored
-  | AnchorServiceFailed
-  | AnchorServiceReplaced
 
 /**
  * Describes anchoring service behavior

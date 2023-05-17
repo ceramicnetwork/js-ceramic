@@ -10,6 +10,10 @@ import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
 import type { Cacao } from '@didtools/cacao'
 import { NonEmptyArray } from './non-empty-array.js'
+import type { AnchorProof, AnchorStatus } from '@ceramicnetwork/codecs'
+
+export type { AnchorProof } from '@ceramicnetwork/codecs'
+export { AnchorStatus } from '@ceramicnetwork/codecs'
 
 /**
  * Describes signature status
@@ -18,18 +22,6 @@ export enum SignatureStatus {
   GENESIS,
   PARTIAL,
   SIGNED,
-}
-
-/**
- * Describes all anchor statuses
- */
-export enum AnchorStatus {
-  NOT_REQUESTED = 0,
-  PENDING = 1,
-  PROCESSING = 2,
-  ANCHORED = 3,
-  FAILED = 4,
-  REPLACED = 5,
 }
 
 export interface CommitHeader {
@@ -57,13 +49,6 @@ export interface RawCommit {
   header?: CommitHeader
   data: any
   prev: CID
-}
-
-export interface AnchorProof {
-  chainId: string
-  txHash: CID
-  root: CID
-  txType?: string
 }
 
 export interface AnchorCommit {

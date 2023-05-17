@@ -1,11 +1,12 @@
 import type { DID } from 'dids'
-import type { Stream, StreamHandler, CeramicCommit, AnchorStatus, StreamState } from './stream.js'
+import type { Stream, StreamHandler, CeramicCommit, StreamState } from './stream.js'
 import type { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
 import { NodeStatusResponse } from './node-status-interface.js'
+import type { AnchorStatus } from '@ceramicnetwork/codecs'
 
 /**
  * Describes Ceramic pinning functionality
