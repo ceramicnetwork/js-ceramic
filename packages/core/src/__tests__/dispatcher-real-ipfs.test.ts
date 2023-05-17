@@ -76,7 +76,7 @@ describe('Dispatcher with real ipfs over http', () => {
   })
 
   it('retries on timeout', async () => {
-    const ipfsGetSpy = jest.spyOn(ipfsClient.dag, 'get')
+    const ipfsBlockSpy = jest.spyOn(ipfsClient.block, 'get')
 
     // try to load a CID that ipfs doesn't know about.  It will timeout.
     // Timeout error message is different depending on if we are talking to a go-ipfs or js-ipfs instance
@@ -85,7 +85,7 @@ describe('Dispatcher with real ipfs over http', () => {
     )
 
     // Make sure we tried 3 times to get the cid from ipfs, not just once
-    expect(ipfsGetSpy).toBeCalledTimes(3)
+    expect(ipfsBlockSpy).toBeCalledTimes(3)
   })
 
   it('interrupts on shutdown', async () => {
