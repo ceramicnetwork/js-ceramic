@@ -1,4 +1,4 @@
-FROM node:16 as js-ceramic
+FROM node:16 as ceramic
 
 RUN apt-get update && apt-get install -y netcat gettext-base
 
@@ -24,10 +24,8 @@ EXPOSE 7007
 
 ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
 
-FROM js-ceramic as composedb
+FROM ceramic as composedb
 
-ARG COMPOSEDB_CLI_VERSION=0.3.0
-
-RUN npm install --location=global @composedb/cli@^${COMPOSEDB_CLI_VERSION}
+RUN npm install --location=global @composedb/cli
 
 ENTRYPOINT ["/usr/local/bin/composedb"]
