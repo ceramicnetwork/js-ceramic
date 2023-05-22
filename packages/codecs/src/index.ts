@@ -1,3 +1,4 @@
+export * from './anchor.js'
 export * from './binary.js'
 export * from './date.js'
 export * from './did.js'
