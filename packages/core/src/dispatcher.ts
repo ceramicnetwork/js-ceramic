@@ -27,7 +27,7 @@ import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CARFactory, CarBlock } from 'cartonne'
+import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
 
 const IPFS_GET_RETRIES = 3
@@ -153,6 +153,27 @@ export class Dispatcher {
   async storeRecord(record: Record<string, unknown>): Promise<CID> {
     return await this._shutdownSignal.abortable((signal) => {
       return this._ipfs.dag.put(record, { signal: signal })
+    })
+  }
+
+  async getIpfsBlock(cid: CID): Promise<Uint8Array> {
+    return await this._shutdownSignal.abortable((signal) => {
+      return this._ipfs.block.get(cid, { signal })
+    })
+  }
+
+  /**
+   * Stores all the blocks in the given CAR file into the local IPFS node.  Uses the blocks API
+   * instead of the dag.import API because the dag.import API requires the CAR file to be a fully
+   * self-contained graph but our CAR file may have references to IPLD objects that aren't included
+   * in the CAR file itself.
+   * @param car
+   */
+  async storeCarFile(car: CAR): Promise<void> {
+    return await this._shutdownSignal.abortable(async (signal) => {
+      for (const block of car.blocks) {
+        await this._ipfs.block.put(block.payload, { signal })
+      }
     })
   }
 

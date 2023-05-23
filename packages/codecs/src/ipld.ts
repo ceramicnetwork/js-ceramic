@@ -47,3 +47,27 @@ export const cidAsString = new Type<CID, string, string>(
   },
   (cid) => cid.toString()
 )
+
+/**
+ * codeco codec for CAR file encoded as a Uint8Array.
+ */
+// TODO(2820): Make this codec work
+// export const carAsUint8Array = new Type<CAR, Uint8Array, Uint8Array>(
+//   'CAR-as-uint8array',
+//   (input: unknown): input is CAR => {
+//     try {
+//       return true // TODO: what do I do here?!?!
+//     } catch (e) {
+//       return false
+//     }
+//   },
+//   (input: Uint8Array, context: Context) => {
+//     try {
+//       // TODO Do I need to create a carFactory every time?
+//       return null
+//     } catch {
+//       return context.failure()
+//     }
+//   },
+//   (car) => car.bytes
+// )

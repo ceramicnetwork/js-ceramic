@@ -268,12 +268,14 @@ export class StateManager {
    * @param state$ - state of the stream being anchored
    * @param tip - The tip that anchorCommit is anchoring
    * @param anchorCommit - cid of the anchor commit
+   * @param carBytes - CAR file with all the IPLD objects needed to apply and verify the anchor commit
    * @private
    */
   private async _handleAnchorCommit(
     state$: RunningState,
     tip: CID,
-    anchorCommit: CID
+    anchorCommit: CID,
+    carBytes: Uint8Array | undefined // TODO(CDB-2520): get CAR object already parsed with a codec
   ): Promise<void> {
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
@@ -281,6 +283,12 @@ export class StateManager {
       remainingRetries--
     ) {
       try {
+        if (carBytes) {
+          // TODO(CDB-2519): make car file required
+          const car = this.carFactory.fromBytes(carBytes)
+          await this.dispatcher.storeCarFile(car)
+        }
+
         await this.executionQ.forStream(state$.id).run(async () => {
           const applied = await this._handleTip(state$, anchorCommit)
           if (applied) {
@@ -359,7 +367,7 @@ export class StateManager {
       { isRoot: true }
     )
 
-    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher._ipfs.block.get(cid))
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher.getIpfsBlock(cid))
 
     // Genesis block
     const genesisCid = streamId.cid
@@ -433,7 +441,7 @@ export class StateManager {
               return
             }
             case AnchorStatus.ANCHORED: {
-              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit)
+              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit, asr.carBytes)
               await this.anchorRequestStore.remove(state$.id)
               stopSignal.next()
               return
