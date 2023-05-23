@@ -2,6 +2,7 @@ import { type TypeOf, literal, optional, sparse, strict, string, union } from 'c
 
 import { cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
+import { uint8array } from './binary.js'
 
 /**
  * Describes all anchor statuses
@@ -66,6 +67,7 @@ export const AnchorServiceAnchored = strict(
     cid: cidAsString,
     message: string,
     anchorCommit: cidAsString,
+    car: optional(uint8array), // TODO(CDB-2519): make this required once all CAS envs are returning car files
   },
   'AnchorServiceAnchored'
 )

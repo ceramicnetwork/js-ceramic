@@ -359,7 +359,7 @@ export class StateManager {
       { isRoot: true }
     )
 
-    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher._ipfs.block.get(cid))
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher.getIpfsBlock(cid))
 
     // Genesis block
     const genesisCid = streamId.cid

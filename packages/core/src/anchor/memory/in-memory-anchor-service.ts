@@ -19,7 +19,8 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
 import lru from 'lru_map'
-import { CAR } from 'cartonne'
+import { CAR, CarBlock, CARFactory } from 'cartonne'
+import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 
 const DID_MATCHER =
@@ -68,6 +69,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   readonly #anchorOnRequest: boolean
   readonly #verifySignatures: boolean
   readonly #feed: Subject<AnchorServiceResponse> = new Subject()
+  readonly carFactory = new CARFactory()
 
   // Maps CID of a specific anchor request to the current status of that request
   readonly #anchors: Map<string, AnchorServiceResponse> = new Map()
@@ -78,6 +80,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     this.#anchorDelay = _config?.anchorDelay ?? 0
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true
     this.#verifySignatures = _config?.verifySignatures ?? true
+
+    this.carFactory.codecs.add(DAG_JOSE)
 
     // Remember the most recent AnchorServiceResponse for each anchor request
     this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
@@ -367,6 +371,33 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Builds the CAR file that the AnchorService responds to Ceramic with for a successfully anchored
+   * request. Contains the AnchorCommit as well as the merkle tree path to the anchored commit.
+   * For the InMemoryAnchorService, the tree is always of size one, so there are only 3 objects in
+   * the CAR file: the AnchorCommit, the AnchorProof for the batch, and the commit that was anchored.
+   */
+  async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID, updateCid: CID): Promise<CAR> {
+    const car = this.carFactory.build()
+
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.#dispatcher.getIpfsBlock(cid))
+
+    car.blocks.put(await cidToBlock(proofCid))
+    car.blocks.put(await cidToBlock(anchorCommitCid))
+    car.blocks.put(await cidToBlock(updateCid))
+
+    const updateCommit = car.get(updateCid)
+    if (StreamUtils.isSignedCommit(updateCommit)) {
+      car.blocks.put(await cidToBlock(updateCommit.link))
+      const cacaoCid = StreamUtils.getCacaoCidFromCommit(updateCommit)
+      if (cacaoCid) {
+        car.blocks.put(await cidToBlock(cacaoCid))
+      }
+    }
+
+    return car
+  }
+
+  /**
    * Process single candidate
    * @private
    */
@@ -387,6 +418,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
     const cid = await this._publishAnchorCommit(leaf.streamId, commit)
 
+    const witnessCar = await this._buildWitnessCAR(proof, cid, leaf.cid)
+
     // add a delay
     const handle = setTimeout(() => {
       this.#feed.next({
@@ -395,6 +428,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         cid: leaf.cid,
         message: 'CID successfully anchored',
         anchorCommit: cid,
+        car: witnessCar.bytes,
       })
       clearTimeout(handle)
     }, this.#anchorDelay)

@@ -235,7 +235,7 @@ export class EthereumAnchorService implements AnchorService {
           message: json.message,
         }
       case RequestStatusName.COMPLETED: {
-        const { anchorCommit } = json
+        const { anchorCommit, car } = json
         const anchorCommitCid = CID.parse(anchorCommit.cid.toString())
         return {
           status: AnchorStatus.ANCHORED,
@@ -243,6 +243,7 @@ export class EthereumAnchorService implements AnchorService {
           cid: cidStream.cid,
           message: json.message,
           anchorCommit: anchorCommitCid,
+          car,
         }
       }
       default:

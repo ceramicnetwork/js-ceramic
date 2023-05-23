@@ -156,6 +156,10 @@ export class Dispatcher {
     })
   }
 
+  async getIpfsBlock(cid: CID): Promise<Uint8Array> {
+    return this._ipfs.block.get(cid)
+  }
+
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
