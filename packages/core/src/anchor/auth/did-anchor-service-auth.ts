@@ -40,7 +40,14 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
       throw new Error('Missing Ceramic instance required by this auth method')
     }
     const { request } = await this.signRequest({ url, opts })
-    return await this._sendRequest(request)
+    return await this._sendRequest(request).catch((err) => {
+      if (err.message.includes("status 'Unauthorized'")) {
+        throw new Error(
+          `You are not authorized to use the anchoring service found at: ${this._anchorServiceUrl}. Are you using the correct anchoring service url? If so please ensure that you have access to 3Box Labs’ Ceramic Anchor Service by following the steps found here: https://composedb.js.org/docs/0.4.x/guides/composedb-server/access-mainnet`
+        )
+      }
+      throw err
+    })
   }
 
   async signRequest(
