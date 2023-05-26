@@ -1,4 +1,4 @@
-import { type MergeFunction, Node, PathDirection } from './merkle-elements.js'
+import { Node, PathDirection, type MergeFunction } from './merkle-elements.js'
 
 /**
  * Calculate path from Merkle tree root to `element`.
@@ -41,12 +41,23 @@ function calculateProof<TData, TLeaf extends TData>(
   return calculateProof(parent, result.concat(proofNode))
 }
 
+export interface IMerkleTree<TData, TLeaf extends TData, TMetadata> {
+  readonly root: Node<TData>
+  readonly leafNodes: Array<Node<TLeaf>>
+  readonly metadata: TMetadata | null
+  getProof(elemIndex: number): Array<Node<TData>>
+  getDirectPathFromRoot(elemIndex: number): PathDirection[]
+  verifyProof(proof: Node<TData>[], element: TData): Promise<boolean>
+}
+
 /**
  * Merkle tree structure.
  * Type 'TData' is the type of the nodes in the tree. Type 'TLeaf' is the type of the leaf nodes specifically,
  * which may be a more specific sub-type of 'TData'. Type 'TMetadata' is the type of the metadata.
  */
-export class MerkleTree<TData, TLeaf extends TData, TMetadata> {
+export class MerkleTree<TData, TLeaf extends TData, TMetadata>
+  implements IMerkleTree<TData, TLeaf, TMetadata>
+{
   constructor(
     /**
      * Function that merges nodes at lower levels to produce nodes for higher levels of the tree
