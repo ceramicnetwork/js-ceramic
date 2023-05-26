@@ -38,6 +38,7 @@ import crypto from 'crypto'
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 import lru from 'lru_map'
 import { S3Store } from './s3-store.js'
+import { commitHash } from './commitHash.js'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -284,7 +285,9 @@ export class CeramicDaemon {
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
     diagnosticsLogger.imp(
-      `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
+      `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${
+        packageJson.version
+      }, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(
         opts,
         null,
         2
