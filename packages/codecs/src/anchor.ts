@@ -67,7 +67,7 @@ export const AnchorServiceAnchored = strict(
     cid: cidAsString,
     message: string,
     anchorCommit: cidAsString,
-    carBytes: optional(uint8array), // TODO(CDB-2519): make this required once all CAS envs are returning car files
+    witnessCar: optional(uint8array), // TODO(CDB-2519): make this required once all CAS envs are returning car files
   },
   'AnchorServiceAnchored'
 )

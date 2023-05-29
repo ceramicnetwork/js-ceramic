@@ -441,7 +441,7 @@ export class StateManager {
               return
             }
             case AnchorStatus.ANCHORED: {
-              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit, asr.carBytes)
+              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit, asr.witnessCar)
               await this.anchorRequestStore.remove(state$.id)
               stopSignal.next()
               return
