@@ -686,9 +686,9 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      // check that anchor CAR file data is stored to ipfs.  CAR file contains anchor proof,
-      // anchor commit, update commit envelope, and update commit payload.
-      expect(blockPutSpy).toHaveBeenCalledTimes(4)
+      // check that anchor CAR file data is stored to ipfs.  CAR file contains anchor proof and
+      // anchor commit.
+      expect(blockPutSpy).toHaveBeenCalledTimes(2)
       blockPutSpy.mockClear()
     })
 
