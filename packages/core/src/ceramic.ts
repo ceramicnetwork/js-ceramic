@@ -887,7 +887,7 @@ export class Ceramic implements CeramicApi {
     const index = {}
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       const queryAtTime = query.opts?.atTime ? query.opts?.atTime : query.atTime
-      const opts = queryAtTime ? { atTime: queryAtTime, ...query.opts } : query.opts
+      const opts = (queryAtTime ? { atTime: queryAtTime, ...query.opts } : query.opts) ?? {}
       let stream
       try {
         stream = await promiseTimeout(
@@ -912,7 +912,7 @@ export class Ceramic implements CeramicApi {
         Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
-      const streamRef = opts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
+      const streamRef = opts?.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
       index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map((key) => {
