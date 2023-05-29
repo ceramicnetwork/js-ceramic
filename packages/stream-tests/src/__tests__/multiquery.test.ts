@@ -96,9 +96,8 @@ describe('multiquery API http-client tests', () => {
       },
     ]
     const streams = await ceramic.multiQuery(queries)
-
-    expect(Object.keys(streams).length).toEqual(4)
     const states = Object.values(streams).map((stream) => stream.state)
+    expect(states.length).toEqual(4)
     // annoying thing, was pending when snapshotted but will
     // obviously not be when loaded at a specific commit
     streamStates[0].anchorStatus = 0
@@ -157,9 +156,8 @@ describe('multiquery API http-client tests', () => {
       },
     ]
     const streams = await ceramic.multiQuery(queries)
-
-    expect(Object.keys(streams).length).toEqual(4)
     const states = Object.values(streams).map((stream) => stream.state)
+    expect(states.length).toEqual(4)
     // annoying thing, was pending when snapshotted but will
     // obviously not be when loaded at a specific commit
     streamStates[0].anchorStatus = 0
@@ -176,7 +174,7 @@ describe('multiquery API http-client tests', () => {
     expect(states[3]).toEqual(stream.state)
   }, 60000)
 
-  it('serailizes syncopts correctly', async () => {
+  it('serializes syncopts correctly', async () => {
     const streamTimestamps = []
     const streamStates = []
     const stream = await TileDocument.create(ceramic, { test: '321f' })
