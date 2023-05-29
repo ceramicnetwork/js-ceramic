@@ -88,6 +88,7 @@ export function buildIndexing(
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
+        pool: { min: 0 },
       })
       return new PostgresIndexApi(
         dataSource,

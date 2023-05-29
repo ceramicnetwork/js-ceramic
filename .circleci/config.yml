@@ -66,8 +66,11 @@ jobs:
 
 workflows:
   build-and-test:
-    # This workflow is set to be triggered conditionally, only when the GitHub Action is triggered.
-    when: << pipeline.parameters.GHA_Event >>
+    when:
+      or:
+        - equal: [ "bypass", << pipeline.parameters.GHA_Meta >> ]
+        - not:
+            equal: [ "ukstv", << pipeline.parameters.GHA_Actor >> ]
     jobs:
       - with-go-ipfs
       - dispatch-event:

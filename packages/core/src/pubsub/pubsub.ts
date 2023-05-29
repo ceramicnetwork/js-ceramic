@@ -5,7 +5,7 @@ import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { IncomingChannel, filterExternal, checkSlowObservable } from './incoming-channel.js'
-import { TaskQueue } from './task-queue.js'
+import { TaskQueue } from '../ancillary/task-queue.js'
 
 const textDecoder = new TextDecoder('utf-8')
 

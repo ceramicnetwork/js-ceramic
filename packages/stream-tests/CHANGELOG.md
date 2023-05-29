@@ -3,6 +3,49 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.30.0...@ceramicnetwork/stream-tests@2.31.0-rc.0) (2023-05-24)
+
+
+### Features
+
+* Less calls to IPFS node ([#2820](https://github.com/ceramicnetwork/js-ceramic/issues/2820)) ([74b92bb](https://github.com/ceramicnetwork/js-ceramic/commit/74b92bb746fbe2cd2957724e9a831a7ca7fed34d))
+
+
+
+
+
+# [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.30.0-rc.0...@ceramicnetwork/stream-tests@2.30.0) (2023-05-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.29.0...@ceramicnetwork/stream-tests@2.30.0-rc.0) (2023-04-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.29.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.29.0-rc.0...@ceramicnetwork/stream-tests@2.29.0) (2023-03-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.29.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.28.0...@ceramicnetwork/stream-tests@2.29.0-rc.0) (2023-03-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [2.28.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.28.0-rc.0...@ceramicnetwork/stream-tests@2.28.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

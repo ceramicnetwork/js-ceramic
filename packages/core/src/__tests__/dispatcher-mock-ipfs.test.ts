@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { expect, jest } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -12,10 +12,13 @@ import { StateManager } from '../state-management/state-manager.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { LevelDbStore } from '../store/level-db-store.js'
 import { StreamStateStore } from '../store/stream-state-store.js'
+import { CARFactory } from 'cartonne'
+import * as dagJoseCodec from 'dag-jose'
+import * as dagCborCodec from '@ipld/dag-cbor'
 
 const TOPIC = '/ceramic'
-const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafyreihbje3f5oj6vlszlqmnrtrsmuukrjurpsv6uus4siwgikldp6wnty')
+const FAKE_CID2 = CID.parse('bafyreidv7jh7yoa4kktoxeit4q3eppywiarlivhg5xmjhb6heul7242bwm')
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
@@ -33,12 +36,28 @@ const mock_ipfs = {
   dag: {
     put: jest.fn(),
     get: jest.fn(),
+    resolve: jest.fn(async (cid: CID, opts?: any) => {
+      return { cid: cid }
+    }),
+    import: jest.fn(() => {
+      return []
+    }),
   },
   block: {
     stat: jest.fn(async () => ({ size: 10 })),
+    get: jest.fn(),
   },
   id: async () => ({ id: 'ipfsid' }),
+  codecs: {
+    listCodecs: () => [dagJoseCodec, dagCborCodec],
+    getCodec: (codename) =>
+      [dagJoseCodec, dagCborCodec].find(
+        (codec) => codec.code === codename || codec.name === codename
+      ),
+  },
 }
+
+const carFactory = new CARFactory()
 
 describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher
@@ -75,6 +94,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   afterEach(async () => {
     await dispatcher.close()
+    jest.clearAllMocks()
   })
 
   it('is constructed correctly', async () => {
@@ -92,34 +112,41 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('store commit correctly', async () => {
-    ipfs.dag.put.mockReturnValueOnce(Promise.resolve(FAKE_CID))
-    expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
+    const carFile = carFactory.build()
+    const expectedCID = carFile.put('data', { isRoot: true })
+    expect(await dispatcher.storeCommit('data')).toEqual(expectedCID)
 
-    expect(ipfs.dag.put.mock.calls.length).toEqual(1)
-    expect(ipfs.dag.put.mock.calls[0][0]).toEqual('data')
+    expect(ipfs.dag.import.mock.calls.length).toEqual(1)
+    expect(ipfs.dag.import.mock.calls[0][0]).toEqual(carFile)
   })
 
   it('retrieves commit correctly', async () => {
-    ipfs.dag.get.mockReturnValueOnce(Promise.resolve({ value: 'data' }))
+    const carFile = carFactory.build()
+    const cid = carFile.put('data')
+    ipfs.block.get.mockReturnValueOnce(Promise.resolve(carFile.blocks.get(cid).payload))
     expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
-    expect(ipfs.dag.get.mock.calls.length).toEqual(1)
-    expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
+    expect(ipfs.block.get.mock.calls.length).toEqual(1)
+    expect(ipfs.block.get.mock.calls[0][0]).toEqual(FAKE_CID)
   })
 
   it('retries on timeout', async () => {
-    ipfs.dag.get.mockRejectedValueOnce({ code: 'ERR_TIMEOUT' })
-    ipfs.dag.get.mockReturnValueOnce(Promise.resolve({ value: 'data' }))
+    const carFile = carFactory.build()
+    const cid = carFile.put('data')
+    ipfs.block.get.mockRejectedValueOnce({ code: 'ERR_TIMEOUT' })
+    ipfs.block.get.mockReturnValueOnce(Promise.resolve(carFile.blocks.get(cid).payload))
     expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
 
-    expect(ipfs.dag.get.mock.calls.length).toEqual(2)
-    expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
-    expect(ipfs.dag.get.mock.calls[1][0]).toEqual(FAKE_CID)
+    expect(ipfs.block.get.mock.calls.length).toEqual(2)
+    expect(ipfs.block.get.mock.calls[0][0]).toEqual(FAKE_CID)
+    expect(ipfs.block.get.mock.calls[1][0]).toEqual(FAKE_CID)
   })
 
   it('caches and retrieves commit correctly', async () => {
-    const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockReturnValueOnce(Promise.resolve({ value: 'data' }))
+    const ipfsSpy = ipfs.block.get
+    const carFile = carFactory.build()
+    const cid = carFile.put('data')
+    ipfsSpy.mockReturnValueOnce(Promise.resolve(carFile.blocks.get(cid).payload))
     expect(await dispatcher.retrieveCommit(FAKE_CID, FAKE_STREAM_ID)).toEqual('data')
     // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
@@ -135,36 +162,40 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('caches and retrieves with path correctly', async () => {
-    const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockImplementation(async function (cid: CID, opts: any) {
+    const carFile = carFactory.build()
+    const fooCid = carFile.put('foo')
+    const barCid = carFile.put('bar')
+
+    ipfs.dag.resolve.mockImplementation(async (cid: CID, opts: any) => {
       if (opts.path == '/foo') {
-        return { value: 'foo' }
+        return { cid: fooCid }
       } else if (opts.path == '/bar') {
-        return { value: 'bar' }
+        return { cid: barCid }
       } else {
         return null
       }
     })
 
+    const blockGetSpy = ipfs.block.get
+    blockGetSpy.mockImplementation(async function (cid: CID, opts: any) {
+      return carFile.blocks.get(cid).payload
+    })
+
     expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/foo')).toEqual('foo')
     // CID+path not found in cache so IPFS lookup performed and cache updated
-    expect(ipfsSpy).toBeCalledTimes(1)
+    expect(blockGetSpy).toBeCalledTimes(1)
+    expect(ipfs.dag.resolve).toBeCalledWith(FAKE_CID, expect.objectContaining({ path: '/foo' }))
     expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/foo')).toEqual('foo')
     // CID+path found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
-    expect(ipfsSpy).toBeCalledTimes(1)
+    expect(blockGetSpy).toBeCalledTimes(1)
 
     expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/bar')).toEqual('bar')
     // Same CID with different path needs to skip cache and go to IPFS
-    expect(ipfsSpy).toBeCalledTimes(2)
+    expect(blockGetSpy).toBeCalledTimes(2)
+    expect(ipfs.dag.resolve).toBeCalledWith(FAKE_CID, expect.objectContaining({ path: '/bar' }))
 
-    expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    expect(ipfsSpy.mock.calls[0][1].path).toEqual('/foo')
-    expect(ipfsSpy.mock.calls[1][0]).toEqual(FAKE_CID)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    expect(ipfsSpy.mock.calls[1][1].path).toEqual('/bar')
+    expect(blockGetSpy.mock.calls[0][0]).toEqual(fooCid)
+    expect(blockGetSpy.mock.calls[1][0]).toEqual(barCid)
   })
 
   it('publishes tip correctly', async () => {

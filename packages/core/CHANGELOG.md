@@ -3,6 +3,56 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.32.0...@ceramicnetwork/core@2.33.0-rc.0) (2023-05-24)
+
+
+### Features
+
+* **core:** Use codecs for pubsub ([#2822](https://github.com/ceramicnetwork/js-ceramic/issues/2822)) ([7797603](https://github.com/ceramicnetwork/js-ceramic/commit/7797603da9bdddb4176f6eaaf3d0581c0801683f))
+* Less calls to IPFS node ([#2820](https://github.com/ceramicnetwork/js-ceramic/issues/2820)) ([74b92bb](https://github.com/ceramicnetwork/js-ceramic/commit/74b92bb746fbe2cd2957724e9a831a7ca7fed34d))
+
+
+
+
+
+# [2.32.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.32.0-rc.0...@ceramicnetwork/core@2.32.0) (2023-05-03)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.32.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.31.0...@ceramicnetwork/core@2.32.0-rc.0) (2023-04-26)
+
+
+### Features
+
+* add composeDB section to node status endpoint ([#2787](https://github.com/ceramicnetwork/js-ceramic/issues/2787)) ([4025aee](https://github.com/ceramicnetwork/js-ceramic/commit/4025aee935c5727fc65ef4cf765b8a0fbadc9b14))
+
+
+
+
+
+# [2.31.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.31.0-rc.0...@ceramicnetwork/core@2.31.0) (2023-03-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.30.0...@ceramicnetwork/core@2.31.0-rc.0) (2023-03-16)
+
+
+### Features
+
+* Change MID content in the indexing DB on update ([#2770](https://github.com/ceramicnetwork/js-ceramic/issues/2770)) ([ce7f401](https://github.com/ceramicnetwork/js-ceramic/commit/ce7f40104479613548f8adc5d4d1ab434df9bc1c))
+
+
+
+
+
 # [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.30.0-rc.0...@ceramicnetwork/core@2.30.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/core

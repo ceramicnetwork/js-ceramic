@@ -3,6 +3,46 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.22.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.21.0...@ceramicnetwork/stream-tile@2.22.0-rc.0) (2023-05-24)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+# [2.21.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.21.0-rc.0...@ceramicnetwork/stream-tile@2.21.0) (2023-05-03)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+# [2.21.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.20.0...@ceramicnetwork/stream-tile@2.21.0-rc.0) (2023-04-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+# [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.20.0-rc.0...@ceramicnetwork/stream-tile@2.20.0) (2023-03-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+# [2.20.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.19.0...@ceramicnetwork/stream-tile@2.20.0-rc.0) (2023-03-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 # [2.19.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@2.19.0-rc.0...@ceramicnetwork/stream-tile@2.19.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

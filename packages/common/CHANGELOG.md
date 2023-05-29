@@ -3,6 +3,55 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.25.0...@ceramicnetwork/common@2.26.0-rc.0) (2023-05-24)
+
+
+### Features
+
+* **codecs:** add anchor codecs ([#2824](https://github.com/ceramicnetwork/js-ceramic/issues/2824)) ([11e9cae](https://github.com/ceramicnetwork/js-ceramic/commit/11e9caeabd77e72f46c86149ab4802acac679c7e))
+
+
+
+
+
+# [2.25.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.25.0-rc.0...@ceramicnetwork/common@2.25.0) (2023-05-03)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.25.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.24.0...@ceramicnetwork/common@2.25.0-rc.0) (2023-04-26)
+
+
+### Features
+
+* add composeDB section to node status endpoint ([#2787](https://github.com/ceramicnetwork/js-ceramic/issues/2787)) ([4025aee](https://github.com/ceramicnetwork/js-ceramic/commit/4025aee935c5727fc65ef4cf765b8a0fbadc9b14))
+
+
+
+
+
+# [2.24.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.24.0-rc.0...@ceramicnetwork/common@2.24.0) (2023-03-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.24.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.23.0...@ceramicnetwork/common@2.24.0-rc.0) (2023-03-16)
+
+
+### Features
+
+* add Stacks support ([#2649](https://github.com/ceramicnetwork/js-ceramic/issues/2649)) ([8ece60a](https://github.com/ceramicnetwork/js-ceramic/commit/8ece60aa899ddc0f0a29569d083fe8116f3985e1))
+
+
+
+
+
 # [2.23.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.23.0-rc.0...@ceramicnetwork/common@2.23.0) (2023-02-28)
 
 **Note:** Version bump only for package @ceramicnetwork/common

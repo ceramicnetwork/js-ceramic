@@ -7,7 +7,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-channel.js'
 import { asIpfsMessage } from './as-ipfs-message.js'
 import { MsgType } from '../pubsub-message.js'
-import { TaskQueue } from '../task-queue.js'
+import { TaskQueue } from '../../ancillary/task-queue.js'
 
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'

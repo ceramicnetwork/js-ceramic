@@ -15,7 +15,7 @@ test('add synchronously', async () => {
 
 test('common error handler', async () => {
   const onError = jest.fn()
-  const tasks = new TaskQueue(onError)
+  const tasks = new TaskQueue(1, onError)
   const error = new Error(`Horror #${Math.random()}`)
   const accumulator = []
   tasks.add(async () => {
@@ -78,7 +78,7 @@ test('retry', async () => {
     n = n + 1
     if (n <= 3) throw new Error(`Retry maybe`)
   }
-  const queue = new TaskQueue((error, retry) => {
+  const queue = new TaskQueue(1, (error, retry) => {
     retry()
   })
   queue.add(task)

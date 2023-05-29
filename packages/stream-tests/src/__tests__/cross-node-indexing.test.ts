@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import {
-  CeramicApi,
   IpfsApi,
   Page,
   PaginationQuery,
