@@ -872,7 +872,10 @@ export class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    * @private
    */
-  protected async _loadLinkedStreams(query: MultiQuery, timeout: number): Promise<Record<string, Stream>> {
+  private async _loadLinkedStreams(
+    query: MultiQuery,
+    timeout: number
+  ): Promise<Record<string, Stream>> {
     const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
     query.paths?.forEach((path) => pathTrie.add(path))
@@ -884,7 +887,7 @@ export class Ceramic implements CeramicApi {
     const index = {}
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       const queryAtTime = query.opts?.atTime ? query.opts?.atTime : query.atTime
-      const opts = queryAtTime ? { atTime: queryAtTime, ...query.opts } : {... query.opts}
+      const opts = queryAtTime ? { atTime: queryAtTime, ...query.opts } : query.opts
       let stream
       try {
         stream = await promiseTimeout(

@@ -1,41 +1,23 @@
-import tmp from 'tmp-promise'
-import type { Ceramic } from '../../../core/src/ceramic.js'
-import { createCeramic } from '../../../core/src/__tests__/create-ceramic.js'
+import type { Ceramic } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import getPort from 'get-port'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { jest } from '@jest/globals'
+import { createCeramic } from '../create-ceramic.js'
+
 describe('multiquery API http-client tests', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicClient
   let core: Ceramic
   let daemon: CeramicDaemon
-  let tmpFolder: tmp.DirectoryResult
-  let streamA: TileDocument,
-    streamB: TileDocument,
-    streamC: TileDocument,
-    streamD: TileDocument,
-    streamE: TileDocument,
-    streamF: TileDocument
-  const notExistStreamId = StreamID.fromString(
-    'kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg'
-  )
-  const streamFTimestamps = []
-  const streamFStates = []
 
   beforeAll(async () => {
     ipfs = await createIPFS()
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    ceramic = await createCeramic(ipfs, {
-      stateStoreDirectory: tmpFolder.path,
-      networkName: 'inmemory',
-    })
     core = await createCeramic(ipfs)
     daemon = new CeramicDaemon(
       core,
@@ -47,22 +29,6 @@ describe('multiquery API http-client tests', () => {
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.did = core.did
-
-    streamF = await TileDocument.create(ceramic, { test: '321f' })
-    streamE = await TileDocument.create(ceramic, { f: streamF.id.toUrl() })
-    streamD = await TileDocument.create(ceramic, { test: '321d' })
-    streamC = await TileDocument.create(ceramic, { test: '321c' })
-    streamB = await TileDocument.create(ceramic, {
-      e: streamE.id.toUrl(),
-      d: streamD.id.toUrl(),
-      notDoc: '123',
-    })
-    streamA = await TileDocument.create(ceramic, {
-      b: streamB.id.toUrl(),
-      c: streamC.id.toUrl(),
-      notExistStreamId: notExistStreamId.toUrl(),
-      notDoc: '123',
-    })
   })
 
   afterAll(async () => {
@@ -70,7 +36,6 @@ describe('multiquery API http-client tests', () => {
     await daemon.close()
     await core.close()
     await ipfs.stop()
-    await tmpFolder.cleanup()
   }, 120000)
 
   /**
@@ -81,6 +46,10 @@ describe('multiquery API http-client tests', () => {
   }
 
   it('loads the same stream at multiple points in time using atTime', async () => {
+    const streamFTimestamps = []
+    const streamFStates = []
+    const streamF = await TileDocument.create(ceramic, { test: '321f' })
+
     // test data for the atTime feature
     streamFStates.push(streamF.state)
     // timestamp before the first anchor commit
@@ -138,6 +107,10 @@ describe('multiquery API http-client tests', () => {
   }, 60000)
 
   it('loads the same stream at multiple points in time using opts.atTime', async () => {
+    const streamFTimestamps = []
+    const streamFStates = []
+    const streamF = await TileDocument.create(ceramic, { test: '321f' })
+
     // test data for the atTime feature
     streamFStates.push(streamF.state)
     // timestamp before the first anchor commit
@@ -195,6 +168,10 @@ describe('multiquery API http-client tests', () => {
   }, 60000)
 
   it('serailizes syncopts correctly', async () => {
+    const streamFTimestamps = []
+    const streamFStates = []
+    const streamF = await TileDocument.create(ceramic, { test: '321f' })
+
     // test data for the atTime feature
     streamFStates.push(streamF.state)
     // timestamp before the first anchor commit

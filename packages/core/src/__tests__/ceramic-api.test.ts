@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { Ceramic } from '../ceramic.js'
+import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { AnchorStatus, IpfsApi, StreamUtils, TestUtils } from '@ceramicnetwork/common'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
