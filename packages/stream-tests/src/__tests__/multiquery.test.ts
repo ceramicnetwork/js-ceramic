@@ -7,6 +7,7 @@ import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { jest } from '@jest/globals'
 import { createCeramic } from '../create-ceramic.js'
+import MockDate from 'mockdate'
 
 describe('multiquery API http-client tests', () => {
   let ipfs: IpfsApi
@@ -27,7 +28,7 @@ describe('multiquery API http-client tests', () => {
       })
     )
     await daemon.listen()
-    ceramic = new CeramicClient(apiUrl)
+    ceramic = new CeramicClient(apiUrl, { syncInterval: 100 })
     ceramic.did = core.did
   })
 
@@ -37,6 +38,14 @@ describe('multiquery API http-client tests', () => {
     await core.close()
     await ipfs.stop()
   }, 120000)
+
+  afterEach(() => {
+    MockDate.reset()
+  })
+
+  function advanceTime() {
+    MockDate.set(new Date(new Date().valueOf() + 1000)) // Plus 1 second
+  }
 
   /**
    * Asserts that the given timestamps are within 5 seconds of each other
@@ -54,17 +63,17 @@ describe('multiquery API http-client tests', () => {
     streamStates.push(stream.state)
     // timestamp before the first anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
-    await TestUtils.delay(1000)
+    advanceTime()
     await stream.update({ ...stream.content, update: 'new stuff' })
     await TestUtils.anchorUpdate(core, stream)
-    await TestUtils.delay(1000)
+    advanceTime()
     // timestamp between the first and the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
-    await TestUtils.delay(1000)
+    advanceTime()
     await stream.update({ ...stream.content, update: 'newer stuff' })
     await TestUtils.anchorUpdate(core, stream)
-    await TestUtils.delay(1000)
+    advanceTime()
     // timestamp after the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
@@ -97,7 +106,7 @@ describe('multiquery API http-client tests', () => {
     // first stream state didn't have an anchor timestamp when it was added to the streamStates
     // array, but it does get a timestamp after being anchored
     // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
-    expect(Math.abs(states[0].log[0].timestamp - streamTimestamps[0])).toBeLessThan(5)
+    expectTimestampsClose(states[0].log[0].timestamp, streamTimestamps[0])
     delete states[0].log[0].timestamp
 
     expect(states[0]).toEqual(streamStates[0])
@@ -115,17 +124,17 @@ describe('multiquery API http-client tests', () => {
     streamStates.push(stream.state)
     // timestamp before the first anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
-    await TestUtils.delay(1000)
+    advanceTime()
     await stream.update({ ...stream.content, update: 'new stuff' })
     await TestUtils.anchorUpdate(core, stream)
-    await TestUtils.delay(1000)
+    advanceTime()
     // timestamp between the first and the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
-    await TestUtils.delay(1000)
+    advanceTime()
     await stream.update({ ...stream.content, update: 'newer stuff' })
     await TestUtils.anchorUpdate(core, stream)
-    await TestUtils.delay(1000)
+    advanceTime()
     // timestamp after the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
@@ -158,7 +167,7 @@ describe('multiquery API http-client tests', () => {
     // first stream state didn't have an anchor timestamp when it was added to the streamStates
     // array, but it does get a timestamp after being anchored
     // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
-    expect(Math.abs(states[0].log[0].timestamp - streamTimestamps[0])).toBeLessThan(5)
+    expectTimestampsClose(states[0].log[0].timestamp, streamTimestamps[0])
     delete states[0].log[0].timestamp
 
     expect(states[0]).toEqual(streamStates[0])
@@ -176,17 +185,17 @@ describe('multiquery API http-client tests', () => {
     streamStates.push(stream.state)
     // timestamp before the first anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
-    await TestUtils.delay(1000)
+    advanceTime()
     await stream.update({ ...stream.content, update: 'new stuff' })
     await TestUtils.anchorUpdate(core, stream)
-    await TestUtils.delay(1000)
+    advanceTime()
     // timestamp between the first and the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
-    await TestUtils.delay(1000)
+    advanceTime()
     await stream.update({ ...stream.content, update: 'newer stuff' })
     await TestUtils.anchorUpdate(core, stream)
-    await TestUtils.delay(1000)
+    advanceTime()
     // timestamp after the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
@@ -251,7 +260,7 @@ describe('multiquery API http-client tests', () => {
     // first stream state didn't have an anchor timestamp when it was added to the streamStates
     // array, but it does get a timestamp after being anchored
     // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
-    expect(Math.abs(states[0].log[0].timestamp - streamTimestamps[0])).toBeLessThan(5)
+    expectTimestampsClose(states[0].log[0].timestamp, streamTimestamps[0])
     delete states[0].log[0].timestamp
 
     expect(states[0]).toEqual(streamStates[0])
