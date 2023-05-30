@@ -417,7 +417,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         cid: leaf.cid,
         message: 'CID successfully anchored',
         anchorCommit: cid,
-        witnessCar: witnessCar.bytes,
+        witnessCar,
       })
       clearTimeout(handle)
     }, this.#anchorDelay)
