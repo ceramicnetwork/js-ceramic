@@ -19,7 +19,7 @@ const TEST_TRANSACTION = {
   blockNumber: 3,
   blockTimestamp: 1586784008,
   blockHash: '0x752fcd3593c140db9f206b421c47d875e0f92e425983f8c72ab04c0e969b072a',
-  to: '0xD3f84Cf6Be3DD0EB16dC89c972f7a27B441A39f2',
+  to: '0x231055A0852D67C7107Ad0d0DFeab60278fE6AdC',
 }
 
 const MockJsonRpcProvider = {
