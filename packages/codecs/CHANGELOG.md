@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.1.0...@ceramicnetwork/codecs@1.2.0-rc.0) (2023-06-01)
+
+
+### Features
+
+* **core:** store CAR files that come back from CAS ([#2828](https://github.com/ceramicnetwork/js-ceramic/issues/2828)) ([45440ca](https://github.com/ceramicnetwork/js-ceramic/commit/45440cad18d7eb89e1b5c0838cb1df6b96bbe754))
+
+
+
+
+
 # [1.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.1.0-rc.0...@ceramicnetwork/codecs@1.1.0) (2023-06-01)
 
 **Note:** Version bump only for package @ceramicnetwork/codecs

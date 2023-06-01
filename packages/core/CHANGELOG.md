@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.34.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.33.0...@ceramicnetwork/core@2.34.0-rc.0) (2023-06-01)
+
+
+### Features
+
+* **core:** finalize block threshold for switch to smart contract anchoring ([#2830](https://github.com/ceramicnetwork/js-ceramic/issues/2830)) ([affc665](https://github.com/ceramicnetwork/js-ceramic/commit/affc665fa1d73e45a2a695d63fb913521484c4d0))
+* **core:** store CAR files that come back from CAS ([#2828](https://github.com/ceramicnetwork/js-ceramic/issues/2828)) ([45440ca](https://github.com/ceramicnetwork/js-ceramic/commit/45440cad18d7eb89e1b5c0838cb1df6b96bbe754))
+
+
+
+
+
 # [2.33.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.33.0-rc.0...@ceramicnetwork/core@2.33.0) (2023-06-01)
 
 **Note:** Version bump only for package @ceramicnetwork/core
