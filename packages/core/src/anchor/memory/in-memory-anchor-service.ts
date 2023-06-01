@@ -19,7 +19,8 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
 import lru from 'lru_map'
-import { CAR } from 'cartonne'
+import { CAR, CarBlock, CARFactory } from 'cartonne'
+import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 
 const DID_MATCHER =
@@ -55,6 +56,8 @@ interface InMemoryAnchorConfig {
 // tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
 // can successfully validate each others transactions.
 const txnCache: lru.LRUMap<string, number> = new lru.LRUMap(100)
+const carFactory = new CARFactory()
+carFactory.codecs.add(DAG_JOSE)
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -367,6 +370,23 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Builds the CAR file that the AnchorService responds to Ceramic with for a successfully anchored
+   * request. Contains the AnchorCommit, AnchorProof, and the merkle tree path to the anchored commit.
+   * For the InMemoryAnchorService, however, the tree is always of size one, so there are no
+   * intermediate objects from the merkle tree.
+   */
+  async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
+    const car = carFactory.build()
+
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.#dispatcher.getIpfsBlock(cid))
+
+    car.blocks.put(await cidToBlock(proofCid))
+    car.blocks.put(await cidToBlock(anchorCommitCid))
+
+    return car
+  }
+
+  /**
    * Process single candidate
    * @private
    */
@@ -387,6 +407,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
     const cid = await this._publishAnchorCommit(leaf.streamId, commit)
 
+    const witnessCar = await this._buildWitnessCAR(proof, cid)
+
     // add a delay
     const handle = setTimeout(() => {
       this.#feed.next({
@@ -395,6 +417,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         cid: leaf.cid,
         message: 'CID successfully anchored',
         anchorCommit: cid,
+        witnessCar,
       })
       clearTimeout(handle)
     }, this.#anchorDelay)

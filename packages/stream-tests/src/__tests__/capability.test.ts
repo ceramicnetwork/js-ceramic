@@ -1,11 +1,4 @@
-import {
-  AnchorStatus,
-  CeramicApi,
-  IpfsApi,
-  StreamUtils,
-  SyncOptions,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'

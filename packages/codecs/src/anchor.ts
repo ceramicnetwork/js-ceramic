@@ -1,6 +1,6 @@
 import { type TypeOf, literal, optional, sparse, strict, string, union } from 'codeco'
 
-import { cidAsString } from './ipld.js'
+import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 
 /**
@@ -66,6 +66,7 @@ export const AnchorServiceAnchored = strict(
     cid: cidAsString,
     message: string,
     anchorCommit: cidAsString,
+    witnessCar: optional(carAsUint8Array),
   },
   'AnchorServiceAnchored'
 )

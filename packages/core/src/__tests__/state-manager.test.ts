@@ -669,11 +669,14 @@ describe('anchor', () => {
       expect(stillProcessingSecond.closed).toBeFalsy()
 
       // Now teardown
+      await inMemoryAnchorService.anchor()
       fauxCASResponse$.complete()
-      stillProcessingSecond.unsubscribe()
+      await whenSubscriptionDone(stillProcessingSecond)
     })
 
     test('anchor call', async () => {
+      const dagImportSpy = jest.spyOn(ceramic.dispatcher._ipfs.dag, 'import')
+
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
 
@@ -683,6 +686,13 @@ describe('anchor', () => {
       await TestUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // dag.import is called 4 times.  Once when the genesis commit is created, twice with the
+      // AnchorCommit itself (once when the InMemoryAnchorService publishes the AnchorCommit and
+      // once when Ceramic applies it), and once with the CAR file with the merkle witness
+      // received from the CAS.
+      expect(dagImportSpy).toHaveBeenCalledTimes(4)
+      dagImportSpy.mockClear()
     })
 
     test('No double anchor', async () => {

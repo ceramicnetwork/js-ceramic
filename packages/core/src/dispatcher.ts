@@ -27,7 +27,7 @@ import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CARFactory, CarBlock } from 'cartonne'
+import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
 
 const IPFS_GET_RETRIES = 3
@@ -156,6 +156,22 @@ export class Dispatcher {
     })
   }
 
+  async getIpfsBlock(cid: CID): Promise<Uint8Array> {
+    return await this._shutdownSignal.abortable((signal) => {
+      return this._ipfs.block.get(cid, { signal })
+    })
+  }
+
+  /**
+   * Stores all the blocks in the given CAR file into the local IPFS node.
+   * @param car
+   */
+  async importCAR(car: CAR): Promise<void> {
+    return await this._shutdownSignal.abortable(async (signal) => {
+      await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
+    })
+  }
+
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
@@ -179,13 +195,13 @@ export class Dispatcher {
         restrictBlockSize(linkedBlock, jws.link)
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
         restrictBlockSize(carFile.blocks.get(cid).payload, cid)
-        await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
+        await this.importCAR(carFile)
         Metrics.count(COMMITS_STORED, 1)
         return cid
       }
       const cid = carFile.put(data, { isRoot: true })
       restrictBlockSize(carFile.blocks.get(cid).payload, cid)
-      await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
+      await this.importCAR(carFile)
       Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {
