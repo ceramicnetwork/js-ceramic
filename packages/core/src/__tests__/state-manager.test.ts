@@ -674,7 +674,7 @@ describe('anchor', () => {
     })
 
     test('anchor call', async () => {
-      const blockPutSpy = jest.spyOn(ceramic.dispatcher._ipfs.block, 'put')
+      const dagImportSpy = jest.spyOn(ceramic.dispatcher._ipfs.dag, 'import')
 
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
@@ -688,8 +688,8 @@ describe('anchor', () => {
 
       // check that anchor CAR file data is stored to ipfs.  CAR file contains anchor proof and
       // anchor commit.
-      expect(blockPutSpy).toHaveBeenCalledTimes(2)
-      blockPutSpy.mockClear()
+      expect(dagImportSpy).toHaveBeenCalledTimes(1)
+      dagImportSpy.mockClear()
     })
 
     test('No double anchor', async () => {

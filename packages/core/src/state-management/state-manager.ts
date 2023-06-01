@@ -284,7 +284,7 @@ export class StateManager {
     ) {
       try {
         if (witnessCAR) {
-          await this.dispatcher.storeCarFile(witnessCAR)
+          await this.dispatcher.importCAR(witnessCAR)
         }
 
         await this.executionQ.forStream(state$.id).run(async () => {

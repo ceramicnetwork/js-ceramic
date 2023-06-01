@@ -163,17 +163,12 @@ export class Dispatcher {
   }
 
   /**
-   * Stores all the blocks in the given CAR file into the local IPFS node.  Uses the blocks API
-   * instead of the dag.import API because the dag.import API requires the CAR file to be a fully
-   * self-contained graph but our CAR file may have references to IPLD objects that aren't included
-   * in the CAR file itself.
+   * Stores all the blocks in the given CAR file into the local IPFS node.
    * @param car
    */
-  async storeCarFile(car: CAR): Promise<void> {
+  async importCAR(car: CAR): Promise<void> {
     return await this._shutdownSignal.abortable(async (signal) => {
-      for (const block of car.blocks) {
-        await this._ipfs.block.put(block.payload, { signal })
-      }
+      await this._ipfs.dag.import(car, { signal, pinRoots: false })
     })
   }
 
