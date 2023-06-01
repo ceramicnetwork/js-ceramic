@@ -168,7 +168,7 @@ export class Dispatcher {
    */
   async importCAR(car: CAR): Promise<void> {
     return await this._shutdownSignal.abortable(async (signal) => {
-      await this._ipfs.dag.import(car, { signal, pinRoots: false })
+      await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
     })
   }
 
@@ -195,13 +195,13 @@ export class Dispatcher {
         restrictBlockSize(linkedBlock, jws.link)
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
         restrictBlockSize(carFile.blocks.get(cid).payload, cid)
-        await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
+        await this.importCAR(carFile)
         Metrics.count(COMMITS_STORED, 1)
         return cid
       }
       const cid = carFile.put(data, { isRoot: true })
       restrictBlockSize(carFile.blocks.get(cid).payload, cid)
-      await all(this._ipfs.dag.import(carFile, { pinRoots: false }))
+      await this.importCAR(carFile)
       Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {

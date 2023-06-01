@@ -686,9 +686,11 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      // check that anchor CAR file data is stored to ipfs.  CAR file contains anchor proof and
-      // anchor commit.
-      expect(dagImportSpy).toHaveBeenCalledTimes(1)
+      // dag.import is called 4 times.  Once when the genesis commit is created, twice with the
+      // AnchorCommit itself (once when the InMemoryAnchorService publishes the AnchorCommit and
+      // once when Ceramic applies it), and once with the CAR file with the merkle witness
+      // received from the CAS.
+      expect(dagImportSpy).toHaveBeenCalledTimes(4)
       dagImportSpy.mockClear()
     })
 
