@@ -669,8 +669,9 @@ describe('anchor', () => {
       expect(stillProcessingSecond.closed).toBeFalsy()
 
       // Now teardown
+      await inMemoryAnchorService.anchor()
       fauxCASResponse$.complete()
-      stillProcessingSecond.unsubscribe()
+      await whenSubscriptionDone(stillProcessingSecond)
     })
 
     test('anchor call', async () => {
