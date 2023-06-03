@@ -56,10 +56,10 @@ type IndexedData<DateType> = {
  */
 export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
-  private modelsToIndex: Array<StreamID> = []
+  private indexedModels: Array<StreamID> = []
   // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
   // indexed
-  private readonly modelsIndexedFields = new Map<string, Array<string>>()
+  private readonly modelRelations = new Map<string, Array<string>>()
   tablesManager: TablesManager
   syncApi: ISyncQueryApi
 
@@ -90,14 +90,14 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
       await this.assertNoOngoingSyncForModel(modelArgs.model)
-      const foundModelToIndex = this.modelsToIndex.find((indexedModel) =>
+      const foundModelToIndex = this.indexedModels.find((indexedModel) =>
         indexedModel.equals(modelArgs.model)
       )
       if (!foundModelToIndex) {
-        this.modelsToIndex.push(modelArgs.model)
+        this.indexedModels.push(modelArgs.model)
       }
       if (modelArgs.relations) {
-        this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
+        this.modelRelations.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }
     }
   }
@@ -132,9 +132,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    */
   async stopIndexingModels(models: Array<StreamID>): Promise<void> {
     await this.stopIndexingModelsInDatabase(models)
-    const modelsAsStrings = models.map((streamID) => streamID.toString())
-    this.modelsToIndex = this.modelsToIndex.filter(
-      (modelStreamID) => !modelsAsStrings.includes(modelStreamID.toString())
+    this.indexedModels = this.indexedModels.filter(
+      (modelStreamID) => !models.some((streamID) => streamID.equals(modelStreamID))
     )
   }
 
@@ -169,7 +168,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
     const indexedData = this.getIndexedData(indexingArgs)
-    const fields = this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []
+    const fields = this.modelRelations.get(indexingArgs.model.toString()) ?? []
     for (const field of fields) {
       indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
     }
@@ -179,15 +178,15 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Get all models to be actively indexed by node
+   * Get all models actively indexed by node
    */
-  public getActiveModelsToIndex(): Array<StreamID> {
+  public getIndexedModels(): Array<StreamID> {
     /**
      * Helper function to return array of active models that are currently being indexed.
      * This variable is automatically populated during node startup & updated with Admin API
      * add & delete operations.
      */
-    return this.modelsToIndex
+    return this.indexedModels
   }
 
   private async getIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
@@ -200,7 +199,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     })
   }
 
-  async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+  async getModelsNoLongerIndexed(): Promise<Array<StreamID>> {
     return (
       await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
         is_indexed: false,
@@ -224,7 +223,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    */
   async assertModelIsIndexed(modelStreamId: StreamID | string) {
     const model = modelStreamId.toString()
-    const foundModelToIndex = this.modelsToIndex.find(
+    const foundModelToIndex = this.indexedModels.find(
       (indexedModel) => indexedModel.toString() == model
     )
     if (foundModelToIndex == undefined) {
@@ -283,7 +282,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    */
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)
-    this.modelsToIndex = await this.getIndexedModelsFromDatabase()
+    this.indexedModels = await this.getIndexedModelsFromDatabase()
   }
 
   /**

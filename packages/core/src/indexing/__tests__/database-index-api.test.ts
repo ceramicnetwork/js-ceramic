@@ -60,18 +60,14 @@ function modelsToIndexArgs(models: Array<StreamID>): Array<IndexModelArgs> {
 }
 
 class CompleteQueryApi implements ISyncQueryApi {
-  syncComplete(model: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      resolve(true)
-    })
+  syncComplete(model: string): boolean {
+    return true
   }
 }
 
 class IncompleteQueryApi implements ISyncQueryApi {
-  syncComplete(model: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      resolve(false)
-    })
+  syncComplete(model: string): boolean {
+    return false
   }
 }
 
@@ -513,7 +509,7 @@ describe('postgres', () => {
 
       expect(
         anotherIndexApi
-          .getActiveModelsToIndex()
+          .getIndexedModels()
           .map((streamID) => streamID.toString())
           .sort()
       ).toEqual([
@@ -527,11 +523,11 @@ describe('postgres', () => {
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      expect(indexApi.getActiveModelsToIndex()).toEqual([])
+      expect(indexApi.getIndexedModels()).toEqual([])
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       expect(
         indexApi
-          .getActiveModelsToIndex()
+          .getIndexedModels()
           .map((streamID) => streamID.toString())
           .sort()
       ).toEqual([
@@ -548,7 +544,7 @@ describe('postgres', () => {
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       expect(
         indexApi
-          .getActiveModelsToIndex()
+          .getIndexedModels()
           .map((streamID) => streamID.toString())
           .sort()
       ).toEqual([
@@ -558,7 +554,7 @@ describe('postgres', () => {
       await indexApi.stopIndexingModels([
         StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
       ])
-      expect(indexApi.getActiveModelsToIndex().map((streamID) => streamID.toString())).toEqual([
+      expect(indexApi.getIndexedModels().map((streamID) => streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
       ])
     })
@@ -695,7 +691,7 @@ describe('postgres', () => {
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
@@ -706,7 +702,7 @@ describe('postgres', () => {
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )
@@ -1147,7 +1143,7 @@ describe('sqlite', () => {
 
       expect(
         anotherIndexApi
-          .getActiveModelsToIndex()
+          .getIndexedModels()
           .map((streamID) => streamID.toString())
           .sort()
       ).toEqual([
@@ -1161,11 +1157,11 @@ describe('sqlite', () => {
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      expect(indexApi.getActiveModelsToIndex()).toEqual([])
+      expect(indexApi.getIndexedModels()).toEqual([])
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       expect(
         indexApi
-          .getActiveModelsToIndex()
+          .getIndexedModels()
           .map((streamID) => streamID.toString())
           .sort()
       ).toEqual([
@@ -1179,7 +1175,7 @@ describe('sqlite', () => {
       const indexApi = new SqliteIndexApi(dbConnection, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
       await indexApi.init()
-      expect(indexApi.getActiveModelsToIndex()).toEqual([])
+      expect(indexApi.getIndexedModels()).toEqual([])
       await expect(indexApi.indexModels(modelsToIndexArgs(modelsToIndex))).rejects.toThrow(
         /historical data for that model is still syncing/
       )
@@ -1193,7 +1189,7 @@ describe('sqlite', () => {
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
       expect(
         indexApi
-          .getActiveModelsToIndex()
+          .getIndexedModels()
           .map((streamID) => streamID.toString())
           .sort()
       ).toEqual([
@@ -1203,7 +1199,7 @@ describe('sqlite', () => {
       await indexApi.stopIndexingModels([
         StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
       ])
-      expect(indexApi.getActiveModelsToIndex().map((streamID) => streamID.toString())).toEqual([
+      expect(indexApi.getIndexedModels().map((streamID) => streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
       ])
     })
@@ -1285,7 +1281,7 @@ describe('sqlite', () => {
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
@@ -1296,7 +1292,7 @@ describe('sqlite', () => {
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.modelsToIndex = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )

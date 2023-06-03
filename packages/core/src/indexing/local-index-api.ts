@@ -68,8 +68,8 @@ export class LocalIndexApi implements IndexApi {
       return false
     }
 
-    return this.databaseIndexApi.getActiveModelsToIndex().some(function (streamId) {
-      return String(streamId) === String(args)
+    return this.databaseIndexApi.getIndexedModels().some(function (streamId) {
+      return streamId.equals(args)
     })
   }
 
@@ -137,27 +137,26 @@ export class LocalIndexApi implements IndexApi {
   }
 
   indexedModels(): Array<StreamID> {
-    return this.databaseIndexApi?.getActiveModelsToIndex()
+    return this.databaseIndexApi?.getIndexedModels() || []
   }
 
-  async indexModels(models: Array<StreamID> | null | undefined): Promise<void> {
+  async indexModels(models?: Array<StreamID>): Promise<void> {
     if (!models) {
       return
     }
 
-    const previouslyIndexedModels =
-      await this.databaseIndexApi?.getPreviouslyIndexedModelsFromDatabase()
+    const modelsNoLongerIndexed = await this.databaseIndexApi?.getModelsNoLongerIndexed()
 
     const indexModelsArgs = []
     for (const modelStreamId of models) {
       this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
       const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
-      if (previouslyIndexedModels) {
-        const streamWasPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
-          return String(streamId) === String(modelStreamId)
+      if (modelsNoLongerIndexed) {
+        const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (streamId) {
+          return streamId.equals(modelStreamId)
         })
         // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-        if (streamWasPreviouslyIndexed) {
+        if (modelNoLongerIndexed) {
           throw new Error(
             `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
           )
@@ -174,19 +173,12 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    await this.databaseIndexApi?.init()
-    // FIXME: CDB-2132 - Fragile DatabaseApi initialisation
-    await this.populateDatabaseApiInternalState()
-  }
-
-  /*
-  Gets currently indexed models from the database api and calls index's api indexModels()
-  which creates index model args and passes them back to the database api, so that it can populate
-  its internal state
-   */
-  async populateDatabaseApiInternalState(): Promise<void> {
-    const modelsToIndex = this.databaseIndexApi?.getActiveModelsToIndex()
-    await this.indexModels(modelsToIndex)
+    if (this.databaseIndexApi) {
+      await this.databaseIndexApi.init()
+      // FIXME: CDB-2132 - Fragile DatabaseApi initialisation
+      const modelsToIndex = this.databaseIndexApi.getIndexedModels()
+      await this.indexModels(modelsToIndex)
+    }
   }
 
   async close(): Promise<void> {
