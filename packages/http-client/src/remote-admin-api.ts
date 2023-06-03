@@ -36,12 +36,9 @@ export class RemoteAdminApi implements AdminApi {
     actingDid: DID,
     code: string,
     requestPath: string,
-    modelsIDs?: Array<StreamID>
+    body?: any
   ): Promise<string> {
     if (!actingDid) throw new MissingDIDError()
-    const body = modelsIDs
-      ? { models: modelsIDs.map((streamID) => streamID.toString()) }
-      : undefined
     const jws = await actingDid.createJWS({
       code: code,
       requestPath,
@@ -69,10 +66,13 @@ export class RemoteAdminApi implements AdminApi {
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
+    const body = modelsIDs
+      ? { models: modelsIDs.map((streamID) => streamID.toString()) }
+      : undefined
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
       body: {
-        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, modelsIDs),
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
       },
     })
   }
@@ -95,10 +95,13 @@ export class RemoteAdminApi implements AdminApi {
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
+    const body = modelsIDs
+      ? { models: modelsIDs.map((streamID) => streamID.toString()) }
+      : undefined
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',
       body: {
-        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, modelsIDs),
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
       },
     })
   }
