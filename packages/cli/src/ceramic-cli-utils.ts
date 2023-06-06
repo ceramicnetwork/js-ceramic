@@ -494,7 +494,7 @@ export class CeramicCliUtils {
 
   static async status(): Promise<void> {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
-        console.log(JSON.stringify(await ceramic.admin.nodeStatus()))
+      console.log(JSON.stringify(await ceramic.admin.nodeStatus()))
     })
   }
 
