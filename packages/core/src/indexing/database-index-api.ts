@@ -57,8 +57,8 @@ type IndexedData<DateType> = {
 export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private indexedModels: Array<StreamID> = []
-  // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
-  // indexed
+  // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
+  // to
   private readonly modelRelations = new Map<string, Array<string>>()
   tablesManager: TablesManager
   syncApi: ISyncQueryApi

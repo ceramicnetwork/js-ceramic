@@ -173,12 +173,15 @@ export class LocalIndexApi implements IndexApi {
   }
 
   async init(): Promise<void> {
-    if (this.databaseIndexApi) {
-      await this.databaseIndexApi.init()
-      // FIXME: CDB-2132 - Fragile DatabaseApi initialisation
-      const modelsToIndex = this.databaseIndexApi.getIndexedModels()
-      await this.indexModels(modelsToIndex)
+    if (!this.databaseIndexApi) {
+      return
     }
+    await this.databaseIndexApi.init()
+    // Load the set of indexed models from the database and pass them
+    // back to the DatabaseIndexApi so that it can populate its internal state.
+    // TODO(CDB-2132):  Fix this fragile and circular DatabaseApi initialization
+    const modelsToIndex = this.databaseIndexApi.getIndexedModels()
+    await this.indexModels(modelsToIndex)
   }
 
   async close(): Promise<void> {
