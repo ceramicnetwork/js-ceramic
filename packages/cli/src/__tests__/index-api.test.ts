@@ -60,7 +60,7 @@ beforeEach(async () => {
   const model = await Model.create(core, MODEL_DEFINITION)
   modelStreamId = model.id
 
-  await core.index.indexModels([modelStreamId])
+  await core.index.indexModels([{ streamID: modelStreamId }])
 })
 
 afterEach(async () => {

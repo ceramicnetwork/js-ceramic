@@ -5,6 +5,7 @@ import {
   NodeStatusResponse,
   ModelData,
   FieldsIndex,
+  convertModelIdsToModelData,
 } from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -82,23 +83,16 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    const code = await this.generateCode()
-    const body = modelIDsAsRequestBody(modelsIDs)
-    await this._fetchJson(this.getModelsUrl(), {
-      method: 'post',
-      body: {
-        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
-      },
-    })
+    await this.startIndexingModelData(convertModelIdsToModelData(modelsIDs))
   }
 
   async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
     const code = await this.generateCode()
     const body = {
-      modelData: modelData.map((data) => {
+      modelData: modelData.map((idx) => {
         return {
-          streamID: data.streamID.toString(),
-          indices: data.indices,
+          streamID: idx.streamID.toString(),
+          indices: idx.indices,
         }
       }),
     }
@@ -111,19 +105,8 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
-    const code = await this.generateCode()
-    const response = await this._fetchJson(this.getModelsUrl(), {
-      headers: {
-        Authorization: `Basic ${await this.buildJWS(
-          this._getDidFn(),
-          code,
-          this.getModelsUrl().pathname
-        )}`,
-      },
-    })
-    return response.models.map((modelStreamIDString: string) => {
-      return StreamID.fromString(modelStreamIDString)
-    })
+    const models = await this.getIndexedModelData()
+    return models.map((data) => data.streamID)
   }
 
   async getIndexedModelData(): Promise<Array<ModelData>> {
@@ -146,12 +129,22 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
+    await this.stopIndexingModelData(convertModelIdsToModelData(modelsIDs))
+  }
+
+  async stopIndexingModelData(modelData: Array<ModelData>): Promise<void> {
     const code = await this.generateCode()
-    const body = modelIDsAsRequestBody(modelsIDs)
-    await this._fetchJson(this.getModelsUrl(), {
+    const body = {
+      modelData: modelData.map((data) => {
+        return {
+          streamID: data.streamID.toString(),
+        }
+      }),
+    }
+    await this._fetchJson(this.getModelDataUrl(), {
       method: 'delete',
       body: {
-        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelDataUrl().pathname, body),
       },
     })
   }
@@ -159,8 +152,4 @@ export class RemoteAdminApi implements AdminApi {
   get pin(): PinApi {
     return this._pinApi
   }
-}
-
-function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
-  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
 }
