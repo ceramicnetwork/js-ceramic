@@ -192,7 +192,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     modelWithRelation = await Model.create(ceramic, MODEL_WITH_RELATION_DEFINITION)
     midRelationMetadata = { model: modelWithRelation.id }
 
-    await core.index.indexModels([model.id, modelWithRelation.id])
+    await core.index.indexModels([{ streamID: model.id }, { streamID: modelWithRelation.id }])
   }, 30 * 1000)
 
   afterEach(async () => {
@@ -232,7 +232,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(core.index.indexedModels().length).toEqual(2)
 
       const mid = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      await expect(core.index.indexModels([mid.id])).rejects.toThrow(/it is not a Model StreamID/)
+      await expect(core.index.indexModels([{ streamID: mid.id }])).rejects.toThrow(
+        /it is not a Model StreamID/
+      )
 
       expect(core.index.indexedModels().length).toEqual(2)
     })

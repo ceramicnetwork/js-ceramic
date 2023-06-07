@@ -6,8 +6,10 @@ import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
+  FieldsIndex,
   LoggerProvider,
   LogStyle,
+  ModelFieldsIndex,
   MultiQuery,
   StreamUtils,
   SyncOptions,
@@ -202,6 +204,14 @@ function validatePort(inPort) {
 }
 
 /**
+ * Field index contents in JWS
+ */
+type AdminAPIJWSModelFields = {
+  streamID: string
+  indices: Array<FieldsIndex>
+}
+
+/**
  * Contents an authorization header signed by an admin DID
  */
 type AdminAPIJWSContents = {
@@ -209,16 +219,21 @@ type AdminAPIJWSContents = {
   code: string
   requestPath: string
   models: Array<string>
+  indices?: Array<AdminAPIJWSModelFields>
 }
 
 type AdminApiJWSValidationResult = {
   kid?: string
   code?: string
   models?: Array<StreamID>
+  indices?: Array<ModelFieldsIndex>
   error?: string
 }
 
-type AdminApiModelMutationMethod = (modelIDs: Array<StreamID>) => Promise<void>
+type AdminApiModelMutationMethod = (
+  modelsIDs: Array<StreamID>,
+  indices?: Array<ModelFieldsIndex>
+) => Promise<void>
 
 /**
  * Ceramic daemon implementation
@@ -714,6 +729,12 @@ export class CeramicDaemon {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
         models: parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString)),
+        indices: parsedJWS.indices?.map((idx) => {
+          return {
+            streamID: StreamID.fromString(idx.streamId),
+            indices: idx.indices,
+          }
+        }),
       }
     }
   }
@@ -754,7 +775,7 @@ export class CeramicDaemon {
     }
 
     // Process request
-    await successCallback(jwsValidation.models)
+    await successCallback(jwsValidation.models, jwsValidation.indices)
     res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
@@ -805,9 +826,9 @@ export class CeramicDaemon {
       return
     }
 
-    const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
+    const indexedModels = await this.ceramic.admin.getIndexedModels()
     res.json({
-      models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
+      models: indexedModels.map((modelStreamID) => modelStreamID.toString()),
     })
   }
 

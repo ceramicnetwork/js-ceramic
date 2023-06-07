@@ -1,6 +1,8 @@
 import type {
   BaseQuery,
+  FieldsIndex,
   IndexApi,
+  ModelFieldsIndex,
   Page,
   PaginationQuery,
   StreamState,
@@ -17,15 +19,21 @@ import { Model } from '@ceramicnetwork/stream-model'
 import { ISyncQueryApi } from '../sync/interfaces.js'
 
 /**
- * Takes a Model StreamID, loads it, and returns the IndexModelArgs necessary to prepare the
+ * Takes a ModelFieldsIndex, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
 async function _getIndexModelArgs(
-  modelStreamId: StreamID,
-  repository: Repository
+  req: ModelFieldsIndex,
+  repository: Repository,
+  databaseIndexApi?: DatabaseIndexApi
 ): Promise<IndexModelArgs> {
+  const modelStreamId = req.streamID
   if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
+  }
+
+  let opts: IndexModelArgs = {
+    model: modelStreamId,
   }
 
   if (modelStreamId.type == Model.STREAM_TYPE_ID) {
@@ -33,11 +41,21 @@ async function _getIndexModelArgs(
     const content = modelState.state.next?.content ?? modelState.state.content
     Model.assertVersionValid(content, 'major')
     if (content.relations) {
-      return { model: modelStreamId, relations: content.relations }
+      opts = {
+        ...opts,
+        relations: content.relations,
+      }
+    }
+    const indices = (await databaseIndexApi?.getFieldsIndex(modelStreamId)) ?? req.indices
+    if (indices) {
+      opts = {
+        ...opts,
+        indices,
+      }
     }
   }
 
-  return { model: modelStreamId }
+  return opts
 }
 
 /**
@@ -68,8 +86,8 @@ export class LocalIndexApi implements IndexApi {
       return false
     }
 
-    return this.databaseIndexApi.getIndexedModels().some(function (streamId) {
-      return streamId.equals(args)
+    return this.databaseIndexApi.getIndexedModels().some(function (idx) {
+      return idx.streamID.equals(args)
     })
   }
 
@@ -136,34 +154,33 @@ export class LocalIndexApi implements IndexApi {
     }
   }
 
-  indexedModels(): Array<StreamID> {
+  indexedModels(): Array<ModelFieldsIndex> {
     return this.databaseIndexApi?.getIndexedModels() || []
   }
 
-  async indexModels(models?: Array<StreamID>): Promise<void> {
-    if (!models) {
-      return
-    }
-
+  async indexModels(models: Array<ModelFieldsIndex>): Promise<void> {
     const modelsNoLongerIndexed = await this.databaseIndexApi?.getModelsNoLongerIndexed()
 
-    const indexModelsArgs = []
-    for (const modelStreamId of models) {
-      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
-      const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
-      if (modelsNoLongerIndexed) {
-        const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (streamId) {
-          return streamId.equals(modelStreamId)
-        })
-        // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-        if (modelNoLongerIndexed) {
-          throw new Error(
-            `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
-          )
+    const indexModelsArgs = await Promise.all(
+      models.map(async (idx) => {
+        const modelStreamId = idx.streamID
+        this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
+        const indexModelArgs = await _getIndexModelArgs(idx, this.repository, this.databaseIndexApi)
+        if (modelsNoLongerIndexed) {
+          const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
+            return oldIdx.streamID.equals(modelStreamId)
+          })
+          // TODO(CDB-2297): Handle a model's historical sync after re-indexing
+          if (modelNoLongerIndexed) {
+            throw new Error(
+              `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
+            )
+          }
         }
-      }
-      indexModelsArgs.push(indexModelArgs)
-    }
+        return indexModelArgs
+      })
+    )
+
     await this.databaseIndexApi?.indexModels(indexModelsArgs)
   }
 

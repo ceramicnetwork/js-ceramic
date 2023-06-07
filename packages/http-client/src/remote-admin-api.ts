@@ -1,4 +1,10 @@
-import { AdminApi, fetchJson, PinApi, NodeStatusResponse } from '@ceramicnetwork/common'
+import {
+  AdminApi,
+  fetchJson,
+  PinApi,
+  NodeStatusResponse,
+  ModelFieldsIndex,
+} from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
@@ -64,9 +70,25 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
+  async startIndexingModels(
+    modelsIDs: Array<StreamID>,
+    indices?: Array<ModelFieldsIndex>
+  ): Promise<void> {
     const code = await this.generateCode()
-    const body = modelIDsAsRequestBody(modelsIDs)
+    let body
+    if (modelsIDs && indices) {
+      body = {
+        models: modelsIDs.map((id) => id.toString()),
+        indices: indices.map((idx) => {
+          return {
+            streamID: idx.streamID.toString(),
+            indices: idx.indices,
+          }
+        }),
+      }
+    } else {
+      body = modelIDsAsRequestBody(modelsIDs)
+    }
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
       body: {
@@ -75,7 +97,7 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async getIndexedModels(): Promise<Array<StreamID>> {
+  async getIndexedModels(): Promise<Array<ModelFieldsIndex>> {
     const code = await this.generateCode()
     const response = await this._fetchJson(this.getModelsUrl(), {
       headers: {
@@ -86,9 +108,7 @@ export class RemoteAdminApi implements AdminApi {
         )}`,
       },
     })
-    return response.models.map((modelStreamIDString: string) => {
-      return StreamID.fromString(modelStreamIDString)
-    })
+    return response.indices
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
@@ -108,7 +128,5 @@ export class RemoteAdminApi implements AdminApi {
 }
 
 function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
-  return modelIDs
-    ? { models: modelIDs.map((streamID) => streamID.toString()) }
-    : undefined
+  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
 }

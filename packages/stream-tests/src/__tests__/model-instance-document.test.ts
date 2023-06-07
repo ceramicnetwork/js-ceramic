@@ -122,7 +122,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     modelSingle = await Model.create(ceramic, MODEL_DEFINITION_SINGLE)
     midSingleMetadata = { model: modelSingle.id }
 
-    await core.index.indexModels([model.id])
+    await core.index.indexModels([{ streamID: model.id }])
   }, 12000)
 
   afterAll(async () => {
