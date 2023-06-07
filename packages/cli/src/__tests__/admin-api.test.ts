@@ -14,6 +14,7 @@ import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
 import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
@@ -25,6 +26,10 @@ const MY_MODEL_1_CONTENT: ModelDefinition = {
 
 const MODEL_PATH = '/api/v0/admin/models'
 const STATUS_PATH = '/api/v0/admin/status'
+
+function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
+  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
+}
 
 describe('admin api', () => {
   let daemon: CeramicDaemon
@@ -132,10 +137,11 @@ describe('admin api', () => {
     })
     expect(getResult.models).toEqual([])
 
+    const postBody = modelIDsAsRequestBody([exampleModelStreamId])
     const postResult = await fetchJson(modelsURLString, {
       method: 'POST',
       body: {
-        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, postBody),
       },
     })
     expect(postResult.result).toEqual('success')
@@ -151,10 +157,11 @@ describe('admin api', () => {
     })
     expect(newGetResult.models).toEqual([exampleModelStreamId])
 
+    const deleteBody = modelIDsAsRequestBody([exampleModelStreamId])
     const deleteResult = await fetchJson(modelsURLString, {
       method: 'DELETE',
       body: {
-        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
+        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, body),
       },
     })
     expect(deleteResult.result).toEqual('success')
