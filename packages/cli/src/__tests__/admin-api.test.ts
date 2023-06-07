@@ -27,8 +27,8 @@ const MY_MODEL_1_CONTENT: ModelDefinition = {
 const MODEL_PATH = '/api/v0/admin/models'
 const STATUS_PATH = '/api/v0/admin/status'
 
-function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
-  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
+function modelIDsAsRequestBody(modelIDs: Array<string>): Record<string, Array<string>> {
+  return modelIDs ? { models: modelIDs } : undefined
 }
 
 describe('admin api', () => {
@@ -88,7 +88,7 @@ describe('admin api', () => {
     requestPath,
     models?: Array<string>
   ): Promise<string> {
-    const body = models ? { models: models } : undefined
+    const body = modelIDsAsRequestBody(models)
     const jws = await did.createJWS({
       code: code,
       requestPath,
@@ -137,11 +137,10 @@ describe('admin api', () => {
     })
     expect(getResult.models).toEqual([])
 
-    const postBody = modelIDsAsRequestBody([exampleModelStreamId])
     const postResult = await fetchJson(modelsURLString, {
       method: 'POST',
       body: {
-        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, postBody),
+        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
       },
     })
     expect(postResult.result).toEqual('success')
@@ -157,11 +156,10 @@ describe('admin api', () => {
     })
     expect(newGetResult.models).toEqual([exampleModelStreamId])
 
-    const deleteBody = modelIDsAsRequestBody([exampleModelStreamId])
     const deleteResult = await fetchJson(modelsURLString, {
       method: 'DELETE',
       body: {
-        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, body),
+        jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
       },
     })
     expect(deleteResult.result).toEqual('success')

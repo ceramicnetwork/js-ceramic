@@ -828,7 +828,7 @@ export class CeramicDaemon {
 
     const indexedModels = await this.ceramic.admin.getIndexedModels()
     res.json({
-      models: indexedModels.map((modelStreamID) => modelStreamID.toString()),
+      models: indexedModels.map((idx) => idx.streamID.toString()),
     })
   }
 
