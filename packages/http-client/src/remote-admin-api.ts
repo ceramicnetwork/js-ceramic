@@ -75,10 +75,10 @@ export class RemoteAdminApi implements AdminApi {
     indices?: Array<ModelFieldsIndex>
   ): Promise<void> {
     const code = await this.generateCode()
-    let body
-    if (modelsIDs && indices) {
+    let body = modelIDsAsRequestBody(modelsIDs)
+    if (indices) {
       body = {
-        models: modelsIDs.map((id) => id.toString()),
+        ...body,
         indices: indices.map((idx) => {
           return {
             streamID: idx.streamID.toString(),
@@ -86,8 +86,6 @@ export class RemoteAdminApi implements AdminApi {
           }
         }),
       }
-    } else {
-      body = modelIDsAsRequestBody(modelsIDs)
     }
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
@@ -97,9 +95,25 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async getIndexedModels(): Promise<Array<ModelFieldsIndex>> {
+  async getIndexedModels(): Promise<Array<StreamID>> {
     const code = await this.generateCode()
     const response = await this._fetchJson(this.getModelsUrl(), {
+      headers: {
+        Authorization: `Basic ${await this.buildJWS(
+          this._getDidFn(),
+          code,
+          this.getModelsUrl().pathname
+        )}`,
+      },
+    })
+    return response.models.map((id) => StreamID.fromString(id))
+  }
+
+  async getIndexedModelsWithFieldIndices(): Promise<Array<ModelFieldsIndex>> {
+    const code = await this.generateCode()
+    const url = this.getModelsUrl()
+    url.searchParams.append('withFieldIndices', 'true')
+    const response = await this._fetchJson(url, {
       headers: {
         Authorization: `Basic ${await this.buildJWS(
           this._getDidFn(),
@@ -127,6 +141,6 @@ export class RemoteAdminApi implements AdminApi {
   }
 }
 
-function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
-  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
+function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, any> {
+  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : {}
 }

@@ -570,9 +570,7 @@ describe('admin api', () => {
           method: 'POST',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/At least one model must be specified/)
     })
 
     it('Empty models for models POST', async () => {
@@ -582,9 +580,7 @@ describe('admin api', () => {
           method: 'POST',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/At least one model must be specified/)
     })
 
     it('No models for models DELETE', async () => {
@@ -594,9 +590,7 @@ describe('admin api', () => {
           method: 'DELETE',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/At least one model must be specified/)
     })
 
     it('Empty models for models DELETE', async () => {
@@ -606,9 +600,7 @@ describe('admin api', () => {
           method: 'DELETE',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/At least one model must be specified/)
     })
 
     it('Disallow re-indexing on POST', async () => {
