@@ -25,6 +25,7 @@ EXPOSE 7007
 ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
 
 FROM ceramic as composedb
+
 ARG COMPOSEDB_VERSION=latest
 
 RUN npm install --location=global @composedb/cli@${COMPOSEDB_VERSION}
