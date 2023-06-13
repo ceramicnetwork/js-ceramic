@@ -70,14 +70,15 @@ export class EventID {
    */
   static create(
     networkID: number | string,
-    separator: string,
+    separator: string | Uint8Array,
     controller: string,
     init: CID | string,
     eventHeight: number,
     event: CID | string
   ): EventID {
     const networkIDInt = typeof networkID === 'string' ? networkByName(networkID) : networkID
-    const separatorBytes = sha256(u8a.fromString(separator)).slice(-8)
+    const separatorAllBytes = typeof separator === 'string' ? u8a.fromString(separator) : separator
+    const separatorBytes = sha256(separatorAllBytes).slice(-8)
     const controllerBytes = sha256(u8a.fromString(controller)).slice(-8)
     const initCid = typeof init === 'string' ? CID.parse(init) : init
     const initBytes = initCid.bytes.slice(-4)
