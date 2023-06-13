@@ -10,7 +10,7 @@ import { Memoize } from 'mapmoize'
 const TAG = Symbol.for('@ceramicnetwork/streamid/EventID')
 
 // Stream Codecs and Event Codec https://github.com/ceramicnetwork/CIPs/blob/main/tables/streamtypes.csv
-const EVENT_ID_CODEC = 0x71
+const EVENT_ID_CODEC = 0x05
 const STREAMID_CODEC_LEN = 2
 const EVENT_ID_CODEC_LEN = 1
 
