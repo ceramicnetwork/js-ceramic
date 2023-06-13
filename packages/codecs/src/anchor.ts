@@ -59,7 +59,7 @@ export const AnchorServiceProcessing = strict(
 )
 export type AnchorServiceProcessing = TypeOf<typeof AnchorServiceProcessing>
 
-export const AnchorServiceAnchored = strict(
+export const AnchorServiceAnchored = sparse(
   {
     status: literal(AnchorStatus.ANCHORED),
     streamId: streamIdAsString,
