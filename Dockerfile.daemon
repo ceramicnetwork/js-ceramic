@@ -1,6 +1,6 @@
-FROM node:16
+FROM node:16 as ceramic
 
-RUN apt-get update && apt-get install -y netcat
+RUN apt-get update && apt-get install -y netcat gettext-base
 
 WORKDIR /js-ceramic
 
@@ -16,10 +16,16 @@ RUN lerna bootstrap --hoist --ci -- --production
 
 COPY types ./types
 
-ARG GIT_COMMIT_HASH
+ARG GIT_COMMIT_HASH=docker
 
 RUN lerna run build
 
 EXPOSE 7007
 
 ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
+
+FROM ceramic as composedb
+
+ARG COMPOSEDB_VERSION=latest
+
+RUN npm install --location=global @composedb/cli@${COMPOSEDB_VERSION}
