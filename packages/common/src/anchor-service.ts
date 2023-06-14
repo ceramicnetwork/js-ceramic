@@ -5,8 +5,6 @@ import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CAR } from 'cartonne'
 
-export type { RequestAnchorParams } from '@ceramicnetwork/codecs'
-
 /**
  * Describes all anchor statuses
  */

@@ -126,8 +126,6 @@ export class EthereumAnchorService implements AnchorService {
 
   /**
    * Send requests to an external Ceramic Anchor Service
-   * @param params - a RequestAnchorParams object
-   * @private
    */
   private _makeAnchorRequest(
     carFileReader: AnchorRequestCarFileReader
