@@ -3,6 +3,15 @@ import { type TypeOf, literal, optional, sparse, strict, string, union } from 'c
 import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 
+export enum RequestStatusName {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  READY = 'READY',
+  REPLACED = 'REPLACED',
+}
+
 /**
  * Describes all anchor statuses
  */

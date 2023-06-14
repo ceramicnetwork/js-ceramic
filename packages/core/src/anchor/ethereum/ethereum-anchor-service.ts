@@ -18,7 +18,7 @@ import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { RequestStatusName } from '@ceramicnetwork/anchor-utils'
+import { RequestStatusName } from '@ceramicnetwork/codecs'
 
 /**
  * CID-streamId pair
