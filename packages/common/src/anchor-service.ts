@@ -4,20 +4,74 @@ import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CAR } from 'cartonne'
-import type { AnchorProof, AnchorServiceResponse } from '@ceramicnetwork/codecs'
 
-export type {
-  AnchorServiceAnchored,
-  AnchorServiceFailed,
-  AnchorServicePending,
-  AnchorServiceProcessing,
-  AnchorServiceReplaced,
-  AnchorServiceResponse,
-  RequestAnchorParams,
-} from '@ceramicnetwork/codecs'
+export type { RequestAnchorParams } from '@ceramicnetwork/codecs'
+
+/**
+ * Describes all anchor statuses
+ */
+export enum AnchorStatus {
+  NOT_REQUESTED = 0,
+  PENDING = 1,
+  PROCESSING = 2,
+  ANCHORED = 3,
+  FAILED = 4,
+  REPLACED = 5,
+}
+
+export type AnchorServicePending = {
+  status: AnchorStatus.PENDING
+  streamId: StreamID
+  cid: CID
+  message: string
+}
+
+export type AnchorServiceProcessing = {
+  status: AnchorStatus.PROCESSING
+  streamId: StreamID
+  cid: CID
+  message: string
+}
+
+export type AnchorServiceAnchored = {
+  status: AnchorStatus.ANCHORED
+  streamId: StreamID
+  cid: CID
+  message: string
+  anchorCommit: CID
+  witnessCar: CAR
+}
+
+export type AnchorServiceFailed = {
+  status: AnchorStatus.FAILED
+  streamId: StreamID
+  cid: CID
+  message: string
+}
+
+export type AnchorServiceReplaced = {
+  status: AnchorStatus.REPLACED
+  streamId: StreamID
+  cid: CID
+  message: string
+}
+
+export type AnchorServiceResponse =
+  | AnchorServicePending
+  | AnchorServiceProcessing
+  | AnchorServiceAnchored
+  | AnchorServiceFailed
+  | AnchorServiceReplaced
 
 export enum AnchorServiceAuthMethods {
   DID = 'did',
+}
+
+export type AnchorProof = {
+  chainId: string
+  txHash: CID
+  root: CID
+  txType?: string
 }
 
 /**

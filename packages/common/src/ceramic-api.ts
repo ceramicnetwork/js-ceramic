@@ -6,7 +6,7 @@ import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
 import { NodeStatusResponse } from './node-status-interface.js'
-import type { AnchorStatus } from '@ceramicnetwork/codecs'
+import type { AnchorStatus } from '@ceramicnetwork/common'
 
 /**
  * Describes Ceramic pinning functionality
