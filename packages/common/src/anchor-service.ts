@@ -3,7 +3,7 @@ import type { Observable } from 'rxjs'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { CAR } from 'cartonne'
+import type { CAR } from 'cartonne'
 
 /**
  * Describes all anchor statuses
