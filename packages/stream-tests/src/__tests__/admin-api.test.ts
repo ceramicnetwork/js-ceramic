@@ -169,7 +169,7 @@ describe('Admin API tests', () => {
 
       ceramic.did = adminDid
 
-      let indexedModels = await ceramic.admin.getIndexedModelsWithFieldIndices()
+      let indexedModels = await ceramic.admin.getIndexedModelData()
       expect(indexedModels.length).toEqual(0)
 
       await expect(ceramic.index.count({ model: model.id })).rejects.toThrow(
@@ -186,7 +186,7 @@ describe('Admin API tests', () => {
           },
         ]
       )
-      indexedModels = await ceramic.admin.getIndexedModelsWithFieldIndices()
+      indexedModels = await ceramic.admin.getIndexedModelData()
       expect(indexedModels.length).toEqual(1)
 
       // Doesn't know about the doc created before the model was indexed

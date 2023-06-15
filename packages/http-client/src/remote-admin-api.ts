@@ -3,7 +3,7 @@ import {
   fetchJson,
   PinApi,
   NodeStatusResponse,
-  ModelFieldsIndex,
+  ModelData,
 } from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -72,20 +72,17 @@ export class RemoteAdminApi implements AdminApi {
 
   async startIndexingModels(
     modelsIDs: Array<StreamID>,
-    indices?: Array<ModelFieldsIndex>
+    indices?: Array<ModelData>
   ): Promise<void> {
     const code = await this.generateCode()
-    let body = modelIDsAsRequestBody(modelsIDs)
+    const body = modelIDsAsRequestBody(modelsIDs)
     if (indices) {
-      body = {
-        ...body,
-        indices: indices.map((idx) => {
-          return {
-            streamID: idx.streamID.toString(),
-            indices: idx.indices,
-          }
-        }),
-      }
+      body.indices = indices.map((idx) => {
+        return {
+          streamID: idx.streamID.toString(),
+          indices: idx.indices,
+        }
+      })
     }
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
@@ -109,10 +106,10 @@ export class RemoteAdminApi implements AdminApi {
     return response.models.map((id) => StreamID.fromString(id))
   }
 
-  async getIndexedModelsWithFieldIndices(): Promise<Array<ModelFieldsIndex>> {
+  async getIndexedModelData(): Promise<Array<ModelData>> {
     const code = await this.generateCode()
     const url = this.getModelsUrl()
-    url.searchParams.append('withFieldIndices', 'true')
+    url.searchParams.append('withModelData', 'true')
     const response = await this._fetchJson(url, {
       headers: {
         Authorization: `Basic ${await this.buildJWS(
@@ -122,7 +119,7 @@ export class RemoteAdminApi implements AdminApi {
         )}`,
       },
     })
-    return response.indices
+    return response.modelData
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {

@@ -24,9 +24,11 @@ export type FieldsIndex = {
 }
 
 /**
- * Index for a model with id
+ * Data for a model. Contains
+ *  * streamID: StreamID of the model
+ *  * indices: Array of field indices
  */
-export type ModelFieldsIndex = {
+export type ModelData = {
   streamID: StreamID
   indices?: Array<FieldsIndex>
 }
@@ -95,17 +97,18 @@ export interface AdminApi {
   getIndexedModels(): Promise<Array<StreamID>>
 
   /**
-   * List indexed model streams with fields
+   * List indexed model streams with data
    */
-  getIndexedModelsWithFieldIndices(): Promise<Array<ModelFieldsIndex>>
+  getIndexedModelData(): Promise<Array<ModelData>>
 
   /**
    * Adds model streams to index
    *
-   * @param modelsIDs - array of model stream IDs to add to index
+   * @param modelsIDs - array of model stream IDs to add to index. This parameter is deprecated
+   * and indices should be specified instead
    * @param indices - array of model streams with field indices to index
    */
-  startIndexingModels(modelsIDs: Array<StreamID>, indices?: Array<ModelFieldsIndex>): Promise<void>
+  startIndexingModels(modelsIDs: Array<StreamID>, indices?: Array<ModelData>): Promise<void>
 
   /**
    * Removes model streams from index

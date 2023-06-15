@@ -6,7 +6,7 @@ import type {
   DiagnosticsLogger,
   Networks,
   FieldsIndex,
-  ModelFieldsIndex,
+  ModelData,
 } from '@ceramicnetwork/common'
 import { Knex } from 'knex'
 import type { CID } from 'multiformats/cid'
@@ -33,7 +33,8 @@ export interface IndexStreamArgs {
 }
 
 /**
- * Create a valid name for a fields index, if the index has a name specified
+ * Create a valid name for a fields index, if the index has a name specified, or generate a valid
+ * name if one is not specified
  * @param idx Index to create a name for
  * @param table Table to add index to
  */
@@ -73,7 +74,7 @@ type IndexedData<DateType> = {
  */
 export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
-  private indexedModels: Array<ModelFieldsIndex> = []
+  private indexedModels: Array<ModelData> = []
   // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
   // to
   private readonly modelRelations = new Map<string, Array<string>>()
@@ -231,7 +232,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   /**
    * Get all models actively indexed by node
    */
-  public getIndexedModels(): Array<ModelFieldsIndex> {
+  public getIndexedModels(): Array<ModelData> {
     /**
      * Helper function to return array of active models that are currently being indexed.
      * This variable is automatically populated during node startup & updated with Admin API
@@ -240,7 +241,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     return this.indexedModels
   }
 
-  private async getIndexedModelsFromDatabase(): Promise<Array<ModelFieldsIndex>> {
+  private async getIndexedModelsFromDatabase(): Promise<Array<ModelData>> {
     return (
       await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'indices').where({
         is_indexed: true,
@@ -253,7 +254,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     })
   }
 
-  async getModelsNoLongerIndexed(): Promise<Array<ModelFieldsIndex>> {
+  async getModelsNoLongerIndexed(): Promise<Array<ModelData>> {
     return (
       await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'indices').where({
         is_indexed: false,

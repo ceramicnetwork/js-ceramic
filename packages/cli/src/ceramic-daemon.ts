@@ -9,7 +9,7 @@ import {
   FieldsIndex,
   LoggerProvider,
   LogStyle,
-  ModelFieldsIndex,
+  ModelData,
   MultiQuery,
   StreamUtils,
   SyncOptions,
@@ -219,20 +219,20 @@ type AdminAPIJWSContents = {
   code: string
   requestPath: string
   models: Array<string>
-  indices?: Array<AdminAPIJWSModelFields>
+  modelData?: Array<AdminAPIJWSModelFields>
 }
 
 type AdminApiJWSValidationResult = {
   kid?: string
   code?: string
   models?: Array<StreamID>
-  indices?: Array<ModelFieldsIndex>
+  modelData?: Array<ModelData>
   error?: string
 }
 
 type AdminApiModelMutationMethod = (
   modelsIDs: Array<StreamID>,
-  indices?: Array<ModelFieldsIndex>
+  indices?: Array<ModelData>
 ) => Promise<void>
 
 /**
@@ -698,7 +698,7 @@ export class CeramicDaemon {
       code: result.payload.code,
       requestPath: result.payload.requestPath,
       models: result.payload.requestBody?.models || [],
-      indices: result.payload.requestBody?.indices || [],
+      modelData: result.payload.requestBody?.indices || [],
     }
   }
 
@@ -722,19 +722,21 @@ export class CeramicDaemon {
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
     } else if (
-      shouldContainModels &&
-      parsedJWS.models.length == 0 &&
-      parsedJWS.indices.length == 0
+      shouldContainModels && (
+        (!parsedJWS.models || parsedJWS.models.length == 0) &&
+        (!parsedJWS.modelData || parsedJWS.modelData.length == 0)
+      )
     ) {
       return {
-        error: `At least one model must be specified, either in 'models' as a 'StreamID' or 'indices' as a 'ModelFieldIndex'`,
+        error: `At least one model must be specified, either in 'models' as a 'StreamID' or 'modelData' as a 'ModelData' consisting of 'StreamID' and other fields`,
       }
     } else {
+      const models = (parsedJWS.models ?? []).map((modelIDString) => StreamID.fromString(modelIDString))
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
-        models: parsedJWS.models.map((modelIDString) => StreamID.fromString(modelIDString)),
-        indices: parsedJWS.indices.map((idx) => {
+        models: models,
+        modelData: parsedJWS.modelData?.map((idx) => {
           return {
             streamID: StreamID.fromString(idx.streamID),
             indices: idx.indices,
@@ -780,7 +782,7 @@ export class CeramicDaemon {
     }
 
     // Process request
-    await successCallback(jwsValidation.models, jwsValidation.indices)
+    await successCallback(jwsValidation.models, jwsValidation.modelData)
     res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
@@ -831,15 +833,15 @@ export class CeramicDaemon {
       return
     }
 
-    const withFieldIndices = req.query.withFieldIndices
-    if (withFieldIndices && withFieldIndices.toString().toLowerCase() == 'true') {
-      const indexedModels = await this.ceramic.admin.getIndexedModelsWithFieldIndices()
+    const withModelData = req.query.withModelData
+    if (withModelData && withModelData.toString().toLowerCase() == 'true') {
+      const indexedModels = await this.ceramic.admin.getIndexedModelData()
       res.json({
         models: indexedModels.map((idx) => idx.streamID.toString()),
-        indices: indexedModels.map((idx) => {
+        modelData: indexedModels.map((idx) => {
           return {
             streamID: idx.streamID.toString(),
-            indices: idx.indices,
+            indices: idx.indices
           }
         }),
       })

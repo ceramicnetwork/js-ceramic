@@ -2,7 +2,7 @@ import type {
   BaseQuery,
   FieldsIndex,
   IndexApi,
-  ModelFieldsIndex,
+  ModelData,
   Page,
   PaginationQuery,
   StreamState,
@@ -23,7 +23,7 @@ import { ISyncQueryApi } from '../sync/interfaces.js'
  * database for indexing that model.
  */
 async function _getIndexModelArgs(
-  req: ModelFieldsIndex,
+  req: ModelData,
   repository: Repository,
   databaseIndexApi?: DatabaseIndexApi
 ): Promise<IndexModelArgs> {
@@ -154,11 +154,11 @@ export class LocalIndexApi implements IndexApi {
     }
   }
 
-  indexedModels(): Array<ModelFieldsIndex> {
-    return this.databaseIndexApi?.getIndexedModels() || []
+  indexedModels(): Array<ModelData> {
+    return this.databaseIndexApi?.getIndexedModels() ?? []
   }
 
-  async indexModels(models: Array<ModelFieldsIndex>): Promise<void> {
+  async indexModels(models: Array<ModelData>): Promise<void> {
     const modelsNoLongerIndexed = await this.databaseIndexApi?.getModelsNoLongerIndexed()
 
     const indexModelsArgs = await Promise.all(
