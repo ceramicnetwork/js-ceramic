@@ -4,6 +4,7 @@ import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CAR } from 'cartonne'
+import type { CASResponse } from '@ceramicnetwork/codecs'
 
 /**
  * Describes all anchor statuses
@@ -98,7 +99,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse>
+  requestAnchor(carFile: CAR): Observable<CASResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
@@ -106,7 +107,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this

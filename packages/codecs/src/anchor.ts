@@ -1,6 +1,7 @@
 import { type, string, sparse, optional, literal, union, type TypeOf } from 'codeco'
-import { cidAsString } from './ipld.js'
+import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
+import { uint8ArrayAsBase64 } from './binary.js'
 
 export enum RequestStatusName {
   PENDING = 'PENDING',
@@ -11,10 +12,12 @@ export enum RequestStatusName {
   REPLACED = 'REPLACED',
 }
 
-export const CommitPresentation = type(
+export const CommitPresentation = sparse(
   {
-    content: sparse({ path: optional(string), prev: string, proof: optional(string) }, 'content'),
-    cid: string,
+    content: optional(
+      sparse({ path: optional(string), prev: string, proof: optional(string) }, 'content')
+    ),
+    cid: string.pipe(cidAsString),
   },
   'CommitPresentation'
 )
@@ -23,7 +26,6 @@ export type CommitPresentation = TypeOf<typeof CommitPresentation>
 export const NotCompleteStatusName = union([
   literal(RequestStatusName.PENDING),
   literal(RequestStatusName.PROCESSING),
-  literal(RequestStatusName.COMPLETED),
   literal(RequestStatusName.FAILED),
   literal(RequestStatusName.READY),
   literal(RequestStatusName.REPLACED),
@@ -46,6 +48,7 @@ export const CompleteCASResponse = type(
     ...NotCompleteCASResponse.props,
     status: literal(RequestStatusName.COMPLETED),
     anchorCommit: CommitPresentation,
+    witnessCar: uint8ArrayAsBase64.pipe(carAsUint8Array),
   },
   'CompleteCASResponse'
 )

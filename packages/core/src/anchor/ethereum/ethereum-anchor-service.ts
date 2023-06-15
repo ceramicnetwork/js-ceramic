@@ -3,22 +3,25 @@ import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
 import {
   CeramicApi,
-  AnchorServiceResponse,
   AnchorService,
   AnchorServiceAuth,
-  AnchorStatus,
   AuthenticatedAnchorService,
   DiagnosticsLogger,
   fetchJson,
   FetchRequest,
-  UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { RequestStatusName } from '@ceramicnetwork/codecs'
+import {
+  CASResponse,
+  CASResponseOrError,
+  ErrorResponse,
+  RequestStatusName,
+} from '@ceramicnetwork/codecs'
+import { decode } from 'codeco'
 
 /**
  * CID-streamId pair
@@ -85,10 +88,8 @@ export class EthereumAnchorService implements AnchorService {
 
   /**
    * Requests anchoring service for current tip of the stream
-   * @param streamId - Stream ID
-   * @param tip - Tip CID of the stream
    */
-  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse> {
+  requestAnchor(carFile: CAR): Observable<CASResponse> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(
@@ -97,8 +98,8 @@ export class EthereumAnchorService implements AnchorService {
       this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
     ).pipe(
       catchError((error) =>
-        of<AnchorServiceResponse>({
-          status: AnchorStatus.FAILED,
+        of<CASResponse>({
+          status: RequestStatusName.FAILED,
           streamId: carFileReader.streamId,
           cid: carFileReader.tip,
           message: error.message,
@@ -115,9 +116,9 @@ export class EthereumAnchorService implements AnchorService {
     return [this._chainId]
   }
 
-  private _announcePending(cidStream: CidAndStream): Observable<AnchorServiceResponse> {
+  private _announcePending(cidStream: CidAndStream): Observable<CASResponse> {
     return of({
-      status: AnchorStatus.PENDING,
+      status: RequestStatusName.PENDING,
       streamId: cidStream.streamId,
       cid: cidStream.cid,
       message: 'Sending anchoring request',
@@ -127,9 +128,7 @@ export class EthereumAnchorService implements AnchorService {
   /**
    * Send requests to an external Ceramic Anchor Service
    */
-  private _makeAnchorRequest(
-    carFileReader: AnchorRequestCarFileReader
-  ): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(carFileReader: AnchorRequestCarFileReader): Observable<CASResponse> {
     return defer(() =>
       from(
         this.sendRequest(this.requestsApiEndpoint, {
@@ -168,7 +167,7 @@ export class EthereumAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
     const started = new Date().getTime()
     const maxTime = started + MAX_POLL_TIME
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
@@ -190,62 +189,17 @@ export class EthereumAnchorService implements AnchorService {
   /**
    * Parse JSON that CAS returns.
    */
-  private parseResponse(cidStream: CidAndStream, json: any): AnchorServiceResponse {
-    if (json.error) {
+  private parseResponse(cidStream: CidAndStream, json: any): CASResponse {
+    const parsed = decode(CASResponseOrError, json)
+    if (ErrorResponse.is(parsed)) {
       return {
-        status: AnchorStatus.FAILED,
+        status: RequestStatusName.FAILED,
         streamId: cidStream.streamId,
         cid: cidStream.cid,
         message: json.error,
       }
-    }
-
-    const status = json.status as RequestStatusName
-
-    switch (status) {
-      case RequestStatusName.READY:
-      case RequestStatusName.PENDING:
-        return {
-          status: AnchorStatus.PENDING,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.PROCESSING:
-        return {
-          status: AnchorStatus.PROCESSING,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.FAILED:
-        return {
-          status: AnchorStatus.FAILED,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.REPLACED:
-        return {
-          status: AnchorStatus.REPLACED,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.COMPLETED: {
-        const { anchorCommit, witnessCar } = json
-        const anchorCommitCid = CID.parse(anchorCommit.cid.toString())
-        return {
-          status: AnchorStatus.ANCHORED,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-          anchorCommit: anchorCommitCid,
-          witnessCar,
-        }
-      }
-      default:
-        throw new UnreachableCaseError(status, `Unexpected anchor request status`)
+    } else {
+      return parsed
     }
   }
 }
