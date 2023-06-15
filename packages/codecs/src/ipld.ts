@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { type Context, Type } from 'codeco'
+import { Type, type Context } from 'codeco'
 import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 

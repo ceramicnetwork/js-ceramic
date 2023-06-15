@@ -1,5 +1,4 @@
 import { type, string, sparse, optional, literal, union, type TypeOf } from 'codeco'
-import { date } from './date.js'
 import { cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 
@@ -37,9 +36,6 @@ export const NotCompleteCASResponse = sparse(
     streamId: streamIdAsString,
     cid: cidAsString,
     message: string,
-    id: optional(string),
-    createdAt: optional(date),
-    updatedAt: optional(date),
   },
   'NotCompleteCASResponse'
 )
