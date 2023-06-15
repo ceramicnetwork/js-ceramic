@@ -1,6 +1,5 @@
 import { type, string, sparse, optional, literal, union, type TypeOf } from 'codeco'
 import { date } from './date.js'
-import { enumCodec } from './enum.js'
 import { cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 
@@ -22,19 +21,28 @@ export const CommitPresentation = type(
 )
 export type CommitPresentation = TypeOf<typeof CommitPresentation>
 
-export const NotCompleteCASResponse = type(
+export const NotCompleteStatusName = union([
+  literal(RequestStatusName.PENDING),
+  literal(RequestStatusName.PROCESSING),
+  literal(RequestStatusName.COMPLETED),
+  literal(RequestStatusName.FAILED),
+  literal(RequestStatusName.READY),
+  literal(RequestStatusName.REPLACED),
+])
+export type NotCompleteStatusName = TypeOf<typeof NotCompleteStatusName>
+
+export const NotCompleteCASResponse = sparse(
   {
-    createdAt: date,
+    status: NotCompleteStatusName,
     streamId: streamIdAsString,
-    id: string,
-    message: string,
-    status: enumCodec('RequestStatusName', RequestStatusName),
     cid: cidAsString,
-    updatedAt: date,
+    message: string,
+    id: optional(string),
+    createdAt: optional(date),
+    updatedAt: optional(date),
   },
   'NotCompleteCASResponse'
 )
-
 export type NotCompleteCASResponse = TypeOf<typeof NotCompleteCASResponse>
 
 export const CompleteCASResponse = type(
