@@ -18,50 +18,6 @@ export enum AnchorStatus {
   REPLACED = 5,
 }
 
-export type AnchorServicePending = {
-  status: AnchorStatus.PENDING
-  streamId: StreamID
-  cid: CID
-  message: string
-}
-
-export type AnchorServiceProcessing = {
-  status: AnchorStatus.PROCESSING
-  streamId: StreamID
-  cid: CID
-  message: string
-}
-
-export type AnchorServiceAnchored = {
-  status: AnchorStatus.ANCHORED
-  streamId: StreamID
-  cid: CID
-  message: string
-  anchorCommit: CID
-  witnessCar: CAR
-}
-
-export type AnchorServiceFailed = {
-  status: AnchorStatus.FAILED
-  streamId: StreamID
-  cid: CID
-  message: string
-}
-
-export type AnchorServiceReplaced = {
-  status: AnchorStatus.REPLACED
-  streamId: StreamID
-  cid: CID
-  message: string
-}
-
-export type AnchorServiceResponse =
-  | AnchorServicePending
-  | AnchorServiceProcessing
-  | AnchorServiceAnchored
-  | AnchorServiceFailed
-  | AnchorServiceReplaced
-
 export enum AnchorServiceAuthMethods {
   DID = 'did',
 }
