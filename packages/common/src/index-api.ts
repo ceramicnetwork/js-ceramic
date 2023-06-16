@@ -25,12 +25,74 @@ export type BackwardPagination = {
 export type Pagination = ForwardPagination | BackwardPagination
 
 /**
+ * Boolean field value filter
+ */
+export type BooleanValueFilter = { isNull: boolean } | { equalTo: boolean }
+
+/**
+ * Enum field value filter
+ */
+export type EnumValueFilter =
+  | { isNull: boolean }
+  | { equalTo: string }
+  | { notEqualTo: string }
+  | { in: Array<string> }
+  | { notIn: Array<string> }
+
+/**
+ * String or number field value filter
+ */
+export type ScalarValueFilter<T extends string | number = string | number> =
+  | { isNull: boolean }
+  | { equalTo: T }
+  | { notEqualTo: T }
+  | { in: Array<T> }
+  | { notIn: Array<T> }
+  | { lessThan: T }
+  | { lessThanOrEqualTo: T }
+  | { greaterThan: T }
+  | { greaterThanOrEqualTo: T }
+
+/**
+ * Any supported field value filter on an object
+ */
+export type AnyValueFilter = BooleanValueFilter | EnumValueFilter | ScalarValueFilter
+
+/**
+ * Mapping of object keys to value filter
+ */
+export type ObjectFilter = Record<string, AnyValueFilter>
+
+/**
+ * Advanced query filters on a document fields
+ */
+export type QueryFilters =
+  | { doc: ObjectFilter }
+  | { and: Array<QueryFilters> }
+  | { or: Array<QueryFilters> }
+  | { not: QueryFilters }
+
+/**
+ * Field sort order, 'ASC' for ascending, 'DESC' for descending
+ */
+export type SortOrder = 'ASC' | 'DESC'
+
+/**
+ * Mapping of object keys to value sort order
+ */
+export type OrderBy = Record<string, SortOrder>
+
+/**
  * Base query to the index. Disregards pagination.
  */
 export type BaseQuery = {
   model: StreamID | string
   account?: string
+  // Deprecated filter for relations support in ComposeDB <= 0.4
   filter?: Record<string, string>
+  // New query filters and order by for ComposeDB >= 0.5
+  filters?: QueryFilters
+  orderBy?: OrderBy
 }
 
 export type PaginationQuery = BaseQuery & Pagination
