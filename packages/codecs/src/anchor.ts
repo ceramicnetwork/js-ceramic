@@ -13,7 +13,10 @@ export enum RequestStatusName {
   REPLACED = 'REPLACED',
 }
 
-export const CommitPresentation = sparse(
+/**
+ * Part of CAS response that sends AnchorCommit content. Effectively a historical artefact.
+ */
+export const AnchorCommitPresentation = sparse(
   {
     content: optional(
       sparse(
@@ -27,9 +30,9 @@ export const CommitPresentation = sparse(
     ),
     cid: string.pipe(cidAsString),
   },
-  'CommitPresentation'
+  'AnchorCommitPresentation'
 )
-export type CommitPresentation = TypeOf<typeof CommitPresentation>
+export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
 
 export const NotCompleteStatusName = union([
   literal(RequestStatusName.PENDING),
@@ -58,7 +61,7 @@ export const CompleteCASResponse = sparse(
   {
     ...NotCompleteCASResponse.props,
     status: literal(RequestStatusName.COMPLETED),
-    anchorCommit: CommitPresentation,
+    anchorCommit: AnchorCommitPresentation,
     witnessCar: optional(uint8ArrayAsBase64.pipe(carAsUint8Array)),
   },
   'CompleteCASResponse'
