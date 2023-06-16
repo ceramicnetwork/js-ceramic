@@ -6,6 +6,7 @@ const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
 
 const casProcessingResponse = {
+  id: '',
   status: 'PROCESSING',
   message: `CAS is finally available; nonce: ${Math.random()}`,
   streamId: FAKE_STREAM_ID.toString(),
