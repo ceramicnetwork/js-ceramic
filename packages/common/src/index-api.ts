@@ -80,7 +80,7 @@ export type SortOrder = 'ASC' | 'DESC'
 /**
  * Mapping of object keys to value sort order
  */
-export type OrderBy = Record<string, SortOrder>
+export type Sorting = Record<string, SortOrder>
 
 /**
  * Base query to the index. Disregards pagination.
@@ -88,11 +88,12 @@ export type OrderBy = Record<string, SortOrder>
 export type BaseQuery = {
   model: StreamID | string
   account?: string
-  // Deprecated filter for relations support in ComposeDB <= 0.4
+  /**
+   * @deprecated relation filters used by ComposeDB <= 0.4
+   */
   filter?: Record<string, string>
-  // New query filters and order by for ComposeDB >= 0.5
-  filters?: QueryFilters
-  orderBy?: OrderBy
+  queryFilters?: QueryFilters
+  sorting?: Sorting
 }
 
 export type PaginationQuery = BaseQuery & Pagination
