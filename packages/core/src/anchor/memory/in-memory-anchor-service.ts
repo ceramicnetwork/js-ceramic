@@ -20,7 +20,7 @@ import lru from 'lru_map'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { RequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -219,7 +219,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`
     }
     this.#feed.next({
-      status: RequestStatusName.FAILED,
+      id: '',
+      status: AnchorRequestStatusName.FAILED,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,
@@ -231,7 +232,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
     }
     this.#feed.next({
-      status: RequestStatusName.PROCESSING,
+      id: '',
+      status: AnchorRequestStatusName.PROCESSING,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,
@@ -293,7 +295,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
-          status: RequestStatusName.FAILED,
+          id: '',
+          status: AnchorRequestStatusName.FAILED,
           streamId: candidate.streamId,
           cid: candidate.cid,
           message: error.message,
@@ -303,7 +306,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       this.#queue.push(candidate)
     }
     this.#feed.next({
-      status: RequestStatusName.PENDING,
+      id: '',
+      status: AnchorRequestStatusName.PENDING,
       streamId: carFileReader.streamId,
       cid: carFileReader.tip,
       message: 'Sending anchoring request',
@@ -411,7 +415,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     // add a delay
     const handle = setTimeout(() => {
       this.#feed.next({
-        status: RequestStatusName.COMPLETED,
+        id: '',
+        status: AnchorRequestStatusName.COMPLETED,
         streamId: leaf.streamId,
         cid: leaf.cid,
         message: 'CID successfully anchored',

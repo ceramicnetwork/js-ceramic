@@ -26,7 +26,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { StateLink } from '../state-management/state-link.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { whenSubscriptionDone } from './when-subscription-done.util.js'
-import { CASResponse, RequestStatusName } from '@ceramicnetwork/codecs'
+import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -641,7 +641,7 @@ describe('anchor', () => {
       const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$)
       // The emulated CAS accepts the request
       fauxCASResponse$.next({
-        status: RequestStatusName.PENDING,
+        status: AnchorRequestStatusName.PENDING,
         streamId: tile.id,
         cid: tile.state.log[0].cid,
         message: 'CAS accepted the request',
@@ -655,7 +655,7 @@ describe('anchor', () => {
 
       // The emulated CAS informs Ceramic, that the 1st tip got REPLACED
       fauxCASResponse$.next({
-        status: RequestStatusName.REPLACED,
+        status: AnchorRequestStatusName.REPLACED,
         streamId: tile.id,
         cid: tile.state.log[0].cid,
         message: 'Replaced',

@@ -25,7 +25,7 @@ import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
-import { CASResponse, RequestStatusName } from '@ceramicnetwork/codecs'
+import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -423,8 +423,8 @@ export class StateManager {
           // the stream's state.
           const status = asr.status
           switch (status) {
-            case RequestStatusName.READY:
-            case RequestStatusName.PENDING: {
+            case AnchorRequestStatusName.READY:
+            case AnchorRequestStatusName.PENDING: {
               if (!asr.cid.equals(state$.tip)) return
               const next = {
                 ...state$.value,
@@ -434,19 +434,19 @@ export class StateManager {
               await this._updateStateIfPinned(state$)
               return
             }
-            case RequestStatusName.PROCESSING: {
+            case AnchorRequestStatusName.PROCESSING: {
               if (!asr.cid.equals(state$.tip)) return
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
               await this._updateStateIfPinned(state$)
               return
             }
-            case RequestStatusName.COMPLETED: {
+            case AnchorRequestStatusName.COMPLETED: {
               await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit.cid, asr.witnessCar)
               await this.anchorRequestStore.remove(state$.id)
               stopSignal.next()
               return
             }
-            case RequestStatusName.FAILED: {
+            case AnchorRequestStatusName.FAILED: {
               if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
                 `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
@@ -456,7 +456,7 @@ export class StateManager {
               stopSignal.next()
               return
             }
-            case RequestStatusName.REPLACED: {
+            case AnchorRequestStatusName.REPLACED: {
               this.logger.verbose(
                 `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
               )

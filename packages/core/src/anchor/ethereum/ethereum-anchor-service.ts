@@ -19,7 +19,7 @@ import {
   CASResponse,
   CASResponseOrError,
   ErrorResponse,
-  RequestStatusName,
+  AnchorRequestStatusName,
 } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
@@ -99,7 +99,8 @@ export class EthereumAnchorService implements AnchorService {
     ).pipe(
       catchError((error) =>
         of<CASResponse>({
-          status: RequestStatusName.FAILED,
+          id: '',
+          status: AnchorRequestStatusName.FAILED,
           streamId: carFileReader.streamId,
           cid: carFileReader.tip,
           message: error.message,
@@ -118,7 +119,8 @@ export class EthereumAnchorService implements AnchorService {
 
   private _announcePending(cidStream: CidAndStream): Observable<CASResponse> {
     return of({
-      status: RequestStatusName.PENDING,
+      id: '',
+      status: AnchorRequestStatusName.PENDING,
       streamId: cidStream.streamId,
       cid: cidStream.cid,
       message: 'Sending anchoring request',
@@ -193,7 +195,8 @@ export class EthereumAnchorService implements AnchorService {
     const parsed = decode(CASResponseOrError, json)
     if (ErrorResponse.is(parsed)) {
       return {
-        status: RequestStatusName.FAILED,
+        id: '',
+        status: AnchorRequestStatusName.FAILED,
         streamId: cidStream.streamId,
         cid: cidStream.cid,
         message: json.error,

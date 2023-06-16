@@ -38,7 +38,7 @@ test('re-request an anchor till get a response', async () => {
   const anchorService = new eas.EthereumAnchorService('http://example.com', diagnosticsLogger, 100)
   let lastResponse: any
   const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
-    if (response.status === codecs.RequestStatusName.PROCESSING) {
+    if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
       lastResponse = response
       subscription.unsubscribe()
     }

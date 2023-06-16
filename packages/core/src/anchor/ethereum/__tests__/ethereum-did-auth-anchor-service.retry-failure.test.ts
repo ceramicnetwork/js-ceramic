@@ -6,6 +6,7 @@ const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
 
 const casProcessingResponse = {
+  id: 'fake-id',
   status: 'PROCESSING',
   message: `CAS is finally available; nonce: ${Math.random()}`,
   streamId: FAKE_STREAM_ID.toString(),
@@ -64,7 +65,7 @@ test('re-request an anchor till get a response', async () => {
 
   let lastResponse: any
   const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
-    if (response.status === codecs.RequestStatusName.PROCESSING) {
+    if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
       lastResponse = response
       subscription.unsubscribe()
     }

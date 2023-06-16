@@ -4,7 +4,7 @@ import { streamIdAsString } from './stream.js'
 import { uint8ArrayAsBase64 } from './binary.js'
 import { dateAsUnix } from './date.js'
 
-export enum RequestStatusName {
+export enum AnchorRequestStatusName {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
@@ -35,11 +35,11 @@ export const AnchorCommitPresentation = sparse(
 export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
 
 export const NotCompleteStatusName = union([
-  literal(RequestStatusName.PENDING),
-  literal(RequestStatusName.PROCESSING),
-  literal(RequestStatusName.FAILED),
-  literal(RequestStatusName.READY),
-  literal(RequestStatusName.REPLACED),
+  literal(AnchorRequestStatusName.PENDING),
+  literal(AnchorRequestStatusName.PROCESSING),
+  literal(AnchorRequestStatusName.FAILED),
+  literal(AnchorRequestStatusName.READY),
+  literal(AnchorRequestStatusName.REPLACED),
 ])
 export type NotCompleteStatusName = TypeOf<typeof NotCompleteStatusName>
 
@@ -60,7 +60,7 @@ export type NotCompleteCASResponse = TypeOf<typeof NotCompleteCASResponse>
 export const CompleteCASResponse = sparse(
   {
     ...NotCompleteCASResponse.props,
-    status: literal(RequestStatusName.COMPLETED),
+    status: literal(AnchorRequestStatusName.COMPLETED),
     anchorCommit: AnchorCommitPresentation,
     witnessCar: optional(uint8ArrayAsBase64.pipe(carAsUint8Array)),
   },
