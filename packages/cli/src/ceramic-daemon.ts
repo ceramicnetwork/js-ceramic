@@ -722,16 +722,17 @@ export class CeramicDaemon {
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
     } else if (
-      shouldContainModels && (
-        (!parsedJWS.models || parsedJWS.models.length == 0) &&
-        (!parsedJWS.modelData || parsedJWS.modelData.length == 0)
-      )
+      shouldContainModels &&
+      (!parsedJWS.models || parsedJWS.models.length == 0) &&
+      (!parsedJWS.modelData || parsedJWS.modelData.length == 0)
     ) {
       return {
         error: `At least one model must be specified, either in 'models' as a 'StreamID' or 'modelData' as a 'ModelData' consisting of 'StreamID' and other fields`,
       }
     } else {
-      const models = (parsedJWS.models ?? []).map((modelIDString) => StreamID.fromString(modelIDString))
+      const models = (parsedJWS.models ?? []).map((modelIDString) =>
+        StreamID.fromString(modelIDString)
+      )
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
@@ -841,7 +842,7 @@ export class CeramicDaemon {
         modelData: indexedModels.map((idx) => {
           return {
             streamID: idx.streamID.toString(),
-            indices: idx.indices
+            indices: idx.indices,
           }
         }),
       })

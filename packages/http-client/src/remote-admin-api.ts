@@ -1,10 +1,4 @@
-import {
-  AdminApi,
-  fetchJson,
-  PinApi,
-  NodeStatusResponse,
-  ModelData,
-} from '@ceramicnetwork/common'
+import { AdminApi, fetchJson, PinApi, NodeStatusResponse, ModelData } from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
@@ -70,10 +64,7 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
-  async startIndexingModels(
-    modelsIDs: Array<StreamID>,
-    indices?: Array<ModelData>
-  ): Promise<void> {
+  async startIndexingModels(modelsIDs: Array<StreamID>, indices?: Array<ModelData>): Promise<void> {
     const code = await this.generateCode()
     const body = modelIDsAsRequestBody(modelsIDs)
     if (indices) {

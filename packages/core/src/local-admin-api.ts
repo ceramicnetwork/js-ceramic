@@ -20,18 +20,15 @@ export class LocalAdminApi implements AdminApi {
     return this.nodeStatusFn()
   }
 
-  async startIndexingModels(
-    modelsIDs: Array<StreamID>,
-    indices?: Array<ModelData>
-  ): Promise<void> {
-    let models = modelsIDs.map((id) => {
-      return {
-        streamID: id,
-        indices: undefined,
-      } as ModelData
-    })
-    if (indices) {
-      models = models.concat(indices)
+  async startIndexingModels(modelsIDs: Array<StreamID>, indices?: Array<ModelData>): Promise<void> {
+    const models = indices ?? []
+    for (const modelId of modelsIDs) {
+      if (!models.some((mid) => mid.streamID.equals(modelId))) {
+        models.push({
+          streamID: modelId,
+          indices: undefined,
+        })
+      }
     }
     await this.indexApi.indexModels(models)
     await this.syncApi.startModelSync(models.map((idx) => idx.streamID.toString()))

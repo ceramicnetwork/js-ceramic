@@ -46,7 +46,7 @@ async function _getIndexModelArgs(
         relations: content.relations,
       }
     }
-    const indices = (await databaseIndexApi?.getFieldsIndex(modelStreamId)) ?? req.indices
+    const indices = req.indices ?? (await databaseIndexApi?.getFieldsIndex(modelStreamId))
     if (indices) {
       opts = {
         ...opts,
@@ -158,27 +158,34 @@ export class LocalIndexApi implements IndexApi {
     return this.databaseIndexApi?.getIndexedModels() ?? []
   }
 
+  async convertModelDataToIndexModelsArgs(
+    modelsNoLongerIndexed: Array<ModelData>,
+    idx: ModelData
+  ): Promise<IndexModelArgs> {
+    const modelStreamId = idx.streamID
+    this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
+    const indexModelArgs = await _getIndexModelArgs(idx, this.repository, this.databaseIndexApi)
+    if (modelsNoLongerIndexed) {
+      const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
+        return oldIdx.streamID.equals(modelStreamId)
+      })
+      // TODO(CDB-2297): Handle a model's historical sync after re-indexing
+      if (modelNoLongerIndexed) {
+        throw new Error(
+          `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
+        )
+      }
+    }
+    return indexModelArgs
+  }
+
   async indexModels(models: Array<ModelData>): Promise<void> {
     const modelsNoLongerIndexed = await this.databaseIndexApi?.getModelsNoLongerIndexed()
 
     const indexModelsArgs = await Promise.all(
-      models.map(async (idx) => {
-        const modelStreamId = idx.streamID
-        this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
-        const indexModelArgs = await _getIndexModelArgs(idx, this.repository, this.databaseIndexApi)
-        if (modelsNoLongerIndexed) {
-          const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
-            return oldIdx.streamID.equals(modelStreamId)
-          })
-          // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-          if (modelNoLongerIndexed) {
-            throw new Error(
-              `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
-            )
-          }
-        }
-        return indexModelArgs
-      })
+      models.map(
+        async (idx) => await this.convertModelDataToIndexModelsArgs(modelsNoLongerIndexed, idx)
+      )
     )
 
     await this.databaseIndexApi?.indexModels(indexModelsArgs)
