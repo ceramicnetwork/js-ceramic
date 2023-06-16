@@ -18,16 +18,6 @@ export enum AnchorRequestStatusName {
  */
 export const AnchorCommitPresentation = sparse(
   {
-    content: optional(
-      sparse(
-        {
-          path: optional(string),
-          prev: string.pipe(cidAsString),
-          proof: optional(string.pipe(cidAsString)),
-        },
-        'content'
-      )
-    ),
     cid: string.pipe(cidAsString),
   },
   'AnchorCommitPresentation'
