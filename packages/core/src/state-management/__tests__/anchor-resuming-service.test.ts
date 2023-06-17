@@ -2,17 +2,12 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { Observable } from 'rxjs'
-import {
-  AnchorServiceResponse,
-  AnchorStatus,
-  IpfsApi,
-  SyncOptions,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { AnchorResumingService } from '../anchor-resuming-service.js'
+import type { CASResponse } from '@ceramicnetwork/codecs'
 
 describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
   jest.setTimeout(10000)
@@ -51,7 +46,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     if (testParam.anchorStatus === AnchorStatus.NOT_REQUESTED) {
       const mockedRequestAnchor = jest.fn()
       mockedRequestAnchor.mockImplementation(() => {
-        return new Observable<AnchorServiceResponse>()
+        return new Observable<CASResponse>()
       })
       // @ts-ignore
       anchorService.requestAnchor = mockedRequestAnchor

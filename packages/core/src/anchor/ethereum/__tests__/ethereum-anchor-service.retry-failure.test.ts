@@ -1,13 +1,16 @@
 import { jest } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
-import { generateFakeCarFile } from './generateFakeCarFile.js'
+import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
 
 const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
 
 const casProcessingResponse = {
+  id: '',
   status: 'PROCESSING',
   message: `CAS is finally available; nonce: ${Math.random()}`,
+  streamId: FAKE_STREAM_ID.toString(),
+  cid: FAKE_TIP_CID.toString(),
 }
 
 jest.unstable_mockModule('cross-fetch', () => {
@@ -28,6 +31,7 @@ jest.unstable_mockModule('cross-fetch', () => {
 
 test('re-request an anchor till get a response', async () => {
   const common = await import('@ceramicnetwork/common')
+  const codecs = await import('@ceramicnetwork/codecs')
   const eas = await import('../ethereum-anchor-service.js')
   const loggerProvider = new common.LoggerProvider()
   const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
@@ -35,7 +39,7 @@ test('re-request an anchor till get a response', async () => {
   const anchorService = new eas.EthereumAnchorService('http://example.com', diagnosticsLogger, 100)
   let lastResponse: any
   const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
-    if (response.status === common.AnchorStatus.PROCESSING) {
+    if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
       lastResponse = response
       subscription.unsubscribe()
     }

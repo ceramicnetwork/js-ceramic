@@ -4,7 +4,6 @@ import { ExecutionQueue } from './execution-queue.js'
 import { commitAtTime, ConflictResolution } from '../conflict-resolution.js'
 import {
   AnchorService,
-  AnchorServiceResponse,
   AnchorStatus,
   CreateOpts,
   LoadOpts,
@@ -18,7 +17,7 @@ import {
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
-import { catchError, concatMap, takeUntil, tap } from 'rxjs/operators'
+import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
@@ -26,6 +25,7 @@ import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
+import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -407,7 +407,7 @@ export class StateManager {
 
   private _processAnchorResponse(
     state$: RunningState,
-    anchorStatus$: Observable<AnchorServiceResponse>
+    anchorStatus$: Observable<CASResponse>
   ): Subscription {
     const stopSignal = new Subject<void>()
     const subscription = anchorStatus$
@@ -417,12 +417,14 @@ export class StateManager {
           // We don't want to change a stream's state due to changes to the anchor
           // status of a commit that is no longer the tip of the stream, so we early return
           // in most cases when receiving a response to an old anchor request.
-          // The one exception is if the AnchorServiceResponse indicates that the old commit
+          // The one exception is if the CASResponse indicates that the old commit
           // is now anchored, in which case we still want to try to process the anchor commit
           // and let the stream's conflict resolution mechanism decide whether or not to update
           // the stream's state.
-          switch (asr.status) {
-            case AnchorStatus.PENDING: {
+          const status = asr.status
+          switch (status) {
+            case AnchorRequestStatusName.READY:
+            case AnchorRequestStatusName.PENDING: {
               if (!asr.cid.equals(state$.tip)) return
               const next = {
                 ...state$.value,
@@ -432,19 +434,19 @@ export class StateManager {
               await this._updateStateIfPinned(state$)
               return
             }
-            case AnchorStatus.PROCESSING: {
+            case AnchorRequestStatusName.PROCESSING: {
               if (!asr.cid.equals(state$.tip)) return
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
               await this._updateStateIfPinned(state$)
               return
             }
-            case AnchorStatus.ANCHORED: {
-              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit, asr.witnessCar)
+            case AnchorRequestStatusName.COMPLETED: {
+              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit.cid, asr.witnessCar)
               await this.anchorRequestStore.remove(state$.id)
               stopSignal.next()
               return
             }
-            case AnchorStatus.FAILED: {
+            case AnchorRequestStatusName.FAILED: {
               if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
                 `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
@@ -454,7 +456,7 @@ export class StateManager {
               stopSignal.next()
               return
             }
-            case AnchorStatus.REPLACED: {
+            case AnchorRequestStatusName.REPLACED: {
               this.logger.verbose(
                 `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
               )
@@ -462,7 +464,7 @@ export class StateManager {
               return
             }
             default:
-              throw new UnreachableCaseError(asr, 'Unknown anchoring state')
+              throw new UnreachableCaseError(status, 'Unknown anchoring state')
           }
         }),
         catchError((error) => {

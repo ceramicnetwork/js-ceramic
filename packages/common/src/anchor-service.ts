@@ -3,21 +3,30 @@ import type { Observable } from 'rxjs'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { CAR } from 'cartonne'
-import type { AnchorProof, AnchorServiceResponse } from '@ceramicnetwork/codecs'
+import type { CAR } from 'cartonne'
+import type { CASResponse } from '@ceramicnetwork/codecs'
 
-export type {
-  AnchorServiceAnchored,
-  AnchorServiceFailed,
-  AnchorServicePending,
-  AnchorServiceProcessing,
-  AnchorServiceReplaced,
-  AnchorServiceResponse,
-  RequestAnchorParams,
-} from '@ceramicnetwork/codecs'
+/**
+ * Describes all anchor statuses
+ */
+export enum AnchorStatus {
+  NOT_REQUESTED = 0,
+  PENDING = 1,
+  PROCESSING = 2,
+  ANCHORED = 3,
+  FAILED = 4,
+  REPLACED = 5,
+}
 
 export enum AnchorServiceAuthMethods {
   DID = 'did',
+}
+
+export type AnchorProof = {
+  chainId: string
+  txHash: CID
+  root: CID
+  txType?: string
 }
 
 /**
@@ -46,7 +55,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse>
+  requestAnchor(carFile: CAR): Observable<CASResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
@@ -54,7 +63,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this

@@ -68,7 +68,7 @@
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "await-semaphore": "^0.1.3",
-    "cartonne": "^2.0.3",
+    "cartonne": "^2.1.1",
     "codeco": "^1.1.0",
     "dag-jose": "^4.0.0",
     "dids": "^4.0.0",

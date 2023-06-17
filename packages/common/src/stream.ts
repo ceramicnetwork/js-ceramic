@@ -10,10 +10,9 @@ import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
 import type { Cacao } from '@didtools/cacao'
 import { NonEmptyArray } from './non-empty-array.js'
-import type { AnchorProof, AnchorStatus } from '@ceramicnetwork/codecs'
+import type { AnchorProof, AnchorStatus } from './anchor-service.js'
 
-export type { AnchorProof } from '@ceramicnetwork/codecs'
-export { AnchorStatus } from '@ceramicnetwork/codecs'
+export { AnchorStatus } from './anchor-service.js'
 
 /**
  * Describes signature status

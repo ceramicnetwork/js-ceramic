@@ -1,6 +1,5 @@
 import { expect, jest, beforeEach, beforeAll, afterEach, afterAll } from '@jest/globals'
 import {
-  AnchorServiceResponse,
   AnchorStatus,
   CommitType,
   IpfsApi,
@@ -27,6 +26,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { StateLink } from '../state-management/state-link.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { whenSubscriptionDone } from './when-subscription-done.util.js'
+import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -635,13 +635,13 @@ describe('anchor', () => {
         'requestAnchor'
       )
       // Emulate CAS responses to the 1st commit
-      const fauxCASResponse$ = new Subject<AnchorServiceResponse>()
+      const fauxCASResponse$ = new Subject<CASResponse>()
       requestAnchorSpy.mockReturnValueOnce(fauxCASResponse$)
       // Subscription for the 1st commit
       const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$)
       // The emulated CAS accepts the request
       fauxCASResponse$.next({
-        status: AnchorStatus.PENDING,
+        status: AnchorRequestStatusName.PENDING,
         streamId: tile.id,
         cid: tile.state.log[0].cid,
         message: 'CAS accepted the request',
@@ -655,7 +655,7 @@ describe('anchor', () => {
 
       // The emulated CAS informs Ceramic, that the 1st tip got REPLACED
       fauxCASResponse$.next({
-        status: AnchorStatus.REPLACED,
+        status: AnchorRequestStatusName.REPLACED,
         streamId: tile.id,
         cid: tile.state.log[0].cid,
         message: 'Replaced',

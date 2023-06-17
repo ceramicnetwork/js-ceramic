@@ -1,120 +1,73 @@
-import { type TypeOf, literal, optional, sparse, strict, string, union } from 'codeco'
-
+import { type, string, number, sparse, optional, literal, union, type TypeOf } from 'codeco'
 import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
+import { uint8ArrayAsBase64 } from './binary.js'
+import { dateAsUnix } from './date.js'
 
-/**
- * Describes all anchor statuses
- */
-export enum AnchorStatus {
-  NOT_REQUESTED = 0,
-  PENDING = 1,
-  PROCESSING = 2,
-  ANCHORED = 3,
-  FAILED = 4,
-  REPLACED = 5,
+export enum AnchorRequestStatusName {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  READY = 'READY',
+  REPLACED = 'REPLACED',
 }
 
-export const AnchorProof = sparse(
-  {
-    chainId: string,
-    txHash: cidAsString,
-    root: cidAsString,
-    txType: optional(string),
-  },
-  'AnchorProof'
-)
-export type AnchorProof = TypeOf<typeof AnchorProof>
-
-export const AnchorCommit = strict(
-  {
-    id: cidAsString,
-    prev: cidAsString,
-    proof: cidAsString,
-    path: string,
-  },
-  'AnchorCommit'
-)
-export type AnchorCommit = TypeOf<typeof AnchorCommit>
-
-export const AnchorServicePending = strict(
-  {
-    status: literal(AnchorStatus.PENDING),
-    streamId: streamIdAsString,
-    cid: cidAsString,
-    message: string,
-  },
-  'AnchorServicePending'
-)
-export type AnchorServicePending = TypeOf<typeof AnchorServicePending>
-
-export const AnchorServiceProcessing = strict(
-  {
-    status: literal(AnchorStatus.PROCESSING),
-    streamId: streamIdAsString,
-    cid: cidAsString,
-    message: string,
-  },
-  'AnchorServiceProcessing'
-)
-export type AnchorServiceProcessing = TypeOf<typeof AnchorServiceProcessing>
-
-export const AnchorServiceAnchored = sparse(
-  {
-    status: literal(AnchorStatus.ANCHORED),
-    streamId: streamIdAsString,
-    cid: cidAsString,
-    message: string,
-    anchorCommit: cidAsString,
-    witnessCar: optional(carAsUint8Array),
-  },
-  'AnchorServiceAnchored'
-)
-export type AnchorServiceAnchored = TypeOf<typeof AnchorServiceAnchored>
-
-export const AnchorServiceFailed = strict(
-  {
-    status: literal(AnchorStatus.FAILED),
-    streamId: streamIdAsString,
-    cid: cidAsString,
-    message: string,
-  },
-  'AnchorServiceFailed'
-)
-export type AnchorServiceFailed = TypeOf<typeof AnchorServiceFailed>
-
-export const AnchorServiceReplaced = strict(
-  {
-    status: literal(AnchorStatus.REPLACED),
-    streamId: streamIdAsString,
-    cid: cidAsString,
-    message: string,
-  },
-  'AnchorServiceReplaced'
-)
-export type AnchorServiceReplaced = TypeOf<typeof AnchorServiceReplaced>
-
-export const RequestAnchorParams = strict(
-  {
-    streamID: streamIdAsString,
-    tip: cidAsString,
-    timestampISO: string, // a result of Date.toISOString()
-  },
-  'RequestAnchorParams'
-)
-export type RequestAnchorParams = TypeOf<typeof RequestAnchorParams>
-
 /**
- * Describes anchor service response
+ * Part of CAS response that sends AnchorCommit content. Effectively a historical artefact.
  */
-export const AnchorServiceResponse = union(
-  [
-    AnchorServicePending,
-    AnchorServiceProcessing,
-    AnchorServiceAnchored,
-    AnchorServiceFailed,
-    AnchorServiceReplaced,
-  ],
-  'AnchorServiceResponse'
+export const AnchorCommitPresentation = sparse(
+  {
+    cid: string.pipe(cidAsString),
+  },
+  'AnchorCommitPresentation'
 )
-export type AnchorServiceResponse = TypeOf<typeof AnchorServiceResponse>
+export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
+
+export const NotCompleteStatusName = union([
+  literal(AnchorRequestStatusName.PENDING),
+  literal(AnchorRequestStatusName.PROCESSING),
+  literal(AnchorRequestStatusName.FAILED),
+  literal(AnchorRequestStatusName.READY),
+  literal(AnchorRequestStatusName.REPLACED),
+])
+export type NotCompleteStatusName = TypeOf<typeof NotCompleteStatusName>
+
+export const NotCompleteCASResponse = sparse(
+  {
+    id: string,
+    status: NotCompleteStatusName,
+    streamId: streamIdAsString,
+    cid: cidAsString,
+    message: string,
+    createdAt: optional(number.pipe(dateAsUnix)),
+    updatedAt: optional(number.pipe(dateAsUnix)),
+  },
+  'NotCompleteCASResponse'
+)
+export type NotCompleteCASResponse = TypeOf<typeof NotCompleteCASResponse>
+
+export const CompleteCASResponse = sparse(
+  {
+    ...NotCompleteCASResponse.props,
+    status: literal(AnchorRequestStatusName.COMPLETED),
+    anchorCommit: AnchorCommitPresentation,
+    witnessCar: optional(uint8ArrayAsBase64.pipe(carAsUint8Array)),
+  },
+  'CompleteCASResponse'
+)
+export type CompleteCASResponse = TypeOf<typeof CompleteCASResponse>
+
+export const CASResponse = union([NotCompleteCASResponse, CompleteCASResponse], 'CASResponse')
+export type CASResponse = TypeOf<typeof CASResponse>
+
+export const ErrorResponse = type(
+  {
+    error: string,
+  },
+  'ErrorResponse'
+)
+export type ErrorResponse = TypeOf<typeof ErrorResponse>
+
+export const CASResponseOrError = union([CASResponse, ErrorResponse], 'CASResponseOrError')
+export type CASResponseOrError = TypeOf<typeof CASResponseOrError>
