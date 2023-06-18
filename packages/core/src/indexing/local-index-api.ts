@@ -160,11 +160,15 @@ export class LocalIndexApi implements IndexApi {
 
   async convertModelDataToIndexModelsArgs(
     modelsNoLongerIndexed: Array<ModelData>,
-    idx: ModelData
+    modelData: ModelData
   ): Promise<IndexModelArgs> {
-    const modelStreamId = idx.streamID
+    const modelStreamId = modelData.streamID
     this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
-    const indexModelArgs = await _getIndexModelArgs(idx, this.repository, this.databaseIndexApi)
+    const indexModelArgs = await _getIndexModelArgs(
+      modelData,
+      this.repository,
+      this.databaseIndexApi
+    )
     if (modelsNoLongerIndexed) {
       const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
         return oldIdx.streamID.equals(modelStreamId)
@@ -205,6 +209,17 @@ export class LocalIndexApi implements IndexApi {
     // back to the DatabaseIndexApi so that it can populate its internal state.
     // TODO(CDB-2132):  Fix this fragile and circular DatabaseApi initialization
     const modelsToIndex = this.databaseIndexApi.getIndexedModels()
+    for (const model of modelsToIndex) {
+      if (model.indices) {
+        for (const idx of model.indices) {
+          if (!idx.fields) {
+            throw new Error('Fields was undefined')
+          } else if (idx.fields instanceof String) {
+            throw new Error('Fields was string')
+          }
+        }
+      }
+    }
     await this.indexModels(modelsToIndex)
   }
 

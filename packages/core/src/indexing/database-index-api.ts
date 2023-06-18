@@ -114,15 +114,13 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Get a model's fields index
    * @param model
    */
-  async getFieldsIndex(model: StreamID): Promise<Array<FieldsIndex>> {
+  async getFieldsIndex(model: StreamID): Promise<Array<FieldsIndex> | undefined> {
     const res = await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
       .first('indices')
       .where('model', model.toString())
 
-    if (res) {
+    if (res && res.indices) {
       return JSON.parse(res.indices)
-    } else {
-      return []
     }
   }
 

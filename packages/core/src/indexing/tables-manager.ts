@@ -334,6 +334,7 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * Determine if a mid table has the indices we expect
    * @param tableName
+   * @param args IndexModelArgs for checking indices
    */
   async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
     const expectedIndices = indices(tableName).indices.flatMap((index) => index.name)

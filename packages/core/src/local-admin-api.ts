@@ -26,7 +26,6 @@ export class LocalAdminApi implements AdminApi {
       if (!models.some((mid) => mid.streamID.equals(modelId))) {
         models.push({
           streamID: modelId,
-          indices: undefined,
         })
       }
     }
