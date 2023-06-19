@@ -148,7 +148,7 @@ test('addModelsToIndexWithFieldIndices()', async () => {
 
   const jwsResult = await did.verifyJWS(sentJws)
   expect(jwsResult.kid).toEqual(expectedKid)
-  expect(jwsResult.payload.requestBody.models.length).toEqual(0)
+  expect(jwsResult.payload.requestBody.models.length).toEqual(1)
   expect(jwsResult.payload.requestBody.indices.length).toEqual(1)
   const streamId = jwsResult.payload.requestBody.indices[0].streamID
   expect(streamId).toEqual(MODEL.toString())

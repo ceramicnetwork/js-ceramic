@@ -66,15 +66,19 @@ export class RemoteAdminApi implements AdminApi {
 
   async startIndexingModels(modelsIDs: Array<StreamID>, indices?: Array<ModelData>): Promise<void> {
     const code = await this.generateCode()
-    const body = modelIDsAsRequestBody(modelsIDs)
-    if (indices) {
-      body.indices = indices.map((idx) => {
-        return {
-          streamID: idx.streamID.toString(),
-          indices: idx.indices,
-        }
-      })
-    }
+    const validatedIndices = indices ?? []
+    const modelIds = modelsIDs.concat(validatedIndices.map((idx) => idx.streamID))
+    const body = modelIDsAsRequestBody(modelIds)
+    body.indices = modelsIDs.map((id) => {
+      return  {
+        streamID: id.toString()
+      }
+    }).concat(validatedIndices.map((idx) => {
+      return {
+        streamID: idx.streamID.toString(),
+        indices: idx.indices,
+      }
+    }))
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
       body: {

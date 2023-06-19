@@ -218,7 +218,7 @@ type AdminAPIJWSContents = {
   kid: string
   code: string
   requestPath: string
-  models: Array<string>
+  models?: Array<string>
   modelData?: Array<AdminAPIJWSModelFields>
 }
 
@@ -730,7 +730,7 @@ export class CeramicDaemon {
         error: `At least one model must be specified, either in 'models' as a 'StreamID' or 'modelData' as a 'ModelData' consisting of 'StreamID' and other fields`,
       }
     } else {
-      const models = (parsedJWS.models ?? []).map((modelIDString) =>
+      const models = parsedJWS.models?.map((modelIDString) =>
         StreamID.fromString(modelIDString)
       )
       return {
@@ -783,7 +783,7 @@ export class CeramicDaemon {
     }
 
     // Process request
-    await successCallback(jwsValidation.models, jwsValidation.modelData)
+    await successCallback(jwsValidation.models ?? [], jwsValidation.modelData)
     res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
