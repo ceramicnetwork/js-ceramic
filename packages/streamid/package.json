@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/streamid",
-  "version": "2.14.0",
+  "version": "2.15.0-rc.0",
   "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",
@@ -30,11 +30,11 @@
   "author": "Zach Ferland <zachferland@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "cborg": "^1.10.2",
     "@ipld/dag-cbor": "^7.0.0",
+    "@stablelib/sha256": "^1.0.1",
+    "cborg": "^1.10.2",
     "mapmoize": "^1.2.1",
     "multiformats": "^11.0.1",
-    "@stablelib/sha256": "^1.0.1",
     "uint8arrays": "^4.0.3",
     "varint": "^6.0.0"
   },
