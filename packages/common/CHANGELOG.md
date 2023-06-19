@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.27.0-rc.0...@ceramicnetwork/common@2.28.0-rc.0) (2023-06-19)
+
+
+### Features
+
+* Add CAS Response as a codec ([#2838](https://github.com/ceramicnetwork/js-ceramic/issues/2838)) ([346a359](https://github.com/ceramicnetwork/js-ceramic/commit/346a359a978328d155e3dfa1a44f59946435dd9c))
+* Add loadOpts to MultiQuery ([#2768](https://github.com/ceramicnetwork/js-ceramic/issues/2768)) ([c609c23](https://github.com/ceramicnetwork/js-ceramic/commit/c609c23e808e659d79e2a8bbc5dcdf80cab88e19))
+
+
+
+
+
 # [2.27.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.26.0...@ceramicnetwork/common@2.27.0-rc.0) (2023-06-01)
 
 **Note:** Version bump only for package @ceramicnetwork/common
