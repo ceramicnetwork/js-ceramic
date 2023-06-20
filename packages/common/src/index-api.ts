@@ -27,31 +27,53 @@ export type Pagination = ForwardPagination | BackwardPagination
 /**
  * Boolean field value filter
  */
-export type BooleanValueFilter = { isNull: boolean } | { equalTo: boolean }
-
-/**
- * Enum field value filter
- */
-export type EnumValueFilter =
+export type BooleanValueFilter =
   | { isNull: boolean }
-  | { equalTo: string }
-  | { notEqualTo: string }
-  | { in: Array<string> }
-  | { notIn: Array<string> }
+  | { equalTo: boolean }
+  | { notEqualTo: boolean }
 
 /**
- * String or number field value filter
+ * Common type for multiple value filters
  */
-export type ScalarValueFilter<T extends string | number = string | number> =
+export type CommonValueFilter<T> =
   | { isNull: boolean }
   | { equalTo: T }
   | { notEqualTo: T }
   | { in: Array<T> }
   | { notIn: Array<T> }
-  | { lessThan: T }
-  | { lessThanOrEqualTo: T }
+
+/**
+ * Enum field value filter
+ */
+export type EnumValueFilter = CommonValueFilter<string>
+
+/**
+ * Supported greater than value conditions
+ */
+export type GreaterThanValueFilter<T extends string | number> =
   | { greaterThan: T }
   | { greaterThanOrEqualTo: T }
+
+/**
+ * Supported less than value conditions
+ */
+export type LessThanValueFilter<T extends string | number> =
+  | { lessThan: T }
+  | { lessThanOrEqualTo: T }
+
+/**
+ * Range value filter using a required greater than or less than value filter
+ * and optional other boundary
+ */
+export type RangeValueFilter<T extends string | number> =
+  | (GreaterThanValueFilter<T> & Partial<LessThanValueFilter<T>>)
+  | (LessThanValueFilter<T> & Partial<GreaterThanValueFilter<T>>)
+
+/**
+ * String or number field value filter
+ */
+export type ScalarValueFilter<T extends string | number = string | number> = CommonValueFilter<T> &
+  RangeValueFilter<T>
 
 /**
  * Any supported field value filter on an object
@@ -67,7 +89,7 @@ export type ObjectFilter = Record<string, AnyValueFilter>
  * Advanced query filters on a document fields
  */
 export type QueryFilters =
-  | { doc: ObjectFilter }
+  | { where: ObjectFilter }
   | { and: Array<QueryFilters> }
   | { or: Array<QueryFilters> }
   | { not: QueryFilters }
