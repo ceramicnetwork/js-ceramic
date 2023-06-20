@@ -328,7 +328,7 @@ export class CeramicDaemon {
     const did = new DID(didOptions)
     if (provider) {
       await did.authenticate()
-      diagnosticsLogger.imp(`DID set to '${did.id}'`)
+      diagnosticsLogger.imp(`Node DID set to '${did.id}. This DID will be used to authenticate to the anchor service'`)
     }
     ceramic.did = did
     await ceramic._init(true)
