@@ -1,4 +1,4 @@
-import type { Knex } from 'knex'
+import { Knex } from 'knex'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Page, Pagination } from '@ceramicnetwork/common'
@@ -11,8 +11,12 @@ import {
 import { asTableName } from './as-table-name.util.js'
 import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
 import { addColumnPrefix } from './column-name.util.js'
+import { convertQueryFilter } from './query-filter-converter.js'
 
-type Selected = { stream_id: string; last_anchored_at: number; created_at: number }
+type SelectedRequired = { stream_id: string; last_anchored_at: number; created_at: number }
+type SelectedOptional = Record<string, boolean | number | string>
+type Selected = SelectedRequired & SelectedOptional
+type QueryFunc = (bldr: Knex.QueryBuilder<any, any>) => Knex.QueryBuilder<any, any>
 
 /**
  * Contains functions to transform (parse and stringify) GraphQL cursors
@@ -128,27 +132,13 @@ export class InsertionOrder {
     pagination: ForwardPaginationQuery
   ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
-    let base = this.dbConnection
-      .from(tableName)
-      .select('stream_id', 'last_anchored_at', 'created_at')
-      .orderBy(INSERTION_ORDER)
-      .limit(pagination.first + 1)
-    if (query.account) {
-      base = base.where({ controller_did: query.account })
-    }
-    if (query.filter) {
-      for (const [key, value] of Object.entries(query.filter)) {
-        const filterObj = {}
-        filterObj[addColumnPrefix(key)] = value
-        base = base.andWhere(filterObj)
-      }
-    }
+    const queryFunc = this.query(query, false)
+    let base = queryFunc(this.dbConnection.from(tableName)).limit(pagination.first + 1)
     if (pagination.after) {
       const after = Cursor.parse(pagination.after)
-      return base.where('created_at', '>', after.created_at)
-    } else {
-      return base
+      base = base.where('created_at', '>', after.created_at)
     }
+    return base
   }
 
   /**
@@ -159,39 +149,48 @@ export class InsertionOrder {
     pagination: BackwardPaginationQuery
   ): Knex.QueryBuilder<unknown, Array<Selected>> {
     const tableName = asTableName(query.model)
-    const limit = pagination.last
-    const identity = <T>(a: T) => a
-    const base = (
-      withWhereCallback: (builder: Knex.QueryBuilder) => Knex.QueryBuilder = identity
-    ) => {
-      return this.dbConnection
-        .select('*')
-        .from((builder) => {
-          let subquery = builder
-            .from(tableName)
-            .select('stream_id', 'last_anchored_at', 'created_at')
-            .orderBy(reverseOrder(INSERTION_ORDER))
-            .limit(limit + 1) // To know if we have more entries to query
-            .as('T')
-          if (query.account) {
-            subquery = subquery.where({ controller_did: query.account })
-          }
-          if (query.filter) {
-            for (const [key, value] of Object.entries(query.filter)) {
-              const filterObj = {}
-              filterObj[addColumnPrefix(key)] = value
-              subquery = subquery.andWhere(filterObj)
-            }
-          }
-          return withWhereCallback(subquery)
-        })
-        .orderBy(INSERTION_ORDER)
-    }
-    if (pagination.before) {
-      const before = Cursor.parse(pagination.before)
-      return base((builder) => builder.where('created_at', '<', before.created_at))
-    } else {
-      return base()
+    const queryFunc = this.query(query, true)
+    return this.dbConnection
+      .select('*')
+      .from((bldr) => {
+        let subquery = queryFunc(bldr.from(tableName)).limit(pagination.last + 1)
+        if (pagination.before) {
+          const before = Cursor.parse(pagination.before)
+          subquery = subquery.where('created_at', '<', before.created_at)
+        }
+        return subquery.as('T')
+      })
+      .orderBy(INSERTION_ORDER)
+  }
+
+  private query(query: BaseQuery, isReverseOrder: boolean): QueryFunc {
+    const converted = convertQueryFilter(query.queryFilters)
+    return (bldr) => {
+      let base = bldr.columns(['stream_id', 'last_anchored_at', 'created_at']).select()
+
+      for (const key of converted.select) {
+        bldr = bldr.jsonExtract('stream_content', `$.${key}`, key)
+      }
+
+      base = base.where(converted.where)
+
+      if (isReverseOrder) {
+        base = base.orderBy(reverseOrder(INSERTION_ORDER))
+      } else {
+        base = base.orderBy(INSERTION_ORDER)
+      }
+      if (query.account) {
+        base = base.where({ controller_did: query.account })
+      }
+      if (query.filter) {
+        for (const [key, value] of Object.entries(query.filter)) {
+          const filterObj = {}
+          filterObj[addColumnPrefix(key)] = value
+          base = base.andWhere(filterObj)
+        }
+      }
+
+      return base
     }
   }
 }

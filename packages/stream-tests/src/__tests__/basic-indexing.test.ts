@@ -390,6 +390,30 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     })
   })
 
+  describe('Queries with custom query filtering', () => {
+    test('Can query a single document by field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          type: 'where',
+          value: {
+            myData: { type: 'value', op: '=', value: 3 },
+          },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+    })
+  })
+
   describe('Queries with filters on relations', () => {
     // TODO(CDB-1895): add test with filter on multiple relations
 

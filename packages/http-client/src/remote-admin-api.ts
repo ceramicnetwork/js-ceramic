@@ -108,7 +108,5 @@ export class RemoteAdminApi implements AdminApi {
 }
 
 function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
-  return modelIDs
-    ? { models: modelIDs.map((streamID) => streamID.toString()) }
-    : undefined
+  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
 }

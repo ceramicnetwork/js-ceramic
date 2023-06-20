@@ -28,19 +28,19 @@ export type Pagination = ForwardPagination | BackwardPagination
  * Boolean field value filter
  */
 export type BooleanValueFilter =
-  | { isNull: boolean }
-  | { equalTo: boolean }
-  | { notEqualTo: boolean }
+  | { type: 'bool'; op: 'null'; value: boolean }
+  | { type: 'bool'; op: '='; value: boolean }
+  | { type: 'bool'; op: '!='; value: boolean }
 
 /**
  * Common type for multiple value filters
  */
 export type CommonValueFilter<T> =
-  | { isNull: boolean }
-  | { equalTo: T }
-  | { notEqualTo: T }
-  | { in: Array<T> }
-  | { notIn: Array<T> }
+  | { type: 'value'; op: 'null'; value: boolean }
+  | { type: 'value'; op: '='; value: T }
+  | { type: 'value'; op: '!='; value: T }
+  | { type: 'value'; op: 'in'; value: Array<T> }
+  | { type: 'value'; op: 'nin'; value: Array<T> }
 
 /**
  * Enum field value filter
@@ -51,15 +51,15 @@ export type EnumValueFilter = CommonValueFilter<string>
  * Supported greater than value conditions
  */
 export type GreaterThanValueFilter<T extends string | number> =
-  | { greaterThan: T }
-  | { greaterThanOrEqualTo: T }
+  | { type: 'value'; op: '>'; value: T }
+  | { type: 'value'; op: '>='; value: T }
 
 /**
  * Supported less than value conditions
  */
 export type LessThanValueFilter<T extends string | number> =
-  | { lessThan: T }
-  | { lessThanOrEqualTo: T }
+  | { type: 'value'; op: '<'; value: T }
+  | { type: 'value'; op: '<='; value: T }
 
 /**
  * Range value filter using a required greater than or less than value filter
@@ -75,10 +75,17 @@ export type RangeValueFilter<T extends string | number> =
 export type ScalarValueFilter<T extends string | number = string | number> = CommonValueFilter<T> &
   RangeValueFilter<T>
 
+type StringCommonValueFilter = ScalarValueFilter<string>
+type NumberCommonValueFilter = ScalarValueFilter<number>
+
 /**
  * Any supported field value filter on an object
  */
-export type AnyValueFilter = BooleanValueFilter | EnumValueFilter | ScalarValueFilter
+export type AnyValueFilter =
+  | BooleanValueFilter
+  | EnumValueFilter
+  | StringCommonValueFilter
+  | NumberCommonValueFilter
 
 /**
  * Mapping of object keys to value filter
@@ -89,10 +96,10 @@ export type ObjectFilter = Record<string, AnyValueFilter>
  * Advanced query filters on a document fields
  */
 export type QueryFilters =
-  | { where: ObjectFilter }
-  | { and: Array<QueryFilters> }
-  | { or: Array<QueryFilters> }
-  | { not: QueryFilters }
+  | { type: 'where'; value: ObjectFilter }
+  | { type: 'and'; value: Array<QueryFilters> }
+  | { type: 'or'; value: Array<QueryFilters> }
+  | { type: 'not'; value: QueryFilters }
 
 /**
  * Field sort order, 'ASC' for ascending, 'DESC' for descending

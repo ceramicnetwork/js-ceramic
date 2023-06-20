@@ -472,7 +472,7 @@ export class Repository {
     const firstAnchor = asDate(
       state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
     )
-    const STREAM_CONTENT = {
+    const streamContent = {
       model: state$.value.metadata.model,
       streamID: state$.id,
       controller: state$.value.metadata.controllers[0],
@@ -482,7 +482,7 @@ export class Repository {
       firstAnchor: firstAnchor,
     }
 
-    await this.index.indexStream(STREAM_CONTENT)
+    await this.index.indexStream(streamContent)
   }
 
   /**

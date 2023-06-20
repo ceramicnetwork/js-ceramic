@@ -43,7 +43,7 @@ export interface IndexModelArgs {
 type IndexedData<DateType> = {
   stream_id: string
   controller_did: string
-  stream_content: any
+  stream_content: Record<string, any> | string
   tip: string
   last_anchored_at: DateType
   first_anchored_at: DateType
