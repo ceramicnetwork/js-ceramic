@@ -177,15 +177,12 @@ describe('Admin API tests', () => {
       )
 
       // Now start indexing the first model
-      await ceramic.admin.startIndexingModels(
-        [],
-        [
-          {
-            streamID: model.id,
-            indices: [{ fields: [{ path: ['myData'] }] }],
-          },
-        ]
-      )
+      await ceramic.admin.startIndexingModelData([
+        {
+          streamID: model.id,
+          indices: [{ fields: [{ path: ['myData'] }] }],
+        },
+      ])
       indexedModels = await ceramic.admin.getIndexedModelData()
       expect(indexedModels.length).toEqual(1)
 

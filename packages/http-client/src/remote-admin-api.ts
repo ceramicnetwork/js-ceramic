@@ -109,7 +109,7 @@ export class RemoteAdminApi implements AdminApi {
   async getIndexedModelData(): Promise<Array<ModelData>> {
     const code = await this.generateCode()
     const url = this.getModelsUrl()
-    url.searchParams.append('withModelData', 'true')
+    url.searchParams.append('outputFormat', 'document')
     const response = await this._fetchJson(url, {
       headers: {
         Authorization: `Basic ${await this.buildJWS(

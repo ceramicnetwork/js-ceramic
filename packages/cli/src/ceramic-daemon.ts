@@ -832,24 +832,20 @@ export class CeramicDaemon {
       return
     }
 
-    const outputFormat = req.query.outputFormat?.toString() ?? 'onlystreamids'
-    if (outputFormat && outputFormat.toString().toLowerCase() == 'document') {
-      const indexedModels = await this.ceramic.admin.getIndexedModelData()
-      res.json({
-        models: indexedModels.map((idx) => idx.streamID.toString()),
-        modelData: indexedModels.map((idx) => {
-          return {
-            streamID: idx.streamID.toString(),
-            indices: idx.indices,
-          }
-        }),
-      })
-    } else {
-      const indexedModels = await this.ceramic.admin.getIndexedModels()
-      res.json({
-        models: indexedModels.map((idx) => idx.toString()),
+    const indexedModels = await this.ceramic.admin.getIndexedModelData()
+    const body: Record<string, any> = {
+      models: indexedModels.map((idx) => idx.streamID.toString()),
+    }
+    const outputFormat = req.query.outputFormat?.toString() ?? 'document'
+    if (outputFormat.toString().toLowerCase() != 'onlystreamids') {
+      body.modelData = indexedModels.map((idx) => {
+        return {
+          streamID: idx.streamID.toString(),
+          indices: idx.indices,
+        }
       })
     }
+    res.json(body)
   }
 
   async validateAdminRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
