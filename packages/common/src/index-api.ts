@@ -25,12 +25,97 @@ export type BackwardPagination = {
 export type Pagination = ForwardPagination | BackwardPagination
 
 /**
+ * Boolean field value filter
+ */
+export type BooleanValueFilter =
+  | { isNull: boolean }
+  | { equalTo: boolean }
+  | { notEqualTo: boolean }
+
+/**
+ * Common type for multiple value filters
+ */
+export type CommonValueFilter<T> =
+  | { isNull: boolean }
+  | { equalTo: T }
+  | { notEqualTo: T }
+  | { in: Array<T> }
+  | { notIn: Array<T> }
+
+/**
+ * Enum field value filter
+ */
+export type EnumValueFilter = CommonValueFilter<string>
+
+/**
+ * Supported greater than value conditions
+ */
+export type GreaterThanValueFilter<T extends string | number> =
+  | { greaterThan: T }
+  | { greaterThanOrEqualTo: T }
+
+/**
+ * Supported less than value conditions
+ */
+export type LessThanValueFilter<T extends string | number> =
+  | { lessThan: T }
+  | { lessThanOrEqualTo: T }
+
+/**
+ * Range value filter using a required greater than or less than value filter
+ * and optional other boundary
+ */
+export type RangeValueFilter<T extends string | number> =
+  | (GreaterThanValueFilter<T> & Partial<LessThanValueFilter<T>>)
+  | (LessThanValueFilter<T> & Partial<GreaterThanValueFilter<T>>)
+
+/**
+ * String or number field value filter
+ */
+export type ScalarValueFilter<T extends string | number = string | number> = CommonValueFilter<T> &
+  RangeValueFilter<T>
+
+/**
+ * Any supported field value filter on an object
+ */
+export type AnyValueFilter = BooleanValueFilter | EnumValueFilter | ScalarValueFilter
+
+/**
+ * Mapping of object keys to value filter
+ */
+export type ObjectFilter = Record<string, AnyValueFilter>
+
+/**
+ * Advanced query filters on a document fields
+ */
+export type QueryFilters =
+  | { where: ObjectFilter }
+  | { and: Array<QueryFilters> }
+  | { or: Array<QueryFilters> }
+  | { not: QueryFilters }
+
+/**
+ * Field sort order, 'ASC' for ascending, 'DESC' for descending
+ */
+export type SortOrder = 'ASC' | 'DESC'
+
+/**
+ * Mapping of object keys to value sort order
+ */
+export type Sorting = Record<string, SortOrder>
+
+/**
  * Base query to the index. Disregards pagination.
  */
 export type BaseQuery = {
   model: StreamID | string
   account?: string
+  /**
+   * @deprecated relation filters used by ComposeDB <= 0.4
+   */
   filter?: Record<string, string>
+  queryFilters?: QueryFilters
+  sorting?: Sorting
 }
 
 export type PaginationQuery = BaseQuery & Pagination
