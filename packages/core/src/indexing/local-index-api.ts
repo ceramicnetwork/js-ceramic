@@ -164,27 +164,22 @@ export class LocalIndexApi implements IndexApi {
   ): Promise<IndexModelArgs> {
     const modelStreamId = modelData.streamID
     this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
-    const indexModelArgs = await _getIndexModelArgs(
-      modelData,
-      this.repository,
-      this.databaseIndexApi
-    )
-    if (modelsNoLongerIndexed) {
-      const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
-        return oldIdx.streamID.equals(modelStreamId)
-      })
-      // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-      if (modelNoLongerIndexed) {
-        throw new Error(
-          `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
-        )
-      }
+
+    const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
+      return oldIdx.streamID.equals(modelStreamId)
+    })
+    // TODO(CDB-2297): Handle a model's historical sync after re-indexing
+    if (modelNoLongerIndexed) {
+      throw new Error(
+        `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
+      )
     }
-    return indexModelArgs
+
+    return await _getIndexModelArgs(modelData, this.repository, this.databaseIndexApi)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {
-    const modelsNoLongerIndexed = await this.databaseIndexApi?.getModelsNoLongerIndexed()
+    const modelsNoLongerIndexed = (await this.databaseIndexApi?.getModelsNoLongerIndexed()) ?? []
 
     const indexModelsArgs = await Promise.all(
       models.map(
