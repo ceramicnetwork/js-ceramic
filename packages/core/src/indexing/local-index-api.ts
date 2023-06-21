@@ -32,7 +32,7 @@ async function _getIndexModelArgs(
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
   }
 
-  let opts: IndexModelArgs = {
+  const opts: IndexModelArgs = {
     model: modelStreamId,
   }
 
@@ -41,18 +41,9 @@ async function _getIndexModelArgs(
     const content = modelState.state.next?.content ?? modelState.state.content
     Model.assertVersionValid(content, 'major')
     if (content.relations) {
-      opts = {
-        ...opts,
-        relations: content.relations,
-      }
+      opts.relations = content.relations
     }
-    const indices = req.indices ?? (await databaseIndexApi?.getFieldsIndex(modelStreamId))
-    if (indices) {
-      opts = {
-        ...opts,
-        indices,
-      }
-    }
+    opts.indices = req.indices ?? (await databaseIndexApi?.getFieldsIndex(modelStreamId))
   }
 
   return opts

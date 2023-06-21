@@ -19,7 +19,6 @@ export interface Field {
  * Index for a model
  */
 export type FieldsIndex = {
-  name?: string
   fields: Array<Field>
 }
 

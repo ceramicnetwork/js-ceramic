@@ -39,11 +39,7 @@ export interface IndexStreamArgs {
  * @param table Table to add index to
  */
 export function fieldsIndexName(idx: FieldsIndex, table: string): string {
-  if (idx.name) {
-    return `${indexNameFromTableName(table)}_${idx.name}`
-  } else {
-    return `${indexNameFromTableName(table)}_${idx.fields.flatMap((f) => f.path).join('_')}`
-  }
+  return `${indexNameFromTableName(table)}_${idx.fields.flatMap((f) => f.path).join('_')}`
 }
 
 /**
@@ -54,8 +50,8 @@ export function fieldsIndexName(idx: FieldsIndex, table: string): string {
  */
 export interface IndexModelArgs {
   readonly model: StreamID
-  readonly relations?: ModelRelationsDefinition
-  readonly indices?: Array<FieldsIndex>
+  relations?: ModelRelationsDefinition
+  indices?: Array<FieldsIndex>
 }
 
 type IndexedData<DateType> = {
