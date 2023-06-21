@@ -209,17 +209,6 @@ export class LocalIndexApi implements IndexApi {
     // back to the DatabaseIndexApi so that it can populate its internal state.
     // TODO(CDB-2132):  Fix this fragile and circular DatabaseApi initialization
     const modelsToIndex = this.databaseIndexApi.getIndexedModels()
-    for (const model of modelsToIndex) {
-      if (model.indices) {
-        for (const idx of model.indices) {
-          if (!idx.fields) {
-            throw new Error('Fields was undefined')
-          } else if (idx.fields instanceof String) {
-            throw new Error('Fields was string')
-          }
-        }
-      }
-    }
     await this.indexModels(modelsToIndex)
   }
 

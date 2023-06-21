@@ -730,9 +730,7 @@ export class CeramicDaemon {
         error: `At least one model must be specified, either in 'models' as a 'StreamID' or 'modelData' as a 'ModelData' consisting of 'StreamID' and other fields`,
       }
     } else {
-      const models = parsedJWS.models?.map((modelIDString) =>
-        StreamID.fromString(modelIDString)
-      )
+      const models = parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString))
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
@@ -834,8 +832,8 @@ export class CeramicDaemon {
       return
     }
 
-    const withModelData = req.query.withModelData
-    if (withModelData && withModelData.toString().toLowerCase() == 'true') {
+    const outputFormat = req.query.outputFormat?.toString() ?? 'onlystreamids'
+    if (outputFormat && outputFormat.toString().toLowerCase() == 'document') {
       const indexedModels = await this.ceramic.admin.getIndexedModelData()
       res.json({
         models: indexedModels.map((idx) => idx.streamID.toString()),

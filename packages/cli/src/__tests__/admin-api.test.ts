@@ -27,7 +27,7 @@ const MY_MODEL_1_CONTENT: ModelDefinition = {
 const MODEL_PATH = '/api/v0/admin/models'
 const STATUS_PATH = '/api/v0/admin/status'
 
-function modelIDsAsRequestBody(modelIDs: Array<string>): Record<string, Array<string>> {
+function modelIDsAsRequestBody(modelIDs: Array<string>): Record<string, Array<string>> | undefined {
   return modelIDs ? { models: modelIDs } : undefined
 }
 

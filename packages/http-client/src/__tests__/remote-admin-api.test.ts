@@ -123,23 +123,20 @@ test('addModelsToIndexWithFieldIndices()', async () => {
   const adminApi = new RemoteAdminApi(FAUX_ENDPOINT, getDidFn)
   const fauxFetch = jest.fn(async () => SUCCESS_RESPONSE) as typeof fetchJson
   ;(adminApi as any)._fetchJson = fauxFetch
-  await adminApi.startIndexingModels(
-    [],
-    [
-      {
-        streamID: MODEL,
-        indices: [
-          {
-            fields: [
-              {
-                path: ['test'],
-              },
-            ],
-          },
-        ],
-      },
-    ]
-  )
+  await adminApi.startIndexingModelData([
+    {
+      streamID: MODEL,
+      indices: [
+        {
+          fields: [
+            {
+              path: ['test'],
+            },
+          ],
+        },
+      ],
+    },
+  ])
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
   expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
   const sentPayload = fauxFetch.mock.calls[1][1]

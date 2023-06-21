@@ -104,11 +104,18 @@ export interface AdminApi {
   /**
    * Adds model streams to index
    *
+   * @deprecated
    * @param modelsIDs - array of model stream IDs to add to index. This parameter is deprecated
    * and indices should be specified instead
-   * @param indices - array of model streams with field indices to index
+   * @param modelData - array of model streams with field indices to index
    */
-  startIndexingModels(modelsIDs: Array<StreamID>, indices?: Array<ModelData>): Promise<void>
+  startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  /**
+   * Adds model streams to index as specified by ModelData
+   * @param modelData - array of model streams with field indices to index
+   */
+  startIndexingModelData(modelData: Array<ModelData>): Promise<void>
 
   /**
    * Removes model streams from index
