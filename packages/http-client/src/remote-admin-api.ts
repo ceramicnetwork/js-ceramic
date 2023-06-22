@@ -82,7 +82,7 @@ export class RemoteAdminApi implements AdminApi {
   async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
     const code = await this.generateCode()
     const body = {
-      indices: modelData.map((idx) => {
+      modelData: modelData.map((idx) => {
         return {
           streamID: idx.streamID.toString(),
           indices: idx.indices,

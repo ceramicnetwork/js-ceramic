@@ -86,7 +86,7 @@ test('stopIndexingModels()', async () => {
   await adminApi.stopIndexingModels([])
 
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
-  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/modelData`))
 })
 
 test('missingDidFailureCases', async () => {
@@ -108,15 +108,15 @@ test('addModelsToIndex()', async () => {
   ;(adminApi as any)._fetchJson = fauxFetch
   await adminApi.startIndexingModels([MODEL])
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
-  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/modelData`))
   const sentPayload = fauxFetch.mock.calls[1][1]
   expect(sentPayload.method).toEqual('post')
   const sentJws = sentPayload.body.jws
 
   const jwsResult = await did.verifyJWS(sentJws)
   expect(jwsResult.kid).toEqual(expectedKid)
-  expect(jwsResult.payload.requestBody.models.length).toEqual(1)
-  expect(jwsResult.payload.requestBody.models[0]).toEqual(MODEL.toString())
+  expect(jwsResult.payload.requestBody.modelData.length).toEqual(1)
+  expect(jwsResult.payload.requestBody.modelData[0].streamID).toEqual(MODEL.toString())
 })
 
 test('addModelsToIndexWithFieldIndices()', async () => {
@@ -138,16 +138,15 @@ test('addModelsToIndexWithFieldIndices()', async () => {
     },
   ])
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
-  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
+  expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/modelData`))
   const sentPayload = fauxFetch.mock.calls[1][1]
   expect(sentPayload.method).toEqual('post')
   const sentJws = sentPayload.body.jws
 
   const jwsResult = await did.verifyJWS(sentJws)
   expect(jwsResult.kid).toEqual(expectedKid)
-  expect(jwsResult.payload.requestBody.models.length).toEqual(1)
-  expect(jwsResult.payload.requestBody.indices.length).toEqual(1)
-  const streamId = jwsResult.payload.requestBody.indices[0].streamID
+  expect(jwsResult.payload.requestBody.modelData.length).toEqual(1)
+  const streamId = jwsResult.payload.requestBody.modelData[0].streamID
   expect(streamId).toEqual(MODEL.toString())
 })
 
