@@ -87,7 +87,7 @@ describe('Remote admin api', () => {
     await adminApi.stopIndexingModels([])
 
     expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
-    expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/model`))
+    expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
   })
 
   test('missingDidFailureCases', async () => {
