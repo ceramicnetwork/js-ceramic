@@ -13,6 +13,7 @@ export class RemoteAdminApi implements AdminApi {
   private readonly _pinApi: PinApi
 
   readonly modelsPath = './admin/models'
+  readonly modelDataPath = './admin/modelData'
   readonly getCodePath = './admin/getCode'
   readonly nodeStatusPath = './admin/status'
 
@@ -26,6 +27,10 @@ export class RemoteAdminApi implements AdminApi {
 
   private getModelsUrl(): URL {
     return new URL(this.modelsPath, this._apiUrl)
+  }
+
+  private getModelDataUrl(): URL {
+    return new URL(this.modelDataPath, this._apiUrl)
   }
 
   private getStatusUrl(): URL {
@@ -76,18 +81,18 @@ export class RemoteAdminApi implements AdminApi {
 
   async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
     const code = await this.generateCode()
-    const modelIds = modelData.map((idx) => idx.streamID)
-    const body = modelIDsAsRequestBody(modelIds)
-    body.indices = modelData.map((idx) => {
-      return {
-        streamID: idx.streamID.toString(),
-        indices: idx.indices,
-      }
-    })
-    await this._fetchJson(this.getModelsUrl(), {
+    const body = {
+      indices: modelData.map((idx) => {
+        return {
+          streamID: idx.streamID.toString(),
+          indices: idx.indices,
+        }
+      })
+    }
+    await this._fetchJson(this.getModelDataUrl(), {
       method: 'post',
       body: {
-        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelDataUrl().pathname, body),
       },
     })
   }
@@ -108,14 +113,12 @@ export class RemoteAdminApi implements AdminApi {
 
   async getIndexedModelData(): Promise<Array<ModelData>> {
     const code = await this.generateCode()
-    const url = this.getModelsUrl()
-    url.searchParams.append('outputFormat', 'document')
-    const response = await this._fetchJson(url, {
+    const response = await this._fetchJson(this.getModelDataUrl(), {
       headers: {
         Authorization: `Basic ${await this.buildJWS(
           this._getDidFn(),
           code,
-          this.getModelsUrl().pathname
+          this.getModelDataUrl().pathname
         )}`,
       },
     })

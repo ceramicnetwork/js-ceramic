@@ -230,10 +230,15 @@ type AdminApiJWSValidationResult = {
   error?: string
 }
 
-type AdminApiModelMutationMethod = (
-  modelsIDs: Array<StreamID>,
-  indices?: Array<ModelData>
-) => Promise<void>
+type AdminApiModelDataMutationMethod = {
+  type: 'modelData',
+  method: (modelData: Array<ModelData>) => Promise<void>
+}
+
+type AdminApiModelMutationMethod = {
+  type: 'modelIDs',
+  method: (modelsIDs: Array<StreamID>) => Promise<void>
+}
 
 /**
  * Ceramic daemon implementation
@@ -364,6 +369,7 @@ export class CeramicDaemon {
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminModelDataRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const legacyPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
@@ -378,6 +384,7 @@ export class CeramicDaemon {
     baseRouter.use('/collection', collectionRouter)
     baseRouter.use('/admin/getCode', adminCodesRouter)
     baseRouter.use('/admin/models', adminModelRouter)
+    baseRouter.use('/admin/modelData', adminModelDataRouter)
     baseRouter.use('/admin/status', adminNodeStatusRouter)
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
@@ -408,6 +415,9 @@ export class CeramicDaemon {
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+    adminModelDataRouter.getAsync('/', this.getIndexedModelData.bind(this))
+    adminModelDataRouter.postAsync('/', this.startIndexingModelData.bind(this))
+    adminModelDataRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
 
@@ -763,7 +773,7 @@ export class CeramicDaemon {
   private async _processAdminModelsMutationRequest(
     req: Request,
     res: Response,
-    successCallback: AdminApiModelMutationMethod
+    successCallback: AdminApiModelMutationMethod | AdminApiModelDataMutationMethod
   ): Promise<void> {
     // Parse request
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws, true)
@@ -778,10 +788,19 @@ export class CeramicDaemon {
       this._verifyActingDid(jwsValidation.kid)
     } catch (e) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+      return
     }
 
     // Process request
-    await successCallback(jwsValidation.models ?? [], jwsValidation.modelData)
+    if (successCallback.type == 'modelIDs') {
+      await successCallback.method(jwsValidation.models ?? [])
+    } else {
+      if (!jwsValidation.modelData || jwsValidation.modelData.length == 0) {
+        res.status(StatusCodes.BAD_REQUEST).json({error: 'Expected modelData to be present and contain elements'})
+        return
+      }
+      await successCallback.method(jwsValidation.modelData)
+    }
     res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
@@ -833,12 +852,23 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModelData()
-    const body: Record<string, any> = {
+    const body = {
       models: indexedModels.map((idx) => idx.streamID.toString()),
     }
-    const outputFormat = req.query.outputFormat?.toString() ?? 'document'
-    if (outputFormat.toString().toLowerCase() != 'onlystreamids') {
-      body.modelData = indexedModels.map((idx) => {
+    res
+      .header("Deprecation", "Wed, 21 Jun 2023 23:59:59 GMT")
+      .json(body)
+  }
+
+  async getIndexedModelData(req: Request, res: Response): Promise<void> {
+    const authorized = await this._checkAdminAPIGETRequestAuthorization(req, res)
+    if (!authorized) {
+      return
+    }
+
+    const indexedModels = await this.ceramic.admin.getIndexedModelData()
+    const body = {
+      modelData: indexedModels.map((idx) => {
         return {
           streamID: idx.streamID.toString(),
           indices: idx.indices,
@@ -877,8 +907,22 @@ export class CeramicDaemon {
   async startIndexingModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(
       req,
+      res.header("Deprecation", "Wed, 21 Jun 2023 23:59:59 GMT"),
+      {
+        type: 'modelIDs',
+        method: this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin)
+      }
+    )
+  }
+
+  async startIndexingModelData(req: Request, res: Response): Promise<void> {
+    await this._processAdminModelsMutationRequest(
+      req,
       res,
-      this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin)
+      {
+        type: 'modelData',
+        method: this.ceramic.admin.startIndexingModelData.bind(this.ceramic.admin)
+      }
     )
   }
 

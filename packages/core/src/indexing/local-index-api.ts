@@ -19,7 +19,7 @@ import { Model } from '@ceramicnetwork/stream-model'
 import { ISyncQueryApi } from '../sync/interfaces.js'
 
 /**
- * Takes a ModelFieldsIndex, loads it, and returns the IndexModelArgs necessary to prepare the
+ * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
 async function _getIndexModelArgs(

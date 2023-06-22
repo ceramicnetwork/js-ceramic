@@ -96,7 +96,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Add an index on model fields to the database
+   * Save model indices to the database. This does not create indices, only records them so that
+   * when MIDs are created from the model, they can have indices applied.
    * @param model
    * @param indices
    */
@@ -117,6 +118,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
 
     if (res && res.indices) {
       return JSON.parse(res.indices)
+    } else {
+      return null
     }
   }
 
