@@ -6,8 +6,10 @@ import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
+  FieldsIndex,
   LoggerProvider,
   LogStyle,
+  ModelData,
   MultiQuery,
   StreamUtils,
   SyncOptions,
@@ -202,23 +204,43 @@ function validatePort(inPort) {
 }
 
 /**
+ * ModelData contents in JWS
+ */
+type AdminAPIJWSModelData = {
+  streamID: string
+  indices: Array<FieldsIndex>
+}
+
+/**
  * Contents an authorization header signed by an admin DID
  */
 type AdminAPIJWSContents = {
   kid: string
   code: string
   requestPath: string
-  models: Array<string>
+  models?: Array<string>
+  modelData?: Array<AdminAPIJWSModelData>
 }
 
 type AdminApiJWSValidationResult = {
   kid?: string
   code?: string
   models?: Array<StreamID>
+  modelData?: Array<ModelData>
   error?: string
 }
 
-type AdminApiModelMutationMethod = (modelIDs: Array<StreamID>) => Promise<void>
+type AdminApiMutationMethod = AdminApiModelIdsMutationMethod | AdminApiModelDataMutationMethod
+
+type AdminApiModelDataMutationMethod = {
+  type: 'modelData'
+  method: (modelData: Array<ModelData>) => Promise<void>
+}
+
+type AdminApiModelIdsMutationMethod = {
+  type: 'modelIDs'
+  method: (modelsIDs: Array<StreamID>) => Promise<void>
+}
 
 /**
  * Ceramic daemon implementation
@@ -328,7 +350,9 @@ export class CeramicDaemon {
     const did = new DID(didOptions)
     if (provider) {
       await did.authenticate()
-      diagnosticsLogger.imp(`Node DID set to '${did.id}. This DID will be used to authenticate to the anchor service'`)
+      diagnosticsLogger.imp(
+        `Node DID set to '${did.id}. This DID will be used to authenticate to the anchor service'`
+      )
     }
     ceramic.did = did
     await ceramic._init(true)
@@ -349,6 +373,7 @@ export class CeramicDaemon {
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminModelRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminModelDataRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const legacyPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
@@ -363,6 +388,7 @@ export class CeramicDaemon {
     baseRouter.use('/collection', collectionRouter)
     baseRouter.use('/admin/getCode', adminCodesRouter)
     baseRouter.use('/admin/models', adminModelRouter)
+    baseRouter.use('/admin/modelData', adminModelDataRouter)
     baseRouter.use('/admin/status', adminNodeStatusRouter)
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
@@ -393,6 +419,9 @@ export class CeramicDaemon {
     adminModelRouter.getAsync('/', this.getIndexedModels.bind(this))
     adminModelRouter.postAsync('/', this.startIndexingModels.bind(this))
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+    adminModelDataRouter.getAsync('/', this.getIndexedModelData.bind(this))
+    adminModelDataRouter.postAsync('/', this.startIndexingModelData.bind(this))
+    adminModelDataRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
 
@@ -683,13 +712,13 @@ export class CeramicDaemon {
       code: result.payload.code,
       requestPath: result.payload.requestPath,
       models: result.payload.requestBody ? result.payload.requestBody.models : undefined,
+      modelData: result.payload.requestBody ? result.payload.requestBody.modelData : undefined,
     }
   }
 
   private async _validateAdminApiJWS(
     basePath: string,
-    jws: string | undefined,
-    shouldContainModels: boolean
+    jws: string | undefined
   ): Promise<AdminApiJWSValidationResult> {
     if (!jws) return { error: `Missing authorization jws` }
 
@@ -705,17 +734,73 @@ export class CeramicDaemon {
       }
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
-    } else if (shouldContainModels && (!parsedJWS.models || parsedJWS.models.length === 0)) {
-      return {
-        error: `The 'models' parameter is required and it has to be an array containing at least one model stream id`,
-      }
     } else {
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
         models: parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString)),
+        modelData: parsedJWS.modelData?.map((idx) => {
+          return {
+            streamID: StreamID.fromString(idx.streamID),
+            indices: idx.indices,
+          }
+        }),
       }
     }
+  }
+
+  private async _processAdminModelsMutationRequest(
+    req: Request,
+    res: Response,
+    successCallback: AdminApiMutationMethod
+  ): Promise<void> {
+    // Parse request
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws)
+    if (jwsValidation.error) {
+      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
+      return
+    }
+
+    // Authorize request
+    try {
+      this._verifyAndDiscardAdminCode(jwsValidation.code)
+      this._verifyActingDid(jwsValidation.kid)
+    } catch (e) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
+    }
+
+    // Process request
+    switch (successCallback.type) {
+      case 'modelData': {
+        if (!jwsValidation.modelData || jwsValidation.modelData.length == 0) {
+          res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({
+              error: `Expected modelData to be present and contain at least one ModelData element, e.g. '{ streamID: <id>}': ${JSON.stringify(
+                jwsValidation
+              )}`,
+            })
+          return
+        }
+        await successCallback.method(jwsValidation.modelData)
+        break
+      }
+      case 'modelIDs': {
+        if (!jwsValidation.models || jwsValidation.models.length == 0) {
+          res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({
+              error: `Expected models to be present and contain at least one StreamID: : ${JSON.stringify(
+                jwsValidation
+              )}`,
+            })
+          return
+        }
+        await successCallback.method(jwsValidation.models)
+        break
+      }
+    }
+    res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
   /**
@@ -731,31 +816,6 @@ export class CeramicDaemon {
         `Unauthorized access: DID '${actingDid}' does not have admin access permission to this node`
       )
     }
-  }
-
-  private async _processAdminModelsMutationRequest(
-    req: Request,
-    res: Response,
-    successCallback: AdminApiModelMutationMethod
-  ): Promise<void> {
-    // Parse request
-    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws, true)
-    if (jwsValidation.error) {
-      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
-      return
-    }
-
-    // Authorize request
-    try {
-      this._verifyAndDiscardAdminCode(jwsValidation.code)
-      this._verifyActingDid(jwsValidation.kid)
-    } catch (e) {
-      res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
-    }
-
-    // Process request
-    await successCallback(jwsValidation.models)
-    res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
   async getAdminCode(req: Request, res: Response): Promise<void> {
@@ -785,7 +845,7 @@ export class CeramicDaemon {
       })
       return false
     }
-    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString)
     if (jwsValidation.error) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
       return false
@@ -811,6 +871,23 @@ export class CeramicDaemon {
     })
   }
 
+  async getIndexedModelData(req: Request, res: Response): Promise<void> {
+    const authorized = await this._checkAdminAPIGETRequestAuthorization(req, res)
+    if (!authorized) {
+      return
+    }
+
+    const indexedModels = await this.ceramic.admin.getIndexedModelData()
+    res.json({
+      modelData: indexedModels.map((data) => {
+        return {
+          streamID: data.streamID.toString(),
+          indices: data.indices,
+        }
+      }),
+    })
+  }
+
   async validateAdminRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
     if (!req.headers.authorization) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization header' })
@@ -823,7 +900,7 @@ export class CeramicDaemon {
       })
       return
     }
-    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString, false)
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString)
     if (jwsValidation.error) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {
@@ -838,19 +915,24 @@ export class CeramicDaemon {
   }
 
   async startIndexingModels(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(
-      req,
-      res,
-      this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin)
-    )
+    await this._processAdminModelsMutationRequest(req, res, {
+      type: 'modelIDs',
+      method: (modelIDs) => this.ceramic.admin.startIndexingModels(modelIDs),
+    })
+  }
+
+  async startIndexingModelData(req: Request, res: Response): Promise<void> {
+    await this._processAdminModelsMutationRequest(req, res, {
+      type: 'modelData',
+      method: (modelData) => this.ceramic.admin.startIndexingModelData(modelData),
+    })
   }
 
   async stopIndexingModels(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(
-      req,
-      res,
-      this.ceramic.admin.stopIndexingModels.bind(this.ceramic.admin)
-    )
+    await this._processAdminModelsMutationRequest(req, res, {
+      type: 'modelIDs',
+      method: (modelsIDs) => this.ceramic.admin.stopIndexingModels(modelsIDs),
+    })
   }
 
   /**

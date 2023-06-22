@@ -1,8 +1,20 @@
-import { AdminApi, fetchJson, PinApi, NodeStatusResponse } from '@ceramicnetwork/common'
+import {
+  AdminApi,
+  fetchJson,
+  PinApi,
+  NodeStatusResponse,
+  ModelData,
+  FieldsIndex,
+} from '@ceramicnetwork/common'
 import { RemotePinApi } from './remote-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DID } from 'dids'
 import { MissingDIDError } from './utils.js'
+
+type RemoteModelData = {
+  streamID: string
+  indices?: Array<FieldsIndex>
+}
 
 /**
  * AdminApi for Ceramic http client.
@@ -13,6 +25,7 @@ export class RemoteAdminApi implements AdminApi {
   private readonly _pinApi: PinApi
 
   readonly modelsPath = './admin/models'
+  readonly modelDataPath = './admin/modelData'
   readonly getCodePath = './admin/getCode'
   readonly nodeStatusPath = './admin/status'
 
@@ -26,6 +39,10 @@ export class RemoteAdminApi implements AdminApi {
 
   private getModelsUrl(): URL {
     return new URL(this.modelsPath, this._apiUrl)
+  }
+
+  private getModelDataUrl(): URL {
+    return new URL(this.modelDataPath, this._apiUrl)
   }
 
   private getStatusUrl(): URL {
@@ -75,6 +92,24 @@ export class RemoteAdminApi implements AdminApi {
     })
   }
 
+  async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
+    const code = await this.generateCode()
+    const body = {
+      modelData: modelData.map((data) => {
+        return {
+          streamID: data.streamID.toString(),
+          indices: data.indices,
+        }
+      }),
+    }
+    await this._fetchJson(this.getModelDataUrl(), {
+      method: 'post',
+      body: {
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelDataUrl().pathname, body),
+      },
+    })
+  }
+
   async getIndexedModels(): Promise<Array<StreamID>> {
     const code = await this.generateCode()
     const response = await this._fetchJson(this.getModelsUrl(), {
@@ -88,6 +123,25 @@ export class RemoteAdminApi implements AdminApi {
     })
     return response.models.map((modelStreamIDString: string) => {
       return StreamID.fromString(modelStreamIDString)
+    })
+  }
+
+  async getIndexedModelData(): Promise<Array<ModelData>> {
+    const code = await this.generateCode()
+    const response = await this._fetchJson(this.getModelDataUrl(), {
+      headers: {
+        Authorization: `Basic ${await this.buildJWS(
+          this._getDidFn(),
+          code,
+          this.getModelDataUrl().pathname
+        )}`,
+      },
+    })
+    return response.modelData.map((data: RemoteModelData) => {
+      return {
+        streamID: StreamID.fromString(data.streamID),
+        indices: data.indices,
+      }
     })
   }
 
@@ -108,7 +162,5 @@ export class RemoteAdminApi implements AdminApi {
 }
 
 function modelIDsAsRequestBody(modelIDs: Array<StreamID>): Record<string, Array<string>> {
-  return modelIDs
-    ? { models: modelIDs.map((streamID) => streamID.toString()) }
-    : undefined
+  return modelIDs ? { models: modelIDs.map((streamID) => streamID.toString()) } : undefined
 }

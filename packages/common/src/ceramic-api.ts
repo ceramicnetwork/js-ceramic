@@ -9,6 +9,30 @@ import { NodeStatusResponse } from './node-status-interface.js'
 import type { AnchorStatus } from '@ceramicnetwork/common'
 
 /**
+ * Field definition for index
+ */
+export interface Field {
+  path: Array<string>
+}
+
+/**
+ * Index for a model
+ */
+export type FieldsIndex = {
+  fields: Array<Field>
+}
+
+/**
+ * Data for a model. Contains
+ *  * streamID: StreamID of the model
+ *  * indices: Array of field indices
+ */
+export type ModelData = {
+  streamID: StreamID
+  indices?: Array<FieldsIndex>
+}
+
+/**
  * Describes Ceramic pinning functionality
  */
 export interface PinApi {
@@ -72,11 +96,22 @@ export interface AdminApi {
   getIndexedModels(): Promise<Array<StreamID>>
 
   /**
+   * List indexed model streams with data
+   */
+  getIndexedModelData(): Promise<Array<ModelData>>
+
+  /**
    * Adds model streams to index
    *
    * @param modelsIDs - array of model stream IDs to add to index
    */
   startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  /**
+   * Adds model streams to index as specified by ModelData
+   * @param modelData - array of model streams with field indices to index
+   */
+  startIndexingModelData(modelData: Array<ModelData>): Promise<void>
 
   /**
    * Removes model streams from index
