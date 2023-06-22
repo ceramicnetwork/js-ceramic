@@ -231,12 +231,12 @@ type AdminApiJWSValidationResult = {
 }
 
 type AdminApiModelDataMutationMethod = {
-  type: 'modelData',
+  type: 'modelData'
   method: (modelData: Array<ModelData>) => Promise<void>
 }
 
 type AdminApiModelMutationMethod = {
-  type: 'modelIDs',
+  type: 'modelIDs'
   method: (modelsIDs: Array<StreamID>) => Promise<void>
 }
 
@@ -796,7 +796,9 @@ export class CeramicDaemon {
       await successCallback.method(jwsValidation.models ?? [])
     } else {
       if (!jwsValidation.modelData || jwsValidation.modelData.length == 0) {
-        res.status(StatusCodes.BAD_REQUEST).json({error: 'Expected modelData to be present and contain elements'})
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: 'Expected modelData to be present and contain elements' })
         return
       }
       await successCallback.method(jwsValidation.modelData)
@@ -855,9 +857,7 @@ export class CeramicDaemon {
     const body = {
       models: indexedModels.map((idx) => idx.streamID.toString()),
     }
-    res
-      .header("Deprecation", "Wed, 21 Jun 2023 23:59:59 GMT")
-      .json(body)
+    res.header('Deprecation', 'Wed, 21 Jun 2023 23:59:59 GMT').json(body)
   }
 
   async getIndexedModelData(req: Request, res: Response): Promise<void> {
@@ -873,7 +873,7 @@ export class CeramicDaemon {
           streamID: idx.streamID.toString(),
           indices: idx.indices,
         }
-      })
+      }),
     }
     res.json(body)
   }
@@ -907,23 +907,19 @@ export class CeramicDaemon {
   async startIndexingModels(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(
       req,
-      res.header("Deprecation", "Wed, 21 Jun 2023 23:59:59 GMT"),
+      res.header('Deprecation', 'Wed, 21 Jun 2023 23:59:59 GMT'),
       {
         type: 'modelIDs',
-        method: this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin)
+        method: this.ceramic.admin.startIndexingModels.bind(this.ceramic.admin),
       }
     )
   }
 
   async startIndexingModelData(req: Request, res: Response): Promise<void> {
-    await this._processAdminModelsMutationRequest(
-      req,
-      res,
-      {
-        type: 'modelData',
-        method: this.ceramic.admin.startIndexingModelData.bind(this.ceramic.admin)
-      }
-    )
+    await this._processAdminModelsMutationRequest(req, res, {
+      type: 'modelData',
+      method: this.ceramic.admin.startIndexingModelData.bind(this.ceramic.admin),
+    })
   }
 
   async stopIndexingModels(req: Request, res: Response): Promise<void> {

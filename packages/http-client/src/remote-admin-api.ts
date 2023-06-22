@@ -87,7 +87,7 @@ export class RemoteAdminApi implements AdminApi {
           streamID: idx.streamID.toString(),
           indices: idx.indices,
         }
-      })
+      }),
     }
     await this._fetchJson(this.getModelDataUrl(), {
       method: 'post',
