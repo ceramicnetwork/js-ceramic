@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/codecs",
-  "version": "1.3.0-rc.0",
+  "version": "1.4.0-rc.0",
   "description": "Ceramic Codecs",
   "keywords": [
     "ceramic",
@@ -30,7 +30,7 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.15.0-rc.0",
+    "@ceramicnetwork/streamid": "^2.16.0-rc.0",
     "codeco": "^1.1.0",
     "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"

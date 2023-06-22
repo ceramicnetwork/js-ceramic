@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.29.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.28.0-rc.0...@ceramicnetwork/common@2.29.0-rc.0) (2023-06-22)
+
+
+### Features
+
+* **common:** Update query type to support new filters and order parameters ([#2839](https://github.com/ceramicnetwork/js-ceramic/issues/2839)) ([37a799e](https://github.com/ceramicnetwork/js-ceramic/commit/37a799e8899af5253ebdcd6b1ac0d6e31c3cd41d))
+
+
+
+
+
 # [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.27.0-rc.0...@ceramicnetwork/common@2.28.0-rc.0) (2023-06-19)
 
 
