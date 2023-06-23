@@ -111,7 +111,7 @@ jobs:
 
   publish_rc:
     runs-on: ubuntu-latest
-    if: ${{ inputs.release_type == 'rc' }}
+    if: ${{ inputs.release_type == 'rc' || inputs.release_type == 'rc-followup' }}
     steps:
       -
         name: Setup Node
@@ -165,7 +165,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate -- --yes
+          RELEASE_TYPE=${{ inputs.release_type }}
+          if [[ $RELEASE_TYPE == "rc" ]]; then
+            npm run publish:release-candidate -- --yes
+          else # $RELEASE_TYPE == "rc-followup"
+            npm run publish:release-candidate-followup -- --yes
+          fi
       -
         name: Send Discord notification
         run: |

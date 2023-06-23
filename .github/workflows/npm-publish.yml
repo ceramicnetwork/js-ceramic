@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Type of publish (one of: rc, main, both, hotfix)'
+        description: 'Type of publish (one of: rc, rc-followup, main, both, hotfix)'
         required: true
         default: 'rc'
       branch:
@@ -29,6 +29,13 @@ jobs:
     uses: ./.github/workflows/reusable-release.yml
     with:
       release_type: rc
+    secrets: inherit
+
+  rc-followup:
+    if: ${{ github.event.inputs.release_type == 'rc-followup' }}
+    uses: ./.github/workflows/reusable-release.yml
+    with:
+      release_type: rc-followup
     secrets: inherit
 
   hotfix:
