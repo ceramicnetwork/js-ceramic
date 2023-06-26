@@ -92,21 +92,17 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
         }
         break
       }
-      case 'in': {
-        const isFirst = first
-        const old = where
-        where = (bldr) => {
-          const b = old(bldr)
-          return handleIn(b, key, value, isFirst, state.negated, state.combinator)
-        }
-        break
-      }
+      case 'in':
       case 'nin': {
         const isFirst = first
         const old = where
+        let negated = state.negated
+        if (value.op == 'nin') {
+          negated = !negated
+        }
         where = (bldr) => {
           const b = old(bldr)
-          return handleIn(b, key, value, isFirst, !state.negated, state.combinator)
+          return handleIn(b, key, value, isFirst, negated, state.combinator)
         }
         break
       }
