@@ -11,7 +11,7 @@ import type { AnchorStatus } from '@ceramicnetwork/common'
 /**
  * Field definition for index
  */
-export interface Field {
+export type Field = {
   path: Array<string>
 }
 
