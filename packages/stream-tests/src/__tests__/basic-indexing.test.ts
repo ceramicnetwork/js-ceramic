@@ -411,6 +411,69 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query multiple documents by field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 3,
+        queryFilters: {
+          type: 'or',
+          value: [
+            {
+              type: 'where',
+              value: {
+                myData: { type: 'value', op: '=', value: 2 },
+              },
+            },
+            {
+              type: 'where',
+              value: {
+                myData: { type: 'value', op: '=', value: 3 },
+              },
+            },
+          ],
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query multiple documents with negated field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          type: 'not',
+          value: {
+            type: 'where',
+            value: {
+              myData: { type: 'value', op: '=', value: 3 },
+            },
+          },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(4)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc2.content))
+      expect(JSON.stringify(results[2].content)).toEqual(JSON.stringify(doc4.content))
+      expect(JSON.stringify(results[3].content)).toEqual(JSON.stringify(doc5.content))
     })
   })
 
