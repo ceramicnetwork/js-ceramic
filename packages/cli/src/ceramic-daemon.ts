@@ -225,9 +225,9 @@ type AdminAPIJWSContents = {
 type AdminApiJWSValidationResult = {
   kid?: string
   code?: string
-  models?: Array<StreamID>
-  modelData?: Array<ModelData>
   error?: string
+  statusCode?: number
+  onSuccess?: () => Promise<void>
 }
 
 type AdminApiMutationMethod = AdminApiModelIdsMutationMethod | AdminApiModelDataMutationMethod
@@ -421,7 +421,7 @@ export class CeramicDaemon {
     adminModelRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
     adminModelDataRouter.getAsync('/', this.getIndexedModelData.bind(this))
     adminModelDataRouter.postAsync('/', this.startIndexingModelData.bind(this))
-    adminModelDataRouter.deleteAsync('/', this.stopIndexingModels.bind(this))
+    adminModelDataRouter.deleteAsync('/', this.stopIndexingModelData.bind(this))
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
 
@@ -718,7 +718,8 @@ export class CeramicDaemon {
 
   private async _validateAdminApiJWS(
     basePath: string,
-    jws: string | undefined
+    jws: string | undefined,
+    successCallback?: AdminApiMutationMethod
   ): Promise<AdminApiJWSValidationResult> {
     if (!jws) return { error: `Missing authorization jws` }
 
@@ -735,16 +736,46 @@ export class CeramicDaemon {
     } else if (!parsedJWS.code) {
       return { error: 'Admin code is missing from the the jws block' }
     } else {
+      let onSuccess
+      if (successCallback) {
+        switch (successCallback.type) {
+          case 'modelData': {
+            const modelData = parsedJWS.modelData?.map((idx) => {
+              return {
+                streamID: StreamID.fromString(idx.streamID),
+                indices: idx.indices,
+              }
+            })
+            if (!modelData || modelData.length == 0) {
+              return {
+                statusCode: StatusCodes.BAD_REQUEST,
+                error: `Expected modelData to be present and contain at least one ModelData element, e.g. '{ streamID: <id>}': ${JSON.stringify(
+                  parsedJWS
+                )}`,
+              }
+            }
+            onSuccess = () => successCallback.method(modelData)
+            break
+          }
+          case 'modelIDs': {
+            const models = parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString))
+            if (!models || models.length == 0) {
+              return {
+                statusCode: StatusCodes.BAD_REQUEST,
+                error: `Expected models to be present and contain at least one StreamID: : ${JSON.stringify(
+                  parsedJWS
+                )}`
+              }
+            }
+            onSuccess = () => successCallback.method(models)
+            break
+          }
+        }
+      }
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
-        models: parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString)),
-        modelData: parsedJWS.modelData?.map((idx) => {
-          return {
-            streamID: StreamID.fromString(idx.streamID),
-            indices: idx.indices,
-          }
-        }),
+        onSuccess
       }
     }
   }
@@ -755,9 +786,14 @@ export class CeramicDaemon {
     successCallback: AdminApiMutationMethod
   ): Promise<void> {
     // Parse request
-    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws)
+    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws, successCallback)
     if (jwsValidation.error) {
-      res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ error: jwsValidation.error })
+      if (jwsValidation.statusCode) {
+        res.status(jwsValidation.statusCode)
+      } else {
+        res.status(StatusCodes.UNPROCESSABLE_ENTITY)
+      }
+      res.json({ error: jwsValidation.error })
       return
     }
 
@@ -769,37 +805,7 @@ export class CeramicDaemon {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
     }
 
-    // Process request
-    switch (successCallback.type) {
-      case 'modelData': {
-        if (!jwsValidation.modelData || jwsValidation.modelData.length == 0) {
-          res
-            .status(StatusCodes.BAD_REQUEST)
-            .json({
-              error: `Expected modelData to be present and contain at least one ModelData element, e.g. '{ streamID: <id>}': ${JSON.stringify(
-                jwsValidation
-              )}`,
-            })
-          return
-        }
-        await successCallback.method(jwsValidation.modelData)
-        break
-      }
-      case 'modelIDs': {
-        if (!jwsValidation.models || jwsValidation.models.length == 0) {
-          res
-            .status(StatusCodes.BAD_REQUEST)
-            .json({
-              error: `Expected models to be present and contain at least one StreamID: : ${JSON.stringify(
-                jwsValidation
-              )}`,
-            })
-          return
-        }
-        await successCallback.method(jwsValidation.models)
-        break
-      }
-    }
+    await jwsValidation.onSuccess()
     res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
@@ -929,6 +935,13 @@ export class CeramicDaemon {
   }
 
   async stopIndexingModels(req: Request, res: Response): Promise<void> {
+    await this._processAdminModelsMutationRequest(req, res, {
+      type: 'modelIDs',
+      method: (modelsIDs) => this.ceramic.admin.stopIndexingModels(modelsIDs),
+    })
+  }
+
+  async stopIndexingModelData(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, {
       type: 'modelIDs',
       method: (modelsIDs) => this.ceramic.admin.stopIndexingModels(modelsIDs),

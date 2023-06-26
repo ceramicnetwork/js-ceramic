@@ -96,7 +96,7 @@ export interface AdminApi {
   getIndexedModels(): Promise<Array<StreamID>>
 
   /**
-   * List indexed model streams with data
+   * List indexed model streams with additional model data (such as the defined field indices)
    */
   getIndexedModelData(): Promise<Array<ModelData>>
 
