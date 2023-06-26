@@ -12,13 +12,14 @@ function createQuery(query: QueryFilters, addlSelect: Array<string>): string {
     .where(result.where)
     .toQuery()
 }
+
 describe('Should convert query filters', () => {
   test('that are composed of a single doc filter', () => {
     const query = createQuery(
       {
-        type: 'doc',
+        type: 'where',
         value: {
-          a: { type: 'scalar', op: '=', value: 1 },
+          a: { type: 'value', op: '=', value: 1 },
         },
       },
       []
@@ -29,10 +30,10 @@ describe('Should convert query filters', () => {
   test('that are composed of a single doc filter with multiple values', () => {
     const query = createQuery(
       {
-        type: 'doc',
+        type: 'where',
         value: {
-          a: { type: 'scalar', op: '=', value: 1 },
-          b: { type: 'scalar', op: 'in', value: [2, 3] },
+          a: { type: 'value', op: '=', value: 1 },
+          b: { type: 'value', op: 'in', value: [2, 3] },
         },
       },
       []
@@ -45,15 +46,15 @@ describe('Should convert query filters', () => {
         type: 'and',
         value: [
           {
-            type: 'doc',
+            type: 'where',
             value: {
-              a: { type: 'scalar', op: '=', value: 1 },
+              a: { type: 'value', op: '=', value: 1 },
             },
           },
           {
-            type: 'doc',
+            type: 'where',
             value: {
-              b: { type: 'scalar', op: 'in', value: [2, 3] },
+              b: { type: 'value', op: 'in', value: [2, 3] },
             },
           },
         ],
@@ -68,15 +69,15 @@ describe('Should convert query filters', () => {
         type: 'or',
         value: [
           {
-            type: 'doc',
+            type: 'where',
             value: {
-              a: { type: 'scalar', op: '=', value: 1 },
+              a: { type: 'value', op: '=', value: 1 },
             },
           },
           {
-            type: 'doc',
+            type: 'where',
             value: {
-              b: { type: 'scalar', op: 'in', value: [2, 3] },
+              b: { type: 'value', op: 'in', value: [2, 3] },
             },
           },
         ],
@@ -93,15 +94,15 @@ describe('Should convert query filters', () => {
           type: 'or',
           value: [
             {
-              type: 'doc',
+              type: 'where',
               value: {
-                a: { type: 'scalar', op: '=', value: 1 },
+                a: { type: 'value', op: '=', value: 1 },
               },
             },
             {
-              type: 'doc',
+              type: 'where',
               value: {
-                b: { type: 'scalar', op: 'in', value: [2, 3] },
+                b: { type: 'value', op: 'in', value: [2, 3] },
               },
             },
           ],
