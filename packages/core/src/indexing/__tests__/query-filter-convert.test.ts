@@ -1,16 +1,17 @@
 import { jest } from '@jest/globals'
 import pkg from 'knex'
 const { knex } = pkg
-import { convertQueryFilter } from '../query-filter-converter.js'
+import { convertQueryFilter, DATA_FIELD } from '../query-filter-converter.js'
 import { QueryFilters } from '@ceramicnetwork/common'
 
 function createQuery(query: QueryFilters, addlSelect: Array<string>): string {
   const result = convertQueryFilter(query)
   return knex('test')
     .from('test')
-    .select(result.select.concat(addlSelect))
+    .select(DATA_FIELD)
     .where(result.where)
     .toQuery()
+    .replaceAll('`', "'")
 }
 
 describe('Should convert query filters', () => {
@@ -25,7 +26,9 @@ describe('Should convert query filters', () => {
       []
     )
 
-    expect(query).toEqual('select `a` from `test` where (((`a` = 1)))')
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as int)=1)))`
+    )
   })
   test('that are composed of a single doc filter with multiple values', () => {
     const query = createQuery(
@@ -38,7 +41,9 @@ describe('Should convert query filters', () => {
       },
       []
     )
-    expect(query).toEqual('select `a`, `b` from `test` where (((`a` = 1)) and (`b` in (2, 3)))')
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as int)=1)) and (cast(stream_content->>'b' as int) in (2,3)))`
+    )
   })
   test('that are composed of and doc filters', () => {
     const query = createQuery(
@@ -61,7 +66,9 @@ describe('Should convert query filters', () => {
       },
       []
     )
-    expect(query).toEqual('select `a`, `b` from `test` where ((((`a` = 1))) and ((`b` in (2, 3))))')
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as int)=1))) and ((cast(stream_content->>'b' as int) in (2,3))))`
+    )
   })
   test('that are composed of or doc filters', () => {
     const query = createQuery(
@@ -84,7 +91,9 @@ describe('Should convert query filters', () => {
       },
       []
     )
-    expect(query).toEqual('select `a`, `b` from `test` where ((((`a` = 1))) or ((`b` in (2, 3))))')
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as int)=1))) or ((cast(stream_content->>'b' as int) in (2,3))))`
+    )
   })
   test('that are composed of or doc filters negated', () => {
     const query = createQuery(
@@ -111,7 +120,7 @@ describe('Should convert query filters', () => {
       []
     )
     expect(query).toEqual(
-      'select `a`, `b` from `test` where ((not ((`a` = 1))) or ((`b` not in (2, 3))))'
+      `select '${DATA_FIELD}' from 'test' where ((not ((cast(${DATA_FIELD}->>'a' as int)=1))) or ((cast(stream_content->>'b' as int) not in (2,3))))`
     )
   })
 })
