@@ -758,13 +758,15 @@ export class CeramicDaemon {
             break
           }
           case 'modelIDs': {
-            const models = parsedJWS.models?.map((modelIDString) => StreamID.fromString(modelIDString))
+            const models = parsedJWS.models?.map((modelIDString) =>
+              StreamID.fromString(modelIDString)
+            )
             if (!models || models.length == 0) {
               return {
                 statusCode: StatusCodes.BAD_REQUEST,
                 error: `Expected models to be present and contain at least one StreamID: : ${JSON.stringify(
                   parsedJWS
-                )}`
+                )}`,
               }
             }
             onSuccess = () => successCallback.method(models)
@@ -775,7 +777,7 @@ export class CeramicDaemon {
       return {
         kid: parsedJWS.kid,
         code: parsedJWS.code,
-        onSuccess
+        onSuccess,
       }
     }
   }
@@ -786,7 +788,11 @@ export class CeramicDaemon {
     successCallback: AdminApiMutationMethod
   ): Promise<void> {
     // Parse request
-    const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, req.body.jws, successCallback)
+    const jwsValidation = await this._validateAdminApiJWS(
+      req.baseUrl,
+      req.body.jws,
+      successCallback
+    )
     if (jwsValidation.error) {
       if (jwsValidation.statusCode) {
         res.status(jwsValidation.statusCode)
@@ -943,8 +949,11 @@ export class CeramicDaemon {
 
   async stopIndexingModelData(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, {
-      type: 'modelIDs',
-      method: (modelsIDs) => this.ceramic.admin.stopIndexingModels(modelsIDs),
+      type: 'modelData',
+      method: (modelData) => {
+        const modelIds = modelData.map((data) => data.streamID)
+        return this.ceramic.admin.stopIndexingModels(modelIds)
+      },
     })
   }
 
