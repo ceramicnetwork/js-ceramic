@@ -1,4 +1,4 @@
-import { Knex } from 'knex'
+import { type Knex } from 'knex'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { BaseQuery, Page, Pagination } from '@ceramicnetwork/common'
@@ -11,7 +11,7 @@ import {
 import { asTableName } from './as-table-name.util.js'
 import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
 import { addColumnPrefix } from './column-name.util.js'
-import { convertQueryFilter } from './query-filter-converter.js'
+import { convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
 
 type SelectedRequired = { stream_id: string; last_anchored_at: number; created_at: number }
 type SelectedOptional = Record<string, boolean | number | string>
@@ -166,11 +166,7 @@ export class InsertionOrder {
   private query(query: BaseQuery, isReverseOrder: boolean): QueryFunc {
     const converted = convertQueryFilter(query.queryFilters)
     return (bldr) => {
-      let base = bldr.columns(['stream_id', 'last_anchored_at', 'created_at']).select()
-
-      for (const key of converted.select) {
-        bldr = bldr.jsonExtract('stream_content', `$.${key}`, key)
-      }
+      let base = bldr.columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD]).select()
 
       base = base.where(converted.where)
 

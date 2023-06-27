@@ -75,17 +75,10 @@ export type RangeValueFilter<T extends string | number> =
 export type ScalarValueFilter<T extends string | number = string | number> = CommonValueFilter<T> &
   RangeValueFilter<T>
 
-type StringCommonValueFilter = ScalarValueFilter<string>
-type NumberCommonValueFilter = ScalarValueFilter<number>
-
 /**
  * Any supported field value filter on an object
  */
-export type AnyValueFilter =
-  | BooleanValueFilter
-  | EnumValueFilter
-  | StringCommonValueFilter
-  | NumberCommonValueFilter
+export type AnyValueFilter = BooleanValueFilter | EnumValueFilter | ScalarValueFilter
 
 /**
  * Mapping of object keys to value filter

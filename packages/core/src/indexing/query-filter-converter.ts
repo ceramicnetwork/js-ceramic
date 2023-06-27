@@ -1,6 +1,8 @@
 import { AnyValueFilter, ObjectFilter, QueryFilters } from '@ceramicnetwork/common'
 import { Knex } from 'knex'
 
+export const DATA_FIELD = 'stream_content'
+
 type DBQuery = Knex.QueryBuilder
 type WhereFunc = (DBQuery) => DBQuery
 
@@ -53,17 +55,23 @@ function handleQuery(
 function handleIn(
   query: DBQuery,
   key: string,
-  value: AnyValueFilter,
+  value: Array<string> | Array<number>,
   first: boolean,
   negated: boolean,
   combinator?: Combinator
 ): DBQuery {
+  let cast = 'string'
+  if (typeof value[0] == 'number') {
+    cast = 'int'
+  }
+  const arrValue = value.map((v) => v.toString()).join(',')
   const inner = (bldr) => {
+    let op = ' in '
     if (negated) {
-      bldr.whereNotIn(key, value.value)
-    } else {
-      bldr.whereIn(key, value.value)
+      op = ` not${op}`
     }
+    const raw = bldr.client.raw(`cast(${key} as ${cast})${op}(${arrValue})`)
+    bldr.whereRaw(raw)
   }
   if (first) {
     return query.where(inner)
@@ -78,9 +86,10 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
   let first = true
   let where = (bldr) => bldr
   const select = []
-  for (const key in state.filter) {
-    select.push(key)
-    const value = state.filter[key]
+  for (const filterKey in state.filter) {
+    select.push(filterKey)
+    const value = state.filter[filterKey]
+    const key = `${DATA_FIELD}->>'${filterKey}'`
 
     switch (value.op) {
       case 'null': {
@@ -94,6 +103,9 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
       }
       case 'in':
       case 'nin': {
+        if (value.value.length == 0) {
+          throw new Error('Expected an array with at least one item')
+        }
         const isFirst = first
         const old = where
         let negated = state.negated
@@ -102,18 +114,27 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
         }
         where = (bldr) => {
           const b = old(bldr)
-          return handleIn(b, key, value, isFirst, negated, state.combinator)
+          return handleIn(b, key, value.value, isFirst, negated, state.combinator)
         }
         break
       }
       default: {
         const isFirst = first
         const old = where
+        let cast = 'boolean'
+        if (typeof value.value == 'number') {
+          cast = 'int'
+        } else if (typeof value.value == 'string') {
+          cast = 'string'
+        }
         where = (bldr) => {
           const b = old(bldr)
           return handleQuery(
             b,
-            (b) => b.where(key, value.op, value.value),
+            (b) => {
+              const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${value.value}`)
+              return b.whereRaw(raw)
+            },
             isFirst,
             state.negated,
             state.combinator
