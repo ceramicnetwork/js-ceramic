@@ -381,7 +381,7 @@ describe('admin api', () => {
     it('Old code used with models GET', async () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       const now = new Date().getTime()
-      MockDate.set(now + (1000 * 60 * 1 + 1000)) // One minute one second in the future
+      MockDate.set(now + (1000 * 60 + 1000)) // One minute one second in the future
       expect(true).toBeTruthy()
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
@@ -565,9 +565,7 @@ describe('admin api', () => {
           method: 'POST',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('Empty models for models POST', async () => {
@@ -577,9 +575,7 @@ describe('admin api', () => {
           method: 'POST',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('No models for models DELETE', async () => {
@@ -589,9 +585,7 @@ describe('admin api', () => {
           method: 'DELETE',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('Empty models for models DELETE', async () => {
@@ -601,9 +595,7 @@ describe('admin api', () => {
           method: 'DELETE',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('Disallow re-indexing on POST', async () => {

@@ -1,4 +1,4 @@
-import { AdminApi, NodeStatusResponse, PinApi } from '@ceramicnetwork/common'
+import { AdminApi, ModelData, NodeStatusResponse, PinApi } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
 import { SyncApi } from './sync/sync-api.js'
@@ -25,8 +25,21 @@ export class LocalAdminApi implements AdminApi {
     await this.syncApi.startModelSync(modelsIDs.map((id) => id.toString()))
   }
 
+  async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
+    await this.startIndexingModels(modelData.map((d) => d.streamID))
+  }
+
   getIndexedModels(): Promise<Array<StreamID>> {
     return Promise.resolve(this.indexApi.indexedModels() ?? [])
+  }
+
+  async getIndexedModelData(): Promise<Array<ModelData>> {
+    const models = await this.getIndexedModels()
+    return models.map((id) => {
+      return {
+        streamID: id,
+      }
+    })
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
