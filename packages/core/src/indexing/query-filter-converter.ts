@@ -1,5 +1,5 @@
-import { AnyValueFilter, ObjectFilter, QueryFilters } from '@ceramicnetwork/common'
 import { Knex } from 'knex'
+import { NonBooleanValueFilterType, ObjectFilter, QueryFilters } from './query-filter-parser.js'
 
 export const DATA_FIELD = 'stream_content'
 
@@ -52,19 +52,20 @@ function handleQuery(
   }
 }
 
-function handleIn(
+function handleIn<T extends number | string>(
   query: DBQuery,
   key: string,
-  value: Array<string> | Array<number>,
+  tpe: NonBooleanValueFilterType,
+  value: Array<T>,
   first: boolean,
   negated: boolean,
   combinator?: Combinator
 ): DBQuery {
-  let cast = 'string'
-  if (typeof value[0] == 'number') {
-    cast = 'int'
-  }
   const arrValue = value.map((v) => v.toString()).join(',')
+  let cast = 'int'
+  if (tpe == 'string') {
+    cast = tpe
+  }
   const inner = (bldr) => {
     let op = ' in '
     if (negated) {
@@ -114,7 +115,7 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
         }
         where = (bldr) => {
           const b = old(bldr)
-          return handleIn(b, key, value.value, isFirst, negated, state.combinator)
+          return handleIn(b, key, value.type, value.value, isFirst, negated, state.combinator)
         }
         break
       }

@@ -12,6 +12,7 @@ import { asTableName } from './as-table-name.util.js'
 import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
 import { addColumnPrefix } from './column-name.util.js'
 import { convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
+import { parseQueryFilters } from './query-filter-parser.js'
 
 type SelectedRequired = { stream_id: string; last_anchored_at: number; created_at: number }
 type SelectedOptional = Record<string, boolean | number | string>
@@ -164,11 +165,17 @@ export class InsertionOrder {
   }
 
   private query(query: BaseQuery, isReverseOrder: boolean): QueryFunc {
-    const converted = convertQueryFilter(query.queryFilters)
+    let converted = null
+    if (query.queryFilters) {
+      const parsed = parseQueryFilters(query.queryFilters)
+      converted = convertQueryFilter(parsed)
+    }
     return (bldr) => {
       let base = bldr.columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD]).select()
 
-      base = base.where(converted.where)
+      if (converted) {
+        base = base.where(converted.where)
+      }
 
       if (isReverseOrder) {
         base = base.orderBy(reverseOrder(INSERTION_ORDER))

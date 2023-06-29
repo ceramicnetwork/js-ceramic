@@ -28,19 +28,19 @@ export type Pagination = ForwardPagination | BackwardPagination
  * Boolean field value filter
  */
 export type BooleanValueFilter =
-  | { type: 'bool'; op: 'null'; value: boolean }
-  | { type: 'bool'; op: '='; value: boolean }
-  | { type: 'bool'; op: '!='; value: boolean }
+  | { isNull: boolean }
+  | { equalTo: boolean }
+  | { notEqualTo: boolean }
 
 /**
  * Common type for multiple value filters
  */
 export type CommonValueFilter<T> =
-  | { type: 'value'; op: 'null'; value: boolean }
-  | { type: 'value'; op: '='; value: T }
-  | { type: 'value'; op: '!='; value: T }
-  | { type: 'value'; op: 'in'; value: Array<T> }
-  | { type: 'value'; op: 'nin'; value: Array<T> }
+  | { isNull: boolean }
+  | { equalTo: T }
+  | { notEqualTo: T }
+  | { in: Array<T> }
+  | { notIn: Array<T> }
 
 /**
  * Enum field value filter
@@ -51,15 +51,15 @@ export type EnumValueFilter = CommonValueFilter<string>
  * Supported greater than value conditions
  */
 export type GreaterThanValueFilter<T extends string | number> =
-  | { type: 'value'; op: '>'; value: T }
-  | { type: 'value'; op: '>='; value: T }
+  | { greaterThan: T }
+  | { greaterThanOrEqualTo: T }
 
 /**
  * Supported less than value conditions
  */
 export type LessThanValueFilter<T extends string | number> =
-  | { type: 'value'; op: '<'; value: T }
-  | { type: 'value'; op: '<='; value: T }
+  | { lessThan: T }
+  | { lessThanOrEqualTo: T }
 
 /**
  * Range value filter using a required greater than or less than value filter
@@ -89,10 +89,10 @@ export type ObjectFilter = Record<string, AnyValueFilter>
  * Advanced query filters on a document fields
  */
 export type QueryFilters =
-  | { type: 'where'; value: ObjectFilter }
-  | { type: 'and'; value: Array<QueryFilters> }
-  | { type: 'or'; value: Array<QueryFilters> }
-  | { type: 'not'; value: QueryFilters }
+  | { where: ObjectFilter }
+  | { and: Array<QueryFilters> }
+  | { or: Array<QueryFilters> }
+  | { not: QueryFilters }
 
 /**
  * Field sort order, 'ASC' for ascending, 'DESC' for descending

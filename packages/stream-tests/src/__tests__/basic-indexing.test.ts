@@ -409,10 +409,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         model: model.id,
         last: 2,
         queryFilters: {
-          type: 'where',
-          value: {
-            myData: { type: 'value', op: '=', value: 3 },
-          },
+          where: { myData: { equalTo: 3 } },
         },
       })
 
@@ -431,21 +428,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         model: model.id,
         last: 3,
         queryFilters: {
-          type: 'or',
-          value: [
-            {
-              type: 'where',
-              value: {
-                myData: { type: 'value', op: '=', value: 2 },
-              },
-            },
-            {
-              type: 'where',
-              value: {
-                myData: { type: 'value', op: '=', value: 3 },
-              },
-            },
-          ],
+          or: [{ where: { myData: { equalTo: 2 } } }, { where: { myData: { equalTo: 3 } } }],
         },
       })
 
@@ -465,13 +448,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         model: model.id,
         last: 5,
         queryFilters: {
-          type: 'not',
-          value: {
-            type: 'where',
-            value: {
-              myData: { type: 'value', op: '=', value: 3 },
-            },
-          },
+          not: { where: { myData: { equalTo: 3 } } },
         },
       })
 
@@ -493,10 +470,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         model: model.id,
         last: 5,
         queryFilters: {
-          type: 'where',
-          value: {
-            myData: { type: 'value', op: 'in', value: [3] },
-          },
+          where: { myData: { in: [3] } },
         },
       })
 
