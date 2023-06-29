@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import express, { Request, Response, NextFunction } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
-import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { DEFAULT_TRACE_SAMPLE_RATIO, ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { IpfsConnectionFactory } from './ipfs-connection-factory.js'
 import {
   DiagnosticsLogger,
@@ -76,10 +76,17 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     return new RotatingFileStream(logPath, true)
   })
 
+  const metricsExporterEnabled = opts.metrics?.metricsExporterEnabled && opts.metrics?.collectorHost;
+  const prometheusExporterEnabled = opts.metrics?.prometheusExporterEnabled && opts.metrics?.prometheusExporterPort;
+
   // If desired, enable metrics
-  if (opts.metrics?.metricsExporterEnabled && opts.metrics?.collectorHost) {
+  if (metricsExporterEnabled && prometheusExporterEnabled) {
+    Metrics.start(opts.metrics.collectorHost, CALLER_NAME, DEFAULT_TRACE_SAMPLE_RATIO, null, true, opts.metrics.prometheusExporterPort);
+  } else if (metricsExporterEnabled) {
     Metrics.start(opts.metrics.collectorHost, CALLER_NAME)
-  }
+  } else if (prometheusExporterEnabled) {
+    Metrics.start('', CALLER_NAME, DEFAULT_TRACE_SAMPLE_RATIO, null, true, opts.metrics.prometheusExporterPort);
+  } // else do nothing, no metrics are configured.
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,

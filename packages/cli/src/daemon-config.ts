@@ -380,6 +380,18 @@ export class DaemonLoggerConfig {
 @toJson
 export class DaemonMetricsConfig {
   /**
+   * Controls whether the Prometheus metrics exporter is started
+   */
+  @jsonMember(Boolean, { name: 'prometheus-exporter-enabled' })
+  prometheusExporterEnabled?: boolean
+
+  /**
+   * Controls the port where Prometheus metrics will be exposed.
+   */
+  @jsonMember(Number, { name: 'prometheus-exporter-port' })
+  prometheusExporterPort?: number
+
+  /**
    * Controls whether the metrics exporter is started
    */
   @jsonMember(Boolean, { name: 'metrics-exporter-enabled' })
