@@ -88,6 +88,7 @@ export const KeepaliveMessage = co.strict(
     typ: co.literal(MsgType.KEEPALIVE),
     ts: co.number, // current time
     ver: co.string, // current ceramic version
+    ipfsVer: co.string // current ipfs version
   },
   'KeepaliveMessage'
 )

@@ -130,7 +130,12 @@ export class Dispatcher {
     )
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
-        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL, MAX_INTERVAL_WITHOUT_KEEPALIVE),
+        new PubsubKeepalive(
+          pubsub,
+          _ipfs,
+          MAX_PUBSUB_PUBLISH_INTERVAL,
+          MAX_INTERVAL_WITHOUT_KEEPALIVE
+        ),
         _logger,
         maxQueriesPerSecond
       )

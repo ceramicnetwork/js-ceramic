@@ -55,6 +55,7 @@ const mock_ipfs = {
         (codec) => codec.code === codename || codec.name === codename
       ),
   },
+  version: () => Promise.resolve({ version: '0.0.0-fake' }),
 }
 
 const carFactory = new CARFactory()
