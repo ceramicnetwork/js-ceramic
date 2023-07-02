@@ -2,13 +2,7 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'mapmoize'
 
-import {
-  base64urlToJSON,
-  CommitData,
-  CommitType,
-  IpfsApi,
-  StreamUtils,
-} from '@ceramicnetwork/common'
+import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'

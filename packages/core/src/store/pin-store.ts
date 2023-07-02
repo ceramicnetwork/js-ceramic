@@ -1,4 +1,4 @@
-import { base64urlToJSON, PinningBackend, StreamUtils } from '@ceramicnetwork/common'
+import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
