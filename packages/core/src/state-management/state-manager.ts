@@ -447,12 +447,27 @@ export class StateManager {
               return
             }
             case AnchorRequestStatusName.FAILED: {
-              if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
                 `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
               )
-              state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
-              await this.anchorRequestStore.remove(state$.id)
+
+              // if this is the anchor response for the tip update the state
+              if (asr.cid.equals(state$.tip)) {
+                state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
+              }
+
+              // If state has become a terminal anchor state, or already was a terminal anchor state, remove it from the anchor store.
+              // if the anchor response was not for the tip, and there was no request to anchor the tip, remove any anchor requests for the stream from the store
+              if (
+                state$.state.anchorStatus === AnchorStatus.FAILED ||
+                state$.state.anchorStatus === AnchorStatus.ANCHORED ||
+                state$.state.anchorStatus === AnchorStatus.REPLACED ||
+                state$.state.anchorStatus === AnchorStatus.NOT_REQUESTED
+              ) {
+                await this.anchorRequestStore.remove(state$.id)
+              }
+
+              // we stop the polling as this is a terminal state
               stopSignal.next()
               return
             }
