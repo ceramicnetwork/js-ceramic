@@ -38,15 +38,15 @@ export type TableIndices = {
   indices: Array<TableIndex>
 }
 
+// create unique index name less than 64 chars that are still capable of being referenced to MID table.
+// We are creating the unique index name by grabbing the last 10 characters of the table name
+// which is normally the stream id. This combined with the rest of the index information should
+// be less than 64 characters. See CDB-1600 for more information
 export function indexNameFromTableName(tableName: string): string {
   return `idx_${tableName.substring(tableName.length - 10)}`
 }
 
 export function indices(tableName: string): TableIndices {
-  // create unique index name less than 64 chars that are still capable of being referenced to MID table.
-  // We are creating the unique index name by grabbing the last 10 characters of the table name
-  // which is normally the stream id. This combined with the rest of the index information should
-  // be less than 64 characters. See CDB-1600 for more information
   const indexName = indexNameFromTableName(tableName)
 
   // index names with additional naming information should be less than

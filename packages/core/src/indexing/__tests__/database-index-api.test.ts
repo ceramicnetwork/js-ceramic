@@ -14,7 +14,7 @@ import {
   IndexModelArgs,
   PostgresIndexApi,
   SqliteIndexApi,
-  asTimestamp,
+  asTimestamp, fieldsIndexName
 } from '../database-index-api.js'
 import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
@@ -627,6 +627,24 @@ describe('postgres', () => {
 
   describe('indexStream', () => {
     const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
+    const MODEL_DATA = [{
+      model: StreamID.fromString(STREAM_ID_A),
+      indices: [
+        {
+          name: 'test_model_index',
+          fields: [
+            {
+              path: ['name'],
+            },
+            {
+              path: ['address'],
+            },
+          ],
+        },
+      ],
+    }, {
+      model: StreamID.fromString(STREAM_ID_B)
+    }]
     const STREAM_CONTENT_A = {
       model: MODELS_TO_INDEX[0],
       streamID: StreamID.fromString(STREAM_ID_B),
@@ -651,7 +669,7 @@ describe('postgres', () => {
       indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
+      await indexApi.indexModels(MODEL_DATA)
     })
 
     test('new stream', async () => {
@@ -724,6 +742,36 @@ describe('postgres', () => {
       expect(result.command).toEqual('EXPLAIN')
       expect(result.rows.length).toBeGreaterThan(1)
       expect(result.rows[0]['QUERY PLAN'].includes('idx_postgres_jsonb')).toBeTruthy()
+    })
+
+    test('create new stream with indices', async () => {
+      const model = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(model)
+
+      //create a stream
+      const streamContent = {
+        model: model,
+        streamID: StreamID.fromString(STREAM_ID_B),
+        controller: CONTROLLER,
+        streamContent: STREAM_TEST_DATA_PROFILE_A,
+        tip: FAKE_CID_A,
+        lastAnchor: null,
+        firstAnchor: null,
+      }
+      await indexApi.indexStream(streamContent)
+
+      // Also manually check MID table structure
+      const expectedIndices = [MODEL_DATA[0].indices[0]]
+        .map((idx) => fieldsIndexName(idx, tableName))
+      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
+      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      const actualIndices = await dbConnection.raw(`
+select *
+from pg_indexes
+where tablename like '${tableName}'
+and indexname in (${sqlIndices});
+  `)
+      expect(actualIndices.rowCount).toEqual(sqlIndices.length)
     })
 
     test('query and filter jsonb stream content', async () => {
@@ -1320,6 +1368,24 @@ describe('sqlite', () => {
 
   describe('indexStream', () => {
     const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
+    const MODEL_DATA = [{
+      model: StreamID.fromString(STREAM_ID_A),
+      indices: [
+        {
+          name: 'test_model_index',
+          fields: [
+            {
+              path: ['name'],
+            },
+            {
+              path: ['address'],
+            },
+          ],
+        },
+      ],
+    }, {
+      model: StreamID.fromString(STREAM_ID_B)
+    }]
     const STREAM_CONTENT = {
       model: MODELS_TO_INDEX[0],
       streamID: StreamID.fromString(STREAM_ID_B),
@@ -1335,7 +1401,7 @@ describe('sqlite', () => {
       indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
+      await indexApi.indexModels(MODEL_DATA)
     })
 
     test('new stream', async () => {
@@ -1385,6 +1451,38 @@ describe('sqlite', () => {
       const createdAt = new Date(raw.created_at)
       expect(closeDates(createdAt, createTime)).toBeTruthy()
       expect(JSON.parse(raw.stream_content)).toEqual(updatedStreamContent.streamContent)
+    })
+
+    test('create new stream with indices', async () => {
+      const model = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(model)
+
+      //create a stream
+      const streamContent = {
+        model: model,
+        streamID: StreamID.fromString(STREAM_ID_B),
+        controller: CONTROLLER,
+        streamContent: STREAM_TEST_DATA_PROFILE_A,
+        tip: FAKE_CID_A,
+        lastAnchor: null,
+        firstAnchor: null,
+      }
+      await indexApi.indexStream(streamContent)
+
+      // Also manually check MID table structure
+      const expectedIndices = [MODEL_DATA[0].indices[0]]
+        .map((idx) => fieldsIndexName(idx, tableName))
+      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
+      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      const actualIndices = await dbConnection.raw(`
+select name, tbl_name
+FROM sqlite_master
+WHERE type='index'
+and tbl_name like '${tableName}'
+and name in (${sqlIndices})
+;
+  `)
+      expect(actualIndices.length).toEqual(sqlIndices.length)
     })
   })
 

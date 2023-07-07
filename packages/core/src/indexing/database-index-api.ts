@@ -34,12 +34,16 @@ export interface IndexStreamArgs {
 
 /**
  * Create a valid name for a fields index, if the index has a name specified, or generate a valid
- * name if one is not specified
+ * name if one is not specified. The index name cannot exceed 64 characters
  * @param idx Index to create a name for
  * @param table Table to add index to
  */
 export function fieldsIndexName(idx: FieldsIndex, table: string): string {
-  return `${indexNameFromTableName(table)}_${idx.fields.flatMap((f) => f.path).join('_')}`
+  const fieldPath = idx.fields
+    .flatMap((f) => f.path)
+    .map((p) => p.slice(0, 5))
+    .join('_')
+  return `${indexNameFromTableName(table)}_${fieldPath}`.slice(0, 64)
 }
 
 /**
@@ -163,6 +167,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
             model: indexModelArgs.model.toString(),
             is_indexed: true,
             updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+            updated_at: this.now(),
           }
         })
       )
@@ -196,6 +201,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
             model: model.streamID.toString(),
             is_indexed: false,
             updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+            updated_at: this.now(),
           }
         })
       )
