@@ -52,3 +52,4 @@ Check out the [Development](./DEVELOPMENT.md) section to learn how to navigate t
 ## License
 
 Fully open source and dual-licensed under MIT and Apache 2.
+
