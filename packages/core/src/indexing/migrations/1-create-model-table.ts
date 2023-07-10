@@ -51,32 +51,32 @@ export function indices(tableName: string): TableIndices {
     {
       keys: ['stream_id'],
       name: `idx_${indexName}_stream_id`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
     {
       keys: ['last_anchored_at'],
       name: `idx_${indexName}_last_anchored_at`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
     {
       keys: ['first_anchored_at'],
       name: `idx_${indexName}_first_anchored_at`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
     {
       keys: ['created_at'],
       name: `idx_${indexName}_created_at`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
     {
       keys: ['updated_at'],
       name: `idx_${indexName}_updated_at`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
     {
       keys: ['last_anchored_at', 'created_at'],
       name: `idx_${indexName}_last_anchored_at_created_at`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
   ]
 
@@ -229,7 +229,7 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
         table.string('updated_by', 1024).notNullable()
 
         table.index(['is_indexed'], `idx_ceramic_is_indexed`, {
-          storageEngineIndexType: 'hash',
+          indexType: 'btree',
         })
       })
       break
