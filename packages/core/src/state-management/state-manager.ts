@@ -458,12 +458,10 @@ export class StateManager {
 
               // If state has become a terminal anchor state, or already was a terminal anchor state, remove it from the anchor store.
               // if the anchor response was not for the tip, and there was no request to anchor the tip, remove any anchor requests for the stream from the store
-              if (
-                state$.state.anchorStatus === AnchorStatus.FAILED ||
-                state$.state.anchorStatus === AnchorStatus.ANCHORED ||
-                state$.state.anchorStatus === AnchorStatus.REPLACED ||
-                state$.state.anchorStatus === AnchorStatus.NOT_REQUESTED
-              ) {
+              const stillProcessing = [AnchorStatus.PROCESSING, AnchorStatus.PENDING].includes(
+                state$.value.anchorStatus
+              )
+              if (!stillProcessing) {
                 await this.anchorRequestStore.remove(state$.id)
               }
 
