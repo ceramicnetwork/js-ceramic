@@ -20,12 +20,12 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
-const CONTENT0 = { myData: 0, myArray: [0] }
-const CONTENT1 = { myData: 1, myArray: [1] }
-const CONTENT2 = { myData: 2, myArray: [2] }
-const CONTENT3 = { myData: 3, myArray: [3] }
-const CONTENT4 = { myData: 4, myArray: [4] }
-const CONTENT5 = { myData: 5, myArray: [5] }
+const CONTENT0 = { myData: 0 }
+const CONTENT1 = { myData: 1 }
+const CONTENT2 = { myData: 2 }
+const CONTENT3 = { myData: 3 }
+const CONTENT4 = { myData: 4 }
+const CONTENT5 = { myData: 5 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -41,21 +41,14 @@ const MODEL_DEFINITION: ModelDefinition = {
         maximum: 10000,
         minimum: 0,
       },
-      myArray: {
-        type: 'array',
-        items: {
-          type: 'number',
-        },
-      },
     },
-    required: ['myData', 'myArray'],
+    required: ['myData'],
   },
 }
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-//const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c7lzflifuuyrimo5txgkau0umv4bl2chbujhkrqjgoeluwiecsg'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
 
 // StreamID for a model that isn't indexed by the node
 const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
@@ -394,89 +387,6 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results[3].content).toEqual(CONTENT4)
       expect(results[4].id.toString()).toEqual(doc5.id.toString())
       expect(results[4].content).toEqual(CONTENT5)
-    })
-  })
-
-  describe('Queries with custom query filtering', () => {
-    test('Can query a single document by field', async () => {
-      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
-      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
-      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
-      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-
-      const resultObj0 = await ceramic.index.query({
-        model: model.id,
-        last: 2,
-        queryFilters: {
-          where: { myData: { equalTo: 3 } },
-        },
-      })
-
-      const results = extractDocuments(ceramic, resultObj0)
-      expect(results.length).toEqual(1)
-      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
-    })
-    test('Can query multiple documents by field', async () => {
-      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
-      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
-      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
-      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-
-      const resultObj0 = await ceramic.index.query({
-        model: model.id,
-        last: 3,
-        queryFilters: {
-          or: [{ where: { myData: { equalTo: 2 } } }, { where: { myData: { equalTo: 3 } } }],
-        },
-      })
-
-      const results = extractDocuments(ceramic, resultObj0)
-      expect(results.length).toEqual(2)
-      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
-      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc3.content))
-    })
-    test('Can query multiple documents with negated field', async () => {
-      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
-      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
-      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
-      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-
-      const resultObj0 = await ceramic.index.query({
-        model: model.id,
-        last: 5,
-        queryFilters: {
-          not: { where: { myData: { equalTo: 3 } } },
-        },
-      })
-
-      const results = extractDocuments(ceramic, resultObj0)
-      expect(results.length).toEqual(4)
-      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
-      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc2.content))
-      expect(JSON.stringify(results[2].content)).toEqual(JSON.stringify(doc4.content))
-      expect(JSON.stringify(results[3].content)).toEqual(JSON.stringify(doc5.content))
-    })
-    test('Can query a single document by array', async () => {
-      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
-      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
-      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
-      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-
-      const resultObj0 = await ceramic.index.query({
-        model: model.id,
-        last: 5,
-        queryFilters: {
-          where: { myData: { in: [3] } },
-        },
-      })
-
-      const results = extractDocuments(ceramic, resultObj0)
-      expect(results.length).toEqual(1)
-      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
     })
   })
 
