@@ -20,10 +20,10 @@ env:
   DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
   DAGGER_LOG_FORMAT: "plain"
   # Dummy (for Dagger)
-  AWS_ACCESS_KEY_ID: "."
-  AWS_SECRET_ACCESS_KEY: "."
-  AWS_REGION: "."
-  AWS_ACCOUNT_ID: "."
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
 jobs:
   publish_main:
@@ -246,8 +246,12 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:hotfix -- --yes
       -
-        name: Get version
-        run: echo "VERSION=$(dagger do -l error --output-format json version -p ${{ env.DAGGER_PLAN }} | jq -r '.version')" >> $GITHUB_ENV
+        name: Get required envars
+        run: |
+          PROPS=$(dagger do -l error --output-format json version -p ${{ env.DAGGER_PLAN }})
+          echo "VERSION=$(echo $PROPS | jq -r '.version')" >> $GITHUB_ENV
+          echo "SHA=$(echo $PROPS | jq -r '.sha')" >> $GITHUB_ENV
+          echo "SHA_TAG=$(echo $PROPS | jq -r '.shaTag')" >> $GITHUB_ENV
       -
         # Pretend to be the main branch since a hotfix is a patch for the main branch
         name: Push Docker image
