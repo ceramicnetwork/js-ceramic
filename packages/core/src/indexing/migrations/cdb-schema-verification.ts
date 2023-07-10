@@ -118,6 +118,12 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         nullable: false,
         defaultValue: null,
       },
+      indices: {
+        type: 'jsonb',
+        maxLength: null,
+        nullable: true,
+        defaultValue: null,
+      },
     },
     /**
      * Valid Postgres table structure for config table
@@ -260,6 +266,12 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         type: 'varchar',
         maxLength: '1024',
         nullable: false,
+        defaultValue: null,
+      },
+      indices: {
+        type: 'json',
+        maxLength: null,
+        nullable: true,
         defaultValue: null,
       },
     },

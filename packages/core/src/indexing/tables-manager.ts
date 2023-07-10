@@ -6,12 +6,18 @@ import {
   createPostgresModelTable,
   createSqliteModelTable,
   indices,
+  createSqliteIndices,
+  createPostgresIndices,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
 import { Knex } from 'knex'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME, IndexModelArgs } from './database-index-api.js'
+import {
+  INDEXED_MODEL_CONFIG_TABLE_NAME,
+  IndexModelArgs,
+  fieldsIndexName,
+} from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
 import { addColumnPrefix } from './column-name.util.js'
@@ -60,8 +66,16 @@ export class TablesManager {
   /**
    * Determine if a mid table has the indices we expect
    * @param tableName
+   * @param args
    */
-  async hasMidIndices(tableName: string): Promise<boolean> {
+  async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+    throw new Error('Must be implemented in extending class')
+  }
+
+  /**
+   * Determine if this manager supports jsonb
+   */
+  hasJsonBSupport(): boolean {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -98,7 +112,7 @@ export class TablesManager {
     const exists = await this.dataSource.schema.hasTable(table.tableName)
     if (!exists) {
       this.logger.imp(`Creating ComposeDB config table: ${table.tableName}`)
-      await createConfigTable(this.dataSource, table.tableName, network)
+      await createConfigTable(this.dataSource, table.tableName, network, this.hasJsonBSupport())
     } else if (table.tableName === CONFIG_TABLE_NAME) {
       const config = await this.dataSource
         .from(table.tableName)
@@ -130,8 +144,9 @@ export class TablesManager {
   async _verifyConfigTable(table: ConfigTable) {
     const columns = await this.dataSource.table(table.tableName).columnInfo()
     const validSchema = JSON.stringify(table.validSchema)
+    const actualSchema = JSON.stringify(columns)
 
-    if (validSchema != JSON.stringify(columns)) {
+    if (validSchema != actualSchema) {
       throw new Error(
         `Schema verification failed for config table: ${table.tableName}. Please make sure node has been setup correctly.`
       )
@@ -171,13 +186,14 @@ export class TablesManager {
     const validSchema = JSON.stringify(expectedTableStructure)
 
     const columns = await this.dataSource.table(tableName).columnInfo()
-    if (validSchema != JSON.stringify(columns)) {
+    const actualSchema = JSON.stringify(columns)
+    if (validSchema != actualSchema) {
       throw new Error(
         `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
     }
 
-    if (!(await this.hasMidIndices(tableName))) {
+    if (!(await this.hasMidIndices(tableName, modelIndexArgs))) {
       throw new Error(
         `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
@@ -237,35 +253,36 @@ export class PostgresTablesManager extends TablesManager {
       this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
       const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
       await createPostgresModelTable(this.dataSource, tableName, relationColumns)
+      if (modelIndexArgs.indices) {
+        await createPostgresIndices(this.dataSource, tableName, modelIndexArgs.indices)
+      }
     }
   }
 
   /**
    * Determine if a mid table has the indices we expect
    * @param tableName
+   * @param args
    */
-  async hasMidIndices(tableName: string): Promise<boolean> {
+  async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
     const expectedIndices = indices(tableName).indices.flatMap((index) => index.name)
+    if (args && args.indices) {
+      for (const index of args.indices) {
+        expectedIndices.push(fieldsIndexName(index, tableName))
+      }
+    }
     const sqlIndices = expectedIndices.map((s) => `'${s}'`)
     const actualIndices = await this.dataSource.raw(`
-  select
-    distinct i.relname as index_name
-from
-    pg_class t,
-    pg_class i,
-    pg_index ix,
-    pg_attribute a
-where
-    t.oid = ix.indrelid
-    and i.oid = ix.indexrelid
-    and a.attrelid = t.oid
-    and a.attnum = ANY(ix.indkey)
-    and t.relkind = 'r'
-    and t.relname like '${tableName}'
-    and i.relname in (${sqlIndices})
-;
+select *
+from pg_indexes
+where tablename like '${tableName}'
+and indexname in (${sqlIndices});
   `)
     return expectedIndices.length == actualIndices.rowCount
+  }
+
+  hasJsonBSupport(): boolean {
+    return true
   }
 }
 
@@ -309,14 +326,23 @@ export class SqliteTablesManager extends TablesManager {
     this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
     const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     await createSqliteModelTable(this.dataSource, tableName, relationColumns)
+    if (modelIndexArgs.indices) {
+      await createSqliteIndices(this.dataSource, tableName, modelIndexArgs.indices)
+    }
   }
 
   /**
    * Determine if a mid table has the indices we expect
    * @param tableName
+   * @param args IndexModelArgs for checking indices
    */
-  async hasMidIndices(tableName: string): Promise<boolean> {
+  async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
     const expectedIndices = indices(tableName).indices.flatMap((index) => index.name)
+    if (args && args.indices) {
+      for (const index of args.indices) {
+        expectedIndices.push(fieldsIndexName(index, tableName))
+      }
+    }
     const sqlIndices = expectedIndices.map((s) => `'${s}'`)
     const actualIndices = await this.dataSource.raw(`
 select name, tbl_name
@@ -327,5 +353,9 @@ and name in (${sqlIndices})
 ;
   `)
     return expectedIndices.length == actualIndices.length
+  }
+
+  hasJsonBSupport(): boolean {
+    return false
   }
 }

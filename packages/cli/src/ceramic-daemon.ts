@@ -242,6 +242,8 @@ type AdminApiModelIdsMutationMethod = {
   method: (modelsIDs: Array<StreamID>) => Promise<void>
 }
 
+const MODELS_DEPRECATION_AT = 'Thu, 29 Jun 2023 23:59:59 GMT'
+
 /**
  * Ceramic daemon implementation
  */
@@ -872,15 +874,17 @@ export class CeramicDaemon {
   }
 
   async getIndexedModels(req: Request, res: Response): Promise<void> {
+    res.header('Deprecation', MODELS_DEPRECATION_AT)
     const authorized = await this._checkAdminAPIGETRequestAuthorization(req, res)
     if (!authorized) {
       return
     }
 
-    const indexedModelStreamIDs = await this.ceramic.admin.getIndexedModels()
-    res.json({
-      models: indexedModelStreamIDs.map((modelStreamID) => modelStreamID.toString()),
-    })
+    const indexedModels = await this.ceramic.admin.getIndexedModels()
+    const body = {
+      models: indexedModels.map((id) => id.toString()),
+    }
+    res.json(body)
   }
 
   async getIndexedModelData(req: Request, res: Response): Promise<void> {
@@ -890,14 +894,15 @@ export class CeramicDaemon {
     }
 
     const indexedModels = await this.ceramic.admin.getIndexedModelData()
-    res.json({
-      modelData: indexedModels.map((data) => {
+    const body = {
+      modelData: indexedModels.map((idx) => {
         return {
-          streamID: data.streamID.toString(),
-          indices: data.indices,
+          streamID: idx.streamID.toString(),
+          indices: idx.indices,
         }
       }),
-    })
+    }
+    res.json(body)
   }
 
   async validateAdminRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -927,6 +932,7 @@ export class CeramicDaemon {
   }
 
   async startIndexingModels(req: Request, res: Response): Promise<void> {
+    res.header('Deprecation', MODELS_DEPRECATION_AT)
     await this._processAdminModelsMutationRequest(req, res, {
       type: 'modelIDs',
       method: (modelIDs) => this.ceramic.admin.startIndexingModels(modelIDs),
@@ -941,6 +947,7 @@ export class CeramicDaemon {
   }
 
   async stopIndexingModels(req: Request, res: Response): Promise<void> {
+    res.header('Deprecation', MODELS_DEPRECATION_AT)
     await this._processAdminModelsMutationRequest(req, res, {
       type: 'modelIDs',
       method: (modelsIDs) => this.ceramic.admin.stopIndexingModels(modelsIDs),
@@ -950,10 +957,7 @@ export class CeramicDaemon {
   async stopIndexingModelData(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, {
       type: 'modelData',
-      method: (modelData) => {
-        const modelIds = modelData.map((data) => data.streamID)
-        return this.ceramic.admin.stopIndexingModels(modelIds)
-      },
+      method: (modelData) => this.ceramic.admin.stopIndexingModelData(modelData),
     })
   }
 

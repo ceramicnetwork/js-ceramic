@@ -14,6 +14,7 @@ import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
 import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
@@ -25,6 +26,10 @@ const MY_MODEL_1_CONTENT: ModelDefinition = {
 
 const MODEL_PATH = '/api/v0/admin/models'
 const STATUS_PATH = '/api/v0/admin/status'
+
+function modelIDsAsRequestBody(modelIDs: Array<string>): Record<string, Array<string>> | undefined {
+  return modelIDs ? { models: modelIDs } : undefined
+}
 
 describe('admin api', () => {
   let daemon: CeramicDaemon
@@ -83,7 +88,7 @@ describe('admin api', () => {
     requestPath,
     models?: Array<string>
   ): Promise<string> {
-    const body = models ? { models: models } : undefined
+    const body = modelIDsAsRequestBody(models)
     const jws = await did.createJWS({
       code: code,
       requestPath,

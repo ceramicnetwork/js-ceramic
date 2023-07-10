@@ -14,7 +14,7 @@ import {
   IndexModelArgs,
   PostgresIndexApi,
   SqliteIndexApi,
-  asTimestamp,
+  asTimestamp, fieldsIndexName
 } from '../database-index-api.js'
 import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
@@ -131,6 +131,54 @@ describe('postgres', () => {
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
       })
 
+      test('create new table with indices', async () => {
+        const modelToIndex = StreamID.fromString(STREAM_ID_A)
+        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
+        await indexApi.init()
+        const modelToIndexArgs = {
+          model: modelToIndex,
+          indices: [
+            {
+              name: 'test_model_index',
+              fields: [
+                {
+                  path: ['name'],
+                },
+                {
+                  path: ['address'],
+                },
+              ],
+            },
+          ],
+        }
+        await indexApi.indexModels([modelToIndexArgs])
+        const created = await indexApi.tablesManager.listMidTables()
+        const tableName = asTableName(modelToIndex)
+        expect(created.length).toEqual(1)
+        expect(created[0]).toEqual(tableName)
+
+        //verify behavior if we call index again
+        await indexApi.indexModels([modelToIndexArgs])
+        const created2 = await indexApi.tablesManager.listMidTables()
+        const tableName2 = asTableName(modelToIndex)
+        expect(created2.length).toEqual(1)
+        expect(created2[0]).toEqual(tableName2)
+
+        // Built-in table verification should pass
+        await expect(indexApi.tablesManager.verifyTables([modelToIndexArgs])).resolves.not.toThrow()
+
+        // Also manually check MID table structure
+        let columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
+        expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.COMMON_TABLE))
+
+        // Also manually check config table structure
+        columns = await dbConnection
+          .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
+          .columnInfo()
+        expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
+      })
+
       test('create new table with relations', async () => {
         const indexModelsArgs: Array<IndexModelArgs> = [
           {
@@ -157,15 +205,15 @@ describe('postgres', () => {
       })
 
       test('table creation is idempotent', async () => {
-        const modelsToIndex = [Model.MODEL, StreamID.fromString(STREAM_ID_A)]
+        const modelsToIndex = [{ model: Model.MODEL }, { model: StreamID.fromString(STREAM_ID_A) }]
         const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
         indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
-        await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+        await indexApi.indexModels(modelsToIndex)
         // Index the same models again to make sure we don't error trying to re-create the tables
-        await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+        await indexApi.indexModels(modelsToIndex)
         const created = await indexApi.tablesManager.listMidTables()
-        const tableNames = modelsToIndex.map(asTableName)
+        const tableNames = modelsToIndex.map((idx) => asTableName(idx.model))
         expect(created.sort()).toEqual(tableNames.sort())
       })
 
@@ -395,11 +443,28 @@ describe('postgres', () => {
 
   describe('indexModels', () => {
     test('populates the INDEXED_MODEL_CONFIG_TABLE_NAME table on indexModels()', async () => {
-      const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const modelToIndexArgs = {
+        model: modelToIndex,
+        indices: [
+          {
+            name: 'test_model_index',
+            fields: [
+              {
+                path: ['name'],
+              },
+              {
+                path: ['address'],
+              },
+            ],
+          },
+        ],
+      }
+      const modelsToIndex = [Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex).concat(modelToIndexArgs))
 
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -423,7 +488,7 @@ describe('postgres', () => {
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-      await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
 
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -442,12 +507,12 @@ describe('postgres', () => {
     })
 
     test('re-indexing models', async () => {
-      const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+      const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
 
-      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+      await indexApi.indexModels(modelsToIndex)
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
           .select('model', 'is_indexed')
@@ -463,7 +528,7 @@ describe('postgres', () => {
         },
       ])
 
-      await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
           .select('model', 'is_indexed')
@@ -510,7 +575,7 @@ describe('postgres', () => {
       expect(
         anotherIndexApi
           .getIndexedModels()
-          .map((streamID) => streamID.toString())
+          .map((idx) => idx.streamID.toString())
           .sort()
       ).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
@@ -528,7 +593,7 @@ describe('postgres', () => {
       expect(
         indexApi
           .getIndexedModels()
-          .map((streamID) => streamID.toString())
+          .map((idx) => idx.streamID.toString())
           .sort()
       ).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
@@ -545,16 +610,16 @@ describe('postgres', () => {
       expect(
         indexApi
           .getIndexedModels()
-          .map((streamID) => streamID.toString())
+          .map((idx) => idx.streamID.toString())
           .sort()
       ).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
         'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
       ])
-      await indexApi.stopIndexingModels([
-        StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
-      ])
-      expect(indexApi.getIndexedModels().map((streamID) => streamID.toString())).toEqual([
+      await indexApi.stopIndexingModels([{
+        streamID: StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
+      }])
+      expect(indexApi.getIndexedModels().map((idx) => idx.streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
       ])
     })
@@ -562,6 +627,24 @@ describe('postgres', () => {
 
   describe('indexStream', () => {
     const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
+    const MODEL_DATA = [{
+      model: StreamID.fromString(STREAM_ID_A),
+      indices: [
+        {
+          name: 'test_model_index',
+          fields: [
+            {
+              path: ['name'],
+            },
+            {
+              path: ['address'],
+            },
+          ],
+        },
+      ],
+    }, {
+      model: StreamID.fromString(STREAM_ID_B)
+    }]
     const STREAM_CONTENT_A = {
       model: MODELS_TO_INDEX[0],
       streamID: StreamID.fromString(STREAM_ID_B),
@@ -586,7 +669,7 @@ describe('postgres', () => {
       indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
+      await indexApi.indexModels(MODEL_DATA)
     })
 
     test('new stream', async () => {
@@ -661,6 +744,36 @@ describe('postgres', () => {
       expect(result.rows[0]['QUERY PLAN'].includes('idx_postgres_jsonb')).toBeTruthy()
     })
 
+    test('create new stream with indices', async () => {
+      const model = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(model)
+
+      //create a stream
+      const streamContent = {
+        model: model,
+        streamID: StreamID.fromString(STREAM_ID_B),
+        controller: CONTROLLER,
+        streamContent: STREAM_TEST_DATA_PROFILE_A,
+        tip: FAKE_CID_A,
+        lastAnchor: null,
+        firstAnchor: null,
+      }
+      await indexApi.indexStream(streamContent)
+
+      // Also manually check MID table structure
+      const expectedIndices = [MODEL_DATA[0].indices[0]]
+        .map((idx) => fieldsIndexName(idx, tableName))
+      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
+      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      const actualIndices = await dbConnection.raw(`
+select *
+from pg_indexes
+where tablename like '${tableName}'
+and indexname in (${sqlIndices});
+  `)
+      expect(actualIndices.rowCount).toEqual(sqlIndices.length)
+    })
+
     test('query and filter jsonb stream content', async () => {
       await indexApi.indexStream(STREAM_CONTENT_A)
       await indexApi.indexStream(STREAM_CONTENT_B)
@@ -691,7 +804,7 @@ describe('postgres', () => {
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
@@ -702,7 +815,7 @@ describe('postgres', () => {
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )
@@ -788,6 +901,54 @@ describe('sqlite', () => {
         )
       })
 
+      test('create new table with indices', async () => {
+        const modelToIndex = StreamID.fromString(STREAM_ID_A)
+        const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
+        await indexApi.init()
+        const modelToIndexArgs = {
+          model: modelToIndex,
+          indices: [
+            {
+              name: 'test_model_index',
+              fields: [
+                {
+                  path: ['name'],
+                },
+                {
+                  path: ['address'],
+                },
+              ],
+            },
+          ],
+        }
+        await indexApi.indexModels([modelToIndexArgs])
+        const created = await indexApi.tablesManager.listMidTables()
+        const tableName = asTableName(modelToIndex)
+        expect(created.length).toEqual(1)
+        expect(created[0]).toEqual(tableName)
+
+        //verify behavior if we call index again
+        await indexApi.indexModels([modelToIndexArgs])
+        const created2 = await indexApi.tablesManager.listMidTables()
+        const tableName2 = asTableName(modelToIndex)
+        expect(created2.length).toEqual(1)
+        expect(created2[0]).toEqual(tableName2)
+
+        // Built-in table verification should pass
+        await expect(indexApi.tablesManager.verifyTables([modelToIndexArgs])).resolves.not.toThrow()
+
+        // Also manually check MID table structure
+        let columns = await dbConnection.table(asTableName(modelToIndex)).columnInfo()
+        expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.COMMON_TABLE))
+
+        // Also manually check config table structure
+        columns = await dbConnection
+          .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
+          .columnInfo()
+        expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
+      })
+
       test('create new table with relations', async () => {
         const indexModelsArgs: Array<IndexModelArgs> = [
           {
@@ -814,15 +975,15 @@ describe('sqlite', () => {
       })
 
       test('table creation is idempotent', async () => {
-        const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+        const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
         indexApi.setSyncQueryApi(new CompleteQueryApi())
         await indexApi.init()
-        await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+        await indexApi.indexModels(modelsToIndex)
         // Index the same models again to make sure we don't error trying to re-create the tables
-        await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+        await indexApi.indexModels(modelsToIndex)
         const created = await indexApi.tablesManager.listMidTables()
-        const tableNames = modelsToIndex.map((m) => `${m.toString()}`)
+        const tableNames = modelsToIndex.map((m) => `${m.model.toString()}`)
         expect(created.sort()).toEqual(tableNames.sort())
       })
 
@@ -1057,7 +1218,7 @@ describe('sqlite', () => {
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-      await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
 
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -1076,12 +1237,12 @@ describe('sqlite', () => {
     })
 
     test('re-indexing models', async () => {
-      const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
+      const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
 
-      await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
+      await indexApi.indexModels(modelsToIndex)
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
           .select('model', 'is_indexed')
@@ -1097,7 +1258,7 @@ describe('sqlite', () => {
         },
       ])
 
-      await indexApi.stopIndexingModels([StreamID.fromString(STREAM_ID_A)])
+      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
           .select('model', 'is_indexed')
@@ -1144,7 +1305,7 @@ describe('sqlite', () => {
       expect(
         anotherIndexApi
           .getIndexedModels()
-          .map((streamID) => streamID.toString())
+          .map((idx) => idx.streamID.toString())
           .sort()
       ).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
@@ -1162,7 +1323,7 @@ describe('sqlite', () => {
       expect(
         indexApi
           .getIndexedModels()
-          .map((streamID) => streamID.toString())
+          .map((idx) => idx.streamID.toString())
           .sort()
       ).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
@@ -1190,16 +1351,16 @@ describe('sqlite', () => {
       expect(
         indexApi
           .getIndexedModels()
-          .map((streamID) => streamID.toString())
+          .map((idx) => idx.streamID.toString())
           .sort()
       ).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
         'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
       ])
-      await indexApi.stopIndexingModels([
-        StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
-      ])
-      expect(indexApi.getIndexedModels().map((streamID) => streamID.toString())).toEqual([
+      await indexApi.stopIndexingModels([{
+        streamID: StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
+      }])
+      expect(indexApi.getIndexedModels().map((idx) => idx.streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
       ])
     })
@@ -1207,6 +1368,24 @@ describe('sqlite', () => {
 
   describe('indexStream', () => {
     const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
+    const MODEL_DATA = [{
+      model: StreamID.fromString(STREAM_ID_A),
+      indices: [
+        {
+          name: 'test_model_index',
+          fields: [
+            {
+              path: ['name'],
+            },
+            {
+              path: ['address'],
+            },
+          ],
+        },
+      ],
+    }, {
+      model: StreamID.fromString(STREAM_ID_B)
+    }]
     const STREAM_CONTENT = {
       model: MODELS_TO_INDEX[0],
       streamID: StreamID.fromString(STREAM_ID_B),
@@ -1222,7 +1401,7 @@ describe('sqlite', () => {
       indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
-      await indexApi.indexModels(modelsToIndexArgs(MODELS_TO_INDEX))
+      await indexApi.indexModels(MODEL_DATA)
     })
 
     test('new stream', async () => {
@@ -1273,6 +1452,38 @@ describe('sqlite', () => {
       expect(closeDates(createdAt, createTime)).toBeTruthy()
       expect(JSON.parse(raw.stream_content)).toEqual(updatedStreamContent.streamContent)
     })
+
+    test('create new stream with indices', async () => {
+      const model = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(model)
+
+      //create a stream
+      const streamContent = {
+        model: model,
+        streamID: StreamID.fromString(STREAM_ID_B),
+        controller: CONTROLLER,
+        streamContent: STREAM_TEST_DATA_PROFILE_A,
+        tip: FAKE_CID_A,
+        lastAnchor: null,
+        firstAnchor: null,
+      }
+      await indexApi.indexStream(streamContent)
+
+      // Also manually check MID table structure
+      const expectedIndices = [MODEL_DATA[0].indices[0]]
+        .map((idx) => fieldsIndexName(idx, tableName))
+      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
+      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      const actualIndices = await dbConnection.raw(`
+select name, tbl_name
+FROM sqlite_master
+WHERE type='index'
+and tbl_name like '${tableName}'
+and name in (${sqlIndices})
+;
+  `)
+      expect(actualIndices.length).toEqual(sqlIndices.length)
+    })
   })
 
   describe('page', () => {
@@ -1281,7 +1492,7 @@ describe('sqlite', () => {
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
@@ -1292,7 +1503,7 @@ describe('sqlite', () => {
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.indexedModels = [StreamID.fromString(STREAM_ID_A)]
+      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )

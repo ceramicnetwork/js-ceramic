@@ -80,6 +80,14 @@ export interface CeramicSigner extends CeramicCommon {
   [index: string]: any // allow arbitrary properties
 }
 
+export function convertModelIdsToModelData(modelIds: Array<StreamID>): Array<ModelData> {
+  return modelIds.map((streamID) => {
+    return {
+      streamID,
+    }
+  })
+}
+
 /**
  * Describes Ceramic Admin API functionality
  */
@@ -91,9 +99,15 @@ export interface AdminApi {
   nodeStatus(): Promise<NodeStatusResponse>
 
   /**
+   * @deprecated
    * List indexed model streams
    */
   getIndexedModels(): Promise<Array<StreamID>>
+
+  /**
+   * List indexed model streams with data
+   */
+  getIndexedModelData(): Promise<Array<ModelData>>
 
   /**
    * List indexed model streams with additional model data (such as the defined field indices)
@@ -103,7 +117,9 @@ export interface AdminApi {
   /**
    * Adds model streams to index
    *
-   * @param modelsIDs - array of model stream IDs to add to index
+   * @deprecated
+   * @param modelsIDs - array of model stream IDs to add to index. This parameter is deprecated
+   * and indices should be specified instead
    */
   startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
 
@@ -114,12 +130,26 @@ export interface AdminApi {
   startIndexingModelData(modelData: Array<ModelData>): Promise<void>
 
   /**
+   * Adds model streams to index as specified by ModelData
+   * @param modelData - array of model streams with field indices to index
+   */
+  startIndexingModelData(modelData: Array<ModelData>): Promise<void>
+
+  /**
+   * @deprecated
    * Removes model streams from index
    *
    * @param modelsIDs - array of model stream IDs to remove from index
    */
 
   stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  /**
+   * Removes model streams from index
+   *
+   * @param modelData - array of model data to remove from index
+   */
+  stopIndexingModelData(modelData: Array<ModelData>): Promise<void>
 
   pin: PinApi
 }
