@@ -76,7 +76,7 @@ export function indices(tableName: string): TableIndices {
     {
       keys: ['last_anchored_at', 'created_at'],
       name: `idx_${indexName}_last_anchored_at_created_at`,
-      indexType: 'hash',
+      indexType: 'btree',
     },
   ]
 

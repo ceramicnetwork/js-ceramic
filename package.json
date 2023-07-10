@@ -24,12 +24,6 @@
     "clean:coverage": "npx rimraf ./packages/*/coverage",
     "clean:build-artifacts": "npx rimraf ./packages/*/lib"
   },
-  "overrides": {
-      "@opentelemetry/resources": "1.8.0",
-      "@opentelemetry/sdk-metrics": "1.8.0",
-      "@opentelemetry/sdk-trace-base": "1.8.0",
-      "@opentelemetry/semantic-conventions": "1.8.0"
-  },
   "devDependencies": {
     "@babel/core": "^7.16.7",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
