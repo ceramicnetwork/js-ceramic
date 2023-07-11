@@ -9,7 +9,7 @@ import type { Provider } from '@ethersproject/providers'
 import { catchError, concatMap, defer, interval, mergeMap, Subscription } from 'rxjs'
 
 import type { LocalIndexApi } from '../indexing/local-index-api.js'
-import { type IJobQueue, JobQueue, JobWithMetadata } from '../state-management/job-queue.js'
+import { type IJobQueue, JobQueue } from '../state-management/job-queue.js'
 
 import {
   CONTINUOUS_SYNC_JOB,

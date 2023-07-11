@@ -4,7 +4,6 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'os'
 import { AnchorServiceAuthMethods } from '@ceramicnetwork/common'
 import { StartupError } from './daemon/error-handler.js'
-import { json } from 'express'
 
 /**
  * Replace `~/` with `<homedir>/` absolute path, and `~+/` with `<cwd>/`.
