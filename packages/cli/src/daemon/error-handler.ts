@@ -4,12 +4,23 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 export class StartupError extends Error {}
 
 /**
+ * Determine if an error is about a client aborting a request.
+ */
+export function isConnectionAborted(error: any): boolean {
+  return 'code' in error && error.code === 'ECONNABORTED'
+}
+
+/**
  * Generic error handling middleware for the daemon.
  */
 export function errorHandler(logger: DiagnosticsLogger): ErrorRequestHandler {
   return (err: Error, req: Request, res: Response, next: NextFunction) => {
     res.locals.error = err // Allow other middlewares access the error
-    logger.err(err)
+    if (isConnectionAborted(err)) {
+      logger.err(`An HTTP client abruptly closed a request`)
+    } else {
+      logger.err(err)
+    }
     if (res.headersSent) {
       return next(err)
     }
