@@ -308,3 +308,28 @@ export async function createConfigTable(
       throw new Error(`Invalid config table creation requested: ${tableName}`)
   }
 }
+
+export async function migrateConfigTable(
+  dataSource: Knex,
+  tableName: string,
+  jsonb_support: boolean
+) {
+  switch (tableName) {
+    case INDEXED_MODEL_CONFIG_TABLE_NAME:
+      if (!(await dataSource.schema.hasColumn(tableName, 'indices'))) {
+        await dataSource.schema.alterTable(tableName, (table) => {
+          if (jsonb_support) {
+            table.jsonb('indices').nullable()
+          } else {
+            table.json('indices').nullable()
+          }
+        })
+      }
+      break
+    case CONFIG_TABLE_NAME:
+      //no migrations
+      break
+    default:
+      throw new Error(`Invalid config table migration requested: ${tableName}`)
+  }
+}
