@@ -16,6 +16,8 @@ import {
   IndexModelArgs,
   PostgresIndexApi,
   SqliteIndexApi,
+  asTimestamp,
+  fieldsIndexName,
 } from '../database-index-api.js'
 import { DatabaseType, indices, migrateConfigTable } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
