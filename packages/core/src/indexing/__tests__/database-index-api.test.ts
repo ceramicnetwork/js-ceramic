@@ -14,7 +14,8 @@ import {
   IndexModelArgs,
   PostgresIndexApi,
   SqliteIndexApi,
-  asTimestamp, fieldsIndexName
+  asTimestamp,
+  fieldsIndexName,
 } from '../database-index-api.js'
 import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
@@ -488,7 +489,7 @@ describe('postgres', () => {
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
+      await indexApi.stopIndexingModels([{ streamID: StreamID.fromString(STREAM_ID_A) }])
 
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -528,7 +529,7 @@ describe('postgres', () => {
         },
       ])
 
-      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
+      await indexApi.stopIndexingModels([{ streamID: StreamID.fromString(STREAM_ID_A) }])
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
           .select('model', 'is_indexed')
@@ -616,9 +617,13 @@ describe('postgres', () => {
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
         'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
       ])
-      await indexApi.stopIndexingModels([{
-        streamID: StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
-      }])
+      await indexApi.stopIndexingModels([
+        {
+          streamID: StreamID.fromString(
+            'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+          ),
+        },
+      ])
       expect(indexApi.getIndexedModels().map((idx) => idx.streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
       ])
@@ -627,24 +632,27 @@ describe('postgres', () => {
 
   describe('indexStream', () => {
     const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
-    const MODEL_DATA = [{
-      model: StreamID.fromString(STREAM_ID_A),
-      indices: [
-        {
-          name: 'test_model_index',
-          fields: [
-            {
-              path: ['name'],
-            },
-            {
-              path: ['address'],
-            },
-          ],
-        },
-      ],
-    }, {
-      model: StreamID.fromString(STREAM_ID_B)
-    }]
+    const MODEL_DATA = [
+      {
+        model: StreamID.fromString(STREAM_ID_A),
+        indices: [
+          {
+            name: 'test_model_index',
+            fields: [
+              {
+                path: ['name'],
+              },
+              {
+                path: ['address'],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: StreamID.fromString(STREAM_ID_B),
+      },
+    ]
     const STREAM_CONTENT_A = {
       model: MODELS_TO_INDEX[0],
       streamID: StreamID.fromString(STREAM_ID_B),
@@ -761,8 +769,9 @@ describe('postgres', () => {
       await indexApi.indexStream(streamContent)
 
       // Also manually check MID table structure
-      const expectedIndices = [MODEL_DATA[0].indices[0]]
-        .map((idx) => fieldsIndexName(idx, tableName))
+      const expectedIndices = [MODEL_DATA[0].indices[0]].map((idx) =>
+        fieldsIndexName(idx, tableName)
+      )
       expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
       const sqlIndices = expectedIndices.map((s) => `'${s}'`)
       const actualIndices = await dbConnection.raw(`
@@ -1218,7 +1227,7 @@ describe('sqlite', () => {
       indexApi.setSyncQueryApi(new CompleteQueryApi())
       await indexApi.init()
       await indexApi.indexModels(modelsToIndexArgs(modelsToIndex))
-      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
+      await indexApi.stopIndexingModels([{ streamID: StreamID.fromString(STREAM_ID_A) }])
 
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -1258,7 +1267,7 @@ describe('sqlite', () => {
         },
       ])
 
-      await indexApi.stopIndexingModels([{streamID: StreamID.fromString(STREAM_ID_A)}])
+      await indexApi.stopIndexingModels([{ streamID: StreamID.fromString(STREAM_ID_A) }])
       expect(
         await dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
           .select('model', 'is_indexed')
@@ -1357,9 +1366,13 @@ describe('sqlite', () => {
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
         'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
       ])
-      await indexApi.stopIndexingModels([{
-        streamID: StreamID.fromString('kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'),
-      }])
+      await indexApi.stopIndexingModels([
+        {
+          streamID: StreamID.fromString(
+            'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+          ),
+        },
+      ])
       expect(indexApi.getIndexedModels().map((idx) => idx.streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
       ])
@@ -1368,24 +1381,27 @@ describe('sqlite', () => {
 
   describe('indexStream', () => {
     const MODELS_TO_INDEX = [STREAM_ID_A, STREAM_ID_B].map(StreamID.fromString)
-    const MODEL_DATA = [{
-      model: StreamID.fromString(STREAM_ID_A),
-      indices: [
-        {
-          name: 'test_model_index',
-          fields: [
-            {
-              path: ['name'],
-            },
-            {
-              path: ['address'],
-            },
-          ],
-        },
-      ],
-    }, {
-      model: StreamID.fromString(STREAM_ID_B)
-    }]
+    const MODEL_DATA = [
+      {
+        model: StreamID.fromString(STREAM_ID_A),
+        indices: [
+          {
+            name: 'test_model_index',
+            fields: [
+              {
+                path: ['name'],
+              },
+              {
+                path: ['address'],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: StreamID.fromString(STREAM_ID_B),
+      },
+    ]
     const STREAM_CONTENT = {
       model: MODELS_TO_INDEX[0],
       streamID: StreamID.fromString(STREAM_ID_B),
@@ -1470,8 +1486,9 @@ describe('sqlite', () => {
       await indexApi.indexStream(streamContent)
 
       // Also manually check MID table structure
-      const expectedIndices = [MODEL_DATA[0].indices[0]]
-        .map((idx) => fieldsIndexName(idx, tableName))
+      const expectedIndices = [MODEL_DATA[0].indices[0]].map((idx) =>
+        fieldsIndexName(idx, tableName)
+      )
       expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
       const sqlIndices = expectedIndices.map((s) => `'${s}'`)
       const actualIndices = await dbConnection.raw(`

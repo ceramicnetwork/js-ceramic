@@ -98,7 +98,20 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
         const old = where
         where = (bldr) => {
           const b = old(bldr)
-          return handleQuery(b, (b) => b.whereNull(key), isFirst, state.negated, state.combinator)
+          let nullQuery = 'is not null'
+          if (value.value) {
+            nullQuery = 'is null'
+          }
+          return handleQuery(
+            b,
+            (b) => {
+              const raw = b.client.raw(`${key} ${nullQuery}`)
+              return b.whereRaw(raw)
+            },
+            isFirst,
+            state.negated,
+            state.combinator
+          )
         }
         break
       }
@@ -126,14 +139,18 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
         if (typeof value.value == 'number') {
           cast = 'int'
         } else if (typeof value.value == 'string') {
-          cast = 'string'
+          cast = 'varchar'
         }
         where = (bldr) => {
           const b = old(bldr)
+          let queryValue = value.value
+          if (cast == 'varchar') {
+            queryValue = `'${queryValue}'`
+          }
           return handleQuery(
             b,
             (b) => {
-              const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${value.value}`)
+              const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${queryValue}`)
               return b.whereRaw(raw)
             },
             isFirst,

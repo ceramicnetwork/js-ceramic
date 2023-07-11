@@ -21,11 +21,11 @@ import knex, { Knex } from 'knex'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
 const CONTENT0 = { myData: 0, myArray: [0] }
-const CONTENT1 = { myData: 1, myArray: [1] }
+const CONTENT1 = { myData: 1, myArray: [1], myString: 'a' }
 const CONTENT2 = { myData: 2, myArray: [2] }
-const CONTENT3 = { myData: 3, myArray: [3] }
+const CONTENT3 = { myData: 3, myArray: [3], myString: 'b' }
 const CONTENT4 = { myData: 4, myArray: [4] }
-const CONTENT5 = { myData: 5, myArray: [5] }
+const CONTENT5 = { myData: 5, myArray: [5], myString: 'c' }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -47,6 +47,9 @@ const MODEL_DEFINITION: ModelDefinition = {
           type: 'number',
         },
       },
+      myString: {
+        type: 'string',
+      },
     },
     required: ['myData', 'myArray'],
   },
@@ -54,8 +57,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-//const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c7lzflifuuyrimo5txgkau0umv4bl2chbujhkrqjgoeluwiecsg'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c7skfiapcx0ou10qtf0air192h02jtywajoh1djg38ourhi6v3a'
 
 // StreamID for a model that isn't indexed by the node
 const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
@@ -418,6 +420,43 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query documents when not null', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          where: { myString: { isNull: false } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+    })
+    test('Can query documents by string', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          where: { myString: { equalTo: 'b' } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
     })
     test('Can query multiple documents by field', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
