@@ -3,6 +3,10 @@ import { NonBooleanValueFilterType, ObjectFilter, QueryFilters } from './query-f
 
 export const DATA_FIELD = 'stream_content'
 
+export function contentKey(field: string): string {
+  return `${DATA_FIELD}->>'${field}'`
+}
+
 type DBQuery = Knex.QueryBuilder
 type WhereFunc = (DBQuery) => DBQuery
 
@@ -90,7 +94,7 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
   for (const filterKey in state.filter) {
     select.push(filterKey)
     const value = state.filter[filterKey]
-    const key = `${DATA_FIELD}->>'${filterKey}'`
+    const key = contentKey(filterKey)
 
     switch (value.op) {
       case 'null': {

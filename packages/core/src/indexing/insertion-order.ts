@@ -1,7 +1,7 @@
 import { type Knex } from 'knex'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { BaseQuery, Page, Pagination } from '@ceramicnetwork/common'
+import type { BaseQuery, Page, Pagination, SortOrder } from '@ceramicnetwork/common'
 import {
   BackwardPaginationQuery,
   ForwardPaginationQuery,
@@ -11,7 +11,7 @@ import {
 import { asTableName } from './as-table-name.util.js'
 import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
 import { addColumnPrefix } from './column-name.util.js'
-import { convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
+import { contentKey, convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
 import { parseQueryFilters } from './query-filter-parser.js'
 
 type SelectedRequired = { stream_id: string; last_anchored_at: number; created_at: number }
@@ -54,7 +54,7 @@ function asInsertionCursor(input: { created_at: number } | undefined) {
   return { created_at: input.created_at }
 }
 
-const REVERSE_ORDER = {
+const REVERSE_ORDER: Record<SortOrder, SortOrder> = {
   ASC: 'DESC',
   DESC: 'ASC',
 }
@@ -66,7 +66,7 @@ function reverseOrder<T extends { order: string }>(entries: Array<T>): Array<T> 
   return entries.map((entry) => ({ ...entry, order: REVERSE_ORDER[entry.order] }))
 }
 
-const INSERTION_ORDER = [{ column: 'created_at', order: 'ASC' }]
+const INSERTION_ORDER = [{ column: 'created_at', order: 'ASC' as const }]
 
 /**
  * Insertion order: created_at DESC.
@@ -87,7 +87,7 @@ export class InsertionOrder {
         return {
           edges: entries.map((row) => {
             return {
-              cursor: Cursor.stringify(row),
+              cursor: Cursor.stringify(asInsertionCursor(row)),
               node: StreamID.fromString(row.stream_id),
             }
           }),
@@ -108,7 +108,7 @@ export class InsertionOrder {
         return {
           edges: entries.map((row) => {
             return {
-              cursor: Cursor.stringify(row),
+              cursor: Cursor.stringify(asInsertionCursor(row)),
               node: StreamID.fromString(row.stream_id),
             }
           }),
@@ -177,11 +177,12 @@ export class InsertionOrder {
         base = base.where(converted.where)
       }
 
-      if (isReverseOrder) {
-        base = base.orderBy(reverseOrder(INSERTION_ORDER))
-      } else {
-        base = base.orderBy(INSERTION_ORDER)
+      for (const [field, order] of Object.entries(query.sorting ?? {})) {
+        const applyOrder = isReverseOrder ? REVERSE_ORDER[order] : order
+        base = base.orderByRaw(`${contentKey(field)} ${applyOrder}`)
       }
+      base = base.orderBy(isReverseOrder ? reverseOrder(INSERTION_ORDER) : INSERTION_ORDER)
+
       if (query.account) {
         base = base.where({ controller_did: query.account })
       }
