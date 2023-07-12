@@ -83,7 +83,16 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await this.startIndexingModelData(convertModelIdsToModelData(modelsIDs))
+    const code = await this.generateCode()
+    const body = {
+      models: modelsIDs.map((idx) => idx.toString())
+    }
+    await this._fetchJson(this.getModelsUrl(), {
+      method: 'post',
+      body: {
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
+      },
+    })
   }
 
   async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
@@ -105,8 +114,21 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {
-    const models = await this.getIndexedModelData()
-    return models.map((data) => data.streamID)
+    const code = await this.generateCode()
+    const response = await this._fetchJson(this.getModelsUrl(), {
+      headers: {
+        Authorization: `Basic ${await this.buildJWS(
+          this._getDidFn(),
+          code,
+          this.getModelsUrl().pathname
+        )}`,
+      },
+    })
+    return response.models.map((data) => {
+      return {
+        streamID: StreamID.fromString(data),
+      }
+    })
   }
 
   async getIndexedModelData(): Promise<Array<ModelData>> {
@@ -129,7 +151,16 @@ export class RemoteAdminApi implements AdminApi {
   }
 
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
-    await this.stopIndexingModelData(convertModelIdsToModelData(modelsIDs))
+    const code = await this.generateCode()
+    const body = {
+      models: modelsIDs.map((data) => data.toString())
+    }
+    await this._fetchJson(this.getModelsUrl(), {
+      method: 'delete',
+      body: {
+        jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
+      },
+    })
   }
 
   async stopIndexingModelData(modelData: Array<ModelData>): Promise<void> {
