@@ -105,11 +105,6 @@ export interface AdminApi {
   getIndexedModels(): Promise<Array<StreamID>>
 
   /**
-   * List indexed model streams with data
-   */
-  getIndexedModelData(): Promise<Array<ModelData>>
-
-  /**
    * List indexed model streams with additional model data (such as the defined field indices)
    */
   getIndexedModelData(): Promise<Array<ModelData>>
@@ -122,12 +117,6 @@ export interface AdminApi {
    * and indices should be specified instead
    */
   startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
-
-  /**
-   * Adds model streams to index as specified by ModelData
-   * @param modelData - array of model streams with field indices to index
-   */
-  startIndexingModelData(modelData: Array<ModelData>): Promise<void>
 
   /**
    * Adds model streams to index as specified by ModelData

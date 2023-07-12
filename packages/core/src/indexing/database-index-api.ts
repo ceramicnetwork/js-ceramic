@@ -33,8 +33,7 @@ export interface IndexStreamArgs {
 }
 
 /**
- * Create a valid name for a fields index, if the index has a name specified, or generate a valid
- * name if one is not specified. The index name cannot exceed 64 characters
+ * Create a valid name for a fields index. The index name cannot exceed 64 characters
  * @param idx Index to create a name for
  * @param table Table to add index to
  */
