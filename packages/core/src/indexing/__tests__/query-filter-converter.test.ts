@@ -19,7 +19,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'value', op: '=', value: 1 },
+        a: { type: 'number', op: '=', value: 1 },
       },
     })
 
@@ -27,12 +27,48 @@ describe('Should convert query filters', () => {
       `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as int)=1)))`
     )
   })
+  test('that are composed of a single doc filter with null', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: 'null', value: true },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((${DATA_FIELD}->>'a' is null)))`
+    )
+  })
+  test('that are composed of a single doc filter with negated null', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: 'null', value: false },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((${DATA_FIELD}->>'a' is not null)))`
+    )
+  })
+  test('that are composed of a single doc filter with string equal', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'string', op: '=', value: 'test_str' },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as varchar)='test_str')))`
+    )
+  })
   test('that are composed of a single doc filter with multiple values', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'value', op: '=', value: 1 },
-        b: { type: 'value', op: 'in', value: [2, 3] },
+        a: { type: 'number', op: '=', value: 1 },
+        b: { type: 'number', op: 'in', value: [2, 3] },
       },
     })
     expect(query).toEqual(
@@ -46,13 +82,13 @@ describe('Should convert query filters', () => {
         {
           type: 'where',
           value: {
-            a: { type: 'value', op: '=', value: 1 },
+            a: { type: 'number', op: '=', value: 1 },
           },
         },
         {
           type: 'where',
           value: {
-            b: { type: 'value', op: 'in', value: [2, 3] },
+            b: { type: 'number', op: 'in', value: [2, 3] },
           },
         },
       ],
@@ -68,13 +104,13 @@ describe('Should convert query filters', () => {
         {
           type: 'where',
           value: {
-            a: { type: 'value', op: '=', value: 1 },
+            a: { type: 'number', op: '=', value: 1 },
           },
         },
         {
           type: 'where',
           value: {
-            b: { type: 'value', op: 'in', value: [2, 3] },
+            b: { type: 'number', op: 'in', value: [2, 3] },
           },
         },
       ],
@@ -92,13 +128,13 @@ describe('Should convert query filters', () => {
           {
             type: 'where',
             value: {
-              a: { type: 'value', op: '=', value: 1 },
+              a: { type: 'number', op: '=', value: 1 },
             },
           },
           {
             type: 'where',
             value: {
-              b: { type: 'value', op: 'in', value: [2, 3] },
+              b: { type: 'number', op: 'in', value: [2, 3] },
             },
           },
         ],

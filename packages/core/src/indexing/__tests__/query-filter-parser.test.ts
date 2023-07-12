@@ -15,6 +15,32 @@ describe('Should parse query filters', () => {
       },
     })
   })
+  test('that are composed of a null query', () => {
+    const parsed = parseQueryFilters({
+      where: {
+        a: { isNull: true },
+      },
+    })
+    expect(parsed).toEqual({
+      type: 'where',
+      value: {
+        a: { type: 'boolean', op: 'null', value: true },
+      },
+    })
+  })
+  test('that are composed of a negated null query', () => {
+    const parsed = parseQueryFilters({
+      where: {
+        a: { isNull: false },
+      },
+    })
+    expect(parsed).toEqual({
+      type: 'where',
+      value: {
+        a: { type: 'boolean', op: 'null', value: false },
+      },
+    })
+  })
   test('that are composed of an and query', () => {
     const parsed = parseQueryFilters({
       and: [
