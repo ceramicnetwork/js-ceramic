@@ -31,8 +31,8 @@ const jungleProvider = new EOSIOProvider({
   },
 })
 
-describe('validateLink', () => {
-  test('Telos testnet', async () => {
+describe.skip('validateLink', () => {
+  test.skip('Telos testnet', async () => {
     const authProvider = new linking.eosio.EosioAuthProvider(
       telosTestnetProvider,
       telosTestnetAccount

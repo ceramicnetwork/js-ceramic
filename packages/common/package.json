@@ -45,7 +45,7 @@
   "dependencies": {
     "@ceramicnetwork/codecs": "^1.4.0",
     "@ceramicnetwork/streamid": "^2.16.0",
-    "@didtools/cacao": "^2.0.0",
+    "@didtools/cacao": "^2.1.0",
     "@didtools/pkh-ethereum": "^0.1.0",
     "@didtools/pkh-solana": "^0.1.0",
     "@didtools/pkh-stacks": "^0.1.0",
