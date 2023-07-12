@@ -91,7 +91,7 @@
     "@ceramicnetwork/3id-did-resolver": "^2.22.0-rc.0",
     "@ceramicnetwork/ipfs-daemon": "^2.22.0-rc.0",
     "@databases/pg-test": "^3.1.2",
-    "@didtools/cacao": "^1.0.0",
+    "@didtools/cacao": "^2.1.0",
     "@types/node": "^18.0.3",
     "csv-parser": "^3.0.0",
     "did-resolver": "^4.0.1",
