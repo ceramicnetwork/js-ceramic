@@ -10,18 +10,19 @@ import { Model } from '@ceramicnetwork/stream-model'
 import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import {
+  asTimestamp,
+  fieldsIndexName,
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
   PostgresIndexApi,
   SqliteIndexApi,
-  asTimestamp,
-  fieldsIndexName,
 } from '../database-index-api.js'
-import { DatabaseType, indices } from '../migrations/1-create-model-table.js'
+import { DatabaseType, indices, migrateConfigTable } from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
 import { ISyncQueryApi } from '../../sync/interfaces.js'
+import { TablesManager } from '../tables-manager.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
 const STREAM_ID_B = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -303,6 +304,37 @@ describe('postgres', () => {
 
         await expect(
           indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+        ).resolves.not.toThrow()
+      })
+
+      test('Can manually create config table that migrates and passes validation', async () => {
+        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+        await dbConnection.schema.createTable(INDEXED_MODEL_CONFIG_TABLE_NAME, (table) => {
+          // create unique index name <64 chars that are still capable of being referenced to MID table
+          table.string('model', 1024).unique().notNullable().primary()
+          table.boolean('is_indexed').notNullable().defaultTo(true)
+          table.boolean('enable_historical_sync').notNullable().defaultTo(false)
+          table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+          table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+          table.string('updated_by', 1024).notNullable()
+
+          table.index(['is_indexed'], `idx_ceramic_is_indexed`, {
+            indexType: 'btree',
+          })
+        })
+
+        await expect(
+          migrateConfigTable(dbConnection, INDEXED_MODEL_CONFIG_TABLE_NAME, true)
+        ).resolves.not.toThrow()
+
+        const dbType = DatabaseType.POSTGRES
+        const manager = new TablesManager(dbType, dbConnection, logger)
+
+        await expect(
+          manager._verifyConfigTable({
+            tableName: INDEXED_MODEL_CONFIG_TABLE_NAME,
+            validSchema: STRUCTURES[dbType].CONFIG_TABLE_MODEL_INDEX,
+          })
         ).resolves.not.toThrow()
       })
 
@@ -1075,6 +1107,37 @@ describe('sqlite', () => {
 
         await expect(
           indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
+        ).resolves.not.toThrow()
+      })
+
+      test('Can manually create config table that migrates and passes validation', async () => {
+        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+        await dbConnection.schema.createTable(INDEXED_MODEL_CONFIG_TABLE_NAME, (table) => {
+          // create unique index name <64 chars that are still capable of being referenced to MID table
+          table.string('model', 1024).unique().notNullable().primary()
+          table.boolean('is_indexed').notNullable().defaultTo(true)
+          table.boolean('enable_historical_sync').notNullable().defaultTo(false)
+          table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+          table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+          table.string('updated_by', 1024).notNullable()
+
+          table.index(['is_indexed'], `idx_ceramic_is_indexed`, {
+            indexType: 'btree',
+          })
+        })
+
+        await expect(
+          migrateConfigTable(dbConnection, INDEXED_MODEL_CONFIG_TABLE_NAME, true)
+        ).resolves.not.toThrow()
+
+        const dbType = DatabaseType.SQLITE
+        const manager = new TablesManager(dbType, dbConnection, logger)
+
+        await expect(
+          manager._verifyConfigTable({
+            tableName: INDEXED_MODEL_CONFIG_TABLE_NAME,
+            validSchema: STRUCTURES[dbType].CONFIG_TABLE_MODEL_INDEX,
+          })
         ).resolves.not.toThrow()
       })
 

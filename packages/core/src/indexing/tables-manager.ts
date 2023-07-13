@@ -8,6 +8,7 @@ import {
   indices,
   createSqliteIndices,
   createPostgresIndices,
+  migrateConfigTable,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
 import { Knex } from 'knex'
@@ -113,15 +114,18 @@ export class TablesManager {
     if (!exists) {
       this.logger.imp(`Creating ComposeDB config table: ${table.tableName}`)
       await createConfigTable(this.dataSource, table.tableName, network, this.hasJsonBSupport())
-    } else if (table.tableName === CONFIG_TABLE_NAME) {
-      const config = await this.dataSource
-        .from(table.tableName)
-        .where('option', 'network')
-        .first('value')
-      if (config.value !== network) {
-        throw new Error(
-          `Initialization failed for config table: ${table.tableName}. The database is configured to use the network ${config.value} but the current network is ${network}.`
-        )
+    } else {
+      await migrateConfigTable(this.dataSource, table.tableName, this.hasJsonBSupport())
+      if (table.tableName === CONFIG_TABLE_NAME) {
+        const config = await this.dataSource
+          .from(table.tableName)
+          .where('option', 'network')
+          .first('value')
+        if (config.value !== network) {
+          throw new Error(
+            `Initialization failed for config table: ${table.tableName}. The database is configured to use the network ${config.value} but the current network is ${network}.`
+          )
+        }
       }
     }
   }
