@@ -39,7 +39,6 @@
   "dependencies": {
     "@ceramicnetwork/streamid": "^2.16.0",
     "@didtools/cacao": "^2.1.0",
-    "@didtools/cacao": "^1.0.0",
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
