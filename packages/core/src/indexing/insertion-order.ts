@@ -1,7 +1,7 @@
 import { type Knex } from 'knex'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type { BaseQuery, Page, Pagination, SortOrder } from '@ceramicnetwork/common'
+import type { BaseQuery, Page, Pagination, SortOrder, Sorting } from '@ceramicnetwork/common'
 import {
   BackwardPaginationQuery,
   ForwardPaginationQuery,
@@ -14,14 +14,18 @@ import { addColumnPrefix } from './column-name.util.js'
 import { contentKey, convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
 import { parseQueryFilters } from './query-filter-parser.js'
 
-type StreamContent = Record<string, boolean | number | string>
+type StreamContent = Record<string, unknown>
 type QueryResult = {
   stream_id: string
-  last_anchored_at: number
+  last_anchored_at?: number
   created_at: number
   stream_content: string
 }
-type QueryFunc = (bldr: Knex.QueryBuilder<any, any>) => Knex.QueryBuilder<any, any>
+type QueryBuilder = Knex.QueryBuilder<unknown, Array<QueryResult>>
+
+/**
+ * Stream `id` is always present in cursor, with the `value` either a record of content keys and values (if custom ordering is provided) or the `created_at` field value as fallback, based on the `type` value
+ */
 type CursorData<Content extends StreamContent = StreamContent> = { id: string } & (
   | { type: 'timestamp'; value: number }
   | { type: 'content'; value: Content }
@@ -65,15 +69,12 @@ abstract class Cursor {
     } else {
       // Use custom content fields
       const content = JSON.parse(input.stream_content)
-      cursor = orderByKeys.reduce(
-        (acc, key) => {
-          if (content[key] != null) {
-            acc.value[key] = content[key]
-          }
-          return acc
-        },
-        { type: 'content', id: input.stream_id, value: {} }
-      )
+      cursor = { type: 'content', id: input.stream_id, value: {} }
+      for (const key of orderByKeys) {
+        if (content[key] != null) {
+          cursor.value[key] = content[key]
+        }
+      }
     }
 
     return uint8arrays.toString(uint8arrays.fromString(JSON.stringify(cursor)), 'base64url')
@@ -113,7 +114,7 @@ export class InsertionOrder {
     switch (paginationKind) {
       case PaginationKind.FORWARD: {
         const limit = pagination.first
-        const response: Array<QueryResult> = await this.forwardQuery(query, pagination)
+        const response = await this.forwardQuery(query, pagination)
         const entries = response.slice(0, limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -134,9 +135,7 @@ export class InsertionOrder {
       }
       case PaginationKind.BACKWARD: {
         const limit = pagination.last
-        const response: Array<QueryResult> = await this.backwardQuery(query, pagination)
-        // Reverse response as results are returned in descending order
-        response.reverse()
+        const response = await this.backwardQuery(query, pagination)
         const entries = response.slice(-limit)
         const firstEntry = entries[0]
         const lastEntry = entries[entries.length - 1]
@@ -163,91 +162,117 @@ export class InsertionOrder {
   /**
    * Forward query: traverse from the most recent to the last.
    */
-  private forwardQuery(
+  private async forwardQuery(
     query: BaseQuery,
     pagination: ForwardPaginationQuery
-  ): Knex.QueryBuilder<unknown, Array<QueryResult>> {
-    const tableName = asTableName(query.model)
-    const queryFunc = this.query(query, false, Cursor.parse(pagination.after))
-    return queryFunc(this.dbConnection.from(tableName)).limit(pagination.first + 1)
+  ): Promise<Array<QueryResult>> {
+    return await this.query(query, false, Cursor.parse(pagination.after)).limit(
+      pagination.first + 1
+    )
   }
 
   /**
    * Backward query: traverse from the last to the most recent.
    */
-  private backwardQuery(
+  private async backwardQuery(
     query: BaseQuery,
     pagination: BackwardPaginationQuery
-  ): Knex.QueryBuilder<unknown, Array<QueryResult>> {
-    const tableName = asTableName(query.model)
-    const queryFunc = this.query(query, true, Cursor.parse(pagination.before))
-    return queryFunc(this.dbConnection.from(tableName)).limit(pagination.last + 1)
+  ): Promise<Array<QueryResult>> {
+    const response = await this.query(query, true, Cursor.parse(pagination.before)).limit(
+      pagination.last + 1
+    )
+    // Reverse response as results are returned in descending order
+    response.reverse()
+    return response
   }
 
-  private query(query: BaseQuery, isReverseOrder: boolean, cursor?: CursorData): QueryFunc {
-    let converted = null
+  private query(query: BaseQuery, isReverseOrder: boolean, cursor?: CursorData): QueryBuilder {
+    let builder: QueryBuilder = this.dbConnection
+      .from(asTableName(query.model))
+      .columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD])
+      .select()
+    // Handle filters (account, fields and/or legacy relations)
+    builder = this.applyFilters(builder, query)
+    const sorting = query.sorting ?? {}
+    // Handle cursor if present
+    if (cursor != null) {
+      builder = this.applyCursor(builder, cursor, isReverseOrder, sorting)
+    }
+    // Handle ordering
+    builder = this.applySorting(builder, isReverseOrder, sorting)
+    return builder
+  }
+
+  private applyFilters(builder: QueryBuilder, query: BaseQuery): QueryBuilder {
+    if (query.account) {
+      builder = builder.where({ controller_did: query.account })
+    }
+
     if (query.queryFilters) {
       const parsed = parseQueryFilters(query.queryFilters)
-      converted = convertQueryFilter(parsed)
-    }
-    return (bldr) => {
-      let base = bldr.columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD]).select()
-
+      const converted = convertQueryFilter(parsed)
       if (converted) {
-        base = base.where(converted.where)
+        builder = builder.where(converted.where)
       }
-
-      // Handle cursor if present
-      if (cursor != null) {
-        if (cursor.type === 'timestamp') {
-          // Paginate using the `created_at` field when no custom field ordering is provided
-          base = base.where((qb) => {
-            qb.where('created_at', isReverseOrder ? '<' : '>', cursor.value) // strict next value
-              .orWhere('created_at', '=', cursor.value) // or current value
-              .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker
-          })
-        } else {
-          // Paginate using previous values of custom fields
-          for (const [key, prevValue] of Object.entries(cursor.value)) {
-            const field = contentKey(key)
-            const sign = getComparisonSign(query.sorting?.[key], isReverseOrder)
-            const value = JSON.stringify(prevValue)
-            base = base.where((qb) => {
-              qb.whereRaw(`${field} ${sign} ${value}`) // strict next value
-                .orWhereRaw(`${field} = ${value}`) // or current value
-                .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker
-            })
-          }
-        }
+    } else if (query.filter) {
+      // Handle legacy `filter` object used for relations
+      for (const [key, value] of Object.entries(query.filter)) {
+        const filterObj = {}
+        filterObj[addColumnPrefix(key)] = value
+        builder = builder.andWhere(filterObj)
       }
-
-      // Handle ordering
-      const sortingEntries = Object.entries(query.sorting ?? {})
-      if (sortingEntries.length === 0) {
-        // Order by insertion order (`created_at` field) as fallback
-        base = base.orderBy(isReverseOrder ? reverseOrder(INSERTION_ORDER) : INSERTION_ORDER)
-      } else {
-        // Order by custom fields
-        for (const [field, order] of sortingEntries) {
-          const orderBy = isReverseOrder ? REVERSE_ORDER[order] : order
-          base = base.orderByRaw(`${contentKey(field)} ${orderBy}`)
-        }
-      }
-      // Always order by stream ID as tie-breaker
-      base = base.orderBy('stream_id', 'asc')
-
-      if (query.account) {
-        base = base.where({ controller_did: query.account })
-      }
-      if (query.filter) {
-        for (const [key, value] of Object.entries(query.filter)) {
-          const filterObj = {}
-          filterObj[addColumnPrefix(key)] = value
-          base = base.andWhere(filterObj)
-        }
-      }
-
-      return base
     }
+
+    return builder
+  }
+
+  private applyCursor(
+    builder: QueryBuilder,
+    cursor: CursorData,
+    isReverseOrder: boolean,
+    sorting: Sorting
+  ): QueryBuilder {
+    if (cursor.type === 'timestamp') {
+      // Paginate using the `created_at` field when no custom field ordering is provided
+      builder = builder.where((qb) => {
+        qb.where('created_at', isReverseOrder ? '<' : '>', cursor.value) // strict next value
+          .orWhere('created_at', '=', cursor.value) // or current value
+          .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker
+      })
+    } else {
+      // Paginate using previous values of custom fields
+      for (const [key, prevValue] of Object.entries(cursor.value)) {
+        const field = contentKey(key)
+        const sign = getComparisonSign(sorting[key], isReverseOrder)
+        const value = JSON.stringify(prevValue)
+        builder = builder.where((qb) => {
+          qb.whereRaw(`${field} ${sign} ${value}`) // strict next value
+            .orWhereRaw(`${field} = ${value}`) // or current value
+            .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker
+        })
+      }
+    }
+    return builder
+  }
+
+  private applySorting(
+    builder: QueryBuilder,
+    isReverseOrder: boolean,
+    sorting: Sorting
+  ): QueryBuilder {
+    const sortingEntries = Object.entries(sorting ?? {})
+    if (sortingEntries.length === 0) {
+      // Order by insertion order (`created_at` field) as fallback
+      builder = builder.orderBy(isReverseOrder ? reverseOrder(INSERTION_ORDER) : INSERTION_ORDER)
+    } else {
+      // Order by custom fields
+      for (const [field, order] of sortingEntries) {
+        const orderBy = isReverseOrder ? REVERSE_ORDER[order] : order
+        builder = builder.orderByRaw(`${contentKey(field)} ${orderBy}`)
+      }
+    }
+    // Always order by stream ID as tie-breaker
+    builder = builder.orderBy('stream_id', 'asc')
+    return builder
   }
 }
