@@ -405,6 +405,10 @@ export class StateManager {
     })
   }
 
+  private _tipHasProcessingAnchorRequest(state$: RunningState): boolean {
+    return [AnchorStatus.PROCESSING, AnchorStatus.PENDING].includes(state$.value.anchorStatus)
+  }
+
   private _processAnchorResponse(
     state$: RunningState,
     anchorStatus$: Observable<CASResponse>
@@ -442,17 +446,28 @@ export class StateManager {
             }
             case AnchorRequestStatusName.COMPLETED: {
               await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit.cid, asr.witnessCar)
-              await this.anchorRequestStore.remove(state$.id)
+
+              if (!this._tipHasProcessingAnchorRequest(state$)) {
+                await this.anchorRequestStore.remove(state$.id)
+              }
               stopSignal.next()
               return
             }
             case AnchorRequestStatusName.FAILED: {
-              if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
                 `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
               )
-              state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
-              await this.anchorRequestStore.remove(state$.id)
+
+              // if this is the anchor response for the tip update the state
+              if (asr.cid.equals(state$.tip)) {
+                state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
+              }
+
+              if (!this._tipHasProcessingAnchorRequest(state$)) {
+                await this.anchorRequestStore.remove(state$.id)
+              }
+
+              // we stop the polling as this is a terminal state
               stopSignal.next()
               return
             }
