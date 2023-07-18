@@ -336,6 +336,14 @@ export class StateManager {
     const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
     const genesisCID = state$.value.log[0].cid
     const genesisCommit = carFile.get(genesisCID)
+
+    // Set the anchor status to PENDING before it is added to the anchor request store.
+    // We do this to prevent the stream from being removed from the anchor request store by previous anchor requests.
+    const next = {
+      ...state$.value,
+      anchorStatus: AnchorStatus.PENDING,
+    }
+    state$.next(next)
     await this._saveAnchorRequestForState(state$, genesisCommit)
 
     const anchorStatus$ = this.anchorService.requestAnchor(carFile)
@@ -346,8 +354,8 @@ export class StateManager {
   /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  confirmAnchorResponse(state$: RunningState): Subscription {
-    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, state$.tip)
+  confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
+    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
