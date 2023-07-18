@@ -832,7 +832,7 @@ describe('anchor', () => {
       await expect(anchorRequestStore.load(stream.id)).resolves.not.toBeNull()
     })
 
-    describe.only('Multiple anchor requests', () => {
+    describe('Multiple anchor requests', () => {
       test('Anchor completed for non tip should not remove any requests from the store if the tip has been requested but not anchored', async () => {
         // @ts-ignore anchorRequestStore is private
         const anchorRequestStore = ceramic.repository.stateManager.anchorRequestStore
