@@ -805,18 +805,36 @@ describe('postgres', () => {
       await indexApi.indexStream(streamContent)
 
       // Also manually check MID table structure
-      const expectedIndices = [MODEL_DATA[0].indices[0]].map((idx) =>
-        fieldsIndexName(idx, tableName)
+      const expectedIndices = [MODEL_DATA[0].indices[0]].map(
+        (idx) => `'${fieldsIndexName(idx, tableName)}'`
       )
-      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
-      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      expect(expectedIndices[0]).toEqual(`'idx_xvg5ygiabd_name_addre'`)
+      expect(expectedIndices.length).toEqual(1)
+
+      const rememberedModels = indexApi.getIndexedModels()
+      expect(rememberedModels.length).toEqual(2)
+      expect(rememberedModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
+      const foundModels = await indexApi.getIndexedModelsFromDatabase()
+      if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
+        // the order that we get back from the database might not be the same order that we used
+        // when we called indexModels() during test setup, so we do this to make sure we are
+        // comparing the streams in the same order.
+        foundModels.reverse()
+      }
+      expect(foundModels).toEqual(rememberedModels)
+      expect(foundModels.length).toEqual(2)
+      expect(foundModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
       const actualIndices = await dbConnection.raw(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
-and indexname in (${sqlIndices});
+and indexname in (${expectedIndices});
   `)
-      expect(actualIndices.rowCount).toEqual(sqlIndices.length)
+      expect(actualIndices.rowCount).toEqual(expectedIndices.length)
     })
 
     test('query and filter jsonb stream content', async () => {
@@ -1553,20 +1571,38 @@ describe('sqlite', () => {
       await indexApi.indexStream(streamContent)
 
       // Also manually check MID table structure
-      const expectedIndices = [MODEL_DATA[0].indices[0]].map((idx) =>
-        fieldsIndexName(idx, tableName)
+      const expectedIndices = [MODEL_DATA[0].indices[0]].map(
+        (idx) => `'${fieldsIndexName(idx, tableName)}'`
       )
-      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
-      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      expect(expectedIndices[0]).toEqual(`'idx_xvg5ygiabd_name_addre'`)
+      expect(expectedIndices.length).toEqual(1)
+
+      const rememberedModels = indexApi.getIndexedModels()
+      expect(rememberedModels.length).toEqual(2)
+      expect(rememberedModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
+      const foundModels = await indexApi.getIndexedModelsFromDatabase()
+      if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
+        // the order that we get back from the database might not be the same order that we used
+        // when we called indexModels() during test setup, so we do this to make sure we are
+        // comparing the streams in the same order.
+        foundModels.reverse()
+      }
+      expect(foundModels).toEqual(rememberedModels)
+      expect(foundModels.length).toEqual(2)
+      expect(foundModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
       const actualIndices = await dbConnection.raw(`
 select name, tbl_name
 FROM sqlite_master
 WHERE type='index'
 and tbl_name like '${tableName}'
-and name in (${sqlIndices})
+and name in (${expectedIndices})
 ;
   `)
-      expect(actualIndices.length).toEqual(sqlIndices.length)
+      expect(actualIndices.length).toEqual(expectedIndices.length)
     })
   })
 

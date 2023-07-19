@@ -93,6 +93,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): IndexedData<DateType>
   abstract now(): DateType
+  abstract parseIndices(indices: unknown): Array<FieldsIndex>
 
   setSyncQueryApi(api: ISyncQueryApi) {
     this.syncApi = api
@@ -234,7 +235,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       })
     ).map((result) => {
       const streamID = StreamID.fromString(result.model)
-      const indices = result.indices ? JSON.parse(result.indices) : null
+      const indices = this.parseIndices(result.indices)
       return {
         streamID,
         indices,
@@ -377,6 +378,10 @@ export class PostgresIndexApi extends DatabaseIndexApi<Date> {
       updated_at: indexingArgs.updatedAt || now,
     }
   }
+
+  parseIndices(indices: Array<FieldsIndex>): Array<FieldsIndex> {
+    return indices ?? undefined // postgres automatically parses the result into a js object
+  }
 }
 
 /**
@@ -423,5 +428,9 @@ export class SqliteIndexApi extends DatabaseIndexApi<number> {
       created_at: asTimestamp(indexingArgs.createdAt) || now,
       updated_at: asTimestamp(indexingArgs.updatedAt) || now,
     }
+  }
+
+  parseIndices(indices: string): Array<FieldsIndex> {
+    return indices ? JSON.parse(indices) : undefined // sqlite returns indices as a string
   }
 }
