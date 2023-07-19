@@ -105,35 +105,7 @@ export class LocalIndexApi implements IndexApi {
    * We assume that a state store always contains StreamState for an indexed stream, but we return null iff it's not to avoid throwing errors at DApps
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
-    if (this.databaseIndexApi) {
-      const page = await this.databaseIndexApi.page(query)
-      const edges = await Promise.all(
-        // For database queries we bypass the stream cache and repository loading queue
-        page.edges.map(async (edge) => {
-          let node = await this.repository.streamState(edge.node)
-          if (!node) {
-            this.logger.warn(`
-            Did not find stream state for streamid ${
-              edge.node
-            } in our state store when serving an indexed query.
-            This may indicate a problem with data persistence of your state store, which can result in data loss.
-            Please check that your state store is properly configured with strong persistence guarantees.
-            This query may have incomplete results. Affected query: ${JSON.stringify(query)}
-            `)
-            node = null
-          }
-
-          return {
-            cursor: edge.cursor,
-            node: node,
-          }
-        })
-      )
-      return {
-        edges: edges,
-        pageInfo: page.pageInfo,
-      }
-    } else {
+    if (!this.databaseIndexApi) {
       this.logger.warn(`Indexing is not configured. Unable to serve query ${JSON.stringify(query)}`)
       return {
         edges: [],
@@ -142,6 +114,34 @@ export class LocalIndexApi implements IndexApi {
           hasPreviousPage: false,
         },
       }
+    }
+
+    const page = await this.databaseIndexApi.page(query)
+    const edges = await Promise.all(
+      // For database queries we bypass the stream cache and repository loading queue
+      page.edges.map(async (edge) => {
+        let node = await this.repository.streamState(edge.node)
+        if (!node) {
+          this.logger.warn(`
+            Did not find stream state for streamid ${
+              edge.node
+            } in our state store when serving an indexed query.
+            This may indicate a problem with data persistence of your state store, which can result in data loss.
+            Please check that your state store is properly configured with strong persistence guarantees.
+            This query may have incomplete results. Affected query: ${JSON.stringify(query)}
+            `)
+          node = null
+        }
+
+        return {
+          cursor: edge.cursor,
+          node: node,
+        }
+      })
+    )
+    return {
+      edges: edges,
+      pageInfo: page.pageInfo,
     }
   }
 
