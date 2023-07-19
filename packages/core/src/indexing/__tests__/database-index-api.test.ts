@@ -17,7 +17,11 @@ import {
   PostgresIndexApi,
   SqliteIndexApi,
 } from '../database-index-api.js'
-import { DatabaseType, indices, migrateConfigTable } from '../migrations/1-create-model-table.js'
+import {
+  DatabaseType,
+  defaultIndices,
+  migrateConfigTable,
+} from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
@@ -294,7 +298,7 @@ describe('postgres', () => {
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             table.index(indexToCreate.keys, indexToCreate.name, {
               storageEngineIndexType: indexToCreate.indexType,
@@ -362,7 +366,7 @@ describe('postgres', () => {
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             if (!indexToCreate.keys.includes('updated_at')) {
               //updated_at not added as part of table
@@ -438,7 +442,7 @@ describe('postgres', () => {
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             table.index(indexToCreate.keys, indexToCreate.name, {
               storageEngineIndexType: indexToCreate.indexType,
@@ -1097,7 +1101,7 @@ describe('sqlite', () => {
           table.integer('created_at').notNullable()
           table.integer('updated_at').notNullable()
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             table.index(indexToCreate.keys, indexToCreate.name, {
               storageEngineIndexType: indexToCreate.indexType,
@@ -1158,7 +1162,7 @@ describe('sqlite', () => {
           table.integer('first_anchored_at').nullable()
           table.integer('created_at').notNullable()
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             if (!indexToCreate.keys.includes('updated_at')) {
               //updated_at not added as part of table
@@ -1221,7 +1225,7 @@ describe('sqlite', () => {
           table.integer('created_at').notNullable()
           table.integer('updated_at').notNullable()
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             if (!indexToCreate.keys.includes('updated_at')) {
               //updated_at not added as part of table
