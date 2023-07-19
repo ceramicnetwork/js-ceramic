@@ -220,11 +220,9 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         is_indexed: true,
       })
     ).map((result) => {
-      const streamID = StreamID.fromString(result.model)
-      const indices = this.parseIndices(result.indices)
       return {
-        streamID,
-        indices,
+        streamID: StreamID.fromString(result.model),
+        indices: this.parseIndices(result.indices),
       }
     })
   }

@@ -39,7 +39,7 @@ async function _getIndexModelArgs(req: ModelData, repository: Repository): Promi
     if (content.relations) {
       opts.relations = content.relations
     }
-    opts.indices = req.indices ?? []
+    opts.indices = req.indices
   }
 
   return opts
