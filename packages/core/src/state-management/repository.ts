@@ -160,7 +160,7 @@ export class Repository {
 
   private fromMemory(streamId: StreamID): RunningState | undefined {
     const state = this.inmemory.get(streamId.toString())
-    if(state) {
+    if (state) {
       Metrics.count(CACHE_HIT_MEMORY, 1)
     }
     return state
