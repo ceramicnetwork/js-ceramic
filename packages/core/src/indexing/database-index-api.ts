@@ -111,22 +111,6 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Get a model's fields index
-   * @param model
-   */
-  async getFieldsIndex(model: StreamID): Promise<Array<FieldsIndex> | undefined> {
-    const res = await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .first('indices')
-      .where('model', model.toString())
-
-    if (res && res.indices) {
-      return JSON.parse(res.indices)
-    } else {
-      return null
-    }
-  }
-
-  /**
    * Prepare the database to begin indexing the given models.  This generally involves creating
    * the necessary database tables and indexes.
    * @param models
@@ -148,7 +132,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         this.modelRelations.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }
       if (modelArgs.indices) {
-        this.addFieldsIndex(modelArgs.model, modelArgs.indices)
+        await this.addFieldsIndex(modelArgs.model, modelArgs.indices) // todo fold into indexModelsInDatabase
       }
     }
   }
@@ -249,9 +233,11 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         is_indexed: true,
       })
     ).map((result) => {
+      const streamID = StreamID.fromString(result.model)
+      const indices = result.indices ? JSON.parse(result.indices) : null
       return {
-        streamID: StreamID.fromString(result.model),
-        indices: result.indices,
+        streamID,
+        indices,
       }
     })
   }

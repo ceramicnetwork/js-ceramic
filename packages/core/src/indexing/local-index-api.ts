@@ -22,11 +22,7 @@ import { ISyncQueryApi } from '../sync/interfaces.js'
  * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
-async function _getIndexModelArgs(
-  req: ModelData,
-  repository: Repository,
-  databaseIndexApi?: DatabaseIndexApi
-): Promise<IndexModelArgs> {
+async function _getIndexModelArgs(req: ModelData, repository: Repository): Promise<IndexModelArgs> {
   const modelStreamId = req.streamID
   if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
@@ -43,7 +39,7 @@ async function _getIndexModelArgs(
     if (content.relations) {
       opts.relations = content.relations
     }
-    opts.indices = req.indices ?? (await databaseIndexApi?.getFieldsIndex(modelStreamId))
+    opts.indices = req.indices ?? []
   }
 
   return opts
@@ -166,7 +162,7 @@ export class LocalIndexApi implements IndexApi {
       )
     }
 
-    return await _getIndexModelArgs(modelData, this.repository, this.databaseIndexApi)
+    return await _getIndexModelArgs(modelData, this.repository)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {
