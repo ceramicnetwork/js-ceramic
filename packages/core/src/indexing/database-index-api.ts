@@ -100,18 +100,6 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Save model indices to the database. This does not create indices, only records them so that
-   * when MIDs are created from the model, they can have indices applied.
-   * @param model
-   * @param indices
-   */
-  async addFieldsIndex(model: StreamID, indices: Array<FieldsIndex>): Promise<void> {
-    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .update({ indices: JSON.stringify(indices) })
-      .where('model', model.toString())
-  }
-
-  /**
    * Prepare the database to begin indexing the given models.  This generally involves creating
    * the necessary database tables and indexes.
    * @param models
@@ -132,9 +120,6 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       if (modelArgs.relations) {
         this.modelRelations.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }
-      if (modelArgs.indices) {
-        await this.addFieldsIndex(modelArgs.model, modelArgs.indices) // todo fold into indexModelsInDatabase
-      }
     }
   }
 
@@ -149,6 +134,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         models.map((indexModelArgs) => {
           return {
             model: indexModelArgs.model.toString(),
+            ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
             is_indexed: true,
             updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
             updated_at: this.now(),
