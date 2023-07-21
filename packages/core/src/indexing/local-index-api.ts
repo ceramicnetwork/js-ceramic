@@ -22,11 +22,7 @@ import { ISyncQueryApi } from '../sync/interfaces.js'
  * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
-async function _getIndexModelArgs(
-  req: ModelData,
-  repository: Repository,
-  databaseIndexApi?: DatabaseIndexApi
-): Promise<IndexModelArgs> {
+async function _getIndexModelArgs(req: ModelData, repository: Repository): Promise<IndexModelArgs> {
   const modelStreamId = req.streamID
   if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
@@ -43,7 +39,7 @@ async function _getIndexModelArgs(
     if (content.relations) {
       opts.relations = content.relations
     }
-    opts.indices = req.indices ?? (await databaseIndexApi?.getFieldsIndex(modelStreamId))
+    opts.indices = req.indices
   }
 
   return opts
@@ -105,35 +101,7 @@ export class LocalIndexApi implements IndexApi {
    * We assume that a state store always contains StreamState for an indexed stream, but we return null iff it's not to avoid throwing errors at DApps
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
-    if (this.databaseIndexApi) {
-      const page = await this.databaseIndexApi.page(query)
-      const edges = await Promise.all(
-        // For database queries we bypass the stream cache and repository loading queue
-        page.edges.map(async (edge) => {
-          let node = await this.repository.streamState(edge.node)
-          if (!node) {
-            this.logger.warn(`
-            Did not find stream state for streamid ${
-              edge.node
-            } in our state store when serving an indexed query.
-            This may indicate a problem with data persistence of your state store, which can result in data loss.
-            Please check that your state store is properly configured with strong persistence guarantees.
-            This query may have incomplete results. Affected query: ${JSON.stringify(query)}
-            `)
-            node = null
-          }
-
-          return {
-            cursor: edge.cursor,
-            node: node,
-          }
-        })
-      )
-      return {
-        edges: edges,
-        pageInfo: page.pageInfo,
-      }
-    } else {
+    if (!this.databaseIndexApi) {
       this.logger.warn(`Indexing is not configured. Unable to serve query ${JSON.stringify(query)}`)
       return {
         edges: [],
@@ -142,6 +110,34 @@ export class LocalIndexApi implements IndexApi {
           hasPreviousPage: false,
         },
       }
+    }
+
+    const page = await this.databaseIndexApi.page(query)
+    const edges = await Promise.all(
+      // For database queries we bypass the stream cache and repository loading queue
+      page.edges.map(async (edge) => {
+        let node = await this.repository.streamState(edge.node)
+        if (!node) {
+          this.logger.warn(`
+            Did not find stream state for streamid ${
+              edge.node
+            } in our state store when serving an indexed query.
+            This may indicate a problem with data persistence of your state store, which can result in data loss.
+            Please check that your state store is properly configured with strong persistence guarantees.
+            This query may have incomplete results. Affected query: ${JSON.stringify(query)}
+            `)
+          node = null
+        }
+
+        return {
+          cursor: edge.cursor,
+          node: node,
+        }
+      })
+    )
+    return {
+      edges: edges,
+      pageInfo: page.pageInfo,
     }
   }
 
@@ -166,7 +162,7 @@ export class LocalIndexApi implements IndexApi {
       )
     }
 
-    return await _getIndexModelArgs(modelData, this.repository, this.databaseIndexApi)
+    return await _getIndexModelArgs(modelData, this.repository)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {

@@ -5,7 +5,7 @@ import {
   createConfigTable,
   createPostgresModelTable,
   createSqliteModelTable,
-  indices,
+  defaultIndices,
   createSqliteIndices,
   createPostgresIndices,
   migrateConfigTable,
@@ -269,7 +269,7 @@ export class PostgresTablesManager extends TablesManager {
    * @param args
    */
   async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
-    const expectedIndices = indices(tableName).indices.flatMap((index) => index.name)
+    const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
         expectedIndices.push(fieldsIndexName(index, tableName))
@@ -341,7 +341,7 @@ export class SqliteTablesManager extends TablesManager {
    * @param args IndexModelArgs for checking indices
    */
   async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
-    const expectedIndices = indices(tableName).indices.flatMap((index) => index.name)
+    const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
         expectedIndices.push(fieldsIndexName(index, tableName))

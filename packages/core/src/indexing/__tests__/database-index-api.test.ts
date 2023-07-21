@@ -17,7 +17,11 @@ import {
   PostgresIndexApi,
   SqliteIndexApi,
 } from '../database-index-api.js'
-import { DatabaseType, indices, migrateConfigTable } from '../migrations/1-create-model-table.js'
+import {
+  DatabaseType,
+  defaultIndices,
+  migrateConfigTable,
+} from '../migrations/1-create-model-table.js'
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
@@ -294,7 +298,7 @@ describe('postgres', () => {
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             table.index(indexToCreate.keys, indexToCreate.name, {
               storageEngineIndexType: indexToCreate.indexType,
@@ -362,7 +366,7 @@ describe('postgres', () => {
           table.dateTime('first_anchored_at').nullable()
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             if (!indexToCreate.keys.includes('updated_at')) {
               //updated_at not added as part of table
@@ -438,7 +442,7 @@ describe('postgres', () => {
           table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
           table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             table.index(indexToCreate.keys, indexToCreate.name, {
               storageEngineIndexType: indexToCreate.indexType,
@@ -801,18 +805,36 @@ describe('postgres', () => {
       await indexApi.indexStream(streamContent)
 
       // Also manually check MID table structure
-      const expectedIndices = [MODEL_DATA[0].indices[0]].map((idx) =>
-        fieldsIndexName(idx, tableName)
+      const expectedIndices = [MODEL_DATA[0].indices[0]].map(
+        (idx) => `'${fieldsIndexName(idx, tableName)}'`
       )
-      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
-      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      expect(expectedIndices[0]).toEqual(`'idx_xvg5ygiabd_name_addre'`)
+      expect(expectedIndices.length).toEqual(1)
+
+      const rememberedModels = indexApi.getIndexedModels()
+      expect(rememberedModels.length).toEqual(2)
+      expect(rememberedModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
+      const foundModels = await indexApi.getIndexedModelsFromDatabase()
+      if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
+        // the order that we get back from the database might not be the same order that we used
+        // when we called indexModels() during test setup, so we do this to make sure we are
+        // comparing the streams in the same order.
+        foundModels.reverse()
+      }
+      expect(foundModels).toEqual(rememberedModels)
+      expect(foundModels.length).toEqual(2)
+      expect(foundModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
       const actualIndices = await dbConnection.raw(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
-and indexname in (${sqlIndices});
+and indexname in (${expectedIndices});
   `)
-      expect(actualIndices.rowCount).toEqual(sqlIndices.length)
+      expect(actualIndices.rowCount).toEqual(expectedIndices.length)
     })
 
     test('query and filter jsonb stream content', async () => {
@@ -1097,7 +1119,7 @@ describe('sqlite', () => {
           table.integer('created_at').notNullable()
           table.integer('updated_at').notNullable()
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             table.index(indexToCreate.keys, indexToCreate.name, {
               storageEngineIndexType: indexToCreate.indexType,
@@ -1158,7 +1180,7 @@ describe('sqlite', () => {
           table.integer('first_anchored_at').nullable()
           table.integer('created_at').notNullable()
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             if (!indexToCreate.keys.includes('updated_at')) {
               //updated_at not added as part of table
@@ -1221,7 +1243,7 @@ describe('sqlite', () => {
           table.integer('created_at').notNullable()
           table.integer('updated_at').notNullable()
 
-          const tableIndices = indices(tableName)
+          const tableIndices = defaultIndices(tableName)
           for (const indexToCreate of tableIndices.indices) {
             if (!indexToCreate.keys.includes('updated_at')) {
               //updated_at not added as part of table
@@ -1549,20 +1571,38 @@ describe('sqlite', () => {
       await indexApi.indexStream(streamContent)
 
       // Also manually check MID table structure
-      const expectedIndices = [MODEL_DATA[0].indices[0]].map((idx) =>
-        fieldsIndexName(idx, tableName)
+      const expectedIndices = [MODEL_DATA[0].indices[0]].map(
+        (idx) => `'${fieldsIndexName(idx, tableName)}'`
       )
-      expect(expectedIndices[0]).toEqual('idx_xvg5ygiabd_name_addre')
-      const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+      expect(expectedIndices[0]).toEqual(`'idx_xvg5ygiabd_name_addre'`)
+      expect(expectedIndices.length).toEqual(1)
+
+      const rememberedModels = indexApi.getIndexedModels()
+      expect(rememberedModels.length).toEqual(2)
+      expect(rememberedModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
+      const foundModels = await indexApi.getIndexedModelsFromDatabase()
+      if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
+        // the order that we get back from the database might not be the same order that we used
+        // when we called indexModels() during test setup, so we do this to make sure we are
+        // comparing the streams in the same order.
+        foundModels.reverse()
+      }
+      expect(foundModels).toEqual(rememberedModels)
+      expect(foundModels.length).toEqual(2)
+      expect(foundModels[0].indices.length).toEqual(expectedIndices.length)
+      expect(rememberedModels[1].indices).toBeUndefined()
+
       const actualIndices = await dbConnection.raw(`
 select name, tbl_name
 FROM sqlite_master
 WHERE type='index'
 and tbl_name like '${tableName}'
-and name in (${sqlIndices})
+and name in (${expectedIndices})
 ;
   `)
-      expect(actualIndices.length).toEqual(sqlIndices.length)
+      expect(actualIndices.length).toEqual(expectedIndices.length)
     })
   })
 

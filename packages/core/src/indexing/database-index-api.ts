@@ -93,37 +93,10 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): IndexedData<DateType>
   abstract now(): DateType
+  abstract parseIndices(indices: unknown): Array<FieldsIndex>
 
   setSyncQueryApi(api: ISyncQueryApi) {
     this.syncApi = api
-  }
-
-  /**
-   * Save model indices to the database. This does not create indices, only records them so that
-   * when MIDs are created from the model, they can have indices applied.
-   * @param model
-   * @param indices
-   */
-  async addFieldsIndex(model: StreamID, indices: Array<FieldsIndex>): Promise<void> {
-    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .update({ indices: JSON.stringify(indices) })
-      .where('model', model.toString())
-  }
-
-  /**
-   * Get a model's fields index
-   * @param model
-   */
-  async getFieldsIndex(model: StreamID): Promise<Array<FieldsIndex> | undefined> {
-    const res = await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .first('indices')
-      .where('model', model.toString())
-
-    if (res && res.indices) {
-      return JSON.parse(res.indices)
-    } else {
-      return null
-    }
   }
 
   /**
@@ -147,9 +120,6 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       if (modelArgs.relations) {
         this.modelRelations.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }
-      if (modelArgs.indices) {
-        this.addFieldsIndex(modelArgs.model, modelArgs.indices)
-      }
     }
   }
 
@@ -164,6 +134,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         models.map((indexModelArgs) => {
           return {
             model: indexModelArgs.model.toString(),
+            ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
             is_indexed: true,
             updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
             updated_at: this.now(),
@@ -251,7 +222,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     ).map((result) => {
       return {
         streamID: StreamID.fromString(result.model),
-        indices: result.indices,
+        indices: this.parseIndices(result.indices),
       }
     })
   }
@@ -391,6 +362,10 @@ export class PostgresIndexApi extends DatabaseIndexApi<Date> {
       updated_at: indexingArgs.updatedAt || now,
     }
   }
+
+  parseIndices(indices: Array<FieldsIndex>): Array<FieldsIndex> {
+    return indices ?? undefined // postgres automatically parses the result into a js object
+  }
 }
 
 /**
@@ -437,5 +412,9 @@ export class SqliteIndexApi extends DatabaseIndexApi<number> {
       created_at: asTimestamp(indexingArgs.createdAt) || now,
       updated_at: asTimestamp(indexingArgs.updatedAt) || now,
     }
+  }
+
+  parseIndices(indices: string): Array<FieldsIndex> {
+    return indices ? JSON.parse(indices) : undefined // sqlite returns indices as a string
   }
 }
