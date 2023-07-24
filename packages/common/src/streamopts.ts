@@ -82,6 +82,11 @@ export interface InternalOpts {
    * @private
    */
   throwIfStale?: boolean
+
+  /**
+   * If true, will not validate that CACAOs used to authorize commit signatures have not expired.
+   */
+  skipCacaoExpirationChecks?: boolean
 }
 
 /**
