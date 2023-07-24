@@ -11,7 +11,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, interval, from, concat, of, defer } from 'rxjs'
+import { Observable, interval, from, concat, timer, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -132,15 +132,13 @@ export class EthereumAnchorService implements AnchorService {
    */
   private _makeAnchorRequest(carFileReader: AnchorRequestCarFileReader): Observable<CASResponse> {
     return defer(() =>
-      from(
-        this.sendRequest(this.requestsApiEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/vnd.ipld.car',
-          },
-          body: carFileReader.carFile.bytes,
-        })
-      )
+      this.sendRequest(this.requestsApiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/vnd.ipld.car',
+        },
+        body: carFileReader.carFile.bytes,
+      })
     ).pipe(
       retry({
         delay: (error) => {
@@ -151,7 +149,7 @@ export class EthereumAnchorService implements AnchorService {
               }`
             )
           )
-          return interval(this.pollInterval)
+          return timer(this.pollInterval)
         },
       }),
       map((response) => {
