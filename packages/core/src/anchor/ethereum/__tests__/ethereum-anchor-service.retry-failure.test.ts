@@ -3,6 +3,9 @@ import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
 
 const MAX_FAILED_ATTEMPTS = 2
+const POLL_INTERVAL = 100 // ms
+const MAX_POLL_TIME = 500 // ms - to test if polling stops after this threshold
+
 let fetchAttemptNum = 0
 
 const casProcessingResponse = {
@@ -36,7 +39,11 @@ test('re-request an anchor till get a response', async () => {
   const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const errSpy = jest.spyOn(diagnosticsLogger, 'err')
-  const anchorService = new EthereumAnchorService('http://example.com', diagnosticsLogger, 100)
+  const anchorService = new EthereumAnchorService(
+    'http://example.com',
+    diagnosticsLogger,
+    POLL_INTERVAL
+  )
   let lastResponse: any
   const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
     if (response.status === AnchorRequestStatusName.PROCESSING) {
@@ -56,7 +63,11 @@ test('re-poll on fetch error', async () => {
   const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const errSpy = jest.spyOn(diagnosticsLogger, 'err')
-  const anchorService = new EthereumAnchorService('http://example.com', diagnosticsLogger, 100)
+  const anchorService = new EthereumAnchorService(
+    'http://example.com',
+    diagnosticsLogger,
+    POLL_INTERVAL
+  )
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
   let lastResponse: any
@@ -86,7 +97,12 @@ test('stop polling after max time', async () => {
   const { LoggerProvider } = await import('@ceramicnetwork/common')
   const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
-  const anchorService = new EthereumAnchorService('http://example.com', diagnosticsLogger, 100, 500)
+  const anchorService = new EthereumAnchorService(
+    'http://example.com',
+    diagnosticsLogger,
+    POLL_INTERVAL,
+    MAX_POLL_TIME
+  )
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
   let error
