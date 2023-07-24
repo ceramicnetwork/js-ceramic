@@ -52,3 +52,5 @@ Check out the [Development](./DEVELOPMENT.md) section to learn how to navigate t
 ## License
 
 Fully open source and dual-licensed under MIT and Apache 2.
+
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=268ff62e-d125-4cb9-9b28-d6e18ac93cea" />
