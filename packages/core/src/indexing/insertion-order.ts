@@ -91,7 +91,7 @@ const REVERSE_ORDER: Record<SortOrder, SortOrder> = {
 
 type ComparisonSign = '>' | '<'
 
-function getComparisonSign(order: SortOrder = 'ASC', reverse: boolean = false): ComparisonSign {
+function getComparisonSign(order: SortOrder = 'ASC', reverse = false): ComparisonSign {
   return order === 'ASC' ? (reverse ? '<' : '>') : reverse ? '>' : '<'
 }
 
