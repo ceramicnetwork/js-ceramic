@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.37.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.36.0...@ceramicnetwork/core@2.37.0-rc.0) (2023-07-13)
+
+
+### Features
+
+* CDB-2493 Adjust API to support model index changes ([#2844](https://github.com/ceramicnetwork/js-ceramic/issues/2844)) ([13e7a9f](https://github.com/ceramicnetwork/js-ceramic/commit/13e7a9f52fdb824d97966c4df88e3db1fcd16428))
+* **core:** CDB 2492 Add database indices for model fields ([#2845](https://github.com/ceramicnetwork/js-ceramic/issues/2845)) ([5ef6dba](https://github.com/ceramicnetwork/js-ceramic/commit/5ef6dbac58258718e3fb108c7fefedf899441591))
+* **core:** CDB-2535 Implement query filters for database queries ([#2842](https://github.com/ceramicnetwork/js-ceramic/issues/2842)) ([67f3de1](https://github.com/ceramicnetwork/js-ceramic/commit/67f3de190950db032cc68cd06e902d9fccda0d6e))
+* Send ipfs version in a keepalive message ([#2848](https://github.com/ceramicnetwork/js-ceramic/issues/2848)) ([8098cff](https://github.com/ceramicnetwork/js-ceramic/commit/8098cff5b1bcd71a407c09db4b1cf00849fb9590))
+
+
+
+
+
 # [2.36.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.36.0-rc.0...@ceramicnetwork/core@2.36.0) (2023-07-12)
 
 **Note:** Version bump only for package @ceramicnetwork/core
