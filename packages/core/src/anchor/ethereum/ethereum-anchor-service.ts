@@ -1,6 +1,4 @@
 import { CID } from 'multiformats/cid'
-import * as providers from '@ethersproject/providers'
-import lru from 'lru_map'
 import {
   CeramicApi,
   AnchorService,
@@ -11,7 +9,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, interval, from, concat, timer, of, defer } from 'rxjs'
+import { Observable, interval, concat, timer, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -41,18 +39,19 @@ export class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string
   private readonly chainIdApiEndpoint: string
   private _chainId: string
-  private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger
   /**
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
   private readonly pollInterval: number
+  private readonly maxPollTime: number
   private readonly sendRequest: FetchRequest
 
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
+    maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
@@ -60,6 +59,7 @@ export class EthereumAnchorService implements AnchorService {
     this._logger = logger
     this.pollInterval = pollInterval
     this.sendRequest = sendRequest
+    this.maxPollTime = maxPollTime
   }
 
   /**
@@ -144,9 +144,7 @@ export class EthereumAnchorService implements AnchorService {
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId.toString()} at commit ${carFileReader.tip.toString()}: ${
-                error.message
-              }`
+              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
             )
           )
           return timer(this.pollInterval)
@@ -169,20 +167,33 @@ export class EthereumAnchorService implements AnchorService {
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
     const started = new Date().getTime()
-    const maxTime = started + MAX_POLL_TIME
+    const maxTime = started + this.maxPollTime
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
     const cidStream = { cid: tip, streamId }
 
+    const doPoll = defer(() => this.sendRequest(requestUrl)).pipe(
+      retry({
+        delay: (error) => {
+          this._logger.err(
+            new Error(
+              `Error connecting to CAS while polling for anchor ${streamId} at commit ${tip}: ${error.message}`
+            )
+          )
+          return timer(this.pollInterval)
+        },
+      })
+    )
+
     return interval(this.pollInterval).pipe(
-      concatMap(async () => {
+      concatMap(() => {
         const now = new Date().getTime()
         if (now > maxTime) {
           throw new Error('Exceeded max anchor polling time limit')
         } else {
-          const response = await this.sendRequest(requestUrl)
-          return this.parseResponse(cidStream, response)
+          return doPoll
         }
-      })
+      }),
+      map((response) => this.parseResponse(cidStream, response))
     )
   }
 
