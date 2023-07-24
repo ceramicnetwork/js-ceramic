@@ -60,15 +60,25 @@ test('re-poll on fetch error', async () => {
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
   let lastResponse: any
-  const subscription = anchorResponse$.subscribe((response) => {
-    if (response.status === AnchorRequestStatusName.PROCESSING) {
-      lastResponse = response
-      subscription.unsubscribe()
-    }
+  let nextCount = 0
+  let errorCount = 0
+  const subscription = anchorResponse$.subscribe({
+    next: (response) => {
+      nextCount += 1
+      if (response.status === AnchorRequestStatusName.PROCESSING) {
+        lastResponse = response
+        subscription.unsubscribe()
+      }
+    },
+    error: () => {
+      errorCount += 1
+    },
   })
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
   expect(errSpy).toBeCalledTimes(3)
+  expect(nextCount).toEqual(1)
+  expect(errorCount).toEqual(0)
 })
 
 test('stop polling after max time', async () => {
@@ -80,11 +90,19 @@ test('stop polling after max time', async () => {
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
   let error
+  let nextCount = 0
+  let errorCount = 0
   const subscription = anchorResponse$.subscribe({
+    next: () => {
+      nextCount += 1
+    },
     error: (e) => {
       error = e
+      errorCount += 1
     },
   })
   await whenSubscriptionDone(subscription)
   expect(String(error)).toEqual('Error: Exceeded max anchor polling time limit')
+  expect(errorCount).toEqual(1)
+  expect(nextCount).toBeGreaterThanOrEqual(3)
 })
