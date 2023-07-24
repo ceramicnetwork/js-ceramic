@@ -68,7 +68,10 @@ abstract class Cursor {
       cursor = { type: 'timestamp', id: input.stream_id, value: input.created_at }
     } else {
       // Use custom content fields
-      const content = JSON.parse(input.stream_content)
+      const content =
+        typeof input.stream_content === 'string'
+          ? JSON.parse(input.stream_content)
+          : input.stream_content
       cursor = { type: 'content', id: input.stream_id, value: {} }
       for (const key of orderByKeys) {
         if (content[key] != null) {
@@ -241,13 +244,12 @@ export class InsertionOrder {
       })
     } else {
       // Paginate using previous values of custom fields
-      for (const [key, prevValue] of Object.entries(cursor.value)) {
+      for (const [key, value] of Object.entries(cursor.value)) {
         const field = contentKey(key)
         const sign = getComparisonSign(sorting[key], isReverseOrder)
-        const value = JSON.stringify(prevValue)
         builder = builder.where((qb) => {
-          qb.whereRaw(`${field} ${sign} ${value}`) // strict next value
-            .orWhereRaw(`${field} = ${value}`) // or current value
+          qb.whereRaw(`${field} ${sign} ?`, [value]) // strict next value
+            .orWhereRaw(`${field} = ?`, [value]) // or current value
             .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker
         })
       }
