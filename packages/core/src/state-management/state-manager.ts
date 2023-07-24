@@ -275,7 +275,7 @@ export class StateManager {
     state$: RunningState,
     tip: CID,
     anchorCommit: CID,
-    witnessCAR: CAR
+    witnessCAR: CAR | undefined
   ): Promise<void> {
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
@@ -283,7 +283,10 @@ export class StateManager {
       remainingRetries--
     ) {
       try {
-        await this.dispatcher.importCAR(witnessCAR)
+        if (witnessCAR) {
+          await this.dispatcher.importCAR(witnessCAR)
+        }
+
         await this.executionQ.forStream(state$.id).run(async () => {
           const applied = await this._handleTip(state$, anchorCommit)
           if (applied) {
