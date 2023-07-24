@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.27.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.27.0-rc.0...@ceramicnetwork/http-client@2.27.0-rc.1) (2023-07-24)
+
+
+### Features
+
+* add metrics for caching and syncing ([#2866](https://github.com/ceramicnetwork/js-ceramic/issues/2866)) ([1c3118b](https://github.com/ceramicnetwork/js-ceramic/commit/1c3118bb131dfe395cc49e755eaa1c01dadbbbfb))
+* Add scarf ([#2870](https://github.com/ceramicnetwork/js-ceramic/issues/2870)) ([1c2efa0](https://github.com/ceramicnetwork/js-ceramic/commit/1c2efa0b2db3a74fd64b49d4924fe5eb3c74d1fa))
+
+
+
+
+
 # [2.27.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.26.0...@ceramicnetwork/http-client@2.27.0-rc.0) (2023-07-13)
 
 
