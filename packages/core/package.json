@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.37.0-rc.2",
+  "version": "2.37.0-rc.3",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
