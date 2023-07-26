@@ -229,9 +229,16 @@ export class AuthenticatedEthereumAnchorService
     auth: AnchorServiceAuth,
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL
+    pollInterval: number = DEFAULT_POLL_INTERVAL,
+    maxPollTime: number = MAX_POLL_TIME
   ) {
-    super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest.bind(auth))
+    super(
+      anchorServiceUrl,
+      logger,
+      pollInterval,
+      maxPollTime,
+      auth.sendAuthenticatedRequest.bind(auth)
+    )
     this.auth = auth
   }
 
