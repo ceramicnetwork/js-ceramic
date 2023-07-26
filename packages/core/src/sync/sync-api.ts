@@ -320,7 +320,7 @@ export class SyncApi implements ISyncApi {
 
   // TODO (CDB-2106): move to SyncStatus Class
   async _logSyncStatus(): Promise<void> {
-    const syncStatus = this.syncStatus()
+    const syncStatus = await this.syncStatus()
     this.diagnosticsLogger.imp(
       `Logging state of running ComposeDB syncs\n ${JSON.stringify(syncStatus, null, 3)}`
     )
