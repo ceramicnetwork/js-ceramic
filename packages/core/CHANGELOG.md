@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.37.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.1...@ceramicnetwork/core@2.37.0-rc.2) (2023-07-26)
+
+
+### Bug Fixes
+
+* **core:** empty sync statuses ([#2872](https://github.com/ceramicnetwork/js-ceramic/issues/2872)) ([a3e78db](https://github.com/ceramicnetwork/js-ceramic/commit/a3e78dbd773d2e8d8fb0f10cea0ae47295ec41cd))
+* **core:** Fix CAS DID-auth ([#2873](https://github.com/ceramicnetwork/js-ceramic/issues/2873)) ([879f401](https://github.com/ceramicnetwork/js-ceramic/commit/879f401d5405f861226dd5be023eb58ff65d9120))
+
+
+
+
+
 # [2.37.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.0...@ceramicnetwork/core@2.37.0-rc.1) (2023-07-24)
 
 
