@@ -52,7 +52,7 @@ export const CompleteCASResponse = sparse(
     ...NotCompleteCASResponse.props,
     status: literal(AnchorRequestStatusName.COMPLETED),
     anchorCommit: AnchorCommitPresentation,
-    witnessCar: optional(uint8ArrayAsBase64.pipe(carAsUint8Array)),
+    witnessCar: uint8ArrayAsBase64.pipe(carAsUint8Array),
   },
   'CompleteCASResponse'
 )
