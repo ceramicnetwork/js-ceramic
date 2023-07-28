@@ -244,12 +244,21 @@ export class StateManager {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    this.logger.debug(`StateManager apply commit to stream ${streamId.toString()}`)
+
     const state$ = await this.load(streamId, opts)
+    this.logger.debug(`StateManager loaded state for stream ${streamId.toString()}`)
 
     return this.executionQ.forStream(streamId).run(async () => {
       const cid = await this.dispatcher.storeCommit(commit, streamId)
+      this.logger.debug(
+        `StateManager stored commit for stream ${streamId.toString()}, CID: ${cid.toString()}`
+      )
 
       await this._handleTip(state$, cid, opts)
+      this.logger.debug(
+        `StateManager handled tip for stream ${streamId.toString()}, CID: ${cid.toString()}`
+      )
       return state$
     })
   }
