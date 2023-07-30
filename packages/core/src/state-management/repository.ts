@@ -29,6 +29,7 @@ import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { ReconApi } from '../recon.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -40,6 +41,7 @@ export type RepositoryDependencies = {
   anchorService: AnchorService
   conflictResolution: ConflictResolution
   indexing: LocalIndexApi
+  recon: ReconApi
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
@@ -117,6 +119,11 @@ export class Repository {
     await this.pinStore.open(this.#deps.keyValueStore)
     await this.anchorRequestStore.open(this.#deps.keyValueStore)
     await this.index.init()
+    if (this.#deps.recon) {
+      const md = this.index.indexedModels()
+      const ids = md.map((idx) => idx.streamID.toString())
+      ids.forEach(this.#deps.recon.subscribe.bind(this.#deps.recon))
+    }
   }
 
   get pinStore(): PinStore {
@@ -146,7 +153,8 @@ export class Repository {
       (streamId, opts) => this.load(streamId, opts),
       // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
       this.indexStreamIfNeeded.bind(this),
-      deps.indexing
+      deps.indexing,
+      deps.recon
     )
   }
 
@@ -523,5 +531,6 @@ export class Repository {
     })
     await this.#deps.pinStore.close()
     await this.index.close()
+    if (this.#deps.recon) this.#deps.recon.close()
   }
 }

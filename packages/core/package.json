@@ -85,7 +85,8 @@
     "pg-boss": "^8.2.0",
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^4.0.3",
+    "zcgen-client": "^0.0.5"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.23.0-rc.0",

@@ -60,6 +60,7 @@ import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
 import { SyncJobData } from './sync/interfaces.js'
+import { ReconApi, ReconApiHTTP } from './recon.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -141,6 +142,8 @@ export interface CeramicConfig {
   useCentralizedPeerDiscovery?: boolean
   syncOverride?: SyncOptions
 
+  reconUrl?: string
+
   [index: string]: any // allow arbitrary properties
 }
 
@@ -160,6 +163,7 @@ export interface CeramicModules {
   repository: Repository
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
+  recon: ReconApi | null
 }
 
 /**
@@ -218,6 +222,7 @@ export class Ceramic implements CeramicApi {
   private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
+  readonly recon: ReconApi
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
@@ -292,6 +297,7 @@ export class Ceramic implements CeramicApi {
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
       indexing: localIndex,
+      recon: modules.recon,
     })
     this.syncApi = new SyncApi(
       {
@@ -305,7 +311,15 @@ export class Ceramic implements CeramicApi {
     )
     const pinApi = this._buildPinApi()
     this.repository.index.setSyncQueryApi(this.syncApi)
-    this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this), pinApi)
+    this.recon = modules.recon
+
+    this.admin = new LocalAdminApi(
+      localIndex,
+      this.syncApi,
+      this.nodeStatus.bind(this),
+      pinApi,
+      this.recon
+    )
   }
 
   get index(): LocalIndexApi {
@@ -537,6 +551,10 @@ export class Ceramic implements CeramicApi {
       maxQueriesPerSecond
     )
 
+    const recon = config.reconUrl
+      ? new ReconApiHTTP(config.reconUrl, config.networkName, repository, dispatcher, logger)
+      : null
+
     const params: CeramicParameters = {
       gateway: config.gateway,
       stateStoreDirectory: config.stateStoreDirectory,
@@ -557,6 +575,7 @@ export class Ceramic implements CeramicApi {
       repository,
       shutdownSignal,
       providersCache,
+      recon,
     }
 
     return [modules, params]

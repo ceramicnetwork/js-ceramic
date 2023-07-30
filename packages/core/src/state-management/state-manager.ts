@@ -20,12 +20,13 @@ import { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
-import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID, EventID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { ReconApi } from '../recon.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
@@ -65,7 +66,8 @@ export class StateManager {
       opts?: LoadOpts | CreateOpts
     ) => Promise<RunningState>,
     private readonly indexStreamIfNeeded,
-    private readonly _index: LocalIndexApi | undefined
+    private readonly _index: LocalIndexApi | undefined,
+    private readonly recon: ReconApi | undefined
   ) {
     this.carFactory.codecs.add(DAG_JOSE)
   }
@@ -206,6 +208,17 @@ export class StateManager {
 
   publishTip(state$: RunningState): void {
     this.dispatcher.publishTip(state$.id, state$.tip, state$.state.metadata.model)
+    if (this.recon) {
+      const eventId = EventID.create(
+        this.recon.networkName,
+        'model',
+        state$.state.metadata.controllers[0],
+        state$.id.cid,
+        state$.state.log.length,
+        state$.tip
+      )
+      this.recon.addEvent({ eventId: eventId.toString() })
+    }
   }
 
   /**

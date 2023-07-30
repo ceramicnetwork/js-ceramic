@@ -342,6 +342,12 @@ export class DaemonCeramicNodeConfig {
    */
   @jsonMember(Number, { name: 'stream-cache-limit' })
   streamCacheLimit?: number
+
+  /**
+   * If set, experimental recon is enabled and uses another node to run recon.
+   */
+  @jsonMember(String, { name: 'recon-url' })
+  reconUrl?: string
 }
 
 /**

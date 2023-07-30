@@ -85,7 +85,7 @@ export class RemoteAdminApi implements AdminApi {
   async startIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
     const body = {
-      models: modelsIDs.map((idx) => idx.toString())
+      models: modelsIDs.map((idx) => idx.toString()),
     }
     await this._fetchJson(this.getModelsUrl(), {
       method: 'post',
@@ -153,7 +153,7 @@ export class RemoteAdminApi implements AdminApi {
   async stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void> {
     const code = await this.generateCode()
     const body = {
-      models: modelsIDs.map((data) => data.toString())
+      models: modelsIDs.map((data) => data.toString()),
     }
     await this._fetchJson(this.getModelsUrl(), {
       method: 'delete',

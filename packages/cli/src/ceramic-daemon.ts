@@ -118,6 +118,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
+    reconUrl: opts.node.reconUrl,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
