@@ -46,7 +46,10 @@ export function indexNameFromTableName(tableName: string): string {
   return `idx_${tableName.substring(tableName.length - 10)}`
 }
 
-export function indices(tableName: string): TableIndices {
+/**
+ * Returns descriptions of the default system indices that are required on all MID tables.
+ */
+export function defaultIndices(tableName: string): TableIndices {
   const indexName = indexNameFromTableName(tableName)
 
   // index names with additional naming information should be less than
@@ -167,7 +170,7 @@ export async function createPostgresModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, function (table) {
-    const idx = indices(tableName)
+    const idx = defaultIndices(tableName)
 
     table
       .string('stream_id')
@@ -197,7 +200,7 @@ export async function createSqliteModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, (table) => {
-    const idx = indices(tableName)
+    const idx = defaultIndices(tableName)
 
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()

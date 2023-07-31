@@ -6,6 +6,7 @@ import {
   Context,
   CreateOpts,
   DiagnosticsLogger,
+  InternalOpts,
   LoadOpts,
   PinningOpts,
   PublishOpts,
@@ -29,6 +30,13 @@ import { Utils } from '../utils.js'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+
+const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
+const CACHE_HIT_MEMORY = 'cache_hit_memory'
+const CACHE_HIT_LOCAL = 'cache_hit_local'
+const CACHE_HIT_REMOTE = 'cache_hit_remote'
+const STREAM_SYNC = 'stream_sync'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -100,6 +108,7 @@ export class Repository {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
       }
+      Metrics.count(CACHE_EVICTED_MEMORY, 1)
       state$.complete()
     })
     this.updates$ = this.updates$.bind(this)
@@ -151,12 +160,17 @@ export class Repository {
   }
 
   private fromMemory(streamId: StreamID): RunningState | undefined {
-    return this.inmemory.get(streamId.toString())
+    const state = this.inmemory.get(streamId.toString())
+    if (state) {
+      Metrics.count(CACHE_HIT_MEMORY, 1)
+    }
+    return state
   }
 
   private async fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.#deps.pinStore.stateStore.load(streamId)
     if (streamState) {
+      Metrics.count(CACHE_HIT_LOCAL, 1)
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
       const storedRequest = await this.anchorRequestStore.load(streamId)
@@ -176,6 +190,7 @@ export class Repository {
     if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
+    Metrics.count(CACHE_HIT_REMOTE, 1)
     // Do not check for possible key revocation here, as we will do so later after loading the tip
     // (or learning that the genesis commit *is* the current tip), when we will have timestamp
     // information for when the genesis commit was anchored.
@@ -215,7 +230,7 @@ export class Repository {
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
    */
-  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  async load(streamId: StreamID, opts: LoadOpts & InternalOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
     const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
@@ -227,6 +242,7 @@ export class Repository {
             return [streamState$, alreadySynced]
           } else {
             await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
+            Metrics.count(STREAM_SYNC, 1)
             return [streamState$, true]
           }
         }
@@ -252,6 +268,7 @@ export class Repository {
             opts.syncTimeoutSeconds * 1000,
             fromMemoryOrStore?.tip
           )
+          Metrics.count(STREAM_SYNC, 1)
           return [fromNetwork$, true]
         }
         default:
@@ -259,7 +276,10 @@ export class Repository {
       }
     })
 
-    StreamUtils.checkForCacaoExpiration(state$.state)
+    if (!opts.skipCacaoExpirationChecks) {
+      StreamUtils.checkForCacaoExpiration(state$.state)
+    }
+
     if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)
     }
@@ -277,8 +297,17 @@ export class Repository {
     // for the stream than is ultimately necessary, but doing so increases the chances that we
     // detect that the CommitID specified is rejected by the conflict resolution rules due to
     // conflict with the stream's canonical branch of history.
-    const base$ = await this.load(commitId.baseID, opts)
-    return this.stateManager.atCommit(base$, commitId)
+    // We also skip CACAO expiration checking during this initial load as its possible
+    // that the CommitID we are being asked to load may in fact be an anchor commit with
+    // the timestamp information that will reveal to us that the CACAO didn't actually expire.
+    const optsSkippingCACAOChecks = { ...opts, skipCacaoExpirationChecks: true }
+    const base$ = await this.load(commitId.baseID, optsSkippingCACAOChecks)
+    const stateAtCommit = await this.stateManager.atCommit(base$, commitId)
+
+    // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
+    StreamUtils.checkForCacaoExpiration(stateAtCommit.state)
+
+    return stateAtCommit
   }
 
   /**

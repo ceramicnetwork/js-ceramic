@@ -469,6 +469,7 @@ export class Ceramic implements CeramicApi {
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
         anchorServiceUrl !== 'https://cas-internal.3boxlabs.com' &&
+        anchorServiceUrl !== 'https://cas-direct.3boxlabs.com' &&
         anchorServiceUrl !== DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
       ) {
         throw new Error('Cannot use custom anchor service on Ceramic mainnet')
