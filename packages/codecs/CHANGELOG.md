@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.5.0-rc.0...@ceramicnetwork/codecs@1.5.0) (2023-07-31)
+
+
+### Reverts
+
+* Revert "chore: Make CAR file required (#2849)" ([cbae060](https://github.com/ceramicnetwork/js-ceramic/commit/cbae060a6f5642ff098566c35d7d6bd03c5a5959)), closes [#2849](https://github.com/ceramicnetwork/js-ceramic/issues/2849)
+
+
+
+
+
 # [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.4.0...@ceramicnetwork/codecs@1.5.0-rc.0) (2023-07-13)
 
 **Note:** Version bump only for package @ceramicnetwork/codecs
