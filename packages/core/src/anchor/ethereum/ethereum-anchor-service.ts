@@ -91,9 +91,7 @@ export class EthereumAnchorService implements AnchorService {
    */
   requestAnchor(carFile: CAR): Observable<CASResponse> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(
-      this._announcePending(cidStreamPair),
       this._makeAnchorRequest(carFileReader),
       this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
     ).pipe(
@@ -115,16 +113,6 @@ export class EthereumAnchorService implements AnchorService {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return [this._chainId]
-  }
-
-  private _announcePending(cidStream: CidAndStream): Observable<CASResponse> {
-    return of({
-      id: '',
-      status: AnchorRequestStatusName.PENDING,
-      streamId: cidStream.streamId,
-      cid: cidStream.cid,
-      message: 'Sending anchoring request',
-    })
   }
 
   /**

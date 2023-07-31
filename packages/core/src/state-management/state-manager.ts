@@ -483,6 +483,15 @@ export class StateManager {
               this.logger.verbose(
                 `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
               )
+
+              // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
+              // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
+              // If this is not the tip, we will remove the stream from the anchor request store ONLY if there are no outstanding anchor requests for the stream.
+              const isTip = asr.cid.equals(state$.tip)
+              if (isTip || !this._tipHasProcessingAnchorRequest(state$)) {
+                await this.anchorRequestStore.remove(state$.id)
+              }
+
               stopSignal.next()
               return
             }

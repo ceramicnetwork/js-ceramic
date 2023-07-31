@@ -924,7 +924,6 @@ describe('anchor', () => {
         await expect(whenSubscriptionDone(firstAnchorResponseSub)).resolves.not.toThrow()
         expect(firstAnchorResponseSub.closed).toBeTruthy()
 
-        // SERGEY: the stream should still be in the anchor request store so this is very wrong
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
