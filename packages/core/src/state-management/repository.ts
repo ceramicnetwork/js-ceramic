@@ -333,8 +333,10 @@ export class Repository {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
     const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
     await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+    this.logger.verbose(`Repository applied write options to stream ${streamId.toString()}`)
     return state$
   }
 

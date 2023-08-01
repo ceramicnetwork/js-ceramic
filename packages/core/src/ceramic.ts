@@ -739,12 +739,10 @@ export class Ceramic implements CeramicApi {
       throw new Error('Writes to streams are not supported in gateway mode')
     }
 
+    const id = normalizeStreamID(streamId)
+    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.applyCommit(
-      normalizeStreamID(streamId),
-      commit,
-      opts as CreateOpts
-    )
+    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
 
     const stream = streamFromState<T>(
       this.context,
@@ -754,6 +752,7 @@ export class Ceramic implements CeramicApi {
     )
 
     await this.repository.indexStreamIfNeeded(state$)
+    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
 
     return stream
   }
@@ -786,6 +785,9 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride }
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const streamId = new StreamID(type, genesisCid)
+    this._logger.verbose(
+      `Created stream from genesis, StreamID: ${streamId.toString()}, genesis CID: ${genesisCid.toString()}`
+    )
     const state$ = await this.repository.applyCreateOpts(streamId, opts)
     const stream = streamFromState<T>(
       this.context,
@@ -793,6 +795,7 @@ export class Ceramic implements CeramicApi {
       state$.value,
       this.repository.updates$
     )
+    this._logger.verbose(`Created stream ${streamId.toString()} from state`)
 
     await this.repository.indexStreamIfNeeded(state$)
 
