@@ -133,8 +133,8 @@ function safeSend(provider: any, method: string, params?: Array<any>): Promise<a
 
   if (provider.request) {
     return provider.request({ method, params }).then(
-      (response) => response,
-      (error) => {
+      (response: any) => response,
+      (error: any) => {
         throw error
       }
     )
@@ -142,7 +142,7 @@ function safeSend(provider: any, method: string, params?: Array<any>): Promise<a
     const sendFunc = (provider.sendAsync ? provider.sendAsync : provider.send).bind(provider)
     const request = encodeRpcMessage(method, params)
     return new Promise((resolve, reject) => {
-      sendFunc(request, (error, response) => {
+      sendFunc(request, (error: any, response: any) => {
         if (error) reject(error)
 
         if (response.error) {
