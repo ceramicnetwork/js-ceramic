@@ -1,6 +1,6 @@
 import mergeOpts from 'merge-options'
-import * as ipfsClient from 'ipfs-http-client'
-import { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
+import { create as createIpfsHttpClient, Options } from 'ipfs-http-client'
+import type { IpfsApi } from '@ceramicnetwork/common'
 import { IpfsMode } from './daemon-config.js'
 import * as http from 'http'
 import * as https from 'https'
@@ -11,14 +11,12 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
 export class IpfsConnectionFactory {
-  static async buildIpfsConnection(
-    mode: IpfsMode,
-    network: string,
-    logger: DiagnosticsLogger,
-    ipfsEndpoint?: string
-  ): Promise<IpfsApi> {
+  static async buildIpfsConnection(mode: IpfsMode, ipfsEndpoint?: string): Promise<IpfsApi> {
     if (mode == IpfsMode.REMOTE) {
-      return ipfsClient.create({
+      if (!ipfsEndpoint) {
+        throw new Error(`No IPFS endpoint provided`)
+      }
+      return createIpfsHttpClient({
         url: ipfsEndpoint,
         timeout: IPFS_GET_TIMEOUT,
         agent: this.ipfsHttpAgent(ipfsEndpoint),
@@ -40,14 +38,12 @@ export class IpfsConnectionFactory {
     }
   }
 
-  private static async createGoIPFS(
-    overrideConfig: Partial<ipfsClient.Options> = {}
-  ): Promise<IpfsApi> {
+  private static async createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
     const swarmPort = 4011
     const apiPort = 5011
     const gatewayPort = 9011
     const defaultConfig = {
-      repo: process.env.IPFS_PATH || '~/.goipfs',
+      repo: process.env['IPFS_PATH'] || '~/.goipfs',
       config: {
         Pubsub: {
           Enabled: true,

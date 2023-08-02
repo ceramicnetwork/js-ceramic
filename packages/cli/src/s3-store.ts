@@ -12,11 +12,11 @@ const MAX_LOAD_RPS = 4000
 const DEFAULT_S3_STORE_USE_CASE_NAME = 'default'
 
 class S3StoreMap {
-  readonly #storeRoot
-  readonly #defaultLocation
+  readonly #storeRoot: string
+  readonly #defaultLocation: string
   readonly networkName: string
   readonly #map: Map<string, LevelUp.LevelUp>
-  readonly #customEndpoint: string
+  readonly #customEndpoint: string | undefined
 
   constructor(networkName: string, bucketName: string, customEndpoint?: string) {
     this.networkName = networkName
@@ -26,7 +26,7 @@ class S3StoreMap {
     this.#customEndpoint = customEndpoint
   }
 
-  createStore(useCaseName = DEFAULT_S3_STORE_USE_CASE_NAME) {
+  createStore(useCaseName = DEFAULT_S3_STORE_USE_CASE_NAME): LevelUp.LevelUp {
     // Different S3 stores live at different urls (named based use-cases with the default being <bucketName + '/ceramic/' + this.networkName + '/state-store'>
     // and others being `<bucketName + '/ceramic/' + this.networkName + '/state-store-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
     const fullLocation = this.getFullLocation(useCaseName)
@@ -43,6 +43,7 @@ class S3StoreMap {
 
     const levelUp = new LevelUp(levelDown)
     this.#map.set(fullLocation, levelUp)
+    return levelUp
   }
 
   private getFullLocation(useCaseName = DEFAULT_S3_STORE_USE_CASE_NAME): string {
@@ -53,11 +54,10 @@ class S3StoreMap {
     }
   }
 
-  async get(useCaseName?: string): Promise<LevelUp.LevelUp> {
-    if (!this.#map.get(this.getFullLocation(useCaseName))) {
-      await this.createStore(useCaseName)
-    }
-    return this.#map.get(this.getFullLocation(useCaseName))
+  get(useCaseName?: string): LevelUp.LevelUp {
+    const location = this.#map.get(this.getFullLocation(useCaseName))
+    if (location) return location
+    return this.createStore(useCaseName)
   }
 
   values(): IterableIterator<LevelUp.LevelUp> {
@@ -83,7 +83,7 @@ export class S3Store implements IKVStore {
   }
 
   async close(useCaseName?: string): Promise<void> {
-    const store = await this.#storeMap.get(useCaseName)
+    const store = this.#storeMap.get(useCaseName)
     await store.close()
   }
 
@@ -96,11 +96,11 @@ export class S3Store implements IKVStore {
   }
 
   async exists(key: string, useCaseName?: string): Promise<boolean> {
-    const store = await this.#storeMap.get(useCaseName)
+    const store = this.#storeMap.get(useCaseName)
     try {
       const value = await store.get(key)
       return value !== undefined
-    } catch (e) {
+    } catch (e: any) {
       if (/Key not found in database/.test(e.toString())) {
         return false
       } else {
@@ -110,7 +110,7 @@ export class S3Store implements IKVStore {
   }
 
   async find(params?: StoreSearchParams): Promise<Array<IKVStoreFindResult>> {
-    const store = await this.#storeMap.get(params?.useCaseName)
+    const store = this.#storeMap.get(params?.useCaseName)
     const options = {
       limit: params?.limit,
     }
@@ -122,7 +122,7 @@ export class S3Store implements IKVStore {
   }
 
   async findKeys(params?: StoreSearchParams): Promise<Array<string>> {
-    const store = await this.#storeMap.get(params?.useCaseName)
+    const store = this.#storeMap.get(params?.useCaseName)
     const bufArray = await toArray(
       store.createKeyStream({
         limit: params?.limit,
@@ -133,19 +133,19 @@ export class S3Store implements IKVStore {
 
   async get(key: string, useCaseName?: string): Promise<any> {
     return this.#loadingLimit.add(async () => {
-      const store = await this.#storeMap.get(useCaseName)
+      const store = this.#storeMap.get(useCaseName)
       const value = await store.get(key)
       return JSON.parse(value)
     })
   }
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
-    const store = await this.#storeMap.get(useCaseName)
-    return await store.put(key, JSON.stringify(value))
+    const store = this.#storeMap.get(useCaseName)
+    await store.put(key, JSON.stringify(value))
   }
 
   async del(key: string, useCaseName?: string): Promise<void> {
-    const store = await this.#storeMap.get(useCaseName)
-    return await store.del(key)
+    const store = this.#storeMap.get(useCaseName)
+    await store.del(key)
   }
 }

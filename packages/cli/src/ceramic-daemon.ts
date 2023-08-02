@@ -115,7 +115,9 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     ipfsPinningEndpoints: opts.ipfs.pinningEndpoints,
     networkName: opts.network.name,
     pubsubTopic: opts.network.pubsubTopic,
-    syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
+    syncOverride: opts.node.syncOverride
+      ? SYNC_OPTIONS_MAP[opts.node.syncOverride as keyof typeof SYNC_OPTIONS_MAP]
+      : undefined,
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
   }
@@ -132,7 +134,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
  * @param opts
  */
 function parseQueryObject(opts: Record<string, any>): Record<string, string | boolean | number> {
-  const typedOpts = {}
+  const typedOpts: Record<string, any> = {}
   for (const [key, value] of Object.entries(opts)) {
     if (typeof value == 'string') {
       if (value[0] == '{') {
@@ -152,22 +154,6 @@ function parseQueryObject(opts: Record<string, any>): Record<string, string | bo
     }
   }
   return typedOpts
-}
-
-/**
- * Converts 'sync' option sent as a bool by outdated http-clients to the current format of an enum.
- * The old behaviors don't map directly to the new behaviors, so we take the best approximation.
- * TODO remove this once we no longer need to support clients older than v1.0.0
- * @param opts
- */
-function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
-  if (typeof opts?.sync == 'boolean') {
-    if (opts.sync) {
-      opts.sync = SyncOptions.SYNC_ALWAYS
-    } else {
-      opts.sync = SyncOptions.PREFER_CACHE
-    }
-  }
 }
 
 /**
@@ -215,9 +201,8 @@ function makeResolvers(
 
 /**
  * Helper function: Parse provided port and verify validity or exit process
- * @param inPort
  */
-function validatePort(inPort) {
+function validatePort(inPort: number | null | undefined): null | undefined | number {
   const validPort = Number(inPort)
   if (inPort == null) {
     return inPort
@@ -247,13 +232,20 @@ type AdminAPIJWSContents = {
   modelData?: Array<AdminAPIJWSModelData>
 }
 
-type AdminApiJWSValidationResult = {
-  kid?: string
-  code?: string
-  error?: string
+type AdminApiJWSValidationError = {
+  kind: 'error'
+  error: string
   statusCode?: number
+}
+
+type AdminApiJWSValidationSuccess = {
+  kind: 'success'
+  kid: string
+  code: string
   onSuccess?: () => Promise<void>
 }
+
+type AdminApiJWSValidationResult = AdminApiJWSValidationSuccess | AdminApiJWSValidationError
 
 type AdminApiMutationMethod = AdminApiModelIdsMutationMethod | AdminApiModelDataMutationMethod
 
@@ -302,7 +294,7 @@ export class CeramicDaemon {
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
-    this.registerAPIPaths(this.app, opts.node?.gateway)
+    this.registerAPIPaths(this.app, Boolean(opts.node?.gateway))
 
     this.app.use(errorHandler(this.diagnosticsLogger))
   }
@@ -324,12 +316,7 @@ export class CeramicDaemon {
   static async create(opts: DaemonConfig): Promise<CeramicDaemon> {
     const ceramicConfig = makeCeramicConfig(opts)
 
-    const ipfs = await IpfsConnectionFactory.buildIpfsConnection(
-      opts.ipfs.mode,
-      opts.network?.name,
-      ceramicConfig.loggerProvider.getDiagnosticsLogger(),
-      opts.ipfs?.host
-    )
+    const ipfs = await IpfsConnectionFactory.buildIpfsConnection(opts.ipfs.mode!, opts.ipfs?.host)
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
@@ -351,7 +338,7 @@ export class CeramicDaemon {
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3Store = new S3Store(
         params.networkOptions.name,
-        opts.stateStore?.s3Bucket,
+        opts.stateStore?.s3Bucket || '',
         opts.stateStore?.s3Endpoint
       )
 
@@ -359,7 +346,7 @@ export class CeramicDaemon {
     }
 
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic, ceramicConfig, opts) }
-    let provider: DIDProvider
+    let provider: DIDProvider | undefined = undefined
 
     if (opts.node.sensitive_privateSeedUrl()) {
       let seed: Uint8Array
@@ -479,13 +466,14 @@ export class CeramicDaemon {
 
   _verifyAndDiscardAdminCode(code: string) {
     const now = new Date().getTime()
-    if (!this.adminCodeCache.get(code)) {
+    const adminCode = this.adminCodeCache.get(code)
+    if (!adminCode) {
       this.diagnosticsLogger.log(
         LogStyle.warn,
         `Unauthorized access attempt to Admin Api with admin code missing from registry`
       )
       throw Error(`Unauthorized access: invalid/already used admin code`)
-    } else if (now - this.adminCodeCache.get(code) > ADMIN_CODE_EXPIRATION_TIMEOUT) {
+    } else if (now - adminCode > ADMIN_CODE_EXPIRATION_TIMEOUT) {
       this.diagnosticsLogger.log(
         LogStyle.warn,
         `Unauthorized access attempt to Admin Api with expired admin code`
@@ -545,7 +533,6 @@ export class CeramicDaemon {
    */
   async createDocFromGenesis(req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
-    upconvertLegacySyncOption(docOpts)
     const type = StreamType.codeByName(doctype)
     const doc = await this.ceramic.createStreamFromGenesis(
       type,
@@ -577,7 +564,7 @@ export class CeramicDaemon {
    * Request stream to be anchored
    */
   async requestAnchor(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid)
+    const streamId = StreamID.fromString(req.params['streamid']!)
     const opts = req.body.opts
     const anchorStatus = await this.ceramic.requestAnchor(streamId, opts)
     res.json({ streamId: streamId.toString(), anchorStatus })
@@ -593,7 +580,6 @@ export class CeramicDaemon {
    */
   async createReadOnlyDocFromGenesis(req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
-    upconvertLegacySyncOption(docOpts)
     const type = StreamType.codeByName(doctype)
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
     const doc = await this.ceramic.createStreamFromGenesis(
@@ -631,7 +617,7 @@ export class CeramicDaemon {
    */
   async state(req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
-    const stream = await this.ceramic.loadStream(req.params.streamid, opts)
+    const stream = await this.ceramic.loadStream(req.params['streamid']!, opts)
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
@@ -642,8 +628,7 @@ export class CeramicDaemon {
    */
   async stateOld(req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
-    upconvertLegacySyncOption(opts)
-    const doc = await this.ceramic.loadStream(req.params.docid, opts)
+    const doc = await this.ceramic.loadStream(req.params['docid']!, opts)
     res.json({ docId: doc.id.toString(), state: StreamUtils.serializeState(doc.state) })
   }
 
@@ -651,7 +636,7 @@ export class CeramicDaemon {
    * Get all document commits
    */
   async commits(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const streamId = StreamID.fromString(req.params['streamid'] || req.params['docid'] || '')
     const commits = await this.ceramic.loadStreamCommits(streamId)
     const serializedCommits = commits.map((r: any) => {
       return {
@@ -732,8 +717,8 @@ export class CeramicDaemon {
     return { count }
   }
 
-  private async _parseAdminApiJWS(jws: string | undefined): Promise<AdminAPIJWSContents> {
-    const result = await this.ceramic.did.verifyJWS(jws)
+  private async _parseAdminApiJWS(jws: string): Promise<AdminAPIJWSContents> {
+    const result = await this.ceramic.did!.verifyJWS(jws)
     return {
       kid: result.kid,
       code: result.payload.code,
@@ -748,20 +733,24 @@ export class CeramicDaemon {
     jws: string | undefined,
     successCallback?: AdminApiMutationMethod
   ): Promise<AdminApiJWSValidationResult> {
-    if (!jws) return { error: `Missing authorization jws` }
+    if (!jws) return { kind: 'error', error: `Missing authorization jws` }
 
     let parsedJWS
     try {
       parsedJWS = await this._parseAdminApiJWS(jws)
-    } catch (e) {
-      return { error: `Error while processing the authorization header ${e.message}` }
+    } catch (e: any) {
+      return {
+        kind: 'error',
+        error: `Error while processing the authorization header ${e.message}`,
+      }
     }
     if (parsedJWS.requestPath !== basePath) {
       return {
+        kind: 'error',
         error: `The jws block contains a request path (${parsedJWS.requestPath}) that doesn't match the request (${basePath})`,
       }
     } else if (!parsedJWS.code) {
-      return { error: 'Admin code is missing from the the jws block' }
+      return { kind: 'error', error: 'Admin code is missing from the the jws block' }
     } else {
       let onSuccess
       if (successCallback) {
@@ -775,6 +764,7 @@ export class CeramicDaemon {
             })
             if (!modelData || modelData.length == 0) {
               return {
+                kind: 'error',
                 statusCode: StatusCodes.BAD_REQUEST,
                 error: `Expected modelData to be present and contain at least one ModelData element, e.g. '{ streamID: <id>}': ${JSON.stringify(
                   parsedJWS
@@ -790,6 +780,7 @@ export class CeramicDaemon {
             )
             if (!models || models.length == 0) {
               return {
+                kind: 'error',
                 statusCode: StatusCodes.BAD_REQUEST,
                 error: `Expected models to be present and contain at least one StreamID: : ${JSON.stringify(
                   parsedJWS
@@ -802,6 +793,7 @@ export class CeramicDaemon {
         }
       }
       return {
+        kind: 'success',
         kid: parsedJWS.kid,
         code: parsedJWS.code,
         onSuccess,
@@ -820,7 +812,7 @@ export class CeramicDaemon {
       req.body.jws,
       successCallback
     )
-    if (jwsValidation.error) {
+    if (jwsValidation.kind === 'error') {
       if (jwsValidation.statusCode) {
         res.status(jwsValidation.statusCode)
       } else {
@@ -834,11 +826,13 @@ export class CeramicDaemon {
     try {
       this._verifyAndDiscardAdminCode(jwsValidation.code)
       this._verifyActingDid(jwsValidation.kid)
-    } catch (e) {
+    } catch (e: any) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
     }
 
-    await jwsValidation.onSuccess()
+    if (jwsValidation.onSuccess) {
+      await jwsValidation.onSuccess()
+    }
     res.status(StatusCodes.OK).json({ result: 'success' })
   }
 
@@ -857,7 +851,7 @@ export class CeramicDaemon {
     }
   }
 
-  async getAdminCode(req: Request, res: Response): Promise<void> {
+  async getAdminCode(_req: Request, res: Response): Promise<void> {
     res.json({ code: await this.generateAdminCode() })
   }
 
@@ -885,14 +879,14 @@ export class CeramicDaemon {
       return false
     }
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString)
-    if (jwsValidation.error) {
+    if (jwsValidation.kind === 'error') {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
       return false
     }
     try {
       this._verifyAndDiscardAdminCode(jwsValidation.code)
       this._verifyActingDid(jwsValidation.kid)
-    } catch (e) {
+    } catch (e: any) {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
     }
     return true
@@ -943,13 +937,13 @@ export class CeramicDaemon {
       return
     }
     const jwsValidation = await this._validateAdminApiJWS(req.baseUrl, jwsString)
-    if (jwsValidation.error) {
+    if (jwsValidation.kind === 'error') {
       res.status(StatusCodes.UNAUTHORIZED).json({ error: jwsValidation.error })
     } else {
       try {
         this._verifyAndDiscardAdminCode(jwsValidation.code)
         this._verifyActingDid(jwsValidation.kid)
-      } catch (e) {
+      } catch (e: any) {
         res.status(StatusCodes.UNAUTHORIZED).json({ error: e.message })
       }
       next()
@@ -992,7 +986,6 @@ export class CeramicDaemon {
   async applyCommit(req: Request, res: Response): Promise<void> {
     const { docId, commit, docOpts } = req.body
     const opts = req.body.opts || docOpts
-    upconvertLegacySyncOption(opts)
 
     const streamId = req.body.streamId || docId
     if (!(streamId && commit)) {
@@ -1029,7 +1022,7 @@ export class CeramicDaemon {
     })
 
     const results = await this.ceramic.multiQuery(queries, timeout)
-    const response = Object.entries(results).reduce((acc, e) => {
+    const response = Object.entries(results).reduce<Record<string, any>>((acc, e) => {
       const [k, v] = e
       acc[k] = StreamUtils.serializeState(v.state)
       return acc
@@ -1042,7 +1035,7 @@ export class CeramicDaemon {
    */
   async content(req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
-    const stream = await this.ceramic.loadStream(req.params.streamid, opts)
+    const stream = await this.ceramic.loadStream(req.params['streamid'] || '', opts)
     res.json(stream.content)
   }
 
@@ -1050,7 +1043,7 @@ export class CeramicDaemon {
    * Pin stream
    */
   async pinStream(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const streamId = StreamID.fromString(req.params['streamid'] || req.params['docid'] || '')
     const { force } = req.body
     await this.ceramic.admin.pin.add(streamId, force)
     Metrics.count(STREAM_PINNED, 1)
@@ -1065,7 +1058,7 @@ export class CeramicDaemon {
    * Unpin stream
    */
   async unpinStream(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const streamId = StreamID.fromString(req.params['streamid'] || req.params['docid'] || '')
     const { opts } = req.body
     await this.ceramic.admin.pin.rm(streamId, opts)
     Metrics.count(STREAM_UNPINNED, 1)
@@ -1080,9 +1073,10 @@ export class CeramicDaemon {
    * List pinned streams
    */
   async listPinned(req: Request, res: Response): Promise<void> {
-    let streamId: StreamID
-    if (req.params.streamid || req.params.docid) {
-      streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    let streamId: StreamID | undefined = undefined
+    const streamIdParam = req.params['streamid'] || req.params['docid']
+    if (streamIdParam) {
+      streamId = StreamID.fromString(streamIdParam)
     }
     const pinnedStreamIds = []
     const iterator = await this.ceramic.admin.pin.ls(streamId)
@@ -1096,25 +1090,25 @@ export class CeramicDaemon {
     res.json({ pinnedStreamIds, pinnedDocIds: pinnedStreamIds })
   }
 
-  async _notSupported(req: Request, res: Response): Promise<void> {
+  async _notSupported(_req: Request, res: Response): Promise<void> {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: 'Method not supported by read only Ceramic Gateway' })
   }
 
-  async _pinNotSupported(req: Request, res: Response): Promise<void> {
+  async _pinNotSupported(_req: Request, res: Response): Promise<void> {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ error: 'Method not supported: pin requests have moved to the admin API /admin/pins' })
   }
 
-  async _pinWarningOk(req: Request, res: Response): Promise<void> {
+  async _pinWarningOk(_req: Request, res: Response): Promise<void> {
     res.status(StatusCodes.OK).json({
       warn: 'Pin requests have moved to the admin API /admin/pins, please make requests there. Any requests here will not pin, API returns 200 for tooling backwards compatibility, and will be removed soon.',
     })
   }
 
-  async getSupportedChains(req: Request, res: Response): Promise<void> {
+  async getSupportedChains(_req: Request, res: Response): Promise<void> {
     const supportedChains = await this.ceramic.getSupportedChains()
     res.json({ supportedChains })
   }
@@ -1124,7 +1118,9 @@ export class CeramicDaemon {
    */
   async close(): Promise<void> {
     await new Promise<void>((resolve, reject) => {
-      if (!this.server) resolve()
+      if (!this.server) {
+        return resolve()
+      }
       this.server.close((err) => {
         if (err) {
           reject(err)

@@ -1,6 +1,7 @@
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import type { NextFunction, Request, Response } from 'express'
 
-export function instrumentRequests(req, res, next) {
+export function instrumentRequests(req: Request, _res: Response, next: NextFunction) {
   // When we move to API tokens, we will need to gather and map this token
   // to identify the partner
   // const token = req.header("authorization")

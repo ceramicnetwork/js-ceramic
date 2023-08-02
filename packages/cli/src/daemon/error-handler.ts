@@ -14,8 +14,8 @@ export function isConnectionAborted(error: any): boolean {
  * Generic error handling middleware for the daemon.
  */
 export function errorHandler(logger: DiagnosticsLogger): ErrorRequestHandler {
-  return (err: Error, req: Request, res: Response, next: NextFunction) => {
-    res.locals.error = err // Allow other middlewares access the error
+  return (err: Error, _req: Request, res: Response, next: NextFunction) => {
+    res.locals['error'] = err // Allow other middlewares access the error
     if (isConnectionAborted(err)) {
       logger.err(`An HTTP client abruptly closed a request: ${err.message}`)
     } else {

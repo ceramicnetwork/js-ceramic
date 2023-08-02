@@ -131,7 +131,7 @@ export class CeramicCliUtils {
     logToFiles: boolean,
     logDirectory: string,
     metricsExporterEnabled: boolean,
-    collectorHost: string,
+    _collectorHost: string,
     network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
@@ -144,92 +144,93 @@ export class CeramicCliUtils {
     const config = await this._loadDaemonConfig(configFilepath)
 
     // Environment variables override values from config file
-    if (process.env.CERAMIC_INDEXING_DB_URI)
-      config.indexing.db = process.env.CERAMIC_INDEXING_DB_URI
-    if (process.env.CERAMIC_METRICS_EXPORTER_ENABLED)
-      config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
-    if (process.env.COLLECTOR_HOSTNAME)
-      config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
-    if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL) {
-      config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
+    if (process.env['CERAMIC_INDEXING_DB_URI']) {
+      config.indexing!.db = process.env['CERAMIC_INDEXING_DB_URI']
+    }
+
+    if (process.env['CERAMIC_METRICS_EXPORTER_ENABLED'])
+      config.metrics.metricsExporterEnabled =
+        process.env['CERAMIC_METRICS_EXPORTER_ENABLED'] == 'true'
+    if (process.env['COLLECTOR_HOSTNAME'])
+      config.metrics.collectorHost = process.env['COLLECTOR_HOSTNAME']
+    if (process.env['CERAMIC_NODE_PRIVATE_SEED_URL']) {
+      config.node.privateSeedUrl = process.env['CERAMIC_NODE_PRIVATE_SEED_URL']
     }
 
     // Validate the config after applying all the overrides
     validateConfig(config)
 
-    {
-      // CLI flags override values from environment variables and config file
-      // todo: Make interface for CLI flags, separate flag validation into helper function, separate
-      // overriding DaemonConfig with CLI flags into another helper function.
-      if (stateStoreDirectory && stateStoreS3Bucket) {
-        throw new Error(
-          'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
-        )
-      }
+    // CLI flags override values from environment variables and config file
+    // todo: Make interface for CLI flags, separate flag validation into helper function, separate
+    // overriding DaemonConfig with CLI flags into another helper function.
+    if (stateStoreDirectory && stateStoreS3Bucket) {
+      throw new Error(
+        'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
+      )
+    }
 
-      if (anchorServiceApi) {
-        config.anchor.anchorServiceUrl = anchorServiceApi
-      }
-      if (ethereumRpc) {
-        config.anchor.ethereumRpcUrl = ethereumRpc
-      }
-      if (corsAllowedOrigins) {
-        config.httpApi.corsAllowedOrigins = corsAllowedOrigins
-          .split(' ')
-          .map((origin) => new RegExp(origin))
-      }
-      if (hostname) {
-        config.httpApi.hostname = hostname
-      }
-      if (port) {
-        config.httpApi.port = port
-      }
-      if (ipfsApi) {
-        config.ipfs.mode = IpfsMode.REMOTE
-        config.ipfs.host = ipfsApi
-      }
-      if (ipfsPinningEndpoints) {
-        config.ipfs.pinningEndpoints = ipfsPinningEndpoints
-      }
-      if (verbose || debug) {
-        const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
-        config.logger.logLevel = logLevel
-      }
-      if (logDirectory) {
-        config.logger.logDirectory = logDirectory
-      }
-      if (logToFiles) {
-        config.logger.logToFiles = logToFiles
-      }
-      if (metricsExporterEnabled) {
-        config.metrics.metricsExporterEnabled = metricsExporterEnabled
-      }
-      if (network) {
-        config.network.name = network
-      }
-      if (pubsubTopic) {
-        config.network.pubsubTopic = pubsubTopic
-      }
-      if (gateway) {
-        config.node.gateway = gateway
-      }
-      if (syncOverride) {
-        config.node.syncOverride = syncOverride
-      }
-      if (disableComposedb) {
-        config.indexing.disableComposedb = true
-      }
-      if (process.env.CERAMIC_DISABLE_COMPOSE_DB === 'true') {
-        config.indexing.disableComposedb = true
-      }
-      if (stateStoreDirectory) {
-        config.stateStore.mode = StateStoreMode.FS
-        config.stateStore.localDirectory = stateStoreDirectory
-      }
-      if (stateStoreS3Bucket) {
-        config.stateStore.mode = StateStoreMode.S3
-        config.stateStore.s3Bucket = stateStoreS3Bucket
-      }
+    if (anchorServiceApi) {
+      config.anchor.anchorServiceUrl = anchorServiceApi
+    }
+    if (ethereumRpc) {
+      config.anchor.ethereumRpcUrl = ethereumRpc
+    }
+    if (corsAllowedOrigins) {
+      config.httpApi.corsAllowedOrigins = corsAllowedOrigins
+        .split(' ')
+        .map((origin) => new RegExp(origin))
+    }
+    if (hostname) {
+      config.httpApi.hostname = hostname
+    }
+    if (port) {
+      config.httpApi.port = port
+    }
+    if (ipfsApi) {
+      config.ipfs.mode = IpfsMode.REMOTE
+      config.ipfs.host = ipfsApi
+    }
+    if (ipfsPinningEndpoints) {
+      config.ipfs.pinningEndpoints = ipfsPinningEndpoints
+    }
+    if (verbose || debug) {
+      const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
+      config.logger.logLevel = logLevel
+    }
+    if (logDirectory) {
+      config.logger.logDirectory = logDirectory
+    }
+    if (logToFiles) {
+      config.logger.logToFiles = logToFiles
+    }
+    if (metricsExporterEnabled) {
+      config.metrics.metricsExporterEnabled = metricsExporterEnabled
+    }
+    if (network) {
+      config.network.name = network
+    }
+    if (pubsubTopic) {
+      config.network.pubsubTopic = pubsubTopic
+    }
+    if (gateway) {
+      config.node.gateway = gateway
+    }
+    if (syncOverride) {
+      config.node.syncOverride = syncOverride
+    }
+    if (disableComposedb) {
+      config.indexing!.disableComposedb = true
+    }
+    if (process.env['CERAMIC_DISABLE_COMPOSE_DB'] === 'true') {
+      config.indexing!.disableComposedb = true
+    }
+    if (stateStoreDirectory) {
+      config.stateStore.mode = StateStoreMode.FS
+      config.stateStore.localDirectory = stateStoreDirectory
+    }
+    if (stateStoreS3Bucket) {
+      config.stateStore.mode = StateStoreMode.S3
+      config.stateStore.s3Bucket = stateStoreS3Bucket
     }
     const daemon = await CeramicDaemon.create(config)
 
@@ -251,7 +252,7 @@ export class CeramicCliUtils {
     controllers: string,
     onlyGenesis: boolean,
     deterministic: boolean,
-    schemaStreamId: string = null
+    schemaStreamId?: string
   ): Promise<void> {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const parsedControllers = CeramicCliUtils._parseControllers(controllers)
@@ -374,7 +375,7 @@ export class CeramicCliUtils {
     controllers: string,
     onlyGenesis: boolean,
     deterministic: boolean,
-    schemaStreamId: string = null
+    schemaStreamId?: string
   ): Promise<void> {
     return CeramicCliUtils._createDoc(
       content,
@@ -415,7 +416,7 @@ export class CeramicCliUtils {
   ): Promise<void> {
     StreamID.fromString(schemaStreamId)
     // TODO validate schema on the client side
-    return CeramicCliUtils.update(schemaStreamId, content, controllers, null)
+    return CeramicCliUtils.update(schemaStreamId, content, controllers)
   }
 
   /**
@@ -430,7 +431,7 @@ export class CeramicCliUtils {
       if (privateKey) {
         await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       } else {
-        await ceramic.did.authenticate()
+        await ceramic.did?.authenticate()
       }
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
@@ -449,7 +450,7 @@ export class CeramicCliUtils {
       if (privateKey) {
         await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       } else {
-        await ceramic.did.authenticate()
+        await ceramic.did?.authenticate()
       }
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
@@ -462,13 +463,13 @@ export class CeramicCliUtils {
    * @param privateKey - optional admin DID private key
    */
   static async pinLs(streamId?: string, privateKey?: string): Promise<void> {
-    const id = streamId ? StreamID.fromString(streamId) : null
+    const id = streamId ? StreamID.fromString(streamId) : undefined
 
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       if (privateKey) {
         await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       } else {
-        await ceramic.did.authenticate()
+        await ceramic.did?.authenticate()
       }
       const pinnedStreamIds = []
       const iterator = await ceramic.admin.pin.ls(id)
@@ -558,7 +559,7 @@ export class CeramicCliUtils {
 
     try {
       await fn(ceramic)
-    } catch (e) {
+    } catch (e: any) {
       console.error(e.message)
       process.exit(-1)
     } finally {

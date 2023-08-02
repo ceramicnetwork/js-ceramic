@@ -44,17 +44,17 @@ function assertPageLimit(requestedEntries: number) {
  * @throws if no relevant fields found, or if requested more than allowed (see +assertPageLimit+)
  */
 export function parsePagination(params: Record<string, any>): Pagination {
-  if (isPositiveInteger(params.first)) {
-    assertPageLimit(params.first)
+  if (isPositiveInteger(params['first'])) {
+    assertPageLimit(params['first'])
     return {
-      first: params.first,
-      after: params.after,
+      first: params['first'],
+      after: params['after'],
     }
-  } else if (isPositiveInteger(params.last)) {
-    assertPageLimit(params.last)
+  } else if (isPositiveInteger(params['last'])) {
+    assertPageLimit(params['last'])
     return {
-      last: params.last,
-      before: params.before,
+      last: params['last'],
+      before: params['before'],
     }
   } else {
     throw new InvalidPaginationError()
@@ -70,21 +70,21 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
   try {
     const pagination = parsePagination(query)
     return {
-      model: StreamID.fromString(query.model),
-      account: query.account,
-      filter: query.filter,
-      queryFilters: query.queryFilters,
+      model: StreamID.fromString(query['model']),
+      account: query['account'],
+      filter: query['filter'],
+      queryFilters: query['queryFilters'],
       ...pagination,
     }
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(`Invalid input in collection request: ${e.message}`)
   }
 }
 
 export function countQuery(query: Record<string, any>): BaseQuery {
   return {
-    model: StreamID.fromString(query.model),
-    account: query.account,
-    filter: query.filter,
+    model: StreamID.fromString(query['model']),
+    account: query['account'],
+    filter: query['filter'],
   }
 }

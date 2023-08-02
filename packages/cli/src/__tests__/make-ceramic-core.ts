@@ -19,7 +19,7 @@ export async function makeCeramicCore(
   })
 
   const handler = new TileDocumentHandler()
-  ;(handler as any).verifyJWS = (): Promise<void> => {
+  ;(handler as any).verifyJWS = async (): Promise<void> => {
     return
   }
   // @ts-ignore

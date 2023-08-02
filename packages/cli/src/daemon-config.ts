@@ -232,7 +232,7 @@ export class IndexingConfig {
    *  - `postgres:///user:password@host:5432/database`
    */
   @jsonMember(String)
-  db: string
+  db!: string
 
   /**
    * Allow serving indexing queries if historical indexing is not done yet.
@@ -293,14 +293,14 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-  private _privateSeedUrl: string
+  private _privateSeedUrl!: string
 
   /**
    * Disallows public access to private-seed-url because it is a sensitive field.
    */
   @jsonMember(String, { name: 'private-seed-url' })
   public get privateSeedUrl(): string {
-    return undefined
+    return ''
   }
 
   /**
@@ -414,51 +414,51 @@ export class DaemonConfig {
    * Options related to anchoring
    */
   @jsonMember(DaemonAnchorConfig)
-  anchor: DaemonAnchorConfig
+  anchor!: DaemonAnchorConfig
 
   /**
    * Options related to the HTTP API server.
    * When specifying in a config file, use the name 'http-api'.
    */
   @jsonMember(DaemonHTTPApiConfig, { name: 'http-api' })
-  httpApi: DaemonHTTPApiConfig
+  httpApi!: DaemonHTTPApiConfig
 
   /**
    * Options related to IPFS.
    */
   @jsonMember(DaemonIpfsConfig)
-  ipfs: DaemonIpfsConfig
+  ipfs!: DaemonIpfsConfig
 
   /**
    * Options related to logging.
    */
   @jsonMember(DaemonLoggerConfig)
-  logger: DaemonLoggerConfig
+  logger!: DaemonLoggerConfig
 
   /**
    * Options related to metrics export.
    */
   @jsonMember(DaemonMetricsConfig)
-  metrics: DaemonMetricsConfig
+  metrics!: DaemonMetricsConfig
 
   /**
    * Options related to the Ceramic network to connect to.
    */
   @jsonMember(DaemonCeramicNetworkConfig)
-  network: DaemonCeramicNetworkConfig
+  network!: DaemonCeramicNetworkConfig
 
   /**
    * Miscellaneous options for behaviors of the underlying Ceramic node.
    */
   @jsonMember(DaemonCeramicNodeConfig)
-  node: DaemonCeramicNodeConfig
+  node!: DaemonCeramicNodeConfig
 
   /**
    * Options related to the state store.
    * When specifying in a config file, use the name 'state-store'.
    */
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
-  stateStore: DaemonStateStoreConfig
+  stateStore!: DaemonStateStoreConfig
 
   /**
    * Options related to DID-resolvers.
@@ -499,9 +499,10 @@ export class DaemonConfig {
 
     // Set hidden fields before returning
     const config = serializer.parse(json)
-    if (json.node) {
-      if (json.node.privateSeedUrl) {
-        config.node.privateSeedUrl = json.node.privateSeedUrl
+    if (!config) throw new Error(`Empty config`)
+    if (json['node']) {
+      if (json['node'].privateSeedUrl) {
+        config.node.privateSeedUrl = json['node'].privateSeedUrl
       }
     }
     return config

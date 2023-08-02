@@ -93,6 +93,12 @@ export function defaultIndices(tableName: string): TableIndices {
   }
 }
 
+type CDBDatabaseConfig = {
+  enable_historical_sync: boolean
+  allow_queries_before_historical_sync: boolean
+  run_historical_sync_worker: boolean
+}
+
 /**
  * Default configuration of ComposeDB functionality per network.
  * Values can be overwritten by updating them in the ceramic_config table
@@ -102,7 +108,7 @@ export function defaultIndices(tableName: string): TableIndices {
  *   allow_queries_before_historical_sync - allow data to be queried before models have been fully synced
  *   run_historical_sync_worker - enable historical data sync on a node level
  */
-export function getDefaultCDBDatabaseConfig(networkName: string): { [key: string]: any } {
+export function getDefaultCDBDatabaseConfig(networkName: string): CDBDatabaseConfig {
   switch (networkName) {
     case 'mainnet':
     case 'elp': {
@@ -111,7 +117,6 @@ export function getDefaultCDBDatabaseConfig(networkName: string): { [key: string
         allow_queries_before_historical_sync: true,
         run_historical_sync_worker: false,
       }
-      break
     }
     case 'testnet-clay':
       return {
@@ -119,28 +124,24 @@ export function getDefaultCDBDatabaseConfig(networkName: string): { [key: string
         allow_queries_before_historical_sync: true,
         run_historical_sync_worker: false,
       }
-      break
     case 'local':
       return {
         enable_historical_sync: false,
         allow_queries_before_historical_sync: true,
         run_historical_sync_worker: false,
       }
-      break
     case 'dev-unstable':
       return {
         enable_historical_sync: false,
         allow_queries_before_historical_sync: true,
         run_historical_sync_worker: false,
       }
-      break
     case 'inmemory':
       return {
         enable_historical_sync: false,
         allow_queries_before_historical_sync: true,
         run_historical_sync_worker: false,
       }
-      break
     default:
       throw new Error(`Invalid network provided during table creation: ${networkName}`)
   }
