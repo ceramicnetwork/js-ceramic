@@ -1,5 +1,11 @@
 import { Knex } from 'knex'
-import { NonBooleanValueFilterType, ObjectFilter, QueryFilters } from './query-filter-parser.js'
+import {
+  getValueType,
+  NonBooleanValueFilterType,
+  ObjectFilter,
+  QueryFilters,
+  ValueFilterType,
+} from './query-filter-parser.js'
 
 export const DATA_FIELD = 'stream_content'
 
@@ -52,6 +58,24 @@ function handleQuery(
   }
 }
 
+function typeAsCast(tpe: ValueFilterType): string {
+  switch (tpe) {
+    case 'boolean':
+      return 'boolean'
+    default:
+      return nonBooleanTypeAsCast(tpe)
+  }
+}
+
+function nonBooleanTypeAsCast(tpe: NonBooleanValueFilterType): string {
+  switch (tpe) {
+    case 'number':
+      return 'numeric'
+    case 'string':
+      return 'varchar'
+  }
+}
+
 function handleIn<T extends number | string>(
   query: DBQuery,
   key: string,
@@ -62,10 +86,7 @@ function handleIn<T extends number | string>(
   combinator?: Combinator
 ): DBQuery {
   const arrValue = value.map((v) => v.toString()).join(',')
-  let cast = 'int'
-  if (tpe == 'string') {
-    cast = tpe
-  }
+  const cast = nonBooleanTypeAsCast(tpe)
   const inner = (bldr) => {
     let op = ' in '
     if (negated) {
@@ -134,13 +155,8 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
       }
       default: {
         const isFirst = first
+        const cast = typeAsCast(getValueType(value.value))
         const old = where
-        let cast = 'boolean'
-        if (typeof value.value == 'number') {
-          cast = 'int'
-        } else if (typeof value.value == 'string') {
-          cast = 'varchar'
-        }
         where = (bldr) => {
           const b = old(bldr)
           let queryValue = value.value

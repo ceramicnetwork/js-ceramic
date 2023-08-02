@@ -20,11 +20,11 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
-const CONTENT0 = { myData: 0, myArray: [0] }
+const CONTENT0 = { myData: 0, myArray: [0], myFloat: 0.5 }
 const CONTENT1 = { myData: 1, myArray: [1], myString: 'a' }
-const CONTENT2 = { myData: 2, myArray: [2] }
+const CONTENT2 = { myData: 2, myArray: [2], myFloat: 1.0 }
 const CONTENT3 = { myData: 3, myArray: [3], myString: 'b' }
-const CONTENT4 = { myData: 4, myArray: [4] }
+const CONTENT4 = { myData: 4, myArray: [4], myFloat: 1.5 }
 const CONTENT5 = { myData: 5, myArray: [5], myString: 'c' }
 
 const MODEL_DEFINITION: ModelDefinition = {
@@ -44,11 +44,14 @@ const MODEL_DEFINITION: ModelDefinition = {
       myArray: {
         type: 'array',
         items: {
-          type: 'number',
+          type: 'integer',
         },
       },
       myString: {
         type: 'string',
+      },
+      myFloat: {
+        type: 'number',
       },
     },
     required: ['myData', 'myArray'],
@@ -57,7 +60,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c7skfiapcx0ou10qtf0air192h02jtywajoh1djg38ourhi6v3a'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c5y9s12q66j1mwhmbsp7rhyncq9vigo8nlkf52gn4zg5a8uvbtc'
 
 // StreamID for a model that isn't indexed by the node
 const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
@@ -518,6 +521,44 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query a single document by float', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.2 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+    })
+    test('Can query a single document by float that gets truncated', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.0 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
     })
   })
 
