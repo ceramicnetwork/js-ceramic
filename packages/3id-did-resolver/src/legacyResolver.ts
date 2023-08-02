@@ -63,14 +63,22 @@ const compressKey = (key: string) => {
   return `${prefix}${xpoint}`
 }
 
+export type LegacyResolverResult = {
+  publicKeys: Record<string, string>
+  keyDid: string
+}
+
 // Returns v0 3id public keys in ceramic 3id doc form
-const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
+export async function LegacyResolver(
+  didId: string,
+  ipfs = ipfsMock
+): Promise<LegacyResolverResult> {
   const doc = (await ipfs.dag.get(didId)).value
   let signingKey, encryptionKey
 
   try {
-    const keyEntrySigning = doc.publicKey.findIndex((e) => e.id.endsWith('signingKey'))
-    const keyEntryEncryption = doc.publicKey.findIndex((e) => e.id.endsWith('encryptionKey'))
+    const keyEntrySigning = doc.publicKey.findIndex((e: any) => e.id.endsWith('signingKey'))
+    const keyEntryEncryption = doc.publicKey.findIndex((e: any) => e.id.endsWith('encryptionKey'))
     signingKey = doc.publicKey[keyEntrySigning].publicKeyHex
     encryptionKey = doc.publicKey[keyEntryEncryption].publicKeyBase64
   } catch (e) {
@@ -89,5 +97,3 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
     },
   }
 }
-
-export { LegacyResolver }

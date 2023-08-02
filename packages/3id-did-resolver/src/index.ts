@@ -4,23 +4,29 @@ import type {
   DIDDocument,
   DIDDocumentMetadata,
   ParsedDID,
-  Resolver,
   ResolverRegistry,
   VerificationMethod,
+  Resolvable,
 } from 'did-resolver'
-import type { StreamState, MultiQuery, CeramicApi, LogEntry } from '@ceramicnetwork/common'
+import type {
+  StreamState,
+  MultiQuery,
+  CeramicApi,
+  LogEntry,
+  NonEmptyArray,
+} from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LegacyResolver } from './legacyResolver.js'
 import * as u8a from 'uint8arrays'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { errorRepresentation, withResolutionError } from './error-representation.js'
-import { CommitType } from '@ceramicnetwork/common'
+import { CommitType, type Stream } from '@ceramicnetwork/common'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
 
-const isLegacyDid = (didId: string): boolean => {
+function isLegacyDid(didId: string): boolean {
   try {
     CID.parse(didId)
     return true
@@ -46,11 +52,11 @@ const formatTime = (timestamp: number): string => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument | null {
   if (!(content && content.publicKeys)) return null
-  const startDoc: DIDDocument = {
+  const startDoc = {
     id: did,
-    verificationMethod: [],
-    authentication: [],
-    keyAgreement: [],
+    verificationMethod: [] as VerificationMethod[],
+    authentication: [] as VerificationMethod[],
+    keyAgreement: [] as VerificationMethod[],
   }
   return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
@@ -81,10 +87,10 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
 /**
  * Return last anchor log entry, or genesis if no anchors found
  */
-function lastAnchorOrGenesisEntry(log: LogEntry[]): LogEntry {
+function lastAnchorOrGenesisEntry(log: NonEmptyArray<LogEntry>): LogEntry {
   // Look for last anchor
   for (let index = log.length - 1; index >= 0; index--) {
-    const entry = log[index]
+    const entry = log[index]!
     if (entry.type === CommitType.ANCHOR) {
       return entry
     }
@@ -109,9 +115,9 @@ function extractMetadata(
   const { timestamp: updated, cid: versionId } = lastAnchorOrGenesisEntry(requestedVersionState.log)
 
   const { timestamp: nextUpdate, cid: nextVersionId } =
-    latestVersionState.log.find(
-      ({ timestamp }) => timestamp > updated || (!updated && timestamp)
-    ) || {}
+    latestVersionState.log.find(({ timestamp }) => {
+      return (timestamp && updated && timestamp > updated) || (!updated && timestamp)
+    }) || {}
 
   if (updated) {
     metadata.updated = formatTime(updated)
@@ -140,23 +146,20 @@ interface VersionInfo {
 function getVersionInfo(query = ''): VersionInfo {
   // version-id was changed to versionId in the latest did-core spec
   // https://github.com/w3c/did-core/pull/553
-  const versionId = query
-    .split('&')
-    .find((e) => e.includes('versionId') || e.includes('version-id'))
-  const versionTime = query.split('&').find((e) => e.includes('versionTime'))
+  const asSearchParams = new URLSearchParams(query)
+  const versionId = asSearchParams.get('versionId') || asSearchParams.get('version-id') || undefined
+  const versionTime = asSearchParams.get('versionTime')
   return {
-    commit: versionId ? versionId.split('=')[1] : undefined,
-    timestamp: versionTime
-      ? Math.floor(new Date(versionTime.split('=')[1]).getTime() / 1000)
-      : undefined,
+    commit: versionId,
+    timestamp: versionTime ? Math.floor(new Date(versionTime).getTime() / 1000) : undefined,
   }
 }
 
-const legacyResolve = async (
+async function legacyResolve(
   ceramic: CeramicApi,
   didId: string,
   verNfo: VersionInfo
-): Promise<DIDResolutionResult> => {
+): Promise<DIDResolutionResult> {
   const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
 
   // TODO - calculate streamid using a CID, annoyingly not working because of dependency issues.
@@ -174,12 +177,12 @@ const legacyResolve = async (
   return didResult
 }
 
-const resolve = async (
+async function resolve(
   ceramic: CeramicApi,
   didId: string,
   verNfo: VersionInfo,
   v03ID?: string
-): Promise<DIDResolutionResult> => {
+): Promise<DIDResolutionResult> {
   const streamId = StreamID.fromString(didId)
   let commitId
   const query: Array<MultiQuery> = [{ streamId }]
@@ -195,17 +198,25 @@ const resolve = async (
   }
   const resp = await ceramic.multiQuery(query)
 
-  if (!resp[didId])
+  const latest = resp[didId]
+  if (!latest) {
     throw new Error(`Failed to properly resolve 3ID, stream ${didId} not found in response.`)
-  const latestVersionState = resp[didId].state
+  }
+  const latestVersionState = latest.state
   const commitIdStr = commitId?.toString() || Object.keys(resp).find((k) => k !== didId)
-  const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
+  const requestedVersionState = (commitIdStr && resp[commitIdStr]?.state) || latestVersionState
   const metadata = extractMetadata(requestedVersionState, latestVersionState)
 
-  const tile = resp[commitIdStr || didId] as TileDocument | undefined
-
-  if (commitIdStr && !tile) {
-    throw new Error(`No resolution for commit ${commitIdStr}`)
+  let tile: Stream
+  if (commitIdStr) {
+    const found = resp[commitIdStr]
+    if (found) {
+      tile = found
+    } else {
+      throw new Error(`No resolution for commit ${commitIdStr}`)
+    }
+  } else {
+    tile = latest
   }
 
   const content = tile.state.content
@@ -221,9 +232,9 @@ const resolve = async (
 export function getResolver(ceramic: CeramicApi): ResolverRegistry {
   return {
     '3': (
-      did: string,
+      _did: string,
       parsed: ParsedDID,
-      resolver: Resolver,
+      _resolver: Resolvable,
       options: DIDResolutionOptions
     ): Promise<DIDResolutionResult> => {
       return withResolutionError(async () => {
@@ -232,22 +243,22 @@ export function getResolver(ceramic: CeramicApi): ResolverRegistry {
         const id = parsed.id
 
         // application/did+json
-        const didResult = () => {
-          if (isLegacyDid(id)) {
-            return legacyResolve(ceramic, id, verNfo)
-          } else {
-            return resolve(ceramic, id, verNfo)
-          }
+        let resolution: DIDResolutionResult
+        if (isLegacyDid(id)) {
+          resolution = await legacyResolve(ceramic, id, verNfo)
+        } else {
+          resolution = await resolve(ceramic, id, verNfo)
         }
 
         switch (contentType) {
           case DID_JSON:
-            return didResult()
+            return resolution
           case DID_LD_JSON: {
-            const result = await didResult()
-            result.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
-            result.didResolutionMetadata.contentType = DID_LD_JSON
-            return result
+            if (resolution.didDocument) {
+              resolution.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
+            }
+            resolution.didResolutionMetadata.contentType = DID_LD_JSON
+            return resolution
           }
           default:
             return errorRepresentation({ error: 'representationNotSupported' })
