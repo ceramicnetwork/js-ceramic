@@ -719,12 +719,13 @@ export class CeramicDaemon {
 
   private async _parseAdminApiJWS(jws: string): Promise<AdminAPIJWSContents> {
     const result = await this.ceramic.did!.verifyJWS(jws)
+    const payload: any = result.payload
     return {
       kid: result.kid,
-      code: result.payload.code,
-      requestPath: result.payload.requestPath,
-      models: result.payload.requestBody ? result.payload.requestBody.models : undefined,
-      modelData: result.payload.requestBody ? result.payload.requestBody.modelData : undefined,
+      code: payload.code,
+      requestPath: payload.requestPath,
+      models: payload.requestBody?.models,
+      modelData: payload.requestBody?.modelData,
     }
   }
 
