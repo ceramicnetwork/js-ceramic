@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { writeFile } from 'node:fs/promises'
 import { DaemonConfig, validateConfig } from '../daemon-config.js'

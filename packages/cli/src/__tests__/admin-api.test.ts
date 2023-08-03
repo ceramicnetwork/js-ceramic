@@ -14,7 +14,6 @@ import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
 import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
-import { StreamID } from '@ceramicnetwork/streamid'
 
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {

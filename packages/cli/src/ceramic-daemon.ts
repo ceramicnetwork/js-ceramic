@@ -351,7 +351,7 @@ export class CeramicDaemon {
     if (opts.node.sensitive_privateSeedUrl()) {
       let seed: Uint8Array
       try {
-        const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl())
+        const privateSeedUrl = new URL(opts.node.sensitive_privateSeedUrl() || '')
         seed = parseSeedUrl(privateSeedUrl)
       } catch (err) {
         // Do not log URL errors here to prevent leaking seed

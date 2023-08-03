@@ -293,14 +293,14 @@ export class DaemonDidResolversConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicNodeConfig {
-  private _privateSeedUrl!: string
+  private _privateSeedUrl: string | undefined = undefined
 
   /**
    * Disallows public access to private-seed-url because it is a sensitive field.
    */
   @jsonMember(String, { name: 'private-seed-url' })
-  public get privateSeedUrl(): string {
-    return ''
+  public get privateSeedUrl(): string | undefined {
+    return undefined
   }
 
   /**
@@ -308,11 +308,11 @@ export class DaemonCeramicNodeConfig {
    * A seed is randomly generated if a config file is not found.
    * When specifying in a config file, use the name 'private-seed-url'.
    */
-  public set privateSeedUrl(value: string) {
+  public set privateSeedUrl(value: string | undefined) {
     this._privateSeedUrl = value
   }
 
-  public sensitive_privateSeedUrl(): string {
+  public sensitive_privateSeedUrl(): string | undefined {
     return this._privateSeedUrl
   }
 
