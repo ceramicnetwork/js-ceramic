@@ -74,6 +74,7 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
       account: query.account,
       filter: query.filter,
       queryFilters: query.queryFilters,
+      sorting: query.sorting,
       ...pagination,
     }
   } catch (e) {
