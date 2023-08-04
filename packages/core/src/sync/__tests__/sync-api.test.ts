@@ -322,11 +322,13 @@ describe('Sync API', () => {
         logger
       )
 
+      // @ts-ignore private field
+      sync.initialIndexingBlock = 0
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123'] }
-      await sync.startModelSync('abc123', data.fromBlock, data.toBlock)
+      await sync.startModelSync('abc123', { startBlock: data.fromBlock, endBlock: data.toBlock })
       expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })
@@ -341,11 +343,13 @@ describe('Sync API', () => {
         logger
       )
 
+      // @ts-ignore private field
+      sync.initialIndexingBlock = 0
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
 
       const data = { fromBlock: 1, toBlock: 10, models: ['abc123', 'def456'] }
-      await sync.startModelSync(data.models, data.fromBlock, data.toBlock)
+      await sync.startModelSync(data.models, { startBlock: data.fromBlock, endBlock: data.toBlock })
       expect(addSyncJob).toHaveBeenCalledWith(HISTORY_SYNC_JOB, expect.objectContaining(data))
       expect(Array.from(sync.modelsToSync)).toEqual(data.models)
     })

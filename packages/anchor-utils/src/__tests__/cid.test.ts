@@ -9,6 +9,8 @@ import {
   DAG_CBOR_CODE,
   createCidFromHexValue,
   getCidFromAnchorEventLog,
+  convertEthHashToCid,
+  convertCidToEthHash,
 } from '../cid.js'
 
 function createCID(digest: Uint8Array = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7])): CID {
@@ -32,5 +34,16 @@ describe('root CID extraction', () => {
     const log = { data: defaultAbiCoder.encode(['bytes32'], [bytes]) } as Log
     const cid = getCidFromAnchorEventLog(log)
     expect(cid.equals(createCID(bytes))).toBe(true)
+  })
+})
+
+describe('eth hash conversion', () => {
+  test('can convert hash to and from CID', () => {
+    const hash = '0x7ac547fc3e4b84e026adecdff83f2c14583b138f665a23281b5fcfcce1c816f2'
+
+    const cid = convertEthHashToCid(hash)
+    const convertedHash = convertCidToEthHash(cid)
+
+    expect(convertedHash).toEqual('hash')
   })
 })

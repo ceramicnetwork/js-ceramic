@@ -1,5 +1,4 @@
 import * as uint8arrays from 'uint8arrays'
-import { decode } from 'multiformats/hashes/digest'
 import * as providers from '@ethersproject/providers'
 import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
@@ -7,6 +6,7 @@ import { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
+import { convertCidToEthHash } from '@ceramicnetwork/anchor-utils'
 
 const SHA256_CODE = 0x12
 const DAG_CBOR_CODE = 0x71
@@ -205,8 +205,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
   }
 
   async validateChainInclusion(anchorProof: AnchorProof): Promise<number> {
-    const decoded = decode(anchorProof.txHash.multihash.bytes)
-    const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
+    const txHash = convertCidToEthHash(anchorProof.txHash)
     const [txResponse, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txCid = getCidFromTransaction(anchorProof.txType, txResponse)
 

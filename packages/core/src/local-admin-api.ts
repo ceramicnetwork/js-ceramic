@@ -4,12 +4,16 @@ import {
   ModelData,
   NodeStatusResponse,
   PinApi,
+  LoadOpts,
 } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { Model } from '@ceramicnetwork/stream-model'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
-import { SyncApi } from './sync/sync-api.js'
+import { ISyncApi, ModelSyncOptions } from './sync/interfaces.js'
+import { convertCidToEthHash } from '@ceramicnetwork/anchor-utils'
 
 type NodeStatusFn = () => Promise<NodeStatusResponse>
+type LoadStreamFn<T> = (streamId: StreamID | CommitID | string, opts?: LoadOpts) => Promise<T>
 
 /**
  * AdminApi for Ceramic core.
@@ -17,9 +21,10 @@ type NodeStatusFn = () => Promise<NodeStatusResponse>
 export class LocalAdminApi implements AdminApi {
   constructor(
     private readonly indexApi: LocalIndexApi,
-    private readonly syncApi: SyncApi,
+    private readonly syncApi: ISyncApi,
     private readonly nodeStatusFn: NodeStatusFn, // TODO(CDB-2293): circular dependency back into Ceramic
-    private readonly pinApi: PinApi
+    private readonly pinApi: PinApi,
+    private readonly loadStream: LoadStreamFn<Model>
   ) {}
 
   async nodeStatus(): Promise<NodeStatusResponse> {
@@ -32,7 +37,31 @@ export class LocalAdminApi implements AdminApi {
 
   async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
     await this.indexApi.indexModels(modelData)
-    await this.syncApi.startModelSync(modelData.map((idx) => idx.streamID.toString()))
+
+    if (this.syncApi.enabled) {
+      const models = await Promise.all(modelData.map(({ streamID }) => this.loadStream(streamID)))
+
+      const oldestModel = models.reduce((oldestModel, currentModel) => {
+        const oldestModelTimestamp = oldestModel.state.log[0].timestamp || Infinity
+        const currentModelTimestamp = currentModel.state.log[0].timestamp || Infinity
+
+        if (currentModelTimestamp < oldestModelTimestamp) {
+          return currentModel
+        }
+
+        return oldestModel
+      })
+
+      const syncOptions: ModelSyncOptions = {
+        startTxHash: oldestModel.state.anchorProof
+          ? convertCidToEthHash(oldestModel.state.anchorProof.txHash)
+          : undefined,
+      }
+      await this.syncApi.startModelSync(
+        modelData.map((idx) => idx.streamID.toString()),
+        syncOptions
+      )
+    }
   }
 
   async getIndexedModels(): Promise<Array<StreamID>> {

@@ -18,13 +18,26 @@ export interface ISyncQueryApi {
 }
 
 /**
+ * Options to configure a historical sync
+ */
+export type ModelSyncOptions = {
+  // start the sync on this block
+  startBlock?: number
+  // end the sync on this block
+  endBlock?: number
+  // start the sync on the block the transaction was mined
+  startTxHash?: string
+}
+
+/**
  * Interface used with historical sync'ing to start model sync on one or more models, or to
  * shutdown the service providing the sync'ing
  */
 export interface ISyncApi extends ISyncQueryApi {
-  startModelSync(models: string | string[], startBlock?: number, endBlock?: number): Promise<void>
+  startModelSync(models: string | string[], modelSyncOptions?: ModelSyncOptions): Promise<void>
   stopModelSync(models: string | string[]): Promise<void>
   shutdown(): Promise<void>
+  enabled: boolean
 }
 
 // handles a commit found during a sync

@@ -1,8 +1,8 @@
 import type { EventFragment } from '@ethersproject/abi'
 import type { Log, TransactionResponse } from '@ethersproject/providers'
-import { create as createMultihash } from 'multiformats/hashes/digest'
+import { create as createMultihash, decode as decodeMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
-import { fromString } from 'uint8arrays'
+import * as uint8arrays from 'uint8arrays'
 
 import { contractInterface } from './interface.js'
 
@@ -12,7 +12,10 @@ export const DAG_CBOR_CODE = 0x71
 export const ETH_TX_CODE = 0x93
 
 export function createCidFromHexValue(hexValue: string): CID {
-  const multihash = createMultihash(SHA256_CODE, fromString(hexValue.slice(2), 'base16'))
+  const multihash = createMultihash(
+    SHA256_CODE,
+    uint8arrays.fromString(hexValue.slice(2), 'base16')
+  )
   return CID.create(1, DAG_CBOR_CODE, multihash)
 }
 
@@ -26,7 +29,7 @@ export function getCidFromAnchorEventLog(log: Log): CID {
 
 const getCidFromV0Transaction = (txResponse: TransactionResponse): CID => {
   const withoutPrefix = txResponse.data.replace(/^(0x0?)/, '')
-  return CID.decode(fromString(withoutPrefix.slice(1), 'base16'))
+  return CID.decode(uint8arrays.fromString(withoutPrefix.slice(1), 'base16'))
 }
 
 const getCidFromV1Transaction = (txResponse: TransactionResponse): CID => {
@@ -55,6 +58,14 @@ export const getCidFromTransaction = (txType: string, txResponse: TransactionRes
  * @param hash - ETH hash
  */
 export function convertEthHashToCid(hexValue: string): CID {
-  const multihash = createMultihash(KECCAK_256_CODE, fromString(hexValue.slice(2), 'base16'))
+  const multihash = createMultihash(
+    KECCAK_256_CODE,
+    uint8arrays.fromString(hexValue.slice(2), 'base16')
+  )
   return CID.create(1, ETH_TX_CODE, multihash)
+}
+
+export function convertCidToEthHash(cid: CID): string {
+  const decoded = decodeMultihash(cid.multihash.bytes)
+  return '0x' + uint8arrays.toString(decoded.digest, 'base16')
 }

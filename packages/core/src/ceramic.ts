@@ -59,7 +59,6 @@ import { AnchorResumingService } from './state-management/anchor-resuming-servic
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { SyncJobData } from './sync/interfaces.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -305,7 +304,13 @@ export class Ceramic implements CeramicApi {
     )
     const pinApi = this._buildPinApi()
     this.repository.index.setSyncQueryApi(this.syncApi)
-    this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this), pinApi)
+    this.admin = new LocalAdminApi(
+      localIndex,
+      this.syncApi,
+      this.nodeStatus.bind(this),
+      pinApi,
+      this.loadStream.bind(this)
+    )
   }
 
   get index(): LocalIndexApi {
