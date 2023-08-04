@@ -244,12 +244,21 @@ export class StateManager {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    this.logger.verbose(`StateManager apply commit to stream ${streamId.toString()}`)
+
     const state$ = await this.load(streamId, opts)
+    this.logger.verbose(`StateManager loaded state for stream ${streamId.toString()}`)
 
     return this.executionQ.forStream(streamId).run(async () => {
       const cid = await this.dispatcher.storeCommit(commit, streamId)
+      this.logger.verbose(
+        `StateManager stored commit for stream ${streamId.toString()}, CID: ${cid.toString()}`
+      )
 
       await this._handleTip(state$, cid, opts)
+      this.logger.verbose(
+        `StateManager handled tip for stream ${streamId.toString()}, CID: ${cid.toString()}`
+      )
       return state$
     })
   }
@@ -275,7 +284,7 @@ export class StateManager {
     state$: RunningState,
     tip: CID,
     anchorCommit: CID,
-    witnessCAR: CAR
+    witnessCAR: CAR | undefined
   ): Promise<void> {
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
@@ -283,7 +292,10 @@ export class StateManager {
       remainingRetries--
     ) {
       try {
-        await this.dispatcher.importCAR(witnessCAR)
+        if (witnessCAR) {
+          await this.dispatcher.importCAR(witnessCAR)
+        }
+
         await this.executionQ.forStream(state$.id).run(async () => {
           const applied = await this._handleTip(state$, anchorCommit)
           if (applied) {

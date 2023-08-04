@@ -6,6 +6,7 @@ import {
   Context,
   CreateOpts,
   DiagnosticsLogger,
+  InternalOpts,
   LoadOpts,
   PinningOpts,
   PublishOpts,
@@ -229,7 +230,7 @@ export class Repository {
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
    */
-  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  async load(streamId: StreamID, opts: LoadOpts & InternalOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
     const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
@@ -275,7 +276,10 @@ export class Repository {
       }
     })
 
-    StreamUtils.checkForCacaoExpiration(state$.state)
+    if (!opts.skipCacaoExpirationChecks) {
+      StreamUtils.checkForCacaoExpiration(state$.state)
+    }
+
     if (synced && state$.isPinned) {
       this.stateManager.markPinnedAndSynced(state$.id)
     }
@@ -293,8 +297,17 @@ export class Repository {
     // for the stream than is ultimately necessary, but doing so increases the chances that we
     // detect that the CommitID specified is rejected by the conflict resolution rules due to
     // conflict with the stream's canonical branch of history.
-    const base$ = await this.load(commitId.baseID, opts)
-    return this.stateManager.atCommit(base$, commitId)
+    // We also skip CACAO expiration checking during this initial load as its possible
+    // that the CommitID we are being asked to load may in fact be an anchor commit with
+    // the timestamp information that will reveal to us that the CACAO didn't actually expire.
+    const optsSkippingCACAOChecks = { ...opts, skipCacaoExpirationChecks: true }
+    const base$ = await this.load(commitId.baseID, optsSkippingCACAOChecks)
+    const stateAtCommit = await this.stateManager.atCommit(base$, commitId)
+
+    // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
+    StreamUtils.checkForCacaoExpiration(stateAtCommit.state)
+
+    return stateAtCommit
   }
 
   /**
@@ -320,8 +333,10 @@ export class Repository {
     commit: any,
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
+    this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
     const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
     await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+    this.logger.verbose(`Repository applied write options to stream ${streamId.toString()}`)
     return state$
   }
 

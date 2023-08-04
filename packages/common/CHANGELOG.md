@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0-rc.1...@ceramicnetwork/common@2.30.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.30.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0-rc.0...@ceramicnetwork/common@2.30.0-rc.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* **core:** Loading at an AnchorCommit should be able to inform node that CACAO is not actually expired ([#2868](https://github.com/ceramicnetwork/js-ceramic/issues/2868)) ([35ada9e](https://github.com/ceramicnetwork/js-ceramic/commit/35ada9e722991364d332ec87f53d42972241e910))
+
+
+
+
+
 # [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.29.0...@ceramicnetwork/common@2.30.0-rc.0) (2023-07-13)
 
 

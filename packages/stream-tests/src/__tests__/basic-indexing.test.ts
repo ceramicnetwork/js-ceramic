@@ -20,12 +20,13 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
-const CONTENT0 = { myData: 0, myArray: [0] }
+const CONTENT0 = { myData: 0, myArray: [0], myFloat: 0.5 }
 const CONTENT1 = { myData: 1, myArray: [1], myString: 'a' }
-const CONTENT2 = { myData: 2, myArray: [2] }
+const CONTENT2 = { myData: 2, myArray: [2], myFloat: 1.0 }
 const CONTENT3 = { myData: 3, myArray: [3], myString: 'b' }
-const CONTENT4 = { myData: 4, myArray: [4], myString: 'c' }
-const CONTENT5 = { myData: 5, myArray: [5], myString: 'b' }
+const CONTENT4 = { myData: 4, myArray: [4], myFloat: 1.5 }
+const CONTENT5 = { myData: 5, myArray: [5], myString: 'c' }
+const CONTENT6 = { myData: 6, myArray: [6], myString: 'b' }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -44,11 +45,14 @@ const MODEL_DEFINITION: ModelDefinition = {
       myArray: {
         type: 'array',
         items: {
-          type: 'number',
+          type: 'integer',
         },
       },
       myString: {
         type: 'string',
+      },
+      myFloat: {
+        type: 'number',
       },
     },
     required: ['myData', 'myArray'],
@@ -57,7 +61,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c7skfiapcx0ou10qtf0air192h02jtywajoh1djg38ourhi6v3a'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c5y9s12q66j1mwhmbsp7rhyncq9vigo8nlkf52gn4zg5a8uvbtc'
 
 // StreamID for a model that isn't indexed by the node
 const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
@@ -448,13 +452,13 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         model: model.id,
         last: 2,
         queryFilters: {
-          where: { myString: { equalTo: 'c' } },
+          where: { myString: { equalTo: 'b' } },
         },
       })
 
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
-      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc5.content))
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
     })
     test('Can query multiple documents by field', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
@@ -516,6 +520,44 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query a single document by float', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.2 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+    })
+    test('Can query a single document by float that gets truncated', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.0 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
     })
   })
 
@@ -598,7 +640,8 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-      const [b1id, b2id] = [doc3.id.toString(), doc5.id.toString()].sort()
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
         model: model.id,
@@ -625,7 +668,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results[1].id.toString()).toEqual(b1id) // b
       // Second slice
       expect(results[2].id.toString()).toEqual(b2id) // b
-      expect(results[3].id.toString()).toEqual(doc4.id.toString()) // c
+      expect(results[3].id.toString()).toEqual(doc5.id.toString()) // c
     })
 
     test('multiple documents - multiple pages - DESC order with forward pagination', async () => {
@@ -634,7 +677,8 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-      const [b1id, b2id] = [doc3.id.toString(), doc5.id.toString()].sort()
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
         model: model.id,
@@ -657,7 +701,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       ].flat()
       expect(results).toHaveLength(4)
       // First slice
-      expect(results[0].id.toString()).toEqual(doc4.id.toString()) // c
+      expect(results[0].id.toString()).toEqual(doc5.id.toString()) // c
       expect(results[1].id.toString()).toEqual(b1id) // b
       // Second slice
       expect(results[2].id.toString()).toEqual(b2id) // b
@@ -670,7 +714,8 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-      const [b1id, b2id] = [doc3.id.toString(), doc5.id.toString()].sort()
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
         model: model.id,
@@ -694,7 +739,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results).toHaveLength(4)
       // First slice
       expect(results[0].id.toString()).toEqual(b1id) // b
-      expect(results[1].id.toString()).toEqual(doc4.id.toString()) // c
+      expect(results[1].id.toString()).toEqual(doc5.id.toString()) // c
       // Second slice
       expect(results[2].id.toString()).toEqual(doc1.id.toString()) // a
       expect(results[3].id.toString()).toEqual(b2id) // b
@@ -706,7 +751,8 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
-      const [b1id, b2id] = [doc3.id.toString(), doc5.id.toString()].sort()
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
         model: model.id,
@@ -732,7 +778,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results[0].id.toString()).toEqual(b1id) // b
       expect(results[1].id.toString()).toEqual(doc1.id.toString()) // a
       // Second slice
-      expect(results[2].id.toString()).toEqual(doc4.id.toString()) // c
+      expect(results[2].id.toString()).toEqual(doc5.id.toString()) // c
       expect(results[3].id.toString()).toEqual(b2id) // b
     })
   })

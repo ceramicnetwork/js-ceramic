@@ -19,19 +19,31 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'number', op: '=', value: 1 },
+        a: { type: 'integer', op: '=', value: 1 },
       },
     })
 
     expect(query).toEqual(
-      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as int)=1)))`
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1)))`
+    )
+  })
+  test('that are composed of a single doc filter with float', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: '=', value: 1.2 },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1.2)))`
     )
   })
   test('that are composed of a single doc filter with null', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'number', op: 'null', value: true },
+        a: { type: 'integer', op: 'null', value: true },
       },
     })
 
@@ -72,7 +84,7 @@ describe('Should convert query filters', () => {
       },
     })
     expect(query).toEqual(
-      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as int)=1)) and (cast(stream_content->>'b' as int) in (2,3)))`
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(stream_content->>'b' as numeric) in (2,3)))`
     )
   })
   test('that are composed of and doc filters', () => {
@@ -94,7 +106,7 @@ describe('Should convert query filters', () => {
       ],
     })
     expect(query).toEqual(
-      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as int)=1))) and ((cast(stream_content->>'b' as int) in (2,3))))`
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as numeric)=1))) and ((cast(stream_content->>'b' as numeric) in (2,3))))`
     )
   })
   test('that are composed of or doc filters', () => {
@@ -116,7 +128,7 @@ describe('Should convert query filters', () => {
       ],
     })
     expect(query).toEqual(
-      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as int)=1))) or ((cast(stream_content->>'b' as int) in (2,3))))`
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as numeric)=1))) or ((cast(stream_content->>'b' as numeric) in (2,3))))`
     )
   })
   test('that are composed of or doc filters negated', () => {
@@ -141,7 +153,7 @@ describe('Should convert query filters', () => {
       },
     })
     expect(query).toEqual(
-      `select '${DATA_FIELD}' from 'test' where ((not ((cast(${DATA_FIELD}->>'a' as int)=1))) or ((cast(stream_content->>'b' as int) not in (2,3))))`
+      `select '${DATA_FIELD}' from 'test' where ((not ((cast(${DATA_FIELD}->>'a' as numeric)=1))) or ((cast(stream_content->>'b' as numeric) not in (2,3))))`
     )
   })
 })

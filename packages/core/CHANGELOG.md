@@ -3,6 +3,57 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.3...@ceramicnetwork/core@2.37.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.37.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.2...@ceramicnetwork/core@2.37.0-rc.3) (2023-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.37.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.1...@ceramicnetwork/core@2.37.0-rc.2) (2023-07-26)
+
+
+### Bug Fixes
+
+* **core:** empty sync statuses ([#2872](https://github.com/ceramicnetwork/js-ceramic/issues/2872)) ([a3e78db](https://github.com/ceramicnetwork/js-ceramic/commit/a3e78dbd773d2e8d8fb0f10cea0ae47295ec41cd))
+* **core:** Fix CAS DID-auth ([#2873](https://github.com/ceramicnetwork/js-ceramic/issues/2873)) ([879f401](https://github.com/ceramicnetwork/js-ceramic/commit/879f401d5405f861226dd5be023eb58ff65d9120))
+
+
+
+
+
+# [2.37.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.0...@ceramicnetwork/core@2.37.0-rc.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* **core:** Loading at an AnchorCommit should be able to inform node that CACAO is not actually expired ([#2868](https://github.com/ceramicnetwork/js-ceramic/issues/2868)) ([35ada9e](https://github.com/ceramicnetwork/js-ceramic/commit/35ada9e722991364d332ec87f53d42972241e910))
+* Do not stop polling for anchor result on a network error ([#2869](https://github.com/ceramicnetwork/js-ceramic/issues/2869)) ([07ff4e5](https://github.com/ceramicnetwork/js-ceramic/commit/07ff4e5b0558fd3ae6069c2fe2bdff5c6de69306))
+
+
+### Features
+
+* add metrics for caching and syncing ([#2866](https://github.com/ceramicnetwork/js-ceramic/issues/2866)) ([1c3118b](https://github.com/ceramicnetwork/js-ceramic/commit/1c3118bb131dfe395cc49e755eaa1c01dadbbbfb))
+* Add scarf ([#2870](https://github.com/ceramicnetwork/js-ceramic/issues/2870)) ([1c2efa0](https://github.com/ceramicnetwork/js-ceramic/commit/1c2efa0b2db3a74fd64b49d4924fe5eb3c74d1fa))
+
+
+### Reverts
+
+* Revert "chore: Make CAR file required (#2849)" ([cbae060](https://github.com/ceramicnetwork/js-ceramic/commit/cbae060a6f5642ff098566c35d7d6bd03c5a5959)), closes [#2849](https://github.com/ceramicnetwork/js-ceramic/issues/2849)
+
+
+
+
+
 # [2.37.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.36.0...@ceramicnetwork/core@2.37.0-rc.0) (2023-07-13)
 
 

@@ -13,8 +13,10 @@ import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
 } from '@ceramicnetwork/stream-model-instance'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { jest } from '@jest/globals'
+import type { CID } from 'multiformats/cid'
 
 function getModelDef(name: string): ModelDefinition {
   return {
@@ -503,6 +505,7 @@ describe('CACAO Integration test', () => {
 
     afterEach(() => {
       MockDate.reset()
+      jest.resetAllMocks()
     })
 
     test(
@@ -572,7 +575,7 @@ describe('CACAO Integration test', () => {
       expect(loaded4.state.log).toEqual(loaded3.state.log) // Rewritten!
     }, 30000)
 
-    test('overwrite expired capability when using RESYNC_ON_ERROR', async () => {
+    test('overwrite expired capability when using SYNC_ON_ERROR', async () => {
       const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
       const tile = await TileDocument.deterministic(
         ceramic,
@@ -644,6 +647,56 @@ describe('CACAO Integration test', () => {
       },
       1000 * 30
     )
+
+    test('Load at anchor CommitID to inform node of anchor meaning CACAO isnt actually expired', async () => {
+      const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
+      const tile = await TileDocument.create(
+        ceramic,
+        CONTENT0,
+        {
+          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        },
+        opts
+      )
+      await tile.update(CONTENT1, null, { ...opts, anchor: true })
+
+      // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
+      const stateManager = ceramic.repository.stateManager
+      const handleAnchorSpy = jest.spyOn(stateManager, '_handleAnchorCommit')
+      const anchorCommitPromise = new Promise<CID>((resolve) => {
+        handleAnchorSpy.mockImplementation((state, tip, anchorCommit: CID, witnessCar) => {
+          expect(tip).toEqual(tile.tip)
+          resolve(anchorCommit)
+        })
+      })
+
+      const anchorService = ceramic.context.anchorService as any
+      await anchorService.anchor()
+
+      const anchorCommitCID = await anchorCommitPromise
+
+      // Expire the CACAO, loading should fail
+      expireCacao()
+      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+
+      // Loading at the anchor commits CommitID should succeed
+      const commitIDAtAnchor = CommitID.make(tile.id, anchorCommitCID)
+      const loadedAtCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
+      expect(loadedAtCommit.state.log.length).toEqual(3)
+      expect(loadedAtCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Now loading the stream should work because the node now knows about the anchor
+      const loaded = await TileDocument.load(ceramic, tile.id)
+      expect(loaded.state.log.length).toEqual(3)
+      expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Resyncing outdated handle with the server should pick up the anchor commit
+      expect(tile.state.log.length).toEqual(2)
+      expect(tile.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
+      await tile.sync()
+      expect(tile.state.log.length).toEqual(3)
+      expect(tile.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    }, 30000)
 
     test(
       'Genesis commit applied with valid capability that later expires without being anchored',
