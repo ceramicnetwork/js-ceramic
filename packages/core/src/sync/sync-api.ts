@@ -397,16 +397,21 @@ export class SyncApi implements ISyncApi {
   async _getStartBlock(syncOptions: ModelSyncOptions): Promise<number> {
     let startBlock = Math.max(this.initialIndexingBlock, syncOptions.startBlock || 0)
 
-    if (syncOptions.startTxHash) {
+    if (syncOptions.startBeforeTx) {
+      const { txHash, numberOfBlocksBeforeTx = 0 } = syncOptions.startBeforeTx
+
       if (!this.provider) {
         throw new Error(
           'Provider not set. Please initialize the sync api before using the sync api'
         )
       }
 
-      const startTx = await this.provider.getTransaction(syncOptions.startTxHash)
+      const startTx = await this.provider.getTransaction(txHash)
+      const startBlockFromTx = startTx.blockNumber
+        ? startTx.blockNumber - numberOfBlocksBeforeTx
+        : 0
 
-      startBlock = Math.max(startBlock, startTx.blockNumber || 0)
+      startBlock = Math.max(startBlock, startBlockFromTx)
     }
 
     return startBlock

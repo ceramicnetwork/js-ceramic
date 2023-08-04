@@ -17,6 +17,7 @@ import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../indexing/database-index-a
 import { CONFIG_TABLE_NAME } from '../../indexing/config.js'
 import { BLOCK_CONFIRMATIONS } from '../sync-api.js'
 import { IProvidersCache } from '../../providers-cache.js'
+import { NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC } from '../../local-admin-api.js'
 
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
@@ -96,11 +97,11 @@ const parseBlockHashOrBlockTag = async (
 }
 
 class MockProvider extends EventEmitter {
-  firstBlock = 25
+  firstBlock = 1025
   lastBlock = this.firstBlock
   rootsByBlockNumber: Record<number, string> = {}
   blockNumberByRoots: Record<string, number> = {}
-  transactionBlockNumber = 3
+  transactionBlockNumber = 1003 + NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC
 
   async getBlock(
     blockHashOrBlockTag?: BlockTag | string | Promise<BlockTag | string>
@@ -339,6 +340,9 @@ describe('Sync tests', () => {
         return original(proof)
       }
 
+      // @ts-ignore private field
+      syncingCeramic.syncApi.initialIndexingBlock = 1000
+
       return syncingCeramic
     }
   })
@@ -442,7 +446,9 @@ describe('Sync tests', () => {
     expect(success).toEqual(true)
 
     const jobData = addSyncJobSpy.mock.calls[0][1]
-    expect(jobData.fromBlock).toEqual(provider.transactionBlockNumber)
+    expect(jobData.fromBlock).toEqual(
+      provider.transactionBlockNumber - NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC
+    )
     expect(jobData.toBlock).toEqual(provider.lastBlock - BLOCK_CONFIRMATIONS)
   })
 
@@ -478,7 +484,7 @@ describe('Sync tests', () => {
     expect(success).toEqual(true)
 
     const jobData = addSyncJobSpy.mock.calls[0][1]
-    expect(jobData.fromBlock).toEqual(0)
+    expect(jobData.fromBlock).toEqual(1000)
     expect(jobData.toBlock).toEqual(provider.lastBlock - BLOCK_CONFIRMATIONS)
   })
 

@@ -15,6 +15,7 @@ import { convertCidToEthHash } from '@ceramicnetwork/anchor-utils'
 type NodeStatusFn = () => Promise<NodeStatusResponse>
 type LoadStreamFn<T> = (streamId: StreamID | CommitID | string, opts?: LoadOpts) => Promise<T>
 
+export const NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC = 360 // >24 hours
 /**
  * AdminApi for Ceramic core.
  */
@@ -52,11 +53,16 @@ export class LocalAdminApi implements AdminApi {
         return oldestModel
       })
 
-      const syncOptions: ModelSyncOptions = {
-        startTxHash: oldestModel.state.anchorProof
-          ? convertCidToEthHash(oldestModel.state.anchorProof.txHash)
-          : undefined,
+      let syncOptions: ModelSyncOptions = {}
+      if (oldestModel.state.anchorProof) {
+        syncOptions = {
+          startBeforeTx: {
+            txHash: convertCidToEthHash(oldestModel.state.anchorProof.txHash),
+            numberOfBlocksBeforeTx: NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC,
+          },
+        }
       }
+
       await this.syncApi.startModelSync(
         modelData.map((idx) => idx.streamID.toString()),
         syncOptions

@@ -17,6 +17,10 @@ export interface ISyncQueryApi {
   syncComplete(model: string): boolean
 }
 
+export type StartBeforeTxSyncOption = {
+  txHash: string
+  numberOfBlocksBeforeTx?: number
+}
 /**
  * Options to configure a historical sync
  */
@@ -25,8 +29,8 @@ export type ModelSyncOptions = {
   startBlock?: number
   // end the sync on this block
   endBlock?: number
-  // start the sync on the block the transaction was mined
-  startTxHash?: string
+  // start the sync X blocks before the block the transaction was mined on
+  startBeforeTx?: StartBeforeTxSyncOption
 }
 
 /**
