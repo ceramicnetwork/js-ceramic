@@ -44,6 +44,6 @@ describe('eth hash conversion', () => {
     const cid = convertEthHashToCid(hash)
     const convertedHash = convertCidToEthHash(cid)
 
-    expect(convertedHash).toEqual('hash')
+    expect(convertedHash).toEqual(hash)
   })
 })
