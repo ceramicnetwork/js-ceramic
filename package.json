@@ -40,7 +40,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^25.7.0",
     "jest": "^29.4.3",
-    "lerna": "^4.0.0",
+    "lerna": "^7.1.4",
     "node-gyp": "^9.3.1",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
