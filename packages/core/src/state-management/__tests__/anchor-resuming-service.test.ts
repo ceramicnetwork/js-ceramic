@@ -31,12 +31,26 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     jest.resetAllMocks()
   })
 
-  test(`Anchors streams in the stream state store`, async () => {
+  test.each`
+    anchorStatus
+    ${AnchorStatus.NOT_REQUESTED}
+    ${AnchorStatus.PENDING}
+  `(`Anchors streams with $anchorStatus status in the stream state store`, async (testParam) => {
     const numberOfStreams = 3
 
     const ceramic = await createCeramic(ipfs, {
       stateStoreDirectory: stateStoreDirectoryName,
     })
+
+    const anchorService = ceramic.repository.stateManager.anchorService as InMemoryAnchorService
+    if (testParam.anchorStatus === AnchorStatus.NOT_REQUESTED) {
+      const mockedRequestAnchor = jest.fn()
+      mockedRequestAnchor.mockImplementation(() => {
+        return new Observable<CASResponse>()
+      })
+      // @ts-ignore
+      anchorService.requestAnchor = mockedRequestAnchor
+    }
 
     // create a few streams with anchor === true to make sure that they stay in the anchor request store
     //  and in the stream state store
@@ -65,7 +79,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     )
 
     runnningStates$.forEach((runningState$) => {
-      expect(runningState$.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      expect(runningState$.state.anchorStatus).toEqual(testParam.anchorStatus)
     })
 
     // update one of the streams but do not anchor the update
