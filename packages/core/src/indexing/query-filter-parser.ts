@@ -3,13 +3,13 @@ import {
   ObjectFilter as ApiObjectFilter,
 } from '@ceramicnetwork/common'
 
+export type NonBooleanValueFilterType = 'number' | 'string'
 export type ValueFilterType = 'boolean' | 'number' | 'string'
 export type ValueFilter<T extends boolean | number | string = boolean | number | string> =
   | { type: ValueFilterType; op: 'null'; value: boolean }
   | { type: ValueFilterType; op: '='; value: T }
   | { type: ValueFilterType; op: '!='; value: T }
 
-export type NonBooleanValueFilterType = 'number' | 'string'
 export type NonBooleanValueFilter<T extends number | string = number | string> =
   | { type: NonBooleanValueFilterType; op: 'in'; value: Array<T> }
   | { type: NonBooleanValueFilterType; op: 'nin'; value: Array<T> }
@@ -34,7 +34,9 @@ export type QueryFilters =
   | { type: 'or'; value: Array<QueryFilters> }
   | { type: 'not'; value: QueryFilters }
 
-function getNonBooleanValueType<T extends number | string>(value: T): NonBooleanValueFilterType {
+export function getNonBooleanValueType<T extends number | string>(
+  value: T
+): NonBooleanValueFilterType {
   if (typeof value == 'number') {
     return 'number'
   } else {
@@ -42,13 +44,11 @@ function getNonBooleanValueType<T extends number | string>(value: T): NonBoolean
   }
 }
 
-function getValueType<T extends boolean | number | string>(value: T): ValueFilterType {
+export function getValueType<T extends boolean | number | string>(value: T): ValueFilterType {
   if (typeof value == 'boolean') {
     return 'boolean'
-  } else if (typeof value == 'number') {
-    return 'number'
   } else {
-    return 'string'
+    return getNonBooleanValueType(value)
   }
 }
 export function parseObjectFilter(filter: ApiObjectFilter): ObjectFilter {

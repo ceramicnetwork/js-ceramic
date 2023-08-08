@@ -72,8 +72,9 @@ export type RangeValueFilter<T extends string | number> =
 /**
  * String or number field value filter
  */
-export type ScalarValueFilter<T extends string | number = string | number> = CommonValueFilter<T> &
-  RangeValueFilter<T>
+export type ScalarValueFilter<T extends string | number = string | number> =
+  | CommonValueFilter<T>
+  | RangeValueFilter<T>
 
 /**
  * Any supported field value filter on an object

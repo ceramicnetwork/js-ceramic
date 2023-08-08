@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0...@ceramicnetwork/cli@2.36.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
 # [2.35.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0-rc.3...@ceramicnetwork/cli@2.35.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
