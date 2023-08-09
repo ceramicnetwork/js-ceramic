@@ -89,6 +89,7 @@ describe('Dispatcher with mock ipfs', () => {
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
       new ShutdownSignal(),
+      true,
       10
     )
   })

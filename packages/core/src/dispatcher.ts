@@ -31,7 +31,8 @@ import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
 
 const IPFS_GET_RETRIES = 3
-const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_LOCAL_TIMEOUT = 3000 // 3 seconds to get data from local ipfs store
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes
@@ -105,6 +106,7 @@ export class Dispatcher {
   )
 
   private readonly carFactory: CARFactory
+  private readonly _ipfsTimeout: number
 
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
@@ -115,9 +117,9 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     private readonly _shutdownSignal: ShutdownSignal,
+    private readonly _enableSync: boolean,
     maxQueriesPerSecond: number,
-    readonly tasks: TaskQueue = new TaskQueue(),
-    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     const pubsub = new Pubsub(
       _ipfs,
@@ -146,6 +148,11 @@ export class Dispatcher {
     this._ipfs.codecs.listCodecs().forEach((codec) => {
       this.carFactory.codecs.add(codec)
     })
+    if (this._enableSync) {
+      this._ipfsTimeout = DEFAULT_IPFS_GET_SYNC_TIMEOUT
+    } else {
+      this._ipfsTimeout = DEFAULT_IPFS_GET_LOCAL_TIMEOUT
+    }
   }
 
   async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
@@ -163,7 +170,8 @@ export class Dispatcher {
 
   async getIpfsBlock(cid: CID): Promise<Uint8Array> {
     return await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.block.get(cid, { signal })
+      // @ts-ignore
+      return this._ipfs.block.get(cid, { signal, offline: !this._enableSync })
     })
   }
 
@@ -313,7 +321,12 @@ export class Dispatcher {
         }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
         const block = await this._shutdownSignal.abortable((signal) =>
-          this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
+          this._ipfs.block.get(blockCid, {
+            timeout: this._ipfsTimeout,
+            signal: signal,
+            // @ts-ignore
+            offline: !this._enableSync,
+          })
         )
         restrictBlockSize(block, blockCid)
         result = codec.decode(block)

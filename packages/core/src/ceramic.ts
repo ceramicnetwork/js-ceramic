@@ -141,6 +141,8 @@ export interface CeramicConfig {
   useCentralizedPeerDiscovery?: boolean
   syncOverride?: SyncOptions
 
+  disablePeerDataSync?: boolean
+
   [index: string]: any // allow arbitrary properties
 }
 
@@ -535,6 +537,7 @@ export class Ceramic implements CeramicApi {
       logger,
       pubsubLogger,
       shutdownSignal,
+      !config.disablePeerDataSync,
       maxQueriesPerSecond
     )
 

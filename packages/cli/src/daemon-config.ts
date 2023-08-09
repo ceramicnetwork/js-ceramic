@@ -75,6 +75,13 @@ export class DaemonIpfsConfig {
    */
   @jsonArrayMember(String, { name: 'pinning-endpoints' })
   pinningEndpoints?: string[]
+
+  /**
+   * When true, effectively makes the node local-only.  All data syncing and sharing between nodes
+   * will fail.
+   */
+  @jsonMember(Boolean)
+  disablePeerDataSync?: boolean = false
 }
 
 /**
