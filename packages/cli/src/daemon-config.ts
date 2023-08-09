@@ -75,6 +75,12 @@ export class DaemonIpfsConfig {
    */
   @jsonArrayMember(String, { name: 'pinning-endpoints' })
   pinningEndpoints?: string[]
+
+  /**
+   * IPFS Get timeout
+   */
+  @jsonMember(Number, { name: 'get-timeout' })
+  getTimeout?: number
 }
 
 /**
@@ -317,10 +323,22 @@ export class DaemonCeramicNodeConfig {
   }
 
   /**
+   * http fetch timeout
+   */
+  @jsonMember(Number, { name: 'http-fetch-timeout' })
+  httpFetchTimeout?: number
+
+  /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
   @jsonMember(Boolean)
   gateway?: boolean
+
+  /**
+   * multiquery timeout
+   */
+  @jsonMember(Number, { name: 'multiquery-timeout' })
+  multiqueryTimeout?: number
 
   /**
    * If set, overrides the 'sync' flag for all stream load operations.  Most users should never have
