@@ -166,7 +166,7 @@ export class EthereumAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
-    if (process.env.CERAMIC_DISABLE_POLLING_RETRIES == 'true') {
+    if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
       return this._pollForAnchorResponseLegacy(streamId, tip)
     } else {
       return this._pollForAnchorResponse(streamId, tip)
