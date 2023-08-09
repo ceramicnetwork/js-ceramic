@@ -30,8 +30,8 @@ import type { ShutdownSignal } from './shutdown-signal.js'
 import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
 
-const IPFS_GET_RETRIES = 3
-const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const IPFS_GET_RETRIES = 1  // TESTING ONLY DO NOT MERGE
+const DEFAULT_IPFS_GET_TIMEOUT = 2000 // 2 seconds TOTAL - TESTING ONLY DO NOT MERGE
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes

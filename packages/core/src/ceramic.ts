@@ -878,7 +878,7 @@ export class Ceramic implements CeramicApi {
    */
   private async _loadLinkedStreams(
     query: MultiQuery,
-    timeout: number
+    timeout: number = 2000  // 2 sec timeout TESTING ONLY DO NOT MERGE
   ): Promise<Record<string, Stream>> {
     const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
