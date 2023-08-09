@@ -3,8 +3,8 @@ import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
 
 const MAX_FAILED_ATTEMPTS = 2
-const POLL_INTERVAL = 100 // ms
-const MAX_POLL_TIME = 500 // ms - to test if polling stops after this threshold
+const POLL_INTERVAL = 1000 // ms
+const MAX_POLL_TIME = 5000 // ms - to test if polling stops after this threshold
 
 let fetchAttemptNum = 0
 
@@ -31,6 +31,7 @@ jest.unstable_mockModule('cross-fetch', () => {
     default: fetchFunc,
   }
 })
+jest.setTimeout(10000)
 
 test('re-request an anchor till get a response', async () => {
   fetchAttemptNum = 0
@@ -120,5 +121,6 @@ test('stop polling after max time', async () => {
   await whenSubscriptionDone(subscription)
   expect(String(error)).toEqual('Error: Exceeded max anchor polling time limit')
   expect(errorCount).toEqual(1)
-  expect(nextCount).toBeGreaterThanOrEqual(3)
+  // During the 5 seconds, there are 2 retries and 3 successes
+  expect(nextCount).toEqual(3)
 })

@@ -9,7 +9,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, interval, concat, timer, of, defer } from 'rxjs'
+import { Observable, concat, timer, of, defer, expand } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -171,7 +171,7 @@ export class EthereumAnchorService implements AnchorService {
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
     const cidStream = { cid: tip, streamId }
 
-    const doPoll = defer(() => this.sendRequest(requestUrl)).pipe(
+    const requestWithError = defer(() => this.sendRequest(requestUrl)).pipe(
       retry({
         delay: (error) => {
           this._logger.err(
@@ -184,13 +184,13 @@ export class EthereumAnchorService implements AnchorService {
       })
     )
 
-    return interval(this.pollInterval).pipe(
-      concatMap(() => {
+    return requestWithError.pipe(
+      expand(() => {
         const now = new Date().getTime()
         if (now > maxTime) {
           throw new Error('Exceeded max anchor polling time limit')
         } else {
-          return doPoll
+          return timer(this.pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
       map((response) => this.parseResponse(cidStream, response))
