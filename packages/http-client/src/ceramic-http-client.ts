@@ -29,6 +29,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { RemoteIndexApi } from './remote-index-api.js'
 import { RemoteAdminApi } from './remote-admin-api.js'
+import { DummyPinApi } from './dummy-pin-api.js'
 
 const API_PATH = '/api/v0/'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -79,6 +80,7 @@ export class CeramicClient implements CeramicApi {
     this._apiUrl = new URL(API_PATH, apiHost)
     this.context = { api: this }
 
+    this.pin = new DummyPinApi()
     this.index = new RemoteIndexApi(this._apiUrl)
     const getDidFn = (() => {
       return this.did

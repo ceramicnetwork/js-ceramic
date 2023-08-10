@@ -629,6 +629,12 @@ export class Ceramic implements CeramicApi {
         .catch((error) => {
           this._logger.err(`Error while resuming anchors: ${error}`)
         })
+
+      if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
+        this._logger.warn(
+          `Running with anchor polling retries disabled. This is not recommended in production`
+        )
+      }
     } catch (err) {
       await this.close()
       throw err
