@@ -648,7 +648,9 @@ export class Ceramic implements CeramicApi {
     await this._checkIPFSPersistence()
 
     if (!this.dispatcher.enableSync && this.index.enabled && this.syncApi.enabled) {
-      throw new Error(`Cannot enable Historical Data Sync while Peer Data Sync is disabled`)
+      throw new Error(
+        `Cannot enable ComposeDB Historical Data Sync while IPFS peer data sync is disabled`
+      )
     }
 
     if (!this.dispatcher.enableSync) {
