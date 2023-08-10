@@ -647,7 +647,7 @@ export class Ceramic implements CeramicApi {
   async _startupChecks(): Promise<void> {
     await this._checkIPFSPersistence()
 
-    if (!this.dispatcher.enableSync && this.syncApi.enabled) {
+    if (!this.dispatcher.enableSync && this.index.enabled && this.syncApi.enabled) {
       throw new Error(`Cannot enable Historical Data Sync while Peer Data Sync is disabled`)
     }
 
