@@ -140,7 +140,8 @@ export class Dispatcher {
         ),
         _logger,
         maxQueriesPerSecond
-      )
+      ),
+      !this.enableSync
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)

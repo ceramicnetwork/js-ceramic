@@ -27,10 +27,17 @@ const OUTER_MESSAGES = MESSAGES.map((message) => asIpfsMessage(message, OUTER_PE
 test('subscribe to pubsub', async () => {
   const pubsub = from(OUTER_MESSAGES).pipe(delay(100)) as unknown as Pubsub
   const subscribeSpy = jest.spyOn(pubsub, 'subscribe')
-  const messageBus = new MessageBus(pubsub)
+  const messageBus = new MessageBus(pubsub, false)
   expect(subscribeSpy).toBeCalledTimes(1)
   const received = await firstValueFrom(messageBus.pipe(bufferCount(LENGTH)))
   expect(received).toEqual(OUTER_MESSAGES)
+})
+
+test('dont subscribe to pubsub if publishOnly is true', async () => {
+  const pubsub = from(OUTER_MESSAGES).pipe(delay(100)) as unknown as Pubsub
+  const subscribeSpy = jest.spyOn(pubsub, 'subscribe')
+  const messageBus = new MessageBus(pubsub, true)
+  expect(subscribeSpy).toBeCalledTimes(0)
 })
 
 test('publish to pubsub', async () => {
@@ -38,7 +45,7 @@ test('publish to pubsub', async () => {
     subscribe: jest.fn(() => Subscription.EMPTY),
     next: jest.fn(),
   } as unknown as Pubsub
-  const messageBus = new MessageBus(pubsub)
+  const messageBus = new MessageBus(pubsub, false)
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
@@ -53,7 +60,7 @@ test('not publish to pubsub if closed', async () => {
     subscribe: jest.fn(() => Subscription.EMPTY),
     next: jest.fn(),
   } as unknown as Pubsub
-  const messageBus = new MessageBus(pubsub)
+  const messageBus = new MessageBus(pubsub, false)
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
@@ -67,7 +74,7 @@ test('not publish to pubsub if closed', async () => {
 
 test('unsubscribe', async () => {
   const pubsub = from(OUTER_MESSAGES).pipe() as unknown as Pubsub
-  const messageBus = new MessageBus(pubsub)
+  const messageBus = new MessageBus(pubsub, false)
   const subscription1 = messageBus.subscribe()
   const subscription2 = messageBus.subscribe()
   messageBus.unsubscribe()
@@ -94,7 +101,7 @@ describe('queryNetwork', () => {
   pubsub.next = jest.fn()
 
   test('return tips', async () => {
-    const messageBus = new MessageBus(pubsub)
+    const messageBus = new MessageBus(pubsub, false)
     const responses = []
     const subscription = messageBus.queryNetwork(FAKE_STREAM_ID).subscribe((r) => {
       responses.push(r)
@@ -112,7 +119,7 @@ describe('queryNetwork', () => {
       })
     ) as unknown as Pubsub
     pubsub.next = jest.fn()
-    const messageBus = new MessageBus(pubsub)
+    const messageBus = new MessageBus(pubsub, false)
     const responses = []
     const subscription = messageBus.queryNetwork(FAKE_STREAM_ID).subscribe((r) => {
       responses.push(r)
@@ -133,7 +140,7 @@ describe('queryNetwork', () => {
       }, MAX_RESPONSE_INTERVAL * 3)
     }) as unknown as Pubsub
     ;(pubsub as any).next = jest.fn()
-    const messageBus = new MessageBus(pubsub)
+    const messageBus = new MessageBus(pubsub, false)
     const responses = []
     const subscription = messageBus.queryNetwork(FAKE_STREAM_ID).subscribe((r) => {
       responses.push(r)

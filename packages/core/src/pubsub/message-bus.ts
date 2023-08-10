@@ -34,11 +34,13 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   private readonly pubsubSubscription: Subscription
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>()
 
-  constructor(readonly pubsub: ObservableWithNext<PubsubMessage>) {
+  constructor(readonly pubsub: ObservableWithNext<PubsubMessage>, private readonly publishOnly) {
     super((subscriber) => {
       this.feed$.subscribe(subscriber)
     })
-    this.pubsubSubscription = this.pubsub.subscribe(this.feed$)
+    if (!publishOnly) {
+      this.pubsubSubscription = this.pubsub.subscribe(this.feed$)
+    }
   }
 
   /**
@@ -89,7 +91,9 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
    * Stop the message feed.
    */
   unsubscribe(): void {
-    this.pubsubSubscription.unsubscribe()
+    if (!this.publishOnly) {
+      this.pubsubSubscription.unsubscribe()
+    }
     this.feed$.complete()
   }
 }
