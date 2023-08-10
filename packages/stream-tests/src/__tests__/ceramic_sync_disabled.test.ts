@@ -100,33 +100,35 @@ describe('Cross node syncing disabled', () => {
     )
   })
 
-  it('Stream created on node with peer data sync disabled still loads via other well connected nodes', async () => {
-    const initialContent = { step: 0 }
-    const updatedContent = { step: 1 }
-    const doc1 = await TileDocument.create(disconnectedCeramic, initialContent, null, {
+  it('Stream created and updated on node with peer data sync disabled still loads via other well connected nodes', async () => {
+    const content0 = { step: 0 }
+    const content1 = { step: 1 }
+    const content2 = { step: 2 }
+    const doc1 = await TileDocument.create(disconnectedCeramic, content0, null, {
       anchor: false,
     })
+    await doc1.update(content1, null, { anchor: false })
 
     const doc2 = await TileDocument.load(connectedCeramic, doc1.id)
     expect(doc1.content).toEqual(doc2.content)
 
     // Update should also propagate from node with sync disabled to the other node without issue
-    await doc1.update(updatedContent, null, { anchor: false })
+    await doc1.update(content2, null, { anchor: false })
 
     await TestUtils.waitForState(
       doc2,
       5000,
-      (state) => state.log.length == 2,
+      (state) => state.log.length == 3,
       (state) => {
         throw new Error(`Sync failed. State: ${StreamUtils.serializeState(state)}`)
       }
     )
 
-    expect(doc1.content).toEqual(updatedContent)
-    expect(doc1.state.log.length).toEqual(2)
+    expect(doc1.content).toEqual(content2)
+    expect(doc1.state.log.length).toEqual(3)
 
-    expect(doc2.content).toEqual(updatedContent)
-    expect(doc2.state.log.length).toEqual(2)
+    expect(doc2.content).toEqual(content2)
+    expect(doc2.state.log.length).toEqual(3)
   })
 
   it('Updates made on connected node not visible to node with peer data sync disabled', async () => {

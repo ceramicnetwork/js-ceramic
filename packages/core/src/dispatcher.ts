@@ -419,6 +419,10 @@ export class Dispatcher {
    * @private
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
+    if (!this.enableSync) {
+      // No point in trying to apply the tip if we know we won't be able to load it from IPFS.
+      return
+    }
     // TODO Add validation the message adheres to the proper format.
     const { stream: streamId, tip, model } = message
     return this._handleTip(tip, streamId, model)
@@ -452,6 +456,11 @@ export class Dispatcher {
    * @private
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
+    if (!this.enableSync) {
+      // No point in trying to apply the tip if we know we won't be able to load it from IPFS.
+      return
+    }
+
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID
