@@ -117,7 +117,7 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     private readonly _shutdownSignal: ShutdownSignal,
-    private readonly _enableSync: boolean,
+    readonly enableSync: boolean,
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
@@ -148,7 +148,7 @@ export class Dispatcher {
     this._ipfs.codecs.listCodecs().forEach((codec) => {
       this.carFactory.codecs.add(codec)
     })
-    if (this._enableSync) {
+    if (this.enableSync) {
       this._ipfsTimeout = DEFAULT_IPFS_GET_SYNC_TIMEOUT
     } else {
       this._ipfsTimeout = DEFAULT_IPFS_GET_LOCAL_TIMEOUT
@@ -171,7 +171,7 @@ export class Dispatcher {
   async getIpfsBlock(cid: CID): Promise<Uint8Array> {
     return await this._shutdownSignal.abortable((signal) => {
       // @ts-ignore
-      return this._ipfs.block.get(cid, { signal, offline: !this._enableSync })
+      return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
     })
   }
 
@@ -325,7 +325,7 @@ export class Dispatcher {
             timeout: this._ipfsTimeout,
             signal: signal,
             // @ts-ignore
-            offline: !this._enableSync,
+            offline: !this.enableSync,
           })
         )
         restrictBlockSize(block, blockCid)
