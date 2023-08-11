@@ -116,7 +116,7 @@ function extractMetadata(
 
   const { timestamp: nextUpdate, cid: nextVersionId } =
     latestVersionState.log.find(({ timestamp }) => {
-      return (timestamp && updated && timestamp > updated) || (!updated && timestamp)
+      return timestamp && ((updated && timestamp > updated) || !updated)
     }) || {}
 
   if (updated) {
