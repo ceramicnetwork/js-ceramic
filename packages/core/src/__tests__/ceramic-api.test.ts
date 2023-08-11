@@ -1,4 +1,13 @@
-import { jest } from '@jest/globals'
+import {
+  jest,
+  describe,
+  beforeEach,
+  beforeAll,
+  afterEach,
+  afterAll,
+  expect,
+  it,
+} from '@jest/globals'
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -185,6 +194,17 @@ describe('Ceramic API', () => {
     it('can create stream with valid schema', async () => {
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
       await TileDocument.create(ceramic, { a: 'test' }, { schema: schemaDoc.commitId })
+    })
+
+    it('block get calls on update', async () => {
+      const tile = await TileDocument.create(ceramic, { content: `hello-${Math.random()}` })
+      const original = ceramic.ipfs.dag.get.bind(ceramic.ipfs.dag)
+      const spy = jest.spyOn(ceramic.ipfs.dag, 'get').mockImplementation((...args) => {
+        console.trace('dag-get')
+        return original(...args)
+      })
+      await tile.update({ content: `hello-again-${Math.random()}` })
+      console.log('calls.0', spy.mock.calls)
     })
 
     it('can create and update stream with valid model to trigger indexing', async () => {
