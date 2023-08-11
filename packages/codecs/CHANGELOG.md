@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.5.0...@ceramicnetwork/codecs@1.6.0-rc.0) (2023-08-11)
+
+
+### Features
+
+* **codecs:** model codecs ([#2825](https://github.com/ceramicnetwork/js-ceramic/issues/2825)) ([f94fb50](https://github.com/ceramicnetwork/js-ceramic/commit/f94fb5097359e40a5bc817105f0584f90a9decbd))
+
+
+
+
+
 # [1.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.5.0-rc.0...@ceramicnetwork/codecs@1.5.0) (2023-07-31)
 
 
