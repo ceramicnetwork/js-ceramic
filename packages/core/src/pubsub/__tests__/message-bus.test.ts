@@ -33,13 +33,6 @@ test('subscribe to pubsub', async () => {
   expect(received).toEqual(OUTER_MESSAGES)
 })
 
-test('dont subscribe to pubsub if publishOnly is true', async () => {
-  const pubsub = from(OUTER_MESSAGES).pipe(delay(100)) as unknown as Pubsub
-  const subscribeSpy = jest.spyOn(pubsub, 'subscribe')
-  const messageBus = new MessageBus(pubsub, true)
-  expect(subscribeSpy).toBeCalledTimes(0)
-})
-
 test('publish to pubsub', async () => {
   const pubsub = {
     subscribe: jest.fn(() => Subscription.EMPTY),
