@@ -132,12 +132,7 @@ function safeSend(provider: any, method: string, params?: Array<any>): Promise<a
   }
 
   if (provider.request) {
-    return provider.request({ method, params }).then(
-      (response: any) => response,
-      (error: any) => {
-        throw error
-      }
-    )
+    return provider.request({ method, params })
   } else if (provider.sendAsync || provider.send) {
     const sendFunc = (provider.sendAsync ? provider.sendAsync : provider.send).bind(provider)
     const request = encodeRpcMessage(method, params)
