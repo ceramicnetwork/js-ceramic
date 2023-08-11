@@ -1,4 +1,4 @@
-name: Build and push Docker image
+name: Build custom Docker image
 
 on:
   workflow_dispatch: # manually triggered
@@ -42,7 +42,7 @@ jobs:
         env:
           IMAGE_ID: "${{ steps.login-ecr-public.outputs.registry }}/r5b3e0r5/3box/js-ceramic"
         run: |
-          docker buildx build -o type=docker . --file Dockerfile \
+          docker buildx build -o type=docker . --file Dockerfile.daemon \
             --tag $IMAGE_ID:${{ github.event.inputs.image_tag }} \
             --tag $IMAGE_ID:${{ github.sha }}
           docker push --all-tags $IMAGE_ID
