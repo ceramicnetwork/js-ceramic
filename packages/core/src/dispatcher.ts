@@ -31,7 +31,8 @@ import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
 
 const IPFS_GET_RETRIES = 3
-const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_LOCAL_TIMEOUT = 1000 // 1 second to get data from local ipfs store
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes
@@ -105,6 +106,7 @@ export class Dispatcher {
   )
 
   private readonly carFactory: CARFactory
+  private readonly _ipfsTimeout: number
 
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
@@ -115,9 +117,9 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     private readonly _shutdownSignal: ShutdownSignal,
+    readonly enableSync: boolean,
     maxQueriesPerSecond: number,
-    readonly tasks: TaskQueue = new TaskQueue(),
-    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     const pubsub = new Pubsub(
       _ipfs,
@@ -138,13 +140,19 @@ export class Dispatcher {
         ),
         _logger,
         maxQueriesPerSecond
-      )
+      ),
+      !this.enableSync
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
     for (const codec of this._ipfs.codecs.listCodecs()) {
       this.carFactory.codecs.add(codec)
+    }
+    if (this.enableSync) {
+      this._ipfsTimeout = DEFAULT_IPFS_GET_SYNC_TIMEOUT
+    } else {
+      this._ipfsTimeout = DEFAULT_IPFS_GET_LOCAL_TIMEOUT
     }
   }
 
@@ -166,7 +174,8 @@ export class Dispatcher {
 
   async getIpfsBlock(cid: CID): Promise<Uint8Array> {
     return await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.block.get(cid, { signal })
+      // @ts-ignore
+      return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
     })
   }
 
@@ -321,7 +330,12 @@ export class Dispatcher {
         }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
         const block = await this._shutdownSignal.abortable((signal) =>
-          this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
+          this._ipfs.block.get(blockCid, {
+            timeout: this._ipfsTimeout,
+            signal: signal,
+            // @ts-ignore
+            offline: !this.enableSync,
+          })
         )
         restrictBlockSize(block, blockCid)
         result = codec.decode(block)
@@ -413,6 +427,10 @@ export class Dispatcher {
    * @private
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
+    if (!this.enableSync) {
+      // No point in trying to apply the tip if we know we won't be able to load it from IPFS.
+      return
+    }
     // TODO Add validation the message adheres to the proper format.
     const { stream: streamId, tip, model } = message
     return this._handleTip(tip, streamId, model)
@@ -446,6 +464,11 @@ export class Dispatcher {
    * @private
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
+    if (!this.enableSync) {
+      // No point in trying to apply the tip if we know we won't be able to load it from IPFS.
+      return
+    }
+
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID
