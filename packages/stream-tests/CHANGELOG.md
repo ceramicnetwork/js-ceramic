@@ -3,6 +3,130 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.36.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.36.0-rc.0...@ceramicnetwork/stream-tests@2.36.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0...@ceramicnetwork/stream-tests@2.36.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
+# [2.35.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0-rc.3...@ceramicnetwork/stream-tests@2.35.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.35.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0-rc.2...@ceramicnetwork/stream-tests@2.35.0-rc.3) (2023-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.35.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0-rc.1...@ceramicnetwork/stream-tests@2.35.0-rc.2) (2023-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.35.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0-rc.0...@ceramicnetwork/stream-tests@2.35.0-rc.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* **core:** Loading at an AnchorCommit should be able to inform node that CACAO is not actually expired ([#2868](https://github.com/ceramicnetwork/js-ceramic/issues/2868)) ([35ada9e](https://github.com/ceramicnetwork/js-ceramic/commit/35ada9e722991364d332ec87f53d42972241e910))
+
+
+
+
+
+# [2.35.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.34.0...@ceramicnetwork/stream-tests@2.35.0-rc.0) (2023-07-13)
+
+
+### Features
+
+* CDB-2493 Adjust API to support model index changes ([#2844](https://github.com/ceramicnetwork/js-ceramic/issues/2844)) ([13e7a9f](https://github.com/ceramicnetwork/js-ceramic/commit/13e7a9f52fdb824d97966c4df88e3db1fcd16428))
+* **core:** CDB 2492 Add database indices for model fields ([#2845](https://github.com/ceramicnetwork/js-ceramic/issues/2845)) ([5ef6dba](https://github.com/ceramicnetwork/js-ceramic/commit/5ef6dbac58258718e3fb108c7fefedf899441591))
+* **core:** CDB-2535 Implement query filters for database queries ([#2842](https://github.com/ceramicnetwork/js-ceramic/issues/2842)) ([67f3de1](https://github.com/ceramicnetwork/js-ceramic/commit/67f3de190950db032cc68cd06e902d9fccda0d6e))
+
+
+
+
+
+# [2.34.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.34.0-rc.0...@ceramicnetwork/stream-tests@2.34.0) (2023-07-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.34.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.33.0-rc.0...@ceramicnetwork/stream-tests@2.34.0-rc.0) (2023-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.32.0-rc.0...@ceramicnetwork/stream-tests@2.33.0-rc.0) (2023-06-19)
+
+
+### Features
+
+* Add loadOpts to MultiQuery ([#2768](https://github.com/ceramicnetwork/js-ceramic/issues/2768)) ([c609c23](https://github.com/ceramicnetwork/js-ceramic/commit/c609c23e808e659d79e2a8bbc5dcdf80cab88e19))
+
+
+
+
+
+# [2.32.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.31.0...@ceramicnetwork/stream-tests@2.32.0-rc.0) (2023-06-01)
+
+
+### Features
+
+* **core:** store CAR files that come back from CAS ([#2828](https://github.com/ceramicnetwork/js-ceramic/issues/2828)) ([45440ca](https://github.com/ceramicnetwork/js-ceramic/commit/45440cad18d7eb89e1b5c0838cb1df6b96bbe754))
+
+
+
+
+
+# [2.31.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.31.0-rc.0...@ceramicnetwork/stream-tests@2.31.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.30.0...@ceramicnetwork/stream-tests@2.31.0-rc.0) (2023-05-24)
+
+
+### Features
+
+* Less calls to IPFS node ([#2820](https://github.com/ceramicnetwork/js-ceramic/issues/2820)) ([74b92bb](https://github.com/ceramicnetwork/js-ceramic/commit/74b92bb746fbe2cd2957724e9a831a7ca7fed34d))
+
+
+
+
+
 # [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.30.0-rc.0...@ceramicnetwork/stream-tests@2.30.0) (2023-05-03)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

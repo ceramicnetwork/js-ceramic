@@ -12,11 +12,11 @@ import {
   SignedCommit,
   SignedCommitContainer,
 } from '../index.js'
-import { AnchorStatus, LogEntry, StreamState } from '../stream.js'
+import { LogEntry, StreamState } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { base64urlToJSON } from '@ceramicnetwork/common'
+import { base64urlToJSON, AnchorStatus } from '@ceramicnetwork/common'
 
 const TILE_TYPE_ID = 0
 

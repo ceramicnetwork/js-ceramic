@@ -1,6 +1,8 @@
 import type {
   BaseQuery,
+  FieldsIndex,
   IndexApi,
+  ModelData,
   Page,
   PaginationQuery,
   StreamState,
@@ -17,15 +19,17 @@ import { Model } from '@ceramicnetwork/stream-model'
 import { ISyncQueryApi } from '../sync/interfaces.js'
 
 /**
- * Takes a Model StreamID, loads it, and returns the IndexModelArgs necessary to prepare the
+ * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
-async function _getIndexModelArgs(
-  modelStreamId: StreamID,
-  repository: Repository
-): Promise<IndexModelArgs> {
+async function _getIndexModelArgs(req: ModelData, repository: Repository): Promise<IndexModelArgs> {
+  const modelStreamId = req.streamID
   if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
+  }
+
+  const opts: IndexModelArgs = {
+    model: modelStreamId,
   }
 
   if (modelStreamId.type == Model.STREAM_TYPE_ID) {
@@ -33,11 +37,12 @@ async function _getIndexModelArgs(
     const content = modelState.state.next?.content ?? modelState.state.content
     Model.assertVersionValid(content, 'major')
     if (content.relations) {
-      return { model: modelStreamId, relations: content.relations }
+      opts.relations = content.relations
     }
+    opts.indices = req.indices
   }
 
-  return { model: modelStreamId }
+  return opts
 }
 
 /**
@@ -68,8 +73,8 @@ export class LocalIndexApi implements IndexApi {
       return false
     }
 
-    return this.databaseIndexApi.getActiveModelsToIndex().some(function (streamId) {
-      return String(streamId) === String(args)
+    return this.databaseIndexApi.getIndexedModels().some(function (idx) {
+      return idx.streamID.equals(args)
     })
   }
 
@@ -96,35 +101,7 @@ export class LocalIndexApi implements IndexApi {
    * We assume that a state store always contains StreamState for an indexed stream, but we return null iff it's not to avoid throwing errors at DApps
    */
   async query(query: PaginationQuery): Promise<Page<StreamState | null>> {
-    if (this.databaseIndexApi) {
-      const page = await this.databaseIndexApi.page(query)
-      const edges = await Promise.all(
-        // For database queries we bypass the stream cache and repository loading queue
-        page.edges.map(async (edge) => {
-          let node = await this.repository.streamState(edge.node)
-          if (!node) {
-            this.logger.warn(`
-            Did not find stream state for streamid ${
-              edge.node
-            } in our state store when serving an indexed query.
-            This may indicate a problem with data persistence of your state store, which can result in data loss.
-            Please check that your state store is properly configured with strong persistence guarantees.
-            This query may have incomplete results. Affected query: ${JSON.stringify(query)}
-            `)
-            node = null
-          }
-
-          return {
-            cursor: edge.cursor,
-            node: node,
-          }
-        })
-      )
-      return {
-        edges: edges,
-        pageInfo: page.pageInfo,
-      }
-    } else {
+    if (!this.databaseIndexApi) {
       this.logger.warn(`Indexing is not configured. Unable to serve query ${JSON.stringify(query)}`)
       return {
         edges: [],
@@ -134,58 +111,86 @@ export class LocalIndexApi implements IndexApi {
         },
       }
     }
-  }
 
-  indexedModels(): Array<StreamID> {
-    return this.databaseIndexApi?.getActiveModelsToIndex()
-  }
-
-  async indexModels(models: Array<StreamID> | null | undefined): Promise<void> {
-    if (!models) {
-      return
-    }
-
-    const previouslyIndexedModels =
-      await this.databaseIndexApi?.getPreviouslyIndexedModelsFromDatabase()
-
-    const indexModelsArgs = []
-    for (const modelStreamId of models) {
-      this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
-      const indexModelArgs = await _getIndexModelArgs(modelStreamId, this.repository)
-      if (previouslyIndexedModels) {
-        const streamWasPreviouslyIndexed = previouslyIndexedModels.some(function (streamId) {
-          return String(streamId) === String(modelStreamId)
-        })
-        // TODO(CDB-2297): Handle a model's historical sync after re-indexing
-        if (streamWasPreviouslyIndexed) {
-          throw new Error(
-            `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
-          )
+    const page = await this.databaseIndexApi.page(query)
+    const edges = await Promise.all(
+      // For database queries we bypass the stream cache and repository loading queue
+      page.edges.map(async (edge) => {
+        let node = await this.repository.streamState(edge.node)
+        if (!node) {
+          this.logger.warn(`
+            Did not find stream state for streamid ${
+              edge.node
+            } in our state store when serving an indexed query.
+            This may indicate a problem with data persistence of your state store, which can result in data loss.
+            Please check that your state store is properly configured with strong persistence guarantees.
+            This query may have incomplete results. Affected query: ${JSON.stringify(query)}
+            `)
+          node = null
         }
-      }
-      indexModelsArgs.push(indexModelArgs)
+
+        return {
+          cursor: edge.cursor,
+          node: node,
+        }
+      })
+    )
+    return {
+      edges: edges,
+      pageInfo: page.pageInfo,
     }
+  }
+
+  indexedModels(): Array<ModelData> {
+    return this.databaseIndexApi?.getIndexedModels() ?? []
+  }
+
+  async convertModelDataToIndexModelsArgs(
+    modelsNoLongerIndexed: Array<ModelData>,
+    modelData: ModelData
+  ): Promise<IndexModelArgs> {
+    const modelStreamId = modelData.streamID
+    this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
+
+    const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
+      return oldIdx.streamID.equals(modelStreamId)
+    })
+    // TODO(CDB-2297): Handle a model's historical sync after re-indexing
+    if (modelNoLongerIndexed) {
+      throw new Error(
+        `Cannot re-index model ${modelStreamId.toString()}, data may not be up-to-date`
+      )
+    }
+
+    return await _getIndexModelArgs(modelData, this.repository)
+  }
+
+  async indexModels(models: Array<ModelData>): Promise<void> {
+    const modelsNoLongerIndexed = (await this.databaseIndexApi?.getModelsNoLongerIndexed()) ?? []
+
+    const indexModelsArgs = await Promise.all(
+      models.map(
+        async (idx) => await this.convertModelDataToIndexModelsArgs(modelsNoLongerIndexed, idx)
+      )
+    )
+
     await this.databaseIndexApi?.indexModels(indexModelsArgs)
   }
 
-  async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(models: Array<ModelData>): Promise<void> {
     this.logger.imp(`Stopping indexing for Models: ${models.map(String).join(',')}`)
     await this.databaseIndexApi?.stopIndexingModels(models)
   }
 
   async init(): Promise<void> {
-    await this.databaseIndexApi?.init()
-    // FIXME: CDB-2132 - Fragile DatabaseApi initialisation
-    await this.populateDatabaseApiInternalState()
-  }
-
-  /*
-  Gets currently indexed models from the database api and calls index's api indexModels()
-  which creates index model args and passes them back to the database api, so that it can populate
-  its internal state
-   */
-  async populateDatabaseApiInternalState(): Promise<void> {
-    const modelsToIndex = this.databaseIndexApi?.getActiveModelsToIndex()
+    if (!this.databaseIndexApi) {
+      return
+    }
+    await this.databaseIndexApi.init()
+    // Load the set of indexed models from the database and pass them
+    // back to the DatabaseIndexApi so that it can populate its internal state.
+    // TODO(CDB-2132):  Fix this fragile and circular DatabaseApi initialization
+    const modelsToIndex = this.databaseIndexApi.getIndexedModels()
     await this.indexModels(modelsToIndex)
   }
 

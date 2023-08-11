@@ -1,66 +1,33 @@
 import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
-import type { AnchorProof, AnchorStatus } from './stream.js'
 import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { CAR } from 'cartonne'
+import type { CAR } from 'cartonne'
+import type { CASResponse } from '@ceramicnetwork/codecs'
+
+/**
+ * Describes all anchor statuses
+ */
+export enum AnchorStatus {
+  NOT_REQUESTED = 0,
+  PENDING = 1,
+  PROCESSING = 2,
+  ANCHORED = 3,
+  FAILED = 4,
+  REPLACED = 5,
+}
 
 export enum AnchorServiceAuthMethods {
   DID = 'did',
 }
 
-export interface AnchorServicePending {
-  readonly status: AnchorStatus.PENDING
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
+export type AnchorProof = {
+  chainId: string
+  txHash: CID
+  root: CID
+  txType?: string
 }
-
-export interface AnchorServiceProcessing {
-  readonly status: AnchorStatus.PROCESSING
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export interface AnchorServiceAnchored {
-  readonly status: AnchorStatus.ANCHORED
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-  readonly anchorCommit: CID
-}
-
-export interface AnchorServiceFailed {
-  readonly status: AnchorStatus.FAILED
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export interface AnchorServiceReplaced {
-  readonly status: AnchorStatus.REPLACED
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly message: string
-}
-
-export type RequestAnchorParams = {
-  streamID: StreamID
-  tip: CID
-  timestampISO: string // a result of Date.toISOString()
-}
-
-/**
- * Describes anchor service response
- */
-export type AnchorServiceResponse =
-  | AnchorServicePending
-  | AnchorServiceProcessing
-  | AnchorServiceAnchored
-  | AnchorServiceFailed
-  | AnchorServiceReplaced
 
 /**
  * Describes anchoring service behavior
@@ -88,7 +55,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse>
+  requestAnchor(carFile: CAR): Observable<CASResponse>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
@@ -96,7 +63,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this

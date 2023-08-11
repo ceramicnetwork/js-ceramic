@@ -1,15 +1,16 @@
 import { jest } from '@jest/globals'
-import { CID } from 'multiformats/cid'
-import { StreamID } from '@ceramicnetwork/streamid'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
-import { generateFakeCarFile } from './generateFakeCarFile.js'
+import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
 
 const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
 
 const casProcessingResponse = {
+  id: 'fake-id',
   status: 'PROCESSING',
   message: `CAS is finally available; nonce: ${Math.random()}`,
+  streamId: FAKE_STREAM_ID.toString(),
+  cid: FAKE_TIP_CID.toString(),
 }
 
 jest.unstable_mockModule('cross-fetch', () => {
@@ -40,6 +41,7 @@ afterAll(async () => {
 
 test('re-request an anchor till get a response', async () => {
   const common = await import('@ceramicnetwork/common')
+  const codecs = await import('@ceramicnetwork/codecs')
   const eas = await import('../ethereum-anchor-service.js')
   const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
   const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
@@ -63,7 +65,7 @@ test('re-request an anchor till get a response', async () => {
 
   let lastResponse: any
   const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
-    if (response.status === common.AnchorStatus.PROCESSING) {
+    if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
       lastResponse = response
       subscription.unsubscribe()
     }

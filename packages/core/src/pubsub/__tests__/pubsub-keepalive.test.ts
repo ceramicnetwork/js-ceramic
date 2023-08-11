@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { expect, jest } from '@jest/globals'
 import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub.js'
 import { deserialize, KeepaliveMessage, MsgType } from '../pubsub-message.js'
@@ -12,6 +12,7 @@ const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 
 const PEER_ID = 'PEER_ID'
 const LATE_MESSAGE_AFTER = 1000
+const FAKE_IPFS_VERSION = '0.0.0-fake'
 
 describe('pubsub keepalive', () => {
   test('sends keepalive if no messages over a period of time', async () => {
@@ -23,6 +24,7 @@ describe('pubsub keepalive', () => {
         publish: jest.fn(),
       },
       id: jest.fn(async () => ({ id: PEER_ID })),
+      version: () => Promise.resolve({ version: FAKE_IPFS_VERSION }),
     }
     const pubsub = new Pubsub(
       ipfs as unknown as IpfsApi,
@@ -36,6 +38,7 @@ describe('pubsub keepalive', () => {
     const maxKeepaliveIntervalTime = 500
     const pubsubWithKeepalive = new PubsubKeepalive(
       pubsub,
+      ipfs as unknown as IpfsApi,
       maxPubsubIntervalTime,
       maxKeepaliveIntervalTime
     )
@@ -47,6 +50,7 @@ describe('pubsub keepalive', () => {
       const message = deserialize({ data: call[1] }) as KeepaliveMessage
       expect(message.typ).toEqual(MsgType.KEEPALIVE)
       expect(message.ver).toEqual(version)
+      expect(message.ipfsVer).toEqual(FAKE_IPFS_VERSION)
     }
 
     subscription.unsubscribe()
@@ -60,6 +64,7 @@ describe('pubsub keepalive', () => {
         publish: jest.fn(),
       },
       id: jest.fn(async () => ({ id: PEER_ID })),
+      version: () => Promise.resolve({ version: '0.0.0-fake' }),
     }
     const pubsub = new Pubsub(
       ipfs as unknown as IpfsApi,
@@ -73,6 +78,7 @@ describe('pubsub keepalive', () => {
     const maxKeepaliveIntervalTime = 100
     const pubsubWithKeepalive = new PubsubKeepalive(
       pubsub,
+      ipfs as unknown as IpfsApi,
       maxPubsubIntervalTime,
       maxKeepaliveIntervalTime
     )
@@ -85,6 +91,7 @@ describe('pubsub keepalive', () => {
       const message = deserialize({ data: call[1] }) as KeepaliveMessage
       expect(message.typ).toEqual(MsgType.KEEPALIVE)
       expect(message.ver).toEqual(version)
+      expect(message.ipfsVer).toEqual(FAKE_IPFS_VERSION)
     }
 
     subscription.unsubscribe()
@@ -98,6 +105,7 @@ describe('pubsub keepalive', () => {
         publish: jest.fn(),
       },
       id: jest.fn(async () => ({ id: PEER_ID })),
+      version: () => Promise.resolve({ version: '0.0.0-fake' }),
     }
     const pubsub = new Pubsub(
       ipfs as unknown as IpfsApi,
@@ -111,6 +119,7 @@ describe('pubsub keepalive', () => {
     const maxKeepaliveIntervalTime = 1000
     const pubsubWithKeepalive = new PubsubKeepalive(
       pubsub,
+      ipfs as unknown as IpfsApi,
       maxPubsubIntervalTime,
       maxKeepaliveIntervalTime
     )

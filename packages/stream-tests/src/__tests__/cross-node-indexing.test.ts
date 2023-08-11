@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import {
-  CeramicApi,
   IpfsApi,
   Page,
   PaginationQuery,
@@ -157,7 +156,7 @@ describe.each(envs)(
           enableHistoricalSync: false,
         },
       })
-      await ceramic1.index.indexModels([model.id])
+      await ceramic1.index.indexModels([{ streamID: model.id }])
 
       ceramic2 = await createCeramic(ipfs2, {
         indexing: {
@@ -166,7 +165,7 @@ describe.each(envs)(
           enableHistoricalSync: false,
         },
       })
-      await ceramic2.index.indexModels([model.id])
+      await ceramic2.index.indexModels([{ streamID: model.id }])
     }, 30 * 1000)
 
     afterEach(async () => {

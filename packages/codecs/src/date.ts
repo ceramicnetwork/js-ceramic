@@ -17,3 +17,16 @@ export const date = new Type<Date, string, unknown>(
   },
   (input: Date) => input.toISOString()
 )
+
+export const dateAsUnix = new Type<Date, number, number>(
+  'Date-as-UnixTimestamp',
+  (input: unknown): input is Date => Boolean(input && input instanceof Date),
+  (input: number, context: Context) => {
+    try {
+      return context.success(new Date(input))
+    } catch {
+      return context.failure()
+    }
+  },
+  (date) => date.getTime()
+)

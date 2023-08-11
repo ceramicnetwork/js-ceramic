@@ -1,8 +1,0 @@
-export enum RequestStatusName {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  READY = 'READY',
-  REPLACED = 'REPLACED',
-}

@@ -4,9 +4,7 @@ import { filter } from 'rxjs/operators'
 import {
   AnchorProof,
   AnchorService,
-  AnchorStatus,
   StreamUtils,
-  AnchorServiceResponse,
   AnchorValidator,
   AnchorCommit,
   TestUtils,
@@ -19,8 +17,10 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
 import lru from 'lru_map'
-import { CAR } from 'cartonne'
+import { CAR, CarBlock, CARFactory } from 'cartonne'
+import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
+import { AnchorRequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -55,6 +55,8 @@ interface InMemoryAnchorConfig {
 // tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
 // can successfully validate each others transactions.
 const txnCache: lru.LRUMap<string, number> = new lru.LRUMap(100)
+const carFactory = new CARFactory()
+carFactory.codecs.add(DAG_JOSE)
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -67,10 +69,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   readonly #anchorDelay: number
   readonly #anchorOnRequest: boolean
   readonly #verifySignatures: boolean
-  readonly #feed: Subject<AnchorServiceResponse> = new Subject()
+  readonly #feed: Subject<CASResponse> = new Subject()
 
   // Maps CID of a specific anchor request to the current status of that request
-  readonly #anchors: Map<string, AnchorServiceResponse> = new Map()
+  readonly #anchors: Map<string, CASResponse> = new Map()
 
   #queue: Candidate[] = []
 
@@ -79,7 +81,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true
     this.#verifySignatures = _config?.verifySignatures ?? true
 
-    // Remember the most recent AnchorServiceResponse for each anchor request
+    // Remember the most recent CASResponse for each anchor request
     this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
   }
 
@@ -217,7 +219,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`
     }
     this.#feed.next({
-      status: AnchorStatus.FAILED,
+      id: '',
+      status: AnchorRequestStatusName.FAILED,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,
@@ -229,7 +232,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
     }
     this.#feed.next({
-      status: AnchorStatus.PROCESSING,
+      id: '',
+      status: AnchorRequestStatusName.PROCESSING,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,
@@ -285,13 +289,14 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse> {
+  requestAnchor(carFile: CAR): Observable<CASResponse> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const candidate = new Candidate(carFileReader)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
-          status: AnchorStatus.FAILED,
+          id: '',
+          status: AnchorRequestStatusName.FAILED,
           streamId: candidate.streamId,
           cid: candidate.cid,
           message: error.message,
@@ -301,7 +306,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       this.#queue.push(candidate)
     }
     this.#feed.next({
-      status: AnchorStatus.PENDING,
+      id: '',
+      status: AnchorRequestStatusName.PENDING,
       streamId: carFileReader.streamId,
       cid: carFileReader.tip,
       message: 'Sending anchoring request',
@@ -315,13 +321,13 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
     const anchorResponse = this.#anchors.get(tip.toString())
     const feed$ = this.#feed.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
     if (anchorResponse) {
-      return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
+      return concat(of<CASResponse>(anchorResponse), feed$)
     } else {
       return feed$
     }
@@ -367,6 +373,23 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Builds the CAR file that the AnchorService responds to Ceramic with for a successfully anchored
+   * request. Contains the AnchorCommit, AnchorProof, and the merkle tree path to the anchored commit.
+   * For the InMemoryAnchorService, however, the tree is always of size one, so there are no
+   * intermediate objects from the merkle tree.
+   */
+  async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
+    const car = carFactory.build()
+
+    const cidToBlock = async (cid) => new CarBlock(cid, await this.#dispatcher.getIpfsBlock(cid))
+
+    car.blocks.put(await cidToBlock(proofCid))
+    car.blocks.put(await cidToBlock(anchorCommitCid))
+
+    return car
+  }
+
+  /**
    * Process single candidate
    * @private
    */
@@ -387,14 +410,18 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
     const cid = await this._publishAnchorCommit(leaf.streamId, commit)
 
+    const witnessCar = await this._buildWitnessCAR(proof, cid)
+
     // add a delay
     const handle = setTimeout(() => {
       this.#feed.next({
-        status: AnchorStatus.ANCHORED,
+        id: '',
+        status: AnchorRequestStatusName.COMPLETED,
         streamId: leaf.streamId,
         cid: leaf.cid,
         message: 'CID successfully anchored',
-        anchorCommit: cid,
+        anchorCommit: { cid: cid },
+        witnessCar,
       })
       clearTimeout(handle)
     }, this.#anchorDelay)

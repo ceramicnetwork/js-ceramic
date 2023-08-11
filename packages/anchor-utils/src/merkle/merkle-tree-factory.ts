@@ -1,6 +1,6 @@
 import type { CompareFunction, MergeFunction, MetadataFunction } from './merkle-elements.js'
 import { Node } from './merkle-elements.js'
-import { MerkleTree } from './merkle-tree.js'
+import { MerkleTree, type IMerkleTree } from './merkle-tree.js'
 
 /**
  * When no leaves present.
@@ -20,7 +20,18 @@ export class MerkleDepthError extends Error {
   }
 }
 
-export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata> {
+export interface IMerkleTreeFactory<
+  TData,
+  TLeaf extends TData,
+  TMetadata,
+  TMerkleTree extends IMerkleTree<TData, TLeaf, TMetadata>
+> {
+  build(leaves: Array<TLeaf> | null | undefined): Promise<TMerkleTree>
+}
+
+export class MerkleTreeFactory<TData, TLeaf extends TData, TMetadata>
+  implements IMerkleTreeFactory<TData, TLeaf, TMetadata, MerkleTree<TData, TLeaf, TMetadata>>
+{
   constructor(
     /**
      * A function that merges nodes at lower levels to produce nodes for higher levels of the tree.

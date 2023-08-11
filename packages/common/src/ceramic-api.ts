@@ -1,11 +1,36 @@
 import type { DID } from 'dids'
-import type { Stream, StreamHandler, CeramicCommit, AnchorStatus, StreamState } from './stream.js'
+import type { Stream, StreamHandler, CeramicCommit, StreamState } from './stream.js'
 import type { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
 import { NodeStatusResponse } from './node-status-interface.js'
+import type { AnchorStatus } from '@ceramicnetwork/common'
+
+/**
+ * Field definition for index
+ */
+export type Field = {
+  path: Array<string>
+}
+
+/**
+ * Index for a model
+ */
+export type FieldsIndex = {
+  fields: Array<Field>
+}
+
+/**
+ * Data for a model. Contains
+ *  * streamID: StreamID of the model
+ *  * indices: Array of field indices
+ */
+export type ModelData = {
+  streamID: StreamID
+  indices?: Array<FieldsIndex>
+}
 
 /**
  * Describes Ceramic pinning functionality
@@ -55,6 +80,14 @@ export interface CeramicSigner extends CeramicCommon {
   [index: string]: any // allow arbitrary properties
 }
 
+export function convertModelIdsToModelData(modelIds: Array<StreamID>): Array<ModelData> {
+  return modelIds.map((streamID) => {
+    return {
+      streamID,
+    }
+  })
+}
+
 /**
  * Describes Ceramic Admin API functionality
  */
@@ -66,24 +99,46 @@ export interface AdminApi {
   nodeStatus(): Promise<NodeStatusResponse>
 
   /**
+   * @deprecated
    * List indexed model streams
    */
   getIndexedModels(): Promise<Array<StreamID>>
 
   /**
+   * List indexed model streams with additional model data (such as the defined field indices)
+   */
+  getIndexedModelData(): Promise<Array<ModelData>>
+
+  /**
    * Adds model streams to index
    *
-   * @param modelsIDs - array of model stream IDs to add to index
+   * @deprecated
+   * @param modelsIDs - array of model stream IDs to add to index. This parameter is deprecated
+   * and indices should be specified instead
    */
   startIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
 
   /**
+   * Adds model streams to index as specified by ModelData
+   * @param modelData - array of model streams with field indices to index
+   */
+  startIndexingModelData(modelData: Array<ModelData>): Promise<void>
+
+  /**
+   * @deprecated
    * Removes model streams from index
    *
    * @param modelsIDs - array of model stream IDs to remove from index
    */
 
   stopIndexingModels(modelsIDs: Array<StreamID>): Promise<void>
+
+  /**
+   * Removes model streams from index
+   *
+   * @param modelData - array of model data to remove from index
+   */
+  stopIndexingModelData(modelData: Array<ModelData>): Promise<void>
 
   pin: PinApi
 }
@@ -198,7 +253,13 @@ export interface MultiQuery {
   paths?: Array<string>
 
   /**
-   * Load a previous version of the stream based on unix timestamp
+   * Load a previous version of the stream based on unix timestamp.
+   * @deprecated Use opts.atTime instead.
    */
-  atTime?: number
+  atTime?: number // TODO(CDB-2417): Remove this
+
+  /**
+   * Additional options for the loadStream operation.
+   */
+  opts?: LoadOpts
 }

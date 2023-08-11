@@ -73,6 +73,8 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
       model: StreamID.fromString(query.model),
       account: query.account,
       filter: query.filter,
+      queryFilters: query.queryFilters,
+      sorting: query.sorting,
       ...pagination,
     }
   } catch (e) {

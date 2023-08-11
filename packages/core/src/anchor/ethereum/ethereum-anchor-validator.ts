@@ -45,20 +45,18 @@ const BASE_CHAIN_ID = 'eip155'
 const MAX_PROVIDERS_COUNT = 100
 const TRANSACTION_CACHE_SIZE = 50
 const BLOCK_CACHE_SIZE = 50
-const V0_PROOF_TYPE = 'raw'
 const V1_PROOF_TYPE = 'f(bytes32)' // See: https://namespaces.chainagnostic.org/eip155/caip168
 
 const ABI = ['function anchorDagCbor(bytes32)']
 
 const iface = new Interface(ABI)
 
-//TODO (NET-1659): Finalize block numbers and smart contract addresses once CAS is creating smart contract anchors
 const BLOCK_THRESHHOLDS = {
-  'eip155:1': 1000000000, //mainnet
+  'eip155:1': 16688195, //mainnet
   'eip155:3': 1000000000, //ropsten
-  'eip155:5': 1000000000, //goerli
-  'eip155:100': 1000000000, //gnosis
-  'eip155:1337': 1000000, //ganache
+  'eip155:5': 8498671, //goerli
+  'eip155:100': 26509835, //gnosis
+  'eip155:1337': 1, //ganache
 }
 const ANCHOR_CONTRACT_ADDRESS = '0x231055A0852D67C7107Ad0d0DFeab60278fE6AdC'
 

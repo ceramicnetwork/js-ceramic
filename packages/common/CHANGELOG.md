@@ -3,6 +3,106 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0...@ceramicnetwork/common@2.31.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
+# [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0-rc.1...@ceramicnetwork/common@2.30.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.30.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0-rc.0...@ceramicnetwork/common@2.30.0-rc.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* **core:** Loading at an AnchorCommit should be able to inform node that CACAO is not actually expired ([#2868](https://github.com/ceramicnetwork/js-ceramic/issues/2868)) ([35ada9e](https://github.com/ceramicnetwork/js-ceramic/commit/35ada9e722991364d332ec87f53d42972241e910))
+
+
+
+
+
+# [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.29.0...@ceramicnetwork/common@2.30.0-rc.0) (2023-07-13)
+
+
+### Features
+
+* CDB-2493 Adjust API to support model index changes ([#2844](https://github.com/ceramicnetwork/js-ceramic/issues/2844)) ([13e7a9f](https://github.com/ceramicnetwork/js-ceramic/commit/13e7a9f52fdb824d97966c4df88e3db1fcd16428))
+* **core:** CDB 2492 Add database indices for model fields ([#2845](https://github.com/ceramicnetwork/js-ceramic/issues/2845)) ([5ef6dba](https://github.com/ceramicnetwork/js-ceramic/commit/5ef6dbac58258718e3fb108c7fefedf899441591))
+
+
+
+
+
+# [2.29.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.29.0-rc.0...@ceramicnetwork/common@2.29.0) (2023-07-12)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.29.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.28.0-rc.0...@ceramicnetwork/common@2.29.0-rc.0) (2023-06-22)
+
+
+### Features
+
+* **common:** Update query type to support new filters and order parameters ([#2839](https://github.com/ceramicnetwork/js-ceramic/issues/2839)) ([37a799e](https://github.com/ceramicnetwork/js-ceramic/commit/37a799e8899af5253ebdcd6b1ac0d6e31c3cd41d))
+
+
+
+
+
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.27.0-rc.0...@ceramicnetwork/common@2.28.0-rc.0) (2023-06-19)
+
+
+### Features
+
+* Add CAS Response as a codec ([#2838](https://github.com/ceramicnetwork/js-ceramic/issues/2838)) ([346a359](https://github.com/ceramicnetwork/js-ceramic/commit/346a359a978328d155e3dfa1a44f59946435dd9c))
+* Add loadOpts to MultiQuery ([#2768](https://github.com/ceramicnetwork/js-ceramic/issues/2768)) ([c609c23](https://github.com/ceramicnetwork/js-ceramic/commit/c609c23e808e659d79e2a8bbc5dcdf80cab88e19))
+
+
+
+
+
+# [2.27.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.26.0...@ceramicnetwork/common@2.27.0-rc.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.26.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.26.0-rc.0...@ceramicnetwork/common@2.26.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.25.0...@ceramicnetwork/common@2.26.0-rc.0) (2023-05-24)
+
+
+### Features
+
+* **codecs:** add anchor codecs ([#2824](https://github.com/ceramicnetwork/js-ceramic/issues/2824)) ([11e9cae](https://github.com/ceramicnetwork/js-ceramic/commit/11e9caeabd77e72f46c86149ab4802acac679c7e))
+
+
+
+
+
 # [2.25.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.25.0-rc.0...@ceramicnetwork/common@2.25.0) (2023-05-03)
 
 **Note:** Version bump only for package @ceramicnetwork/common

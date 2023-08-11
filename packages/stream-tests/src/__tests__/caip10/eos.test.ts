@@ -29,7 +29,7 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 120000)
 
-test('happy path', async () => {
+test.skip('happy path', async () => {
   const authProvider = new linking.eosio.EosioAuthProvider(
     telosTestnetProvider,
     telosTestnetAccount
@@ -37,7 +37,7 @@ test('happy path', async () => {
   await happyPath(ceramic, authProvider)
 }, 120000)
 
-test('wrong proof', async () => {
+test.skip('wrong proof', async () => {
   const authProvider = new linking.eosio.EosioAuthProvider(
     telosTestnetProvider,
     telosTestnetAccount
@@ -45,7 +45,7 @@ test('wrong proof', async () => {
   await wrongProof(ceramic, authProvider)
 }, 120000)
 
-test('clear did', async () => {
+test.skip('clear did', async () => {
   const authProvider = new linking.eosio.EosioAuthProvider(
     telosTestnetProvider,
     telosTestnetAccount

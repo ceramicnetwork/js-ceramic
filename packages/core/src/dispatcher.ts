@@ -26,8 +26,9 @@ import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
-import { Utils } from './utils.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
+import { CAR, CARFactory, CarBlock } from 'cartonne'
+import all from 'it-all'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -59,6 +60,24 @@ function messageTypeToString(type: MsgType): string {
   }
 }
 
+export class CommitSizeError extends Error {
+  constructor(cid: CID | string, size: number) {
+    super(`${cid} commit size ${size} exceeds the maximum block size of ${IPFS_MAX_COMMIT_SIZE}`)
+  }
+}
+
+/**
+ * Restricts block size to +IPFS_MAX_COMMIT_SIZE+.
+ *
+ * @param block - Uint8Array of IPLD block
+ * @param cid - Commit CID
+ * @internal
+ */
+function restrictBlockSize(block: Uint8Array, cid: CID): void {
+  const size = block.byteLength
+  if (size > IPFS_MAX_COMMIT_SIZE) throw new CommitSizeError(cid, size)
+}
+
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
@@ -85,6 +104,8 @@ export class Dispatcher {
     PUBSUB_CACHE_SIZE
   )
 
+  private readonly carFactory: CARFactory
+
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -109,13 +130,22 @@ export class Dispatcher {
     )
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
-        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL, MAX_INTERVAL_WITHOUT_KEEPALIVE),
+        new PubsubKeepalive(
+          pubsub,
+          _ipfs,
+          MAX_PUBSUB_PUBLISH_INTERVAL,
+          MAX_INTERVAL_WITHOUT_KEEPALIVE
+        ),
         _logger,
         maxQueriesPerSecond
       )
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.carFactory = new CARFactory()
+    this._ipfs.codecs.listCodecs().forEach((codec) => {
+      this.carFactory.codecs.add(codec)
+    })
   }
 
   async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
@@ -131,6 +161,22 @@ export class Dispatcher {
     })
   }
 
+  async getIpfsBlock(cid: CID): Promise<Uint8Array> {
+    return await this._shutdownSignal.abortable((signal) => {
+      return this._ipfs.block.get(cid, { signal })
+    })
+  }
+
+  /**
+   * Stores all the blocks in the given CAR file into the local IPFS node.
+   * @param car
+   */
+  async importCAR(car: CAR): Promise<void> {
+    return await this._shutdownSignal.abortable(async (signal) => {
+      await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
+    })
+  }
+
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
@@ -138,40 +184,30 @@ export class Dispatcher {
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
-    Metrics.count(COMMITS_STORED, 1)
+    const carFile = this.carFactory.build()
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
         const { jws, linkedBlock, cacaoBlock } = data
         // if cacao is present, put it into ipfs dag
         if (cacaoBlock) {
           const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
-          const capIPFSUri = decodedProtectedHeader.cap
-          await this._shutdownSignal.abortable((signal) => {
-            return Utils.putIPFSBlock(capIPFSUri, cacaoBlock, this._ipfs, signal)
-          })
+          const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
+          carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
+          restrictBlockSize(cacaoBlock, capCID)
         }
 
-        // put the JWS into the ipfs dag
-        const cid = await this._shutdownSignal.abortable((signal) => {
-          return this._ipfs.dag.put(jws, {
-            storeCodec: 'dag-jose',
-            hashAlg: 'sha2-256',
-            signal: signal,
-          })
-        })
-        // put the payload into the ipfs dag
-        const linkCid = jws.link
-        await this._shutdownSignal.abortable((signal) => {
-          return Utils.putIPFSBlock(linkCid, linkedBlock, this._ipfs, signal)
-        })
-        await this._restrictCommitSize(jws.link.toString())
-        await this._restrictCommitSize(cid)
+        carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
+        restrictBlockSize(linkedBlock, jws.link)
+        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
+        restrictBlockSize(carFile.blocks.get(cid).payload, cid)
+        await this.importCAR(carFile)
+        Metrics.count(COMMITS_STORED, 1)
         return cid
       }
-      const cid = await this._shutdownSignal.abortable((signal) => {
-        return this._ipfs.dag.put(data, { signal: signal })
-      })
-      await this._restrictCommitSize(cid)
+      const cid = carFile.put(data, { isRoot: true })
+      restrictBlockSize(carFile.blocks.get(cid).payload, cid)
+      await this.importCAR(carFile)
+      Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {
       if (streamId) {
@@ -196,9 +232,7 @@ export class Dispatcher {
    */
   async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
     try {
-      const result = await this._getFromIpfs(cid)
-      await this._restrictCommitSize(cid)
-      return result
+      return await this._getFromIpfs(cid)
     } catch (e) {
       this._logger.err(
         `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
@@ -254,8 +288,8 @@ export class Dispatcher {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
 
     // Lookup CID in cache before looking it up IPFS
-    const cidAndPath = path ? asCid.toString() + path : asCid.toString()
-    const cachedDagNode = await this.dagNodeCache.get(cidAndPath)
+    const resolutionPath = `${asCid}${path || ''}`
+    const cachedDagNode = this.dagNodeCache.get(resolutionPath)
     if (cachedDagNode) return cloneDeep(cachedDagNode)
 
     // Now lookup CID in IPFS, with retry logic
@@ -263,16 +297,26 @@ export class Dispatcher {
     // allow IPFS to use the extra time to find the CID, doing internal retries if needed.
     // Anecdotally, however, we've seen evidence that IPFS sometimes finds CIDs on retry that it
     // doesn't on the first attempt, even when given plenty of time to load it.
-    let dagResult = null
-    for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
+    let result = null
+    for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && result == null; retries--) {
       try {
-        dagResult = await this._shutdownSignal.abortable((signal) => {
-          return this._ipfs.dag.get(asCid, {
-            timeout: this._ipfsTimeout,
-            path,
-            signal: signal,
-          })
-        })
+        let blockCid: CID = asCid
+        if (path) {
+          const resolution = await this._shutdownSignal.abortable((signal) =>
+            this._ipfs.dag.resolve(asCid, {
+              timeout: this._ipfsTimeout,
+              path: path,
+              signal: signal,
+            })
+          )
+          blockCid = resolution.cid
+        }
+        const codec = await this._ipfs.codecs.getCodec(blockCid.code)
+        const block = await this._shutdownSignal.abortable((signal) =>
+          this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
+        )
+        restrictBlockSize(block, blockCid)
+        result = codec.decode(block)
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
@@ -293,30 +337,8 @@ export class Dispatcher {
       }
     }
     // CID loaded successfully, store in cache
-    await this.dagNodeCache.set(cidAndPath, dagResult.value)
-    return cloneDeep(dagResult.value)
-  }
-
-  /**
-   * Restricts commit size to IPFS_MAX_COMMIT_SIZE
-   * @param cid - Commit CID
-   * @private
-   */
-  async _restrictCommitSize(cid: CID | string): Promise<void> {
-    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.block.stat(asCid, {
-        timeout: this._ipfsTimeout,
-        signal: signal,
-      })
-    })
-    if (stat.size > IPFS_MAX_COMMIT_SIZE) {
-      throw new Error(
-        `${cid.toString()} commit size ${
-          stat.size
-        } exceeds the maximum block size of ${IPFS_MAX_COMMIT_SIZE}`
-      )
-    }
+    this.dagNodeCache.set(resolutionPath, result)
+    return cloneDeep(result)
   }
 
   /**

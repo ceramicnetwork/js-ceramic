@@ -14,6 +14,7 @@ import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
 import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
@@ -25,6 +26,10 @@ const MY_MODEL_1_CONTENT: ModelDefinition = {
 
 const MODEL_PATH = '/api/v0/admin/models'
 const STATUS_PATH = '/api/v0/admin/status'
+
+function modelIDsAsRequestBody(modelIDs: Array<string>): Record<string, Array<string>> | undefined {
+  return modelIDs ? { models: modelIDs } : undefined
+}
 
 describe('admin api', () => {
   let daemon: CeramicDaemon
@@ -83,7 +88,7 @@ describe('admin api', () => {
     requestPath,
     models?: Array<string>
   ): Promise<string> {
-    const body = models ? { models: models } : undefined
+    const body = modelIDsAsRequestBody(models)
     const jws = await did.createJWS({
       code: code,
       requestPath,
@@ -381,7 +386,7 @@ describe('admin api', () => {
     it('Old code used with models GET', async () => {
       const code = (await fetchJson(`http://localhost:${daemon.port}/api/v0/admin/getCode`)).code
       const now = new Date().getTime()
-      MockDate.set(now + (1000 * 60 * 1 + 1000)) // One minute one second in the future
+      MockDate.set(now + (1000 * 60 + 1000)) // One minute one second in the future
       expect(true).toBeTruthy()
       await expect(
         fetchJson(`http://localhost:${daemon.port}/api/v0/admin/models`, {
@@ -565,9 +570,7 @@ describe('admin api', () => {
           method: 'POST',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('Empty models for models POST', async () => {
@@ -577,9 +580,7 @@ describe('admin api', () => {
           method: 'POST',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('No models for models DELETE', async () => {
@@ -589,9 +590,7 @@ describe('admin api', () => {
           method: 'DELETE',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('Empty models for models DELETE', async () => {
@@ -601,9 +600,7 @@ describe('admin api', () => {
           method: 'DELETE',
           body: { jws: await buildJWS(adminDid, code, MODEL_PATH, []) },
         })
-      ).rejects.toThrow(
-        /The 'models' parameter is required and it has to be an array containing at least one model stream id/
-      )
+      ).rejects.toThrow(/Expected models to be present/)
     })
 
     it('Disallow re-indexing on POST', async () => {

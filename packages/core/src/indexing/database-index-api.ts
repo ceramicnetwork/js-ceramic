@@ -5,6 +5,8 @@ import type {
   Page,
   DiagnosticsLogger,
   Networks,
+  FieldsIndex,
+  ModelData,
 } from '@ceramicnetwork/common'
 import { Knex } from 'knex'
 import type { CID } from 'multiformats/cid'
@@ -16,6 +18,7 @@ import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tab
 import { addColumnPrefix } from './column-name.util.js'
 import { ISyncQueryApi } from '../sync/interfaces.js'
 import cloneDeep from 'lodash.clonedeep'
+import { indexNameFromTableName } from './migrations/1-create-model-table.js'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 
@@ -30,6 +33,19 @@ export interface IndexStreamArgs {
 }
 
 /**
+ * Create a valid name for a fields index. The index name cannot exceed 64 characters
+ * @param idx Index to create a name for
+ * @param table Table to add index to
+ */
+export function fieldsIndexName(idx: FieldsIndex, table: string): string {
+  const fieldPath = idx.fields
+    .flatMap((f) => f.path)
+    .map((p) => p.slice(0, 5))
+    .join('_')
+  return `${indexNameFromTableName(table)}_${fieldPath}`.slice(0, 64)
+}
+
+/**
  * Arguments for telling the index database that it should be ready to index streams of a new model.
  * Should include everything necessary for the database to start receiving `indexStream` calls with
  * MIDs belonging to the model.  This likely involves setting up the necessary database tables with
@@ -37,13 +53,14 @@ export interface IndexStreamArgs {
  */
 export interface IndexModelArgs {
   readonly model: StreamID
-  readonly relations?: ModelRelationsDefinition
+  relations?: ModelRelationsDefinition
+  indices?: Array<FieldsIndex>
 }
 
 type IndexedData<DateType> = {
   stream_id: string
   controller_did: string
-  stream_content: any
+  stream_content: Record<string, any> | string
   tip: string
   last_anchored_at: DateType
   first_anchored_at: DateType
@@ -56,10 +73,10 @@ type IndexedData<DateType> = {
  */
 export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
-  private modelsToIndex: Array<StreamID> = []
-  // Maps Model streamIDs to the list of fields in the content of MIDs in that model that should be
-  // indexed
-  private readonly modelsIndexedFields = new Map<string, Array<string>>()
+  private indexedModels: Array<ModelData> = []
+  // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
+  // to
+  private readonly modelRelations = new Map<string, Array<string>>()
   tablesManager: TablesManager
   syncApi: ISyncQueryApi
 
@@ -76,6 +93,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): IndexedData<DateType>
   abstract now(): DateType
+  abstract parseIndices(indices: unknown): Array<FieldsIndex>
 
   setSyncQueryApi(api: ISyncQueryApi) {
     this.syncApi = api
@@ -90,14 +108,17 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     await this.indexModelsInDatabase(models)
     for (const modelArgs of models) {
       await this.assertNoOngoingSyncForModel(modelArgs.model)
-      const foundModelToIndex = this.modelsToIndex.find((indexedModel) =>
-        indexedModel.equals(modelArgs.model)
+      const foundModelToIndex = this.indexedModels.find((indexedModel) =>
+        indexedModel.streamID.equals(modelArgs.model)
       )
       if (!foundModelToIndex) {
-        this.modelsToIndex.push(modelArgs.model)
+        this.indexedModels.push({
+          streamID: modelArgs.model,
+          indices: modelArgs.indices,
+        })
       }
       if (modelArgs.relations) {
-        this.modelsIndexedFields.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
+        this.modelRelations.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }
     }
   }
@@ -113,7 +134,10 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         models.map((indexModelArgs) => {
           return {
             model: indexModelArgs.model.toString(),
+            ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
+            is_indexed: true,
             updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+            updated_at: this.now(),
           }
         })
       )
@@ -130,24 +154,24 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    *
    * @param models
    */
-  async stopIndexingModels(models: Array<StreamID>): Promise<void> {
+  async stopIndexingModels(models: Array<ModelData>): Promise<void> {
     await this.stopIndexingModelsInDatabase(models)
-    const modelsAsStrings = models.map((streamID) => streamID.toString())
-    this.modelsToIndex = this.modelsToIndex.filter(
-      (modelStreamID) => !modelsAsStrings.includes(modelStreamID.toString())
+    this.indexedModels = this.indexedModels.filter(
+      (idx) => !models.some((data) => data.streamID.equals(idx.streamID))
     )
   }
 
-  private async stopIndexingModelsInDatabase(models: Array<StreamID>): Promise<void> {
+  private async stopIndexingModelsInDatabase(models: Array<ModelData>): Promise<void> {
     if (models.length === 0) return
     // FIXME: CDB-1866 - populate the updated_by field properly when auth is implemented
     await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
       .insert(
         models.map((model) => {
           return {
-            model: model.toString(),
+            model: model.streamID.toString(),
             is_indexed: false,
             updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+            updated_at: this.now(),
           }
         })
       )
@@ -169,9 +193,9 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
     const indexedData = this.getIndexedData(indexingArgs)
-    const fields = this.modelsIndexedFields.get(indexingArgs.model.toString()) ?? []
-    for (const field of fields) {
-      indexedData[addColumnPrefix(field)] = indexingArgs.streamContent[field]
+    const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
+    for (const relation of relations) {
+      indexedData[addColumnPrefix(relation)] = indexingArgs.streamContent[relation]
     }
     const toMerge = cloneDeep(indexedData)
     delete toMerge.created_at
@@ -179,41 +203,47 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Get all models to be actively indexed by node
+   * Get all models actively indexed by node
    */
-  public getActiveModelsToIndex(): Array<StreamID> {
+  public getIndexedModels(): Array<ModelData> {
     /**
      * Helper function to return array of active models that are currently being indexed.
      * This variable is automatically populated during node startup & updated with Admin API
      * add & delete operations.
      */
-    return this.modelsToIndex
+    return this.indexedModels
   }
 
-  private async getIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+  private async getIndexedModelsFromDatabase(): Promise<Array<ModelData>> {
     return (
-      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
+      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'indices').where({
         is_indexed: true,
       })
     ).map((result) => {
-      return StreamID.fromString(result.model)
+      return {
+        streamID: StreamID.fromString(result.model),
+        indices: this.parseIndices(result.indices),
+      }
     })
   }
 
-  async getPreviouslyIndexedModelsFromDatabase(): Promise<Array<StreamID>> {
+  async getModelsNoLongerIndexed(): Promise<Array<ModelData>> {
     return (
-      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model').where({
+      await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'indices').where({
         is_indexed: false,
       })
     ).map((result) => {
-      return StreamID.fromString(result.model)
+      return {
+        streamID: StreamID.fromString(result.model),
+        indices: result.indices,
+      }
     })
   }
 
   /**
    * Ensures that the given model StreamID can be queried and throws if not.
    */
-  async assertModelQueryable(modelStreamId: StreamID | string) {
+  async assertModelQueryable(modelStreamId: StreamID) {
     await this.assertModelIsIndexed(modelStreamId)
     await this.assertNoOngoingSyncForModel(modelStreamId)
   }
@@ -222,13 +252,14 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Assert that a model has been indexed
    * @param modelStreamId
    */
-  async assertModelIsIndexed(modelStreamId: StreamID | string) {
-    const model = modelStreamId.toString()
-    const foundModelToIndex = this.modelsToIndex.find(
-      (indexedModel) => indexedModel.toString() == model
+  async assertModelIsIndexed(modelStreamId: StreamID) {
+    const foundModelToIndex = this.indexedModels.find((indexedModel) =>
+      modelStreamId.equals(indexedModel.streamID)
     )
     if (foundModelToIndex == undefined) {
-      const err = new Error(`Query failed: Model ${model} is not indexed on this node`)
+      const err = new Error(
+        `Query failed: Model ${modelStreamId.toString()} is not indexed on this node`
+      )
       this.logger.debug(err)
       throw err
     }
@@ -238,7 +269,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Assert that there is no ongoing historical sync for a model
    * @param modelStreamId
    */
-  async assertNoOngoingSyncForModel(modelStreamId: StreamID | string): Promise<void> {
+  async assertNoOngoingSyncForModel(modelStreamId: StreamID): Promise<void> {
     if (
       !this.allowQueriesBeforeHistoricalSync &&
       !(await this.syncApi.syncComplete(modelStreamId.toString()))
@@ -253,7 +284,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Return number of suitable indexed records.
    */
   async count(query: BaseQuery): Promise<number> {
-    await this.assertModelQueryable(query.model)
+    const model = StreamID.fromString(query.model.toString())
+    await this.assertModelQueryable(model)
 
     const tableName = asTableName(query.model)
     let dbQuery = this.dbConnection(tableName).count('*')
@@ -274,7 +306,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Query the index.
    */
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
-    await this.assertModelQueryable(query.model)
+    const model = StreamID.fromString(query.model.toString())
+    await this.assertModelQueryable(model)
     return this.insertionOrder.page(query)
   }
 
@@ -283,7 +316,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    */
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)
-    this.modelsToIndex = await this.getIndexedModelsFromDatabase()
+    this.indexedModels = await this.getIndexedModelsFromDatabase()
   }
 
   /**
@@ -328,6 +361,10 @@ export class PostgresIndexApi extends DatabaseIndexApi<Date> {
       created_at: indexingArgs.createdAt || now,
       updated_at: indexingArgs.updatedAt || now,
     }
+  }
+
+  parseIndices(indices: Array<FieldsIndex>): Array<FieldsIndex> {
+    return indices ?? undefined // postgres automatically parses the result into a js object
   }
 }
 
@@ -375,5 +412,9 @@ export class SqliteIndexApi extends DatabaseIndexApi<number> {
       created_at: asTimestamp(indexingArgs.createdAt) || now,
       updated_at: asTimestamp(indexingArgs.updatedAt) || now,
     }
+  }
+
+  parseIndices(indices: string): Array<FieldsIndex> {
+    return indices ? JSON.parse(indices) : undefined // sqlite returns indices as a string
   }
 }

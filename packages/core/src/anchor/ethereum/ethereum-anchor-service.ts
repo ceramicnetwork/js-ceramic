@@ -1,24 +1,25 @@
 import { CID } from 'multiformats/cid'
-import * as providers from '@ethersproject/providers'
-import lru from 'lru_map'
 import {
   CeramicApi,
-  AnchorServiceResponse,
   AnchorService,
   AnchorServiceAuth,
-  AnchorStatus,
   AuthenticatedAnchorService,
   DiagnosticsLogger,
   fetchJson,
   FetchRequest,
-  UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, interval, from, concat, of, defer } from 'rxjs'
+import { Observable, interval, concat, timer, of, defer } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { RequestStatusName } from '@ceramicnetwork/anchor-utils'
+import {
+  CASResponse,
+  CASResponseOrError,
+  ErrorResponse,
+  AnchorRequestStatusName,
+} from '@ceramicnetwork/codecs'
+import { decode } from 'codeco'
 
 /**
  * CID-streamId pair
@@ -38,18 +39,19 @@ export class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string
   private readonly chainIdApiEndpoint: string
   private _chainId: string
-  private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger
   /**
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
   private readonly pollInterval: number
+  private readonly maxPollTime: number
   private readonly sendRequest: FetchRequest
 
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
+    maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson
   ) {
     this.requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
@@ -57,6 +59,7 @@ export class EthereumAnchorService implements AnchorService {
     this._logger = logger
     this.pollInterval = pollInterval
     this.sendRequest = sendRequest
+    this.maxPollTime = maxPollTime
   }
 
   /**
@@ -85,10 +88,8 @@ export class EthereumAnchorService implements AnchorService {
 
   /**
    * Requests anchoring service for current tip of the stream
-   * @param streamId - Stream ID
-   * @param tip - Tip CID of the stream
    */
-  requestAnchor(carFile: CAR): Observable<AnchorServiceResponse> {
+  requestAnchor(carFile: CAR): Observable<CASResponse> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(
@@ -97,8 +98,9 @@ export class EthereumAnchorService implements AnchorService {
       this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
     ).pipe(
       catchError((error) =>
-        of<AnchorServiceResponse>({
-          status: AnchorStatus.FAILED,
+        of<CASResponse>({
+          id: '',
+          status: AnchorRequestStatusName.FAILED,
           streamId: carFileReader.streamId,
           cid: carFileReader.tip,
           message: error.message,
@@ -115,9 +117,10 @@ export class EthereumAnchorService implements AnchorService {
     return [this._chainId]
   }
 
-  private _announcePending(cidStream: CidAndStream): Observable<AnchorServiceResponse> {
+  private _announcePending(cidStream: CidAndStream): Observable<CASResponse> {
     return of({
-      status: AnchorStatus.PENDING,
+      id: '',
+      status: AnchorRequestStatusName.PENDING,
       streamId: cidStream.streamId,
       cid: cidStream.cid,
       message: 'Sending anchoring request',
@@ -126,33 +129,25 @@ export class EthereumAnchorService implements AnchorService {
 
   /**
    * Send requests to an external Ceramic Anchor Service
-   * @param params - a RequestAnchorParams object
-   * @private
    */
-  private _makeAnchorRequest(
-    carFileReader: AnchorRequestCarFileReader
-  ): Observable<AnchorServiceResponse> {
+  private _makeAnchorRequest(carFileReader: AnchorRequestCarFileReader): Observable<CASResponse> {
     return defer(() =>
-      from(
-        this.sendRequest(this.requestsApiEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/vnd.ipld.car',
-          },
-          body: carFileReader.carFile.bytes,
-        })
-      )
+      this.sendRequest(this.requestsApiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/vnd.ipld.car',
+        },
+        body: carFileReader.carFile.bytes,
+      })
     ).pipe(
       retry({
         delay: (error) => {
           this._logger.err(
             new Error(
-              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId.toString()} at commit ${carFileReader.tip.toString()}: ${
-                error.message
-              }`
+              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
             )
           )
-          return interval(this.pollInterval)
+          return timer(this.pollInterval)
         },
       }),
       map((response) => {
@@ -170,9 +165,54 @@ export class EthereumAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
+    if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
+      return this._pollForAnchorResponseLegacy(streamId, tip)
+    } else {
+      return this._pollForAnchorResponse(streamId, tip)
+    }
+  }
+
+  private _pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
     const started = new Date().getTime()
-    const maxTime = started + MAX_POLL_TIME
+    const maxTime = started + this.maxPollTime
+    const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
+    const cidStream = { cid: tip, streamId }
+
+    const doPoll = defer(() => this.sendRequest(requestUrl)).pipe(
+      retry({
+        delay: (error) => {
+          this._logger.err(
+            new Error(
+              `Error connecting to CAS while polling for anchor ${streamId} at commit ${tip}: ${error.message}`
+            )
+          )
+          return timer(this.pollInterval)
+        },
+      })
+    )
+
+    return interval(this.pollInterval).pipe(
+      concatMap(() => {
+        const now = new Date().getTime()
+        if (now > maxTime) {
+          throw new Error('Exceeded max anchor polling time limit')
+        } else {
+          return doPoll
+        }
+      }),
+      map((response) => this.parseResponse(cidStream, response))
+    )
+  }
+
+  /**
+   * The old version of polling that has a bug where polling stops if there's a network error.
+   * TODO: REMOVE THIS!  We're only putting this back temporarily to investigate if it caused
+   * a performance regression.
+   */
+  private _pollForAnchorResponseLegacy(streamId: StreamID, tip: CID): Observable<CASResponse> {
+    const started = new Date().getTime()
+    const maxTime = started + this.maxPollTime
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
     const cidStream = { cid: tip, streamId }
 
@@ -192,61 +232,18 @@ export class EthereumAnchorService implements AnchorService {
   /**
    * Parse JSON that CAS returns.
    */
-  private parseResponse(cidStream: CidAndStream, json: any): AnchorServiceResponse {
-    if (json.error) {
+  private parseResponse(cidStream: CidAndStream, json: any): CASResponse {
+    const parsed = decode(CASResponseOrError, json)
+    if (ErrorResponse.is(parsed)) {
       return {
-        status: AnchorStatus.FAILED,
+        id: '',
+        status: AnchorRequestStatusName.FAILED,
         streamId: cidStream.streamId,
         cid: cidStream.cid,
         message: json.error,
       }
-    }
-
-    const status = json.status as RequestStatusName
-
-    switch (status) {
-      case RequestStatusName.READY:
-      case RequestStatusName.PENDING:
-        return {
-          status: AnchorStatus.PENDING,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.PROCESSING:
-        return {
-          status: AnchorStatus.PROCESSING,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.FAILED:
-        return {
-          status: AnchorStatus.FAILED,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.REPLACED:
-        return {
-          status: AnchorStatus.REPLACED,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-        }
-      case RequestStatusName.COMPLETED: {
-        const { anchorCommit } = json
-        const anchorCommitCid = CID.parse(anchorCommit.cid.toString())
-        return {
-          status: AnchorStatus.ANCHORED,
-          streamId: cidStream.streamId,
-          cid: cidStream.cid,
-          message: json.message,
-          anchorCommit: anchorCommitCid,
-        }
-      }
-      default:
-        throw new UnreachableCaseError(status, `Unexpected anchor request status`)
+    } else {
+      return parsed
     }
   }
 }
@@ -264,9 +261,16 @@ export class AuthenticatedEthereumAnchorService
     auth: AnchorServiceAuth,
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL
+    pollInterval: number = DEFAULT_POLL_INTERVAL,
+    maxPollTime: number = MAX_POLL_TIME
   ) {
-    super(anchorServiceUrl, logger, pollInterval, auth.sendAuthenticatedRequest.bind(auth))
+    super(
+      anchorServiceUrl,
+      logger,
+      pollInterval,
+      maxPollTime,
+      auth.sendAuthenticatedRequest.bind(auth)
+    )
     this.auth = auth
   }
 

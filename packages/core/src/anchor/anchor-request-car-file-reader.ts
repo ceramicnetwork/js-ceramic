@@ -1,6 +1,5 @@
 import { CAR } from 'cartonne'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { toCID } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
 
 export class AnchorRequestCarFileReader {

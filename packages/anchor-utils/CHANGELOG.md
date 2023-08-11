@@ -3,6 +3,89 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.13.0...@ceramicnetwork/anchor-utils@1.14.0-rc.0) (2023-08-07)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.13.0-rc.1...@ceramicnetwork/anchor-utils@1.13.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.13.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.13.0-rc.0...@ceramicnetwork/anchor-utils@1.13.0-rc.1) (2023-07-24)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.12.0...@ceramicnetwork/anchor-utils@1.13.0-rc.0) (2023-07-13)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.12.0-rc.0...@ceramicnetwork/anchor-utils@1.12.0) (2023-07-12)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.11.0-rc.0...@ceramicnetwork/anchor-utils@1.12.0-rc.0) (2023-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.10.0-rc.0...@ceramicnetwork/anchor-utils@1.11.0-rc.0) (2023-06-19)
+
+
+### Features
+
+* Add CAS Response as a codec ([#2838](https://github.com/ceramicnetwork/js-ceramic/issues/2838)) ([346a359](https://github.com/ceramicnetwork/js-ceramic/commit/346a359a978328d155e3dfa1a44f59946435dd9c))
+
+
+
+
+
+# [1.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.9.0...@ceramicnetwork/anchor-utils@1.10.0-rc.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.9.0-rc.0...@ceramicnetwork/anchor-utils@1.9.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
+# [1.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.8.0...@ceramicnetwork/anchor-utils@1.9.0-rc.0) (2023-05-24)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-utils
+
+
+
+
+
 # [1.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.8.0-rc.0...@ceramicnetwork/anchor-utils@1.8.0) (2023-05-03)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-utils

@@ -1,6 +1,6 @@
 import type { Knex } from 'knex'
-import { UnreachableCaseError, Networks } from '@ceramicnetwork/common'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../database-index-api.js'
+import { UnreachableCaseError, FieldsIndex, Networks } from '@ceramicnetwork/common'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME, fieldsIndexName } from '../database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
 import { addColumnPrefix } from '../column-name.util.js'
 
@@ -38,45 +38,52 @@ export type TableIndices = {
   indices: Array<TableIndex>
 }
 
-export function indices(tableName: string): TableIndices {
-  // create unique index name less than 64 chars that are still capable of being referenced to MID table.
-  // We are creating the unique index name by grabbing the last 10 characters of the table name
-  // which is normally the stream id. This combined with the rest of the index information should
-  // be less than 64 characters. See CDB-1600 for more information
-  const indexName = tableName.substring(tableName.length - 10)
+// create unique index name less than 64 chars that are still capable of being referenced to MID table.
+// We are creating the unique index name by grabbing the last 10 characters of the table name
+// which is normally the stream id. This combined with the rest of the index information should
+// be less than 64 characters. See CDB-1600 for more information
+export function indexNameFromTableName(tableName: string): string {
+  return `idx_${tableName.substring(tableName.length - 10)}`
+}
+
+/**
+ * Returns descriptions of the default system indices that are required on all MID tables.
+ */
+export function defaultIndices(tableName: string): TableIndices {
+  const indexName = indexNameFromTableName(tableName)
 
   // index names with additional naming information should be less than
   // 64 characters, which means additional information should be less than 54 characters
   const indices: Array<TableIndex> = [
     {
       keys: ['stream_id'],
-      name: `idx_${indexName}_stream_id`,
-      indexType: 'hash',
+      name: `${indexName}_stream_id`,
+      indexType: 'btree',
     },
     {
       keys: ['last_anchored_at'],
-      name: `idx_${indexName}_last_anchored_at`,
-      indexType: 'hash',
+      name: `${indexName}_last_anchored_at`,
+      indexType: 'btree',
     },
     {
       keys: ['first_anchored_at'],
-      name: `idx_${indexName}_first_anchored_at`,
-      indexType: 'hash',
+      name: `${indexName}_first_anchored_at`,
+      indexType: 'btree',
     },
     {
       keys: ['created_at'],
-      name: `idx_${indexName}_created_at`,
+      name: `${indexName}_created_at`,
       indexType: 'hash',
     },
     {
       keys: ['updated_at'],
-      name: `idx_${indexName}_updated_at`,
-      indexType: 'hash',
+      name: `${indexName}_updated_at`,
+      indexType: 'btree',
     },
     {
       keys: ['last_anchored_at', 'created_at'],
-      name: `idx_${indexName}_last_anchored_at_created_at`,
-      indexType: 'hash',
+      name: `${indexName}_last_anchored_at_created_at`,
+      indexType: 'btree',
     },
   ]
 
@@ -163,7 +170,7 @@ export async function createPostgresModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, function (table) {
-    const idx = indices(tableName)
+    const idx = defaultIndices(tableName)
 
     table
       .string('stream_id')
@@ -193,7 +200,7 @@ export async function createSqliteModelTable(
   extraColumns: Array<ColumnInfo>
 ): Promise<void> {
   await dataSource.schema.createTable(tableName, (table) => {
-    const idx = indices(tableName)
+    const idx = defaultIndices(tableName)
 
     table.string('stream_id', 1024).primary().unique().notNullable()
     table.string('controller_did', 1024).notNullable()
@@ -214,7 +221,49 @@ export async function createSqliteModelTable(
   })
 }
 
-export async function createConfigTable(dataSource: Knex, tableName: string, network: Networks) {
+function rawIndexQuery(tableName: string, index: FieldsIndex, json_indices: Array<string>): string {
+  const indexName = fieldsIndexName(index, tableName)
+  return `CREATE INDEX ${indexName} ON ${tableName} (${json_indices.join(',')})`
+}
+
+export async function createPostgresIndices(
+  dataSource: Knex,
+  tableName: string,
+  indices: Array<FieldsIndex>
+): Promise<void> {
+  for (const index of indices) {
+    const json_indices = []
+    for (const field of index.fields) {
+      const path = field.path.map((p) => `'${p}'`)
+      json_indices.push(`(stream_content->${path.join('->')})`)
+    }
+    const raw = rawIndexQuery(tableName, index, json_indices)
+    await dataSource.schema.raw(raw)
+  }
+}
+
+export async function createSqliteIndices(
+  dataSource: Knex,
+  tableName: string,
+  indices: Array<FieldsIndex>
+): Promise<void> {
+  for (const index of indices) {
+    const json_indices = []
+    for (const field of index.fields) {
+      const path = field.path.join('.')
+      json_indices.push(`json_extract(stream_content, '$.${path}')`)
+    }
+    const raw = rawIndexQuery(tableName, index, json_indices)
+    await dataSource.schema.raw(raw)
+  }
+}
+
+export async function createConfigTable(
+  dataSource: Knex,
+  tableName: string,
+  network: Networks,
+  jsonb_support: boolean
+) {
   const NETWORK_DEFAULT_CONFIG = getDefaultCDBDatabaseConfig(network)
 
   switch (tableName) {
@@ -227,9 +276,14 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
         table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
         table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
         table.string('updated_by', 1024).notNullable()
+        if (jsonb_support) {
+          table.jsonb('indices').nullable()
+        } else {
+          table.json('indices').nullable()
+        }
 
         table.index(['is_indexed'], `idx_ceramic_is_indexed`, {
-          storageEngineIndexType: 'hash',
+          indexType: 'btree',
         })
       })
       break
@@ -255,5 +309,30 @@ export async function createConfigTable(dataSource: Knex, tableName: string, net
       break
     default:
       throw new Error(`Invalid config table creation requested: ${tableName}`)
+  }
+}
+
+export async function migrateConfigTable(
+  dataSource: Knex,
+  tableName: string,
+  jsonb_support: boolean
+) {
+  switch (tableName) {
+    case INDEXED_MODEL_CONFIG_TABLE_NAME:
+      if (!(await dataSource.schema.hasColumn(tableName, 'indices'))) {
+        await dataSource.schema.alterTable(tableName, (table) => {
+          if (jsonb_support) {
+            table.jsonb('indices').nullable()
+          } else {
+            table.json('indices').nullable()
+          }
+        })
+      }
+      break
+    case CONFIG_TABLE_NAME:
+      //no migrations
+      break
+    default:
+      throw new Error(`Invalid config table migration requested: ${tableName}`)
   }
 }

@@ -20,12 +20,13 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
 import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
 
-const CONTENT0 = { myData: 0 }
-const CONTENT1 = { myData: 1 }
-const CONTENT2 = { myData: 2 }
-const CONTENT3 = { myData: 3 }
-const CONTENT4 = { myData: 4 }
-const CONTENT5 = { myData: 5 }
+const CONTENT0 = { myData: 0, myArray: [0], myFloat: 0.5 }
+const CONTENT1 = { myData: 1, myArray: [1], myString: 'a' }
+const CONTENT2 = { myData: 2, myArray: [2], myFloat: 1.0 }
+const CONTENT3 = { myData: 3, myArray: [3], myString: 'b' }
+const CONTENT4 = { myData: 4, myArray: [4], myFloat: 1.5 }
+const CONTENT5 = { myData: 5, myArray: [5], myString: 'c' }
+const CONTENT6 = { myData: 6, myArray: [6], myString: 'b' }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -41,14 +42,26 @@ const MODEL_DEFINITION: ModelDefinition = {
         maximum: 10000,
         minimum: 0,
       },
+      myArray: {
+        type: 'array',
+        items: {
+          type: 'integer',
+        },
+      },
+      myString: {
+        type: 'string',
+      },
+      myFloat: {
+        type: 'number',
+      },
     },
-    required: ['myData'],
+    required: ['myData', 'myArray'],
   },
 }
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehcw5246o2q'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c5y9s12q66j1mwhmbsp7rhyncq9vigo8nlkf52gn4zg5a8uvbtc'
 
 // StreamID for a model that isn't indexed by the node
 const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
@@ -192,7 +205,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     modelWithRelation = await Model.create(ceramic, MODEL_WITH_RELATION_DEFINITION)
     midRelationMetadata = { model: modelWithRelation.id }
 
-    await core.index.indexModels([model.id, modelWithRelation.id])
+    await core.index.indexModels([{ streamID: model.id }, { streamID: modelWithRelation.id }])
   }, 30 * 1000)
 
   afterEach(async () => {
@@ -232,7 +245,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(core.index.indexedModels().length).toEqual(2)
 
       const mid = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      await expect(core.index.indexModels([mid.id])).rejects.toThrow(/it is not a Model StreamID/)
+      await expect(core.index.indexModels([{ streamID: mid.id }])).rejects.toThrow(
+        /it is not a Model StreamID/
+      )
 
       expect(core.index.indexedModels().length).toEqual(2)
     })
@@ -330,8 +345,6 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
-      console.log(`docIds: [${doc1.id.toString()}, ${doc2.id.toString()}, ${doc3.id.toString()}]`)
-
       const resultObj = await ceramic.index.query({ model: model.id, last: 100 })
       const results = extractDocuments(ceramic, resultObj)
 
@@ -387,6 +400,386 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results[3].content).toEqual(CONTENT4)
       expect(results[4].id.toString()).toEqual(doc5.id.toString())
       expect(results[4].content).toEqual(CONTENT5)
+    })
+  })
+
+  describe('Queries with custom query filtering', () => {
+    test('Can query a single document by field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          where: { myData: { equalTo: 3 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query documents when not null', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          where: { myString: { isNull: false } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+    })
+    test('Can query documents by string', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          where: { myString: { equalTo: 'b' } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+    })
+    test('Can query multiple documents by field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 3,
+        queryFilters: {
+          or: [{ where: { myData: { equalTo: 2 } } }, { where: { myData: { equalTo: 3 } } }],
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query multiple documents with negated field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          not: { where: { myData: { equalTo: 3 } } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(4)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc2.content))
+      expect(JSON.stringify(results[2].content)).toEqual(JSON.stringify(doc4.content))
+      expect(JSON.stringify(results[3].content)).toEqual(JSON.stringify(doc5.content))
+    })
+    test('Can query a single document by array', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myData: { in: [3] } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+    })
+    test('Can query a single document by float', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.2 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+    })
+    test('Can query a single document by float that gets truncated', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.0 } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+    })
+  })
+
+  describe('queries with custom sorting', () => {
+    test('multiple documents - one page - ASC order with forward pagination', async () => {
+      const doc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+
+      const resultObj = await ceramic.index.query({
+        model: model.id,
+        sorting: { myData: 'ASC' },
+        first: 100,
+      })
+      const results = extractDocuments(ceramic, resultObj)
+
+      expect(results).toHaveLength(3)
+      expect(results[0].id.toString()).toBe(doc0.id.toString())
+      expect(results[1].id.toString()).toBe(doc1.id.toString())
+      expect(results[2].id.toString()).toBe(doc2.id.toString())
+    })
+
+    test('multiple documents - one page - DESC order with forward pagination', async () => {
+      const doc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+
+      const resultObj = await ceramic.index.query({
+        model: model.id,
+        sorting: { myData: 'DESC' },
+        first: 100,
+      })
+      const results = extractDocuments(ceramic, resultObj)
+
+      expect(results).toHaveLength(3)
+      expect(results[0].id.toString()).toBe(doc2.id.toString())
+      expect(results[1].id.toString()).toBe(doc1.id.toString())
+      expect(results[2].id.toString()).toBe(doc0.id.toString())
+    })
+
+    test('multiple documents - one page - ASC order with backward pagination', async () => {
+      const doc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+
+      const resultObj = await ceramic.index.query({
+        model: model.id,
+        sorting: { myData: 'ASC' },
+        last: 100,
+      })
+      const results = extractDocuments(ceramic, resultObj)
+
+      expect(results).toHaveLength(3)
+      expect(results[0].id.toString()).toBe(doc0.id.toString())
+      expect(results[1].id.toString()).toBe(doc1.id.toString())
+      expect(results[2].id.toString()).toBe(doc2.id.toString())
+    })
+
+    test('multiple documents - one page - DESC order with backward pagination', async () => {
+      const doc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+
+      const resultObj = await ceramic.index.query({
+        model: model.id,
+        sorting: { myData: 'DESC' },
+        last: 100,
+      })
+      const results = extractDocuments(ceramic, resultObj)
+
+      expect(results).toHaveLength(3)
+      expect(results[0].id.toString()).toBe(doc2.id.toString())
+      expect(results[1].id.toString()).toBe(doc1.id.toString())
+      expect(results[2].id.toString()).toBe(doc0.id.toString())
+    })
+
+    test('multiple documents - multiple pages - ASC order with forward pagination', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
+
+      const query = {
+        model: model.id,
+        queryFilters: { where: { myString: { isNull: false } } },
+        sorting: { myString: 'ASC' },
+        first: 2,
+      }
+
+      const resultObj0 = await ceramic.index.query(query)
+      expect(resultObj0.pageInfo.hasNextPage).toBe(true)
+      const resultObj1 = await ceramic.index.query({
+        ...query,
+        after: resultObj0.pageInfo.endCursor,
+      })
+      expect(resultObj1.pageInfo.hasNextPage).toBe(false)
+
+      const results = [
+        extractDocuments(ceramic, resultObj0),
+        extractDocuments(ceramic, resultObj1),
+      ].flat()
+      expect(results).toHaveLength(4)
+      // First slice
+      expect(results[0].id.toString()).toEqual(doc1.id.toString()) // a
+      expect(results[1].id.toString()).toEqual(b1id) // b
+      // Second slice
+      expect(results[2].id.toString()).toEqual(b2id) // b
+      expect(results[3].id.toString()).toEqual(doc5.id.toString()) // c
+    })
+
+    test('multiple documents - multiple pages - DESC order with forward pagination', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
+
+      const query = {
+        model: model.id,
+        queryFilters: { where: { myString: { isNull: false } } },
+        sorting: { myString: 'DESC' },
+        first: 2,
+      }
+
+      const resultObj0 = await ceramic.index.query(query)
+      expect(resultObj0.pageInfo.hasNextPage).toBe(true)
+      const resultObj1 = await ceramic.index.query({
+        ...query,
+        after: resultObj0.pageInfo.endCursor,
+      })
+      expect(resultObj1.pageInfo.hasNextPage).toBe(false)
+
+      const results = [
+        extractDocuments(ceramic, resultObj0),
+        extractDocuments(ceramic, resultObj1),
+      ].flat()
+      expect(results).toHaveLength(4)
+      // First slice
+      expect(results[0].id.toString()).toEqual(doc5.id.toString()) // c
+      expect(results[1].id.toString()).toEqual(b1id) // b
+      // Second slice
+      expect(results[2].id.toString()).toEqual(b2id) // b
+      expect(results[3].id.toString()).toEqual(doc1.id.toString()) // a
+    })
+
+    test('multiple documents - multiple pages - ASC order with backward pagination', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
+
+      const query = {
+        model: model.id,
+        queryFilters: { where: { myString: { isNull: false } } },
+        sorting: { myString: 'ASC' }, // Need to flip to DESC in query
+        last: 2,
+      }
+
+      const resultObj0 = await ceramic.index.query(query)
+      expect(resultObj0.pageInfo.hasPreviousPage).toBe(true)
+      const resultObj1 = await ceramic.index.query({
+        ...query,
+        before: resultObj0.pageInfo.startCursor,
+      })
+      expect(resultObj1.pageInfo.hasPreviousPage).toBe(false)
+
+      const results = [
+        extractDocuments(ceramic, resultObj0),
+        extractDocuments(ceramic, resultObj1),
+      ].flat()
+      expect(results).toHaveLength(4)
+      // First slice
+      expect(results[0].id.toString()).toEqual(b1id) // b
+      expect(results[1].id.toString()).toEqual(doc5.id.toString()) // c
+      // Second slice
+      expect(results[2].id.toString()).toEqual(doc1.id.toString()) // a
+      expect(results[3].id.toString()).toEqual(b2id) // b
+    })
+
+    test('multiple documents - multiple pages - DESC order with backward pagination', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+      const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
+
+      const query = {
+        model: model.id,
+        queryFilters: { where: { myString: { isNull: false } } },
+        sorting: { myString: 'DESC' },
+        last: 2,
+      }
+
+      const resultObj0 = await ceramic.index.query(query)
+      expect(resultObj0.pageInfo.hasPreviousPage).toBe(true)
+      const resultObj1 = await ceramic.index.query({
+        ...query,
+        before: resultObj0.pageInfo.startCursor,
+      })
+      expect(resultObj1.pageInfo.hasPreviousPage).toBe(false)
+
+      const results = [
+        extractDocuments(ceramic, resultObj0),
+        extractDocuments(ceramic, resultObj1),
+      ].flat()
+      expect(results).toHaveLength(4)
+      // First slice
+      expect(results[0].id.toString()).toEqual(b1id) // b
+      expect(results[1].id.toString()).toEqual(doc1.id.toString()) // a
+      // Second slice
+      expect(results[2].id.toString()).toEqual(doc5.id.toString()) // c
+      expect(results[3].id.toString()).toEqual(b2id) // b
     })
   })
 

@@ -1,7 +1,9 @@
 import { Observable, Subscription, interval } from 'rxjs'
+import { concatMap } from 'rxjs/operators'
 import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message.js'
 import { ObservableWithNext } from './observable-with-next.js'
 import { version } from '../version.js'
+import { IpfsApi } from '@ceramicnetwork/common'
 
 /**
  * Wraps an instance of Pubsub and ensures that a pubsub message is generated with some minimum
@@ -15,6 +17,8 @@ export class PubsubKeepalive
 
   // start at 0 so it always publishes once on startup
   private lastPublishedKeepAliveMessageDate = 0
+
+  private _ipfsVersion: string | undefined = undefined
 
   /**
    * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
@@ -31,6 +35,7 @@ export class PubsubKeepalive
    */
   constructor(
     private readonly pubsub: ObservableWithNext<PubsubMessage>,
+    private readonly ipfs: IpfsApi,
     private readonly maxPubsubPublishInterval: number,
     private readonly maxIntervalWithoutKeepalive: number
   ) {
@@ -42,9 +47,18 @@ export class PubsubKeepalive
       // Run it with the minimum required interval
       const pubsubKeepaliveInterval = interval(
         Math.min(this.maxPubsubPublishInterval / 2, this.maxIntervalWithoutKeepalive / 2)
-      ).subscribe(() => {
-        this.publishPubsubKeepaliveIfNeeded()
-      })
+      )
+        .pipe(
+          concatMap(async () => {
+            if (!this._ipfsVersion) {
+              this._ipfsVersion = await ipfs.version().then((_) => _.version)
+            }
+            return this._ipfsVersion
+          })
+        )
+        .subscribe((ipfsVersion) => {
+          this.publishPubsubKeepaliveIfNeeded(ipfsVersion)
+        })
 
       return () => {
         pubsubKeepaliveInterval.unsubscribe()
@@ -70,7 +84,7 @@ export class PubsubKeepalive
    * publishing a pubsub message.  This is to work around a bug in IPFS where peer connections
    * get dropped if they haven't had traffic in too long.
    */
-  publishPubsubKeepaliveIfNeeded(): void {
+  publishPubsubKeepaliveIfNeeded(ipfsVersion: string): void {
     const now = Date.now()
     const needToPublishKeepaliveOnceADay =
       now - this.lastPublishedKeepAliveMessageDate > this.maxIntervalWithoutKeepalive
@@ -83,7 +97,12 @@ export class PubsubKeepalive
       return
     }
 
-    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now, ver: version }
+    const message: KeepaliveMessage = {
+      typ: MsgType.KEEPALIVE,
+      ts: now,
+      ver: version,
+      ipfsVer: ipfsVersion,
+    }
     this.next(message)
   }
 }

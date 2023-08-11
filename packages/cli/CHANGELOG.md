@@ -3,6 +3,120 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.36.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0-rc.0...@ceramicnetwork/cli@2.36.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0...@ceramicnetwork/cli@2.36.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
+# [2.35.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0-rc.3...@ceramicnetwork/cli@2.35.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.35.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0-rc.2...@ceramicnetwork/cli@2.35.0-rc.3) (2023-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.35.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0-rc.1...@ceramicnetwork/cli@2.35.0-rc.2) (2023-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.35.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0-rc.0...@ceramicnetwork/cli@2.35.0-rc.1) (2023-07-24)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.35.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.34.0...@ceramicnetwork/cli@2.35.0-rc.0) (2023-07-13)
+
+
+### Features
+
+* add ability to export Prometheus metrics ([#2846](https://github.com/ceramicnetwork/js-ceramic/issues/2846)) ([6be4e00](https://github.com/ceramicnetwork/js-ceramic/commit/6be4e00162eb2bc32604f3991e2df7f624c4e304))
+* CDB-2493 Adjust API to support model index changes ([#2844](https://github.com/ceramicnetwork/js-ceramic/issues/2844)) ([13e7a9f](https://github.com/ceramicnetwork/js-ceramic/commit/13e7a9f52fdb824d97966c4df88e3db1fcd16428))
+* **core:** CDB 2492 Add database indices for model fields ([#2845](https://github.com/ceramicnetwork/js-ceramic/issues/2845)) ([5ef6dba](https://github.com/ceramicnetwork/js-ceramic/commit/5ef6dbac58258718e3fb108c7fefedf899441591))
+* **core:** CDB-2535 Implement query filters for database queries ([#2842](https://github.com/ceramicnetwork/js-ceramic/issues/2842)) ([67f3de1](https://github.com/ceramicnetwork/js-ceramic/commit/67f3de190950db032cc68cd06e902d9fccda0d6e))
+* Send ipfs version in a keepalive message ([#2848](https://github.com/ceramicnetwork/js-ceramic/issues/2848)) ([8098cff](https://github.com/ceramicnetwork/js-ceramic/commit/8098cff5b1bcd71a407c09db4b1cf00849fb9590))
+
+
+
+
+
+# [2.34.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.34.0-rc.0...@ceramicnetwork/cli@2.34.0) (2023-07-12)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.34.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.33.0-rc.0...@ceramicnetwork/cli@2.34.0-rc.0) (2023-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.32.0-rc.0...@ceramicnetwork/cli@2.33.0-rc.0) (2023-06-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.32.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.31.0...@ceramicnetwork/cli@2.32.0-rc.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.31.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.31.0-rc.0...@ceramicnetwork/cli@2.31.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.30.0...@ceramicnetwork/cli@2.31.0-rc.0) (2023-05-24)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.30.0-rc.0...@ceramicnetwork/cli@2.30.0) (2023-05-03)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

@@ -469,6 +469,7 @@ export class Ceramic implements CeramicApi {
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
         anchorServiceUrl !== 'https://cas-internal.3boxlabs.com' &&
+        anchorServiceUrl !== 'https://cas-direct.3boxlabs.com' &&
         anchorServiceUrl !== DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
       ) {
         throw new Error('Cannot use custom anchor service on Ceramic mainnet')
@@ -625,6 +626,12 @@ export class Ceramic implements CeramicApi {
         .catch((error) => {
           this._logger.err(`Error while resuming anchors: ${error}`)
         })
+
+      if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
+        this._logger.warn(
+          `Running with anchor polling retries disabled. This is not recommended in production`
+        )
+      }
     } catch (err) {
       await this.close()
       throw err
@@ -738,12 +745,10 @@ export class Ceramic implements CeramicApi {
       throw new Error('Writes to streams are not supported in gateway mode')
     }
 
+    const id = normalizeStreamID(streamId)
+    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.applyCommit(
-      normalizeStreamID(streamId),
-      commit,
-      opts as CreateOpts
-    )
+    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
 
     const stream = streamFromState<T>(
       this.context,
@@ -753,6 +758,7 @@ export class Ceramic implements CeramicApi {
     )
 
     await this.repository.indexStreamIfNeeded(state$)
+    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
 
     return stream
   }
@@ -785,6 +791,9 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride }
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const streamId = new StreamID(type, genesisCid)
+    this._logger.verbose(
+      `Created stream from genesis, StreamID: ${streamId.toString()}, genesis CID: ${genesisCid.toString()}`
+    )
     const state$ = await this.repository.applyCreateOpts(streamId, opts)
     const stream = streamFromState<T>(
       this.context,
@@ -792,6 +801,7 @@ export class Ceramic implements CeramicApi {
       state$.value,
       this.repository.updates$
     )
+    this._logger.verbose(`Created stream ${streamId.toString()} from state`)
 
     await this.repository.indexStreamIfNeeded(state$)
 
@@ -872,7 +882,10 @@ export class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    * @private
    */
-  async _loadLinkedStreams(query: MultiQuery, timeout: number): Promise<Record<string, Stream>> {
+  private async _loadLinkedStreams(
+    query: MultiQuery,
+    timeout: number
+  ): Promise<Record<string, Stream>> {
     const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
     query.paths?.forEach((path) => pathTrie.add(path))
@@ -883,10 +896,12 @@ export class Ceramic implements CeramicApi {
 
     const index = {}
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
+      const queryAtTime = query.opts?.atTime ? query.opts?.atTime : query.atTime
+      const opts = (queryAtTime ? { atTime: queryAtTime, ...query.opts } : query.opts) ?? {}
       let stream
       try {
         stream = await promiseTimeout(
-          this.loadStream(streamId, { atTime: query.atTime }),
+          this.loadStream(streamId, opts),
           timeout,
           `Timeout after ${timeout}ms`
         )
@@ -894,20 +909,20 @@ export class Ceramic implements CeramicApi {
         if (CommitID.isInstance(streamId)) {
           this._logger.warn(
             `Error loading stream ${streamId.baseID.toString()} at commit ${streamId.commit.toString()} at time ${
-              query.atTime
+              opts.atTime
             } as part of a multiQuery request: ${e.toString()}`
           )
         } else {
           this._logger.warn(
             `Error loading stream ${streamId.toString()} at time ${
-              query.atTime
+              opts.atTime
             } as part of a multiQuery request: ${e.toString()}`
           )
         }
         Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
-      const streamRef = query.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
+      const streamRef = opts?.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
       index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map((key) => {

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "2.13.0",
+  "version": "2.16.0",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -37,8 +37,8 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.14.0",
-    "@didtools/cacao": "^1.0.0",
+    "@ceramicnetwork/streamid": "^2.17.0",
+    "@didtools/cacao": "^2.1.0",
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
@@ -48,6 +48,7 @@
   "devDependencies": {
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
+    "@noble/curves": "^1.1.0",
     "@polkadot/api": "^4.6.2",
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
@@ -56,7 +57,6 @@
     "@smontero/eosio-local-provider": "^0.0.3",
     "@solana/wallet-adapter-base": "^0.7.1",
     "@solana/web3.js": "^1.31.0",
-    "@stablelib/ed25519": "^1.0.2",
     "@taquito/signer": "^11.2.0",
     "@taquito/taquito": "^11.2.0",
     "@tendermint/sig": "^0.6.0",

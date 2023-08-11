@@ -3,6 +3,150 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.38.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0-rc.0...@ceramicnetwork/core@2.38.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.38.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0...@ceramicnetwork/core@2.38.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
+# [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.3...@ceramicnetwork/core@2.37.0) (2023-07-31)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.37.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.2...@ceramicnetwork/core@2.37.0-rc.3) (2023-07-26)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.37.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.1...@ceramicnetwork/core@2.37.0-rc.2) (2023-07-26)
+
+
+### Bug Fixes
+
+* **core:** empty sync statuses ([#2872](https://github.com/ceramicnetwork/js-ceramic/issues/2872)) ([a3e78db](https://github.com/ceramicnetwork/js-ceramic/commit/a3e78dbd773d2e8d8fb0f10cea0ae47295ec41cd))
+* **core:** Fix CAS DID-auth ([#2873](https://github.com/ceramicnetwork/js-ceramic/issues/2873)) ([879f401](https://github.com/ceramicnetwork/js-ceramic/commit/879f401d5405f861226dd5be023eb58ff65d9120))
+
+
+
+
+
+# [2.37.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.0...@ceramicnetwork/core@2.37.0-rc.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* **core:** Loading at an AnchorCommit should be able to inform node that CACAO is not actually expired ([#2868](https://github.com/ceramicnetwork/js-ceramic/issues/2868)) ([35ada9e](https://github.com/ceramicnetwork/js-ceramic/commit/35ada9e722991364d332ec87f53d42972241e910))
+* Do not stop polling for anchor result on a network error ([#2869](https://github.com/ceramicnetwork/js-ceramic/issues/2869)) ([07ff4e5](https://github.com/ceramicnetwork/js-ceramic/commit/07ff4e5b0558fd3ae6069c2fe2bdff5c6de69306))
+
+
+### Features
+
+* add metrics for caching and syncing ([#2866](https://github.com/ceramicnetwork/js-ceramic/issues/2866)) ([1c3118b](https://github.com/ceramicnetwork/js-ceramic/commit/1c3118bb131dfe395cc49e755eaa1c01dadbbbfb))
+* Add scarf ([#2870](https://github.com/ceramicnetwork/js-ceramic/issues/2870)) ([1c2efa0](https://github.com/ceramicnetwork/js-ceramic/commit/1c2efa0b2db3a74fd64b49d4924fe5eb3c74d1fa))
+
+
+### Reverts
+
+* Revert "chore: Make CAR file required (#2849)" ([cbae060](https://github.com/ceramicnetwork/js-ceramic/commit/cbae060a6f5642ff098566c35d7d6bd03c5a5959)), closes [#2849](https://github.com/ceramicnetwork/js-ceramic/issues/2849)
+
+
+
+
+
+# [2.37.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.36.0...@ceramicnetwork/core@2.37.0-rc.0) (2023-07-13)
+
+
+### Features
+
+* CDB-2493 Adjust API to support model index changes ([#2844](https://github.com/ceramicnetwork/js-ceramic/issues/2844)) ([13e7a9f](https://github.com/ceramicnetwork/js-ceramic/commit/13e7a9f52fdb824d97966c4df88e3db1fcd16428))
+* **core:** CDB 2492 Add database indices for model fields ([#2845](https://github.com/ceramicnetwork/js-ceramic/issues/2845)) ([5ef6dba](https://github.com/ceramicnetwork/js-ceramic/commit/5ef6dbac58258718e3fb108c7fefedf899441591))
+* **core:** CDB-2535 Implement query filters for database queries ([#2842](https://github.com/ceramicnetwork/js-ceramic/issues/2842)) ([67f3de1](https://github.com/ceramicnetwork/js-ceramic/commit/67f3de190950db032cc68cd06e902d9fccda0d6e))
+* Send ipfs version in a keepalive message ([#2848](https://github.com/ceramicnetwork/js-ceramic/issues/2848)) ([8098cff](https://github.com/ceramicnetwork/js-ceramic/commit/8098cff5b1bcd71a407c09db4b1cf00849fb9590))
+
+
+
+
+
+# [2.36.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.36.0-rc.0...@ceramicnetwork/core@2.36.0) (2023-07-12)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.35.0-rc.0...@ceramicnetwork/core@2.36.0-rc.0) (2023-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.35.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.34.0-rc.0...@ceramicnetwork/core@2.35.0-rc.0) (2023-06-19)
+
+
+### Features
+
+* Add CAS Response as a codec ([#2838](https://github.com/ceramicnetwork/js-ceramic/issues/2838)) ([346a359](https://github.com/ceramicnetwork/js-ceramic/commit/346a359a978328d155e3dfa1a44f59946435dd9c))
+* Add loadOpts to MultiQuery ([#2768](https://github.com/ceramicnetwork/js-ceramic/issues/2768)) ([c609c23](https://github.com/ceramicnetwork/js-ceramic/commit/c609c23e808e659d79e2a8bbc5dcdf80cab88e19))
+
+
+
+
+
+# [2.34.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.33.0...@ceramicnetwork/core@2.34.0-rc.0) (2023-06-01)
+
+
+### Features
+
+* **core:** finalize block threshold for switch to smart contract anchoring ([#2830](https://github.com/ceramicnetwork/js-ceramic/issues/2830)) ([affc665](https://github.com/ceramicnetwork/js-ceramic/commit/affc665fa1d73e45a2a695d63fb913521484c4d0))
+* **core:** store CAR files that come back from CAS ([#2828](https://github.com/ceramicnetwork/js-ceramic/issues/2828)) ([45440ca](https://github.com/ceramicnetwork/js-ceramic/commit/45440cad18d7eb89e1b5c0838cb1df6b96bbe754))
+
+
+
+
+
+# [2.33.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.33.0-rc.0...@ceramicnetwork/core@2.33.0) (2023-06-01)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.32.0...@ceramicnetwork/core@2.33.0-rc.0) (2023-05-24)
+
+
+### Features
+
+* **core:** Use codecs for pubsub ([#2822](https://github.com/ceramicnetwork/js-ceramic/issues/2822)) ([7797603](https://github.com/ceramicnetwork/js-ceramic/commit/7797603da9bdddb4176f6eaaf3d0581c0801683f))
+* Less calls to IPFS node ([#2820](https://github.com/ceramicnetwork/js-ceramic/issues/2820)) ([74b92bb](https://github.com/ceramicnetwork/js-ceramic/commit/74b92bb746fbe2cd2957724e9a831a7ca7fed34d))
+
+
+
+
+
 # [2.32.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.32.0-rc.0...@ceramicnetwork/core@2.32.0) (2023-05-03)
 
 **Note:** Version bump only for package @ceramicnetwork/core

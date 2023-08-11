@@ -2,10 +2,10 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CAR, CARFactory } from 'cartonne'
 import { CID } from 'multiformats/cid'
 
-const FAKE_STREAM_ID = StreamID.fromString(
+export const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
-const FAKE_TIP_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+export const FAKE_TIP_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 export function generateFakeCarFile(): CAR {
   const carFactory = new CARFactory()

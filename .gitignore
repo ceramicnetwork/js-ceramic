@@ -4,6 +4,7 @@ lerna-debug.log
 .pinning.store
 .vscode
 *.iml
+.*.swp
 docs/
 .run/
 cue.mod/
