@@ -14,7 +14,6 @@ import { Ceramic } from '@ceramicnetwork/core'
 import tmp from 'tmp-promise'
 import MockDate from 'mockdate'
 import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
-import { StreamID } from '@ceramicnetwork/streamid'
 
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
@@ -632,9 +631,7 @@ describe('admin api', () => {
             jws: await buildJWS(adminDid, await fetchCode(), MODEL_PATH, [exampleModelStreamId]),
           },
         })
-      ).rejects.toThrow(
-        /Cannot re-index model kjzl6hvfrbw6c9jjl42rrylkpibnt1mjf52900nnwkt68ci1kuoc51hncgczs5q, data may not be up-to-date/
-      )
+      ).rejects.toThrow(`Cannot re-index model ${exampleModelStreamId}, data may not be up-to-date`)
     })
   })
 })
