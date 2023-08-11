@@ -169,13 +169,16 @@ export type ModelViewsDefinition = TypeOf<typeof ModelViewsDefinition>
 /**
  * Contents of a Model Stream.
  */
-export const ModelDefinition = sparse({
-  version: string,
-  name: string,
-  description: optional(string),
-  schema: ObjectSchema,
-  accountRelation: ModelAccountRelation,
-  relations: optional(ModelRelationsDefinition),
-  views: optional(ModelViewsDefinition),
-})
+export const ModelDefinition = sparse(
+  {
+    version: string,
+    name: string,
+    description: optional(string),
+    schema: ObjectSchema,
+    accountRelation: ModelAccountRelation,
+    relations: optional(ModelRelationsDefinition),
+    views: optional(ModelViewsDefinition),
+  },
+  'ModelDefinition'
+)
 export type ModelDefinition = TypeOf<typeof ModelDefinition>
