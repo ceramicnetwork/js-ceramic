@@ -77,8 +77,8 @@ export class DaemonIpfsConfig {
   pinningEndpoints?: string[]
 
   /**
-   * When true, effectively makes the node local-only.  All data syncing and sharing between nodes
-   * will fail.
+   * When true, effectively makes the node local-only.  This node will be unable to load any data
+   * from other nodes on the network. Use with caution!
    */
   @jsonMember(Boolean, { name: 'disable-peer-data-sync' })
   disablePeerDataSync?: boolean = false
