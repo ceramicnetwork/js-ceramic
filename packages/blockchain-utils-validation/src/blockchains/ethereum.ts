@@ -60,7 +60,7 @@ async function validateErc1271Link(proof: LinkProof): Promise<LinkProof | null> 
   const provider = getEthersProvider(account.chainId.reference)
   const contract = new Contract(account.address, ERC1271_ABI, provider)
   const message = utf8toHex(proof.message)
-  const returnValue = await contract.isValidSignature(message, proof.signature)
+  const returnValue = await contract['isValidSignature'](message, proof.signature)
 
   return returnValue === MAGIC_ERC1271_VALUE ? proof : null
 }

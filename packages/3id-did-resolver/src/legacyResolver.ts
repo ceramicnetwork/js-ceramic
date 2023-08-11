@@ -63,18 +63,40 @@ const compressKey = (key: string) => {
   return `${prefix}${xpoint}`
 }
 
-// Returns v0 3id public keys in ceramic 3id doc form
-const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
-  const doc = (await ipfs.dag.get(didId)).value
-  let signingKey, encryptionKey
+export type LegacyResolverResult = {
+  publicKeys: Record<string, string>
+  keyDid: string
+}
 
-  try {
-    const keyEntrySigning = doc.publicKey.findIndex((e) => e.id.endsWith('signingKey'))
-    const keyEntryEncryption = doc.publicKey.findIndex((e) => e.id.endsWith('encryptionKey'))
-    signingKey = doc.publicKey[keyEntrySigning].publicKeyHex
-    encryptionKey = doc.publicKey[keyEntryEncryption].publicKeyBase64
-  } catch (e) {
-    throw new Error('Not a valid 3ID')
+type LegacySigningKey = { id: string; publicKeyHex: string }
+type LegacyEncryptionKey = { id: string; publicKeyBase64: string }
+type LegacyPublicKeyEntry = LegacySigningKey | LegacyEncryptionKey
+
+class NotValid3IdError extends Error {
+  constructor() {
+    super(`Not a valid 3ID`)
+  }
+}
+
+// Returns v0 3id public keys in ceramic 3id doc form
+export async function LegacyResolver(
+  didId: string,
+  ipfs = ipfsMock
+): Promise<LegacyResolverResult> {
+  const doc = (await ipfs.dag.get(didId)).value
+  if (!Array.isArray(doc.publicKey)) {
+    throw new NotValid3IdError()
+  }
+
+  const signingKey = doc.publicKey.find((e: LegacyPublicKeyEntry) =>
+    e.id.endsWith('signingKey')
+  )?.publicKeyHex
+  const encryptionKey = doc.publicKey.find((e: LegacyPublicKeyEntry) =>
+    e.id.endsWith('encryptionKey')
+  )?.publicKeyBase64
+
+  if (!signingKey || !encryptionKey) {
+    throw new NotValid3IdError()
   }
 
   const signingKeyCompressed = compressKey(signingKey)
@@ -89,5 +111,3 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
     },
   }
 }
-
-export { LegacyResolver }
