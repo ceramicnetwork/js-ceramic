@@ -6,7 +6,7 @@ import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { Repository } from '../state-management/repository.js'
 import { StreamStateStore } from './stream-state-store.js'
 
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
+const IPFS_GET_TIMEOUT = 2000 // 2 seconds TESTING ONLY DO NOT MERGE
 
 export type Props = {
   pinningEndpoints?: string[]
