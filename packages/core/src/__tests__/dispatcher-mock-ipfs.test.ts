@@ -1,4 +1,4 @@
-import { expect, jest } from '@jest/globals'
+import { expect, jest, it, describe, beforeEach, afterEach } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -36,7 +36,7 @@ const mock_ipfs = {
   dag: {
     put: jest.fn(),
     get: jest.fn(),
-    resolve: jest.fn(async (cid: CID, opts?: any) => {
+    resolve: jest.fn(async (cid: CID) => {
       return { cid: cid }
     }),
     import: jest.fn(() => {
@@ -50,7 +50,7 @@ const mock_ipfs = {
   id: async () => ({ id: 'ipfsid' }),
   codecs: {
     listCodecs: () => [dagJoseCodec, dagCborCodec],
-    getCodec: (codename) =>
+    getCodec: (codename: string | number) =>
       [dagJoseCodec, dagCborCodec].find(
         (codec) => codec.code === codename || codec.name === codename
       ),
@@ -76,7 +76,7 @@ describe('Dispatcher with mock ipfs', () => {
     const levelPath = await tmp.tmpName()
     const levelStore = new LevelDbStore(levelPath, 'test')
     const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
-    stateStore.open(levelStore)
+    await stateStore.open(levelStore)
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,
@@ -179,9 +179,7 @@ describe('Dispatcher with mock ipfs', () => {
     })
 
     const blockGetSpy = ipfs.block.get
-    blockGetSpy.mockImplementation(async function (cid: CID, opts: any) {
-      return carFile.blocks.get(cid).payload
-    })
+    blockGetSpy.mockImplementation(async (cid: CID) => carFile.blocks.get(cid).payload)
 
     expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/foo')).toEqual('foo')
     // CID+path not found in cache so IPFS lookup performed and cache updated

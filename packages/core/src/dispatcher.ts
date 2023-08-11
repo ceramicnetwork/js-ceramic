@@ -146,9 +146,9 @@ export class Dispatcher {
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
-    this._ipfs.codecs.listCodecs().forEach((codec) => {
+    for (const codec of this._ipfs.codecs.listCodecs()) {
       this.carFactory.codecs.add(codec)
-    })
+    }
     if (this.enableSync) {
       this._ipfsTimeout = DEFAULT_IPFS_GET_SYNC_TIMEOUT
     } else {
@@ -164,9 +164,12 @@ export class Dispatcher {
   }
 
   async storeRecord(record: Record<string, unknown>): Promise<CID> {
-    return await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.dag.put(record, { signal: signal })
-    })
+    return this._shutdownSignal
+      .abortable((signal) => this._ipfs.dag.put(record, { signal: signal }))
+      .then((cid) => {
+        this.dagNodeCache.set(cid.toString(), record)
+        return cid
+      })
   }
 
   async getIpfsBlock(cid: CID): Promise<Uint8Array> {
@@ -180,8 +183,8 @@ export class Dispatcher {
    * Stores all the blocks in the given CAR file into the local IPFS node.
    * @param car
    */
-  async importCAR(car: CAR): Promise<void> {
-    return await this._shutdownSignal.abortable(async (signal) => {
+  importCAR(car: CAR): Promise<void> {
+    return this._shutdownSignal.abortable(async (signal) => {
       await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
     })
   }
@@ -203,18 +206,23 @@ export class Dispatcher {
           const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
           carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
           restrictBlockSize(cacaoBlock, capCID)
+          this.dagNodeCache.set(capCID.toString(), carFile.get(capCID))
         }
 
-        carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
+        const payloadCID = jws.link
+        carFile.blocks.put(new CarBlock(payloadCID, linkedBlock)) // Encode payload
         restrictBlockSize(linkedBlock, jws.link)
+        this.dagNodeCache.set(payloadCID.toString(), carFile.get(payloadCID))
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
         restrictBlockSize(carFile.blocks.get(cid).payload, cid)
+        this.dagNodeCache.set(cid.toString(), carFile.get(cid))
         await this.importCAR(carFile)
         Metrics.count(COMMITS_STORED, 1)
         return cid
       }
       const cid = carFile.put(data, { isRoot: true })
       restrictBlockSize(carFile.blocks.get(cid).payload, cid)
+      this.dagNodeCache.set(cid.toString(), carFile.get(cid))
       await this.importCAR(carFile)
       Metrics.count(COMMITS_STORED, 1)
       return cid
