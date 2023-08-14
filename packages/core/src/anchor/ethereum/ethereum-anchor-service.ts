@@ -9,7 +9,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, concat, timer, of, defer, expand, interval, tap } from 'rxjs'
+import { Observable, concat, timer, of, defer, expand } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -194,89 +194,6 @@ export class EthereumAnchorService implements AnchorService {
         }
       }),
       map((response) => this.parseResponse(cidStream, response))
-    )
-  }
-
-  newPollForAnchorResponse(task: () => Promise<any>): Observable<CASResponse> {
-    const started = new Date().getTime()
-    const maxTime = started + this.maxPollTime
-
-    const requestWithError = defer(async () => {
-      console.log('newPollForAnchorResponse: doing task', Date.now() - started)
-      const x = await task()
-      console.log('newPollForAnchorResponse: after task', Date.now() - started)
-      return x
-    }).pipe(
-      retry({
-        delay: (error) => {
-          this._logger.err(
-            new Error(
-              `newPollForAnchorResponse: error received ${error} at ${Date.now() - started}`
-            )
-          )
-          return timer(this.pollInterval)
-        },
-      })
-    )
-
-    return requestWithError.pipe(
-      tap((x) => {
-        console.log('newPollForAnchorResponse: received first value', x)
-      }),
-      expand(() => {
-        const now = new Date().getTime()
-        console.log('newPollForAnchorResponse: time elapsed', now - started)
-        if (now > maxTime) {
-          throw new Error('Exceeded max anchor polling time limit')
-        } else {
-          console.log('newPollForAnchorResponse: task to be completed in ms', this.pollInterval)
-          return timer(this.pollInterval).pipe(concatMap(() => requestWithError))
-        }
-      }),
-      tap((x) => {
-        console.log('newPollForAnchorResponse: received value after expand', x)
-      })
-    )
-  }
-
-  oldPollForAnchorResponse(task: () => Promise<any>): Observable<CASResponse> {
-    const started = new Date().getTime()
-    const maxTime = started + this.maxPollTime
-
-    const doPoll = defer(async () => {
-      console.log('oldPollForAnchorResponse: doing task', Date.now() - started)
-      const x = await task()
-      console.log('oldPollForAnchorResponse: after task', Date.now() - started)
-      return x
-    }).pipe(
-      retry({
-        delay: (error) => {
-          this._logger.err(
-            new Error(
-              `oldPollForAnchorResponse: error received ${error} at ${Date.now() - started}`
-            )
-          )
-          return timer(this.pollInterval)
-        },
-      })
-    )
-
-    return interval(this.pollInterval).pipe(
-      tap((x) => {
-        console.log('oldPollForAnchorResponse: received value from interval', x)
-      }),
-      concatMap(() => {
-        const now = new Date().getTime()
-        console.log('oldPollForAnchorResponse: time elapsed', now - started)
-        if (now > maxTime) {
-          throw new Error('Exceeded max anchor polling time limit')
-        } else {
-          return doPoll
-        }
-      }),
-      tap((x) => {
-        console.log('oldPollForAnchorResponse: received value after concatMap', x)
-      })
     )
   }
 

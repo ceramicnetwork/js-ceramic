@@ -3,8 +3,8 @@ import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
 
 const MAX_FAILED_ATTEMPTS = 2
-const POLL_INTERVAL = 1000 // ms
-const MAX_POLL_TIME = 5000 // ms - to test if polling stops after this threshold
+const POLL_INTERVAL = 100 // ms
+const MAX_POLL_TIME = 500 // ms - to test if polling stops after this threshold
 
 let fetchAttemptNum = 0
 
@@ -121,6 +121,6 @@ test('stop polling after max time', async () => {
   await whenSubscriptionDone(subscription)
   expect(String(error)).toEqual('Error: Exceeded max anchor polling time limit')
   expect(errorCount).toEqual(1)
-  // During the 5 seconds, there are 2 retries and 3 successes
+  // During the 5 ms, there is the intial call, then 2 retries (2 ms) and 3 successes (3 ms)
   expect(nextCount).toEqual(3)
 })
