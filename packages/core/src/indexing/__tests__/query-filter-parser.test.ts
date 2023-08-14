@@ -15,6 +15,19 @@ describe('Should parse query filters', () => {
       },
     })
   })
+  test('that are composed of a single in query', () => {
+    const parsed = parseQueryFilters({
+      where: {
+        a: { in: ['b', 'c'] },
+      },
+    })
+    expect(parsed).toEqual({
+      type: 'where',
+      value: {
+        a: { type: 'string', op: 'in', value: ['b', 'c'] },
+      },
+    })
+  })
   test('that are composed of a null query', () => {
     const parsed = parseQueryFilters({
       where: {

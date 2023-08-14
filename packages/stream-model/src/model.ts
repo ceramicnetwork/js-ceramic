@@ -13,11 +13,14 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
 import { CID } from 'multiformats/cid'
 import { create } from 'multiformats/hashes/digest'
 import { code, encode } from '@ipld/dag-cbor'
 import { identity } from 'multiformats/hashes/identity'
+import { asDIDString } from '@ceramicnetwork/codecs'
+import { decode } from 'codeco'
+
+import { ModelDefinition, type ModelMetadata, ModelRelationsDefinition } from './codecs.js'
 
 export const MODEL_VERSION_REGEXP = /^[0-9]+\.[0-9]+$/
 
@@ -39,23 +42,6 @@ export interface ModelMetadataArgs {
   controller: string
 }
 
-/**
- * Metadata for a Model Stream
- */
-export interface ModelMetadata {
-  /**
-   * The DID that is allowed to author updates to this Model
-   */
-  controller: string
-
-  /**
-   * The StreamID that all Model streams have as their 'model' for indexing purposes. Note that
-   * this StreamID doesn't refer to a valid Stream and cannot be loaded, it's just a way to index
-   * all Models.
-   */
-  model: StreamID
-}
-
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
@@ -74,75 +60,6 @@ async function throwReadOnlyError(): Promise<void> {
   throw new Error(
     'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
   )
-}
-
-/**
- * Represents the relationship between an instance of this model and the controller account.
- * 'list' means there can be many instances of this model for a single account. 'single' means
- * there can be only one instance of this model per account (if a new instance is created it
- * overrides the old one).
- */
-export type ModelAccountRelation = { type: 'list' } | { type: 'single' }
-
-/**
- * Identifies types of properties that are supported as relations by the indexing service.
- *
- * Currently supported types of relation properties:
- * - 'account': references a DID property
- * - 'document': references a StreamID property with associated 'model' the related document must use
- *
- */
-export type ModelRelationDefinition = { type: 'account' } | { type: 'document'; model: string }
-
-/**
- * A mapping between model's property names and types of relation properties
- *
- * It indicates which properties of a model are relation properties and of what type
- */
-export type ModelRelationsDefinition = Record<string, ModelRelationDefinition>
-
-export type ModelDocumentMetadataViewDefinition =
-  | { type: 'documentAccount' }
-  | { type: 'documentVersion' }
-
-export type ModelRelationViewDefinition =
-  | { type: 'relationDocument'; model: string; property: string }
-  | { type: 'relationFrom'; model: string; property: string }
-  | { type: 'relationCountFrom'; model: string; property: string }
-
-/**
- * Identifies types of properties that are supported as view properties at DApps' runtime
- *
- * A view-property is one that is not stored in related MIDs' content, but is derived from their other properties
- *
- * Currently supported types of view properties:
- * - 'documentAccount': view properties of this type have the MID's controller DID as values
- * - 'documentVersion': view properties of this type have the MID's commit ID as values
- * - 'relationDocument': view properties of this type represent document relations identified by the given 'property' field
- * - 'relationFrom': view properties of this type represent inverse relations identified by the given 'model' and 'property' fields
- * - 'relationCountFrom': view properties of this type represent the number of inverse relations identified by the given 'model' and 'property' fields
- *
- */
-export type ModelViewDefinition = ModelDocumentMetadataViewDefinition | ModelRelationViewDefinition
-
-/**
- * A mapping between model's property names and types of view properties
- *
- * It indicates which properties of a model are view properties and of what type
- */
-export type ModelViewsDefinition = Record<string, ModelViewDefinition>
-
-/**
- * Contents of a Model Stream.
- */
-export interface ModelDefinition {
-  version: string
-  name: string
-  description?: string
-  schema: JSONSchema.Object
-  accountRelation: ModelAccountRelation
-  relations?: ModelRelationsDefinition
-  views?: ModelViewsDefinition
 }
 
 /**
@@ -180,7 +97,10 @@ export class Model extends Stream {
   }
 
   get metadata(): ModelMetadata {
-    return { controller: this.state$.value.metadata.controllers[0], model: Model.MODEL }
+    return {
+      controller: asDIDString(this.state$.value.metadata.controllers[0]),
+      model: Model.MODEL,
+    }
   }
 
   /**
@@ -196,7 +116,6 @@ export class Model extends Stream {
   ): Promise<Model> {
     Model.assertComplete(content)
     Model.assertVersionValid(content, 'minor')
-    Model.assertRelationsValid(content)
 
     const opts: CreateOpts = {
       publish: true,
@@ -213,44 +132,8 @@ export class Model extends Stream {
    * @param content
    * @param streamId
    */
-  static assertComplete(content: ModelDefinition, streamId?: StreamID | CommitID | string): void {
-    if (!content.name) {
-      if (streamId) {
-        throw new Error(`Model with StreamID ${streamId.toString()} is missing a 'name' field`)
-      } else {
-        throw new Error(`Model is missing a 'name' field`)
-      }
-    }
-
-    if (!content.version) {
-      if (streamId) {
-        throw new Error(
-          `Model ${content.name} (${streamId.toString()}) is missing a 'version' field`
-        )
-      } else {
-        throw new Error(`Model ${content.name} is missing a 'version' field`)
-      }
-    }
-
-    if (!content.schema) {
-      if (streamId) {
-        throw new Error(
-          `Model ${content.name} (${streamId.toString()}) is missing a 'schema' field`
-        )
-      } else {
-        throw new Error(`Model ${content.name} is missing a 'schema' field`)
-      }
-    }
-
-    if (!content.accountRelation) {
-      if (streamId) {
-        throw new Error(
-          `Model ${content.name} (${streamId.toString()}) is missing a 'accountRelation' field`
-        )
-      } else {
-        throw new Error(`Model ${content.name} is missing a 'accountRelation' field`)
-      }
-    }
+  static assertComplete(content: ModelDefinition, _streamId?: StreamID | CommitID | string): void {
+    decode(ModelDefinition, content)
   }
 
   /**
@@ -280,27 +163,8 @@ export class Model extends Stream {
    * an error if not.
    */
   static assertRelationsValid(content: ModelDefinition) {
-    if (!content.relations) {
-      return
-    }
-
-    for (const [fieldName, relationDefinition] of Object.entries(content.relations)) {
-      switch (relationDefinition.type) {
-        case 'account':
-          continue
-        case 'document':
-          try {
-            StreamID.fromString(relationDefinition.model)
-          } catch (err) {
-            throw new Error(`Relation on field ${fieldName} has invalid model: ${err.toString()}`)
-          }
-          continue
-        default:
-          throw new Error(
-            // @ts-ignore
-            `Relation on field ${fieldName} has unexpected type ${relationDefinition.type}`
-          )
-      }
+    if (content.relations != null) {
+      decode(ModelRelationsDefinition, content.relations)
     }
   }
 

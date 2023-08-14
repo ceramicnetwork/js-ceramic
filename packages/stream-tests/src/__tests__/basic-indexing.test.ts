@@ -460,6 +460,26 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
     })
+    test('Can query documents by string in array', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 2,
+        queryFilters: {
+          where: { myString: { in: ['a', 'c'] } },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc4.content))
+    })
     test('Can query multiple documents by field', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.28.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.28.0-rc.0...@ceramicnetwork/http-client@2.28.0-rc.1) (2023-08-11)
+
+
+### Bug Fixes
+
+* **core:** String in query values should be escaped ([#2891](https://github.com/ceramicnetwork/js-ceramic/issues/2891)) ([6bd02d7](https://github.com/ceramicnetwork/js-ceramic/commit/6bd02d77701b1f6195495ba994847dade7938a61))
+* **http-client:** Add a dummy pin api to not break old callers ([#2876](https://github.com/ceramicnetwork/js-ceramic/issues/2876)) ([3547e25](https://github.com/ceramicnetwork/js-ceramic/commit/3547e25773809b1fb666c31197a140937ddadf99))
+
+
+
+
+
 # [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.27.0...@ceramicnetwork/http-client@2.28.0-rc.0) (2023-08-07)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.36.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0-rc.1...@ceramicnetwork/cli@2.36.0-rc.2) (2023-08-11)
+
+
+### Features
+
+* Add config option to disable data fetching in IPFS ([#2888](https://github.com/ceramicnetwork/js-ceramic/issues/2888)) ([ae87750](https://github.com/ceramicnetwork/js-ceramic/commit/ae87750f5d03f322114cb48ead4d03a860a175fe))
+* **codecs:** model codecs ([#2825](https://github.com/ceramicnetwork/js-ceramic/issues/2825)) ([f94fb50](https://github.com/ceramicnetwork/js-ceramic/commit/f94fb5097359e40a5bc817105f0584f90a9decbd))
+
+
+
+
+
+# [2.36.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0-rc.0...@ceramicnetwork/cli@2.36.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0...@ceramicnetwork/cli@2.36.0-rc.0) (2023-08-07)
 
 
