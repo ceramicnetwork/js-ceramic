@@ -120,5 +120,6 @@ test('stop polling after max time', async () => {
   await whenSubscriptionDone(subscription)
   expect(String(error)).toEqual('Error: Exceeded max anchor polling time limit')
   expect(errorCount).toEqual(1)
-  expect(nextCount).toBeGreaterThanOrEqual(3)
+  // During the 5 ms, there is the intial call, then 2 retries (2 ms) and 3 successes (3 ms)
+  expect(nextCount).toEqual(3)
 })
