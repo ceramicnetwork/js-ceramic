@@ -31,7 +31,6 @@ jest.unstable_mockModule('cross-fetch', () => {
     default: fetchFunc,
   }
 })
-jest.setTimeout(10000)
 
 test('re-request an anchor till get a response', async () => {
   fetchAttemptNum = 0
