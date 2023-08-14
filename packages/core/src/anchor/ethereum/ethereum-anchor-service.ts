@@ -9,7 +9,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, concat, timer, of, defer, expand } from 'rxjs'
+import { Observable, concat, timer, of, defer, expand, interval } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
