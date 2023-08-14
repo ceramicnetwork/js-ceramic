@@ -106,9 +106,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     )
   } // else do nothing, no metrics are configured.
 
-  const disablePeerDataSync =
-    opts.ipfs.disablePeerDataSync || process.env.CERAMIC_DISABLE_IPFS_PEER_DATA_SYNC == 'true'
-
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     gateway: opts.node.gateway || false,
@@ -121,7 +118,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
-    disablePeerDataSync,
+    disablePeerDataSync: opts.ipfs.disablePeerDataSync,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
