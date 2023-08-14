@@ -42,7 +42,7 @@
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
-    "near-api-js": "^0.44.2",
+    "near-api-js": "^2.1.4",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
