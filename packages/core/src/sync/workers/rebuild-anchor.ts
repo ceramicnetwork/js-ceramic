@@ -12,6 +12,10 @@ import {
 import type { Worker, Job } from '../../state-management/job-queue.js'
 import { CID } from 'multiformats/cid'
 import { pathString } from '@ceramicnetwork/anchor-utils'
+import PQueue from 'p-queue'
+
+// Up to 1024 streams could be present in an anchor
+const IPFS_LOAD_CONCURRENCY = 16
 
 const REBUILD_ANCHOR_JOB_OPTIONS: SendOptions = {
   retryLimit: 5,
@@ -96,7 +100,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
     const merkleTreeLeafLoader = new MerkleTreeLoader(this.ipfsService, proof.root)
     const metadata = await merkleTreeLeafLoader.getMetadata().catch((err) => {
       this.logger.err(
-        `Failed to retreive the merkle tree metadata for root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
+        `Failed to retrieve the merkle tree metadata for root ${jobData.root} and txHash ${jobData.txHash} for models ${jobData.models} with error: ${err} `
       )
       // TODO (CDB-2291): add failure job for root cid
     })
@@ -104,13 +108,10 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
       return
     }
 
-    const streams = metadata.streamIds
-
-    await Promise.all(
-      streams.map(async (stream, i) => {
+    const tasks = metadata.streamIds.map((stream, i) => {
+      return async () => {
         try {
           const streamId = StreamID.fromString(stream)
-
           const model = await this.getModelForStream(streamId)
 
           const shouldIndex = model
@@ -143,8 +144,11 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
           )
           // TODO (CDB-2291): add failure job for streamId
         }
-      })
-    )
+      }
+    })
+
+    const queue = new PQueue({ concurrency: IPFS_LOAD_CONCURRENCY })
+    await queue.addAll(tasks)
 
     this.logger.debug(
       `Rebuild anchor job completed for models ${jobData.models}, root ${jobData.root}, and txHash ${jobData.txHash}`
