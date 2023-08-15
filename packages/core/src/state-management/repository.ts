@@ -173,9 +173,9 @@ export class Repository {
       Metrics.count(CACHE_HIT_LOCAL, 1)
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
-      const toRecover = await this.anchorRequestStore.exists(streamId)
-      if (toRecover && this.stateManager.anchorService) {
-        this.stateManager.confirmAnchorResponse(runningState)
+      const storedRequest = await this.anchorRequestStore.load(streamId)
+      if (storedRequest !== null && this.stateManager.anchorService) {
+        this.stateManager.confirmAnchorResponse(runningState, storedRequest.cid)
       }
       return runningState
     } else {

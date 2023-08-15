@@ -18,7 +18,7 @@ import {
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
-import { empty, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
+import { EMPTY, Observable, Subject, Subscription, timer, lastValueFrom, merge, of } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from '../indexing/local-index-api.js'
@@ -355,8 +355,8 @@ export class StateManager {
   /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  confirmAnchorResponse(state$: RunningState): Subscription {
-    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, state$.tip)
+  confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
+    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 
@@ -450,18 +450,26 @@ export class StateManager {
               return
             }
             case AnchorRequestStatusName.COMPLETED: {
+              if (asr.cid.equals(state$.tip)) {
+                await this.anchorRequestStore.remove(state$.id)
+              }
+
               await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit.cid, asr.witnessCar)
-              await this.anchorRequestStore.remove(state$.id)
+
               stopSignal.next()
               return
             }
             case AnchorRequestStatusName.FAILED: {
-              if (!asr.cid.equals(state$.tip)) return
               this.logger.warn(
                 `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
               )
-              state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
-              await this.anchorRequestStore.remove(state$.id)
+
+              // if this is the anchor response for the tip update the state
+              if (asr.cid.equals(state$.tip)) {
+                state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
+                await this.anchorRequestStore.remove(state$.id)
+              }
+              // we stop the polling as this is a terminal state
               stopSignal.next()
               return
             }
@@ -469,6 +477,13 @@ export class StateManager {
               this.logger.verbose(
                 `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
               )
+
+              // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
+              // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
+              if (asr.cid.equals(state$.tip)) {
+                await this.anchorRequestStore.remove(state$.id)
+              }
+
               stopSignal.next()
               return
             }
@@ -485,7 +500,7 @@ export class StateManager {
           // TODO: This can leave a stream with AnchorStatus PENDING or PROCESSING indefinitely.
           // We should distinguish whether the error is transient or permanent, and either transition
           // to AnchorStatus FAILED or keep retrying.
-          return empty()
+          return EMPTY
         })
       )
       .subscribe()

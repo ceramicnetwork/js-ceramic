@@ -82,6 +82,11 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       expect(runningState$.state.anchorStatus).toEqual(testParam.anchorStatus)
     })
 
+    // update one of the streams but do not anchor the update
+    const tile = await TileDocument.load(ceramic, streamIds[0])
+    await tile.update({ x: 100 }, null, { anchor: false })
+    expect(runnningStates$[0].state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
     await ceramic.close()
 
     // Create a new ceramic (with the same state directory) to check that resuming works,
@@ -95,8 +100,10 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
 
     runnningStates$.forEach((state$) => {
       // We call _process(...) here to mimic the behaviour of EthereumAnchorService which would start polling CAS for anchor statuses
+      // All streams except one has only one commit. The stream with two commits has not requested an anchor for the 2nd commit. Therefore we
+      // we only need to anchor the first commit of each stream.
       // @ts-ignore { cid: , streamID: } is not an instance of Candidate class (which shouldn't be exported, if necessary)
-      newAnchoringService._process({ cid: state$.tip, streamId: state$.id })
+      newAnchoringService._process({ cid: state$.state.log[0].cid, streamId: state$.id })
     })
 
     // Use the ceramic instance with anchorOnRequest === true to resume anchors
