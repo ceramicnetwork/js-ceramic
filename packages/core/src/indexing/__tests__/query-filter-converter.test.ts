@@ -39,6 +39,18 @@ describe('Should convert query filters', () => {
       `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1.2)))`
     )
   })
+  test('that are composed of a single doc filter with in string query', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'string', op: 'in', value: ['a', 'b'] },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((cast(${DATA_FIELD}->>'a' as varchar) in ('a','b')))`
+    )
+  })
   test('that are composed of a single doc filter with null', () => {
     const query = createQuery({
       type: 'where',

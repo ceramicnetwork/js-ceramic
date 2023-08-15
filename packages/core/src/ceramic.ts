@@ -59,7 +59,6 @@ import { AnchorResumingService } from './state-management/anchor-resuming-servic
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { SyncJobData } from './sync/interfaces.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -140,6 +139,8 @@ export interface CeramicConfig {
 
   useCentralizedPeerDiscovery?: boolean
   syncOverride?: SyncOptions
+
+  disablePeerDataSync?: boolean
 
   [index: string]: any // allow arbitrary properties
 }
@@ -535,6 +536,7 @@ export class Ceramic implements CeramicApi {
       logger,
       pubsubLogger,
       shutdownSignal,
+      !config.disablePeerDataSync,
       maxQueriesPerSecond
     )
 
@@ -613,7 +615,7 @@ export class Ceramic implements CeramicApi {
       const chainId = this._supportedChains ? this._supportedChains[0] : null
       await this._anchorValidator.init(chainId)
 
-      if (this.syncApi.enabled) {
+      if (this.index.enabled && this.syncApi.enabled) {
         const provider = await this.providersCache.getProvider(chainId)
         await this.syncApi.init(provider)
       }
@@ -626,6 +628,12 @@ export class Ceramic implements CeramicApi {
         .catch((error) => {
           this._logger.err(`Error while resuming anchors: ${error}`)
         })
+
+      if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
+        this._logger.warn(
+          `Running with anchor polling retries disabled. This is not recommended in production`
+        )
+      }
     } catch (err) {
       await this.close()
       throw err
@@ -637,7 +645,19 @@ export class Ceramic implements CeramicApi {
    * Throws an Error if any issues are detected
    */
   async _startupChecks(): Promise<void> {
-    return this._checkIPFSPersistence()
+    await this._checkIPFSPersistence()
+
+    if (!this.dispatcher.enableSync && this.index.enabled && this.syncApi.enabled) {
+      throw new Error(
+        `Cannot enable ComposeDB Historical Data Sync while IPFS peer data sync is disabled`
+      )
+    }
+
+    if (!this.dispatcher.enableSync) {
+      this._logger.warn(
+        `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
+      )
+    }
   }
 
   /**

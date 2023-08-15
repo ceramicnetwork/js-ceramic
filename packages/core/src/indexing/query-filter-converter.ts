@@ -89,8 +89,13 @@ function handleIn<T extends number | string>(
   negated: boolean,
   combinator?: Combinator
 ): DBQuery {
-  const arrValue = value.map((v) => v.toString()).join(',')
   const cast = nonBooleanTypeAsCast(tpe)
+  let arrValue
+  if (cast == 'varchar') {
+    arrValue = value.map((v) => `'${v}'`).join(',')
+  } else {
+    arrValue = value.map((v) => `${v}`).join(',')
+  }
   const inner = (bldr) => {
     let op = ' in '
     if (negated) {

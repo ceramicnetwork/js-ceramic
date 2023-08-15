@@ -9,7 +9,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, interval, concat, timer, of, defer } from 'rxjs'
+import { Observable, concat, timer, of, defer, expand, interval } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -166,12 +166,20 @@ export class EthereumAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
+    if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
+      return this._pollForAnchorResponseLegacy(streamId, tip)
+    } else {
+      return this._pollForAnchorResponse(streamId, tip)
+    }
+  }
+
+  private _pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
     const started = new Date().getTime()
     const maxTime = started + this.maxPollTime
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
     const cidStream = { cid: tip, streamId }
 
-    const doPoll = defer(() => this.sendRequest(requestUrl)).pipe(
+    const requestWithError = defer(() => this.sendRequest(requestUrl)).pipe(
       retry({
         delay: (error) => {
           this._logger.err(
@@ -184,16 +192,40 @@ export class EthereumAnchorService implements AnchorService {
       })
     )
 
-    return interval(this.pollInterval).pipe(
-      concatMap(() => {
+    return requestWithError.pipe(
+      expand(() => {
         const now = new Date().getTime()
         if (now > maxTime) {
           throw new Error('Exceeded max anchor polling time limit')
         } else {
-          return doPoll
+          return timer(this.pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
       map((response) => this.parseResponse(cidStream, response))
+    )
+  }
+
+  /**
+   * The old version of polling that has a bug where polling stops if there's a network error.
+   * TODO: REMOVE THIS!  We're only putting this back temporarily to investigate if it caused
+   * a performance regression.
+   */
+  private _pollForAnchorResponseLegacy(streamId: StreamID, tip: CID): Observable<CASResponse> {
+    const started = new Date().getTime()
+    const maxTime = started + this.maxPollTime
+    const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
+    const cidStream = { cid: tip, streamId }
+
+    return interval(this.pollInterval).pipe(
+      concatMap(async () => {
+        const now = new Date().getTime()
+        if (now > maxTime) {
+          throw new Error('Exceeded max anchor polling time limit')
+        } else {
+          const response = await this.sendRequest(requestUrl)
+          return this.parseResponse(cidStream, response)
+        }
+      })
     )
   }
 

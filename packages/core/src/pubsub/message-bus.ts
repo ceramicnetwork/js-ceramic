@@ -1,5 +1,13 @@
 import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message.js'
-import { Observable, Subject, Subscription, SubscriptionLike, pipe, UnaryFunction } from 'rxjs'
+import {
+  Observable,
+  Subject,
+  Subscription,
+  SubscriptionLike,
+  empty,
+  pipe,
+  UnaryFunction,
+} from 'rxjs'
 import { filter, map, takeUntil, tap } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
@@ -34,7 +42,10 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   private readonly pubsubSubscription: Subscription
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>()
 
-  constructor(readonly pubsub: ObservableWithNext<PubsubMessage>) {
+  constructor(
+    readonly pubsub: ObservableWithNext<PubsubMessage>,
+    private readonly peerSyncDisabled: boolean
+  ) {
     super((subscriber) => {
       this.feed$.subscribe(subscriber)
     })
@@ -66,6 +77,12 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
    * Returns CID of the tip based on response message.
    */
   queryNetwork(streamId: StreamID): Observable<CID> {
+    if (this.peerSyncDisabled) {
+      // There's no point in querying pubsub if we're not going to be able to load the tip
+      // we get in the response anyway.
+      return empty()
+    }
+
     const queryMessage = buildQueryMessage(streamId)
     this.next(queryMessage)
     const timeNow: number = Date.now()

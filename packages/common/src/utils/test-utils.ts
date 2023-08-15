@@ -73,16 +73,18 @@ export class TestUtils {
     predicate: (state: StreamState) => boolean,
     onFailure: (state: StreamState) => void
   ): Promise<void> {
-    if (predicate(stream.state)) return
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs))
-    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
-    const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
-      defaultValue: undefined,
-    })
-    await Promise.race([timeoutPromise, completionPromise])
-    if (!predicate(stream.state)) {
-      onFailure(stream.state)
+    let now = new Date()
+    const expiration = new Date(now.getTime() + timeoutMs)
+
+    while (now < expiration) {
+      await stream.sync()
+      if (predicate(stream.state)) {
+        return
+      }
+      now = new Date()
+      await TestUtils.delay(100) // poll every 100ms
     }
+    onFailure(stream.state)
   }
 
   /**

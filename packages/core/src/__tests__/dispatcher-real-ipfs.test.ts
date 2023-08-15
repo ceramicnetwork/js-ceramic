@@ -47,10 +47,11 @@ describe('Dispatcher with real ipfs over http', () => {
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
       shutdownSignal,
+      true,
       10,
-      new TaskQueue(),
-      3000 // time out ipfs.dag.get after 3 seconds
+      new TaskQueue()
     )
+    dispatcher._ipfsTimeout = 3000 // time out ipfs.dag.get after 3 seconds
   })
 
   afterAll(async () => {

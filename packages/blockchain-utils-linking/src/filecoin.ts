@@ -1,8 +1,8 @@
 import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
 import { asOldCaipString, getConsentMessage, LinkProof } from './util.js'
-import type { MessageParams } from '@zondax/filecoin-signing-tools'
 import * as uint8arrays from 'uint8arrays'
+import type { MessageParams } from '@zondax/filecoin-signing-tools'
 
 export class FilecoinAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
