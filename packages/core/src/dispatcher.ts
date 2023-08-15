@@ -327,10 +327,10 @@ export class Dispatcher {
 
     // Lookup CID in cache before looking it up IPFS
     const resolutionPath = `${asCid}${path || ''}`
-    const cachedDagNode = this.ipldCache.getR(resolutionPath)?.record
-    if (cachedDagNode) {
+    const fromCache = this.ipldCache.getUnresolved(resolutionPath)
+    if (fromCache) {
       Metrics.count(IPFS_CACHE_HIT, 1)
-      return cloneDeep(cachedDagNode)
+      return cloneDeep(fromCache.record)
     }
     Metrics.count(IPFS_CACHE_MISS, 1)
 
@@ -365,7 +365,7 @@ export class Dispatcher {
         restrictBlockSize(block, blockCid)
         result = codec.decode(block)
         // CID loaded successfully, store in cache
-        this.ipldCache.setR(resolutionPath, {
+        this.ipldCache.setUnresolved(resolutionPath, {
           record: result,
           block: block,
         })
