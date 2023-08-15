@@ -2,6 +2,9 @@ import { LRUCache } from 'least-recent'
 import { CodenameContainer } from 'cartonne'
 import type { BlockCodec, CID } from 'multiformats'
 
+export const IPFS_CACHE_HIT = 'ipfs_cache_hit'
+export const IPFS_CACHE_MISS = 'ipfs_cache_miss'
+
 /**
  * Fully decoded IPLD record and block bytes.
  */

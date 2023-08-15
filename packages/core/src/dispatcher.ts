@@ -29,7 +29,7 @@ import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
 import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
-import { IPLDRecordsCache } from './ancillary/ipld-records-cache.js'
+import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -175,8 +175,10 @@ export class Dispatcher {
   async getIpfsBlock(cid: CID): Promise<Uint8Array> {
     const found = this.ipldCache.get(cid)
     if (found) {
+      Metrics.count(IPFS_CACHE_HIT, 1)
       return found.block
     } else {
+      Metrics.count(IPFS_CACHE_MISS, 1)
       return this._shutdownSignal.abortable((signal) => {
         // @ts-expect-error
         return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
@@ -326,7 +328,11 @@ export class Dispatcher {
     // Lookup CID in cache before looking it up IPFS
     const resolutionPath = `${asCid}${path || ''}`
     const cachedDagNode = this.ipldCache.getR(resolutionPath)?.record
-    if (cachedDagNode) return cloneDeep(cachedDagNode)
+    if (cachedDagNode) {
+      Metrics.count(IPFS_CACHE_HIT, 1)
+      return cloneDeep(cachedDagNode)
+    }
+    Metrics.count(IPFS_CACHE_MISS, 1)
 
     // Now lookup CID in IPFS, with retry logic
     // Note, in theory retries shouldn't be necessary, as just increasing the timeout should

@@ -1,3 +1,4 @@
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { DiagnosticsLogger, IpfsApi, PinningBackendStatic } from '@ceramicnetwork/common'
 import { PinningAggregation } from '@ceramicnetwork/pinning-aggregation'
 import { PinStore } from './pin-store.js'
@@ -5,7 +6,8 @@ import type { CID } from 'multiformats/cid'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { Repository } from '../state-management/repository.js'
 import { StreamStateStore } from './stream-state-store.js'
-import type { IPLDRecordsCache } from '../ancillary/ipld-records-cache.js'
+import type { IPLDRecordsCache } from './ipld-records-cache.js'
+import { IPFS_CACHE_HIT, IPFS_CACHE_MISS } from './ipld-records-cache.js'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
@@ -42,7 +44,11 @@ export class PinStoreFactory {
     const pinning = PinningAggregation.build(ipfs, this.pinningEndpoints, this.pinningBackends)
     const retrieve = async (cid: CID): Promise<any> => {
       const fromCache = this.ipldRecordsCache.get(cid)
-      if (fromCache) return fromCache.record
+      if (fromCache) {
+        Metrics.count(IPFS_CACHE_HIT, 1)
+        return fromCache.record
+      }
+      Metrics.count(IPFS_CACHE_MISS, 1)
       const blob = await ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
       return blob?.value
     }

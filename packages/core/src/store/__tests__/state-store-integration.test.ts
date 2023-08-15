@@ -19,7 +19,7 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { RunningState } from '../../state-management/running-state.js'
 import { Repository } from '../../state-management/repository.js'
 import { LevelDbStore } from '../level-db-store.js'
-import { IPLDRecordsCache } from '../../ancillary/ipld-records-cache.js'
+import { IPLDRecordsCache } from '../ipld-records-cache.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
