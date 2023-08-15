@@ -637,7 +637,7 @@ describe('anchor', () => {
       )
       // Emulate CAS responses to the 1st commit
       const fauxCASResponse$ = new Subject<CASResponse>()
-      requestAnchorSpy.mockReturnValueOnce(fauxCASResponse$)
+      requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxCASResponse$))
       // Subscription for the 1st commit
       const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$)
       // The emulated CAS accepts the request
@@ -861,7 +861,7 @@ describe('anchor', () => {
 
         // Emulate CAS responses to the 1st commit
         const firstCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockImplementationOnce((streamId, commit) => {
+        requestAnchorSpy.mockImplementationOnce(async (streamId, commit) => {
           originalPollForAnchorResponse(streamId, commit)
           return firstCASResponse$
         })
@@ -898,7 +898,7 @@ describe('anchor', () => {
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
         // Emulate CAS responses to the 2nd commit
         const secondCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(secondCASResponse$)
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondCASResponse$))
         // Anchor the 2nd commit and subscribe
         await ceramic.repository.stateManager.anchor(stream$)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
@@ -942,7 +942,7 @@ describe('anchor', () => {
 
         // Emulate CAS responses to the 1st commit
         const firstCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(firstCASResponse$)
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstCASResponse$))
         // Anchor the 1st commit and subscribe
         const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
@@ -1050,7 +1050,7 @@ describe('anchor', () => {
 
         // Emulate CAS responses to the 1st commit
         const firstCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(firstCASResponse$)
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstCASResponse$))
         // Anchor the first commit and subscribe
         const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
@@ -1078,7 +1078,7 @@ describe('anchor', () => {
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
         // Emulate CAS responses to the 2nd commit
         const secondCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(secondCASResponse$)
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondCASResponse$))
         // Anchor the 2nd commit and subscribe
         const secondAnchorRequestSub = await ceramic.repository.stateManager.anchor(stream$)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
@@ -1137,7 +1137,7 @@ describe('anchor', () => {
 
         // Emulate CAS responses for the 1st commit
         const fauxCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(fauxCASResponse$)
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxCASResponse$))
         // anchor the first commit and subscribe
         const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(

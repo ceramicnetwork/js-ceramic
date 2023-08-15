@@ -89,7 +89,7 @@ export class EthereumAnchorService implements AnchorService {
   /**
    * Requests anchoring service for current tip of the stream
    */
-  requestAnchor(carFile: CAR): Observable<CASResponse> {
+  async requestAnchor(carFile: CAR): Promise<Observable<CASResponse>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(

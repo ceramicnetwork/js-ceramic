@@ -289,7 +289,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(carFile: CAR): Observable<CASResponse> {
+  async requestAnchor(carFile: CAR): Promise<Observable<CASResponse>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const candidate = new Candidate(carFileReader)
     if (this.#anchorOnRequest) {

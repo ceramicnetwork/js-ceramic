@@ -55,7 +55,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(carFile: CAR): Observable<CASResponse>
+  requestAnchor(carFile: CAR): Promise<Observable<CASResponse>>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the

@@ -64,12 +64,14 @@ test('re-request an anchor till get a response', async () => {
   )
 
   let lastResponse: any
-  const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
-    if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
-      lastResponse = response
-      subscription.unsubscribe()
+  const subscription = (await anchorService.requestAnchor(generateFakeCarFile())).subscribe(
+    (response) => {
+      if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
+        lastResponse = response
+        subscription.unsubscribe()
+      }
     }
-  })
+  )
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
   expect(errSpy).toBeCalledTimes(3)
