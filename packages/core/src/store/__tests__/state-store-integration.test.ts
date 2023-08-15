@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { jest, expect, it, beforeEach, describe, test } from '@jest/globals'
 import tmp from 'tmp-promise'
 import {
   AnchorStatus,
@@ -19,6 +19,7 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { RunningState } from '../../state-management/running-state.js'
 import { Repository } from '../../state-management/repository.js'
 import { LevelDbStore } from '../level-db-store.js'
+import { IPLDRecordsCache } from '../../ancillary/ipld-records-cache.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -52,6 +53,7 @@ describe('Level data store', () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
     const storeFactory = new PinStoreFactory(
       ipfs,
+      new IPLDRecordsCache(10),
       repository,
       {
         pinningEndpoints: ['ipfs+context'],
@@ -144,6 +146,7 @@ describe('Level data store', () => {
     const localLevelStore = new LevelDbStore(levelPath, 'local')
     const storeFactoryLocal = new PinStoreFactory(
       ipfs,
+      new IPLDRecordsCache(10),
       repository,
       {
         pinningEndpoints: ['ipfs+context'],
@@ -162,6 +165,7 @@ describe('Level data store', () => {
     const inmemoryLevelStore = new LevelDbStore(levelPath, 'inmemory')
     const storeFactoryInMemory = new PinStoreFactory(
       ipfs,
+      new IPLDRecordsCache(10),
       repository,
       {
         pinningEndpoints: ['ipfs+context'],

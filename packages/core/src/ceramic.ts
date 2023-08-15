@@ -527,7 +527,6 @@ export class Ceramic implements CeramicApi {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
-    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -538,6 +537,13 @@ export class Ceramic implements CeramicApi {
       shutdownSignal,
       !config.disablePeerDataSync,
       maxQueriesPerSecond
+    )
+    const pinStoreFactory = new PinStoreFactory(
+      ipfs,
+      dispatcher.ipldCache,
+      repository,
+      pinStoreOptions,
+      logger
     )
 
     const params: CeramicParameters = {

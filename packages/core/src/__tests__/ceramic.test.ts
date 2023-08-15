@@ -1,18 +1,18 @@
 import { jest, expect, describe, it, test, beforeEach, afterEach } from '@jest/globals'
 import {
   StreamUtils,
-  IpfsApi,
   TestUtils,
-  StreamState,
   SyncOptions,
-  GenesisCommit,
-  MultiQuery,
-  CeramicApi,
+  type StreamState,
+  type GenesisCommit,
+  type MultiQuery,
+  type CeramicApi,
+  type IpfsApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
-import { Ceramic } from '../ceramic.js'
+import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
 
@@ -50,16 +50,10 @@ describe('IPFS caching', () => {
   test('applyCommit', async () => {
     const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
     const ipfsBlockGet = jest.spyOn(ipfs.block, 'get')
-    const original = ipfs.dag.get.bind(ipfs.dag)
     const ipfsDagGet = jest.spyOn(ipfs.dag, 'get')
-    ipfsDagGet.mockImplementation((...args) => {
-      // Called from PinStore TODO CDB-2697 Use cached records in PinStore
-      // console.trace('dag.get', args)
-      return original(...args)
-    })
     await tile.update({ hello: `world-1-${Math.random()}` })
     expect(ipfsBlockGet).toBeCalledTimes(0)
-    expect(ipfsDagGet).toBeCalledTimes(1)
+    expect(ipfsDagGet).toBeCalledTimes(0)
   })
 })
 
