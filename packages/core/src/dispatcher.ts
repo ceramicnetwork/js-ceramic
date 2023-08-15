@@ -29,6 +29,7 @@ import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
 import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
+import { IPLDRecordsCache } from './ancillary/ipld-records-cache.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -88,7 +89,7 @@ export class Dispatcher {
   /**
    * Cache IPFS objects.
    */
-  readonly dagNodeCache: LRUCache<string, any>
+  readonly ipldCache: IPLDRecordsCache
 
   /**
    * Cache recently seen tips processed via incoming pubsub UPDATE or RESPONSE messages.
@@ -142,10 +143,11 @@ export class Dispatcher {
       !this.enableSync
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache = new LRUCache<string, any>(IPFS_CACHE_SIZE)
+    this.ipldCache = new IPLDRecordsCache(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
     for (const codec of this._ipfs.codecs.listCodecs()) {
       this.carFactory.codecs.add(codec)
+      this.ipldCache.codecs.add(codec)
     }
     if (this.enableSync) {
       this._ipfsTimeout = DEFAULT_IPFS_GET_SYNC_TIMEOUT
@@ -165,16 +167,21 @@ export class Dispatcher {
     return this._shutdownSignal
       .abortable((signal) => this._ipfs.dag.put(record, { signal: signal }))
       .then((cid) => {
-        this.dagNodeCache.set(cid.toString(), record)
+        this.ipldCache.setRecord(cid, record)
         return cid
       })
   }
 
   async getIpfsBlock(cid: CID): Promise<Uint8Array> {
-    return await this._shutdownSignal.abortable((signal) => {
-      // @ts-ignore
-      return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
-    })
+    const found = this.ipldCache.get(cid)
+    if (found) {
+      return found.block
+    } else {
+      return this._shutdownSignal.abortable((signal) => {
+        // @ts-expect-error
+        return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
+      })
+    }
   }
 
   /**
@@ -204,23 +211,37 @@ export class Dispatcher {
           const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
           carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
           restrictBlockSize(cacaoBlock, capCID)
-          this.dagNodeCache.set(capCID.toString(), carFile.get(capCID))
+          this.ipldCache.set(capCID, {
+            record: carFile.get(capCID),
+            block: cacaoBlock,
+          })
         }
 
         const payloadCID = jws.link
         carFile.blocks.put(new CarBlock(payloadCID, linkedBlock)) // Encode payload
         restrictBlockSize(linkedBlock, jws.link)
-        this.dagNodeCache.set(payloadCID.toString(), carFile.get(payloadCID))
+        this.ipldCache.set(payloadCID, {
+          record: carFile.get(payloadCID),
+          block: linkedBlock,
+        })
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
-        restrictBlockSize(carFile.blocks.get(cid).payload, cid)
-        this.dagNodeCache.set(cid.toString(), carFile.get(cid))
+        const cidBlock = carFile.blocks.get(cid).payload
+        restrictBlockSize(cidBlock, cid)
+        this.ipldCache.set(cid, {
+          record: carFile.get(cid),
+          block: cidBlock,
+        })
         await this.importCAR(carFile)
         Metrics.count(COMMITS_STORED, 1)
         return cid
       }
       const cid = carFile.put(data, { isRoot: true })
-      restrictBlockSize(carFile.blocks.get(cid).payload, cid)
-      this.dagNodeCache.set(cid.toString(), carFile.get(cid))
+      const cidBlock = carFile.blocks.get(cid).payload
+      restrictBlockSize(cidBlock, cid)
+      this.ipldCache.set(cid, {
+        record: carFile.get(cid),
+        block: cidBlock,
+      })
       await this.importCAR(carFile)
       Metrics.count(COMMITS_STORED, 1)
       return cid
@@ -304,7 +325,7 @@ export class Dispatcher {
 
     // Lookup CID in cache before looking it up IPFS
     const resolutionPath = `${asCid}${path || ''}`
-    const cachedDagNode = this.dagNodeCache.get(resolutionPath)
+    const cachedDagNode = this.ipldCache.getR(resolutionPath)?.record
     if (cachedDagNode) return cloneDeep(cachedDagNode)
 
     // Now lookup CID in IPFS, with retry logic
@@ -337,6 +358,12 @@ export class Dispatcher {
         )
         restrictBlockSize(block, blockCid)
         result = codec.decode(block)
+        // CID loaded successfully, store in cache
+        this.ipldCache.setR(resolutionPath, {
+          record: result,
+          block: block,
+        })
+        return cloneDeep(result)
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
@@ -356,9 +383,6 @@ export class Dispatcher {
         throw err
       }
     }
-    // CID loaded successfully, store in cache
-    this.dagNodeCache.set(resolutionPath, result)
-    return cloneDeep(result)
   }
 
   /**

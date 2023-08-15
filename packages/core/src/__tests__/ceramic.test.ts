@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { jest, expect, describe, it, test, beforeEach, afterEach } from '@jest/globals'
 import {
   StreamUtils,
   IpfsApi,
@@ -33,6 +33,35 @@ function createCeramic(
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
+
+describe('IPFS caching', () => {
+  let ipfs: IpfsApi
+  let ceramic: CeramicApi
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
+    await ipfs.stop()
+  })
+
+  test('applyCommit', async () => {
+    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
+    const ipfsBlockGet = jest.spyOn(ipfs.block, 'get')
+    const original = ipfs.dag.get.bind(ipfs.dag)
+    const ipfsDagGet = jest.spyOn(ipfs.dag, 'get')
+    ipfsDagGet.mockImplementation((...args) => {
+      // Called from PinStore TODO CDB-2697 Use cached records in PinStore
+      // console.trace('dag.get', args)
+      return original(...args)
+    })
+    await tile.update({ hello: `world-1-${Math.random()}` })
+    expect(ipfsBlockGet).toBeCalledTimes(0)
+    expect(ipfsDagGet).toBeCalledTimes(1)
+  })
+})
 
 describe('Ceramic integration', () => {
   jest.setTimeout(TEST_TIMEOUT)
