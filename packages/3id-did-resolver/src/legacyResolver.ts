@@ -1,6 +1,6 @@
 import fetch from 'cross-fetch'
 import * as u8a from 'uint8arrays'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 
 interface DAG {
   get(cid: string): any
@@ -13,7 +13,7 @@ interface IPFS {
 // Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services
 const THREEBOX_API_URL = 'https://ipfs.3box.io'
 const LIMIT = 100
-const fetchCache = new lru.LRUMap<string, any>(LIMIT)
+const fetchCache = new LRUCache<string, any>(LIMIT)
 
 const fetchJson = async (url: string): Promise<any> => {
   const cached = fetchCache.get(url)

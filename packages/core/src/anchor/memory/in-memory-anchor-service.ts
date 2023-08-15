@@ -16,7 +16,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -54,7 +54,7 @@ interface InMemoryAnchorConfig {
 // multiple InMemoryAnchorServices are being used simultaneously in the same process (usually by
 // tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
 // can successfully validate each others transactions.
-const txnCache: lru.LRUMap<string, number> = new lru.LRUMap(100)
+const txnCache: LRUCache<string, number> = new LRUCache(100)
 const carFactory = new CARFactory()
 carFactory.codecs.add(DAG_JOSE)
 

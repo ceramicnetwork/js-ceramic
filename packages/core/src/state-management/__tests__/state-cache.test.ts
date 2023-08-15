@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { jest, test, expect, describe, beforeEach } from '@jest/globals'
 import { StateCache } from '../state-cache.js'
 
 test('get and set', () => {
@@ -84,15 +84,15 @@ describe('iteration', () => {
     }
     const expected = [
       ['a', 1],
-      ['c', 3],
       ['d', 4],
+      ['c', 3],
     ]
     expect(entries).toEqual(expected)
     expect(Array.from(cache)).toEqual(expected)
   })
 
   test('keys', () => {
-    const expected = ['a', 'c', 'd']
+    const expected = ['a', 'd', 'c']
     const keys: Array<string> = []
     for (const k of cache.keys()) {
       keys.push(k)
@@ -102,7 +102,7 @@ describe('iteration', () => {
   })
 
   test('values', () => {
-    const expected = [1, 3, 4]
+    const expected = [1, 4, 3]
     const values: Array<number> = []
     for (const value of cache.values()) {
       values.push(value)
@@ -132,16 +132,16 @@ describe('delete', () => {
   test('persistent', () => {
     cache.delete('a')
     expect(Array.from(cache.volatile)).toEqual([
-      ['c', 3],
       ['d', 4],
+      ['c', 3],
     ])
     expect(Array.from(cache.durable)).toEqual([])
   })
   test('non-existent', () => {
     cache.delete('e')
     expect(Array.from(cache.volatile)).toEqual([
-      ['c', 3],
       ['d', 4],
+      ['c', 3],
     ])
     expect(Array.from(cache.durable)).toEqual([['a', 1]])
   })

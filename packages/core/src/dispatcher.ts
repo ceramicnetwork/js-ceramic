@@ -22,7 +22,7 @@ import {
 import { Pubsub } from './pubsub/pubsub.js'
 import { empty, Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus.js'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
@@ -88,7 +88,7 @@ export class Dispatcher {
   /**
    * Cache IPFS objects.
    */
-  readonly dagNodeCache: lru.LRUMap<string, any>
+  readonly dagNodeCache: LRUCache<string, any>
 
   /**
    * Cache recently seen tips processed via incoming pubsub UPDATE or RESPONSE messages.
@@ -101,9 +101,7 @@ export class Dispatcher {
    * to pubsub with the wrong StreamID associated in the pubsub message.
    * @private
    */
-  private readonly pubsubCache: lru.LRUMap<string, string> = new lru.LRUMap<string, string>(
-    PUBSUB_CACHE_SIZE
-  )
+  private readonly pubsubCache: LRUCache<string, string> = new LRUCache(PUBSUB_CACHE_SIZE)
 
   private readonly carFactory: CARFactory
   private readonly _ipfsTimeout: number
@@ -144,7 +142,7 @@ export class Dispatcher {
       !this.enableSync
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache = new LRUCache<string, any>(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
     for (const codec of this._ipfs.codecs.listCodecs()) {
       this.carFactory.codecs.add(codec)
