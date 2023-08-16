@@ -81,7 +81,7 @@ describe('anchor', () => {
       const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       await stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
-      await ceramic.repository.stateManager.anchor(streamState1)
+      await ceramic.repository.stateManager.anchor(streamState1, {})
 
       const ceramic2 = await createCeramic(ipfs)
       const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id, { syncTimeoutSeconds: 0 })
@@ -639,7 +639,7 @@ describe('anchor', () => {
       const fauxCASResponse$ = new Subject<CASResponse>()
       requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxCASResponse$))
       // Subscription for the 1st commit
-      const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$)
+      const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$, {})
       // The emulated CAS accepts the request
       fauxCASResponse$.next({
         status: AnchorRequestStatusName.PENDING,
@@ -652,7 +652,7 @@ describe('anchor', () => {
 
       // Now do the 2nd commit, anchor it
       await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
-      const stillProcessingSecond = await ceramic.repository.stateManager.anchor(stream$)
+      const stillProcessingSecond = await ceramic.repository.stateManager.anchor(stream$, {})
       await expectAnchorStatus(tile, AnchorStatus.PENDING)
 
       // The emulated CAS informs Ceramic, that the 1st tip got REPLACED
@@ -683,7 +683,7 @@ describe('anchor', () => {
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
 
-      await ceramic.repository.stateManager.anchor(stream$)
+      await ceramic.repository.stateManager.anchor(stream$, {})
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await TestUtils.anchorUpdate(ceramic, stream)
@@ -702,7 +702,7 @@ describe('anchor', () => {
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
 
-      await ceramic.repository.stateManager.anchor(stream$)
+      await ceramic.repository.stateManager.anchor(stream$, {})
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await TestUtils.anchorUpdate(ceramic, stream)
@@ -711,7 +711,7 @@ describe('anchor', () => {
       expect(stream$.value.log.length).toEqual(2)
 
       // Now re-request an anchor when the stream is already anchored. Should be a no-op
-      await ceramic.repository.stateManager.anchor(stream$)
+      await ceramic.repository.stateManager.anchor(stream$, {})
       expect(stream$.value.log.length).toEqual(2)
     })
 
@@ -731,7 +731,7 @@ describe('anchor', () => {
       // and stop the retrying mechanism
       fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-      await ceramic.repository.stateManager.anchor(stream$)
+      await ceramic.repository.stateManager.anchor(stream$, {})
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -754,7 +754,7 @@ describe('anchor', () => {
       // Mock fakeHandleTip to always throw
       fakeHandleTip.mockRejectedValue(new Error('Handle tip failed'))
 
-      await ceramic.repository.stateManager.anchor(stream$)
+      await ceramic.repository.stateManager.anchor(stream$, {})
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -774,7 +774,7 @@ describe('anchor', () => {
       const anchorRequestStore = ceramic.repository.stateManager.anchorRequestStore
 
       expect(await anchorRequestStore.load(stream.id)).toBeNull()
-      await ceramic.repository.stateManager.anchor(stream$)
+      await ceramic.repository.stateManager.anchor(stream$, {})
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
       expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
 
@@ -867,7 +867,7 @@ describe('anchor', () => {
         })
 
         // Anchor the first commit and subscribe
-        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
+        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -900,7 +900,7 @@ describe('anchor', () => {
         const secondCASResponse$ = new Subject<CASResponse>()
         requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondCASResponse$))
         // Anchor the 2nd commit and subscribe
-        await ceramic.repository.stateManager.anchor(stream$)
+        await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -944,7 +944,7 @@ describe('anchor', () => {
         const firstCASResponse$ = new Subject<CASResponse>()
         requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstCASResponse$))
         // Anchor the 1st commit and subscribe
-        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
+        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -1000,7 +1000,7 @@ describe('anchor', () => {
           const stream$ = await ceramic.repository.load(tile.id, {})
 
           // anchor the first commit
-          const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
+          const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
           expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
             stream$.tip.toString()
           )
@@ -1008,7 +1008,7 @@ describe('anchor', () => {
 
           await tile.update({ x: 2 }, null, { anchor: false })
           // anchor the second commit
-          const secondAnchorRequestSub = await ceramic.repository.stateManager.anchor(stream$)
+          const secondAnchorRequestSub = await ceramic.repository.stateManager.anchor(stream$, {})
           expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
             stream$.tip.toString()
           )
@@ -1052,7 +1052,7 @@ describe('anchor', () => {
         const firstCASResponse$ = new Subject<CASResponse>()
         requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstCASResponse$))
         // Anchor the first commit and subscribe
-        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
+        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -1080,7 +1080,7 @@ describe('anchor', () => {
         const secondCASResponse$ = new Subject<CASResponse>()
         requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondCASResponse$))
         // Anchor the 2nd commit and subscribe
-        const secondAnchorRequestSub = await ceramic.repository.stateManager.anchor(stream$)
+        const secondAnchorRequestSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -1139,7 +1139,7 @@ describe('anchor', () => {
         const fauxCASResponse$ = new Subject<CASResponse>()
         requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxCASResponse$))
         // anchor the first commit and subscribe
-        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$)
+        const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
