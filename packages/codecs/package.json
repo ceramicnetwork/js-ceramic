@@ -31,12 +31,12 @@
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
     "@ceramicnetwork/streamid": "^2.17.0",
+    "cartonne": "^2.1.1",
     "codeco": "^1.1.0",
     "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "cartonne": "^2.1.1",
     "ts-essentials": "^9.3.2"
   },
   "publishConfig": {
