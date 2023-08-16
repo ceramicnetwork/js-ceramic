@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.39.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0...@ceramicnetwork/core@2.39.0-rc.0) (2023-08-16)
+
+
+### Bug Fixes
+
+* **core:** fix anchor retry logic ([#2865](https://github.com/ceramicnetwork/js-ceramic/issues/2865)) ([95d57ef](https://github.com/ceramicnetwork/js-ceramic/commit/95d57ef0905d65ff882ab27016b57703a2bd7326))
+* **core:** limit IPFS load of HDS sync ([#2889](https://github.com/ceramicnetwork/js-ceramic/issues/2889)) ([4c6eae6](https://github.com/ceramicnetwork/js-ceramic/commit/4c6eae67fca9ef1ebdf80e99c7921e747eccd3a5))
+* **core:** send anchor status request once every poll interval ([#2884](https://github.com/ceramicnetwork/js-ceramic/issues/2884)) ([f9dafae](https://github.com/ceramicnetwork/js-ceramic/commit/f9dafae9c2ef69be6a56487807b2be625c6bd9fc))
+
+
+
+
+
 # [2.38.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0-rc.2...@ceramicnetwork/core@2.38.0) (2023-08-16)
 
 **Note:** Version bump only for package @ceramicnetwork/core
