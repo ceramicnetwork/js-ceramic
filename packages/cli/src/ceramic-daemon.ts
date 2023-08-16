@@ -41,7 +41,7 @@ import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 
@@ -280,7 +280,7 @@ export class CeramicDaemon {
   public hostname: string
   public port: number
   private readonly adminDids: Array<string>
-  private readonly adminCodeCache = new lru.LRUMap<AdminCode, Timestamp>(ADMIN_CODE_CACHE_CAPACITY)
+  private readonly adminCodeCache = new LRUCache<AdminCode, Timestamp>(ADMIN_CODE_CACHE_CAPACITY)
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()

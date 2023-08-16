@@ -1,7 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
 import { decode } from 'multiformats/hashes/digest'
 import * as providers from '@ethersproject/providers'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
@@ -91,9 +91,9 @@ const getCidFromTransaction = (txType: string, txResponse: TransactionResponse):
  */
 export class EthereumAnchorValidator implements AnchorValidator {
   private _chainId: string | null
-  private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
-  private readonly _transactionCache: lru.LRUMap<string, TransactionResponse>
-  private readonly _blockCache: lru.LRUMap<string, Block>
+  private readonly providersCache: LRUCache<string, providers.BaseProvider>
+  private readonly _transactionCache: LRUCache<string, TransactionResponse>
+  private readonly _blockCache: LRUCache<string, Block>
   private readonly _logger: DiagnosticsLogger
 
   /**
@@ -101,9 +101,9 @@ export class EthereumAnchorValidator implements AnchorValidator {
    * @param logger
    */
   constructor(readonly ethereumRpcEndpoint: string, logger: DiagnosticsLogger) {
-    this.providersCache = new lru.LRUMap(MAX_PROVIDERS_COUNT)
-    this._transactionCache = new lru.LRUMap(TRANSACTION_CACHE_SIZE)
-    this._blockCache = new lru.LRUMap(BLOCK_CACHE_SIZE)
+    this.providersCache = new LRUCache(MAX_PROVIDERS_COUNT)
+    this._transactionCache = new LRUCache(TRANSACTION_CACHE_SIZE)
+    this._blockCache = new LRUCache(BLOCK_CACHE_SIZE)
     this._logger = logger
   }
 

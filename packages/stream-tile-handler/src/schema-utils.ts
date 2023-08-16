@@ -4,7 +4,7 @@ import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'
 import type { Schema } from 'ajv'
 import addFormats from 'ajv-formats'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 
 function buildAjv(): Ajv {
   const validator = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
@@ -19,10 +19,10 @@ const AJV_CACHE_SIZE = 500
  * TODO: Move schema stream loading out of this.
  */
 export class SchemaValidation {
-  readonly validators: lru.LRUMap<string, Ajv>
+  readonly validators: LRUCache<string, Ajv>
 
   constructor() {
-    this.validators = new lru.LRUMap(AJV_CACHE_SIZE)
+    this.validators = new LRUCache(AJV_CACHE_SIZE)
   }
 
   public async validateSchema(

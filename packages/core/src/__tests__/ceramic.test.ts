@@ -1,18 +1,18 @@
-import { jest } from '@jest/globals'
+import { jest, expect, describe, it, test, beforeEach, afterEach } from '@jest/globals'
 import {
   StreamUtils,
-  IpfsApi,
   TestUtils,
-  StreamState,
   SyncOptions,
-  GenesisCommit,
-  MultiQuery,
-  CeramicApi,
+  type StreamState,
+  type GenesisCommit,
+  type MultiQuery,
+  type CeramicApi,
+  type IpfsApi,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
-import { Ceramic } from '../ceramic.js'
+import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
 
@@ -33,6 +33,29 @@ function createCeramic(
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
+
+describe('IPFS caching', () => {
+  let ipfs: IpfsApi
+  let ceramic: CeramicApi
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
+    await ipfs.stop()
+  })
+
+  test('applyCommit', async () => {
+    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
+    const ipfsBlockGet = jest.spyOn(ipfs.block, 'get')
+    const ipfsDagGet = jest.spyOn(ipfs.dag, 'get')
+    await tile.update({ hello: `world-1-${Math.random()}` })
+    expect(ipfsBlockGet).toBeCalledTimes(0)
+    expect(ipfsDagGet).toBeCalledTimes(0)
+  })
+})
 
 describe('Ceramic integration', () => {
   jest.setTimeout(TEST_TIMEOUT)

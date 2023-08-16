@@ -45,8 +45,8 @@
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "fast-json-patch": "^3.1.0",
+    "least-recent": "^1.0.3",
     "lodash.clonedeep": "^4.5.0",
-    "lru_map": "^0.4.1",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
