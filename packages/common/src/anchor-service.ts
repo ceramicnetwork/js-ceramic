@@ -51,11 +51,12 @@ export interface AnchorService {
   url: string
 
   /**
-   * Request anchor commit on blockchain
-   * @param streamId - Stream ID
-   * @param tip - CID tip
+   * Send request to the anchoring service
+   * @param carFile - CAR file containing all necessary data for the CAS to anchor
+   * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
+   *   request before returning.
    */
-  requestAnchor(carFile: CAR): Promise<Observable<CASResponse>>
+  requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<Observable<CASResponse>>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the

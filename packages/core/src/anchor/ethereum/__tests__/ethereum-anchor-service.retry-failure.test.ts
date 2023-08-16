@@ -45,7 +45,7 @@ test('re-request an anchor till get a response', async () => {
     POLL_INTERVAL
   )
   let lastResponse: any
-  const subscription = (await anchorService.requestAnchor(generateFakeCarFile())).subscribe(
+  const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(
     (response) => {
       if (response.status === AnchorRequestStatusName.PROCESSING) {
         lastResponse = response

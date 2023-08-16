@@ -60,7 +60,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       return { status: AnchorRequestStatusName.PENDING }
     })
 
-    const observable = await anchorService.requestAnchor(generateFakeCarFile())
+    const observable = await anchorService.requestAnchor(generateFakeCarFile(), false)
     const anchorStatus = await lastValueFrom(observable)
     expect(anchorStatus.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
 

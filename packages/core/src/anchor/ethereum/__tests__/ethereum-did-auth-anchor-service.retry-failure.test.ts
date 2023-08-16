@@ -64,7 +64,7 @@ test('re-request an anchor till get a response', async () => {
   )
 
   let lastResponse: any
-  const subscription = (await anchorService.requestAnchor(generateFakeCarFile())).subscribe(
+  const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(
     (response) => {
       if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
         lastResponse = response

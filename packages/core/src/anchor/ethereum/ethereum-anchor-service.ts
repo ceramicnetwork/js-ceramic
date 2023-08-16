@@ -87,9 +87,15 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   /**
-   * Requests anchoring service for current tip of the stream
+   * Send request to the anchoring service
+   * @param carFile - CAR file containing all necessary data for the CAS to anchor
+   * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
+   *   request before returning.
    */
-  async requestAnchor(carFile: CAR): Promise<Observable<CASResponse>> {
+  async requestAnchor(
+    carFile: CAR,
+    waitForConfirmation: boolean
+  ): Promise<Observable<CASResponse>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
     return concat(
