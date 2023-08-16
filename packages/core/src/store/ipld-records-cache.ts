@@ -70,7 +70,7 @@ export class IPLDRecordsCache {
    * IPFS allows you to get an IPLD record by a query like `CID/some/path`. We do not have resolution mechanism that would translate `cid/path` query into a CID,
    * so we just store an entry by query. See also `getUnresolved`.
    */
-  setUnresolved(query: string, entry: CacheEntry): void {
+  setWithResolutionPath(query: string, entry: CacheEntry): void {
     this.cache.set(query, entry)
   }
 
@@ -78,7 +78,7 @@ export class IPLDRecordsCache {
    * IPFS allows you to get an IPLD record by a query like `CID/some/path`. We do not have resolution mechanism that would translate `cid/path` query into a CID,
    * so here we do our best to return an entry by query. See also `setUnresolved`.
    */
-  getUnresolved(query: string): CacheEntry | undefined {
+  getWithResolutionPath(query: string): CacheEntry | undefined {
     return this.cache.get(query)
   }
 }
