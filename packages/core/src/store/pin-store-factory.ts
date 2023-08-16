@@ -50,7 +50,12 @@ export class PinStoreFactory {
       }
       Metrics.count(IPFS_CACHE_MISS, 1)
       const blob = await ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
-      return blob?.value
+      if (blob && blob.value) {
+        const record = blob.value
+        this.ipldRecordsCache.setRecord(cid, record)
+        return record
+      }
+      return undefined
     }
     const resolve = async (path: string): Promise<CID> => {
       return (await ipfs.dag.resolve(path)).cid
