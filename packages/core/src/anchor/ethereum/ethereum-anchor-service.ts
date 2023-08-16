@@ -9,7 +9,7 @@ import {
   FetchRequest,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, concat, timer, of, defer, expand, interval } from 'rxjs'
+import { Observable, concat, timer, of, defer, expand, interval, lastValueFrom } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -98,10 +98,15 @@ export class EthereumAnchorService implements AnchorService {
   ): Promise<Observable<CASResponse>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
-    return concat(
+
+    const requestCreated$ = concat(
       this._announcePending(cidStreamPair),
-      this._makeAnchorRequest(carFileReader),
-      this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
+      this._makeAnchorRequest(carFileReader, !waitForConfirmation)
+    )
+
+    const anchorCompleted$ = this.pollForAnchorResponse(
+      carFileReader.streamId,
+      carFileReader.tip
     ).pipe(
       catchError((error) =>
         of<CASResponse>({
@@ -113,6 +118,13 @@ export class EthereumAnchorService implements AnchorService {
         })
       )
     )
+
+    if (waitForConfirmation) {
+      await lastValueFrom(requestCreated$)
+      return anchorCompleted$
+    } else {
+      return concat(requestCreated$, anchorCompleted$)
+    }
   }
 
   /**
@@ -136,8 +148,11 @@ export class EthereumAnchorService implements AnchorService {
   /**
    * Send requests to an external Ceramic Anchor Service
    */
-  private _makeAnchorRequest(carFileReader: AnchorRequestCarFileReader): Observable<CASResponse> {
-    return defer(() =>
+  private _makeAnchorRequest(
+    carFileReader: AnchorRequestCarFileReader,
+    shouldRetry: boolean
+  ): Observable<CASResponse> {
+    let sendRequest$ = defer(() =>
       this.sendRequest(this.requestsApiEndpoint, {
         method: 'POST',
         headers: {
@@ -145,17 +160,33 @@ export class EthereumAnchorService implements AnchorService {
         },
         body: carFileReader.carFile.bytes,
       })
-    ).pipe(
-      retry({
-        delay: (error) => {
-          this._logger.err(
-            new Error(
-              `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
+    )
+
+    if (shouldRetry) {
+      sendRequest$ = sendRequest$.pipe(
+        retry({
+          delay: (error) => {
+            this._logger.err(
+              new Error(
+                `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
+              )
             )
+            return timer(this.pollInterval)
+          },
+        })
+      )
+    } else {
+      sendRequest$ = sendRequest$.pipe(
+        catchError((error) => {
+          // clean up the error message to have more context
+          throw new Error(
+            `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
           )
-          return timer(this.pollInterval)
-        },
-      }),
+        })
+      )
+    }
+
+    return sendRequest$.pipe(
       map((response) => {
         return this.parseResponse(
           { streamId: carFileReader.streamId, cid: carFileReader.tip },

@@ -347,7 +347,7 @@ export class StateManager {
     const genesisCommit = carFile.get(genesisCID)
     await this._saveAnchorRequestForState(state$, genesisCommit)
 
-    const anchorStatus$ = await this.anchorService.requestAnchor(carFile, false)
+    const anchorStatus$ = await this.anchorService.requestAnchor(carFile, true) // todo: take arg further up
 
     return this._processAnchorResponse(state$, anchorStatus$)
   }
