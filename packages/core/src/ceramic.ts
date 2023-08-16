@@ -25,6 +25,7 @@ import {
   StreamState,
   AdminApi,
   NodeStatusResponse,
+  AnchorOpts,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -783,11 +784,14 @@ export class Ceramic implements CeramicApi {
    * @param streamId
    * @param opts used to load the current Stream state
    */
-  async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
+  async requestAnchor(
+    streamId: string | StreamID,
+    opts: LoadOpts & AnchorOpts = {}
+  ): Promise<AnchorStatus> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const effectiveStreamId = normalizeStreamID(streamId)
     const state = await this.repository.load(effectiveStreamId, opts)
-    await this.repository.stateManager.anchor(state)
+    await this.repository.stateManager.anchor(state, opts)
     return state.state.anchorStatus
   }
 
