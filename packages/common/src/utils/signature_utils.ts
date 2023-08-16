@@ -53,7 +53,7 @@ export class SignatureUtils {
     } catch (e: any) {
       const original = e.message ? e.message : String(e)
       throw new Error(
-        `Can not verify signature for commit ${commitData.cid} to stream ${streamId} with controller DID ${controller}: ${original}`
+        `Can not verify signature for commit ${commitData.cid} to stream ${streamId} which has controller DID ${controller}: ${original}`
       )
     }
   }
