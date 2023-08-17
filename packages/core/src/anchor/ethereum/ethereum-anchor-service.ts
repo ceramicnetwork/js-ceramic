@@ -104,26 +104,27 @@ export class EthereumAnchorService implements AnchorService {
       this._makeAnchorRequest(carFileReader, !waitForConfirmation)
     )
 
-    const anchorCompleted$ = this.pollForAnchorResponse(
-      carFileReader.streamId,
-      carFileReader.tip
-    ).pipe(
-      catchError((error) =>
-        of<CASResponse>({
-          id: '',
-          status: AnchorRequestStatusName.FAILED,
-          streamId: carFileReader.streamId,
-          cid: carFileReader.tip,
-          message: error.message,
-        })
+    const anchorCompleted$ = this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
+
+    const addErrorHandling = (anchorStatus$) => {
+      return anchorStatus$.pipe(
+        catchError((error) =>
+          of<CASResponse>({
+            id: '',
+            status: AnchorRequestStatusName.FAILED,
+            streamId: carFileReader.streamId,
+            cid: carFileReader.tip,
+            message: error.message,
+          })
+        )
       )
-    )
+    }
 
     if (waitForConfirmation) {
       await lastValueFrom(requestCreated$)
-      return anchorCompleted$
+      return addErrorHandling(anchorCompleted$)
     } else {
-      return concat(requestCreated$, anchorCompleted$)
+      return addErrorHandling(concat(requestCreated$, anchorCompleted$))
     }
   }
 
