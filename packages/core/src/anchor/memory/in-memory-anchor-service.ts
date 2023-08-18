@@ -286,10 +286,14 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   /**
    * Send request to the anchoring service
-   * @param streamId - Stream ID
-   * @param tip - Commit CID
+   * @param carFile - CAR file containing all necessary data for the CAS to anchor
+   * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
+   *   request before returning.
    */
-  requestAnchor(carFile: CAR): Observable<CASResponse> {
+  async requestAnchor(
+    carFile: CAR,
+    waitForConfirmation: boolean
+  ): Promise<Observable<CASResponse>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const candidate = new Candidate(carFileReader)
     if (this.#anchorOnRequest) {

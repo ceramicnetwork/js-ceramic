@@ -14,6 +14,7 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   GenesisCommit,
+  AnchorOpts,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
@@ -163,7 +164,7 @@ export class StateManager {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
     if (anchor) {
-      await this.anchor(state$)
+      await this.anchor(state$, opts)
     }
     if (publish) {
       this.publishTip(state$)
@@ -334,7 +335,7 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  async anchor(state$: RunningState): Promise<Subscription> {
+  async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
     if (!this.anchorService) {
       throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }
@@ -347,7 +348,10 @@ export class StateManager {
     const genesisCommit = carFile.get(genesisCID)
     await this._saveAnchorRequestForState(state$, genesisCommit)
 
-    const anchorStatus$ = this.anchorService.requestAnchor(carFile)
+    const anchorStatus$ = await this.anchorService.requestAnchor(
+      carFile,
+      opts.waitForAnchorConfirmation
+    )
 
     return this._processAnchorResponse(state$, anchorStatus$)
   }
