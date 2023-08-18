@@ -4,6 +4,9 @@ import type { Repository } from './repository.js'
 import { LogStyle, type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { TaskQueue } from '../ancillary/task-queue.js'
 
+// TODO: Increase concurrency and remove RATE_LIMIT_DELAY once we've optimized anchor polling
+// so that the code to js-ceramic for polling is constant (instead of scaling with the number of
+// streams with pending anchors as it is today).
 const RESUME_QUEUE_CONCURRENCY = 5
 const RESUME_BATCH_SIZE = RESUME_QUEUE_CONCURRENCY * 5
 const RATE_LIMIT_DELAY = 100
