@@ -118,6 +118,13 @@ export interface AnchorOpts {
    * Whether or not to request an anchor after performing the operation.
    */
   anchor?: boolean
+
+  /**
+   * If true, the write operation won't return until the anchor request has been successfully and
+   * durably created on the Anchor Service.  Note this does NOT wait for the write to be fully
+   * anchored, it only waits until we are confident that the write will *eventually* be anchored.
+   */
+  waitForAnchorConfirmation?: boolean
 }
 
 /**
