@@ -178,7 +178,10 @@ export class StateManager {
     const genesisCommit = carFile.get(genesisCID)
     await this._saveAnchorRequestForState(state$, genesisCommit)
 
-    const anchorStatus$ = await this.anchorService.requestAnchor(carFile, opts.waitForAnchorConfirmation)
+    const anchorStatus$ = await this.anchorService.requestAnchor(
+      carFile,
+      opts.waitForAnchorConfirmation
+    )
     return this.internals.processAnchorResponse(state$, anchorStatus$)
   }
 
