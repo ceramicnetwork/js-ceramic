@@ -4,12 +4,11 @@ import type { Repository } from './repository.js'
 import { LogStyle, type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { TaskQueue } from '../ancillary/task-queue.js'
 
-// TODO: Increase concurrency and remove RATE_LIMIT_DELAY once we've optimized anchor polling
-// so that the cost to js-ceramic for polling is constant (instead of scaling with the number of
-// streams with pending anchors as it is today).
+// TODO: Increase concurrency and remove the delay between restoring each stream once we've
+// optimized anchor polling so that the cost to js-ceramic for polling is constant (instead
+// of scaling with the number of streams with pending anchors as it is today).
 const RESUME_QUEUE_CONCURRENCY = 5
 const RESUME_BATCH_SIZE = RESUME_QUEUE_CONCURRENCY * 5
-const RATE_LIMIT_DELAY = 100
 
 export class AnchorResumingService {
   /**
@@ -41,6 +40,15 @@ export class AnchorResumingService {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
+  /**
+   * Returns a random number between 10 and 50 representing the number of milliseconds to sleep
+   * in between restoring each stream.  We want some randomness here to prevent many streams from
+   * being on the same schedule such that they wind up polling the CAS at the exact same time.
+   */
+  getDelay() {
+    return Math.floor(Math.random() * 40) + 10
+  }
+
   async resumeRunningStatesFromAnchorRequestStore(repository: Repository): Promise<void> {
     if (this.#shouldBeClosed) {
       throw Error('This AnchorResumingService is closed, create a new instance to resume')
@@ -59,7 +67,7 @@ export class AnchorResumingService {
           this.logger.verbose(`Resumed running state for stream id: ${listResult.key.toString()}`)
           numRestoredStreams++
         })
-        await this.delay(RATE_LIMIT_DELAY)
+        await this.delay(this.getDelay())
       }
       gt = batch[batch.length - 1]?.key
       await this.resumeQ.onIdle()
