@@ -98,6 +98,16 @@ describe('Should convert query filters', () => {
     expect(query).toEqual(
       `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(stream_content->>'b' as numeric) in (2,3)))`
     )
+    const query = createQuery({
+      type: 'where',
+      value: {
+        b: { type: 'number', op: 'in', value: [2, 3] },
+        a: { type: 'number', op: '=', value: 1 },
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((cast(stream_content->>'b' as numeric) in (2,3)) and ((cast(${DATA_FIELD}->>'a' as numeric)=1)))`
+    )
   })
   test('that are composed of and doc filters', () => {
     const query = createQuery({

@@ -52,6 +52,7 @@ export function getValueType<T extends boolean | number | string>(value: T): Val
   }
 }
 export function parseObjectFilter(filter: ApiObjectFilter): ObjectFilter {
+  // have entries be an array of values do validation ehre
   const entries: Record<string, AllValueFilter> = {}
   const keys = Object.keys(filter)
   for (const key of keys) {
@@ -131,11 +132,27 @@ export function parseObjectFilter(filter: ApiObjectFilter): ObjectFilter {
 }
 
 export function parseQueryFilters(filter: ApiQueryFilters): QueryFilters {
+  const keys = Object.keys(filter)
+  if (keys.length > 1) {
+    throw Error('Only one of where, and, or, and not can be used per query filter level')
+  }
+
   if ('where' in filter) {
-    const value = parseObjectFilter(filter.where as ApiObjectFilter)
-    return {
-      type: 'where',
-      value,
+    // check if its a combo where validate its possible, then make it a sub and
+    if (Object.keys(filter.where).length > 1) {
+      const value = Object.keys(filter.where).map((key) =>
+        parseQueryFilters({ where: { [key]: filter.where[key] } })
+      )
+      return {
+        type: 'and',
+        value,
+      }
+    } else {
+      const value = parseObjectFilter(filter.where as ApiObjectFilter)
+      return {
+        type: 'where',
+        value,
+      }
     }
   } else if ('and' in filter) {
     const value = filter.and.map(parseQueryFilters)
@@ -156,4 +173,6 @@ export function parseQueryFilters(filter: ApiQueryFilters): QueryFilters {
       value,
     }
   }
+
+  throw Error(`Invalid query filter provided: ${keys[0]}`)
 }

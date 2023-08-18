@@ -45,14 +45,10 @@ function handleQuery(
   const opFunc = (bldr) => {
     if (first) {
       return bldr.where(func)
-    } else if (combinator) {
-      if (combinator == Combinator.Or) {
-        return bldr.orWhere(func)
-      } else {
-        return bldr.andWhere(func)
-      }
+    } else if (combinator && combinator == Combinator.Or) {
+      return bldr.orWhere(func)
     } else {
-      throw new Error('Combinator called without operand')
+      return bldr.andWhere(func)
     }
   }
   if (negated) {
@@ -114,13 +110,19 @@ function handleIn<T extends number | string>(
 }
 
 function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryFilter {
+  console.log(
+    '🚀 ~ file: query-filter-converter.ts:118 ~ handleWhereQuery ~ state:',
+    JSON.stringify(state, null, 3)
+  )
   let first = true
   let where = (bldr) => bldr
   const select = []
   for (const filterKey in state.filter) {
     select.push(filterKey)
     const value = state.filter[filterKey]
+    console.log('🚀 ~ file: query-filter-converter.ts:128 ~ handleWhereQuery ~ value:', value)
     const key = contentKey(filterKey)
+    console.log('🚀 ~ file: query-filter-converter.ts:130 ~ handleWhereQuery ~ key:', key)
 
     switch (value.op) {
       case 'null': {
@@ -223,6 +225,10 @@ function handleCombinator(state: ConversionState<QueryFilters>): ConvertedQueryF
 }
 
 function convert(state: ConversionState<QueryFilters>): ConvertedQueryFilter {
+  console.log(
+    '🚀 ~ file: query-filter-converter.ts:226 ~ convert ~ state:',
+    JSON.stringify(state, null, 3)
+  )
   switch (state.filter.type) {
     case 'where': {
       const filter = state.filter.value as ObjectFilter
