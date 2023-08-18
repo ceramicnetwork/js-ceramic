@@ -123,9 +123,9 @@ export class RepositoryInternals {
       Metrics.count(CACHE_HIT_LOCAL, 1)
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
-      const toRecover = await this.#anchorRequestStore.exists(streamId)
-      if (toRecover && this.#anchorService) {
-        this.confirmAnchorResponse(runningState)
+      const storedRequest = await this.#anchorRequestStore.load(streamId)
+      if (storedRequest !== null && this.#anchorService) {
+        this.confirmAnchorResponse(runningState, storedRequest.cid)
       }
       return runningState
     } else {
@@ -288,8 +288,8 @@ export class RepositoryInternals {
   /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  confirmAnchorResponse(state$: RunningState): Subscription {
-    const anchorStatus$ = this.#anchorService.pollForAnchorResponse(state$.id, state$.tip)
+  confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
+    const anchorStatus$ = this.#anchorService.pollForAnchorResponse(state$.id, cid)
     return this.processAnchorResponse(state$, anchorStatus$)
   }
 
