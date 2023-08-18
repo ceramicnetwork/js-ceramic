@@ -39,7 +39,7 @@
     "ganache-core": "^2.13.2",
     "get-port": "^6.0.0",
     "it-first": "^1.0.7",
-    "key-did-provider-ed25519": "^2.0.0",
+    "key-did-provider-ed25519": "^3.0.2",
     "key-did-resolver": "^3.0.0",
     "merge-options": "^3.0.4",
     "pkh-did-resolver": "^1.2.0",

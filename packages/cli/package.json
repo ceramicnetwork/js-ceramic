@@ -60,7 +60,7 @@
     "express": "^4.17.2",
     "http-status-codes": "^2.2.0",
     "ipfs-http-client": "^60.0.0",
-    "key-did-provider-ed25519": "^2.0.0",
+    "key-did-provider-ed25519": "^3.0.2",
     "key-did-resolver": "^3.0.0",
     "levelup": "^5.1.1",
     "merge-options": "^3.0.4",
