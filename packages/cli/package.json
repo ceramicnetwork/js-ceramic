@@ -85,6 +85,7 @@
     "@types/node": "^18.0.3",
     "@types/stream-to-array": "^2.3.0",
     "cross-fetch": "^3.1.4",
+    "genversion": "^3.0.2",
     "get-port": "^6.0.0",
     "lodash.merge": "^4.6.2",
     "mockdate": "^3.0.5",
