@@ -579,6 +579,127 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
     })
+    test('Can query a document with filter with multiple values', async () => {
+      await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: {
+            myString: { in: ['a', 'b'] },
+            myData: { equalTo: 6 },
+          },
+        },
+      })
+
+      const resultObj1 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: {
+            myData: { equalTo: 6 },
+            myString: { in: ['a', 'b'] },
+          },
+        },
+      })
+
+      const results0 = extractDocuments(ceramic, resultObj0)
+      const results1 = extractDocuments(ceramic, resultObj1)
+      expect(results0.length).toEqual(1)
+      expect(JSON.stringify(results0[0].content)).toEqual(JSON.stringify(doc5.content))
+      expect(results1.length).toEqual(1)
+      expect(JSON.stringify(results1[0].content)).toEqual(JSON.stringify(doc5.content))
+    })
+    test('Will not allow multiple filters per level', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      await expect(
+        ceramic.index.query({
+          model: model.id,
+          last: 5,
+          queryFilters: {
+            where: {
+              myData: { greaterThan: 1, lessThanOrEqualTo: 5 },
+            },
+            and: [
+              {
+                where: {
+                  myString: { in: ['a', 'c'] },
+                },
+              },
+            ],
+          },
+        })
+      ).rejects.toThrow(/Only one of where, and, or, and not can be used/)
+
+      await expect(
+        ceramic.index.query({
+          model: model.id,
+          last: 5,
+          queryFilters: {
+            and: [
+              {
+                where: {
+                  myString: { in: ['a', 'c'] },
+                },
+                not: { where: { myData: { equalTo: 3 } } },
+              },
+            ],
+          },
+        })
+      ).rejects.toThrow(/Only one of where, and, or, and not can be used/)
+    })
+    test('Can combine value filters representing valid range boundaries', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const resultObj0 = await ceramic.index.query({
+        model: model.id,
+        last: 5,
+        queryFilters: {
+          where: {
+            myString: { in: ['a', 'b'] },
+            myData: { greaterThan: 3, lessThanOrEqualTo: 6 },
+          },
+        },
+      })
+
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc5.content))
+    })
+    test('Cannot combine value filters that do not represent valid range boundaries', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      await expect(
+        ceramic.index.query({
+          model: model.id,
+          last: 5,
+          queryFilters: {
+            where: {
+              myString: { in: ['a', 'b'] },
+              myData: { greaterThan: 3, in: [6, 8, 10] },
+            },
+          },
+        })
+      ).rejects.toThrow(/Can only combine value filters representing valid range boundaries/)
+    })
   })
 
   describe('queries with custom sorting', () => {

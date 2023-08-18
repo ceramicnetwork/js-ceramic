@@ -23,7 +23,7 @@ export type AllValueFilter = ValueFilter | NonBooleanValueFilter
 /**
  * Mapping of object keys to value filter
  */
-export type ObjectFilter = Record<string, AllValueFilter>
+export type ObjectFilter = Record<string, AllValueFilter[]>
 
 /**
  * Advanced query filters on a document fields
@@ -51,80 +51,109 @@ export function getValueType<T extends boolean | number | string>(value: T): Val
     return getNonBooleanValueType(value)
   }
 }
+
+function validateCombinedOps(ops: string[]): void {
+  if (ops.length <= 1) {
+    return
+  }
+
+  if (ops.length > 2) {
+    throw Error('Cannot have more than one value filter')
+  }
+
+  ops.sort()
+
+  if (!ops[0].startsWith('greaterThan') || !ops[1].startsWith('lessThan')) {
+    throw Error(
+      'Can only combine value filters representing valid range boundaries ex. greaterThan[orEqualto] and lessThan[orEqualTo]'
+    )
+  }
+}
+
 export function parseObjectFilter(filter: ApiObjectFilter): ObjectFilter {
   // have entries be an array of values do validation ehre
-  const entries: Record<string, AllValueFilter> = {}
+  const entries: Record<string, AllValueFilter[]> = {}
   const keys = Object.keys(filter)
   for (const key of keys) {
     const childFilter = filter[key]
-    if ('isNull' in childFilter) {
-      const value = childFilter.isNull
-      entries[key] = {
-        type: getValueType(value),
-        op: 'null',
-        value: value,
-      }
-    } else if ('equalTo' in childFilter) {
-      const value = childFilter.equalTo
-      entries[key] = {
-        type: getValueType(value),
-        op: '=',
-        value: value,
-      }
-    } else if ('notEqualTo' in childFilter) {
-      const value = childFilter.notEqualTo
-      entries[key] = {
-        type: getValueType(value),
-        op: '!=',
-        value: value,
-      }
-    } else if ('lessThan' in childFilter) {
-      const value = childFilter.lessThan
-      entries[key] = {
-        type: getNonBooleanValueType(value),
-        op: '<',
-        value: value,
-      }
-    } else if ('lessThanOrEqualTo' in childFilter) {
-      const value = childFilter.lessThanOrEqualTo
-      entries[key] = {
-        type: getNonBooleanValueType(value),
-        op: '<=',
-        value: value,
-      }
-    } else if ('greaterThan' in childFilter) {
-      const value = childFilter.greaterThan
-      entries[key] = {
-        type: getNonBooleanValueType(value),
-        op: '>',
-        value: value,
-      }
-    } else if ('greaterThanOrEqualTo' in childFilter) {
-      const value = childFilter.greaterThanOrEqualTo
-      entries[key] = {
-        type: getNonBooleanValueType(value),
-        op: '>=',
-        value: value,
-      }
-    } else if ('in' in childFilter) {
-      const value = childFilter.in
-      if (value.length == 0) {
-        throw new Error('In query specified without array values')
-      }
-      entries[key] = {
-        type: getNonBooleanValueType(value[0]),
-        op: 'in',
-        value: value,
-      }
-    } else if ('notIn' in childFilter) {
-      const value = childFilter.notIn
-      if (value.length == 0) {
-        throw new Error('Not In query specified without array values')
-      }
-      entries[key] = {
-        type: getNonBooleanValueType(value[0]),
-        op: 'nin',
-        value: value,
+    const childKeys = Object.keys(childFilter)
+    if (childKeys.length > 1) {
+      validateCombinedOps(childKeys)
+    }
+
+    entries[key] = []
+    for (const childKey of childKeys) {
+      if (childKey === 'isNull' && 'isNull' in childFilter) {
+        const value = childFilter.isNull
+        entries[key].push({
+          type: getValueType(value),
+          op: 'null',
+          value: value,
+        })
+      } else if (childKey === 'equalTo' && 'equalTo' in childFilter) {
+        const value = childFilter.equalTo
+        entries[key].push({
+          type: getValueType(value),
+          op: '=',
+          value: value,
+        })
+      } else if (childKey === 'notEqualTo' && 'notEqualTo' in childFilter) {
+        const value = childFilter.notEqualTo
+        entries[key].push({
+          type: getValueType(value),
+          op: '!=',
+          value: value,
+        })
+      } else if (childKey === 'lessThan' && 'lessThan' in childFilter) {
+        const value = childFilter.lessThan
+        entries[key].push({
+          type: getNonBooleanValueType(value),
+          op: '<',
+          value: value,
+        })
+      } else if (childKey === 'lessThanOrEqualTo' && 'lessThanOrEqualTo' in childFilter) {
+        const value = childFilter.lessThanOrEqualTo
+        entries[key].push({
+          type: getNonBooleanValueType(value),
+          op: '<=',
+          value: value,
+        })
+      } else if (childKey === 'greaterThan' && 'greaterThan' in childFilter) {
+        const value = childFilter.greaterThan
+        entries[key].push({
+          type: getNonBooleanValueType(value),
+          op: '>',
+          value: value,
+        })
+      } else if (childKey === 'greaterThanOrEqualTo' && 'greaterThanOrEqualTo' in childFilter) {
+        const value = childFilter.greaterThanOrEqualTo
+        entries[key].push({
+          type: getNonBooleanValueType(value),
+          op: '>=',
+          value: value,
+        })
+      } else if (childKey === 'in' && 'in' in childFilter) {
+        const value = childFilter.in
+        if (value.length == 0) {
+          throw new Error('In query specified without array values')
+        }
+        entries[key].push({
+          type: getNonBooleanValueType(value[0]),
+          op: 'in',
+          value: value,
+        })
+      } else if (childKey === 'notIn' && 'notIn' in childFilter) {
+        const value = childFilter.notIn
+        if (value.length == 0) {
+          throw new Error('Not In query specified without array values')
+        }
+        entries[key].push({
+          type: getNonBooleanValueType(value[0]),
+          op: 'nin',
+          value: value,
+        })
+      } else {
+        throw new Error('what dis')
       }
     }
   }
@@ -138,21 +167,10 @@ export function parseQueryFilters(filter: ApiQueryFilters): QueryFilters {
   }
 
   if ('where' in filter) {
-    // check if its a combo where validate its possible, then make it a sub and
-    if (Object.keys(filter.where).length > 1) {
-      const value = Object.keys(filter.where).map((key) =>
-        parseQueryFilters({ where: { [key]: filter.where[key] } })
-      )
-      return {
-        type: 'and',
-        value,
-      }
-    } else {
-      const value = parseObjectFilter(filter.where as ApiObjectFilter)
-      return {
-        type: 'where',
-        value,
-      }
+    const value = parseObjectFilter(filter.where as ApiObjectFilter)
+    return {
+      type: 'where',
+      value,
     }
   } else if ('and' in filter) {
     const value = filter.and.map(parseQueryFilters)

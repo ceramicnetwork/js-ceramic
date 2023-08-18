@@ -119,76 +119,74 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
   const select = []
   for (const filterKey in state.filter) {
     select.push(filterKey)
-    const value = state.filter[filterKey]
-    console.log('🚀 ~ file: query-filter-converter.ts:128 ~ handleWhereQuery ~ value:', value)
     const key = contentKey(filterKey)
-    console.log('🚀 ~ file: query-filter-converter.ts:130 ~ handleWhereQuery ~ key:', key)
 
-    switch (value.op) {
-      case 'null': {
-        const isFirst = first
-        const old = where
-        where = (bldr) => {
-          const b = old(bldr)
-          let nullQuery = 'is not null'
-          if (value.value) {
-            nullQuery = 'is null'
+    for (const value of state.filter[filterKey]) {
+      switch (value.op) {
+        case 'null': {
+          const isFirst = first
+          const old = where
+          where = (bldr) => {
+            const b = old(bldr)
+            let nullQuery = 'is not null'
+            if (value.value) {
+              nullQuery = 'is null'
+            }
+            return handleQuery(
+              b,
+              (b) => {
+                const raw = b.client.raw(`${key} ${nullQuery}`)
+                return b.whereRaw(raw)
+              },
+              isFirst,
+              state.negated,
+              state.combinator
+            )
           }
-          return handleQuery(
-            b,
-            (b) => {
-              const raw = b.client.raw(`${key} ${nullQuery}`)
-              return b.whereRaw(raw)
-            },
-            isFirst,
-            state.negated,
-            state.combinator
-          )
+          break
         }
-        break
-      }
-      case 'in':
-      case 'nin': {
-        if (value.value.length == 0) {
-          throw new Error('Expected an array with at least one item')
-        }
-        const isFirst = first
-        const old = where
-        let negated = state.negated
-        if (value.op == 'nin') {
-          negated = !negated
-        }
-        where = (bldr) => {
-          const b = old(bldr)
-          return handleIn(b, key, value.type, value.value, isFirst, negated, state.combinator)
-        }
-        break
-      }
-      default: {
-        const isFirst = first
-        const cast = typeAsCast(getValueType(value.value))
-        const old = where
-        where = (bldr) => {
-          const b = old(bldr)
-          let queryValue = value.value
-          if (cast == 'varchar') {
-            queryValue = `'${queryValue}'`
+        case 'in':
+        case 'nin': {
+          if (value.value.length == 0) {
+            throw new Error('Expected an array with at least one item')
           }
-          return handleQuery(
-            b,
-            (b) => {
-              const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${queryValue}`)
-              return b.whereRaw(raw)
-            },
-            isFirst,
-            state.negated,
-            state.combinator
-          )
+          const isFirst = first
+          const old = where
+          let negated = state.negated
+          if (value.op == 'nin') {
+            negated = !negated
+          }
+          where = (bldr) => {
+            const b = old(bldr)
+            return handleIn(b, key, value.type, value.value, isFirst, negated, state.combinator)
+          }
+          break
+        }
+        default: {
+          const isFirst = first
+          const cast = typeAsCast(getValueType(value.value))
+          const old = where
+          where = (bldr) => {
+            const b = old(bldr)
+            let queryValue = value.value
+            if (cast == 'varchar') {
+              queryValue = `'${queryValue}'`
+            }
+            return handleQuery(
+              b,
+              (b) => {
+                const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${queryValue}`)
+                return b.whereRaw(raw)
+              },
+              isFirst,
+              state.negated,
+              state.combinator
+            )
+          }
         }
       }
+      first = false
     }
-
-    first = false
   }
   return {
     select,

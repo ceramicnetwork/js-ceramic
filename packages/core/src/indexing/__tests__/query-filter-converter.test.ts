@@ -19,7 +19,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'integer', op: '=', value: 1 },
+        a: [{ type: 'integer', op: '=', value: 1 }],
       },
     })
 
@@ -31,7 +31,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'number', op: '=', value: 1.2 },
+        a: [{ type: 'number', op: '=', value: 1.2 }],
       },
     })
 
@@ -43,7 +43,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'string', op: 'in', value: ['a', 'b'] },
+        a: [{ type: 'string', op: 'in', value: ['a', 'b'] }],
       },
     })
 
@@ -55,7 +55,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'integer', op: 'null', value: true },
+        a: [{ type: 'integer', op: 'null', value: true }],
       },
     })
 
@@ -67,7 +67,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'number', op: 'null', value: false },
+        a: [{ type: 'number', op: 'null', value: false }],
       },
     })
 
@@ -79,7 +79,7 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'string', op: '=', value: 'test_str' },
+        a: [{ type: 'string', op: '=', value: 'test_str' }],
       },
     })
 
@@ -91,21 +91,21 @@ describe('Should convert query filters', () => {
     const query = createQuery({
       type: 'where',
       value: {
-        a: { type: 'number', op: '=', value: 1 },
-        b: { type: 'number', op: 'in', value: [2, 3] },
+        a: [{ type: 'number', op: '=', value: 1 }],
+        b: [{ type: 'number', op: 'in', value: [2, 3] }],
       },
     })
     expect(query).toEqual(
       `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(stream_content->>'b' as numeric) in (2,3)))`
     )
-    const query = createQuery({
+    const query2 = createQuery({
       type: 'where',
       value: {
-        b: { type: 'number', op: 'in', value: [2, 3] },
-        a: { type: 'number', op: '=', value: 1 },
+        b: [{ type: 'number', op: 'in', value: [2, 3] }],
+        a: [{ type: 'number', op: '=', value: 1 }],
       },
     })
-    expect(query).toEqual(
+    expect(query2).toEqual(
       `select '${DATA_FIELD}' from 'test' where ((cast(stream_content->>'b' as numeric) in (2,3)) and ((cast(${DATA_FIELD}->>'a' as numeric)=1)))`
     )
   })
@@ -116,13 +116,13 @@ describe('Should convert query filters', () => {
         {
           type: 'where',
           value: {
-            a: { type: 'number', op: '=', value: 1 },
+            a: [{ type: 'number', op: '=', value: 1 }],
           },
         },
         {
           type: 'where',
           value: {
-            b: { type: 'number', op: 'in', value: [2, 3] },
+            b: [{ type: 'number', op: 'in', value: [2, 3] }],
           },
         },
       ],
@@ -138,13 +138,13 @@ describe('Should convert query filters', () => {
         {
           type: 'where',
           value: {
-            a: { type: 'number', op: '=', value: 1 },
+            a: [{ type: 'number', op: '=', value: 1 }],
           },
         },
         {
           type: 'where',
           value: {
-            b: { type: 'number', op: 'in', value: [2, 3] },
+            b: [{ type: 'number', op: 'in', value: [2, 3] }],
           },
         },
       ],
@@ -162,13 +162,13 @@ describe('Should convert query filters', () => {
           {
             type: 'where',
             value: {
-              a: { type: 'number', op: '=', value: 1 },
+              a: [{ type: 'number', op: '=', value: 1 }],
             },
           },
           {
             type: 'where',
             value: {
-              b: { type: 'number', op: 'in', value: [2, 3] },
+              b: [{ type: 'number', op: 'in', value: [2, 3] }],
             },
           },
         ],
@@ -176,6 +176,32 @@ describe('Should convert query filters', () => {
     })
     expect(query).toEqual(
       `select '${DATA_FIELD}' from 'test' where ((not ((cast(${DATA_FIELD}->>'a' as numeric)=1))) or ((cast(stream_content->>'b' as numeric) not in (2,3))))`
+    )
+  })
+  test('STEPH', () => {
+    const query = createQuery({
+      type: 'or',
+      value: [
+        {
+          type: 'where',
+          value: {
+            a: [
+              { type: 'number', op: '>=', value: 3 },
+              { type: 'number', op: '<=', value: 5 },
+            ],
+            b: [{ type: 'number', op: 'in', value: [2, 3] }],
+          },
+        },
+        {
+          type: 'where',
+          value: {
+            b: [{ type: 'number', op: 'in', value: [2, 3] }],
+          },
+        },
+      ],
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as numeric)>=3)) and ((cast(${DATA_FIELD}->>'a' as numeric)<=5)) or (cast(${DATA_FIELD}->>'b' as numeric) in (2,3))) or ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3))))`
     )
   })
 })
