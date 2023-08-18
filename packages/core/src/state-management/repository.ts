@@ -110,7 +110,6 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
-  // TODO: remove
   async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
@@ -119,7 +118,6 @@ export class Repository {
     await this.init()
   }
 
-  // TODO: move to ServicesAPI
   async init(): Promise<void> {
     await this.pinStore.open(this.#deps.keyValueStore)
     await this.anchorRequestStore.open(this.#deps.keyValueStore)

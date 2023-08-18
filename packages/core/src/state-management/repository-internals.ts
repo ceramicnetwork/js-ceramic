@@ -41,16 +41,6 @@ import type { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { StateCache } from './state-cache.js'
 
-// TODO: extract Repository methods called by StateManager + StateManager methods used by Repository
-// New relations:
-// - Repository can call RepositoryInternals and StateManager methods
-// - StateManager can call RepositoryInternals methods but NO ACCESS to Repository methods
-// - RepositoryInternals has NO ACCESS to Repository and StateManager methods
-// Logic flow:
-// - Repository instantiates RepositoryInternals
-// - Repository instantiates StateManager, injects RepositoryInternals
-// - Repository proxies needed methods to RepositoryInternals
-
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const CACHE_HIT_LOCAL = 'cache_hit_local'
 const CACHE_HIT_MEMORY = 'cache_hit_memory'
