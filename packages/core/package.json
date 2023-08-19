@@ -97,7 +97,7 @@
     "csv-parser": "^3.0.0",
     "did-resolver": "^4.0.1",
     "genversion": "^3.0.2",
-    "key-did-provider-ed25519": "^2.0.0",
+    "key-did-provider-ed25519": "^3.0.2",
     "key-did-resolver": "^3.0.0",
     "mockdate": "^3.0.5",
     "tmp-promise": "^3.0.3"
