@@ -66,14 +66,14 @@ describe('anchor', () => {
   })
 
   beforeEach(() => {
-    realHandleTip = (ceramic.repository.stateManager as any)._handleTip
+    realHandleTip = ceramic.repository._internals.handleTip
   })
 
   afterEach(() => {
-    // Restore the _handleTip function in case any of the tests modified it
+    // Restore the handleTip function in case any of the tests modified it
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    ceramic.repository.stateManager._handleTip = realHandleTip
+    ceramic.repository._internals.handleTip = realHandleTip
   })
 
   describe('With anchorOnRequest == true', () => {
@@ -102,10 +102,7 @@ describe('anchor', () => {
         expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 })
       )
 
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[1].cid
-      )
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[1].cid)
 
       expect(stream2.state).toEqual(stream1.state)
       await ceramic2.close()
@@ -125,10 +122,7 @@ describe('anchor', () => {
       const streamState2 = await ceramic2.repository.load(stream2.id, {})
 
       retrieveCommitSpy.mockClear()
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[1].cid
-      )
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[1].cid)
 
       expect(streamState2.state).toEqual(stream1.state)
       // 2 IPFS retrievals - the signed commit and its linked commit payload for the commit to be
@@ -136,14 +130,8 @@ describe('anchor', () => {
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       // Now re-apply the same commit and don't expect any additional calls to IPFS
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[1].cid
-      )
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[0].cid
-      )
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[1].cid)
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[0].cid)
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       // Add another update to stream 1
@@ -151,10 +139,7 @@ describe('anchor', () => {
       await stream1.update(moreNewContent, null, { anchor: false })
 
       retrieveCommitSpy.mockClear()
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[2].cid
-      )
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[2].cid)
 
       expect(streamState2.state).toEqual(stream1.state)
       // 2 IPFS retrievals - 1 each for linked commit/envelope for CID to be applied - since there is no lone genesis commit
@@ -162,14 +147,8 @@ describe('anchor', () => {
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       // Now re-apply the same commit and don't expect any additional calls to IPFS
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[2].cid
-      )
-      await (ceramic2.repository.stateManager as any)._handleTip(
-        streamState2,
-        stream1.state.log[1].cid
-      )
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[2].cid)
+      await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[1].cid)
       expect(retrieveCommitSpy).toBeCalledTimes(2)
 
       await ceramic2.close()
@@ -398,7 +377,7 @@ describe('anchor', () => {
         .then((stream) => stream.state)
       const state$ = new RunningState(initialState, true)
       ceramic.repository.add(state$)
-      await (ceramic.repository.stateManager as any)._handleTip(state$, tipPreUpdate)
+      await ceramic.repository._internals.handleTip(state$, tipPreUpdate)
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const conflictingNewContent = { asdf: 2342 }
@@ -420,12 +399,12 @@ describe('anchor', () => {
       expect(stream2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to stream with invalid
       // log results in valid state
-      await (ceramic.repository.stateManager as any)._handleTip(state$, tipValidUpdate)
+      await ceramic.repository._internals.handleTip(state$, tipValidUpdate)
       expect(stream2.content).toEqual(newContent)
 
       // loading tip from invalid log to stream with valid
       // log results in valid state
-      await (ceramic.repository.stateManager as any)._handleTip(streamState1, tipInvalidUpdate)
+      await ceramic.repository._internals.handleTip(streamState1, tipInvalidUpdate)
       expect(stream1.content).toEqual(newContent)
 
       // Loading valid commit works
@@ -531,40 +510,44 @@ describe('anchor', () => {
       }
 
       test('handle first received', async () => {
-        const stateManager = ceramic.repository.stateManager
+        const internals = ceramic.repository._internals
         const response = responseTips(1)
         ceramic.dispatcher.messageBus.queryNetwork = () => from(response)
-        const fakeHandleTip = jest.fn(() => Promise.resolve())
-        ;(stateManager as any)._handleTip = fakeHandleTip
+        const fakeHandleTip = jest.fn(() =>
+          Promise.resolve()
+        ) as unknown as typeof internals.handleTip
+        internals.handleTip = fakeHandleTip
         const state$ = {
           id: FAKE_STREAM_ID,
           value: {
             log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
           },
         } as unknown as RunningState
-        await stateManager.sync(state$, 1000)
+        await internals.sync(state$, 1000)
         expect(fakeHandleTip).toHaveBeenCalledWith(state$, response[0])
       })
       test('handle all received', async () => {
-        const stateManager = ceramic.repository.stateManager
+        const internals = ceramic.repository._internals
         const amount = 10
         const response = responseTips(amount)
         ceramic.dispatcher.messageBus.queryNetwork = () => from(response)
-        const fakeHandleTip = jest.fn(() => Promise.resolve())
-        ;(stateManager as any)._handleTip = fakeHandleTip
+        const fakeHandleTip = jest.fn(() =>
+          Promise.resolve()
+        ) as unknown as typeof internals.handleTip
+        internals.handleTip = fakeHandleTip
         const state$ = {
           id: FAKE_STREAM_ID,
           value: {
             log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
           },
         } as unknown as RunningState
-        await stateManager.sync(state$, 1000)
+        await internals.sync(state$, 1000)
         response.forEach((r) => {
           expect(fakeHandleTip).toHaveBeenCalledWith(state$, r)
         })
       })
       test('not handle delayed', async () => {
-        const stateManager = ceramic.repository.stateManager
+        const internals = ceramic.repository._internals
         const amount = 10
         const response = responseTips(amount)
         ceramic.dispatcher.messageBus.queryNetwork = () =>
@@ -576,17 +559,17 @@ describe('anchor', () => {
               return value
             })
           )
-        const fakeHandleTip = jest.fn(() => Promise.resolve())
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        stateManager._handleTip = fakeHandleTip
+        const fakeHandleTip = jest.fn(() =>
+          Promise.resolve()
+        ) as unknown as typeof internals.handleTip
+        internals.handleTip = fakeHandleTip
         const state$ = {
           id: FAKE_STREAM_ID,
           value: {
             log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
           },
         } as unknown as RunningState
-        await stateManager.sync(state$, 1000)
+        await internals.sync(state$, 1000)
         expect(fakeHandleTip).toBeCalledTimes(5)
         response.slice(0, 5).forEach((r) => {
           expect(fakeHandleTip).toHaveBeenCalledWith(state$, r)
@@ -596,18 +579,20 @@ describe('anchor', () => {
         })
       })
       test('stop after timeout', async () => {
-        const stateManager = ceramic.repository.stateManager
+        const internals = ceramic.repository._internals
         ceramic.dispatcher.messageBus.queryNetwork = () =>
           timer(0, MAX_RESPONSE_INTERVAL * 0.5).pipe(map((n) => hash(n.toString())))
-        const fakeHandleTip = jest.fn(() => Promise.resolve())
-        ;(stateManager as any)._handleTip = fakeHandleTip
+        const fakeHandleTip = jest.fn(() =>
+          Promise.resolve()
+        ) as unknown as typeof internals.handleTip
+        internals.handleTip = fakeHandleTip
         const state$ = {
           id: FAKE_STREAM_ID,
           value: {
             log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
           },
         } as unknown as RunningState
-        await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10)
+        await internals.sync(state$, MAX_RESPONSE_INTERVAL * 10)
         expect(fakeHandleTip).toBeCalledTimes(20)
       })
     })
@@ -724,14 +709,13 @@ describe('anchor', () => {
       expect(stream$.value.log.length).toEqual(2)
     })
 
-    test(`_handleTip is retried until it returns`, async () => {
-      const stateManager = ceramic.repository.stateManager
+    test(`handleTip is retried until it returns`, async () => {
+      const internals = ceramic.repository._internals
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
 
-      const fakeHandleTip = jest.fn()
-      const bound = fakeHandleTip.bind(stateManager)
-      ;(stateManager as any)._handleTip = bound
+      const fakeHandleTip = jest.fn() as unknown as typeof internals.handleTip
+      internals.handleTip = fakeHandleTip
 
       // Mock a throw as the first call
       fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
@@ -751,14 +735,13 @@ describe('anchor', () => {
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
-    test(`_handleTip is retried up to three times within _handleAnchorCommit, if it doesn't return`, async () => {
-      const stateManager = ceramic.repository.stateManager
+    test(`handleTip is retried up to three times within _handleAnchorCommit, if it doesn't return`, async () => {
+      const internals = ceramic.repository._internals
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
 
-      const fakeHandleTip = jest.fn()
-      const bound = fakeHandleTip.bind(stateManager)
-      ;(stateManager as any)._handleTip = bound
+      const fakeHandleTip = jest.fn() as unknown as typeof internals.handleTip
+      internals.handleTip = fakeHandleTip
 
       // Mock fakeHandleTip to always throw
       fakeHandleTip.mockRejectedValue(new Error('Handle tip failed'))

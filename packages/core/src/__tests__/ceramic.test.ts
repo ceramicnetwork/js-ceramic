@@ -324,12 +324,12 @@ describe('Ceramic integration', () => {
         const ceramic2 = await createCeramic(ipfs2, false, 1)
 
         const repository1 = ceramic1.repository
-        const addSpy1 = jest.spyOn(repository1, 'add')
-        const loadSpy1 = jest.spyOn(repository1, 'load')
+        const addSpy1 = jest.spyOn(repository1._internals, 'add')
+        const loadSpy1 = jest.spyOn(repository1._internals, 'load')
 
         const repository2 = ceramic2.repository
-        const addSpy2 = jest.spyOn(repository2, 'add')
-        const loadSpy2 = jest.spyOn(repository2, 'load')
+        const addSpy2 = jest.spyOn(repository2._internals, 'add')
+        const loadSpy2 = jest.spyOn(repository2._internals, 'load')
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 }, null, {
           publish: false,
@@ -372,12 +372,12 @@ describe('Ceramic integration', () => {
         const ceramic2 = await createCeramic(ipfs2, false, 1)
 
         const repository1 = ceramic1.repository
-        const addSpy1 = jest.spyOn(repository1, 'add')
-        const loadSpy1 = jest.spyOn(repository1, 'load')
+        const addSpy1 = jest.spyOn(repository1._internals, 'add')
+        const loadSpy1 = jest.spyOn(repository1._internals, 'load')
 
         const repository2 = ceramic2.repository
-        const addSpy2 = jest.spyOn(repository2, 'add')
-        const loadSpy2 = jest.spyOn(repository2, 'load')
+        const addSpy2 = jest.spyOn(repository2._internals, 'add')
+        const loadSpy2 = jest.spyOn(repository2._internals, 'load')
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
         expect(loadSpy1).toBeCalledTimes(1)

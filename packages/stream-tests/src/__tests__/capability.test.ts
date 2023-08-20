@@ -661,8 +661,8 @@ describe('CACAO Integration test', () => {
       await tile.update(CONTENT1, null, { ...opts, anchor: true })
 
       // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
-      const stateManager = ceramic.repository.stateManager
-      const handleAnchorSpy = jest.spyOn(stateManager, '_handleAnchorCommit')
+      const internals = ceramic.repository._internals
+      const handleAnchorSpy = jest.spyOn(internals, '_handleAnchorCommit')
       const anchorCommitPromise = new Promise<CID>((resolve) => {
         handleAnchorSpy.mockImplementation((state, tip, anchorCommit: CID, witnessCar) => {
           expect(tip).toEqual(tile.tip)
