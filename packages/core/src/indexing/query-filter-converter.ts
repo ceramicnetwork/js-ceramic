@@ -110,91 +110,108 @@ function handleIn<T extends number | string>(
 }
 
 function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryFilter {
-  console.log(
-    '🚀 ~ file: query-filter-converter.ts:118 ~ handleWhereQuery ~ state:',
-    JSON.stringify(state, null, 3)
-  )
   let first = true
   let where = (bldr) => bldr
   const select = []
+
+  // If there are multiple keys, they are combined via "ands" and the negation is applied over the and
+  let combinator = state.combinator
+  let negated = state.negated
+  if (Object.keys(state.filter).length > 1) {
+    combinator = Combinator.And
+    negated = false
+  }
+
   for (const filterKey in state.filter) {
     select.push(filterKey)
+    const value = state.filter[filterKey]
     const key = contentKey(filterKey)
 
-    for (const value of state.filter[filterKey]) {
-      switch (value.op) {
-        case 'null': {
-          const isFirst = first
-          const old = where
-          where = (bldr) => {
-            const b = old(bldr)
-            let nullQuery = 'is not null'
-            if (value.value) {
-              nullQuery = 'is null'
-            }
-            return handleQuery(
-              b,
-              (b) => {
-                const raw = b.client.raw(`${key} ${nullQuery}`)
-                return b.whereRaw(raw)
-              },
-              isFirst,
-              state.negated,
-              state.combinator
-            )
+    switch (value.op) {
+      case 'null': {
+        const isFirst = first
+        const old = where
+        where = (bldr) => {
+          const b = old(bldr)
+          let nullQuery = 'is not null'
+          if (value.value) {
+            nullQuery = 'is null'
           }
-          break
+          return handleQuery(
+            b,
+            (b) => {
+              const raw = b.client.raw(`${key} ${nullQuery}`)
+              return b.whereRaw(raw)
+            },
+            isFirst,
+            negated,
+            combinator
+          )
         }
-        case 'in':
-        case 'nin': {
-          if (value.value.length == 0) {
-            throw new Error('Expected an array with at least one item')
-          }
-          const isFirst = first
-          const old = where
-          let negated = state.negated
-          if (value.op == 'nin') {
-            negated = !negated
-          }
-          where = (bldr) => {
-            const b = old(bldr)
-            return handleIn(b, key, value.type, value.value, isFirst, negated, state.combinator)
-          }
-          break
+        break
+      }
+      case 'in':
+      case 'nin': {
+        if (value.value.length == 0) {
+          throw new Error('Expected an array with at least one item')
         }
-        default: {
-          const isFirst = first
-          const cast = typeAsCast(getValueType(value.value))
-          const old = where
-          where = (bldr) => {
-            const b = old(bldr)
-            let queryValue = value.value
-            if (cast == 'varchar') {
-              queryValue = `'${queryValue}'`
-            }
-            return handleQuery(
-              b,
-              (b) => {
-                const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${queryValue}`)
-                return b.whereRaw(raw)
-              },
-              isFirst,
-              state.negated,
-              state.combinator
-            )
+        const isFirst = first
+        const old = where
+        let inNegated = negated
+        if (value.op == 'nin') {
+          inNegated = !inNegated
+        }
+        where = (bldr) => {
+          const b = old(bldr)
+          return handleIn(b, key, value.type, value.value, isFirst, negated, combinator)
+        }
+        break
+      }
+      default: {
+        const isFirst = first
+        const cast = typeAsCast(getValueType(value.value))
+        const old = where
+        where = (bldr) => {
+          const b = old(bldr)
+          let queryValue = value.value
+          if (cast == 'varchar') {
+            queryValue = `'${queryValue}'`
           }
+          return handleQuery(
+            b,
+            (b) => {
+              const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${queryValue}`)
+              return b.whereRaw(raw)
+            },
+            isFirst,
+            negated,
+            combinator
+          )
         }
       }
-      first = false
+    }
+
+    first = false
+  }
+
+  // apply the not over the entire query if there are implicit "ands"
+  if (Object.keys(state.filter).length > 1 && state.negated) {
+    const old = where
+    where = (bldr) => {
+      return bldr.whereNot(old)
     }
   }
+
   return {
     select,
     where,
   }
 }
 
-function handleCombinator(state: ConversionState<QueryFilters>): ConvertedQueryFilter {
+function handleCombinator(
+  state: ConversionState<QueryFilters>,
+  negated: boolean
+): ConvertedQueryFilter {
   let where = (bldr) => bldr
   let select = []
   let first = true
@@ -216,6 +233,15 @@ function handleCombinator(state: ConversionState<QueryFilters>): ConvertedQueryF
     }
     first = false
   }
+
+  // apply negation over the entire query
+  if (negated) {
+    const old = where
+    where = (bldr) => {
+      return bldr.whereNot(old)
+    }
+  }
+
   return {
     where,
     select,
@@ -223,10 +249,6 @@ function handleCombinator(state: ConversionState<QueryFilters>): ConvertedQueryF
 }
 
 function convert(state: ConversionState<QueryFilters>): ConvertedQueryFilter {
-  console.log(
-    '🚀 ~ file: query-filter-converter.ts:226 ~ convert ~ state:',
-    JSON.stringify(state, null, 3)
-  )
   switch (state.filter.type) {
     case 'where': {
       const filter = state.filter.value as ObjectFilter
@@ -235,12 +257,16 @@ function convert(state: ConversionState<QueryFilters>): ConvertedQueryFilter {
     case 'and': {
       const newState = nextState(state, state.filter)
       newState.combinator = Combinator.And
-      return handleCombinator(newState)
+      // apply negation after the filter have been combined
+      newState.negated = false
+      return handleCombinator(newState, state.negated)
     }
     case 'or': {
       const newState = nextState(state, state.filter)
       newState.combinator = Combinator.Or
-      return handleCombinator(newState)
+      // apply negation after the filter have been combined
+      newState.negated = false
+      return handleCombinator(newState, state.negated)
     }
     case 'not': {
       const next = nextState(state, state.filter.value)
