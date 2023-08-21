@@ -744,9 +744,6 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       })
 
       const results = extractDocuments(ceramic, resultObj0)
-      for (const result of results) {
-        console.log(result.content)
-      }
       expect(results.length).toEqual(3)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
       expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc5.content))
