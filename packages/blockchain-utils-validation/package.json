@@ -43,7 +43,7 @@
     "@ethersproject/providers": "^5.5.1",
     "@ethersproject/wallet": "^5.5.0",
     "@noble/curves": "^1.1.0",
-    "@polkadot/util-crypto": "^7.0.2",
+    "@polkadot/util-crypto": "^12.4.1",
     "@smontero/eosio-signing-tools": "^0.0.6",
     "@taquito/utils": "^11.2.0",
     "@tendermint/sig": "^0.6.0",
