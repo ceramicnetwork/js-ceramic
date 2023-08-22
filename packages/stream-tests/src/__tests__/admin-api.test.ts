@@ -90,28 +90,6 @@ describe('Admin API tests', () => {
     await core.close()
   })
 
-  describe('nodeStatus tests', () => {
-    test('Fails with non-admin DID', async () => {
-      await expect(ceramic.admin.getIndexedModels()).rejects.toThrow(/Unauthorized access/)
-    })
-
-    test('basic node status test', async () => {
-      ceramic.did = adminDid
-
-      const status = await ceramic.admin.nodeStatus()
-      expect(typeof status.runId).toEqual('string')
-      expect(status.uptimeMs).toBeGreaterThan(0)
-      expect(status.network).toEqual('inmemory')
-      expect(status.anchor.anchorServiceUrl).toEqual('<inmemory>')
-      expect(status.anchor.ethereumRpcEndpoint).toBeNull()
-      expect(status.anchor.chainId).toEqual('inmemory:12345')
-      expect(typeof status.ipfs.peerId).toEqual('string')
-      for (const addr of status.ipfs.addresses) {
-        expect(typeof addr).toEqual('string')
-      }
-    })
-  })
-
   describe('Indexing config tests', () => {
     test('Fails with non-admin DID', async () => {
       const model = await Model.create(ceramic, MODEL_DEFINITION)

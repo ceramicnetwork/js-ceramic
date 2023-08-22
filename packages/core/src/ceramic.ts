@@ -728,6 +728,7 @@ export class Ceramic implements CeramicApi {
       anchorServiceUrl: this.context.anchorService.url,
       ethereumRpcEndpoint: this._anchorValidator.ethereumRpcEndpoint,
       chainId: this._anchorValidator.chainId,
+      pendingAnchors: this.repository.numPendingAnchors,
     }
     const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
 
