@@ -4,7 +4,10 @@ import type { Repository } from './repository.js'
 import { LogStyle, type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { TaskQueue } from '../ancillary/task-queue.js'
 
-const RESUME_QUEUE_CONCURRENCY = 30
+// TODO: Increase concurrency and remove the delay between restoring each stream once we've
+// optimized anchor polling so that the cost to js-ceramic for polling is constant (instead
+// of scaling with the number of streams with pending anchors as it is today).
+const RESUME_QUEUE_CONCURRENCY = 5
 const RESUME_BATCH_SIZE = RESUME_QUEUE_CONCURRENCY * 5
 
 export class AnchorResumingService {
@@ -33,24 +36,46 @@ export class AnchorResumingService {
     })
   }
 
+  delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Returns a random number between 10 and 50 representing the number of milliseconds to sleep
+   * in between restoring each stream.  We want some randomness here to prevent many streams from
+   * being on the same schedule such that they wind up polling the CAS at the exact same time.
+   */
+  getDelay() {
+    return Math.floor(Math.random() * 40) + 10
+  }
+
   async resumeRunningStatesFromAnchorRequestStore(repository: Repository): Promise<void> {
     if (this.#shouldBeClosed) {
       throw Error('This AnchorResumingService is closed, create a new instance to resume')
     }
 
+    this.logger.imp(`Resuming polling for streams with pending anchors`)
+
+    let numRestoredStreams = 0
     let gt: StreamID | undefined = undefined
     let batch = new Array<AnchorRequestStoreListResult>()
     do {
       batch = await repository.anchorRequestStore.list(RESUME_BATCH_SIZE, gt)
-      batch.forEach((listResult) => {
+      for (const listResult of batch) {
         this.resumeQ.add(async () => {
           await repository.fromMemoryOrStore(listResult.key)
           this.logger.verbose(`Resumed running state for stream id: ${listResult.key.toString()}`)
+          numRestoredStreams++
         })
-      })
+        await this.delay(this.getDelay())
+      }
       gt = batch[batch.length - 1]?.key
       await this.resumeQ.onIdle()
     } while (batch.length > 0 && !this.#shouldBeClosed)
+
+    this.logger.imp(
+      `Finished resuming polling for ${numRestoredStreams} streams which had pending anchors`
+    )
   }
 
   async close(): Promise<void> {
