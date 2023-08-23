@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.32.0...@ceramicnetwork/common@2.33.0-rc.0) (2023-08-23)
+
+
+### Features
+
+* Add option to wait until anchor requests are durably created on the CAS ([#2907](https://github.com/ceramicnetwork/js-ceramic/issues/2907)) ([a36ebf7](https://github.com/ceramicnetwork/js-ceramic/commit/a36ebf72b1701836a3360fb30ba935a265d0aeda))
+
+
+
+
+
 # [2.32.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.32.0-rc.1...@ceramicnetwork/common@2.32.0) (2023-08-23)
 
 **Note:** Version bump only for package @ceramicnetwork/common

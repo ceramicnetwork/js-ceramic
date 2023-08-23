@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.38.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.37.0...@ceramicnetwork/stream-tests@2.38.0-rc.0) (2023-08-23)
+
+
+### Features
+
+* **core, stream-tests:** negated ors/ands and multiple keys/values with where filters ([#2916](https://github.com/ceramicnetwork/js-ceramic/issues/2916)) ([9ac0ba9](https://github.com/ceramicnetwork/js-ceramic/commit/9ac0ba99c9219163a391ffcbc8c5c42745f9dad5))
+
+
+
+
+
 # [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.37.0-rc.1...@ceramicnetwork/stream-tests@2.37.0) (2023-08-23)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

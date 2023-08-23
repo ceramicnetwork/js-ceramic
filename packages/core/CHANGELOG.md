@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.40.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.39.0...@ceramicnetwork/core@2.40.0-rc.0) (2023-08-23)
+
+
+### Bug Fixes
+
+* Slow down rate of restoring polling for streams with pending anchors ([#2912](https://github.com/ceramicnetwork/js-ceramic/issues/2912)) ([442d2e4](https://github.com/ceramicnetwork/js-ceramic/commit/442d2e4294b2bea76dec99895cf14e492585a620))
+
+
+### Features
+
+* Add option to wait until anchor requests are durably created on the CAS ([#2907](https://github.com/ceramicnetwork/js-ceramic/issues/2907)) ([a36ebf7](https://github.com/ceramicnetwork/js-ceramic/commit/a36ebf72b1701836a3360fb30ba935a265d0aeda))
+* **core, stream-tests:** negated ors/ands and multiple keys/values with where filters ([#2916](https://github.com/ceramicnetwork/js-ceramic/issues/2916)) ([9ac0ba9](https://github.com/ceramicnetwork/js-ceramic/commit/9ac0ba99c9219163a391ffcbc8c5c42745f9dad5))
+
+
+
+
+
 # [2.39.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.39.0-rc.1...@ceramicnetwork/core@2.39.0) (2023-08-23)
 
 **Note:** Version bump only for package @ceramicnetwork/core
