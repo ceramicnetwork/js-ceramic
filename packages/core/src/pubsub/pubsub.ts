@@ -96,23 +96,26 @@ export class Pubsub extends Observable<PubsubMessage> {
       .pipe(
         mergeMap(async (peerId) => {
           const serializedMessage = serialize(message)
-          await this.ipfs.pubsub.publish(this.topic, serializedMessage)
-          return { peerId, serializedMessage }
+          const logMessage = { ...message, ...JSON.parse(textDecoder.decode(serializedMessage)) }
+          try {
+            await this.ipfs.pubsub.publish(this.topic, serializedMessage)
+            this.pubsubLogger.log({
+              peer: peerId,
+              event: 'published',
+              topic: this.topic,
+              message: logMessage,
+            })
+          } catch (error) {
+            this.pubsubLogger.log({
+              peer: peerId,
+              event: 'publish-error',
+              topic: this.topic,
+              message: logMessage,
+            })
+            this.logger.err(error)
+          }
         })
       )
-      .subscribe({
-        next: ({ peerId, serializedMessage }) => {
-          const logMessage = { ...message, ...JSON.parse(textDecoder.decode(serializedMessage)) }
-          this.pubsubLogger.log({
-            peer: peerId,
-            event: 'published',
-            topic: this.topic,
-            message: logMessage,
-          })
-        },
-        error: (error) => {
-          this.logger.err(error)
-        },
-      })
+      .subscribe()
   }
 }
