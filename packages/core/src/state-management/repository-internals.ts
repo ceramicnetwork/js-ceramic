@@ -45,6 +45,7 @@ const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const CACHE_HIT_LOCAL = 'cache_hit_local'
 const CACHE_HIT_MEMORY = 'cache_hit_memory'
 const CACHE_HIT_REMOTE = 'cache_hit_remote'
+const ANCHOR_POLL_COUNT = 'anchor_poll_count'
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const STREAM_SYNC = 'stream_sync'
 
@@ -299,6 +300,7 @@ export class RepositoryInternals {
   ): Subscription {
     const stopSignal = new Subject<void>()
     this.#numPendingAnchorSubscriptions++
+    Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
     const subscription = anchorStatus$
       .pipe(
         takeUntil(stopSignal),
@@ -387,9 +389,13 @@ export class RepositoryInternals {
         null,
         (err) => {
           this.#numPendingAnchorSubscriptions--
+          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
           throw err
         },
-        () => this.#numPendingAnchorSubscriptions--
+        () => {
+          this.#numPendingAnchorSubscriptions--
+          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
+        }
       )
     state$.add(subscription)
     return subscription
