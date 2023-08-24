@@ -8,7 +8,6 @@ import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { IncomingChannel, filterExternal, checkSlowObservable } from './incoming-channel.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
 
-
 const textDecoder = new TextDecoder('utf-8')
 
 /**
