@@ -115,7 +115,8 @@ export interface LogEntry {
 }
 
 /**
- * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits.
+ * Includes all additional data necessary to apply the commit without requiring any additional i/o
+ * to load anything else from ipfs or the p2p Ceramic network.
  */
 export interface CommitData extends LogEntry {
   /**
@@ -151,6 +152,33 @@ export interface CommitData extends LogEntry {
    */
   disableTimecheck?: boolean
 }
+
+/**
+ * A SyncedStreamLog that has also validated all the Anchor Commits, extracted the timestamp
+ * information from them, and applied them to all the commits in the log. This log can now be
+ * applied to a StreamState without needing to perform any additional i/o.
+ */
+export type AppliableStreamLog = {
+  log: Array<CommitData>
+  anchorTimestampsValidated: true
+}
+
+/**
+ * A SyncedStreamLog that has loaded all necessary data from the p2p network but has yet to validate
+ * the Anchor Commits and extract the timestamp information needed before the log can be applied.
+ */
+export type UnappliableStreamLog = {
+  log: Array<CommitData>
+  anchorTimestampsValidated: false
+}
+
+/**
+ * Log of commits loaded for a stream that contains all the information needed to apply the log and
+ * get a StreamState, without needing to do any additional i/o *to the p2p network*. Note there
+ * may still be i/o needed to validate the anchor commits against Ethereum and extract and apply the
+ * timestamps to the commits before the log can be fully applied.
+ */
+export type SyncedStreamLog = AppliableStreamLog | UnappliableStreamLog
 
 /**
  * Stream state

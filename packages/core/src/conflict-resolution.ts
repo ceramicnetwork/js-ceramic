@@ -195,7 +195,7 @@ export class HistoryLog {
  * @param anchorValidator
  * @param log
  */
-async function verifyAnchorAndApplyTimestamps(
+export async function verifyAnchorAndApplyTimestamps(
   logger: DiagnosticsLogger,
   dispatcher: Dispatcher,
   anchorValidator: AnchorValidator,

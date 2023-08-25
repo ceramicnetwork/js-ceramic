@@ -30,6 +30,7 @@ import type { ShutdownSignal } from './shutdown-signal.js'
 import { CAR, CARFactory, CarBlock } from 'cartonne'
 import all from 'it-all'
 import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
+import { IpfsInterface } from './loading/ipfs_interface.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -83,7 +84,7 @@ function restrictBlockSize(block: Uint8Array, cid: CID): void {
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
-export class Dispatcher {
+export class Dispatcher implements IpfsInterface {
   readonly messageBus: MessageBus
 
   /**
