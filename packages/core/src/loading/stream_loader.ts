@@ -1,15 +1,10 @@
 import { LogSyncer } from './log_syncer.js'
 import { TipFetcher } from './tip_fetcher.js'
 import { StateManipulator } from './state_manipulator.js'
-import {
-  AnchorValidator,
-  DiagnosticsLogger,
-  StreamState,
-  StreamUtils,
-} from '@ceramicnetwork/common'
+import { DiagnosticsLogger, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Dispatcher } from '../dispatcher.js'
-import { verifyAnchorAndApplyTimestamps } from '../conflict-resolution.js'
+import { AnchorTimestampExtractor } from './anchor_timestamp_extractor.js'
 
 /**
  * Class to contain all the logic for loading a stream, including fetching the relevant commit
@@ -23,7 +18,7 @@ export class StreamLoader {
     readonly dispatcher: Dispatcher,
     readonly tipFetcher: TipFetcher,
     readonly logSyncer: LogSyncer,
-    readonly anchorValidator: AnchorValidator,
+    readonly anchorTimestampExtractor: AnchorTimestampExtractor,
     readonly stateManipulator: StateManipulator
   ) {}
 
@@ -35,16 +30,10 @@ export class StreamLoader {
   async loadStream(streamID: StreamID, syncTimeoutSecs: number): Promise<StreamState> {
     const tip = await this.tipFetcher.findTip(streamID, syncTimeoutSecs)
     const logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, tip)
-    const logWithTimestamps = await verifyAnchorAndApplyTimestamps(
-      this.logger,
-      this.dispatcher,
-      this.anchorValidator,
-      logWithoutTimestamps.log
+    const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
+      logWithoutTimestamps
     )
-    return await this.stateManipulator.applyFullLog({
-      log: logWithTimestamps,
-      anchorTimestampsValidated: true,
-    })
+    return await this.stateManipulator.applyFullLog(logWithTimestamps)
   }
 
   /**
@@ -61,15 +50,9 @@ export class StreamLoader {
       tip,
       state.log[state.log.length - 1].cid
     )
-    const logWithTimestamps = await verifyAnchorAndApplyTimestamps(
-      this.logger,
-      this.dispatcher,
-      this.anchorValidator,
-      logWithoutTimestamps.log
+    const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
+      logWithoutTimestamps
     )
-    return await this.stateManipulator.applyLogToState(state, {
-      log: logWithTimestamps,
-      anchorTimestampsValidated: true,
-    })
+    return await this.stateManipulator.applyLogToState(state, logWithTimestamps)
   }
 }
