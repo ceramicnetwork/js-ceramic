@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link",
-  "version": "2.28.0-rc.0",
+  "version": "2.28.0-rc.1",
   "description": "Ceramic AccountLink stream type",
   "keywords": [
     "ceramic",
@@ -39,7 +39,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.33.0-rc.0",
+    "@ceramicnetwork/common": "^2.33.0-rc.1",
     "@ceramicnetwork/streamid": "^2.17.0",
     "caip": "~1.1.0",
     "did-resolver": "^4.0.1",
