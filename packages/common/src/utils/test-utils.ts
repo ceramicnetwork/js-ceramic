@@ -9,6 +9,7 @@ import { AnchorStatus } from '@ceramicnetwork/common'
 import type { CeramicApi } from '../ceramic-api.js'
 import first from 'it-first'
 import { create } from 'multiformats/hashes/digest'
+import { StreamUtils } from './stream-utils.js'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
@@ -71,7 +72,7 @@ export class TestUtils {
     stream: Stream,
     timeoutMs: number,
     predicate: (state: StreamState) => boolean,
-    onFailure: (state: StreamState) => void
+    onFailure?: (state: StreamState) => void
   ): Promise<void> {
     let now = new Date()
     const expiration = new Date(now.getTime() + timeoutMs)
@@ -84,7 +85,17 @@ export class TestUtils {
       now = new Date()
       await TestUtils.delay(100) // poll every 100ms
     }
-    onFailure(stream.state)
+    if (onFailure) {
+      onFailure(stream.state)
+    } else {
+      throw new Error(
+        `Timeout while waiting for desired state to be reached.  Current state: ${JSON.stringify(
+          StreamUtils.serializeState(stream.state),
+          null,
+          2
+        )}`
+      )
+    }
   }
 
   /**

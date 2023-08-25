@@ -128,6 +128,13 @@ export class Repository {
     return this.#deps.pinStore
   }
 
+  /**
+   * Returns the number of streams with writes that are waiting to be anchored by the CAS.
+   */
+  get numPendingAnchors(): number {
+    return this._internals.numPendingAnchorSubscriptions
+  }
+
   get anchorRequestStore(): AnchorRequestStore {
     return this.#deps.anchorRequestStore
   }
