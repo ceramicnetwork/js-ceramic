@@ -8,14 +8,13 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { IpfsInterface } from './ipfs_interface.js'
-import { verifyAnchorAndApplyTimestamps } from '../conflict-resolution.js'
 import { Dispatcher } from '../dispatcher.js'
+import { verifyAnchorAndApplyTimestamps } from '../conflict-resolution.js'
 
 export class StreamLoader {
   constructor(
     readonly logger: DiagnosticsLogger,
-    readonly ipfsInterface: IpfsInterface,
+    readonly dispatcher: Dispatcher,
     readonly tipFetcher: TipFetcher,
     readonly logSyncer: LogSyncer,
     readonly anchorValidator: AnchorValidator,
@@ -27,7 +26,7 @@ export class StreamLoader {
     const logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, tip)
     const logWithTimestamps = await verifyAnchorAndApplyTimestamps(
       this.logger,
-      this.ipfsInterface as Dispatcher, // todo remove typecast
+      this.dispatcher,
       this.anchorValidator,
       logWithoutTimestamps.log
     )
@@ -47,7 +46,7 @@ export class StreamLoader {
     )
     const logWithTimestamps = await verifyAnchorAndApplyTimestamps(
       this.logger,
-      this.ipfsInterface as Dispatcher, // todo remove typecast
+      this.dispatcher,
       this.anchorValidator,
       logWithoutTimestamps.log
     )
