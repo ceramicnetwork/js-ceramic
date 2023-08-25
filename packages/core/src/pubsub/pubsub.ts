@@ -1,5 +1,6 @@
 import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction } from 'rxjs'
-import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { map, catchError, mergeMap, withLatestFrom, tap } from 'rxjs/operators'
 import { IpfsApi } from '@ceramicnetwork/common'
 import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
@@ -42,6 +43,9 @@ function ipfsToPubsub(
   )
 }
 
+const PUBSUB_PUBLISHED = 'pubsub_published'
+const PUBSUB_RECEIVED = 'pubsub_received'
+
 /**
  * Receive and publish messages to IPFS pubsub.
  */
@@ -76,7 +80,10 @@ export class Pubsub extends Observable<PubsubMessage> {
             logger,
             `IPFS did not provide any internal messages, please check your IPFS configuration.`
           ),
-          ipfsToPubsub(this.peerId$, pubsubLogger, topic)
+          ipfsToPubsub(this.peerId$, pubsubLogger, topic),
+          tap((message) => {
+            Metrics.count(PUBSUB_RECEIVED, 1, { typ: message.typ })
+          })
         )
         .subscribe(subscriber)
     })
@@ -96,23 +103,27 @@ export class Pubsub extends Observable<PubsubMessage> {
       .pipe(
         mergeMap(async (peerId) => {
           const serializedMessage = serialize(message)
-          await this.ipfs.pubsub.publish(this.topic, serializedMessage)
-          return { peerId, serializedMessage }
+          const logMessage = { ...message, ...JSON.parse(textDecoder.decode(serializedMessage)) }
+          try {
+            await this.ipfs.pubsub.publish(this.topic, serializedMessage)
+            Metrics.count(PUBSUB_PUBLISHED, 1, { typ: message.typ }) // really attempted to publish...
+            this.pubsubLogger.log({
+              peer: peerId,
+              event: 'published',
+              topic: this.topic,
+              message: logMessage,
+            })
+          } catch (error) {
+            this.pubsubLogger.log({
+              peer: peerId,
+              event: 'publish-error',
+              topic: this.topic,
+              message: logMessage,
+            })
+            this.logger.err(error)
+          }
         })
       )
-      .subscribe({
-        next: ({ peerId, serializedMessage }) => {
-          const logMessage = { ...message, ...JSON.parse(textDecoder.decode(serializedMessage)) }
-          this.pubsubLogger.log({
-            peer: peerId,
-            event: 'published',
-            topic: this.topic,
-            message: logMessage,
-          })
-        },
-        error: (error) => {
-          this.logger.err(error)
-        },
-      })
+      .subscribe()
   }
 }
