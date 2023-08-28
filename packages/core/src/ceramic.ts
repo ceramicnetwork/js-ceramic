@@ -61,6 +61,10 @@ import { SyncApi } from './history-sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
 import { AnchorTimestampExtractor } from './stream-loading/anchor_timestamp_extractor.js'
+import { TipFetcher } from './stream-loading/tip_fetcher.js'
+import { LogSyncer } from './stream-loading/log_syncer.js'
+import { StateManipulator } from './stream-loading/state_manipulator.js'
+import { StreamLoader } from './stream-loading/stream_loader.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -283,6 +287,17 @@ export class Ceramic implements CeramicApi {
       this.context,
       this._streamHandlers
     )
+    const tipFetcher = new TipFetcher(this.dispatcher)
+    const logSyncer = new LogSyncer(this.dispatcher)
+    const stateManipulator = new StateManipulator()
+    const streamLoader = new StreamLoader(
+      this._logger,
+      this.dispatcher,
+      tipFetcher,
+      logSyncer,
+      anchorTimestampExtractor,
+      stateManipulator
+    )
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
       params.indexingConfig,
@@ -300,6 +315,7 @@ export class Ceramic implements CeramicApi {
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
       indexing: localIndex,
+      streamLoader,
     })
     this.syncApi = new SyncApi(
       {
