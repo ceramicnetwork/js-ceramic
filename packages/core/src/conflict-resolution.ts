@@ -1,7 +1,6 @@
 import type { CID } from 'multiformats/cid'
 import {
   AnchorStatus,
-  AnchorValidator,
   CommitData,
   CommitType,
   Context,
@@ -196,8 +195,8 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
 
 export class ConflictResolution {
   constructor(
-    public logger: DiagnosticsLogger,
-    public anchorTimestampExtractor: AnchorTimestampExtractor,
+    private readonly logger: DiagnosticsLogger,
+    private readonly anchorTimestampExtractor: AnchorTimestampExtractor,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,
     private readonly handlers: HandlersMap
