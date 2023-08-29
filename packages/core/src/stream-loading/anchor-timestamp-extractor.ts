@@ -83,6 +83,6 @@ export class AnchorTimestampExtractor {
       commitData.timestamp = timestamp
     }
 
-    return { commits: log.commits, anchorTimestampsValidated: true }
+    return { commits: log.commits, timestampStatus: 'validated' }
   }
 }

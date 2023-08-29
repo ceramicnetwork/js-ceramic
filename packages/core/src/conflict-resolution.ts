@@ -350,7 +350,7 @@ export class ConflictResolution {
     }
     const log = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps({
       commits: logWithoutTimestamps,
-      anchorTimestampsValidated: false,
+      timestampStatus: 'pending',
     })
     return this.applyLog(initialState, stateLog, log.commits, opts)
   }

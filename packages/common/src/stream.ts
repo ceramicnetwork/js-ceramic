@@ -160,7 +160,7 @@ export interface CommitData extends LogEntry {
  */
 export type AppliableStreamLog = {
   commits: Array<CommitData>
-  anchorTimestampsValidated: true
+  timestampStatus: 'validated'
 }
 
 /**
@@ -169,7 +169,7 @@ export type AppliableStreamLog = {
  */
 export type UnappliableStreamLog = {
   commits: Array<CommitData>
-  anchorTimestampsValidated: false
+  timestampStatus: 'pending'
 }
 
 /**
