@@ -16,7 +16,7 @@ import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
-import { ISyncQueryApi } from '../sync/interfaces.js'
+import { ISyncQueryApi } from '../history-sync/interfaces.js'
 import cloneDeep from 'lodash.clonedeep'
 import { indexNameFromTableName } from './migrations/1-create-model-table.js'
 

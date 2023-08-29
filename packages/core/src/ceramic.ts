@@ -57,10 +57,10 @@ import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
-import { SyncApi } from './sync/sync-api.js'
+import { SyncApi } from './history-sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { AnchorTimestampExtractor } from './loading/anchor_timestamp_extractor.js'
+import { AnchorTimestampExtractor } from './stream-loading/anchor_timestamp_extractor.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting

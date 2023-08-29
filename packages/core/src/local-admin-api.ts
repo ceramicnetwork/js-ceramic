@@ -7,7 +7,7 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LocalIndexApi } from './indexing/local-index-api.js'
-import { SyncApi } from './sync/sync-api.js'
+import { SyncApi } from './history-sync/sync-api.js'
 
 type NodeStatusFn = () => Promise<NodeStatusResponse>
 

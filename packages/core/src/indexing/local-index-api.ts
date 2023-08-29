@@ -1,6 +1,5 @@
 import type {
   BaseQuery,
-  FieldsIndex,
   IndexApi,
   ModelData,
   Page,
@@ -16,7 +15,7 @@ import { IndexingConfig } from './build-indexing.js'
 import { makeIndexApi } from '../initialization/make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
-import { ISyncQueryApi } from '../sync/interfaces.js'
+import { ISyncQueryApi } from '../history-sync/interfaces.js'
 
 /**
  * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
