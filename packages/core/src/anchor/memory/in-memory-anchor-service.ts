@@ -390,6 +390,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     car.blocks.put(await cidToBlock(proofCid))
     car.blocks.put(await cidToBlock(anchorCommitCid))
 
+    car.roots.push(anchorCommitCid)
+
     return car
   }
 
