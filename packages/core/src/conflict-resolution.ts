@@ -18,7 +18,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { HandlersMap } from './handlers-map.js'
 import { Utils } from './utils.js'
-import { AnchorTimestampExtractor } from './stream-loading/anchor_timestamp_extractor.js'
+import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
 
 /**
  * Given two different StreamStates representing two different conflicting histories of the same

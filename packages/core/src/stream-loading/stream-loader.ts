@@ -1,10 +1,10 @@
-import { LogSyncer } from './log_syncer.js'
-import { TipFetcher } from './tip_fetcher.js'
-import { StateManipulator } from './state_manipulator.js'
+import { LogSyncer } from './log-syncer.js'
+import { TipFetcher } from './tip-fetcher.js'
+import { StateManipulator } from './state-manipulator.js'
+import { AnchorTimestampExtractor } from './anchor-timestamp-extractor.js'
 import { DiagnosticsLogger, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Dispatcher } from '../dispatcher.js'
-import { AnchorTimestampExtractor } from './anchor_timestamp_extractor.js'
 
 /**
  * Class to contain all the logic for loading a stream, including fetching the relevant commit
