@@ -1,7 +1,6 @@
 import type { CID } from 'multiformats/cid'
 import {
   AnchorStatus,
-  AnchorValidator,
   CommitData,
   CommitType,
   Context,
@@ -19,51 +18,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { HandlersMap } from './handlers-map.js'
 import { Utils } from './utils.js'
-
-/**
- * Verifies anchor commit structure. Throws if the anchor commit is invalid in any way.
- *
- * @param dispatcher - To get raw blob from IPFS
- * @param anchorValidator - AnchorValidator to verify chain inclusion
- * @param commitData - Anchor commit data
- * @returns The anchor timestamp of the blockchain anchor transaction (in seconds).
- */
-async function verifyAnchorCommit(
-  dispatcher: Dispatcher,
-  anchorValidator: AnchorValidator,
-  commitData: CommitData
-): Promise<number> {
-  const proof = commitData.proof
-  const commitPath = commitData.commit.path
-
-  let prevCIDViaMerkleTree
-  try {
-    // optimize verification by using ipfs.dag.tree for fetching the nested CID
-    if (commitPath.length === 0) {
-      prevCIDViaMerkleTree = proof.root
-    } else {
-      const merkleTreeParentCommitPath =
-        '/root/' + commitPath.substr(0, commitPath.lastIndexOf('/'))
-      const last: string = commitPath.substr(commitPath.lastIndexOf('/') + 1)
-
-      const merkleTreeParentCommit = await dispatcher.retrieveFromIPFS(
-        commitData.commit.proof,
-        merkleTreeParentCommitPath
-      )
-      prevCIDViaMerkleTree = merkleTreeParentCommit[last]
-    }
-  } catch (e) {
-    throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
-  }
-
-  if (commitData.commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
-    throw new Error(
-      `The anchor commit proof ${proof.toString()} with path ${commitPath} points to invalid 'prev' commit`
-    )
-  }
-
-  return anchorValidator.validateChainInclusion(proof)
-}
+import { AnchorTimestampExtractor } from './loading/anchor_timestamp_extractor.js'
 
 /**
  * Given two different StreamStates representing two different conflicting histories of the same
@@ -187,39 +142,6 @@ export class HistoryLog {
 }
 
 /**
- * Validates all the anchor commits in the log, applying timestamp information to the CommitData
- * entries in the log along the way. Defers throwing errors resulting from anchor validation
- * failures until later, when the anchor commits are actually applied.
- * @param logger
- * @param dispatcher
- * @param anchorValidator
- * @param log
- */
-export async function verifyAnchorAndApplyTimestamps(
-  logger: DiagnosticsLogger,
-  dispatcher: Dispatcher,
-  anchorValidator: AnchorValidator,
-  log: CommitData[]
-): Promise<CommitData[]> {
-  let timestamp = null
-  for (let i = log.length - 1; i >= 0; i--) {
-    const commitData = log[i]
-    if (commitData.type == CommitType.ANCHOR) {
-      try {
-        timestamp = await verifyAnchorCommit(dispatcher, anchorValidator, commitData)
-      } catch (err) {
-        // Save the error for now to be thrown when trying to actually apply the anchor commit.
-        logger.warn(`Error when validating anchor commit: ${err}`)
-        commitData.anchorValidationError = err
-      }
-    }
-    commitData.timestamp = timestamp
-  }
-
-  return log
-}
-
-/**
  * Fetch log to find a connection for the given CID.
  * Expands SignedCommits and adds a CID into the log for their inner `link` commits
  *
@@ -273,8 +195,8 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
 
 export class ConflictResolution {
   constructor(
-    public logger: DiagnosticsLogger,
-    public anchorValidator: AnchorValidator,
+    private readonly logger: DiagnosticsLogger,
+    private readonly anchorTimestampExtractor: AnchorTimestampExtractor,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,
     private readonly handlers: HandlersMap
@@ -423,16 +345,14 @@ export class ConflictResolution {
 
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState)
     const logWithoutTimestamps = await fetchLog(this.dispatcher, tip, stateLog)
-    const log = await verifyAnchorAndApplyTimestamps(
-      this.logger,
-      this.dispatcher,
-      this.anchorValidator,
-      logWithoutTimestamps
-    )
-
-    if (log.length) {
-      return this.applyLog(initialState, stateLog, log, opts)
+    if (!logWithoutTimestamps.length) {
+      return null
     }
+    const log = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps({
+      commits: logWithoutTimestamps,
+      anchorTimestampsValidated: false,
+    })
+    return this.applyLog(initialState, stateLog, log.commits, opts)
   }
 
   /**

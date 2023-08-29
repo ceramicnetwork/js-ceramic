@@ -159,7 +159,7 @@ export interface CommitData extends LogEntry {
  * applied to a StreamState without needing to perform any additional i/o.
  */
 export type AppliableStreamLog = {
-  log: Array<CommitData>
+  commits: Array<CommitData>
   anchorTimestampsValidated: true
 }
 
@@ -168,7 +168,7 @@ export type AppliableStreamLog = {
  * the Anchor Commits and extract the timestamp information needed before the log can be applied.
  */
 export type UnappliableStreamLog = {
-  log: Array<CommitData>
+  commits: Array<CommitData>
   anchorTimestampsValidated: false
 }
 

@@ -60,6 +60,7 @@ import { AnchorResumingService } from './state-management/anchor-resuming-servic
 import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
+import { AnchorTimestampExtractor } from './loading/anchor_timestamp_extractor.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -270,9 +271,14 @@ export class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
+    const anchorTimestampExtractor = new AnchorTimestampExtractor(
+      this._logger,
+      this.dispatcher,
+      modules.anchorValidator
+    )
     const conflictResolution = new ConflictResolution(
-      this.loggerProvider.getDiagnosticsLogger(),
-      modules.anchorValidator,
+      this._logger,
+      anchorTimestampExtractor,
       this.dispatcher,
       this.context,
       this._streamHandlers
