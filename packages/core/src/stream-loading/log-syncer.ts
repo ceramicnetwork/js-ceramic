@@ -1,7 +1,11 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { UnappliableStreamLog } from '@ceramicnetwork/common'
-import { Dispatcher } from '../dispatcher.js'
+
+interface IpfsCommitLoader {
+  retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any>
+  retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
+}
 
 /**
  * Used to load all the relevant data for a Stream log from the p2p network that will allow that
@@ -10,7 +14,7 @@ import { Dispatcher } from '../dispatcher.js'
  * can be applied.
  */
 export class LogSyncer {
-  constructor(readonly dispatcher: Dispatcher) {}
+  constructor(readonly ipfsLoader: IpfsCommitLoader) {}
 
   /**
    * Given a StreamID and a known tip for that Stream, load all the commits from the tip back to

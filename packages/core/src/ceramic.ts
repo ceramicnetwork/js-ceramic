@@ -287,12 +287,11 @@ export class Ceramic implements CeramicApi {
       this.context,
       this._streamHandlers
     )
-    const tipFetcher = new TipFetcher(this.dispatcher)
+    const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
     const logSyncer = new LogSyncer(this.dispatcher)
     const stateManipulator = new StateManipulator()
     const streamLoader = new StreamLoader(
       this._logger,
-      this.dispatcher,
       tipFetcher,
       logSyncer,
       anchorTimestampExtractor,

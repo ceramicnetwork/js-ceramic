@@ -1,4 +1,3 @@
-import { Dispatcher } from '../dispatcher.js'
 import {
   AnchorValidator,
   AppliableStreamLog,
@@ -7,6 +6,11 @@ import {
   DiagnosticsLogger,
   UnappliableStreamLog,
 } from '@ceramicnetwork/common'
+import { CID } from 'multiformats/cid'
+
+interface IpfsRecordLoader {
+  retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
+}
 
 /**
  * Responsible for validating the Anchor Commits in a Stream log, extracting the timestamp
@@ -16,7 +20,7 @@ import {
 export class AnchorTimestampExtractor {
   constructor(
     readonly logger: DiagnosticsLogger,
-    readonly dispatcher: Dispatcher,
+    readonly ipfsLoader: IpfsRecordLoader,
     readonly anchorValidator: AnchorValidator
   ) {}
 
@@ -39,7 +43,7 @@ export class AnchorTimestampExtractor {
           '/root/' + commitPath.substr(0, commitPath.lastIndexOf('/'))
         const last: string = commitPath.substr(commitPath.lastIndexOf('/') + 1)
 
-        const merkleTreeParentCommit = await this.dispatcher.retrieveFromIPFS(
+        const merkleTreeParentCommit = await this.ipfsLoader.retrieveFromIPFS(
           commitData.commit.proof,
           merkleTreeParentCommitPath
         )
