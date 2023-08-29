@@ -1,18 +1,12 @@
 import { jest } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
-import { LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { Repository, RepositoryDependencies } from '../state-management/repository.js'
-import tmp from 'tmp-promise'
-import { PinStore } from '../store/pin-store.js'
+import { IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { TaskQueue } from '../ancillary/task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { ShutdownSignal } from '../shutdown-signal.js'
-import { LevelDbStore } from '../store/level-db-store.js'
-import { StreamStateStore } from '../store/stream-state-store.js'
+import { createDispatcher } from './create-dispatcher.js'
 
-const TOPIC = '/ceramic'
+const TOPIC = '/ceramic/test54321'
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -23,34 +17,11 @@ describe('Dispatcher with real ipfs over http', () => {
 
   let dispatcher: Dispatcher
   let ipfsClient: IpfsApi
-  let shutdownSignal: ShutdownSignal
 
   beforeAll(async () => {
     ipfsClient = await createIPFS()
 
-    const loggerProvider = new LoggerProvider()
-    const levelPath = await tmp.tmpName()
-    const levelStore = new LevelDbStore(levelPath, 'test')
-    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
-    stateStore.open(levelStore)
-    const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
-    const pinStore = {
-      stateStore,
-    } as unknown as PinStore
-    repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    shutdownSignal = new ShutdownSignal()
-
-    dispatcher = new Dispatcher(
-      ipfsClient,
-      TOPIC,
-      repository,
-      loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub'),
-      shutdownSignal,
-      true,
-      10,
-      new TaskQueue()
-    )
+    dispatcher = await createDispatcher(ipfsClient, TOPIC)
     dispatcher._ipfsTimeout = 3000 // time out ipfs.dag.get after 3 seconds
   })
 
@@ -103,7 +74,7 @@ describe('Dispatcher with real ipfs over http', () => {
     if (isJsIpfsNode) {
       await TestUtils.delay(1000)
     }
-    shutdownSignal.abort()
+    dispatcher.shutdownSignal.abort()
     await expect(getPromise).rejects.toThrow(/aborted/)
   }, 50000)
 })

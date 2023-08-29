@@ -156,6 +156,10 @@ export class Dispatcher {
     }
   }
 
+  get shutdownSignal(): ShutdownSignal {
+    return this._shutdownSignal
+  }
+
   async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
     const ipfsId = await this._ipfs.id()
     const peerId = ipfsId.id.toString()
