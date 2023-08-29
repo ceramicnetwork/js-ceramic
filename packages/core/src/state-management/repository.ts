@@ -28,6 +28,7 @@ import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { RepositoryInternals } from './repository-internals.js'
+import { StreamLoader } from '../stream-loading/stream_loader.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -41,6 +42,7 @@ export type RepositoryDependencies = {
   anchorService: AnchorService
   conflictResolution: ConflictResolution
   indexing: LocalIndexApi
+  streamLoader: StreamLoader
 }
 
 enum OperationType {
@@ -126,6 +128,10 @@ export class Repository {
 
   get pinStore(): PinStore {
     return this.#deps.pinStore
+  }
+
+  private get streamLoader(): StreamLoader {
+    return this.#deps.streamLoader
   }
 
   /**
