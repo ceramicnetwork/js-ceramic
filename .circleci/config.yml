@@ -31,6 +31,9 @@ commands:
       - run: npm run build
       - run: npm run lint
       - run:
+          name: Run ceramic-one
+          command: ceramic-one daemon &
+      - run:
           name: Test
           command: npm run test
           no_output_timeout: 30m
@@ -52,7 +55,7 @@ commands:
 jobs:
   with-go-ipfs:
     machine:
-      image: ubuntu-2004:202107-02
+      image: ubuntu-2204:2023.07.2
     environment:
       IPFS_FLAVOR: go
     steps:
@@ -62,9 +65,21 @@ jobs:
           command: npm run docs
           environment:
             NODE_OPTIONS: '--max_old_space_size=4096'
+  with-rust-ipfs:
+    machine:
+      image: ubuntu-2204:2023.07.2
+    environment:
+      IPFS_FLAVOR: rust
+    steps:
+      - build-and-test
+      - run:
+          name: Build docs
+          command: npm run docs
+          environment:
+            NODE_OPTIONS: '--max_old_space_size=4096'
   dispatch-event:
     machine:
-      image: ubuntu-2004:202107-02
+      image: ubuntu-2204:2023.07.2
     steps:
       - send-dispatch-event
 
@@ -77,6 +92,8 @@ workflows:
             equal: [ "ukstv", << pipeline.parameters.GHA_Actor >> ]
     jobs:
       - with-go-ipfs
+      - with-rust-ipfs
       - dispatch-event:
           requires:
             - with-go-ipfs
+            - with-rust-ipfs

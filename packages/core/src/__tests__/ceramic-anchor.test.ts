@@ -22,7 +22,18 @@ describe('Ceramic anchoring', () => {
   let ipfs3: IpfsApi
 
   beforeAll(async () => {
-    const instances = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    const instances = await Promise.all(Array.from({ length: 3 }).map((_, i) => createIPFS(
+      // Go IPFS options
+      {},
+      // disposable
+      true,
+      // Rust IPFS options
+      {
+        type: 'remote',
+        // Assume three nodes are running on ports 5001, 5002 and 5003
+        port: 5001 + i
+      }
+    )))
     ipfs1 = instances[0]
     ipfs2 = instances[1]
     ipfs3 = instances[2]
