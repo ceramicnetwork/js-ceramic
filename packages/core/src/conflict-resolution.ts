@@ -150,6 +150,8 @@ export class HistoryLog {
  * @param stateLog - Log from the current stream state
  * @param unappliedCommits - Unapplied commits found so far
  * @private
+ * @deprecated
+ * TODO(CDB-2727): Delete this in favor of using the LogSyncer.
  */
 export async function fetchLog(
   dispatcher: Dispatcher,
