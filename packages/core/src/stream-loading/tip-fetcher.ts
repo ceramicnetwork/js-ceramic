@@ -12,7 +12,7 @@ interface IPFSPubsubQuerier {
  * know about for this Stream.
  */
 export class TipFetcher {
-  constructor(readonly pubsubQuerier: IPFSPubsubQuerier) {}
+  constructor(private readonly pubsubQuerier: IPFSPubsubQuerier) {}
 
   async findTip(streamID: StreamID, syncTimeoutSecs: number): Promise<CID> {
     throw new Error(`Not yet implemented`)

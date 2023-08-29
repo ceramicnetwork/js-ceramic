@@ -13,11 +13,11 @@ import { StreamID } from '@ceramicnetwork/streamid'
  */
 export class StreamLoader {
   constructor(
-    readonly logger: DiagnosticsLogger,
-    readonly tipFetcher: TipFetcher,
-    readonly logSyncer: LogSyncer,
-    readonly anchorTimestampExtractor: AnchorTimestampExtractor,
-    readonly stateManipulator: StateManipulator
+    private readonly logger: DiagnosticsLogger,
+    private readonly tipFetcher: TipFetcher,
+    private readonly logSyncer: LogSyncer,
+    private readonly anchorTimestampExtractor: AnchorTimestampExtractor,
+    private readonly stateManipulator: StateManipulator
   ) {}
 
   /**

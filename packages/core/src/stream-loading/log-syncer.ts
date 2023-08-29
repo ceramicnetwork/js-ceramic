@@ -14,7 +14,7 @@ interface IpfsCommitLoader {
  * can be applied.
  */
 export class LogSyncer {
-  constructor(readonly ipfsLoader: IpfsCommitLoader) {}
+  constructor(private readonly ipfsLoader: IpfsCommitLoader) {}
 
   /**
    * Given a StreamID and a known tip for that Stream, load all the commits from the tip back to

@@ -19,9 +19,9 @@ interface IpfsRecordLoader {
  */
 export class AnchorTimestampExtractor {
   constructor(
-    readonly logger: DiagnosticsLogger,
-    readonly ipfsLoader: IpfsRecordLoader,
-    readonly anchorValidator: AnchorValidator
+    private readonly logger: DiagnosticsLogger,
+    private readonly ipfsLoader: IpfsRecordLoader,
+    private readonly anchorValidator: AnchorValidator
   ) {}
 
   /**
