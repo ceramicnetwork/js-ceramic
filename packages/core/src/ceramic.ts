@@ -336,6 +336,10 @@ export class Ceramic implements CeramicApi {
     return this.repository.index
   }
 
+  get pubsubTopic(): string {
+    return this._networkOptions.pubsubTopic
+  }
+
   /**
    * Get IPFS instance
    */
