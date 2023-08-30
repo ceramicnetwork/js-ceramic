@@ -72,6 +72,8 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
         sync: SyncOptions.SYNC_ALWAYS,
       })
     ).rejects.toThrow(/deadline exceeded/)
+
+    await ipfs2.stop()
   })
 
   test('Pubsub responds with record that isnt a real commit', async () => {
@@ -102,6 +104,8 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     })
     expect(doc.content).toEqual(content)
     expect(doc.state.log.length).toEqual(1)
+
+    await ipfs2.stop()
   })
 
   test('Pubsub responds with tip from a different stream', async () => {
@@ -134,5 +138,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     })
     expect(doc.content).toEqual(content)
     expect(doc.state.log.length).toEqual(1)
+
+    await ipfs2.stop()
   })
 })
