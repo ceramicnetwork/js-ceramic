@@ -72,14 +72,6 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
         sync: SyncOptions.SYNC_ALWAYS,
       })
     ).rejects.toThrow(/deadline exceeded/)
-
-    // const doc = await TileDocument.load(ceramic, streamID, {
-    //   sync: SyncOptions.SYNC_ALWAYS,
-    // })
-
-    //
-    // expect(doc.content).toEqual(content)
-    // expect(doc.state.log.length).toEqual(1)
   })
 
   test('Pubsub responds with record that isnt a real commit', async () => {
