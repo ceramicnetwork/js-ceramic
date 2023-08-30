@@ -18,7 +18,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     ceramic = await createCeramic(ipfs)
 
     // speed up how quickly the dispatcher gives up on loading a non-existent commit from ipfs.
-    ceramic.dispatcher._ipfsTimeout = 1000
+    ceramic.dispatcher._ipfsTimeout = 500
   }, 12000)
 
   afterAll(async () => {
