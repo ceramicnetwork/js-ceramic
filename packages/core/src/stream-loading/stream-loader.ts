@@ -43,10 +43,10 @@ export class StreamLoader {
   async syncStream(state: StreamState, syncTimeoutSecs: number): Promise<StreamState> {
     const streamID = StreamUtils.streamIdFromState(state)
     const tip = await this.tipFetcher.findTip(streamID, syncTimeoutSecs)
-    const logWithoutTimestamps = await this.logSyncer.syncLogUntil(
+    const logWithoutTimestamps = await this.logSyncer.syncLogUntilMatch(
       streamID,
       tip,
-      state.log[state.log.length - 1].cid
+      state.log.map((logEntry) => logEntry.cid)
     )
     const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
       logWithoutTimestamps
