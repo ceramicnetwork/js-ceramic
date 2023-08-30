@@ -272,7 +272,7 @@ export class Repository {
       const pinStr = opts.pin ? 'pin' : 'unpin'
       const opStr = opType == OperationType.UPDATE ? 'update' : 'load'
       //TODO(CDB-2314): An error should be thrown once fully deprecated
-      console.warn(
+      this.logger.warn(
         `Cannot pin or unpin streams through the CRUD APIs. To change stream pin state use the admin.pin API with an authenticated admin DID. Attempting to ${pinStr} stream ${StreamUtils.streamIdFromState(
           state$.state
         ).toString()} as part of a ${opStr} operation`

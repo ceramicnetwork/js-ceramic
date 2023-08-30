@@ -314,7 +314,7 @@ export class Dispatcher {
       })
       return result != null
     } catch (err) {
-      console.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
+      this._logger.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
       return false
     }
   }
@@ -376,7 +376,7 @@ export class Dispatcher {
           err.name == 'TimeoutError' ||
           err.message == 'Request timed out'
         ) {
-          console.warn(
+          this._logger.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           Metrics.count(ERROR_IPFS_TIMEOUT, 1)
