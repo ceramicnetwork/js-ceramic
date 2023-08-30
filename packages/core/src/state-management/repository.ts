@@ -28,7 +28,7 @@ import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { RepositoryInternals } from './repository-internals.js'
-import { StreamLoader } from '../stream-loading/stream_loader.js'
+import { StreamLoader } from '../stream-loading/stream-loader.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 

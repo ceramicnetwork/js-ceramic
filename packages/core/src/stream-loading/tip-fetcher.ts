@@ -1,6 +1,10 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { Dispatcher } from '../dispatcher.js'
+import { Observable } from 'rxjs'
+
+interface IPFSPubsubQuerier {
+  queryNetwork(streamId: StreamID): Observable<CID>
+}
 
 /**
  * Class for resolving a StreamID to the Tip (the CID of the most recent commit in the stream's
@@ -8,7 +12,7 @@ import { Dispatcher } from '../dispatcher.js'
  * know about for this Stream.
  */
 export class TipFetcher {
-  constructor(readonly dispatcher: Dispatcher) {}
+  constructor(private readonly pubsubQuerier: IPFSPubsubQuerier) {}
 
   async findTip(streamID: StreamID, syncTimeoutSecs: number): Promise<CID> {
     throw new Error(`Not yet implemented`)

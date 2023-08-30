@@ -60,11 +60,11 @@ import { AnchorResumingService } from './state-management/anchor-resuming-servic
 import { SyncApi } from './history-sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { AnchorTimestampExtractor } from './stream-loading/anchor_timestamp_extractor.js'
-import { TipFetcher } from './stream-loading/tip_fetcher.js'
-import { LogSyncer } from './stream-loading/log_syncer.js'
-import { StateManipulator } from './stream-loading/state_manipulator.js'
-import { StreamLoader } from './stream-loading/stream_loader.js'
+import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
+import { TipFetcher } from './stream-loading/tip-fetcher.js'
+import { LogSyncer } from './stream-loading/log-syncer.js'
+import { StateManipulator } from './stream-loading/state-manipulator.js'
+import { StreamLoader } from './stream-loading/stream-loader.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -287,12 +287,11 @@ export class Ceramic implements CeramicApi {
       this.context,
       this._streamHandlers
     )
-    const tipFetcher = new TipFetcher(this.dispatcher)
+    const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
     const logSyncer = new LogSyncer(this.dispatcher)
     const stateManipulator = new StateManipulator()
     const streamLoader = new StreamLoader(
       this._logger,
-      this.dispatcher,
       tipFetcher,
       logSyncer,
       anchorTimestampExtractor,
