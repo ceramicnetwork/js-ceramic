@@ -136,6 +136,10 @@ export class TestUtils {
     return CID.create(version, codec, create(hasher, random.randomBytes(32)))
   }
 
+  static randomStreamID(): StreamID {
+    return new StreamID(0, this.randomCID())
+  }
+
   /**
    * Trigger anchor for a stream. WARNING: can only work on Ceramic Core.
    * @param ceramic Ceramic Core instance.

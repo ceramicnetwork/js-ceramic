@@ -2,19 +2,15 @@ import { expect, jest, it, describe, beforeEach, afterEach } from '@jest/globals
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { CommitType, StreamState, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
-import { Repository, RepositoryDependencies } from '../state-management/repository.js'
-import tmp from 'tmp-promise'
-import { PinStore } from '../store/pin-store.js'
+import { Repository } from '../state-management/repository.js'
 import { RunningState } from '../state-management/running-state.js'
 import { StateManager } from '../state-management/state-manager.js'
-import { ShutdownSignal } from '../shutdown-signal.js'
-import { LevelDbStore } from '../store/level-db-store.js'
-import { StreamStateStore } from '../store/stream-state-store.js'
 import { CARFactory } from 'cartonne'
 import * as dagJoseCodec from 'dag-jose'
 import * as dagCborCodec from '@ipld/dag-cbor'
+import { createDispatcher } from './create-dispatcher.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafyreihbje3f5oj6vlszlqmnrtrsmuukrjurpsv6uus4siwgikldp6wnty')
@@ -63,7 +59,6 @@ const carFactory = new CARFactory()
 describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher
   let repository: Repository
-  const loggerProvider = new LoggerProvider()
   const ipfs = mock_ipfs
 
   beforeEach(async () => {
@@ -73,25 +68,8 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    const levelPath = await tmp.tmpName()
-    const levelStore = new LevelDbStore(levelPath, 'test')
-    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
-    await stateStore.open(levelStore)
-    repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
-    const pinStore = {
-      stateStore,
-    } as unknown as PinStore
-    repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    dispatcher = new Dispatcher(
-      ipfs as unknown as IpfsApi,
-      TOPIC,
-      repository,
-      loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub'),
-      new ShutdownSignal(),
-      true,
-      10
-    )
+    dispatcher = await createDispatcher(ipfs as unknown as IpfsApi, TOPIC)
+    repository = dispatcher.repository
   })
 
   afterEach(async () => {

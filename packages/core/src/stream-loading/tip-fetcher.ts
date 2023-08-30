@@ -1,6 +1,6 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { Observable } from 'rxjs'
+import { lastValueFrom, Observable, timer, takeUntil } from 'rxjs'
 
 interface IPFSPubsubQuerier {
   queryNetwork(streamId: StreamID): Observable<CID>
@@ -14,7 +14,19 @@ interface IPFSPubsubQuerier {
 export class TipFetcher {
   constructor(private readonly pubsubQuerier: IPFSPubsubQuerier) {}
 
-  async findTip(streamID: StreamID, syncTimeoutSecs: number): Promise<CID> {
-    throw new Error(`Not yet implemented`)
+  /**
+   * Queries pubsub for the current tip for the given StreamID.  If no response messages come
+   * back within 'syncTimeoutSecs', returns null.  Note that there's no guarantee that the CID
+   * that comes back from this is *actually* a valid tip for this stream, that validation needs to
+   * happen later.
+   * @param streamID
+   * @param syncTimeoutSecs
+   */
+  async findTip(streamID: StreamID, syncTimeoutSecs: number): Promise<CID | null> {
+    const tipSource$ = this.pubsubQuerier.queryNetwork(streamID)
+    const timeoutMillis = syncTimeoutSecs * 1000
+    return lastValueFrom(tipSource$.pipe(takeUntil(timer(timeoutMillis))), {
+      defaultValue: null,
+    })
   }
 }
