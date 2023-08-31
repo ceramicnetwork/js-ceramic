@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { JobQueue } from '../../../state-management/job-queue.js'
+import { JobQueue } from '@ceramicnetwork/job-queue'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { of, type Observable, map } from 'rxjs'

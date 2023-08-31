@@ -9,7 +9,7 @@ import {
   type RebuildAnchorJobData,
   REBUILD_ANCHOR_JOB,
 } from '../interfaces.js'
-import type { Worker, Job } from '../../state-management/job-queue.js'
+import type { Worker, Job } from '@ceramicnetwork/job-queue'
 import { CID } from 'multiformats/cid'
 import { pathString } from '@ceramicnetwork/anchor-utils'
 import PQueue from 'p-queue'

@@ -46,6 +46,7 @@
     "@ceramicnetwork/codecs": "^1.8.0",
     "@ceramicnetwork/common": "^2.33.0",
     "@ceramicnetwork/ipfs-topology": "^2.27.0",
+    "@ceramicnetwork/job-queue": "^1.0.0",
     "@ceramicnetwork/observability": "^1.4.1",
     "@ceramicnetwork/pinning-aggregation": "^2.25.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^2.25.0",
@@ -83,7 +84,6 @@
     "multiformats": "^11.0.1",
     "p-queue": "7.3.0",
     "pg": "^8.7.3",
-    "pg-boss": "^8.2.0",
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
     "uint8arrays": "^4.0.3"

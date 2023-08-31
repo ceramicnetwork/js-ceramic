@@ -1,6 +1,6 @@
 import { default as PgBoss } from 'pg-boss'
 import { type SendOptions } from 'pg-boss'
-import { IJobQueue, Job, Worker } from '../../state-management/job-queue.js'
+import { IJobQueue, Job, Worker } from '@ceramicnetwork/job-queue'
 import { BlockProofs, createBlocksProofsLoader } from '@ceramicnetwork/anchor-listener'
 import type { Provider } from '@ethersproject/providers'
 import { concatMap, lastValueFrom, of, catchError } from 'rxjs'
