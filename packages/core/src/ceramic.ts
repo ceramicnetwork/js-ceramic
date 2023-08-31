@@ -904,6 +904,14 @@ export class Ceramic implements CeramicApi {
   }
 
   /**
+   * Load stream state for indexing queries, bypassing the stream cache and repository loading queue
+   * @param streamId - Stream ID
+   */
+  async loadStreamState(streamId: StreamID): Promise<StreamState | undefined> {
+    return await this.repository.streamState(streamId)
+  }
+
+  /**
    * Used to ensure that the given genesis commit contents already exist on IPFS so we don't time
    * out trying to load it.
    * @param genesis

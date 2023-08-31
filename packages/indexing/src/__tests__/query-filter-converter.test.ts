@@ -1,0 +1,284 @@
+import pkg from 'knex'
+const { knex } = pkg
+import { convertQueryFilter, DATA_FIELD } from '../query-filter-converter.js'
+import { QueryFilters } from '../query-filter-parser.js'
+
+function createQuery(query: QueryFilters): string {
+  const result = convertQueryFilter(query)
+  return knex('test')
+    .from('test')
+    .select(DATA_FIELD)
+    .where(result.where)
+    .toQuery()
+    .replaceAll('`', "'")
+}
+
+describe('Should convert query filters', () => {
+  test('that are composed of a single doc filter', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: '=', value: 1 },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1)))`
+    )
+  })
+  test('that are composed of a single doc filter with float', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: '=', value: 1.2 },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1.2)))`
+    )
+  })
+  test('that are composed of a single doc filter with in string query', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'string', op: 'in', value: ['a', 'b'] },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((cast(${DATA_FIELD}->>'a' as varchar) in ('a','b')))`
+    )
+  })
+  test('that are composed of a single doc filter with null', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: 'null', value: true },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((${DATA_FIELD}->>'a' is null)))`
+    )
+  })
+  test('that are composed of a single doc filter with negated null', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: 'null', value: false },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((${DATA_FIELD}->>'a' is not null)))`
+    )
+  })
+  test('that are composed of a single doc filter with string equal', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'string', op: '=', value: 'test_str' },
+      },
+    })
+
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as varchar)='test_str')))`
+    )
+  })
+  test('that are composed of a single doc filter with multiple values', () => {
+    const query = createQuery({
+      type: 'where',
+      value: {
+        a: { type: 'number', op: '=', value: 1 },
+        b: { type: 'number', op: 'in', value: [2, 3] },
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(${DATA_FIELD}->>'b' as numeric) in (2,3)))`
+    )
+    const query2 = createQuery({
+      type: 'where',
+      value: {
+        b: { type: 'number', op: 'in', value: [2, 3] },
+        a: { type: 'number', op: '=', value: 1 },
+      },
+    })
+    expect(query2).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3)) and ((cast(${DATA_FIELD}->>'a' as numeric)=1)))`
+    )
+  })
+  test('that are composed of a single doc filter with multiple values, negated', () => {
+    const query = createQuery({
+      type: 'not',
+      value: {
+        type: 'where',
+        value: {
+          a: { type: 'number', op: '=', value: 1 },
+          b: { type: 'number', op: 'in', value: [2, 3] },
+        },
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (not (((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(${DATA_FIELD}->>'b' as numeric) in (2,3))))`
+    )
+    const query2 = createQuery({
+      type: 'where',
+      value: {
+        b: { type: 'number', op: 'in', value: [2, 3] },
+        a: { type: 'number', op: '=', value: 1 },
+      },
+    })
+    expect(query2).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3)) and ((cast(${DATA_FIELD}->>'a' as numeric)=1)))`
+    )
+  })
+  test('that are composed of and doc filters', () => {
+    const query = createQuery({
+      type: 'and',
+      value: [
+        {
+          type: 'where',
+          value: {
+            a: { type: 'number', op: '=', value: 1 },
+          },
+        },
+        {
+          type: 'where',
+          value: {
+            b: { type: 'number', op: 'in', value: [2, 3] },
+          },
+        },
+      ],
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as numeric)=1))) and ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3))))`
+    )
+  })
+  test('that are composed of or doc filters', () => {
+    const query = createQuery({
+      type: 'or',
+      value: [
+        {
+          type: 'where',
+          value: {
+            a: { type: 'number', op: '=', value: 1 },
+          },
+        },
+        {
+          type: 'where',
+          value: {
+            b: { type: 'number', op: 'in', value: [2, 3] },
+          },
+        },
+      ],
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where ((((cast(${DATA_FIELD}->>'a' as numeric)=1))) or ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3))))`
+    )
+  })
+  test('that are composed of or doc filters negated', () => {
+    const query = createQuery({
+      type: 'not',
+      value: {
+        type: 'or',
+        value: [
+          {
+            type: 'where',
+            value: {
+              a: { type: 'number', op: '=', value: 1 },
+            },
+          },
+          {
+            type: 'where',
+            value: {
+              b: { type: 'number', op: 'in', value: [2, 3] },
+            },
+          },
+        ],
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (not ((((cast(${DATA_FIELD}->>'a' as numeric)=1))) or ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3)))))`
+    )
+  })
+  test('that are composed of and doc filters negated', () => {
+    const query = createQuery({
+      type: 'not',
+      value: {
+        type: 'and',
+        value: [
+          {
+            type: 'where',
+            value: {
+              a: { type: 'number', op: '=', value: 1 },
+            },
+          },
+          {
+            type: 'where',
+            value: {
+              b: { type: 'number', op: 'in', value: [2, 3] },
+            },
+          },
+        ],
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (not ((((cast(${DATA_FIELD}->>'a' as numeric)=1))) and ((cast(${DATA_FIELD}->>'b' as numeric) in (2,3)))))`
+    )
+  })
+  test('that are composed of or doc filters that have multiple values, negated', () => {
+    const query = createQuery({
+      type: 'not',
+      value: {
+        type: 'or',
+        value: [
+          {
+            type: 'where',
+            value: {
+              a: { type: 'number', op: '=', value: 1 },
+              b: { type: 'number', op: 'in', value: [2, 3] },
+            },
+          },
+          {
+            type: 'where',
+            value: {
+              c: { type: 'number', op: '<=', value: 6 },
+              d: { type: 'number', op: 'null', value: true },
+            },
+          },
+        ],
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (not ((((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(${DATA_FIELD}->>'b' as numeric) in (2,3))) or (((cast(${DATA_FIELD}->>'c' as numeric)<=6)) and ((${DATA_FIELD}->>'d' is null)))))`
+    )
+  })
+  test('that are composed of and doc filters that have multiple values, negated', () => {
+    const query = createQuery({
+      type: 'not',
+      value: {
+        type: 'and',
+        value: [
+          {
+            type: 'where',
+            value: {
+              a: { type: 'number', op: '=', value: 1 },
+              b: { type: 'number', op: 'in', value: [2, 3] },
+            },
+          },
+          {
+            type: 'where',
+            value: {
+              c: { type: 'number', op: '<=', value: 6 },
+              d: { type: 'number', op: 'null', value: true },
+            },
+          },
+        ],
+      },
+    })
+    expect(query).toEqual(
+      `select '${DATA_FIELD}' from 'test' where (not ((((cast(${DATA_FIELD}->>'a' as numeric)=1)) and (cast(${DATA_FIELD}->>'b' as numeric) in (2,3))) and (((cast(${DATA_FIELD}->>'c' as numeric)<=6)) and ((${DATA_FIELD}->>'d' is null)))))`
+    )
+  })
+})
