@@ -35,6 +35,7 @@ import {
   type ICandidate,
 } from '@ceramicnetwork/anchor-utils'
 import { FauxBloomMetadata } from './faux-bloom-metadata.js'
+import { createCeramic } from '../../__tests__/create-ceramic.js'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -180,11 +181,11 @@ class MockProvidersCache {
   }
 }
 
-jest.unstable_mockModule('../../providers-cache.js', () => {
-  return {
-    ProvidersCache: MockProvidersCache,
-  }
-})
+// jest.unstable_mockModule('../../providers-cache.js', () => {
+//   return {
+//     ProvidersCache: MockProvidersCache,
+//   }
+// })
 
 const extractStreamStates = (page: Page<StreamState | null>): Array<StreamState> => {
   if (page.edges.find((edge) => edge.node === null)) {
@@ -272,9 +273,6 @@ describe('Sync tests', () => {
     })
     await cleanTables(dbConnection)
 
-    const createCeramicFile = await import('../../__tests__/create-ceramic.js')
-    const createCeramic = createCeramicFile.createCeramic
-
     ipfs1 = await createIPFS()
     ipfs2 = await createIPFS()
     await swarmConnect(ipfs1, ipfs2)
@@ -300,6 +298,7 @@ describe('Sync tests', () => {
           db: process.env.DATABASE_URL as string,
           allowQueriesBeforeHistoricalSync: true,
           enableHistoricalSync: false,
+          disableComposedb: false,
         },
         sync: true,
         // change pubsub topic so that we aren't getting updates via pubsub

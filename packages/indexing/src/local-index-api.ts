@@ -58,7 +58,7 @@ export class LocalIndexApi implements IndexApi {
   public readonly enabled: boolean
 
   constructor(
-    indexingConfig: IndexingConfig,
+    indexingConfig: IndexingConfig | undefined,
     private readonly core: CeramicCoreApi,
     private readonly logger: DiagnosticsLogger,
     networkName: Networks

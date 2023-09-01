@@ -37,12 +37,7 @@ describe('with database backend', () => {
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
 
-    const indexApi = new LocalIndexApi(
-      {} as IndexingConfig,
-      fauxCore,
-      fauxLogger,
-      Networks.INMEMORY
-    )
+    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
     ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -85,12 +80,7 @@ describe('with database backend', () => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(
-      {} as IndexingConfig,
-      fauxCore,
-      fauxLogger,
-      Networks.INMEMORY
-    )
+    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
     ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -114,12 +104,7 @@ describe('without database backend', () => {
     const fauxCore = {} as unknown as CeramicCoreApi
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(
-      {} as IndexingConfig,
-      fauxCore,
-      fauxLogger,
-      Networks.INMEMORY
-    )
+    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
 
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
@@ -139,7 +124,7 @@ test('count', async () => {
   const fauxCore = {} as unknown as CeramicCoreApi
   const warnFn = jest.fn()
   const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-  const indexApi = new LocalIndexApi({} as IndexingConfig, fauxCore, fauxLogger, Networks.INMEMORY)
+  const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
   const expected = Math.random()
   const countFn = jest.fn(() => expected)
   const fauxBackend = { count: countFn } as unknown as DatabaseIndexApi

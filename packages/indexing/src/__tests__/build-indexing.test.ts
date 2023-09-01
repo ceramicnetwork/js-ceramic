@@ -31,6 +31,7 @@ describe('sqlite', () => {
         db: databaseUrl.href,
         allowQueriesBeforeHistoricalSync: true,
         enableHistoricalSync: false,
+        disableComposedb: false,
       },
       diagnosticsLogger,
       Networks.INMEMORY
@@ -45,6 +46,7 @@ describe('sqlite', () => {
         db: databaseUrl.href,
         allowQueriesBeforeHistoricalSync: true,
         enableHistoricalSync: false,
+        disableComposedb: false,
       },
       diagnosticsLogger,
       Networks.INMEMORY
@@ -60,6 +62,7 @@ test('build for postgres connection string', async () => {
       db: databaseURL,
       allowQueriesBeforeHistoricalSync: true,
       enableHistoricalSync: false,
+      disableComposedb: false,
     },
     diagnosticsLogger,
     Networks.INMEMORY
@@ -84,6 +87,7 @@ describe('postgres', () => {
         db: databaseURL,
         allowQueriesBeforeHistoricalSync: true,
         enableHistoricalSync: false,
+        disableComposedb: false,
       },
       diagnosticsLogger,
       Networks.INMEMORY
@@ -97,7 +101,12 @@ test('throw on unsupported protocol', () => {
   const connectionString = 'garbage://host:3000/database'
   expect(() =>
     buildIndexing(
-      { db: connectionString, allowQueriesBeforeHistoricalSync: true },
+      {
+        db: connectionString,
+        allowQueriesBeforeHistoricalSync: true,
+        disableComposedb: false,
+        enableHistoricalSync: true,
+      },
       diagnosticsLogger,
       Networks.INMEMORY
     )
@@ -108,7 +117,12 @@ test('throw on non-url connection string', () => {
   const connectionString = `/absolute/path/to/database.sqlite`
   expect(() =>
     buildIndexing(
-      { db: connectionString, allowQueriesBeforeHistoricalSync: true },
+      {
+        db: connectionString,
+        allowQueriesBeforeHistoricalSync: true,
+        disableComposedb: false,
+        enableHistoricalSync: true,
+      },
       diagnosticsLogger,
       Networks.INMEMORY
     )
