@@ -196,10 +196,6 @@ export async function createIPFSFlavor(
 ): Promise<RunningIpfs> {
   switch (flavor.name) {
     case 'go': {
-      if (!flavor.options.start) {
-        throw Error('go IPFS instances must be started')
-      }
-
       let options
       let tmpFolder
       if (flavor.options.repo) {
@@ -210,7 +206,7 @@ export async function createIPFSFlavor(
         options = await createIpfsOptions(flavor.options, tmpFolder.path)
       }
 
-      const ipfsd = await createGoController(flavor.options, disposable)
+      const ipfsd = await createGoController(options, disposable)
       // API is only set on started controllers
       const started = await ipfsd.start()
       if (!tmpFolder) {
