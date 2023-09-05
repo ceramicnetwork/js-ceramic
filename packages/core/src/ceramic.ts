@@ -326,7 +326,7 @@ export class Ceramic implements CeramicApi {
       this.repository.index,
       this._logger
     )
-    const pinApi = this._buildPinApi()
+    const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
     this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this), pinApi)
   }
@@ -360,10 +360,6 @@ export class Ceramic implements CeramicApi {
    */
   set did(did: DID) {
     this.context.did = did
-  }
-
-  private _buildPinApi(): PinApi {
-    return new LocalPinApi(this.repository, this._logger)
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
