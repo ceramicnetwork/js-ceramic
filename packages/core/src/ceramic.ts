@@ -64,7 +64,11 @@ import { TipFetcher } from './stream-loading/tip-fetcher.js'
 import { LogSyncer } from './stream-loading/log-syncer.js'
 import { StateManipulator } from './stream-loading/state-manipulator.js'
 import { StreamLoader } from './stream-loading/stream-loader.js'
-import { CeramicNetworkOptions, pubsubTopicFromNetwork } from './initialization/network-options.js'
+import {
+  assertNetwork,
+  CeramicNetworkOptions,
+  pubsubTopicFromNetwork,
+} from './initialization/network-options.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -355,8 +359,8 @@ export class Ceramic implements CeramicApi {
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
-    const networkName = (config.networkName || DEFAULT_NETWORK) as Networks
-
+    const networkName = config.networkName || DEFAULT_NETWORK
+    assertNetwork(networkName)
     const pubsubTopic = pubsubTopicFromNetwork(networkName, config.pubsubTopic)
 
     return { name: networkName, pubsubTopic }

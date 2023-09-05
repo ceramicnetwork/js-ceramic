@@ -16,7 +16,7 @@ export class CustomTopicError extends Error {
 }
 
 export class UnrecognizedNetworkError extends Error {
-  constructor(network: never) {
+  constructor(network: string) {
     super(
       `Unrecognized Ceramic network name: '${network}'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'`
     )
@@ -27,8 +27,17 @@ const TOPIC_BY_NETWORK = {
   [Networks.MAINNET]: '/ceramic/mainnet',
   [Networks.ELP]: '/ceramic/mainnet',
   [Networks.TESTNET_CLAY]: '/ceramic/testnet-clay',
+  [Networks.DEV_UNSTABLE]: '/ceramic/dev-unstable',
+  // Default to a random pub/sub topic so that local deployments are isolated from each other
+  // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
+  // be made to talk to each other if needed.
   [Networks.LOCAL]: `/ceramic/local-${randomUint32()}`,
   [Networks.INMEMORY]: `/ceramic/inmemory-${randomUint32()}`,
+}
+
+export function assertNetwork(input: string): asserts input is Networks {
+  const isValid = Object.keys(TOPIC_BY_NETWORK).includes(input)
+  if (!isValid) throw new UnrecognizedNetworkError(input)
 }
 
 const ALLOW_CUSTOM_TOPIC = [Networks.INMEMORY, Networks.LOCAL]
@@ -38,36 +47,4 @@ export function pubsubTopicFromNetwork(network: Networks, customTopic: string | 
     throw new CustomTopicError()
   }
   return customTopic || TOPIC_BY_NETWORK[network]
-
-  // switch (network) {
-  //   case Networks.MAINNET:
-  //     return '/ceramic/mainnet'
-  //   case Networks.ELP:
-  //     return '/ceramic/mainnet'
-  //   case Networks.TESTNET_CLAY:
-  //     return '/ceramic/testnet-clay'
-  //   case Networks.DEV_UNSTABLE:
-  //     return '/ceramic/dev-unstable'
-  //   case Networks.LOCAL:
-  //     // Default to a random pub/sub topic so that local deployments are isolated from each other
-  //     // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-  //     // be made to talk to each other if needed.
-  //     if (customTopic) {
-  //       return customTopic
-  //     } else {
-  //       return `/ceramic/local-${randomUint32()}`
-  //     }
-  //   case Networks.INMEMORY:
-  //     // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
-  //     // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-  //     // be made to talk to each other if needed.
-  //     if (customTopic) {
-  //       return customTopic
-  //     } else {
-  //       return `/ceramic/inmemory-${randomUint32()}`
-  //     }
-  //   default: {
-  //     throw new UnrecognizedNetworkError(network)
-  //   }
-  // }
 }
