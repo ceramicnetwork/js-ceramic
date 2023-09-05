@@ -39,7 +39,6 @@ import {
 } from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
-import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
 import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
@@ -65,9 +64,8 @@ import { LogSyncer } from './stream-loading/log-syncer.js'
 import { StateManipulator } from './stream-loading/state-manipulator.js'
 import { StreamLoader } from './stream-loading/stream-loader.js'
 import {
-  assertNetwork,
-  CeramicNetworkOptions,
-  pubsubTopicFromNetwork,
+  networkOptionsByName,
+  type CeramicNetworkOptions,
 } from './initialization/network-options.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
@@ -186,8 +184,6 @@ export interface CeramicParameters {
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
-
-const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
   const streamRef = StreamRef.from(streamId)
@@ -358,14 +354,6 @@ export class Ceramic implements CeramicApi {
     this.context.did = did
   }
 
-  private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
-    const networkName = config.networkName || DEFAULT_NETWORK
-    assertNetwork(networkName)
-    const pubsubTopic = pubsubTopicFromNetwork(networkName, config.pubsubTopic)
-
-    return { name: networkName, pubsubTopic }
-  }
-
   /**
    * Given the ceramic network we are running on and the anchor service we are connected to, figure
    * out the set of caip2 chain IDs that are supported for stream anchoring
@@ -407,7 +395,7 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const networkOptions = Ceramic._generateNetworkOptions(config)
+    const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
     let anchorService = null
     let anchorServiceAuth = null
