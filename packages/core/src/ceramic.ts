@@ -13,7 +13,6 @@ import {
   CeramicApi,
   CeramicCommit,
   IpfsApi,
-  PinApi,
   MultiQuery,
   PinningBackendStatic,
   LoggerProvider,
@@ -65,6 +64,7 @@ import { TipFetcher } from './stream-loading/tip-fetcher.js'
 import { LogSyncer } from './stream-loading/log-syncer.js'
 import { StateManipulator } from './stream-loading/state-manipulator.js'
 import { StreamLoader } from './stream-loading/stream-loader.js'
+import { CeramicNetworkOptions } from './initialization/network-options.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -181,14 +181,6 @@ export interface CeramicParameters {
   sync?: boolean
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
-}
-
-/**
- * Protocol options that are derived from the specified Ceramic network name (e.g. "mainnet", "testnet-clay", etc)
- */
-interface CeramicNetworkOptions {
-  name: Networks // Must be one of the supported network names
-  pubsubTopic: string // The topic that will be used for broadcasting protocol messages
 }
 
 const DEFAULT_NETWORK = Networks.INMEMORY
