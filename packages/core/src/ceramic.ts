@@ -64,7 +64,7 @@ import { TipFetcher } from './stream-loading/tip-fetcher.js'
 import { LogSyncer } from './stream-loading/log-syncer.js'
 import { StateManipulator } from './stream-loading/state-manipulator.js'
 import { StreamLoader } from './stream-loading/stream-loader.js'
-import { CeramicNetworkOptions } from './initialization/network-options.js'
+import { CeramicNetworkOptions, pubsubTopicFromNetwork } from './initialization/network-options.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -355,64 +355,9 @@ export class Ceramic implements CeramicApi {
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
-    const networkName = config.networkName || DEFAULT_NETWORK
+    const networkName = (config.networkName || DEFAULT_NETWORK) as Networks
 
-    if (config.pubsubTopic && networkName !== Networks.INMEMORY && networkName !== Networks.LOCAL) {
-      throw new Error(
-        "Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks"
-      )
-    }
-
-    let pubsubTopic
-    switch (networkName) {
-      case Networks.MAINNET: {
-        pubsubTopic = '/ceramic/mainnet'
-        break
-      }
-      case Networks.ELP: {
-        pubsubTopic = '/ceramic/mainnet'
-        break
-      }
-      case Networks.TESTNET_CLAY: {
-        pubsubTopic = '/ceramic/testnet-clay'
-        break
-      }
-      case Networks.DEV_UNSTABLE: {
-        pubsubTopic = '/ceramic/dev-unstable'
-        break
-      }
-      case Networks.LOCAL: {
-        // Default to a random pub/sub topic so that local deployments are isolated from each other
-        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-        // be made to talk to each other if needed.
-        if (config.pubsubTopic) {
-          pubsubTopic = config.pubsubTopic
-        } else {
-          const rand = randomUint32()
-          pubsubTopic = '/ceramic/local-' + rand
-        }
-        break
-      }
-      case Networks.INMEMORY: {
-        // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
-        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-        // be made to talk to each other if needed.
-        if (config.pubsubTopic) {
-          pubsubTopic = config.pubsubTopic
-        } else {
-          const rand = randomUint32()
-          pubsubTopic = '/ceramic/inmemory-' + rand
-        }
-        break
-      }
-      default: {
-        throw new Error(
-          "Unrecognized Ceramic network name: '" +
-            networkName +
-            "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
-        )
-      }
-    }
+    const pubsubTopic = pubsubTopicFromNetwork(networkName, config.pubsubTopic)
 
     return { name: networkName, pubsubTopic }
   }
