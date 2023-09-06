@@ -67,6 +67,7 @@ import {
   networkOptionsByName,
   type CeramicNetworkOptions,
 } from './initialization/network-options.js'
+import { usableAnchorChains, DEFAULT_ANCHOR_SERVICE_URLS } from './initialization/anchoring.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -74,24 +75,7 @@ const TESTING = process.env.NODE_ENV == 'test'
 
 const TRAILING_SLASH = /\/$/ // slash at the end of the string
 
-const DEFAULT_ANCHOR_SERVICE_URLS = {
-  [Networks.MAINNET]: 'https://cas.3boxlabs.com',
-  [Networks.ELP]: 'https://cas.3boxlabs.com',
-  [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
-  [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
-  [Networks.LOCAL]: 'http://localhost:8081',
-}
-
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
-
-const SUPPORTED_CHAINS_BY_NETWORK = {
-  [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
-  [Networks.ELP]: ['eip155:1'], // Ethereum mainnet
-  [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
-  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
-  [Networks.LOCAL]: ['eip155:1337'], // Ganache
-  [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
-}
 
 /**
  * For user-initiated writes that come in via the 'core' or http clients directly (as opposed to
@@ -354,35 +338,14 @@ export class Ceramic implements CeramicApi {
     this.context.did = did
   }
 
-  /**
-   * Given the ceramic network we are running on and the anchor service we are connected to, figure
-   * out the set of caip2 chain IDs that are supported for stream anchoring
-   * @private
-   */
   private async _loadSupportedChains(): Promise<void> {
     const networkName = this._networkOptions.name
     const anchorService = this.context.anchorService
-    const networkChains = SUPPORTED_CHAINS_BY_NETWORK[networkName]
-
-    // Now that we know the set of supported chains for the specified network, get the actually
-    // configured chainId from the anchorService and make sure it's valid.
-    const anchorServiceChains = await anchorService.getSupportedChains()
-    const usableChains = networkChains.filter((c) => anchorServiceChains.includes(c))
-    if (usableChains.length === 0) {
-      throw new Error(
-        "No usable chainId for anchoring was found.  The ceramic network '" +
-          networkName +
-          "' supports the chains: ['" +
-          networkChains.join("', '") +
-          "'], but the configured anchor service '" +
-          anchorService.url +
-          "' only supports the chains: ['" +
-          anchorServiceChains.join("', '") +
-          "']"
-      )
-    }
-
-    this._supportedChains = usableChains
+    this._supportedChains = usableAnchorChains(
+      networkName,
+      anchorService.url,
+      await anchorService.getSupportedChains()
+    )
   }
 
   /**
