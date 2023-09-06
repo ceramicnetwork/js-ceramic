@@ -20,7 +20,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --forceExit",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -47,7 +47,6 @@
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.26.0",
-    "@ceramicnetwork/core": "^2.40.0",
     "@ceramicnetwork/ipfs-daemon": "^2.26.0",
     "@ceramicnetwork/stream-model-instance": "^1.15.0",
     "@ceramicnetwork/stream-tile": "^2.29.0",

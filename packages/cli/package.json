@@ -45,6 +45,7 @@
     "@ceramicnetwork/common": "^2.33.0",
     "@ceramicnetwork/core": "^2.40.0",
     "@ceramicnetwork/http-client": "^2.30.0",
+    "@ceramicnetwork/indexing": "^1.0.0",
     "@ceramicnetwork/ipfs-daemon": "^2.26.0",
     "@ceramicnetwork/logger": "^2.5.0",
     "@ceramicnetwork/observability": "^1.4.1",

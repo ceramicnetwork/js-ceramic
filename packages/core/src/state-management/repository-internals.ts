@@ -11,6 +11,7 @@ import {
   SyncOptions,
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
+import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CAR } from 'cartonne'
@@ -32,7 +33,7 @@ import {
 import { ConflictResolution } from '../conflict-resolution.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { LocalIndexApi } from '../indexing/local-index-api.js'
+
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { PinStore } from '../store/pin-store.js'
 import { Utils } from '../utils.js'

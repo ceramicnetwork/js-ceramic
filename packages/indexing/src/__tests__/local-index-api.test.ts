@@ -4,7 +4,6 @@ import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
 import { type CeramicCoreApi, LocalIndexApi } from '../local-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
-import { IndexingConfig } from '../build-indexing.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
