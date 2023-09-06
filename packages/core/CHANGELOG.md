@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.41.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.40.0...@ceramicnetwork/core@2.41.0-rc.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* Await pubsub subscription in tip fetcher test ([#2938](https://github.com/ceramicnetwork/js-ceramic/issues/2938)) ([c0a47d4](https://github.com/ceramicnetwork/js-ceramic/commit/c0a47d42e0353d8cf21ec1373ca3e654c3630905))
+* Do not publish tip when loading from genesis ([#2933](https://github.com/ceramicnetwork/js-ceramic/issues/2933)) ([120bfd0](https://github.com/ceramicnetwork/js-ceramic/commit/120bfd0f4a7f36fab58633eba33ee1bb1695376e))
+
+
+### Features
+
+* **core:** Implement LogSyncer ([#2932](https://github.com/ceramicnetwork/js-ceramic/issues/2932)) ([886b60d](https://github.com/ceramicnetwork/js-ceramic/commit/886b60d3b5715e465e390f0e3675e7b042c1c047))
+* **core:** Implement TipFetcher ([#2930](https://github.com/ceramicnetwork/js-ceramic/issues/2930)) ([db2fdd2](https://github.com/ceramicnetwork/js-ceramic/commit/db2fdd23fa3e949c1e4f7787d5bfc1c5786ebb6b))
+* Report number of pending anchors in metrics and nodeStatus output ([#2918](https://github.com/ceramicnetwork/js-ceramic/issues/2918)) ([c93bb2a](https://github.com/ceramicnetwork/js-ceramic/commit/c93bb2afe6e346e160ba4911c2a94fdd380de52b))
+
+
+
+
+
 # [2.40.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.40.0-rc.1...@ceramicnetwork/core@2.40.0) (2023-08-28)
 
 **Note:** Version bump only for package @ceramicnetwork/core
