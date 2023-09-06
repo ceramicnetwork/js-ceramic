@@ -40,7 +40,7 @@
     "@ceramicnetwork/codecs": "^1.9.0-rc.0",
     "@ceramicnetwork/common": "^2.34.0-rc.0",
     "@ceramicnetwork/streamid": "^2.17.0",
-    "@ipld/dag-cbor": "^7.0.0",
+    "@ipld/dag-cbor": "^9.0.4",
     "@stablelib/random": "^1.0.1",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
