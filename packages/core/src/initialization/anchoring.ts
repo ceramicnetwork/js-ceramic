@@ -1,4 +1,4 @@
-import { Networks } from '@ceramicnetwork/common'
+import { Networks, type AnchorService } from '@ceramicnetwork/common'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
@@ -38,7 +38,9 @@ export class UnusableAnchorChainsError extends Error {
  * Given the ceramic network we are running on and the anchor service we are connected to, figure
  * out the set of caip2 chain IDs that are supported for stream anchoring
  */
-export async function usableAnchorChains(network: Networks, casURL: string, casChains: Array<string>) {
+export async function usableAnchorChains(network: Networks, anchorService: AnchorService): Promise<string[]> {
+  const casChains = await anchorService.getSupportedChains()
+  const casURL = anchorService.url
   const supportedChains = SUPPORTED_CHAINS_BY_NETWORK[network]
   // Now that we know the set of supported chains for the specified network, get the actually
   // configured chainId from the anchorService and make sure it's valid.

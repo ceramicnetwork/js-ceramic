@@ -338,15 +338,6 @@ export class Ceramic implements CeramicApi {
     this.context.did = did
   }
 
-  private async _loadSupportedChains(network: Networks): Promise<void> {
-    const anchorService = this.context.anchorService
-    this._supportedChains = await usableAnchorChains(
-      network,
-      anchorService.url,
-      await anchorService.getSupportedChains()
-    )
-  }
-
   /**
    * Parses the given `CeramicConfig` and generates the appropriate `CeramicParameters` and
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
@@ -523,7 +514,10 @@ export class Ceramic implements CeramicApi {
 
       if (!this._gateway) {
         await this.context.anchorService.init()
-        await this._loadSupportedChains(this._networkOptions.name)
+        this._supportedChains = await usableAnchorChains(
+          this._networkOptions.name,
+          this.context.anchorService
+        )
         this._logger.imp(
           `Connected to anchor service '${
             this.context.anchorService.url
