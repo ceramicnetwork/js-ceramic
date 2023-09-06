@@ -38,7 +38,7 @@ describe('TipFetcher test', () => {
     const ipfs2 = await createIPFS()
     await swarmConnect(ipfsClient, ipfs2)
 
-    ipfs2.pubsub.subscribe(TOPIC, (rawMessage: SignedMessage) => {
+    await ipfs2.pubsub.subscribe(TOPIC, (rawMessage: SignedMessage) => {
       const message = deserialize(rawMessage)
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), tip)
