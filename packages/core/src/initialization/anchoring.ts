@@ -38,7 +38,7 @@ export class UnusableAnchorChainsError extends Error {
  * Given the ceramic network we are running on and the anchor service we are connected to, figure
  * out the set of caip2 chain IDs that are supported for stream anchoring
  */
-export function usableAnchorChains(network: Networks, casURL: string, casChains: Array<string>) {
+export async function usableAnchorChains(network: Networks, casURL: string, casChains: Array<string>) {
   const supportedChains = SUPPORTED_CHAINS_BY_NETWORK[network]
   // Now that we know the set of supported chains for the specified network, get the actually
   // configured chainId from the anchorService and make sure it's valid.
