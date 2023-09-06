@@ -57,7 +57,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
 
     const nonExistentTip = TestUtils.randomCID()
 
-    ipfs2.pubsub.subscribe(ceramic.pubsubTopic, (rawMessage: SignedMessage) => {
+    await ipfs2.pubsub.subscribe(ceramic.pubsubTopic, (rawMessage: SignedMessage) => {
       const message = deserialize(rawMessage)
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), nonExistentTip)
@@ -89,7 +89,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
 
     const garbageTip = await ceramic.dispatcher.storeRecord({ hello: 'world' })
 
-    ipfs2.pubsub.subscribe(ceramic.pubsubTopic, (rawMessage: SignedMessage) => {
+    await ipfs2.pubsub.subscribe(ceramic.pubsubTopic, (rawMessage: SignedMessage) => {
       const message = deserialize(rawMessage)
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), garbageTip)
@@ -123,7 +123,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     const ipfs2 = await createIPFS()
     await swarmConnect(ipfs, ipfs2)
 
-    ipfs2.pubsub.subscribe(ceramic.pubsubTopic, (rawMessage: SignedMessage) => {
+    await ipfs2.pubsub.subscribe(ceramic.pubsubTopic, (rawMessage: SignedMessage) => {
       const message = deserialize(rawMessage)
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), otherStream.tip)
