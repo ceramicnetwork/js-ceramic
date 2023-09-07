@@ -45,6 +45,7 @@ export async function usableAnchorChains(
   const casChains = await anchorService.getSupportedChains()
   const casURL = anchorService.url
   const supportedChains = SUPPORTED_CHAINS_BY_NETWORK[network]
+
   // Now that we know the set of supported chains for the specified network, get the actually
   // configured chainId from the anchorService and make sure it's valid.
   const usableChains = supportedChains.filter((c) => casChains.includes(c))
