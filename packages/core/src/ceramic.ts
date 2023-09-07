@@ -265,7 +265,12 @@ export class Ceramic implements CeramicApi {
     )
     const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
     const logSyncer = new LogSyncer(this.dispatcher)
-    const stateManipulator = new StateManipulator()
+    const stateManipulator = new StateManipulator(
+      this._logger,
+      this._streamHandlers,
+      this.context,
+      logSyncer
+    )
     const streamLoader = new StreamLoader(
       this._logger,
       tipFetcher,

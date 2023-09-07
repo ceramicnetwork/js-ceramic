@@ -31,7 +31,9 @@ export class StreamLoader {
     const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
       logWithoutTimestamps
     )
-    return await this.stateManipulator.applyFullLog(logWithTimestamps)
+    return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, {
+      throwOnInvalidCommit: false,
+    })
   }
 
   /**
@@ -51,6 +53,10 @@ export class StreamLoader {
     const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
       logWithoutTimestamps
     )
-    return await this.stateManipulator.applyLogToState(state, logWithTimestamps)
+    return await this.stateManipulator.applyLogToState(state, logWithTimestamps, {
+      throwOnInvalidCommit: false,
+      throwIfStale: false,
+      throwOnConflict: false,
+    })
   }
 }
