@@ -31,7 +31,7 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/common": "^2.33.0",
+    "@ceramicnetwork/common": "^2.34.0-rc.0",
     "pg": "^8.11.3",
     "pg-boss": "^8.2.0",
     "rxjs": "^7.8.1"
