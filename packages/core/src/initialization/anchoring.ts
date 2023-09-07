@@ -38,7 +38,10 @@ export class UnusableAnchorChainsError extends Error {
  * Given the ceramic network we are running on and the anchor service we are connected to, figure
  * out the set of caip2 chain IDs that are supported for stream anchoring
  */
-export async function usableAnchorChains(network: Networks, anchorService: AnchorService): Promise<string[]> {
+export async function usableAnchorChains(
+  network: Networks,
+  anchorService: AnchorService
+): Promise<string[]> {
   const casChains = await anchorService.getSupportedChains()
   const casURL = anchorService.url
   const supportedChains = SUPPORTED_CHAINS_BY_NETWORK[network]
