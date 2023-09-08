@@ -289,16 +289,9 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
 
     const tableName = asTableName(query.model)
     let dbQuery = this.dbConnection(tableName).count('*')
-    if (query.account) {
-      dbQuery = dbQuery.where({ controller_did: query.account })
-    }
-    if (query.filter) {
-      for (const [key, value] of Object.entries(query.filter)) {
-        const filterObj = {}
-        filterObj[addColumnPrefix(key)] = value
-        dbQuery = dbQuery.andWhere(filterObj)
-      }
-    }
+
+    dbQuery = this.insertionOrder.applyFilters(dbQuery, query)
+
     return dbQuery.then((response) => this.getCountFromResult(response))
   }
 
