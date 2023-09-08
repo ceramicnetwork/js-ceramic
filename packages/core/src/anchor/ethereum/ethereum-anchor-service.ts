@@ -18,6 +18,7 @@ import {
   CASResponseOrError,
   ErrorResponse,
   AnchorRequestStatusName,
+  uint8ArrayAsBase64,
 } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
@@ -96,6 +97,7 @@ export class EthereumAnchorService implements AnchorService {
     carFile: CAR,
     waitForConfirmation: boolean
   ): Promise<Observable<CASResponse>> {
+    console.log('car-as-base64url', uint8ArrayAsBase64.encode(carFile.bytes))
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
 
