@@ -8,6 +8,7 @@ import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { AnchorResumingService } from '../anchor-resuming-service.js'
 import type { CASResponse } from '@ceramicnetwork/codecs'
+import all from 'it-all'
 
 describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
   jest.setTimeout(10000)
@@ -64,7 +65,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
-    const loaded = (await ceramic.repository.anchorRequestStore.list()).map((result) =>
+    const loaded = (await all(ceramic.repository.anchorRequestStore.list())).map((result) =>
       result.key.toString()
     )
     // LevelDB Store stores keys ordered lexicographically

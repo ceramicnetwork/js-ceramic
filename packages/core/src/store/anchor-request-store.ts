@@ -51,18 +51,24 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     return this.store.exists(generateKey(key), this.useCaseName)
   }
 
-  async list(limit?: number, gt?: StreamID): Promise<Array<AnchorRequestStoreListResult>> {
-    return (
-      await this.store.find({
-        limit: limit,
+  async *list(): AsyncIterable<AnchorRequestStoreListResult> {
+    let hasMore = true
+    let gt: StreamID | undefined = undefined
+    do {
+      const [found] = await this.store.find({
+        limit: 1,
         useCaseName: this.useCaseName,
         gt: gt ? generateKey(gt) : undefined,
       })
-    ).map((result) => {
-      return {
-        key: StreamID.fromString(result.key),
-        value: deserializeAnchorRequestData(result.value),
+      if (found) {
+        gt = StreamID.fromString(found.key)
+        yield {
+          key: gt,
+          value: deserializeAnchorRequestData(found.value),
+        }
+      } else {
+        hasMore = false
       }
-    })
+    } while (hasMore)
   }
 }
