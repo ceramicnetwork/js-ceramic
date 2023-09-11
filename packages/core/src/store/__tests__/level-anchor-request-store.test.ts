@@ -226,7 +226,9 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
       { key: streamId3, value: anchorRequestData3 },
     ].sort(sortByKeyStreamId)
 
-    const retrieved = await all(anchorRequestStore.list())
+    const retrieved = await all(anchorRequestStore.list()).then((batches) =>
+      batches.reduce((acc, array) => acc.concat(array), [])
+    )
     expect(retrieved.sort(sortByKeyStreamId)).toEqual(sortedParams)
 
     const retrievedWithLimit = await first(anchorRequestStore.list())

@@ -65,7 +65,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
-    const loaded = (await all(ceramic.repository.anchorRequestStore.list())).map((result) =>
+    const loaded = (await all(ceramic.repository.anchorRequestStore.list())).reduce((acc, array) => acc.concat(array), []).map((result) =>
       result.key.toString()
     )
     // LevelDB Store stores keys ordered lexicographically

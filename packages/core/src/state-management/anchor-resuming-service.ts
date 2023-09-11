@@ -55,19 +55,17 @@ export class AnchorResumingService {
     this.logger.imp(`Resuming polling for streams with pending anchors`)
 
     let numRestoredStreams = 0
-    let n = 0
-    for await (const item of repository.anchorRequestStore.list()) {
-      this.resumeQ.add(async () => {
-        await repository.fromMemoryOrStore(item.key)
-        this.logger.verbose(`Resumed running state for stream id: ${item.key}`)
-        numRestoredStreams++
-      })
-      await this.delay(this.getDelay())
-      n += 1
-      if (n >= RESUME_BATCH_SIZE) {
-        await this.resumeQ.onIdle()
-        n = 0
+    for await (const batch of repository.anchorRequestStore.list()) {
+      for (const item of batch) {
+        if (this.#shouldBeClosed) return
+        this.resumeQ.add(async () => {
+          await repository.fromMemoryOrStore(item.key)
+          this.logger.verbose(`Resumed running state for stream id: ${item.key}`)
+          numRestoredStreams++
+        })
+        await this.delay(this.getDelay())
       }
+      await this.resumeQ.onIdle()
     }
 
     this.logger.imp(
@@ -78,7 +76,7 @@ export class AnchorResumingService {
   async close(): Promise<void> {
     this.logger.debug('Closing AnchorResumingService')
     this.#shouldBeClosed = true
-    this.resumeQ.clear()
+    await this.resumeQ.onIdle()
     this.logger.debug('Waiting for remaining AnchorResumingService tasks to stop')
     await this.resumeQ.onIdle()
     this.logger.debug('AnchorResumingService closed')
