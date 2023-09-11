@@ -223,7 +223,7 @@ export class ConflictResolution {
       breakOnAnchor,
       opts
     )
-    StreamUtils.checkForCacaoExpiration(state)
+    //    StreamUtils.checkForCacaoExpiration(state)
 
     return state
   }
