@@ -49,6 +49,8 @@ export type AnchorEvent = NotCompleteAnchorEvent | CompleteAnchorEvent
  * Describes anchoring service behavior
  */
 export interface AnchorService {
+  readonly events: Observable<AnchorEvent>
+
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
    */

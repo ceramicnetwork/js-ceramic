@@ -8,6 +8,7 @@ import {
   AnchorValidator,
   AnchorCommit,
   TestUtils,
+  AnchorEvent,
 } from '@ceramicnetwork/common'
 import type { Dispatcher } from '../../dispatcher.js'
 import { Ceramic } from '../../ceramic.js'
@@ -70,12 +71,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   #queue: Candidate[] = []
 
+  readonly events: Observable<AnchorEvent>
+
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
 
     // Remember the most recent CASResponse for each anchor request
     this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
+    this.events = new Observable()
   }
 
   get chainId(): string {
