@@ -1,4 +1,4 @@
-import { JobQueue, Worker, Job } from '../job-queue.js'
+import { JobQueue, Worker, Job } from '../index.js'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { jest } from '@jest/globals'

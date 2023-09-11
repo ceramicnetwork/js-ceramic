@@ -46,7 +46,7 @@ export type Worker<T> = {
 }
 
 class PgWrapper implements PgBoss.Db {
-  constructor(private readonly db: Pg.Client) {}
+  constructor(private readonly db: Pg.Pool) {}
 
   executeSql(text: string, values: any[]): Promise<{ rows: any[]; rowCount: number }> {
     return this.db.query(text, values)
@@ -59,7 +59,7 @@ class PgWrapper implements PgBoss.Db {
 export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
   private queue: PgBoss
   private dbConnection: Pg.Pool
-  private jobs: string[]
+  private jobs: string[] = []
 
   constructor(db: string, private readonly logger: DiagnosticsLogger) {
     this.dbConnection = new Pg.Pool({
@@ -95,9 +95,16 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
     const jobs = await Promise.all(activeJobsIds.map((jobId) => this.queue.getJobById(jobId)))
 
     return jobs.reduce(
-      (jobsByJobName: Record<string, Array<JobWithMetadata<T>>>, job: PgBossJobWithMetadata) => {
+      (
+        jobsByJobName: Record<string, Array<JobWithMetadata<T>>>,
+        job: PgBossJobWithMetadata | null
+      ) => {
+        if (job == null) {
+          return jobsByJobName
+        }
+
         if (!jobsByJobName[job.name]) jobsByJobName[job.name] = []
-        jobsByJobName[job.name].push({
+        jobsByJobName[job.name]!.push({
           name: job.name,
           data: job.data as T,
           id: job.id,
@@ -151,7 +158,7 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
       throw Error(`Cannot add job ${job.name} to queue because no workers for that job exist`)
     }
 
-    await this.queue.send(job.name, job.data, job.options)
+    await this.queue.send(job.name, job.data, job.options!)
   }
 
   /**
@@ -186,6 +193,7 @@ export class JobQueue<T extends Record<any, any>> implements IJobQueue<T> {
 
     if (this.dbConnection) {
       await this.dbConnection.end()
+      // @ts-ignore null connection
       this.dbConnection = null
     }
   }
