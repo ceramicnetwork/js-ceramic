@@ -7,12 +7,13 @@
 [![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
 [![Twitter](https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social)](https://twitter.com/ceramicnetwork)
 
-**js-ceramic** is a monorepo containing the TypeScript implementation of the Ceramic protocol. If you are unfamiliar with Ceramic, see the [website](https://ceramic.network) or [overview](https://github.com/ceramicnetwork/ceramic) for more information.
+**js-ceramic** is a monorepo containing the TypeScript implementation of the Ceramic protocol. If you are unfamiliar with Ceramic, see the [website](https://ceramic.network) or [overview](https://developers.ceramic.network/learn/welcome/) for more information.
 
-> **Project status**: **`Clay` testnet is now live. 🚀** <br/>
-> Clay is a decentralized public network ready for experimental application development and testing. It anchors documents on the Ethereum Ropsten and Rinkeby testnets. It is the last major milestone before `Fire` mainnet, which is under development and will launch in late Q1 2021. Documents published on Clay will _not_ be portable to Fire.
+> **Project status**: **Access  the Ceramic mainnet. 🚀** <br/>
+> With the launch of [ComposeDB Beta](https://blog.ceramic.network/composedb-is-live-on-ceramic-mainnet/), it is now much easier to access the Ceramic mainnet for building the applications.
+> Developers can now onboard their node to Ceramic mainnet in under 5 minutes without needing to contact any community members. Check out [this guide](https://composedb.js.org/docs/0.5.x/guides/composedb-server/access-mainnet)
+> to learn more.
 
-> June 2022: As Rinkeby and Ropsten are on their way to being deprecated, Clay will be shifting to using the Gnosis Chain (previously xDAI) for anchoring streams. Streams published on Rinkeby/Ropsten through Clay will _not_ be ported over to Gnosis.
 
 ## Clients
 
@@ -26,17 +27,14 @@
 
 > For performance reasons it is recommended that you use the HTTP client if you are building an application.
 
-## Quick start
-
-Learn the basics by setting up and interacting with the Ceramic CLI. [Quick start guide →](https://developers.ceramic.network/build/quick-start/)
 
 ## Installation and usage
 
-Full documentation on installation and usage can be found on the [Ceramic documentation site →](https://developers.ceramic.network/build/installation/)
+Full protocol documentation can be found on the [Ceramic documentation site →](https://developers.ceramic.network/protocol/overview/).
 
 ## Troubleshooting
 
-- For questions, support, and discussions: [Join the Ceramic Discord](https://chat.ceramic.network)
+- For technical questions and support: [Join the Ceramic Forum](https://forum.ceramic.network/)
 - For bugs and feature requests: [Create an issue on Github](https://github.com/ceramicnetwork/js-ceramic/issues)
 
 ## Contributing
