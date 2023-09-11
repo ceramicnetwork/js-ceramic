@@ -4,7 +4,8 @@ import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CAR } from 'cartonne'
-import type { CASResponse } from '@ceramicnetwork/codecs'
+import type { CASResponse, NotCompleteStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 /**
  * Describes all anchor statuses
@@ -28,6 +29,21 @@ export type AnchorProof = {
   root: CID
   txType?: string
 }
+
+export type NotCompleteAnchorEvent = {
+  status: NotCompleteStatusName
+  streamId: StreamID
+  cid: CID
+}
+
+export type CompleteAnchorEvent = {
+  status: AnchorRequestStatusName.COMPLETED
+  streamId: StreamID
+  cid: CID
+  witnessCar: CAR
+}
+
+export type AnchorEvent = NotCompleteAnchorEvent | CompleteAnchorEvent
 
 /**
  * Describes anchoring service behavior
