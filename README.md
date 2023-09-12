@@ -10,7 +10,7 @@
 **js-ceramic** is a monorepo containing the TypeScript implementation of the Ceramic protocol. If you are unfamiliar with Ceramic, see the [website](https://ceramic.network) or [overview](https://developers.ceramic.network/learn/welcome/) for more information.
 
 > **Project status**: **Access  the Ceramic mainnet. 🚀** <br/>
-> With the launch of [ComposeDB Beta](https://blog.ceramic.network/composedb-is-live-on-ceramic-mainnet/), it is now much easier to access the Ceramic mainnet for building the applications.
+> With the launch of [ComposeDB Beta](https://blog.ceramic.network/composedb-is-live-on-ceramic-mainnet/), it is now much easier to access Ceramic mainnet for building applications.
 > Developers can now onboard their node to Ceramic mainnet in under 5 minutes without needing to contact any community members. Check out [this guide](https://composedb.js.org/docs/0.5.x/guides/composedb-server/access-mainnet)
 > to learn more.
 
