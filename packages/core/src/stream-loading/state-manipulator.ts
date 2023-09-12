@@ -10,6 +10,7 @@ import {
   StreamUtils,
   UnappliableStreamLog,
 } from '@ceramicnetwork/common'
+import { CID } from 'multiformats/cid'
 import { HandlersMap } from '../handlers-map.js'
 import { LogSyncer } from './log-syncer.js'
 
@@ -28,7 +29,7 @@ interface ApplyFullLogOpts {
  *   the existing state.
  * @param throwOnConflict - if true, throws if the log to apply is rejected by conflict resolution.
  */
-interface ApplyLogToStateOpts {
+export interface ApplyLogToStateOpts {
   throwOnInvalidCommit: boolean
   throwIfStale: boolean
   throwOnConflict: boolean
@@ -228,19 +229,43 @@ export class StateManipulator {
     // Remote log was selected.  We need to build the state that corresponds to the new log.
 
     // First get the stream state at the divergence point
-    const sharedLogWithoutTimestamps = await this.logSyncer.syncFullLog(
-      streamId,
+    const sharedState = await this.resetStateToCommit(
+      initialState,
       initialState.log[conflictIdx].cid
     )
-    const sharedLogWithTimestamps = this._copyTrustedTimestamps(
-      initialState.log,
-      sharedLogWithoutTimestamps
-    )
-    const sharedState = await this._applyLog(handler, null, sharedLogWithTimestamps, true)
 
     // Now apply the new log to the shared state
     return this._applyLog(handler, sharedState, logToApply, opts.throwOnInvalidCommit)
   }
+
+  /**
+   * Given a StreamState and the CID of a commit in that state's log, return a new StreamState
+   * representing the state of the Stream as of that commit CID.
+   * @param initialState
+   * @param commitCid - cid of a commit that must be in the log of 'initialState'
+   */
+  async resetStateToCommit(initialState: StreamState, commitCid: CID): Promise<StreamState> {
+    const streamId = StreamUtils.streamIdFromState(initialState)
+    // It is invalid to call this function if the commitCid is not a part of the initialState log.
+    const commitIndex = initialState.log.findIndex((logEntry) => logEntry.cid.equals(commitCid))
+    if (commitIndex < 0) {
+      // Note this should never happen - it would indicate a programmer bug if this Error was ever
+      // actually thrown.
+      throw new Error(
+        `Requested commit CID ${commitCid.toString()} not found in the log for stream ${streamId.toString()}`
+      )
+    }
+
+    const sharedLogWithoutTimestamps = await this.logSyncer.syncFullLog(streamId, commitCid)
+    const sharedLogWithTimestamps = this._copyTrustedTimestamps(
+      initialState.log,
+      sharedLogWithoutTimestamps
+    )
+
+    const handler = this.streamTypeHandlers.get(initialState.type)
+    return this._applyLog(handler, null, sharedLogWithTimestamps, true)
+  }
+
   /**
    * Applies a log of new commits to an existing StreamState to get the updated StreamState
    * resulting from applying the log. It's possible that the new StreamState could be the same as

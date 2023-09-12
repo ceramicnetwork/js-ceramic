@@ -374,6 +374,9 @@ export class ConflictResolution {
     // rejected it.
     const commitIndex = baseStateLog.findIndex(commitId.commit)
     if (commitIndex < 0) {
+      // Note this should never happen. Since we set `throwOnConflict` in the opts, applyTip()
+      // have thrown already if the commit was rejected by conflict resolution.  It would indicate
+      // programming error if this Error was ever actually thrown.
       throw new Error(
         `Requested commit CID ${commitId.commit.toString()} not found in the log for stream ${commitId.baseID.toString()}`
       )
