@@ -7,6 +7,7 @@ import {
   DiagnosticsLogger,
   fetchJson,
   FetchRequest,
+  AnchorEvent,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, concat, timer, of, defer, expand, interval, lastValueFrom } from 'rxjs'
@@ -47,6 +48,8 @@ export class EthereumAnchorService implements AnchorService {
   private readonly maxPollTime: number
   private readonly sendRequest: FetchRequest
 
+  readonly events: Observable<AnchorEvent>
+
   constructor(
     readonly anchorServiceUrl: string,
     logger: DiagnosticsLogger,
@@ -60,6 +63,7 @@ export class EthereumAnchorService implements AnchorService {
     this.pollInterval = pollInterval
     this.sendRequest = sendRequest
     this.maxPollTime = maxPollTime
+    this.events = new Observable()
   }
 
   /**
