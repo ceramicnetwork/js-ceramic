@@ -21,7 +21,7 @@ type QueryResult = {
   created_at: number
   stream_content: string
 }
-type QueryBuilder = Knex.QueryBuilder<{}, Array<QueryResult>>
+type QueryBuilder = Knex.QueryBuilder<any, Array<QueryResult>>
 
 /**
  * Stream `id` is always present in cursor, with the `value` either a record of content keys and values (if custom ordering is provided) or the `created_at` field value as fallback, based on the `type` value

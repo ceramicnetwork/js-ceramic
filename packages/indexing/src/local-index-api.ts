@@ -121,7 +121,7 @@ export class LocalIndexApi implements IndexApi {
     const edges = await Promise.all(
       // For database queries we bypass the stream cache and repository loading queue
       page.edges.map(async (edge) => {
-        let node = (await this.core.loadStreamState(edge.node)) ?? null
+        const node = (await this.core.loadStreamState(edge.node)) ?? null
         if (!node) {
           this.logger.warn(`
             Did not find stream state for streamid ${
