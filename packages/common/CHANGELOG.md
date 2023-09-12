@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.34.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.33.0...@ceramicnetwork/common@2.34.0-rc.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* Do not publish tip when loading from genesis ([#2933](https://github.com/ceramicnetwork/js-ceramic/issues/2933)) ([120bfd0](https://github.com/ceramicnetwork/js-ceramic/commit/120bfd0f4a7f36fab58633eba33ee1bb1695376e))
+
+
+### Features
+
+* **core:** Implement TipFetcher ([#2930](https://github.com/ceramicnetwork/js-ceramic/issues/2930)) ([db2fdd2](https://github.com/ceramicnetwork/js-ceramic/commit/db2fdd23fa3e949c1e4f7787d5bfc1c5786ebb6b))
+* Report number of pending anchors in metrics and nodeStatus output ([#2918](https://github.com/ceramicnetwork/js-ceramic/issues/2918)) ([c93bb2a](https://github.com/ceramicnetwork/js-ceramic/commit/c93bb2afe6e346e160ba4911c2a94fdd380de52b))
+
+
+
+
+
 # [2.33.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.33.0-rc.1...@ceramicnetwork/common@2.33.0) (2023-08-28)
 
 **Note:** Version bump only for package @ceramicnetwork/common

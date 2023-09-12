@@ -696,6 +696,7 @@ describe('CACAO Integration test', () => {
       await tile.sync()
       expect(tile.state.log.length).toEqual(3)
       expect(tile.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      jest.restoreAllMocks()
     }, 30000)
 
     test(

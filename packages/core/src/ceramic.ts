@@ -13,7 +13,6 @@ import {
   CeramicApi,
   CeramicCommit,
   IpfsApi,
-  PinApi,
   MultiQuery,
   PinningBackendStatic,
   LoggerProvider,
@@ -40,7 +39,6 @@ import {
 } from './anchor/ethereum/ethereum-anchor-service.js'
 import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
-import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
 import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
@@ -63,6 +61,11 @@ import { TipFetcher } from './stream-loading/tip-fetcher.js'
 import { LogSyncer } from './stream-loading/log-syncer.js'
 import { StateManipulator } from './stream-loading/state-manipulator.js'
 import { StreamLoader } from './stream-loading/stream-loader.js'
+import {
+  networkOptionsByName,
+  type CeramicNetworkOptions,
+} from './initialization/network-options.js'
+import { usableAnchorChains, DEFAULT_ANCHOR_SERVICE_URLS } from './initialization/anchoring.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -70,24 +73,7 @@ const TESTING = process.env.NODE_ENV == 'test'
 
 const TRAILING_SLASH = /\/$/ // slash at the end of the string
 
-const DEFAULT_ANCHOR_SERVICE_URLS = {
-  [Networks.MAINNET]: 'https://cas.3boxlabs.com',
-  [Networks.ELP]: 'https://cas.3boxlabs.com',
-  [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
-  [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
-  [Networks.LOCAL]: 'http://localhost:8081',
-}
-
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
-
-const SUPPORTED_CHAINS_BY_NETWORK = {
-  [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
-  [Networks.ELP]: ['eip155:1'], // Ethereum mainnet
-  [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
-  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
-  [Networks.LOCAL]: ['eip155:1337'], // Ganache
-  [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
-}
 
 /**
  * For user-initiated writes that come in via the 'core' or http clients directly (as opposed to
@@ -180,16 +166,6 @@ export interface CeramicParameters {
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
-
-/**
- * Protocol options that are derived from the specified Ceramic network name (e.g. "mainnet", "testnet-clay", etc)
- */
-interface CeramicNetworkOptions {
-  name: Networks // Must be one of the supported network names
-  pubsubTopic: string // The topic that will be used for broadcasting protocol messages
-}
-
-const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
   const streamRef = StreamRef.from(streamId)
@@ -324,13 +300,17 @@ export class Ceramic implements CeramicApi {
       this.repository.index,
       this._logger
     )
-    const pinApi = this._buildPinApi()
+    const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
     this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this), pinApi)
   }
 
   get index(): LocalIndexApi {
     return this.repository.index
+  }
+
+  get pubsubTopic(): string {
+    return this._networkOptions.pubsubTopic
   }
 
   /**
@@ -356,104 +336,6 @@ export class Ceramic implements CeramicApi {
     this.context.did = did
   }
 
-  private _buildPinApi(): PinApi {
-    return new LocalPinApi(this.repository, this._logger)
-  }
-
-  private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
-    const networkName = config.networkName || DEFAULT_NETWORK
-
-    if (config.pubsubTopic && networkName !== Networks.INMEMORY && networkName !== Networks.LOCAL) {
-      throw new Error(
-        "Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks"
-      )
-    }
-
-    let pubsubTopic
-    switch (networkName) {
-      case Networks.MAINNET: {
-        pubsubTopic = '/ceramic/mainnet'
-        break
-      }
-      case Networks.ELP: {
-        pubsubTopic = '/ceramic/mainnet'
-        break
-      }
-      case Networks.TESTNET_CLAY: {
-        pubsubTopic = '/ceramic/testnet-clay'
-        break
-      }
-      case Networks.DEV_UNSTABLE: {
-        pubsubTopic = '/ceramic/dev-unstable'
-        break
-      }
-      case Networks.LOCAL: {
-        // Default to a random pub/sub topic so that local deployments are isolated from each other
-        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-        // be made to talk to each other if needed.
-        if (config.pubsubTopic) {
-          pubsubTopic = config.pubsubTopic
-        } else {
-          const rand = randomUint32()
-          pubsubTopic = '/ceramic/local-' + rand
-        }
-        break
-      }
-      case Networks.INMEMORY: {
-        // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
-        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-        // be made to talk to each other if needed.
-        if (config.pubsubTopic) {
-          pubsubTopic = config.pubsubTopic
-        } else {
-          const rand = randomUint32()
-          pubsubTopic = '/ceramic/inmemory-' + rand
-        }
-        break
-      }
-      default: {
-        throw new Error(
-          "Unrecognized Ceramic network name: '" +
-            networkName +
-            "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
-        )
-      }
-    }
-
-    return { name: networkName, pubsubTopic }
-  }
-
-  /**
-   * Given the ceramic network we are running on and the anchor service we are connected to, figure
-   * out the set of caip2 chain IDs that are supported for stream anchoring
-   * @private
-   */
-  private async _loadSupportedChains(): Promise<void> {
-    const networkName = this._networkOptions.name
-    const anchorService = this.context.anchorService
-    const networkChains = SUPPORTED_CHAINS_BY_NETWORK[networkName]
-
-    // Now that we know the set of supported chains for the specified network, get the actually
-    // configured chainId from the anchorService and make sure it's valid.
-    const anchorServiceChains = await anchorService.getSupportedChains()
-    const usableChains = networkChains.filter((c) => anchorServiceChains.includes(c))
-    if (usableChains.length === 0) {
-      throw new Error(
-        "No usable chainId for anchoring was found.  The ceramic network '" +
-          networkName +
-          "' supports the chains: ['" +
-          networkChains.join("', '") +
-          "'], but the configured anchor service '" +
-          anchorService.url +
-          "' only supports the chains: ['" +
-          anchorServiceChains.join("', '") +
-          "']"
-      )
-    }
-
-    this._supportedChains = usableChains
-  }
-
   /**
    * Parses the given `CeramicConfig` and generates the appropriate `CeramicParameters` and
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
@@ -464,7 +346,7 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const networkOptions = Ceramic._generateNetworkOptions(config)
+    const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
     let anchorService = null
     let anchorServiceAuth = null
@@ -630,7 +512,10 @@ export class Ceramic implements CeramicApi {
 
       if (!this._gateway) {
         await this.context.anchorService.init()
-        await this._loadSupportedChains()
+        this._supportedChains = await usableAnchorChains(
+          this._networkOptions.name,
+          this.context.anchorService
+        )
         this._logger.imp(
           `Connected to anchor service '${
             this.context.anchorService.url

@@ -87,5 +87,6 @@ export function countQuery(query: Record<string, any>): BaseQuery {
     model: StreamID.fromString(query.model),
     account: query.account,
     filter: query.filter,
+    queryFilters: query.queryFilters,
   }
 }

@@ -206,7 +206,7 @@ export class InsertionOrder {
     return builder
   }
 
-  private applyFilters(builder: QueryBuilder, query: BaseQuery): QueryBuilder {
+  applyFilters(builder: Knex.QueryBuilder, query: BaseQuery): Knex.QueryBuilder {
     if (query.account) {
       builder = builder.where({ controller_did: query.account })
     }

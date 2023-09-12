@@ -10,6 +10,7 @@ import type { CeramicApi } from '../ceramic-api.js'
 import first from 'it-first'
 import { create } from 'multiformats/hashes/digest'
 import { StreamUtils } from './stream-utils.js'
+import { CommitType, SignatureStatus } from '../stream.js'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
@@ -157,6 +158,25 @@ export class TestUtils {
       )
       await anchorService.anchor()
       await tillAnchored
+    }
+  }
+
+  static makeStreamState(): StreamState {
+    const cid = TestUtils.randomCID()
+    return {
+      type: 0,
+      content: { num: 0 },
+      metadata: {
+        controllers: [''],
+      },
+      signature: SignatureStatus.GENESIS,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
+      log: [
+        {
+          type: CommitType.GENESIS,
+          cid,
+        },
+      ],
     }
   }
 }

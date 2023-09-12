@@ -8,13 +8,12 @@ import {
   AnchorValidator,
   AnchorCommit,
   TestUtils,
+  AnchorEvent,
 } from '@ceramicnetwork/common'
-
 import type { Dispatcher } from '../../dispatcher.js'
 import { Ceramic } from '../../ceramic.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import type { DagJWS } from 'dids'
 import { Utils } from '../../utils.js'
 import { LRUCache } from 'least-recent'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
@@ -22,8 +21,6 @@ import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
 
-const DID_MATCHER =
-  '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
@@ -43,10 +40,9 @@ class Candidate {
   }
 }
 
-interface InMemoryAnchorConfig {
-  anchorDelay?: number
-  anchorOnRequest?: boolean
-  verifySignatures?: boolean
+type InMemoryAnchorConfig = {
+  anchorDelay: number
+  anchorOnRequest: boolean
 }
 
 // Caches recent anchor txn hashes and the timestamp when they were anchored
@@ -68,7 +64,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   readonly #anchorDelay: number
   readonly #anchorOnRequest: boolean
-  readonly #verifySignatures: boolean
   readonly #feed: Subject<CASResponse> = new Subject()
 
   // Maps CID of a specific anchor request to the current status of that request
@@ -76,13 +71,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   #queue: Candidate[] = []
 
-  constructor(_config: InMemoryAnchorConfig) {
-    this.#anchorDelay = _config?.anchorDelay ?? 0
-    this.#anchorOnRequest = _config?.anchorOnRequest ?? true
-    this.#verifySignatures = _config?.verifySignatures ?? true
+  readonly events: Observable<AnchorEvent>
+
+  constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
+    this.#anchorDelay = _config.anchorDelay ?? 0
+    this.#anchorOnRequest = _config.anchorOnRequest ?? true
 
     // Remember the most recent CASResponse for each anchor request
     this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
+    this.events = new Observable()
   }
 
   get chainId(): string {
@@ -157,11 +154,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
           // If we already have an identical request for the exact same commit on the same,
           // streamid, don't create duplicate Candidates
           continue
-        }
-
-        const commitData = await Utils.getCommitData(this.#dispatcher, req.cid, req.streamId, null)
-        if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
-          await this.verifySignedCommit(commitData.envelope)
         }
 
         const log = await this._loadCommitHistory(req.cid, req.streamId)
@@ -431,21 +423,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       })
       clearTimeout(handle)
     }, this.#anchorDelay)
-  }
-
-  /**
-   * Verifies commit signature
-   * @param envelope - JWS envelope
-   * @return DID
-   * @private
-   */
-  async verifySignedCommit(envelope: DagJWS): Promise<string> {
-    try {
-      const { kid } = await this.#ceramic.did.verifyJWS(envelope)
-      return kid.match(RegExp(DID_MATCHER))[1]
-    } catch (e) {
-      throw new Error('Invalid signature for signed commit. ' + e)
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

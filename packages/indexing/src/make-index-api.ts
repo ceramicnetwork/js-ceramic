@@ -3,6 +3,14 @@ import { Networks } from '@ceramicnetwork/common'
 import { buildIndexing, IndexingConfig } from './build-indexing.js'
 import { DatabaseIndexApi, SqliteIndexApi } from './database-index-api.js'
 
+export class UnsupportedIndexingDatabaseError extends Error {
+  constructor() {
+    super(
+      'SQLite is not supported for the ComposeDB indexing database in production use. Please setup a Postgres instance and update the config file to use ComposeDB, or disable ComposeDB to start up without an indexing database.'
+    )
+  }
+}
+
 /**
  * Make IndexAPI instance. Call `buildIndexing` inside.
  */
@@ -28,18 +36,12 @@ export function makeIndexApi(
   const indexApi = buildIndexing(indexingConfig, logger, network)
   // TODO(CDB-2310): replace experimental env var with config option from ceramic_config
   if (indexingConfig.enableHistoricalSync && indexApi instanceof SqliteIndexApi) {
-    throw Error(
-      'SQLite is not supported for the ComposeDB indexing database with historical syncing enabled. Please setup a Postgres instance and update the config file.'
-    )
-    return undefined
+    throw new UnsupportedIndexingDatabaseError()
   }
 
   // TODO(CDB-2078): extend with addt. properties from startup if MAINNET or sync is enabled
   if (network === Networks.MAINNET && indexApi instanceof SqliteIndexApi) {
-    throw Error(
-      'SQLite is not supported for the ComposeDB indexing database in production use. Please setup a Postgres instance and update the config file to use ComposeDB, or disable ComposeDB to start up without an indexing database.'
-    )
-    return undefined
+    throw new UnsupportedIndexingDatabaseError()
   }
 
   return indexApi

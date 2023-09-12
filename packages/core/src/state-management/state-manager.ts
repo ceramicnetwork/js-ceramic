@@ -2,15 +2,15 @@ import { Dispatcher } from '../dispatcher.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { commitAtTime, ConflictResolution } from '../conflict-resolution.js'
 import {
+  AnchorOpts,
   AnchorService,
   AnchorStatus,
   CreateOpts,
-  UpdateOpts,
-  RunningStateLike,
   DiagnosticsLogger,
-  StreamUtils,
   GenesisCommit,
-  AnchorOpts,
+  RunningStateLike,
+  StreamUtils,
+  UpdateOpts,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
@@ -22,6 +22,7 @@ import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { RepositoryInternals } from './repository-internals.js'
+import { OperationType } from './operation-type.js'
 
 export class StateManager {
   private readonly carFactory = new CARFactory()
@@ -94,15 +95,20 @@ export class StateManager {
    *
    * @param state$ - Running State
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
+   * @param opType - If we load, create or update a stream
    * @private
    */
-  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts): Promise<void> {
+  async applyWriteOpts(
+    state$: RunningState,
+    opts: CreateOpts | UpdateOpts,
+    opType: OperationType
+  ): Promise<void> {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
     if (anchor) {
       await this.anchor(state$, opts)
     }
-    if (publish) {
+    if (publish && opType !== OperationType.LOAD) {
       this.internals.publishTip(state$)
     }
   }

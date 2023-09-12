@@ -1,10 +1,7 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import {
-  AnchorStatus,
   Stream,
-  CommitType,
-  SignatureStatus,
   StreamUtils,
   TestUtils,
   StreamState,
@@ -16,27 +13,10 @@ import { StreamStateStore } from '../stream-state-store.js'
 
 class FakeType extends Stream {
   isReadOnly = true
+  metadata = {}
+
   makeReadOnly() {
     throw new Error('Method not implemented.')
-  }
-}
-
-const makeStreamState = function (): StreamState {
-  const cid = TestUtils.randomCID()
-  return {
-    type: 0,
-    content: { num: 0 },
-    metadata: {
-      controllers: [''],
-    },
-    signature: SignatureStatus.GENESIS,
-    anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [
-      {
-        type: CommitType.GENESIS,
-        cid,
-      },
-    ],
   }
 }
 
@@ -68,7 +48,7 @@ describe('LevelDB-backed StateStore', () => {
   test('#save and #load', async () => {
     const putSpy = jest.spyOn(stateStore.store, 'put')
 
-    const state = makeStreamState()
+    const state = TestUtils.makeStreamState()
     const stream = streamFromState(state)
     await stateStore.saveFromStreamStateHolder(stream)
     const streamId = stream.id.baseID
@@ -82,7 +62,7 @@ describe('LevelDB-backed StateStore', () => {
 
   describe('#load', () => {
     test('#load not found', async () => {
-      const streamID = StreamUtils.streamIdFromState(makeStreamState())
+      const streamID = StreamUtils.streamIdFromState(TestUtils.makeStreamState())
       const retrieved = await stateStore.load(streamID)
       expect(retrieved).toBeNull()
     })
@@ -92,7 +72,7 @@ describe('LevelDB-backed StateStore', () => {
       getSpy.mockImplementationOnce(() => {
         throw new Error('something internal to LevelDB')
       })
-      const streamID = StreamUtils.streamIdFromState(makeStreamState())
+      const streamID = StreamUtils.streamIdFromState(TestUtils.makeStreamState())
       await expect(stateStore.load(streamID)).rejects.toThrow('something internal to LevelDB')
 
       await getSpy.mockRestore()
@@ -100,7 +80,7 @@ describe('LevelDB-backed StateStore', () => {
   })
 
   test('#remove', async () => {
-    const state = makeStreamState()
+    const state = TestUtils.makeStreamState()
     const stream = streamFromState(state)
     await stateStore.saveFromStreamStateHolder(stream)
     const streamId = stream.id.baseID
@@ -116,7 +96,11 @@ describe('LevelDB-backed StateStore', () => {
 
   describe('#list', () => {
     test('saved entries', async () => {
-      const states = await Promise.all([makeStreamState(), makeStreamState(), makeStreamState()])
+      const states = await Promise.all([
+        TestUtils.makeStreamState(),
+        TestUtils.makeStreamState(),
+        TestUtils.makeStreamState(),
+      ])
       const streams = states.map((state) => streamFromState(state))
 
       let list = await stateStore.listStoredStreamIDs()
@@ -139,7 +123,7 @@ describe('LevelDB-backed StateStore', () => {
     })
 
     test('list with limit', async () => {
-      const states = await Promise.all([makeStreamState(), makeStreamState()])
+      const states = await Promise.all([TestUtils.makeStreamState(), TestUtils.makeStreamState()])
 
       await stateStore.saveFromStreamStateHolder(streamFromState(states[0]))
       await stateStore.saveFromStreamStateHolder(streamFromState(states[1]))
@@ -152,7 +136,7 @@ describe('LevelDB-backed StateStore', () => {
     })
 
     test('report if streamId is saved', async () => {
-      const state = makeStreamState()
+      const state = TestUtils.makeStreamState()
       const streamID = StreamUtils.streamIdFromState(state)
 
       // Stream absent from state store
@@ -184,7 +168,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
     const elpLevelStore = new LevelDbStore(tmpFolder.path, Networks.ELP)
     await stateStore.open(elpLevelStore)
 
-    const state = makeStreamState()
+    const state = TestUtils.makeStreamState()
     const stream = streamFromState(state)
     await stateStore.saveFromStreamStateHolder(stream)
     const retrievedFromElp = await stateStore.load(stream.id.baseID)
@@ -203,7 +187,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
     const clayLevelStore = new LevelDbStore(tmpFolder.path, Networks.TESTNET_CLAY)
     await stateStore.open(clayLevelStore)
 
-    const state = makeStreamState()
+    const state = TestUtils.makeStreamState()
     const stream = streamFromState(state)
     await stateStore.saveFromStreamStateHolder(stream)
     const retrievedFromClay = await stateStore.load(stream.id.baseID)

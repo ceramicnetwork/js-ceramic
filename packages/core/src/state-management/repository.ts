@@ -29,6 +29,7 @@ import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { RepositoryInternals } from './repository-internals.js'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
+import { OperationType } from './operation-type.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -45,11 +46,6 @@ export type RepositoryDependencies = {
   streamLoader: StreamLoader
 }
 
-enum OperationType {
-  CREATE,
-  UPDATE,
-  LOAD,
-}
 /**
  * Indicate if the stream should be indexed.
  */
@@ -248,7 +244,7 @@ export class Repository {
    * @private
    */
   async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts, opType: OperationType) {
-    await this.stateManager.applyWriteOpts(state$, opts)
+    await this.stateManager.applyWriteOpts(state$, opts, opType)
 
     await this.handlePinOpts(state$, opts as PinningOpts, opType)
   }
