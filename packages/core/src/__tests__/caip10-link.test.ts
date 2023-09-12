@@ -62,7 +62,6 @@ describe('Ceramic API', () => {
       ceramic = await createCeramic(ipfs, {
         stateStoreDirectory: tmpFolder.path,
         anchorOnRequest: false,
-        verifySignatures: false,
       })
       authProvider = { createLink: jest.fn() }
     })
