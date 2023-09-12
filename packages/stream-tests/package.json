@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.27.0-rc.0",
+    "@ceramicnetwork/anchor-utils": "^1.17.0-rc.0",
     "@ceramicnetwork/blockchain-utils-linking": "^2.19.0-rc.0",
     "@ceramicnetwork/blockchain-utils-validation": "^2.26.0-rc.0",
     "@ceramicnetwork/cli": "^2.39.0-rc.0",

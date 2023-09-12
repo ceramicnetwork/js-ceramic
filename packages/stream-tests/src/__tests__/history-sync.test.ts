@@ -9,7 +9,6 @@ import * as uint8arrays from 'uint8arrays'
 import { hash } from '@stablelib/sha256'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
-import { BaseProvider } from '@ethersproject/providers'
 
 import {
   BLOCK_CONFIRMATIONS,
@@ -174,20 +173,6 @@ class MockProvider extends EventEmitter {
 }
 
 const provider = new MockProvider()
-
-class MockProvidersCache {
-  ethereumRpcEndpoint = 'test'
-
-  async getProvider(chainId: string | null): Promise<BaseProvider> {
-    return provider as any
-  }
-}
-
-// jest.unstable_mockModule('../../providers-cache.js', () => {
-//   return {
-//     ProvidersCache: MockProvidersCache,
-//   }
-// })
 
 const extractStreamStates = (page: Page<StreamState | null>): Array<StreamState> => {
   if (page.edges.find((edge) => edge.node === null)) {
