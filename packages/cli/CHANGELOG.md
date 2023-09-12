@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.39.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.39.0-rc.0...@ceramicnetwork/cli@2.39.0-rc.1) (2023-09-12)
+
+
+### Features
+
+* **core, cli, stream-tests:** Add support for filters in count ([cef2139](https://github.com/ceramicnetwork/js-ceramic/commit/cef21396e170f5cf72260ad28520c0e91177ccb1))
+
+
+
+
+
 # [2.39.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.38.0...@ceramicnetwork/cli@2.39.0-rc.0) (2023-09-06)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

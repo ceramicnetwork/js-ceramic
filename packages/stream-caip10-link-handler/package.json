@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link-handler",
-  "version": "2.27.0-rc.0",
+  "version": "2.27.0-rc.1",
   "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",
@@ -39,10 +39,10 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-validation": "^2.26.0-rc.0",
-    "@ceramicnetwork/common": "^2.34.0-rc.0",
-    "@ceramicnetwork/stream-caip10-link": "^2.29.0-rc.0",
-    "@ceramicnetwork/stream-handler-common": "^1.24.0-rc.0"
+    "@ceramicnetwork/blockchain-utils-validation": "^2.26.0-rc.1",
+    "@ceramicnetwork/common": "^2.34.0-rc.1",
+    "@ceramicnetwork/stream-caip10-link": "^2.29.0-rc.1",
+    "@ceramicnetwork/stream-handler-common": "^1.24.0-rc.1"
   },
   "devDependencies": {
     "@stablelib/sha256": "^1.0.1",
