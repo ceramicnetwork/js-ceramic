@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model",
-  "version": "1.16.0-rc.0",
+  "version": "1.16.0-rc.1",
   "description": "Ceramic Model stream type",
   "keywords": [
     "ceramic",
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/codecs": "^1.9.0-rc.0",
-    "@ceramicnetwork/common": "^2.34.0-rc.0",
+    "@ceramicnetwork/common": "^2.34.0-rc.1",
     "@ceramicnetwork/streamid": "^2.17.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
