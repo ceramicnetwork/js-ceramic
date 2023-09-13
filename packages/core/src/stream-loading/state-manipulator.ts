@@ -179,7 +179,7 @@ export class StateManipulator {
     return log1[log1.length - 1].cid.bytes < log2[log2.length - 1].cid.bytes ? log1 : log2
   }
 
-  async _applyLogToState_noCacaoVerification(
+  async _applyLogToStateWithoutCacaoVerification(
     initialState: StreamState,
     logToApply: AppliableStreamLog,
     opts: ApplyLogToStateOpts
@@ -254,7 +254,11 @@ export class StateManipulator {
     logToApply: AppliableStreamLog,
     opts: ApplyLogToStateOpts
   ): Promise<StreamState> {
-    const state = await this._applyLogToState_noCacaoVerification(initialState, logToApply, opts)
+    const state = await this._applyLogToStateWithoutCacaoVerification(
+      initialState,
+      logToApply,
+      opts
+    )
 
     // The initial state may have included commits that were valid previously but have since had
     // their CACAOs expire.  Before returning the state back to the caller we should double-check
