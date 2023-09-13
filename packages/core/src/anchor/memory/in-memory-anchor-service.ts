@@ -114,7 +114,13 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async failPendingAnchors(): Promise<void> {
     const candidates = await this._findCandidates()
     for (const candidate of candidates) {
-      this._failCandidate(candidate, 'anchor failed')
+      this.#feed.next({
+        id: '',
+        status: AnchorRequestStatusName.FAILED,
+        streamId: candidate.streamId,
+        cid: candidate.cid,
+        message: 'anchor failed',
+      })
     }
 
     this.#queue = [] // reset
@@ -163,53 +169,22 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
     const result: Candidate[] = []
-    for (const compositeKey of Object.keys(groupedCandidates)) {
-      const candidates = groupedCandidates[compositeKey]
-
-      // When there are multiple valid candidate tips to anchor for the same streamId, pick the one
-      // with the largest log
-      let selected: Candidate = null
-      for (const c of candidates) {
-        if (selected == null) {
-          selected = c
-          continue
-        }
-
-        if (c.log.length < selected.log.length) {
-          this._failCandidate(c)
-        } else if (c.log.length > selected.log.length) {
-          this._failCandidate(selected)
-          selected = c
-        } else {
-          // If there are two conflicting candidates with the same log length, we must choose
-          // which to anchor deterministically. We use the same arbitrary but deterministic strategy
-          // that js-ceramic conflict resolution does: choosing the commit whose CID is smaller
-          if (c.cid.bytes < selected.cid.bytes) {
-            this._failCandidate(selected)
-            selected = c
-          } else {
-            this._failCandidate(c)
-          }
-        }
+    for (const candidates of Object.values(groupedCandidates)) {
+      const init = candidates.slice(0, candidates.length - 1)
+      const last = candidates[candidates.length - 1]
+      for (const replaced of init) {
+        this.#feed.next({
+          id: '',
+          status: AnchorRequestStatusName.FAILED,
+          streamId: replaced.streamId,
+          cid: replaced.cid,
+          message: 'replaced',
+        })
       }
-
-      result.push(selected)
+      result.push(last)
     }
 
     return result
-  }
-
-  _failCandidate(candidate: Candidate, message?: string): void {
-    if (!message) {
-      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`
-    }
-    this.#feed.next({
-      id: '',
-      status: AnchorRequestStatusName.FAILED,
-      streamId: candidate.streamId,
-      cid: candidate.cid,
-      message,
-    })
   }
 
   _startProcessingCandidate(candidate: Candidate, message?: string): void {
