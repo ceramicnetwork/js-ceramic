@@ -1,10 +1,10 @@
 import { LogSyncer } from './log-syncer.js'
 import { TipFetcher } from './tip-fetcher.js'
-import { ApplyLogToStateOpts, StateManipulator } from './state-manipulator.js'
+import { StateManipulator } from './state-manipulator.js'
 import { AnchorTimestampExtractor } from './anchor-timestamp-extractor.js'
 import { DiagnosticsLogger, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import { CID } from 'multiformats/cid'
+import { applyTipToState } from './apply-tip-helper.js'
 
 /**
  * Class to contain all the logic for loading a stream, including fetching the relevant commit
@@ -47,28 +47,18 @@ export class StreamLoader {
     const streamID = StreamUtils.streamIdFromState(state)
     const tip = await this.tipFetcher.findTip(streamID, syncTimeoutSecs)
 
-    return this._applyTipToState(state, tip, {
-      throwOnInvalidCommit: false,
-      throwIfStale: false,
-      throwOnConflict: false,
-    })
-  }
-
-  private async _applyTipToState(
-    state: StreamState,
-    tip: CID,
-    opts: ApplyLogToStateOpts
-  ): Promise<StreamState> {
-    const streamID = StreamUtils.streamIdFromState(state)
-    const logWithoutTimestamps = await this.logSyncer.syncLogUntilMatch(
-      streamID,
+    return applyTipToState(
+      this.logSyncer,
+      this.anchorTimestampExtractor,
+      this.stateManipulator,
+      state,
       tip,
-      state.log.map((logEntry) => logEntry.cid)
+      {
+        throwOnInvalidCommit: false,
+        throwIfStale: false,
+        throwOnConflict: false,
+      }
     )
-    const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
-      logWithoutTimestamps
-    )
-    return await this.stateManipulator.applyLogToState(state, logWithTimestamps, opts)
   }
 
   /**
@@ -83,7 +73,14 @@ export class StreamLoader {
     const opts = { throwOnInvalidCommit: true, throwOnConflict: true, throwIfStale: false }
 
     // If 'commit' is ahead of 'initialState', sync state up to 'commit'
-    const baseState = await this._applyTipToState(initialState, commitId.commit, opts)
+    const baseState = await applyTipToState(
+      this.logSyncer,
+      this.anchorTimestampExtractor,
+      this.stateManipulator,
+      initialState,
+      commitId.commit,
+      opts
+    )
 
     // If the commitId is now the tip, we're done.
     if (baseState.log[baseState.log.length - 1].cid.equals(commitId.commit)) {
