@@ -43,6 +43,22 @@ const txnCache: LRUCache<string, number> = new LRUCache(100)
 const carFactory = new CARFactory()
 carFactory.codecs.add(DAG_JOSE)
 
+function groupCandidatesByStreamId(candidates: Candidate[]): Record<string, Candidate[]> {
+  const result: Record<string, Candidate[]> = {}
+  for (const req of candidates) {
+    const key = req.key
+    const items = result[key] || []
+    if (items.find((c) => c.cid.equals(req.cid))) {
+      // If we already have an identical request for the exact same commit on the same,
+      // streamid, don't create duplicate Candidates
+      continue
+    }
+    items.push(req)
+    result[key] = items
+  }
+  return result
+}
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
@@ -133,34 +149,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
-    const groupedCandidates = await this._groupCandidatesByStreamId(this.#queue)
-    return this._selectValidCandidates(groupedCandidates)
-  }
-
-  async _groupCandidatesByStreamId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
-    const result: Record<string, Candidate[]> = {}
-    for (const req of candidates) {
-      const key = req.key
-      const items = result[key] || []
-      if (items.find((c) => c.cid.equals(req.cid))) {
-        // If we already have an identical request for the exact same commit on the same,
-        // streamid, don't create duplicate Candidates
-        continue
-      }
-      items.push(req)
-      result[key] = items
-    }
-    return result
-  }
-
-  _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
+    const groupedCandidates = groupCandidatesByStreamId(this.#queue)
+    // Select last candidate per stream, mark others REPLACED
     return Object.values(groupedCandidates).map((candidates) => {
       const init = candidates.slice(0, candidates.length - 1)
       const last = candidates[candidates.length - 1]
       for (const replaced of init) {
         this.#feed.next({
           id: '',
-          status: AnchorRequestStatusName.FAILED,
+          status: AnchorRequestStatusName.REPLACED,
           streamId: replaced.streamId,
           cid: replaced.cid,
           message: 'replaced',
