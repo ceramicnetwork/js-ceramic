@@ -25,18 +25,16 @@ const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
-  constructor(readonly carFileReader: AnchorRequestCarFileReader, readonly log?: CID[]) {}
+  readonly streamId: StreamID
+  readonly cid: CID
+  readonly key: string
+  readonly log?: Array<CID>
 
-  get streamId(): StreamID {
-    return this.carFileReader.streamId
-  }
-
-  get cid(): CID {
-    return this.carFileReader.tip
-  }
-
-  get key(): string {
-    return this.carFileReader.streamId.toString()
+  constructor(readonly carFileReader: AnchorRequestCarFileReader, log?: CID[]) {
+    this.streamId = carFileReader.streamId
+    this.cid = carFileReader.tip
+    this.key = carFileReader.streamId.toString()
+    this.log = log
   }
 }
 
