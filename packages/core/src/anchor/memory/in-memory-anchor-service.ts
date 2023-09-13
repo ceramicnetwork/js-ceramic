@@ -12,7 +12,6 @@ import {
 import type { Dispatcher } from '../../dispatcher.js'
 import { Ceramic } from '../../ceramic.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { LRUCache } from 'least-recent'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
@@ -23,15 +22,11 @@ const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
-  readonly streamId: StreamID
-  readonly cid: CID
-  readonly key: string
-
-  constructor(readonly carFileReader: AnchorRequestCarFileReader) {
-    this.streamId = carFileReader.streamId
-    this.cid = carFileReader.tip
-    this.key = carFileReader.streamId.toString()
+  static fromCarFileReader(reader: AnchorRequestCarFileReader): Candidate {
+    return new Candidate(reader.streamId, reader.tip, reader.streamId.toString())
   }
+
+  constructor(readonly streamId: StreamID, readonly cid: CID, readonly key: string) {}
 }
 
 type InMemoryAnchorConfig = {
@@ -154,7 +149,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         continue
       }
 
-      const candidate = new Candidate(req.carFileReader)
+      const candidate = new Candidate(req.streamId, req.cid, req.key)
 
       result[candidate.key].push(candidate)
     }
@@ -212,7 +207,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     waitForConfirmation: boolean
   ): Promise<Observable<CASResponse>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const candidate = new Candidate(carFileReader)
+    const candidate = Candidate.fromCarFileReader(carFileReader)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
