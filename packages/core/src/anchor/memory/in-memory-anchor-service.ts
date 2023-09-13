@@ -162,8 +162,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
-    const result: Candidate[] = []
-    for (const candidates of Object.values(groupedCandidates)) {
+    return Object.values(groupedCandidates).map((candidates) => {
       const init = candidates.slice(0, candidates.length - 1)
       const last = candidates[candidates.length - 1]
       for (const replaced of init) {
@@ -175,10 +174,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
           message: 'replaced',
         })
       }
-      result.push(last)
-    }
-
-    return result
+      return last
+    })
   }
 
   _startProcessingCandidate(candidate: Candidate, message?: string): void {
