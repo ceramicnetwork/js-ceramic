@@ -25,7 +25,10 @@ export class StreamUpdater {
   ) {}
 
   /**
-   *
+   * Applies a tip that was learned about via the p2p network (ie from pubsub, ReCon, HDS, etc) to
+   * the given StreamState.  Because it came from the network, we cannot trust that the tip is
+   * actually a valid tip for the stream.  If it is not, we just return the same StreamState
+   * unmodified.
    * @param state
    * @param tip
    */
@@ -44,6 +47,15 @@ export class StreamUpdater {
     )
   }
 
+  /**
+   * Apply a commit that came in from an active application request via the HTTP client. Because
+   * this write comes in from an active application session, we apply stricter rules to it and
+   * throw errors in cases that might indicate an application bug - for instance if the write
+   * is built on stale state in the client relative to what the server knows is the most current
+   * state for the Stream.
+   * @param state
+   * @param commit
+   */
   async applyCommitFromUser(state: StreamState, commit: CeramicCommit): Promise<StreamState> {
     const tip = await this.commitStorer.storeCommit(commit, StreamUtils.streamIdFromState(state))
 
