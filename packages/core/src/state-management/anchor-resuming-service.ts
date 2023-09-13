@@ -76,6 +76,7 @@ export class AnchorResumingService {
   async close(): Promise<void> {
     this.logger.debug('Closing AnchorResumingService')
     this.#shouldBeClosed = true
+    this.resumeQ.clear()
     this.logger.debug('Waiting for remaining AnchorResumingService tasks to stop')
     await this.resumeQ.onIdle()
     this.logger.debug('AnchorResumingService closed')
