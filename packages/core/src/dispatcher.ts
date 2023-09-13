@@ -387,6 +387,8 @@ export class Dispatcher {
 
           if (retries > 0) {
             continue
+          } else {
+            throw new Error(`Timeout error while loading CID ${asCid.toString()} from IPFS: ${err}`)
           }
         }
 
