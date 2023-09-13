@@ -1,5 +1,6 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
+  AnchorOpts,
   AnchorService,
   CommitType,
   Context,
@@ -21,7 +22,7 @@ import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { ConflictResolution } from '../conflict-resolution.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { Observable } from 'rxjs'
+import { Observable, Subscription } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -30,6 +31,7 @@ import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { RepositoryInternals } from './repository-internals.js'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
+import { CID } from 'multiformats/cid'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -84,7 +86,7 @@ export class Repository {
   /**
    * Instance of StateManager for performing operations on stream state.
    */
-  stateManager: StateManager
+  private stateManager: StateManager
 
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
@@ -237,6 +239,24 @@ export class Repository {
   }
 
   /**
+   * Handles update. Update may come from the PubSub topic or from running a sync
+   *
+   * @param streamId
+   * @param tip - Stream Tip CID
+   * @param model - Model Stream ID
+   */
+  async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    return this.stateManager.handleUpdate(streamId, tip, model)
+  }
+
+  /**
+   * Request anchor for the latest stream state
+   */
+  async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
+    return this.stateManager.anchor(state$, opts)
+  }
+
+  /**
    * Apply options relating to authoring a new commit
    *
    * @param state$ - Running State
@@ -348,6 +368,10 @@ export class Repository {
 
     this._internals.markUnpinned(state$.id)
     return this.#deps.pinStore.rm(state$)
+  }
+
+  markPinnedAndSynced(streamId: StreamID): void {
+    this._internals.markPinnedAndSynced(streamId)
   }
 
   /**
