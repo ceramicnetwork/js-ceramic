@@ -54,7 +54,6 @@ carFactory.codecs.add(DAG_JOSE)
 export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
-  #logger: DiagnosticsLogger
 
   readonly #anchorDelay: number
   readonly #anchorOnRequest: boolean
@@ -203,7 +202,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   set ceramic(ceramic: Ceramic) {
     this.#ceramic = ceramic
     this.#dispatcher = this.#ceramic.dispatcher
-    this.#logger = this.#ceramic?.context?.loggerProvider.getDiagnosticsLogger()
   }
 
   /**
