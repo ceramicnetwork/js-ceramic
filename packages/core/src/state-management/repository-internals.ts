@@ -294,6 +294,78 @@ export class RepositoryInternals {
     return this.processAnchorResponse(state$, anchorStatus$)
   }
 
+  /**
+   * Handle CASResponse and update state$.
+   *
+   * @param state$ - RunningState instance to update.
+   * @param asr - response from CAS.
+   * @return boolean - `true` if polling should stop, `false` if polling continues
+   */
+  async handleAnchorResponse(state$: RunningState, asr: CASResponse): Promise<boolean> {
+    // We don't want to change a stream's state due to changes to the anchor
+    // status of a commit that is no longer the tip of the stream, so we early return
+    // in most cases when receiving a response to an old anchor request.
+    // The one exception is if the CASResponse indicates that the old commit
+    // is now anchored, in which case we still want to try to process the anchor commit
+    // and let the stream's conflict resolution mechanism decide whether or not to update
+    // the stream's state.
+    const status = asr.status
+    switch (status) {
+      case AnchorRequestStatusName.READY:
+      case AnchorRequestStatusName.PENDING: {
+        if (!asr.cid.equals(state$.tip)) return
+        const next = {
+          ...state$.value,
+          anchorStatus: AnchorStatus.PENDING,
+        }
+        state$.next(next)
+        await this._updateStateIfPinned(state$)
+        return false
+      }
+      case AnchorRequestStatusName.PROCESSING: {
+        if (!asr.cid.equals(state$.tip)) return
+        state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
+        await this._updateStateIfPinned(state$)
+        return false
+      }
+      case AnchorRequestStatusName.COMPLETED: {
+        if (asr.cid.equals(state$.tip)) {
+          await this.#anchorRequestStore.remove(state$.id)
+        }
+        await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit.cid, asr.witnessCar)
+        return true
+      }
+      case AnchorRequestStatusName.FAILED: {
+        this.#logger.warn(
+          `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
+        )
+
+        // if this is the anchor response for the tip update the state
+        if (asr.cid.equals(state$.tip)) {
+          state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
+          await this.#anchorRequestStore.remove(state$.id)
+        }
+        // we stop the polling as this is a terminal state
+        return true
+      }
+      case AnchorRequestStatusName.REPLACED: {
+        this.#logger.verbose(
+          `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
+        )
+
+        // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
+        // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
+        if (asr.cid.equals(state$.tip)) {
+          await this.#anchorRequestStore.remove(state$.id)
+        }
+
+        return true
+      }
+      default:
+        throw new UnreachableCaseError(status, 'Unknown anchoring state')
+    }
+  }
+
   processAnchorResponse(
     state$: RunningState,
     anchorStatus$: Observable<CASResponse>
@@ -305,73 +377,8 @@ export class RepositoryInternals {
       .pipe(
         takeUntil(stopSignal),
         concatMap(async (asr) => {
-          // We don't want to change a stream's state due to changes to the anchor
-          // status of a commit that is no longer the tip of the stream, so we early return
-          // in most cases when receiving a response to an old anchor request.
-          // The one exception is if the CASResponse indicates that the old commit
-          // is now anchored, in which case we still want to try to process the anchor commit
-          // and let the stream's conflict resolution mechanism decide whether or not to update
-          // the stream's state.
-          const status = asr.status
-          switch (status) {
-            case AnchorRequestStatusName.READY:
-            case AnchorRequestStatusName.PENDING: {
-              if (!asr.cid.equals(state$.tip)) return
-              const next = {
-                ...state$.value,
-                anchorStatus: AnchorStatus.PENDING,
-              }
-              state$.next(next)
-              await this._updateStateIfPinned(state$)
-              return
-            }
-            case AnchorRequestStatusName.PROCESSING: {
-              if (!asr.cid.equals(state$.tip)) return
-              state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-              await this._updateStateIfPinned(state$)
-              return
-            }
-            case AnchorRequestStatusName.COMPLETED: {
-              if (asr.cid.equals(state$.tip)) {
-                await this.#anchorRequestStore.remove(state$.id)
-              }
-
-              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit.cid, asr.witnessCar)
-
-              stopSignal.next()
-              return
-            }
-            case AnchorRequestStatusName.FAILED: {
-              this.#logger.warn(
-                `Anchor failed for commit ${asr.cid} of stream ${asr.streamId}: ${asr.message}`
-              )
-
-              // if this is the anchor response for the tip update the state
-              if (asr.cid.equals(state$.tip)) {
-                state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
-                await this.#anchorRequestStore.remove(state$.id)
-              }
-              // we stop the polling as this is a terminal state
-              stopSignal.next()
-              return
-            }
-            case AnchorRequestStatusName.REPLACED: {
-              this.#logger.verbose(
-                `Anchor request for commit ${asr.cid} of stream ${asr.streamId} is replaced`
-              )
-
-              // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
-              // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
-              if (asr.cid.equals(state$.tip)) {
-                await this.#anchorRequestStore.remove(state$.id)
-              }
-
-              stopSignal.next()
-              return
-            }
-            default:
-              throw new UnreachableCaseError(status, 'Unknown anchoring state')
-          }
+          const shouldStop = await this.handleAnchorResponse(state$, asr)
+          if (shouldStop) stopSignal.next()
         }),
         catchError((error) => {
           // TODO: Combine these two log statements into one line so that they can't get split up in the
