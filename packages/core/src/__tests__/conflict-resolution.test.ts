@@ -155,7 +155,7 @@ describe('pickLogToAccept', () => {
       log: [{ cid: cids[4] }, { cid: cids[0], timestamp: 10 }],
     } as unknown as StreamState
 
-    // When anchored in the same blockchain, same block, and with same log lengths, we should choose the one with
+    // When anchored in the same blockchain, same block, and with different log lengths, we should choose the one with
     // longer log length
     expect(await pickLogToAccept(state1, state2)).toEqual(state1)
     expect(await pickLogToAccept(state2, state1)).toEqual(state1)
