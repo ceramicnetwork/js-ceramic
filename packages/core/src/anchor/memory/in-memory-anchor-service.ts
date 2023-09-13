@@ -73,6 +73,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   readonly events: Observable<AnchorEvent>
 
+  readonly chainId = CHAIN_ID
+  readonly url = '<inmemory>'
+  readonly ethereumRpcEndpoint = null
+
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
@@ -80,10 +84,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     // Remember the most recent CASResponse for each anchor request
     this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
     this.events = new Observable()
-  }
-
-  get chainId(): string {
-    return CHAIN_ID
   }
 
   async init(): Promise<void> {
@@ -266,14 +266,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     this.#ceramic = ceramic
     this.#dispatcher = this.#ceramic.dispatcher
     this.#logger = this.#ceramic?.context?.loggerProvider.getDiagnosticsLogger()
-  }
-
-  get url() {
-    return '<inmemory>'
-  }
-
-  get ethereumRpcEndpoint(): string | null {
-    return null
   }
 
   /**
