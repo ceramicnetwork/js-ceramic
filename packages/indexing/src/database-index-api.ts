@@ -16,7 +16,7 @@ import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
 import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
 import { addColumnPrefix } from './column-name.util.js'
-import { ISyncQueryApi } from '../history-sync/interfaces.js'
+import { ISyncQueryApi } from './history-sync/interfaces.js'
 import cloneDeep from 'lodash.clonedeep'
 import { indexNameFromTableName } from './migrations/1-create-model-table.js'
 
@@ -62,9 +62,9 @@ type IndexedData<DateType> = {
   controller_did: string
   stream_content: Record<string, any> | string
   tip: string
-  last_anchored_at: DateType
-  first_anchored_at: DateType
-  created_at: DateType
+  last_anchored_at: DateType | null
+  first_anchored_at: DateType | null
+  created_at?: DateType
   updated_at: DateType
 }
 
@@ -77,8 +77,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
   // to
   private readonly modelRelations = new Map<string, Array<string>>()
-  tablesManager: TablesManager
-  syncApi: ISyncQueryApi
+  tablesManager!: TablesManager
+  syncApi!: ISyncQueryApi
 
   protected constructor(
     protected readonly dbConnection: Knex,
@@ -192,13 +192,13 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
-    const indexedData = this.getIndexedData(indexingArgs)
+    const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
     const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
     for (const relation of relations) {
       indexedData[addColumnPrefix(relation)] = indexingArgs.streamContent[relation]
     }
     const toMerge = cloneDeep(indexedData)
-    delete toMerge.created_at
+    delete toMerge['created_at']
     await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
   }
 
@@ -337,7 +337,7 @@ export class PostgresIndexApi extends DatabaseIndexApi<Date> {
   }
 
   getCountFromResult(response: Array<Record<string, string | number>>): number {
-    return Number(response[0]['count'])
+    return Number(response[0]!['count'])
   }
 
   getIndexedData(
@@ -368,7 +368,7 @@ export function asTimestamp(input: Date | null | undefined): number | null {
   if (input) {
     return input.valueOf()
   } else {
-    return undefined
+    return null
   }
 }
 
@@ -387,7 +387,7 @@ export class SqliteIndexApi extends DatabaseIndexApi<number> {
     return new Date().valueOf()
   }
 
-  getCountFromResult(response: Array<Record<string, string | number>>): number {
+  getCountFromResult(response: [Record<string, string | number>]): number {
     return Number(response[0]['count(*)'])
   }
 

@@ -8,7 +8,7 @@ const METADATA_PATH = '2'
  * Retrieves the leaves of a Merkle Tree based on the merkle trees metadata
  */
 export class MerkleTreeLoader {
-  private _metadata: TreeMetadata
+  private _metadata!: TreeMetadata
 
   constructor(private readonly ipfsService: IpfsService, private readonly rootCid: CID) {}
 
@@ -38,7 +38,7 @@ export class MerkleTreeLoader {
       pathString(path.slice(0, -1))
     )
     const lastPathDirection = path[path.length - 1]
-    const cid = parent[lastPathDirection]
+    const cid = parent[lastPathDirection!]
 
     return { cid, path }
   }

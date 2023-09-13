@@ -21,7 +21,7 @@ type QueryResult = {
   created_at: number
   stream_content: string
 }
-type QueryBuilder = Knex.QueryBuilder<unknown, Array<QueryResult>>
+type QueryBuilder = Knex.QueryBuilder<any, Array<QueryResult>>
 
 /**
  * Stream `id` is always present in cursor, with the `value` either a record of content keys and values (if custom ordering is provided) or the `created_at` field value as fallback, based on the `type` value
@@ -124,7 +124,7 @@ export class InsertionOrder {
         return {
           edges: entries.map((row) => {
             return {
-              cursor: Cursor.stringify(row, orderByKeys),
+              cursor: Cursor.stringify(row, orderByKeys)!,
               node: StreamID.fromString(row.stream_id),
             }
           }),
@@ -145,7 +145,7 @@ export class InsertionOrder {
         return {
           edges: entries.map((row) => {
             return {
-              cursor: Cursor.stringify(row, orderByKeys),
+              cursor: Cursor.stringify(row, orderByKeys)!,
               node: StreamID.fromString(row.stream_id),
             }
           }),
@@ -220,7 +220,7 @@ export class InsertionOrder {
     } else if (query.filter) {
       // Handle legacy `filter` object used for relations
       for (const [key, value] of Object.entries(query.filter)) {
-        const filterObj = {}
+        const filterObj: Record<string, string> = {}
         filterObj[addColumnPrefix(key)] = value
         builder = builder.andWhere(filterObj)
       }

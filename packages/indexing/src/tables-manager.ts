@@ -60,7 +60,7 @@ export class TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  async initMidTables(modelsToIndex: Array<IndexModelArgs>): Promise<void> {
+  async initMidTables(_modelsToIndex: Array<IndexModelArgs>): Promise<void> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -69,7 +69,7 @@ export class TablesManager {
    * @param tableName
    * @param args
    */
-  async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  async hasMidIndices(_tableName: string, _args: IndexModelArgs): Promise<boolean> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -220,7 +220,7 @@ export class PostgresTablesManager extends TablesManager {
   /**
    * List existing mid tables.
    */
-  async listMidTables(): Promise<Array<string>> {
+  override async listMidTables(): Promise<Array<string>> {
     const result: Array<{ tablename: string }> = await this.dataSource
       .select('tablename')
       .from('pg_tables')
@@ -233,7 +233,7 @@ export class PostgresTablesManager extends TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
+  override async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
     await Promise.all(
       modelsToIndex.map(async (modelIndexArgs) => {
         await this.initMidTable(modelIndexArgs)
@@ -268,7 +268,7 @@ export class PostgresTablesManager extends TablesManager {
    * @param tableName
    * @param args
    */
-  async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
@@ -285,7 +285,7 @@ and indexname in (${sqlIndices});
     return expectedIndices.length == actualIndices.rowCount
   }
 
-  hasJsonBSupport(): boolean {
+  override hasJsonBSupport(): boolean {
     return true
   }
 }
@@ -298,7 +298,7 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * List existing mid tables.
    */
-  async listMidTables(): Promise<Array<string>> {
+  override async listMidTables(): Promise<Array<string>> {
     const result: Array<{ name: string }> = await this.dataSource
       .from('sqlite_schema')
       .select('name')
@@ -310,7 +310,7 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
+  override async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
     const existingTables = await this.listMidTables()
     await Promise.all(
       modelsToIndex.map(async (modelIndexArgs) => {
@@ -340,7 +340,7 @@ export class SqliteTablesManager extends TablesManager {
    * @param tableName
    * @param args IndexModelArgs for checking indices
    */
-  async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
@@ -359,7 +359,7 @@ and name in (${sqlIndices})
     return expectedIndices.length == actualIndices.length
   }
 
-  hasJsonBSupport(): boolean {
+  override hasJsonBSupport(): boolean {
     return false
   }
 }

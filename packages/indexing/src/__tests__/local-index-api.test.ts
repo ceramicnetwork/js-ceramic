@@ -1,12 +1,9 @@
 import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
-import type { Repository } from '../../state-management/repository.js'
-import type { Context, DiagnosticsLogger, Page } from '@ceramicnetwork/common'
+import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
-import { LocalIndexApi } from '../local-index-api.js'
+import { type CeramicCoreApi, LocalIndexApi } from '../local-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
-import { IndexingConfig } from '../build-indexing.js'
-import { HandlersMap } from '../../handlers-map.js'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
@@ -35,16 +32,11 @@ describe('with database backend', () => {
       }
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
-    const fauxRepository = { streamState: streamStateFn } as unknown as Repository
+    const fauxCore = { loadStreamState: streamStateFn } as unknown as CeramicCoreApi
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
 
-    const indexApi = new LocalIndexApi(
-      undefined as IndexingConfig,
-      fauxRepository,
-      fauxLogger,
-      Networks.INMEMORY
-    )
+    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
     ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -81,18 +73,13 @@ describe('with database backend', () => {
       return undefined
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
-    const fauxRepository = { streamState: streamStateFn } as unknown as Repository
+    const fauxCore = { loadStreamState: streamStateFn } as unknown as CeramicCoreApi
     const fauxLogger = {
       warn: jest.fn((content: string | Record<string, unknown> | Error) => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(
-      undefined as IndexingConfig,
-      fauxRepository,
-      fauxLogger,
-      Networks.INMEMORY
-    )
+    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
     ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -113,10 +100,10 @@ describe('with database backend', () => {
 
 describe('without database backend', () => {
   test('return an empty response', async () => {
-    const fauxRepository = {} as unknown as Repository
+    const fauxCore = {} as unknown as CeramicCoreApi
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
 
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
@@ -133,10 +120,10 @@ describe('without database backend', () => {
 })
 
 test('count', async () => {
-  const fauxRepository = {} as unknown as Repository
+  const fauxCore = {} as unknown as CeramicCoreApi
   const warnFn = jest.fn()
   const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-  const indexApi = new LocalIndexApi(undefined, fauxRepository, fauxLogger, Networks.INMEMORY)
+  const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
   const expected = Math.random()
   const countFn = jest.fn(() => expected)
   const fauxBackend = { count: countFn } as unknown as DatabaseIndexApi

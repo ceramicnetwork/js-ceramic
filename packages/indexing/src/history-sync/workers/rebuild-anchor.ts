@@ -130,10 +130,10 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
 
             const anchorCommitCid = await this.ipfsService.storeCommit(anchorCommit)
 
-            await this.handleCommit(streamId, anchorCommitCid, model)
+            await this.handleCommit(streamId, anchorCommitCid, model!)
 
             this.logger.debug(
-              `Successfully handled anchor commit ${anchorCommitCid} for stream ${streamId.toString()} and model ${model.toString()} using merkle tree root ${
+              `Successfully handled anchor commit ${anchorCommitCid} for stream ${streamId.toString()} and model ${model!.toString()} using merkle tree root ${
                 jobData.root
               }`
             )

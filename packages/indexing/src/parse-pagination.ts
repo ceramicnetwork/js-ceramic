@@ -33,4 +33,5 @@ export function parsePagination(query: Pagination): PaginationQuery {
       before: query.before,
     }
   }
+  throw new Error('Invalid pagination query')
 }

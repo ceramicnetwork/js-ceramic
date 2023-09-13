@@ -6,22 +6,28 @@ import type {
   PaginationQuery,
   StreamState,
   DiagnosticsLogger,
+  LoadOpts,
+  Stream,
 } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
-import type { Repository } from '../state-management/repository.js'
 import { IndexStreamArgs } from './database-index-api.js'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { type CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { IndexingConfig } from './build-indexing.js'
-import { makeIndexApi } from '../initialization/make-index-api.js'
+import { makeIndexApi } from './make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
-import { ISyncQueryApi } from '../history-sync/interfaces.js'
+import { ISyncQueryApi } from './history-sync/interfaces.js'
+
+export type CeramicCoreApi = {
+  loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>
+  loadStreamState(streamId: StreamID): Promise<StreamState | undefined>
+}
 
 /**
  * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
-async function _getIndexModelArgs(req: ModelData, repository: Repository): Promise<IndexModelArgs> {
+async function _getIndexModelArgs(req: ModelData, core: CeramicCoreApi): Promise<IndexModelArgs> {
   const modelStreamId = req.streamID
   if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
@@ -32,7 +38,7 @@ async function _getIndexModelArgs(req: ModelData, repository: Repository): Promi
   }
 
   if (modelStreamId.type == Model.STREAM_TYPE_ID) {
-    const modelState = await repository.load(modelStreamId, {})
+    const modelState = await core.loadStream(modelStreamId, {})
     const content = modelState.state.next?.content ?? modelState.state.content
     Model.assertVersionValid(content, 'major')
     if (content.relations) {
@@ -52,8 +58,8 @@ export class LocalIndexApi implements IndexApi {
   public readonly enabled: boolean
 
   constructor(
-    private readonly indexingConfig: IndexingConfig,
-    private readonly repository: Repository,
+    indexingConfig: IndexingConfig | undefined,
+    private readonly core: CeramicCoreApi,
     private readonly logger: DiagnosticsLogger,
     networkName: Networks
   ) {
@@ -86,11 +92,11 @@ export class LocalIndexApi implements IndexApi {
     if (!this.shouldIndexStream(args.model)) {
       return
     }
-    await this.databaseIndexApi.indexStream(args)
+    await this.databaseIndexApi!.indexStream(args)
   }
 
   async count(query: BaseQuery): Promise<number> {
-    return this.databaseIndexApi.count(query)
+    return this.databaseIndexApi!.count(query)
   }
 
   /**
@@ -115,7 +121,7 @@ export class LocalIndexApi implements IndexApi {
     const edges = await Promise.all(
       // For database queries we bypass the stream cache and repository loading queue
       page.edges.map(async (edge) => {
-        let node = await this.repository.streamState(edge.node)
+        const node = (await this.core.loadStreamState(edge.node)) ?? null
         if (!node) {
           this.logger.warn(`
             Did not find stream state for streamid ${
@@ -125,7 +131,6 @@ export class LocalIndexApi implements IndexApi {
             Please check that your state store is properly configured with strong persistence guarantees.
             This query may have incomplete results. Affected query: ${JSON.stringify(query)}
             `)
-          node = null
         }
 
         return {
@@ -161,7 +166,7 @@ export class LocalIndexApi implements IndexApi {
       )
     }
 
-    return await _getIndexModelArgs(modelData, this.repository)
+    return await _getIndexModelArgs(modelData, this.core)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {

@@ -49,13 +49,11 @@ import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-valid
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
-import { LocalIndexApi } from './indexing/local-index-api.js'
+import { type IndexingConfig, LocalIndexApi, SyncApi } from '@ceramicnetwork/indexing'
 import { ShutdownSignal } from './shutdown-signal.js'
-import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
-import { SyncApi } from './history-sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
 import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
@@ -276,7 +274,7 @@ export class Ceramic implements CeramicApi {
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
       params.indexingConfig,
-      this.repository,
+      this, // Circular dependency while core provided indexing
       this._logger,
       params.networkOptions.name
     )
@@ -786,6 +784,14 @@ export class Ceramic implements CeramicApi {
         )
       }
     }
+  }
+
+  /**
+   * Load stream state for indexing queries, bypassing the stream cache and repository loading queue
+   * @param streamId - Stream ID
+   */
+  async loadStreamState(streamId: StreamID): Promise<StreamState | undefined> {
+    return await this.repository.streamState(streamId)
   }
 
   /**

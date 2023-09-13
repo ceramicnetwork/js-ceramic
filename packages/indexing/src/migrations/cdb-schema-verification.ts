@@ -4,7 +4,7 @@ import { DatabaseType } from './1-create-model-table.js'
 interface ColumnInfo {
   defaultValue: any // Value in Knex
   type: string
-  maxLength: number | string
+  maxLength: number | string | null
   nullable: boolean
 }
 type TableInfo = Record<string, ColumnInfo>

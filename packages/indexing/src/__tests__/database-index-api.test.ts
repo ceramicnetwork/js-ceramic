@@ -25,7 +25,7 @@ import {
 import { STRUCTURES } from '../migrations/cdb-schema-verification.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
-import { ISyncQueryApi } from '../../history-sync/interfaces.js'
+import { ISyncQueryApi } from '../history-sync/interfaces.js'
 import { TablesManager } from '../tables-manager.js'
 
 const STREAM_ID_A = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'

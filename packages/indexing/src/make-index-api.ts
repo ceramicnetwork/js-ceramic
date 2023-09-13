@@ -1,7 +1,7 @@
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Networks } from '@ceramicnetwork/common'
-import { buildIndexing, IndexingConfig } from '../indexing/build-indexing.js'
-import { DatabaseIndexApi, SqliteIndexApi } from '../indexing/database-index-api.js'
+import { buildIndexing, IndexingConfig } from './build-indexing.js'
+import { DatabaseIndexApi, SqliteIndexApi } from './database-index-api.js'
 
 export class UnsupportedIndexingDatabaseError extends Error {
   constructor() {

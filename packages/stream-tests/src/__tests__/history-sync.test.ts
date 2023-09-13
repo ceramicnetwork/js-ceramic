@@ -9,14 +9,14 @@ import * as uint8arrays from 'uint8arrays'
 import { hash } from '@stablelib/sha256'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
-import { BaseProvider } from '@ethersproject/providers'
 
-import { STATE_TABLE_NAME } from '../sync-api.js'
-import { Ceramic } from '../../ceramic.js'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '../../indexing/database-index-api.js'
-import { CONFIG_TABLE_NAME } from '../../indexing/config.js'
-import { BLOCK_CONFIRMATIONS } from '../sync-api.js'
-import { IProvidersCache } from '../../providers-cache.js'
+import {
+  BLOCK_CONFIRMATIONS,
+  CONFIG_TABLE_NAME,
+  INDEXED_MODEL_CONFIG_TABLE_NAME,
+  STATE_TABLE_NAME,
+} from '@ceramicnetwork/indexing'
+import { Ceramic } from '@ceramicnetwork/core'
 
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
@@ -35,7 +35,8 @@ import {
   type TreeMetadata,
   type ICandidate,
 } from '@ceramicnetwork/anchor-utils'
-import { FauxBloomMetadata } from './faux-bloom-metadata.js'
+import { FauxBloomMetadata } from '../faux-bloom-metadata.js'
+import { createCeramic } from '../create-ceramic.js'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -173,20 +174,6 @@ class MockProvider extends EventEmitter {
 
 const provider = new MockProvider()
 
-class MockProvidersCache implements IProvidersCache {
-  ethereumRpcEndpoint = 'test'
-
-  async getProvider(chainId: string | null): Promise<BaseProvider> {
-    return provider as any
-  }
-}
-
-jest.unstable_mockModule('../../providers-cache.js', () => {
-  return {
-    ProvidersCache: MockProvidersCache,
-  }
-})
-
 const extractStreamStates = (page: Page<StreamState | null>): Array<StreamState> => {
   if (page.edges.find((edge) => edge.node === null)) {
     throw new Error(
@@ -273,9 +260,6 @@ describe('Sync tests', () => {
     })
     await cleanTables(dbConnection)
 
-    const createCeramicFile = await import('../../__tests__/create-ceramic.js')
-    const createCeramic = createCeramicFile.createCeramic
-
     ipfs1 = await createIPFS()
     ipfs2 = await createIPFS()
     await swarmConnect(ipfs1, ipfs2)
@@ -301,6 +285,7 @@ describe('Sync tests', () => {
           db: process.env.DATABASE_URL as string,
           allowQueriesBeforeHistoricalSync: true,
           enableHistoricalSync: false,
+          disableComposedb: false,
         },
         sync: true,
         // change pubsub topic so that we aren't getting updates via pubsub

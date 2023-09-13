@@ -18,7 +18,7 @@ import { makeDID } from '@ceramicnetwork/cli/lib/__tests__/make-did.js'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/indexing'
 
 const CONTENT0 = { myData: 0, myArray: [0], myFloat: 0.5 }
 const CONTENT1 = { myData: 1, myArray: [1], myString: 'a' }

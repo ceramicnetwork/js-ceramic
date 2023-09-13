@@ -13,6 +13,7 @@ import {
   StreamUtils,
   UpdateOpts,
 } from '@ceramicnetwork/common'
+import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
@@ -23,7 +24,6 @@ import type { HandlersMap } from '../handlers-map.js'
 import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
-import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'

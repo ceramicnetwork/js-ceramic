@@ -300,11 +300,11 @@ export async function createConfigTable(
       await dataSource.into(tableName).insert({ option: 'network', value: network })
       await dataSource.into(tableName).insert({
         option: 'allow-queries-before-historical-sync',
-        value: NETWORK_DEFAULT_CONFIG.allow_queries_before_historical_sync,
+        value: NETWORK_DEFAULT_CONFIG['allow_queries_before_historical_sync'],
       })
       await dataSource.into(tableName).insert({
         option: 'run-historical-sync-worker',
-        value: NETWORK_DEFAULT_CONFIG.run_historical_sync_worker,
+        value: NETWORK_DEFAULT_CONFIG['run_historical_sync_worker'],
       })
       break
     default:

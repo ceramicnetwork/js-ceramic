@@ -14,7 +14,7 @@ export function contentKey(field: string): string {
 }
 
 type DBQuery = Knex.QueryBuilder
-type WhereFunc = (DBQuery) => DBQuery
+type WhereFunc = (query: DBQuery) => DBQuery
 
 enum Combinator {
   And,
@@ -42,7 +42,7 @@ function handleQuery(
   negated: boolean,
   combinator?: Combinator
 ): DBQuery {
-  const opFunc = (bldr) => {
+  const opFunc = (bldr: Knex.QueryBuilder) => {
     if (first) {
       return bldr.where(func)
     } else if (combinator && combinator == Combinator.Or) {
@@ -86,13 +86,13 @@ function handleIn<T extends number | string>(
   combinator?: Combinator
 ): DBQuery {
   const cast = nonBooleanTypeAsCast(tpe)
-  let arrValue
+  let arrValue: string
   if (cast == 'varchar') {
     arrValue = value.map((v) => `'${v}'`).join(',')
   } else {
     arrValue = value.map((v) => `${v}`).join(',')
   }
-  const inner = (bldr) => {
+  const inner = (bldr: Knex.QueryBuilder) => {
     let op = ' in '
     if (negated) {
       op = ` not${op}`
@@ -111,7 +111,7 @@ function handleIn<T extends number | string>(
 
 function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryFilter {
   let first = true
-  let where = (bldr) => bldr
+  let where = (bldr: Knex.QueryBuilder) => bldr
   const select = []
 
   // If there are multiple keys, they are combined via "ands" and the negation is applied over the and
@@ -127,14 +127,14 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
     const value = state.filter[filterKey]
     const key = contentKey(filterKey)
 
-    switch (value.op) {
+    switch (value!.op) {
       case 'null': {
         const isFirst = first
         const old = where
         where = (bldr) => {
           const b = old(bldr)
           let nullQuery = 'is not null'
-          if (value.value) {
+          if (value!.value) {
             nullQuery = 'is null'
           }
           return handleQuery(
@@ -152,35 +152,43 @@ function handleWhereQuery(state: ConversionState<ObjectFilter>): ConvertedQueryF
       }
       case 'in':
       case 'nin': {
-        if (value.value.length == 0) {
+        if ((value!.value as Array<any>).length == 0) {
           throw new Error('Expected an array with at least one item')
         }
         const isFirst = first
         const old = where
         let inNegated = negated
-        if (value.op == 'nin') {
+        if (value!.op == 'nin') {
           inNegated = !inNegated
         }
         where = (bldr) => {
           const b = old(bldr)
-          return handleIn(b, key, value.type, value.value, isFirst, negated, combinator)
+          return handleIn(
+            b,
+            key,
+            value!.type as any,
+            value!.value as any,
+            isFirst,
+            negated,
+            combinator
+          )
         }
         break
       }
       default: {
         const isFirst = first
-        const cast = typeAsCast(getValueType(value.value))
+        const cast = typeAsCast(getValueType(value!.value as any))
         const old = where
         where = (bldr) => {
           const b = old(bldr)
-          let queryValue = value.value
+          let queryValue = value!.value
           if (cast == 'varchar') {
             queryValue = `'${queryValue}'`
           }
           return handleQuery(
             b,
             (b) => {
-              const raw = b.client.raw(`cast(${key} as ${cast})${value.op}${queryValue}`)
+              const raw = b.client.raw(`cast(${key} as ${cast})${value!.op}${queryValue}`)
               return b.whereRaw(raw)
             },
             isFirst,
@@ -212,8 +220,8 @@ function handleCombinator(
   state: ConversionState<QueryFilters>,
   negated: boolean
 ): ConvertedQueryFilter {
-  let where = (bldr) => bldr
-  let select = []
+  let where = (bldr: Knex.QueryBuilder) => bldr
+  let select: Array<string> = []
   let first = true
   const filters = state.filter.value as Array<QueryFilters>
   for (const filter of filters) {
@@ -277,7 +285,7 @@ function convert(state: ConversionState<QueryFilters>): ConvertedQueryFilter {
 }
 
 export type ConvertedQueryFilter = {
-  where: (DBQuery) => DBQuery
+  where: (query: DBQuery) => DBQuery
   select: Array<string>
 }
 

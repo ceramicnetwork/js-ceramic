@@ -9,7 +9,7 @@ import { type IJobQueue, JobQueue } from '@ceramicnetwork/job-queue'
 import type { Provider } from '@ethersproject/providers'
 import { catchError, concatMap, defer, interval, mergeMap, Subscription } from 'rxjs'
 
-import type { LocalIndexApi } from '../indexing/local-index-api.js'
+import type { LocalIndexApi } from '../local-index-api.js'
 
 import {
   CONTINUOUS_SYNC_JOB,
@@ -102,15 +102,15 @@ export interface SyncStatus {
 export class SyncApi implements ISyncApi {
   public readonly modelsToSync = new Set<string>()
   public readonly modelsToHistoricSync = new Map<string, number>()
-  private readonly dataSource: Knex
-  private readonly jobQueue: IJobQueue<JobData>
+  private readonly dataSource!: Knex
+  private readonly jobQueue!: IJobQueue<JobData>
   private subscription: Subscription | undefined
-  private provider: Provider
-  private chainId: SupportedNetwork
-  private initialIndexingBlock: number
+  private provider!: Provider
+  private chainId!: SupportedNetwork
+  private initialIndexingBlock!: number
   private periodicStatusLogger: Subscription | undefined
-  private currentBlock: number
-  private startBlock: number
+  private currentBlock!: number
+  private startBlock!: number
 
   constructor(
     private readonly syncConfig: SyncConfig,
@@ -400,7 +400,7 @@ export class SyncApi implements ISyncApi {
   async startModelSync(
     models: string | string[],
     startBlock = this.initialIndexingBlock,
-    endBlock?
+    knownEndBlock?: number
   ): Promise<void> {
     if (!this.syncConfig.on) return
 
@@ -412,11 +412,9 @@ export class SyncApi implements ISyncApi {
       this.modelsToSync.add(modelId)
     }
 
-    if (!endBlock) {
-      endBlock = await this.provider
-        .getBlock('latest')
-        .then(({ number }) => number - BLOCK_CONFIRMATIONS)
-    }
+    const endBlock: number =
+      knownEndBlock ??
+      (await this.provider.getBlock('latest').then(({ number }) => number - BLOCK_CONFIRMATIONS))
 
     // start a new full sync on a model
     await this._addSyncJob(HISTORY_SYNC_JOB, {

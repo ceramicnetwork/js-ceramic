@@ -2,6 +2,7 @@ import { default as PgBoss } from 'pg-boss'
 import { type SendOptions } from 'pg-boss'
 import { IJobQueue, Job, Worker } from '@ceramicnetwork/job-queue'
 import { BlockProofs, createBlocksProofsLoader } from '@ceramicnetwork/anchor-listener'
+import type { SupportedNetwork } from '@ceramicnetwork/anchor-utils'
 import type { Provider } from '@ethersproject/providers'
 import { concatMap, lastValueFrom, of, catchError } from 'rxjs'
 import { createRebuildAnchorJob } from './rebuild-anchor.js'
@@ -55,9 +56,9 @@ export class SyncWorker implements Worker<SyncJobData> {
   constructor(
     private readonly provider: Provider,
     private readonly jobQueue: IJobQueue<JobData>,
-    private readonly chainId,
+    private readonly chainId: SupportedNetwork,
     private readonly logger: DiagnosticsLogger,
-    private readonly syncCompleteCallback: (SyncCompleteData) => void
+    private readonly syncCompleteCallback: (data: SyncCompleteData) => void
   ) {}
 
   /**

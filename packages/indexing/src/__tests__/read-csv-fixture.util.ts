@@ -9,7 +9,7 @@ const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnr
 const MODEL = StreamID.fromString(MODEL_ID)
 
 export function readCsvFixture(filepath: URL) {
-  type CsvFixture = IndexStreamArgs & { createdAt?: Date }
+  type CsvFixture = IndexStreamArgs & { createdAt?: Date | null }
   return new Promise<Array<CsvFixture>>((resolve, reject) => {
     const result = new Array<CsvFixture>()
     const csvReader = csv({
@@ -25,10 +25,8 @@ export function readCsvFixture(filepath: URL) {
           controller: row.controller,
           streamContent: row.stream_content ? row.stream_content : '{}',
           tip: row.tip ? row.tip : FAKE_CID,
-          lastAnchor: row.last_anchored_at
-            ? new Date(Number(row.last_anchored_at) * 1000)
-            : undefined,
-          createdAt: row.created_at ? new Date(Number(row.created_at) * 1000) : undefined,
+          lastAnchor: row.last_anchored_at ? new Date(Number(row.last_anchored_at) * 1000) : null,
+          createdAt: row.created_at ? new Date(Number(row.created_at) * 1000) : null,
           firstAnchor: null,
         })
       })
