@@ -308,7 +308,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
     if (anchorResponse) {
-      return concat(of<CASResponse>(anchorResponse), feed$)
+      return concat(of(anchorResponse), feed$)
     } else {
       return feed$
     }
