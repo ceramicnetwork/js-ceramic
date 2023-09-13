@@ -85,6 +85,18 @@ export function buildIndexing(
     case 'postgres':
     case 'postgresql': {
       logger.imp('Initializing PostgreSQL connection')
+
+      if (connectionString.searchParams.has('sslmode')) {
+        const uriSSLConfig = connectionString.searchParams.get('sslmode')
+
+        if (uriSSLConfig != 'disable' && uriSSLConfig != 'no-verify') {
+          connectionString.searchParams.set('sslmode', 'no-verify')
+          logger.warn(
+            `Changed "?sslmode=${uriSSLConfig}" to "no-verify" to avoid self signed cert errors during cloud deployments.`
+          )
+        }
+      }
+
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
