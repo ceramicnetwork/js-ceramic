@@ -139,7 +139,11 @@ export class Repository {
     return this._internals.numPendingAnchorSubscriptions
   }
 
-  get anchorRequestStore(): AnchorRequestStore {
+  private get anchorService(): AnchorService {
+    return this.#deps.anchorService
+  }
+
+  private get anchorRequestStore(): AnchorRequestStore {
     return this.#deps.anchorRequestStore
   }
 

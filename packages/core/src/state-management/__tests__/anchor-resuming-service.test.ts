@@ -43,7 +43,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       stateStoreDirectory: stateStoreDirectoryName,
     })
 
-    const anchorService = ceramic.repository.stateManager.anchorService as InMemoryAnchorService
+    const anchorService = ceramic.repository.anchorService as InMemoryAnchorService
     if (testParam.anchorStatus === AnchorStatus.NOT_REQUESTED) {
       const mockedRequestAnchor = jest.fn()
       mockedRequestAnchor.mockImplementation(() => {
@@ -65,9 +65,9 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
-    const loaded = (await all(ceramic.repository.anchorRequestStore.list())).reduce((acc, array) => acc.concat(array), []).map((result) =>
-      result.key.toString()
-    )
+    const loaded = (await all(ceramic.repository.anchorRequestStore.list()))
+      .reduce((acc, array) => acc.concat(array), [])
+      .map((result) => result.key.toString())
     // LevelDB Store stores keys ordered lexicographically
     expect(streamIds.map((streamId) => streamId.toString()).sort()).toEqual(loaded)
 
@@ -96,8 +96,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       stateStoreDirectory: stateStoreDirectoryName,
     })
 
-    const newAnchoringService = newCeramic.repository.stateManager
-      .anchorService as InMemoryAnchorService
+    const newAnchoringService = newCeramic.repository.anchorService as InMemoryAnchorService
 
     runnningStates$.forEach((state$) => {
       // We call _process(...) here to mimic the behaviour of EthereumAnchorService which would start polling CAS for anchor statuses
