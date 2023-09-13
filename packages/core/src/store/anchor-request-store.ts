@@ -51,18 +51,25 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     return this.store.exists(generateKey(key), this.useCaseName)
   }
 
-  async list(limit?: number, gt?: StreamID): Promise<Array<AnchorRequestStoreListResult>> {
-    return (
-      await this.store.find({
-        limit: limit,
+  async *list(batchSize = 1): AsyncIterable<Array<AnchorRequestStoreListResult>> {
+    let gt: StreamID | undefined = undefined
+    do {
+      const batch = await this.store.find({
+        limit: batchSize,
         useCaseName: this.useCaseName,
         gt: gt ? generateKey(gt) : undefined,
       })
-    ).map((result) => {
-      return {
-        key: StreamID.fromString(result.key),
-        value: deserializeAnchorRequestData(result.value),
+      if (batch.length > 0) {
+        gt = StreamID.fromString(batch[batch.length - 1].key)
+        yield batch.map((item) => {
+          return {
+            key: StreamID.fromString(item.key),
+            value: deserializeAnchorRequestData(item.value),
+          }
+        })
+      } else {
+        return
       }
-    })
+    } while (true)
   }
 }

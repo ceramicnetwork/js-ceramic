@@ -1,5 +1,3 @@
-import type { StreamID } from '@ceramicnetwork/streamid'
-import type { AnchorRequestStoreListResult } from '../store/anchor-request-store.js'
 import type { Repository } from './repository.js'
 import { LogStyle, type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { TaskQueue } from '../ancillary/task-queue.js'
@@ -57,21 +55,18 @@ export class AnchorResumingService {
     this.logger.imp(`Resuming polling for streams with pending anchors`)
 
     let numRestoredStreams = 0
-    let gt: StreamID | undefined = undefined
-    let batch = new Array<AnchorRequestStoreListResult>()
-    do {
-      batch = await repository.anchorRequestStore.list(RESUME_BATCH_SIZE, gt)
-      for (const listResult of batch) {
+    for await (const batch of repository.anchorRequestStore.list(RESUME_BATCH_SIZE)) {
+      for (const item of batch) {
+        if (this.#shouldBeClosed) return
         this.resumeQ.add(async () => {
-          await repository.fromMemoryOrStore(listResult.key)
-          this.logger.verbose(`Resumed running state for stream id: ${listResult.key.toString()}`)
+          await repository.fromMemoryOrStore(item.key)
+          this.logger.verbose(`Resumed running state for stream id: ${item.key}`)
           numRestoredStreams++
         })
         await this.delay(this.getDelay())
       }
-      gt = batch[batch.length - 1]?.key
       await this.resumeQ.onIdle()
-    } while (batch.length > 0 && !this.#shouldBeClosed)
+    }
 
     this.logger.imp(
       `Finished resuming polling for ${numRestoredStreams} streams which had pending anchors`
