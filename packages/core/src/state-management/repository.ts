@@ -30,6 +30,7 @@ import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { RepositoryInternals } from './repository-internals.js'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
+import { StreamUpdater } from '../stream-loading/stream-updater.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -44,6 +45,7 @@ export type RepositoryDependencies = {
   conflictResolution: ConflictResolution
   indexing: LocalIndexApi
   streamLoader: StreamLoader
+  streamUpdater: StreamUpdater
 }
 
 /**
