@@ -143,7 +143,7 @@ export class Repository {
     return this.#deps.anchorService
   }
 
-  private get anchorRequestStore(): AnchorRequestStore {
+  get anchorRequestStore(): AnchorRequestStore {
     return this.#deps.anchorRequestStore
   }
 
