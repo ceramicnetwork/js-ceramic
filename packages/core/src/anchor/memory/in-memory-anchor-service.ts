@@ -28,13 +28,11 @@ class Candidate {
   readonly streamId: StreamID
   readonly cid: CID
   readonly key: string
-  readonly log?: Array<CID>
 
-  constructor(readonly carFileReader: AnchorRequestCarFileReader, log?: CID[]) {
+  constructor(readonly carFileReader: AnchorRequestCarFileReader) {
     this.streamId = carFileReader.streamId
     this.cid = carFileReader.tip
     this.key = carFileReader.streamId.toString()
-    this.log = log
   }
 }
 
@@ -159,8 +157,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
         continue
       }
 
-      const log = await this._loadCommitHistory(req.cid, req.streamId)
-      const candidate = new Candidate(req.carFileReader, log)
+      const candidate = new Candidate(req.carFileReader)
 
       result[candidate.key].push(candidate)
     }
@@ -198,31 +195,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       cid: candidate.cid,
       message,
     })
-  }
-
-  /**
-   * Load candidate log.
-   *
-   * @param commitId - Start CID
-   * @private
-   */
-  async _loadCommitHistory(commitId: CID, streamId: StreamID): Promise<CID[]> {
-    const history: CID[] = []
-
-    let currentCommitId = commitId
-    for (;;) {
-      const commitData = await Utils.getCommitData(this.#dispatcher, currentCommitId, streamId)
-      if (StreamUtils.isAnchorCommitData(commitData)) {
-        return history
-      }
-      const prevCommitId = commitData.commit.prev
-      if (prevCommitId == null) {
-        return history
-      }
-
-      history.push(prevCommitId)
-      currentCommitId = prevCommitId
-    }
   }
 
   /**
