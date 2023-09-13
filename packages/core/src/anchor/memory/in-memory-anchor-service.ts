@@ -4,7 +4,6 @@ import { filter } from 'rxjs/operators'
 import {
   AnchorProof,
   AnchorService,
-  StreamUtils,
   AnchorValidator,
   AnchorCommit,
   TestUtils,
@@ -14,7 +13,6 @@ import type { Dispatcher } from '../../dispatcher.js'
 import { Ceramic } from '../../ceramic.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { Utils } from '../../utils.js'
 import { LRUCache } from 'least-recent'
 import { CAR, CarBlock, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
