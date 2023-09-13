@@ -140,18 +140,15 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async _groupCandidatesByStreamId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
     const result: Record<string, Candidate[]> = {}
     for (const req of candidates) {
-      if (!result[req.key]) {
-        result[req.key] = []
-      }
-      if (result[req.key].find((c) => c.cid.equals(req.cid))) {
+      const key = req.key
+      const items = result[key] || []
+      if (items.find((c) => c.cid.equals(req.cid))) {
         // If we already have an identical request for the exact same commit on the same,
         // streamid, don't create duplicate Candidates
         continue
       }
-
-      const candidate = new Candidate(req.streamId, req.cid, req.key)
-
-      result[candidate.key].push(candidate)
+      items.push(req)
+      result[key] = items
     }
     return result
   }
