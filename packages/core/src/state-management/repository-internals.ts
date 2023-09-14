@@ -427,28 +427,22 @@ export class RepositoryInternals {
    * heard about it already via pubsub (given that pubsub is an unreliable channel).
    * @param state$ - state of the stream being anchored
    * @param tip - The tip that anchorCommit is anchoring
-   * @param anchorCommit - cid of the anchor commit
    * @param witnessCAR - CAR file with all the IPLD objects needed to apply and verify the anchor commit
    * @private
    */
-  async _handleAnchorCommit(
-    state$: RunningState,
-    tip: CID,
-    anchorCommit: CID,
-    witnessCAR: CAR | undefined
-  ): Promise<void> {
+  async _handleAnchorCommit(state$: RunningState, tip: CID, witnessCAR: CAR): Promise<void> {
+    const anchorCommitCID = witnessCAR.roots[0]
+    if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
       remainingRetries >= 0;
       remainingRetries--
     ) {
       try {
-        if (witnessCAR) {
-          await this.#dispatcher.importCAR(witnessCAR)
-        }
+        await this.#dispatcher.importCAR(witnessCAR)
 
         await this.#executionQ.forStream(state$.id).run(async () => {
-          const applied = await this.handleTip(state$, anchorCommit)
+          const applied = await this.handleTip(state$, anchorCommitCID)
           if (applied) {
             // We hadn't already heard about the AnchorCommit via pubsub, so it's possible
             // other nodes didn't hear about it via pubsub either, so we rebroadcast it to pubsub now.
@@ -458,7 +452,7 @@ export class RepositoryInternals {
               // If we failed to apply the commit at least once, then it's worth logging when
               // we are able to do so successfully on the retry.
               this.#logger.imp(
-                `Successfully applied anchor commit ${anchorCommit} for stream ${state$.id}`
+                `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
               )
             }
           }
@@ -466,7 +460,7 @@ export class RepositoryInternals {
         return
       } catch (error) {
         this.#logger.warn(
-          `Error while applying anchor commit ${anchorCommit} for stream ${state$.id}, ${remainingRetries} retries remain. ${error}`
+          `Error while applying anchor commit ${anchorCommitCID} for stream ${state$.id}, ${remainingRetries} retries remain. ${error}`
         )
 
         if (remainingRetries == 0) {

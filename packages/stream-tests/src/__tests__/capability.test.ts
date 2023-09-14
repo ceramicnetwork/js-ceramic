@@ -17,6 +17,7 @@ import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { jest } from '@jest/globals'
 import type { CID } from 'multiformats/cid'
+import type { CAR } from 'cartonne'
 
 function getModelDef(name: string): ModelDefinition {
   return {
@@ -664,8 +665,9 @@ describe('CACAO Integration test', () => {
       const internals = ceramic.repository._internals
       const handleAnchorSpy = jest.spyOn(internals, '_handleAnchorCommit')
       const anchorCommitPromise = new Promise<CID>((resolve) => {
-        handleAnchorSpy.mockImplementation((state, tip, anchorCommit: CID, witnessCar) => {
+        handleAnchorSpy.mockImplementation((state, tip, witnessCar: CAR) => {
           expect(tip).toEqual(tile.tip)
+          const anchorCommit = witnessCar.roots[0]
           resolve(anchorCommit)
         })
       })
