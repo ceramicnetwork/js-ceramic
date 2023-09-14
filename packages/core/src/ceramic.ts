@@ -67,7 +67,6 @@ import {
 } from './initialization/network-options.js'
 import {
   usableAnchorChains,
-  DEFAULT_ANCHOR_SERVICE_URLS,
   makeAnchorServiceUrl,
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
