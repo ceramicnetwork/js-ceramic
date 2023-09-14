@@ -21,8 +21,9 @@ import {
   lastValueFrom,
   Subject,
   type OperatorFunction,
+  type MonoTypeOperatorFunction,
 } from 'rxjs'
-import { concatMap, catchError, map, retry } from 'rxjs/operators'
+import { concatMap, catchError, map, retry, tap } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
@@ -179,9 +180,12 @@ export class EthereumAnchorService implements AnchorService {
 
     if (waitForConfirmation) {
       await lastValueFrom(requestCreated$)
-      return anchorCompleted$.pipe(catchError(errHandler))
+      return anchorCompleted$.pipe(catchError(errHandler), this._updateEvents())
     } else {
-      return concat(requestCreated$, anchorCompleted$).pipe(catchError(errHandler))
+      return concat(requestCreated$, anchorCompleted$).pipe(
+        catchError(errHandler),
+        this._updateEvents()
+      )
     }
   }
 
@@ -269,7 +273,8 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
-      this._parseResponse(streamId, tip)
+      this._parseResponse(streamId, tip),
+      this._updateEvents()
     )
   }
 
@@ -292,12 +297,17 @@ export class EthereumAnchorService implements AnchorService {
           return this.#sendRequest(requestUrl)
         }
       }),
-      this._parseResponse(streamId, tip)
+      this._parseResponse(streamId, tip),
+      this._updateEvents()
     )
   }
 
   private _parseResponse(streamId: StreamID, tip: CID): OperatorFunction<unknown, AnchorEvent> {
     return map((response) => parseResponse(streamId, tip, response))
+  }
+
+  private _updateEvents(): MonoTypeOperatorFunction<AnchorEvent> {
+    return tap((event) => this.#events.next(event))
   }
 }
 
