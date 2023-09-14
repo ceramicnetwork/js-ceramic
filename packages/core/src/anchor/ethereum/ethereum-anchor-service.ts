@@ -14,12 +14,7 @@ import { Observable, concat, timer, of, defer, expand, interval, lastValueFrom }
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import {
-  CASResponse,
-  CASResponseOrError,
-  ErrorResponse,
-  AnchorRequestStatusName,
-} from '@ceramicnetwork/codecs'
+import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
 /**
@@ -99,7 +94,7 @@ export class EthereumAnchorService implements AnchorService {
   async requestAnchor(
     carFile: CAR,
     waitForConfirmation: boolean
-  ): Promise<Observable<CASResponse>> {
+  ): Promise<Observable<AnchorEvent>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
 
@@ -113,8 +108,7 @@ export class EthereumAnchorService implements AnchorService {
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
     const errHandler = (error) =>
-      of<CASResponse>({
-        id: '',
+      of<AnchorEvent>({
         status: AnchorRequestStatusName.FAILED,
         streamId: streamId,
         cid: tip,
@@ -137,9 +131,8 @@ export class EthereumAnchorService implements AnchorService {
     return [this._chainId]
   }
 
-  private _announcePending(cidStream: CidAndStream): Observable<CASResponse> {
+  private _announcePending(cidStream: CidAndStream): Observable<AnchorEvent> {
     return of({
-      id: '',
       status: AnchorRequestStatusName.PENDING,
       streamId: cidStream.streamId,
       cid: cidStream.cid,
@@ -153,7 +146,7 @@ export class EthereumAnchorService implements AnchorService {
   private _makeAnchorRequest(
     carFileReader: AnchorRequestCarFileReader,
     shouldRetry: boolean
-  ): Observable<CASResponse> {
+  ): Observable<AnchorEvent> {
     let sendRequest$ = defer(() =>
       this.sendRequest(this.requestsApiEndpoint, {
         method: 'POST',
@@ -204,7 +197,7 @@ export class EthereumAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
       return this._pollForAnchorResponseLegacy(streamId, tip)
     } else {
@@ -212,7 +205,7 @@ export class EthereumAnchorService implements AnchorService {
     }
   }
 
-  private _pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
+  private _pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const started = new Date().getTime()
     const maxTime = started + this.maxPollTime
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
@@ -249,7 +242,7 @@ export class EthereumAnchorService implements AnchorService {
    * TODO: REMOVE THIS!  We're only putting this back temporarily to investigate if it caused
    * a performance regression.
    */
-  private _pollForAnchorResponseLegacy(streamId: StreamID, tip: CID): Observable<CASResponse> {
+  private _pollForAnchorResponseLegacy(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const started = new Date().getTime()
     const maxTime = started + this.maxPollTime
     const requestUrl = [this.requestsApiEndpoint, tip.toString()].join('/')
@@ -271,18 +264,31 @@ export class EthereumAnchorService implements AnchorService {
   /**
    * Parse JSON that CAS returns.
    */
-  private parseResponse(cidStream: CidAndStream, json: any): CASResponse {
+  private parseResponse(cidStream: CidAndStream, json: any): AnchorEvent {
     const parsed = decode(CASResponseOrError, json)
     if (ErrorResponse.is(parsed)) {
       return {
-        id: '',
         status: AnchorRequestStatusName.FAILED,
         streamId: cidStream.streamId,
         cid: cidStream.cid,
         message: json.error,
       }
     } else {
-      return parsed
+      if (parsed.status === AnchorRequestStatusName.COMPLETED) {
+        return {
+          status: parsed.status,
+          streamId: parsed.streamId,
+          cid: parsed.cid,
+          message: parsed.message,
+          witnessCar: parsed.witnessCar,
+        }
+      }
+      return {
+        status: parsed.status,
+        streamId: parsed.streamId,
+        cid: parsed.cid,
+        message: parsed.message,
+      }
     }
   }
 }

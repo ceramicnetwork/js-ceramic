@@ -1,22 +1,22 @@
 import { CID } from 'multiformats/cid'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
-import {
+import { TestUtils } from '@ceramicnetwork/common'
+import type {
   AnchorProof,
   AnchorService,
   AnchorValidator,
   AnchorCommit,
-  TestUtils,
   AnchorEvent,
 } from '@ceramicnetwork/common'
 import type { Dispatcher } from '../../dispatcher.js'
-import { Ceramic } from '../../ceramic.js'
-import { StreamID } from '@ceramicnetwork/streamid'
+import type { Ceramic } from '../../ceramic.js'
+import type { StreamID } from '@ceramicnetwork/streamid'
 import { LRUCache } from 'least-recent'
-import { CAR, CARFactory } from 'cartonne'
+import { CARFactory, type CAR } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
@@ -68,26 +68,26 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   readonly #anchorDelay: number
   readonly #anchorOnRequest: boolean
-  readonly #feed: Subject<CASResponse> = new Subject()
+  readonly #events: Subject<AnchorEvent>
 
   // Maps CID of a specific anchor request to the current status of that request
-  readonly #anchors: Map<string, CASResponse> = new Map()
+  readonly #anchors: Map<string, AnchorEvent> = new Map()
 
   #queue: Candidate[] = []
-
-  readonly events: Observable<AnchorEvent>
 
   readonly chainId = CHAIN_ID
   readonly url = '<inmemory>'
   readonly ethereumRpcEndpoint = null
+  readonly events: Observable<AnchorEvent>
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
 
-    // Remember the most recent CASResponse for each anchor request
-    this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
-    this.events = new Observable()
+    this.#events = new Subject()
+    // Remember the most recent AnchorEvent for each anchor request
+    this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
+    this.events = this.#events
   }
 
   async init(): Promise<void> {
@@ -120,8 +120,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async failPendingAnchors(): Promise<void> {
     const candidates = await this._findCandidates()
     for (const candidate of candidates) {
-      this.#feed.next({
-        id: '',
+      this.#events.next({
         status: AnchorRequestStatusName.FAILED,
         streamId: candidate.streamId,
         cid: candidate.cid,
@@ -155,8 +154,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       const init = candidates.slice(0, candidates.length - 1)
       const last = candidates[candidates.length - 1]
       for (const replaced of init) {
-        this.#feed.next({
-          id: '',
+        this.#events.next({
           status: AnchorRequestStatusName.REPLACED,
           streamId: replaced.streamId,
           cid: replaced.cid,
@@ -171,8 +169,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     if (!message) {
       message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
     }
-    this.#feed.next({
-      id: '',
+    this.#events.next({
       status: AnchorRequestStatusName.PROCESSING,
       streamId: candidate.streamId,
       cid: candidate.cid,
@@ -199,13 +196,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async requestAnchor(
     carFile: CAR,
     waitForConfirmation: boolean
-  ): Promise<Observable<CASResponse>> {
+  ): Promise<Observable<AnchorEvent>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const candidate = Candidate.fromCarFileReader(carFileReader)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
-        this.#feed.next({
-          id: '',
+        this.#events.next({
           status: AnchorRequestStatusName.FAILED,
           streamId: candidate.streamId,
           cid: candidate.cid,
@@ -215,8 +211,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     } else {
       this.#queue.push(candidate)
     }
-    this.#feed.next({
-      id: '',
+    this.#events.next({
       status: AnchorRequestStatusName.PENDING,
       streamId: carFileReader.streamId,
       cid: carFileReader.tip,
@@ -231,9 +226,9 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const anchorResponse = this.#anchors.get(tip.toString())
-    const feed$ = this.#feed.pipe(
+    const feed$ = this.#events.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
     if (anchorResponse) {
@@ -264,12 +259,9 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    */
   async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
     const car = carFactory.build()
-
     car.blocks.put(await this.#dispatcher.getIpfsBlock(proofCid))
     car.blocks.put(await this.#dispatcher.getIpfsBlock(anchorCommitCid))
-
     car.roots.push(anchorCommitCid)
-
     return car
   }
 
@@ -298,16 +290,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
     // add a delay
     const handle = setTimeout(() => {
-      this.#feed.next({
-        id: '',
+      this.#events.next({
         status: AnchorRequestStatusName.COMPLETED,
         streamId: leaf.streamId,
         cid: leaf.cid,
         message: 'CID successfully anchored',
-        anchorCommit: { cid: cid },
         witnessCar: witnessCar,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       })
       clearTimeout(handle)
     }, this.#anchorDelay)

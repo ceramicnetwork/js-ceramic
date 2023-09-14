@@ -2,12 +2,11 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { Observable } from 'rxjs'
-import { AnchorStatus, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { AnchorEvent, AnchorStatus, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { AnchorResumingService } from '../anchor-resuming-service.js'
-import type { CASResponse } from '@ceramicnetwork/codecs'
 import all from 'it-all'
 
 describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
@@ -47,7 +46,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     if (testParam.anchorStatus === AnchorStatus.NOT_REQUESTED) {
       const mockedRequestAnchor = jest.fn()
       mockedRequestAnchor.mockImplementation(() => {
-        return new Observable<CASResponse>()
+        return new Observable<AnchorEvent>()
       })
       // @ts-ignore
       anchorService.requestAnchor = mockedRequestAnchor
@@ -65,9 +64,9 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
-    const loaded = (await all(ceramic.repository.anchorRequestStore.list())).reduce((acc, array) => acc.concat(array), []).map((result) =>
-      result.key.toString()
-    )
+    const loaded = (await all(ceramic.repository.anchorRequestStore.list()))
+      .reduce((acc, array) => acc.concat(array), [])
+      .map((result) => result.key.toString())
     // LevelDB Store stores keys ordered lexicographically
     expect(streamIds.map((streamId) => streamId.toString()).sort()).toEqual(loaded)
 

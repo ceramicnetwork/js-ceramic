@@ -16,6 +16,7 @@ import {
   Stream,
   TestUtils,
   AnchorCommit,
+  type AnchorEvent,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
@@ -32,7 +33,7 @@ import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { whenSubscriptionDone } from './when-subscription-done.util.js'
-import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const INITIAL_CONTENT = { abc: 123, def: 456 }
 const STRING_MAP_SCHEMA = {
@@ -83,7 +84,7 @@ describe('anchor', () => {
 
     test('handleTip', async () => {
       const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
-      await stream1.subscribe()
+      stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       await ceramic.repository.stateManager.anchor(streamState1, {})
 
@@ -196,7 +197,7 @@ describe('anchor', () => {
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       expect(publishTip).toHaveBeenCalledTimes(1)
       expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
-      await publishTip.mockClear()
+      publishTip.mockClear()
       const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
       await ceramic.repository.applyCommit(streamState1.id, updateRec, {
         anchor: false,
@@ -352,17 +353,16 @@ describe('anchor', () => {
         'requestAnchor'
       )
       // Emulate CAS responses to the 1st commit
-      const fauxCASResponse$ = new Subject<CASResponse>()
-      requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxCASResponse$))
+      const fauxAnchorEvent$ = new Subject<AnchorEvent>()
+      requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxAnchorEvent$))
       // Subscription for the 1st commit
       const stillProcessingFirst = await ceramic.repository.stateManager.anchor(stream$, {})
       // The emulated CAS accepts the request
-      fauxCASResponse$.next({
+      fauxAnchorEvent$.next({
         status: AnchorRequestStatusName.PENDING,
         streamId: tile.id,
         cid: tile.state.log[0].cid,
         message: 'CAS accepted the request',
-        id: '',
       })
       await expectAnchorStatus(tile, AnchorStatus.PENDING)
 
@@ -372,12 +372,11 @@ describe('anchor', () => {
       await expectAnchorStatus(tile, AnchorStatus.PENDING)
 
       // The emulated CAS informs Ceramic, that the 1st tip got REPLACED
-      fauxCASResponse$.next({
+      fauxAnchorEvent$.next({
         status: AnchorRequestStatusName.REPLACED,
         streamId: tile.id,
         cid: tile.state.log[0].cid,
         message: 'Replaced',
-        id: '',
       })
 
       // Polling for the 1st commit should stop
@@ -389,7 +388,7 @@ describe('anchor', () => {
 
       // Now teardown
       await inMemoryAnchorService.anchor()
-      fauxCASResponse$.complete()
+      fauxAnchorEvent$.complete()
       await whenSubscriptionDone(stillProcessingSecond)
     })
 
@@ -436,15 +435,14 @@ describe('anchor', () => {
       const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
       const stream$ = await ceramic.repository.load(stream.id, {})
 
-      const fakeHandleTip = jest.fn() as unknown as typeof internals.handleTip
-      internals.handleTip = fakeHandleTip
+      const handleTipSpy = jest.spyOn(internals, 'handleTip')
 
       // Mock a throw as the first call
-      fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
+      handleTipSpy.mockRejectedValueOnce(new Error('Handle tip failed'))
 
       // Mock the result of the original implementation as the second call - this one should return
       // and stop the retrying mechanism
-      fakeHandleTip.mockImplementationOnce(realHandleTip)
+      handleTipSpy.mockImplementationOnce(realHandleTip)
 
       await ceramic.repository.stateManager.anchor(stream$, {})
 
@@ -453,7 +451,7 @@ describe('anchor', () => {
       await TestUtils.anchorUpdate(ceramic, stream)
 
       // Check that fakeHandleTip was called only three times
-      expect(fakeHandleTip).toHaveBeenCalledTimes(2)
+      expect(handleTipSpy).toHaveBeenCalledTimes(2)
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
@@ -551,9 +549,9 @@ describe('anchor', () => {
         // @ts-ignore anchorRequestStore is private
         const anchorRequestStore = ceramic.repository.stateManager.anchorRequestStore
 
-        const originalPollForAnchorResponse =
+        const originalPollForAnchorResponse: InMemoryAnchorService['pollForAnchorResponse'] =
           inMemoryAnchorService.pollForAnchorResponse.bind(inMemoryAnchorService)
-        const requestAnchorSpy = jest.spyOn(
+        const pollForAnchorResponseSpy = jest.spyOn(
           ceramic.repository.stateManager.anchorService,
           'pollForAnchorResponse'
         )
@@ -574,10 +572,10 @@ describe('anchor', () => {
         const stream$ = await ceramic.repository.load(tile.id, {})
 
         // Emulate CAS responses to the 1st commit
-        const firstCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockImplementationOnce(async (streamId, commit) => {
+        const firstAnchorEvent$ = new Subject<AnchorEvent>()
+        pollForAnchorResponseSpy.mockImplementationOnce((streamId, commit) => {
           originalPollForAnchorResponse(streamId, commit)
-          return firstCASResponse$
+          return firstAnchorEvent$
         })
 
         // Anchor the first commit and subscribe
@@ -586,20 +584,18 @@ describe('anchor', () => {
           stream$.tip.toString()
         )
         // The emulated CAS accepts the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.PENDING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS accepted the request',
-          id: 'id',
         })
         // The emulated CAS is processing the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.PROCESSING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS is processing the request',
-          id: 'id',
         })
         await expectAnchorStatus(tile, AnchorStatus.PROCESSING)
 
@@ -611,8 +607,8 @@ describe('anchor', () => {
         // Create the 2nd commit that is valid because it builds on the anchor commit
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
         // Emulate CAS responses to the 2nd commit
-        const secondCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondCASResponse$))
+        const secondAnchorEvent$ = new Subject<AnchorEvent>()
+        pollForAnchorResponseSpy.mockReturnValueOnce(secondAnchorEvent$)
         // Anchor the 2nd commit and subscribe
         await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
@@ -620,18 +616,17 @@ describe('anchor', () => {
         )
 
         // The emulated CAS receives the COMPLETED anchor status for the 1st request
-        const completedASRForFirstCommit = (await firstValueFrom(
+        const completedASRForFirstCommit = await firstValueFrom(
           originalPollForAnchorResponse(stream$.id, tile.state.log[0].cid)
-        )) as CASResponse
-        firstCASResponse$.next(completedASRForFirstCommit)
+        )
+        firstAnchorEvent$.next(completedASRForFirstCommit)
 
         // The emulated CAS accepts the 2nd request
-        secondCASResponse$.next({
+        secondAnchorEvent$.next({
           status: AnchorRequestStatusName.PENDING,
           streamId: tile.id,
           cid: tile.state.log[1].cid,
           message: 'CAS accepted the request',
-          id: 'id',
         })
 
         // Polling for the 1st commit should stop
@@ -655,28 +650,26 @@ describe('anchor', () => {
         const stream$ = await ceramic.repository.load(tile.id, {})
 
         // Emulate CAS responses to the 1st commit
-        const firstCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstCASResponse$))
+        const firstAnchorEvent$ = new Subject<AnchorEvent>()
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstAnchorEvent$))
         // Anchor the 1st commit and subscribe
         const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
         // The emulated CAS accepts the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.PENDING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS accepted the request',
-          id: 'id',
         })
         // The emulated CAS processing the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.PROCESSING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS is processing the request',
-          id: 'id',
         })
         await expectAnchorStatus(tile, AnchorStatus.PROCESSING)
 
@@ -685,12 +678,11 @@ describe('anchor', () => {
         await expectAnchorStatus(tile, AnchorStatus.PENDING)
 
         // The emulated CAS FAILED the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.FAILED,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS failed the request',
-          id: 'id',
         })
 
         // Polling for the 1st commit should stop
@@ -763,56 +755,52 @@ describe('anchor', () => {
         const stream$ = await ceramic.repository.load(tile.id, {})
 
         // Emulate CAS responses to the 1st commit
-        const firstCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstCASResponse$))
+        const firstAnchorEvent$ = new Subject<AnchorEvent>()
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(firstAnchorEvent$))
         // Anchor the first commit and subscribe
         const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
         // The emulated CAS accepts the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.PENDING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS accepted the request',
-          id: 'id',
         })
         // The emulated CAS is processing the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.PROCESSING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS is processing the request',
-          id: 'id',
         })
         await expectAnchorStatus(tile, AnchorStatus.PROCESSING)
 
         // Create the 2nd commit
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
         // Emulate CAS responses to the 2nd commit
-        const secondCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondCASResponse$))
+        const secondAnchorEvent$ = new Subject<AnchorEvent>()
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(secondAnchorEvent$))
         // Anchor the 2nd commit and subscribe
         const secondAnchorRequestSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
         // The emulated CAS accepts the 2nd request
-        secondCASResponse$.next({
+        secondAnchorEvent$.next({
           status: AnchorRequestStatusName.PENDING,
           streamId: tile.id,
           cid: tile.state.log[1].cid,
           message: 'CAS accepted the request',
-          id: 'id',
         })
         // The emulated CAS FAILED the 2nd request
-        secondCASResponse$.next({
+        secondAnchorEvent$.next({
           status: AnchorRequestStatusName.FAILED,
           streamId: tile.id,
           cid: tile.state.log[1].cid,
           message: 'CAS failed the request',
-          id: 'id',
         })
         await expectAnchorStatus(tile, AnchorStatus.FAILED)
 
@@ -823,12 +811,11 @@ describe('anchor', () => {
         expect(await anchorRequestStore.load(tile.id)).toBeNull()
 
         // The emulated CAS FAILED the 1st request
-        firstCASResponse$.next({
+        firstAnchorEvent$.next({
           status: AnchorRequestStatusName.FAILED,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS failed the request',
-          id: 'id',
         })
         // Polling for the 1st commit should stop
         await expect(whenSubscriptionDone(firstAnchorResponseSub)).resolves.not.toThrow()
@@ -850,28 +837,26 @@ describe('anchor', () => {
         const stream$ = await ceramic.repository.load(tile.id, {})
 
         // Emulate CAS responses for the 1st commit
-        const fauxCASResponse$ = new Subject<CASResponse>()
-        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxCASResponse$))
+        const fauxAnchorEvent$ = new Subject<AnchorEvent>()
+        requestAnchorSpy.mockReturnValueOnce(Promise.resolve(fauxAnchorEvent$))
         // anchor the first commit and subscribe
         const firstAnchorResponseSub = await ceramic.repository.stateManager.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
         // The emulated CAS accepts the 1st request
-        fauxCASResponse$.next({
+        fauxAnchorEvent$.next({
           status: AnchorRequestStatusName.PENDING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS accepted the request',
-          id: 'id',
         })
         // The emulated CAS is processing the 1st request
-        fauxCASResponse$.next({
+        fauxAnchorEvent$.next({
           status: AnchorRequestStatusName.PROCESSING,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS is processing the request',
-          id: 'id',
         })
         await expectAnchorStatus(tile, AnchorStatus.PROCESSING)
 
@@ -880,12 +865,11 @@ describe('anchor', () => {
         await expectAnchorStatus(tile, AnchorStatus.NOT_REQUESTED)
 
         // The emulated CAS fails the 1st request
-        fauxCASResponse$.next({
+        fauxAnchorEvent$.next({
           status: AnchorRequestStatusName.FAILED,
           streamId: tile.id,
           cid: tile.state.log[0].cid,
           message: 'CAS failed the request',
-          id: 'id',
         })
 
         // Polling for the 1st commit should stop
