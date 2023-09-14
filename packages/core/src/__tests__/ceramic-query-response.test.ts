@@ -30,7 +30,7 @@ describe('Response to pubsub queries handling', () => {
     await ceramicIpfs.stop()
   })
 
-  test('sync returns after only response', async () => {
+  test('sync returns after the only response', async () => {
     const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
     const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamID = new StreamID(0, genesisCID)
