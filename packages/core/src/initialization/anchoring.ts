@@ -34,6 +34,28 @@ export class UnusableAnchorChainsError extends Error {
   }
 }
 
+export class CustomMainnetCasError extends Error {
+  constructor() {
+    super('Cannot use custom anchor service on Ceramic mainnet')
+  }
+}
+
+const TRAILING_SLASH = new RegExp(/\/+$/g) // slash at the end of the string
+const MAINNET_CAS_URLS = [
+  'https://cas-internal.3boxlabs.com',
+  'https://cas-direct.3boxlabs.com',
+  DEFAULT_ANCHOR_SERVICE_URLS[Networks.MAINNET],
+  DEFAULT_ANCHOR_SERVICE_URLS[Networks.ELP],
+]
+export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks): string {
+  const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
+  const isMainnet = network == Networks.MAINNET || network == Networks.ELP
+  if (isMainnet && !MAINNET_CAS_URLS.includes(casUrl)) {
+    throw new CustomMainnetCasError()
+  }
+  return casUrl
+}
+
 /**
  * Given the ceramic network we are running on and the anchor service we are connected to, figure
  * out the set of caip2 chain IDs that are supported for stream anchoring
@@ -43,14 +65,14 @@ export async function usableAnchorChains(
   anchorService: AnchorService
 ): Promise<string[]> {
   const casChains = await anchorService.getSupportedChains()
-  const casURL = anchorService.url
+  const casUrl = anchorService.url
   const supportedChains = SUPPORTED_CHAINS_BY_NETWORK[network]
 
   // Now that we know the set of supported chains for the specified network, get the actually
   // configured chainId from the anchorService and make sure it's valid.
   const usableChains = supportedChains.filter((c) => casChains.includes(c))
   if (usableChains.length === 0) {
-    throw new UnusableAnchorChainsError(network, casURL, casChains, supportedChains)
+    throw new UnusableAnchorChainsError(network, casUrl, casChains, supportedChains)
   }
   return usableChains
 }

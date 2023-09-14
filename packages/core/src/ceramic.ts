@@ -65,14 +65,16 @@ import {
   networkOptionsByName,
   type CeramicNetworkOptions,
 } from './initialization/network-options.js'
-import { usableAnchorChains, DEFAULT_ANCHOR_SERVICE_URLS } from './initialization/anchoring.js'
+import {
+  usableAnchorChains,
+  DEFAULT_ANCHOR_SERVICE_URLS,
+  makeAnchorServiceUrl,
+} from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const TESTING = process.env.NODE_ENV == 'test'
-
-const TRAILING_SLASH = /\/$/ // slash at the end of the string
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
 
@@ -367,9 +369,7 @@ export class Ceramic implements CeramicApi {
     let anchorService = null
     let anchorServiceAuth = null
     if (!config.gateway) {
-      const anchorServiceUrl =
-        config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
-        DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+      const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, networkOptions.name)
 
       if (config.anchorServiceAuthMethod) {
         try {
@@ -383,15 +383,6 @@ export class Ceramic implements CeramicApi {
             `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
           )
         }
-      }
-
-      if (
-        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
-        anchorServiceUrl !== 'https://cas-internal.3boxlabs.com' &&
-        anchorServiceUrl !== 'https://cas-direct.3boxlabs.com' &&
-        anchorServiceUrl !== DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
-      ) {
-        throw new Error('Cannot use custom anchor service on Ceramic mainnet')
       }
 
       if (networkOptions.name != Networks.INMEMORY) {
