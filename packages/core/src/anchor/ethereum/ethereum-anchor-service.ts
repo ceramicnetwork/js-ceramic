@@ -218,7 +218,7 @@ export class EthereumAnchorService implements AnchorService {
       sendRequest$ = sendRequest$.pipe(
         retry({
           delay: (error) => {
-            this.#logger.err(
+            this.#logger.warn(
               new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
             )
             return timer(this.#pollInterval)
@@ -254,7 +254,7 @@ export class EthereumAnchorService implements AnchorService {
     const requestWithError = defer(() => this.#sendRequest(requestUrl)).pipe(
       retry({
         delay: (error) => {
-          this.#logger.err(new CasConnectionError(streamId, tip, error.message))
+          this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
           return timer(this.#pollInterval)
         },
       })
