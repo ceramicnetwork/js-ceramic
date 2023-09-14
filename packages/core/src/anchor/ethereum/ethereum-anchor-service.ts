@@ -243,11 +243,7 @@ export class EthereumAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-    if (process.env.CERAMIC_DISABLE_ANCHOR_POLLING_RETRIES == 'true') {
-      return this._pollForAnchorResponseLegacy(streamId, tip)
-    } else {
-      return this._pollForAnchorResponse(streamId, tip)
-    }
+    return this._pollForAnchorResponse(streamId, tip)
   }
 
   private _pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
@@ -271,30 +267,6 @@ export class EthereumAnchorService implements AnchorService {
           throw new MaxAnchorPollingError()
         } else {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
-        }
-      }),
-      this._parseResponse(streamId, tip),
-      this._updateEvents()
-    )
-  }
-
-  /**
-   * The old version of polling that has a bug where polling stops if there's a network error.
-   * TODO: REMOVE THIS!  We're only putting this back temporarily to investigate if it caused
-   * a performance regression.
-   */
-  private _pollForAnchorResponseLegacy(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-    const started = new Date().getTime()
-    const maxTime = started + this.#maxPollTime
-    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
-
-    return interval(this.#pollInterval).pipe(
-      concatMap(async () => {
-        const now = new Date().getTime()
-        if (now > maxTime) {
-          throw new MaxAnchorPollingError()
-        } else {
-          return this.#sendRequest(requestUrl)
         }
       }),
       this._parseResponse(streamId, tip),
