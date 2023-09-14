@@ -35,7 +35,7 @@ describe('Response to pubsub queries handling', () => {
     const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamID = new StreamID(0, genesisCID)
 
-    const timeBeforeResponding = 100
+    const timeBeforeResponding = MAX_RESPONSE_INTERVAL / 2
     await otherIpfs.pubsub.subscribe(ceramic.pubsubTopic, async (rawMessage: SignedMessage) => {
       const message = deserialize(rawMessage)
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
