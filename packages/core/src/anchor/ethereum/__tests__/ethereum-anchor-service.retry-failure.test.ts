@@ -38,7 +38,7 @@ test('re-request an anchor till get a response', async () => {
   const { AnchorRequestStatusName } = await import('@ceramicnetwork/codecs')
   const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
-  const errSpy = jest.spyOn(diagnosticsLogger, 'err')
+  const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const anchorService = new EthereumAnchorService(
     'http://example.com',
     diagnosticsLogger,
@@ -55,7 +55,7 @@ test('re-request an anchor till get a response', async () => {
   )
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
-  expect(errSpy).toBeCalledTimes(3)
+  expect(warnSpy).toBeCalledTimes(3)
 })
 
 test('re-poll on fetch error', async () => {
@@ -64,7 +64,7 @@ test('re-poll on fetch error', async () => {
   const { AnchorRequestStatusName } = await import('@ceramicnetwork/codecs')
   const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
-  const errSpy = jest.spyOn(diagnosticsLogger, 'err')
+  const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const anchorService = new EthereumAnchorService(
     'http://example.com',
     diagnosticsLogger,
@@ -89,7 +89,7 @@ test('re-poll on fetch error', async () => {
   })
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
-  expect(errSpy).toBeCalledTimes(3)
+  expect(warnSpy).toBeCalledTimes(3)
   expect(nextCount).toEqual(1)
   expect(errorCount).toEqual(0)
 })
