@@ -291,10 +291,8 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
     const car = carFactory.build()
 
-    const cidToBlock = async (cid) => new CarBlock(cid, await this.#dispatcher.getIpfsBlock(cid))
-
-    car.blocks.put(await cidToBlock(proofCid))
-    car.blocks.put(await cidToBlock(anchorCommitCid))
+    car.blocks.put(await this.#dispatcher.getIpfsBlock(proofCid))
+    car.blocks.put(await this.#dispatcher.getIpfsBlock(anchorCommitCid))
 
     car.roots.push(anchorCommitCid)
 
