@@ -332,7 +332,12 @@ export class RepositoryInternals {
         if (casResponse.cid.equals(state$.tip)) {
           await this.#anchorRequestStore.remove(state$.id)
         }
-        await this._handleAnchorCommit(state$, casResponse.cid, casResponse.anchorCommit.cid, casResponse.witnessCar)
+        await this._handleAnchorCommit(
+          state$,
+          casResponse.cid,
+          casResponse.anchorCommit.cid,
+          casResponse.witnessCar
+        )
         return true
       }
       case AnchorRequestStatusName.FAILED: {
