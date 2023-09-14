@@ -68,6 +68,7 @@ import {
 import {
   usableAnchorChains,
   makeAnchorServiceUrl,
+  makeAnchorServiceAuth,
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 
@@ -366,30 +367,27 @@ export class Ceramic implements CeramicApi {
     const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
     let anchorService = null
-    let anchorServiceAuth = null
     if (!config.gateway) {
       const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, networkOptions.name)
 
-      if (config.anchorServiceAuthMethod) {
-        try {
-          anchorServiceAuth = new DIDAnchorServiceAuth(anchorServiceUrl, logger)
-        } catch (error) {
-          throw new Error(`DID auth method for anchor service failed to instantiate`)
-        }
-      } else {
-        if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {
-          logger.warn(
-            `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
-          )
-        }
-      }
-
-      if (networkOptions.name != Networks.INMEMORY) {
-        anchorService = anchorServiceAuth
-          ? new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
-          : new EthereumAnchorService(anchorServiceUrl, logger)
-      } else {
+      if (networkOptions.name == Networks.INMEMORY) {
         anchorService = new InMemoryAnchorService(config as any)
+      } else {
+        const anchorServiceAuth = makeAnchorServiceAuth(
+          config.anchorServiceAuthMethod,
+          anchorServiceUrl,
+          networkOptions.name,
+          logger
+        )
+        if (anchorServiceAuth) {
+          anchorService = new AuthenticatedEthereumAnchorService(
+            anchorServiceAuth,
+            anchorServiceUrl,
+            logger
+          )
+        } else {
+          anchorService = new EthereumAnchorService(anchorServiceUrl, logger)
+        }
       }
     }
 

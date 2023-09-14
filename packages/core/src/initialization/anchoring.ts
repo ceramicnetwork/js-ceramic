@@ -1,4 +1,5 @@
-import { Networks, type AnchorService } from '@ceramicnetwork/common'
+import { Networks, type AnchorService, type DiagnosticsLogger } from '@ceramicnetwork/common'
+import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
@@ -49,11 +50,14 @@ const MAINNET_CAS_URLS = [
 ]
 export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks): string {
   const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
-  const isMainnet = network == Networks.MAINNET || network == Networks.ELP
-  if (isMainnet && !MAINNET_CAS_URLS.includes(casUrl)) {
+  if (isMainnet(network) && !MAINNET_CAS_URLS.includes(casUrl)) {
     throw new CustomMainnetCasError()
   }
   return casUrl
+}
+
+function isMainnet(network: Networks): boolean {
+  return network == Networks.MAINNET || network == Networks.ELP
 }
 
 /**
@@ -75,4 +79,26 @@ export async function usableAnchorChains(
     throw new UnusableAnchorChainsError(network, casUrl, casChains, supportedChains)
   }
   return usableChains
+}
+
+export function makeAnchorServiceAuth(
+  authMethod: string | undefined,
+  casUrl: string,
+  network: Networks,
+  logger: DiagnosticsLogger
+): DIDAnchorServiceAuth | undefined {
+  if (authMethod) {
+    try {
+      return new DIDAnchorServiceAuth(casUrl, logger)
+    } catch (error) {
+      throw new Error(`DID auth method for anchor service failed to instantiate`)
+    }
+  } else {
+    if (isMainnet(network)) {
+      logger.warn(
+        `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
+      )
+    }
+    return undefined
+  }
 }
