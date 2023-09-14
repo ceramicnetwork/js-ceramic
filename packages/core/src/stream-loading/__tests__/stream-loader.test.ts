@@ -256,6 +256,19 @@ describe('StreamLoader querying against real Ceramic node', () => {
       ).rejects.toThrow(/rejected by conflict resolution/)
     })
   })
+
+  describe('loadGenesisState', () => {
+    test('load at genesis commit', async () => {
+      const doc = await TileDocument.create(ceramic, CONTENT0)
+      await doc.update(CONTENT1)
+      await TestUtils.anchorUpdate(ceramic, doc)
+      expect(doc.state.log.length).toEqual(3)
+
+      const genesisState = await streamLoader.loadGenesisState(doc.id)
+      expect(genesisState.log.length).toEqual(1)
+      expect(genesisState.content).toEqual(CONTENT0)
+    })
+  })
 })
 
 /**

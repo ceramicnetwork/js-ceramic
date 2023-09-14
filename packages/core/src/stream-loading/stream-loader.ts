@@ -147,4 +147,19 @@ export class StreamLoader {
     // to reset the state to the state at the requested commit.
     return this.stateManipulator.resetStateToCommit(baseState, commitId.commit)
   }
+
+  /**
+   * Completely loads the current state of a Stream from the p2p network just from the StreamID.
+   * TODO(CDB-2761): Delete this method.
+   * @param streamID
+   */
+  async loadGenesisState(streamID: StreamID): Promise<StreamState> {
+    const logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, streamID.cid)
+    const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
+      logWithoutTimestamps
+    )
+    return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, {
+      throwOnInvalidCommit: true,
+    })
+  }
 }

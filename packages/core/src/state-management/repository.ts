@@ -169,6 +169,8 @@ export class Repository {
       loadingQ: this.loadingQ,
       logger: this.logger,
       pinStore: this.pinStore,
+      streamLoader: deps.streamLoader,
+      streamUpdater: deps.streamUpdater,
     })
     this.stateManager = new StateManager(
       deps.dispatcher,
