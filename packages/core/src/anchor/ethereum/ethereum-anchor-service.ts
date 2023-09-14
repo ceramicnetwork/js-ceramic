@@ -20,6 +20,7 @@ import {
   interval,
   lastValueFrom,
   Subject,
+  type OperatorFunction,
 } from 'rxjs'
 import { concatMap, catchError, map, retry } from 'rxjs/operators'
 import { CAR } from 'cartonne'
@@ -228,11 +229,7 @@ export class EthereumAnchorService implements AnchorService {
       )
     }
 
-    return sendRequest$.pipe(
-      map((response) => {
-        return parseResponse(carFileReader.streamId, carFileReader.tip, response)
-      })
-    )
+    return sendRequest$.pipe(this._parseResponse(carFileReader.streamId, carFileReader.tip))
   }
 
   /**
@@ -272,7 +269,7 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
-      map((response) => parseResponse(streamId, tip, response))
+      this._parseResponse(streamId, tip)
     )
   }
 
@@ -292,11 +289,15 @@ export class EthereumAnchorService implements AnchorService {
         if (now > maxTime) {
           throw new MaxAnchorPollingError()
         } else {
-          const response = await this.#sendRequest(requestUrl)
-          return parseResponse(streamId, tip, response)
+          return this.#sendRequest(requestUrl)
         }
-      })
+      }),
+      this._parseResponse(streamId, tip)
     )
+  }
+
+  private _parseResponse(streamId: StreamID, tip: CID): OperatorFunction<unknown, AnchorEvent> {
+    return map((response) => parseResponse(streamId, tip, response))
   }
 }
 
