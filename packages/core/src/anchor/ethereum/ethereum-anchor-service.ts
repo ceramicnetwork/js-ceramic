@@ -38,6 +38,28 @@ interface CidAndStream {
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
 
+class MultipleChainsError extends Error {
+  constructor() {
+    super(
+      "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
+    )
+  }
+}
+
+class CasConnectionError extends Error {
+  constructor(streamId: StreamID, tip: CID, cause: string) {
+    super(
+      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
+    )
+  }
+}
+
+class MaxAnchorPollingError extends Error {
+  constructor() {
+    super('Exceeded max anchor polling time limit')
+  }
+}
+
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -88,9 +110,7 @@ export class EthereumAnchorService implements AnchorService {
     // Get the chainIds supported by our anchor service
     const response = await this.#sendRequest(this.#chainIdApiEndpoint)
     if (response.supportedChains.length > 1) {
-      throw new Error(
-        "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
-      )
+      throw new MultipleChainsError()
     }
     this.#chainId = response.supportedChains[0]
   }
@@ -172,9 +192,7 @@ export class EthereumAnchorService implements AnchorService {
         retry({
           delay: (error) => {
             this.#logger.err(
-              new Error(
-                `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
-              )
+              new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
             )
             return timer(this.#pollInterval)
           },
@@ -183,10 +201,7 @@ export class EthereumAnchorService implements AnchorService {
     } else {
       sendRequest$ = sendRequest$.pipe(
         catchError((error) => {
-          // clean up the error message to have more context
-          throw new Error(
-            `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
-          )
+          throw new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
         })
       )
     }
@@ -224,11 +239,7 @@ export class EthereumAnchorService implements AnchorService {
     const requestWithError = defer(() => this.#sendRequest(requestUrl)).pipe(
       retry({
         delay: (error) => {
-          this.#logger.err(
-            new Error(
-              `Error connecting to CAS while polling for anchor ${streamId} at commit ${tip}: ${error.message}`
-            )
-          )
+          this.#logger.err(new CasConnectionError(streamId, tip, error.message))
           return timer(this.#pollInterval)
         },
       })
@@ -238,7 +249,7 @@ export class EthereumAnchorService implements AnchorService {
       expand(() => {
         const now = new Date().getTime()
         if (now > maxTime) {
-          throw new Error('Exceeded max anchor polling time limit')
+          throw new MaxAnchorPollingError()
         } else {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
@@ -262,7 +273,7 @@ export class EthereumAnchorService implements AnchorService {
       concatMap(async () => {
         const now = new Date().getTime()
         if (now > maxTime) {
-          throw new Error('Exceeded max anchor polling time limit')
+          throw new MaxAnchorPollingError()
         } else {
           const response = await this.#sendRequest(requestUrl)
           return this.parseResponse(cidStream, response)
