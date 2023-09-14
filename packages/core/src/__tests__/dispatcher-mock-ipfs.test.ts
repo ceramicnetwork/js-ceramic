@@ -6,7 +6,6 @@ import { CommitType, StreamState, IpfsApi, TestUtils } from '@ceramicnetwork/com
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository } from '../state-management/repository.js'
 import { RunningState } from '../state-management/running-state.js'
-import { StateManager } from '../state-management/state-manager.js'
 import { CARFactory } from 'cartonne'
 import * as dagJoseCodec from 'dag-jose'
 import * as dagCborCodec from '@ipld/dag-cbor'
@@ -203,8 +202,6 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('handle message correctly without model', async () => {
-    dispatcher.repository.stateManager = {} as unknown as StateManager
-
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
       repository.add(runningState)
@@ -232,18 +229,14 @@ describe('Dispatcher with mock ipfs', () => {
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message without model
-    dispatcher.repository.stateManager.handleUpdate = jest.fn()
+    dispatcher.repository.handleUpdate = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
       stream: FAKE_STREAM_ID,
       tip: FAKE_CID,
       model: null,
     })
-    expect(dispatcher.repository.stateManager.handleUpdate).toBeCalledWith(
-      state$.id,
-      FAKE_CID,
-      null
-    )
+    expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, null)
 
     const continuationState = {
       ...initialState,
@@ -266,16 +259,10 @@ describe('Dispatcher with mock ipfs', () => {
     // Handle RESPONSE message
     const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
-    expect(dispatcher.repository.stateManager.handleUpdate).toBeCalledWith(
-      stream2.id,
-      FAKE_CID2,
-      undefined
-    )
+    expect(dispatcher.repository.handleUpdate).toBeCalledWith(stream2.id, FAKE_CID2, undefined)
   })
 
   it('handle message correctly with model', async () => {
-    dispatcher.repository.stateManager = {} as unknown as StateManager
-
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
       repository.add(runningState)
@@ -295,17 +282,13 @@ describe('Dispatcher with mock ipfs', () => {
     const state$ = await register(initialState)
 
     // Handle UPDATE message with model
-    dispatcher.repository.stateManager.handleUpdate = jest.fn()
+    dispatcher.repository.handleUpdate = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
       stream: FAKE_STREAM_ID,
       tip: FAKE_CID,
       model: FAKE_MODEL,
     })
-    expect(dispatcher.repository.stateManager.handleUpdate).toBeCalledWith(
-      state$.id,
-      FAKE_CID,
-      FAKE_MODEL
-    )
+    expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, FAKE_MODEL)
   })
 })
