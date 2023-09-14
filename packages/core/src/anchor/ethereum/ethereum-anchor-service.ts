@@ -27,14 +27,6 @@ import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
-/**
- * CID-streamId pair
- */
-interface CidAndStream {
-  readonly cid: CID
-  readonly streamId: StreamID
-}
-
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
 
@@ -63,13 +55,13 @@ class MaxAnchorPollingError extends Error {
 /**
  * Parse JSON that CAS returns.
  */
-function parseResponse(cidStream: CidAndStream, json: unknown): AnchorEvent {
+function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent {
   const parsed = decode(CASResponseOrError, json)
   if (ErrorResponse.is(parsed)) {
     return {
       status: AnchorRequestStatusName.FAILED,
-      streamId: cidStream.streamId,
-      cid: cidStream.cid,
+      streamId: streamId,
+      cid: tip,
       message: parsed.error,
     }
   } else {
@@ -89,6 +81,15 @@ function parseResponse(cidStream: CidAndStream, json: unknown): AnchorEvent {
       message: parsed.message,
     }
   }
+}
+
+function announcePending(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
+  return of({
+    status: AnchorRequestStatusName.PENDING,
+    streamId: streamId,
+    cid: tip,
+    message: 'Sending anchoring request',
+  })
 }
 
 /**
@@ -157,18 +158,17 @@ export class EthereumAnchorService implements AnchorService {
     waitForConfirmation: boolean
   ): Promise<Observable<AnchorEvent>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const cidStreamPair: CidAndStream = { cid: carFileReader.tip, streamId: carFileReader.streamId }
+    const streamId = carFileReader.streamId
+    const tip = carFileReader.tip
 
     const requestCreated$ = concat(
-      this._announcePending(cidStreamPair),
+      announcePending(streamId, tip),
       this._makeAnchorRequest(carFileReader, !waitForConfirmation)
     )
 
-    const anchorCompleted$ = this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
+    const anchorCompleted$ = this.pollForAnchorResponse(streamId, tip)
 
-    const streamId = carFileReader.streamId
-    const tip = carFileReader.tip
-    const errHandler = (error) =>
+    const errHandler = (error: Error) =>
       of<AnchorEvent>({
         status: AnchorRequestStatusName.FAILED,
         streamId: streamId,
@@ -190,15 +190,6 @@ export class EthereumAnchorService implements AnchorService {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return [this.#chainId]
-  }
-
-  private _announcePending(cidStream: CidAndStream): Observable<AnchorEvent> {
-    return of({
-      status: AnchorRequestStatusName.PENDING,
-      streamId: cidStream.streamId,
-      cid: cidStream.cid,
-      message: 'Sending anchoring request',
-    })
   }
 
   /**
@@ -239,7 +230,7 @@ export class EthereumAnchorService implements AnchorService {
 
     return sendRequest$.pipe(
       map((response) => {
-        return parseResponse({ streamId: carFileReader.streamId, cid: carFileReader.tip }, response)
+        return parseResponse(carFileReader.streamId, carFileReader.tip, response)
       })
     )
   }
@@ -262,7 +253,6 @@ export class EthereumAnchorService implements AnchorService {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
-    const cidStream = { cid: tip, streamId }
 
     const requestWithError = defer(() => this.#sendRequest(requestUrl)).pipe(
       retry({
@@ -282,7 +272,7 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
-      map((response) => parseResponse(cidStream, response))
+      map((response) => parseResponse(streamId, tip, response))
     )
   }
 
@@ -295,7 +285,6 @@ export class EthereumAnchorService implements AnchorService {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
-    const cidStream = { cid: tip, streamId }
 
     return interval(this.#pollInterval).pipe(
       concatMap(async () => {
@@ -304,7 +293,7 @@ export class EthereumAnchorService implements AnchorService {
           throw new MaxAnchorPollingError()
         } else {
           const response = await this.#sendRequest(requestUrl)
-          return parseResponse(cidStream, response)
+          return parseResponse(streamId, tip, response)
         }
       })
     )
