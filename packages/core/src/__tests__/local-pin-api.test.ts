@@ -23,7 +23,7 @@ const repository = {
   pin: jest.fn(),
   unpin: jest.fn(),
   list: jest.fn(),
-  stateManager: { markPinnedAndSynced: jest.fn() },
+  markPinnedAndSynced: jest.fn(),
 } as unknown as Repository
 const pinApi = new LocalPinApi(repository, new LoggerProvider().getDiagnosticsLogger())
 
@@ -37,14 +37,14 @@ test('add', async () => {
   await pinApi.add(STREAM_ID)
   expect(repository.load).toBeCalledWith(STREAM_ID, { sync: SyncOptions.PREFER_CACHE })
   expect(repository.pin).toBeCalledWith(state$, undefined)
-  expect(repository.stateManager.markPinnedAndSynced).toBeCalledWith(state$.id)
+  expect(repository.markPinnedAndSynced).toBeCalledWith(state$.id)
 })
 
 test('add: force', async () => {
   await pinApi.add(STREAM_ID, true)
   expect(repository.load).toBeCalledWith(STREAM_ID, { sync: SyncOptions.PREFER_CACHE })
   expect(repository.pin).toBeCalledWith(state$, true)
-  expect(repository.stateManager.markPinnedAndSynced).toBeCalledWith(state$.id)
+  expect(repository.markPinnedAndSynced).toBeCalledWith(state$.id)
 })
 
 test('rm', async () => {

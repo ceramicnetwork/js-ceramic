@@ -50,10 +50,6 @@ export class StateManager {
     this.carFactory.codecs.add(DAG_JOSE)
   }
 
-  markPinnedAndSynced(streamId: StreamID): void {
-    this.internals.markPinnedAndSynced(streamId)
-  }
-
   /**
    * Take the version of a stream state and a specific commit and returns a snapshot of a state
    * at the requested commit. If the requested commit is for a branch of history that conflicts with the
