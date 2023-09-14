@@ -13,7 +13,7 @@ import type { Dispatcher } from '../../dispatcher.js'
 import { Ceramic } from '../../ceramic.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { LRUCache } from 'least-recent'
-import { CAR, CarBlock, CARFactory } from 'cartonne'
+import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
@@ -243,32 +243,13 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }
   }
 
-  async _storeRecord(record: Record<string, unknown>): Promise<CID> {
-    let timeout: any
-
-    const putPromise = this.#dispatcher.storeCommit(record).finally(() => {
-      clearTimeout(timeout)
-    })
-
-    const timeoutPromise = new Promise((resolve) => {
-      timeout = setTimeout(resolve, 30 * 1000)
-    })
-
-    return Promise.race([
-      putPromise,
-      timeoutPromise.then(() => {
-        throw new Error(`Timed out storing record in IPFS`)
-      }),
-    ])
-  }
-
   /**
    * Sends anchor commit to Ceramic node and instructs it to publish the commit to pubsub
    * @param streamId
    * @param commit
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
-    const anchorCid = await this._storeRecord(commit as any)
+    const anchorCid = await this.#dispatcher.storeCommit(commit as any)
     await new Promise<void>((resolve) => {
       this.#dispatcher.publishTip(streamId, anchorCid).add(resolve)
     })
