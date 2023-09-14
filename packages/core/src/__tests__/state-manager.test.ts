@@ -10,26 +10,18 @@ import {
 } from '@jest/globals'
 import {
   AnchorStatus,
-  CommitType,
   IpfsApi,
   SignatureStatus,
   Stream,
   TestUtils,
   AnchorCommit,
 } from '@ceramicnetwork/common'
-import { CID } from 'multiformats/cid'
-import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
-import { RunningState } from '../state-management/running-state.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import * as uint8arrays from 'uint8arrays'
-import * as sha256 from '@stablelib/sha256'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { from, Subject, timer, firstValueFrom } from 'rxjs'
-import { concatMap, map } from 'rxjs/operators'
-import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
+import { Subject, firstValueFrom } from 'rxjs'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { whenSubscriptionDone } from './when-subscription-done.util.js'
 import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
@@ -204,121 +196,6 @@ describe('anchor', () => {
       })
       expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
     })
-
-    describe('sync', () => {
-      let originalCeramic: Ceramic
-
-      beforeEach(() => {
-        originalCeramic = ceramic
-      })
-
-      afterEach(() => {
-        ceramic = originalCeramic
-      })
-
-      const FAKE_STREAM_ID = StreamID.fromString(
-        'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-      )
-      function digest(input: string) {
-        return uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
-      }
-      function hash(data: string): CID {
-        return CID.create(1, 0x12, decodeMultiHash(Buffer.from('1220' + digest(data), 'hex')))
-      }
-
-      function responseTips(amount: number) {
-        const times = Array.from({ length: amount }).map((_, index) => index)
-        return times.map((n) => hash(n.toString()))
-      }
-
-      test('handle first received', async () => {
-        const internals = ceramic.repository._internals
-        const response = responseTips(1)
-        ceramic.dispatcher.messageBus.queryNetwork = () => from(response)
-        const fakeHandleTip = jest.fn(() =>
-          Promise.resolve()
-        ) as unknown as typeof internals.handleTip
-        internals.handleTip = fakeHandleTip
-        const state$ = {
-          id: FAKE_STREAM_ID,
-          value: {
-            log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
-          },
-        } as unknown as RunningState
-        await internals.sync(state$, 1000)
-        expect(fakeHandleTip).toHaveBeenCalledWith(state$, response[0])
-      })
-      test('handle all received', async () => {
-        const internals = ceramic.repository._internals
-        const amount = 10
-        const response = responseTips(amount)
-        ceramic.dispatcher.messageBus.queryNetwork = () => from(response)
-        const fakeHandleTip = jest.fn(() =>
-          Promise.resolve()
-        ) as unknown as typeof internals.handleTip
-        internals.handleTip = fakeHandleTip
-        const state$ = {
-          id: FAKE_STREAM_ID,
-          value: {
-            log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
-          },
-        } as unknown as RunningState
-        await internals.sync(state$, 1000)
-        response.forEach((r) => {
-          expect(fakeHandleTip).toHaveBeenCalledWith(state$, r)
-        })
-      })
-      test('not handle delayed', async () => {
-        const internals = ceramic.repository._internals
-        const amount = 10
-        const response = responseTips(amount)
-        ceramic.dispatcher.messageBus.queryNetwork = () =>
-          from(response).pipe(
-            concatMap(async (value, index) => {
-              await new Promise((resolve) =>
-                setTimeout(resolve, index * MAX_RESPONSE_INTERVAL * 0.3)
-              )
-              return value
-            })
-          )
-        const fakeHandleTip = jest.fn(() =>
-          Promise.resolve()
-        ) as unknown as typeof internals.handleTip
-        internals.handleTip = fakeHandleTip
-        const state$ = {
-          id: FAKE_STREAM_ID,
-          value: {
-            log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
-          },
-        } as unknown as RunningState
-        await internals.sync(state$, 1000)
-        expect(fakeHandleTip).toBeCalledTimes(5)
-        response.slice(0, 5).forEach((r) => {
-          expect(fakeHandleTip).toHaveBeenCalledWith(state$, r)
-        })
-        response.slice(6, 10).forEach((r) => {
-          expect(fakeHandleTip).not.toHaveBeenCalledWith(state$, r)
-        })
-      })
-      test('stop after timeout', async () => {
-        const internals = ceramic.repository._internals
-        ceramic.dispatcher.messageBus.queryNetwork = () =>
-          timer(0, MAX_RESPONSE_INTERVAL * 0.5).pipe(map((n) => hash(n.toString())))
-        const fakeHandleTip = jest.fn(() =>
-          Promise.resolve()
-        ) as unknown as typeof internals.handleTip
-        internals.handleTip = fakeHandleTip
-        const state$ = {
-          id: FAKE_STREAM_ID,
-          value: {
-            log: [{ type: CommitType.GENESIS, cid: FAKE_STREAM_ID }],
-          },
-        } as unknown as RunningState
-        await internals.sync(state$, MAX_RESPONSE_INTERVAL * 10)
-        expect(fakeHandleTip).toBeCalledTimes(20)
-      })
-    })
-  })
 
   describe('With anchorOnRequest == false', () => {
     let inMemoryAnchorService: InMemoryAnchorService
