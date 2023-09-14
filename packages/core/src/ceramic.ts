@@ -314,7 +314,7 @@ export class Ceramic implements CeramicApi {
         on: params.sync,
       },
       this.dispatcher,
-      this.repository.stateManager.handleUpdate.bind(this.repository.stateManager),
+      this.repository.handleUpdate.bind(this.repository),
       this.repository.index,
       this._logger
     )
@@ -703,7 +703,7 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const effectiveStreamId = normalizeStreamID(streamId)
     const state = await this.repository.load(effectiveStreamId, opts)
-    await this.repository.stateManager.anchor(state, opts)
+    await this.repository.anchor(state, opts)
     return state.state.anchorStatus
   }
 

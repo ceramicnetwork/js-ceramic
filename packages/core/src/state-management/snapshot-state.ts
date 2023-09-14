@@ -5,7 +5,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 /**
  * Snapshot of a stream state at some commit. Unlike `RunningState` this can not be updated.
  * Only a subset of operations could be performed with an instance of SnapshotState, like
- * `StateManager#atCommit` or `StateManager#atTime`.
+ * `Repository#loadAtCommit` or `Repository#loadAtTime`.
  */
 export class SnapshotState extends Observable<StreamState> implements RunningStateLike {
   readonly id: StreamID
