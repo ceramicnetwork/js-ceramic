@@ -54,6 +54,7 @@ export class EthereumAnchorService implements AnchorService {
   readonly #events: Subject<AnchorEvent>
   #chainId: string
 
+  readonly url: string
   readonly events: Observable<AnchorEvent>
 
   constructor(
@@ -71,6 +72,7 @@ export class EthereumAnchorService implements AnchorService {
     this.#maxPollTime = maxPollTime
     this.#events = new Subject()
     this.events = this.#events
+    this.url = this.anchorServiceUrl
   }
 
   /**
@@ -80,10 +82,6 @@ export class EthereumAnchorService implements AnchorService {
    */
   set ceramic(ceramic: CeramicApi) {
     // Do Nothing
-  }
-
-  get url() {
-    return this.anchorServiceUrl
   }
 
   async init(): Promise<void> {
