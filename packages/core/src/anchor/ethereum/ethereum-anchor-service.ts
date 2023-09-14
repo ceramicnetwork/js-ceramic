@@ -180,12 +180,9 @@ export class EthereumAnchorService implements AnchorService {
 
     if (waitForConfirmation) {
       await lastValueFrom(requestCreated$)
-      return anchorCompleted$.pipe(catchError(errHandler), this._updateEvents())
+      return anchorCompleted$.pipe(catchError(errHandler))
     } else {
-      return concat(requestCreated$, anchorCompleted$).pipe(
-        catchError(errHandler),
-        this._updateEvents()
-      )
+      return concat(requestCreated$, anchorCompleted$).pipe(catchError(errHandler))
     }
   }
 
@@ -243,10 +240,6 @@ export class EthereumAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-    return this._pollForAnchorResponse(streamId, tip)
-  }
-
-  private _pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
