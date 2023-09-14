@@ -254,7 +254,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       timeout = setTimeout(resolve, 30 * 1000)
     })
 
-    return await Promise.race([
+    return Promise.race([
       putPromise,
       timeoutPromise.then(() => {
         throw new Error(`Timed out storing record in IPFS`)
@@ -269,16 +269,9 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
     const anchorCid = await this._storeRecord(commit as any)
-    let resolved = false
     await new Promise<void>((resolve) => {
-      this.#dispatcher.publishTip(streamId, anchorCid).add(() => {
-        if (!resolved) {
-          resolved = true
-          resolve()
-        }
-      })
+      this.#dispatcher.publishTip(streamId, anchorCid).add(resolve)
     })
-
     return anchorCid
   }
 
