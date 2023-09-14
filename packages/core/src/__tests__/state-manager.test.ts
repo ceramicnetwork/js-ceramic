@@ -196,6 +196,7 @@ describe('anchor', () => {
       })
       expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
     })
+  })
 
   describe('With anchorOnRequest == false', () => {
     let inMemoryAnchorService: InMemoryAnchorService
