@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.42.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.41.0...@ceramicnetwork/core@2.42.0-rc.0) (2023-09-14)
+
+
+### Features
+
+* Add functionality to StreamLoader to load at a CommitID ([#2950](https://github.com/ceramicnetwork/js-ceramic/issues/2950)) ([8103038](https://github.com/ceramicnetwork/js-ceramic/commit/8103038ac2cca172470ca82778225a6ef2045385))
+* Add StreamUpdater to handle applying incoming commits ([#2953](https://github.com/ceramicnetwork/js-ceramic/issues/2953)) ([21c4df6](https://github.com/ceramicnetwork/js-ceramic/commit/21c4df615cd68f7b563435580e5488cf64e639a1))
+* Implement StateManipulator with cleaner, more efficient conflict resolution ([#2946](https://github.com/ceramicnetwork/js-ceramic/issues/2946)) ([510e811](https://github.com/ceramicnetwork/js-ceramic/commit/510e811392dfe1e4f2223113fca8cf459c1b91e3))
+
+
+
+
+
 # [2.41.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.41.0-rc.1...@ceramicnetwork/core@2.41.0) (2023-09-14)
 
 **Note:** Version bump only for package @ceramicnetwork/core
