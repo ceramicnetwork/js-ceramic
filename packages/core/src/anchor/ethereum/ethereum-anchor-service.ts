@@ -61,6 +61,37 @@ class MaxAnchorPollingError extends Error {
 }
 
 /**
+ * Parse JSON that CAS returns.
+ */
+function parseResponse(cidStream: CidAndStream, json: unknown): AnchorEvent {
+  const parsed = decode(CASResponseOrError, json)
+  if (ErrorResponse.is(parsed)) {
+    return {
+      status: AnchorRequestStatusName.FAILED,
+      streamId: cidStream.streamId,
+      cid: cidStream.cid,
+      message: parsed.error,
+    }
+  } else {
+    if (parsed.status === AnchorRequestStatusName.COMPLETED) {
+      return {
+        status: parsed.status,
+        streamId: parsed.streamId,
+        cid: parsed.cid,
+        message: parsed.message,
+        witnessCar: parsed.witnessCar,
+      }
+    }
+    return {
+      status: parsed.status,
+      streamId: parsed.streamId,
+      cid: parsed.cid,
+      message: parsed.message,
+    }
+  }
+}
+
+/**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
 export class EthereumAnchorService implements AnchorService {
@@ -208,10 +239,7 @@ export class EthereumAnchorService implements AnchorService {
 
     return sendRequest$.pipe(
       map((response) => {
-        return this.parseResponse(
-          { streamId: carFileReader.streamId, cid: carFileReader.tip },
-          response
-        )
+        return parseResponse({ streamId: carFileReader.streamId, cid: carFileReader.tip }, response)
       })
     )
   }
@@ -254,7 +282,7 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
-      map((response) => this.parseResponse(cidStream, response))
+      map((response) => parseResponse(cidStream, response))
     )
   }
 
@@ -276,41 +304,10 @@ export class EthereumAnchorService implements AnchorService {
           throw new MaxAnchorPollingError()
         } else {
           const response = await this.#sendRequest(requestUrl)
-          return this.parseResponse(cidStream, response)
+          return parseResponse(cidStream, response)
         }
       })
     )
-  }
-
-  /**
-   * Parse JSON that CAS returns.
-   */
-  private parseResponse(cidStream: CidAndStream, json: any): AnchorEvent {
-    const parsed = decode(CASResponseOrError, json)
-    if (ErrorResponse.is(parsed)) {
-      return {
-        status: AnchorRequestStatusName.FAILED,
-        streamId: cidStream.streamId,
-        cid: cidStream.cid,
-        message: json.error,
-      }
-    } else {
-      if (parsed.status === AnchorRequestStatusName.COMPLETED) {
-        return {
-          status: parsed.status,
-          streamId: parsed.streamId,
-          cid: parsed.cid,
-          message: parsed.message,
-          witnessCar: parsed.witnessCar,
-        }
-      }
-      return {
-        status: parsed.status,
-        streamId: parsed.streamId,
-        cid: parsed.cid,
-        message: parsed.message,
-      }
-    }
   }
 }
 
