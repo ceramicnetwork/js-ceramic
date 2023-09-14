@@ -66,6 +66,7 @@ import {
   type CeramicNetworkOptions,
 } from './initialization/network-options.js'
 import { usableAnchorChains, DEFAULT_ANCHOR_SERVICE_URLS } from './initialization/anchoring.js'
+import { StreamUpdater } from './stream-loading/stream-updater.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -249,6 +250,8 @@ export class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
+    // TODO(CDB-2749): Hide 'anchorTimestampExtractor', 'tipFetcher', 'logSyncer', and
+    //  'stateManipulator' as implementation details of StreamLoader and StreamUpdater.
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       this._logger,
       this.dispatcher,
@@ -276,6 +279,13 @@ export class Ceramic implements CeramicApi {
       anchorTimestampExtractor,
       stateManipulator
     )
+    const streamUpdater = new StreamUpdater(
+      this._logger,
+      this.dispatcher,
+      logSyncer,
+      anchorTimestampExtractor,
+      stateManipulator
+    )
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
       params.indexingConfig,
@@ -294,6 +304,7 @@ export class Ceramic implements CeramicApi {
       conflictResolution: conflictResolution,
       indexing: localIndex,
       streamLoader,
+      streamUpdater,
     })
     this.syncApi = new SyncApi(
       {
