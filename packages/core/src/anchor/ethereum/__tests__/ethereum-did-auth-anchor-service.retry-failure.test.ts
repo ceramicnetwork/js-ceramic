@@ -50,7 +50,7 @@ test('re-request an anchor till get a response', async () => {
   )
   const loggerProvider = new common.LoggerProvider()
   const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
-  const errSpy = jest.spyOn(diagnosticsLogger, 'err')
+  const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const url = 'http://example.com'
 
   ipfs = await createIPFS()
@@ -74,5 +74,5 @@ test('re-request an anchor till get a response', async () => {
   )
   await whenSubscriptionDone(subscription)
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
-  expect(errSpy).toBeCalledTimes(3)
+  expect(warnSpy).toBeCalledTimes(3)
 })
