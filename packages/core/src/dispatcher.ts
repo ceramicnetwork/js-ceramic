@@ -142,7 +142,6 @@ export class Dispatcher {
       ),
       !this.enableSync
     )
-    this.messageBus.subscribe(this.handleMessage.bind(this))
     this.ipldCache = new IPLDRecordsCache(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
     for (const codec of this._ipfs.codecs.listCodecs()) {
@@ -154,6 +153,10 @@ export class Dispatcher {
     } else {
       this._ipfsTimeout = DEFAULT_IPFS_GET_LOCAL_TIMEOUT
     }
+  }
+
+  async init() {
+    this.messageBus.subscribe(this.handleMessage.bind(this))
   }
 
   get shutdownSignal(): ShutdownSignal {
