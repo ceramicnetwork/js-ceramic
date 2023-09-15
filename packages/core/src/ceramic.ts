@@ -521,6 +521,7 @@ export class Ceramic implements CeramicApi {
       }
 
       await this.repository.init()
+      await this.dispatcher.init()
 
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()

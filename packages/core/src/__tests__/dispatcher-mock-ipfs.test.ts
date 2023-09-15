@@ -1,4 +1,4 @@
-import { expect, jest, it, describe, beforeEach, afterEach } from '@jest/globals'
+import { expect, jest, it, test, describe, beforeEach, afterEach } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -31,7 +31,7 @@ const mock_ipfs = {
   dag: {
     put: jest.fn(),
     get: jest.fn(),
-    resolve: jest.fn(async (cid: CID) => {
+    resolve: jest.fn(async (cid: CID, opts: any) => {
       return { cid: cid }
     }),
     import: jest.fn(() => {
@@ -290,5 +290,11 @@ describe('Dispatcher with mock ipfs', () => {
       model: FAKE_MODEL,
     })
     expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, FAKE_MODEL)
+  })
+
+  test('init', async () => {
+    const subscribeSpy = jest.spyOn(dispatcher.messageBus, 'subscribe')
+    await dispatcher.init()
+    expect(subscribeSpy).toBeCalled()
   })
 })
