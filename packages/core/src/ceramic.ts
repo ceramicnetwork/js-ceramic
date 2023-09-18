@@ -57,14 +57,16 @@ import {
   networkOptionsByName,
   type CeramicNetworkOptions,
 } from './initialization/network-options.js'
-import { usableAnchorChains, makeAnchorService } from './initialization/anchoring.js'
+import {
+  usableAnchorChains,
+  makeAnchorService,
+  makeEthereumRpcUrl,
+} from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const TESTING = process.env.NODE_ENV == 'test'
-
-const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
 
 /**
  * For user-initiated writes that come in via the 'core' or http clients directly (as opposed to
@@ -356,10 +358,7 @@ export class Ceramic implements CeramicApi {
 
     const anchorService = makeAnchorService(config, networkOptions.name, logger)
 
-    let ethereumRpcUrl = config.ethereumRpcUrl
-    if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
-      ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
-    }
+    const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name)
     const providersCache = new ProvidersCache(ethereumRpcUrl)
 
     let anchorValidator

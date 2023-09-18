@@ -131,3 +131,14 @@ export function makeAnchorService(
     return new EthereumAnchorService(anchorServiceUrl, logger)
   }
 }
+
+const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
+export function makeEthereumRpcUrl(
+  fromConfig: string | undefined,
+  network: Networks
+): string | undefined {
+  if (!fromConfig && network == Networks.LOCAL) {
+    return DEFAULT_LOCAL_ETHEREUM_RPC
+  }
+  return fromConfig
+}
