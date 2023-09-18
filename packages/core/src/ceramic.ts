@@ -32,7 +32,6 @@ import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
 import {
   AuthenticatedEthereumAnchorService,
   EthereumAnchorService,
@@ -67,8 +66,8 @@ import {
 } from './initialization/network-options.js'
 import {
   usableAnchorChains,
-  DEFAULT_ANCHOR_SERVICE_URLS,
   makeAnchorServiceUrl,
+  makeAnchorServiceAuth,
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 
@@ -370,20 +369,12 @@ export class Ceramic implements CeramicApi {
     let anchorServiceAuth = null
     if (!config.gateway) {
       const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, networkOptions.name)
-
-      if (config.anchorServiceAuthMethod) {
-        try {
-          anchorServiceAuth = new DIDAnchorServiceAuth(anchorServiceUrl, logger)
-        } catch (error) {
-          throw new Error(`DID auth method for anchor service failed to instantiate`)
-        }
-      } else {
-        if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {
-          logger.warn(
-            `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
-          )
-        }
-      }
+      anchorServiceAuth = makeAnchorServiceAuth(
+        config.anchorServiceAuthMethod,
+        anchorServiceUrl,
+        networkOptions.name,
+        logger
+      )
 
       if (networkOptions.name != Networks.INMEMORY) {
         anchorService = anchorServiceAuth
