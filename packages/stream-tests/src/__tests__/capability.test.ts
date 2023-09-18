@@ -672,7 +672,7 @@ describe('CACAO Integration test', () => {
         })
       })
 
-      const anchorService = ceramic.context.anchorService as any
+      const anchorService = ceramic.anchorService
       await anchorService.anchor()
 
       const anchorCommitCID = await anchorCommitPromise

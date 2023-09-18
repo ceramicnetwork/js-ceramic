@@ -81,9 +81,7 @@ describe('Ceramic interop: core <> http-client', () => {
         )
       )
     )
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await daemon.ceramic.context.anchorService.anchor()
+    await daemon.ceramic.anchorService.anchor()
     await changeHandle
   }
 

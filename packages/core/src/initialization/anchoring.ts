@@ -72,7 +72,8 @@ function isMainnet(network: Networks): boolean {
  */
 export async function usableAnchorChains(
   network: Networks,
-  anchorService: AnchorService
+  anchorService: AnchorService,
+  logger: DiagnosticsLogger
 ): Promise<string[]> {
   const casChains = await anchorService.getSupportedChains()
   const casUrl = anchorService.url
@@ -84,6 +85,11 @@ export async function usableAnchorChains(
   if (usableChains.length === 0) {
     throw new UnusableAnchorChainsError(network, casUrl, casChains, supportedChains)
   }
+  logger.imp(
+    `Connected to anchor service '${
+      anchorService.url
+    }' with supported anchor chains ['${usableChains.join("','")}']`
+  )
   return usableChains
 }
 

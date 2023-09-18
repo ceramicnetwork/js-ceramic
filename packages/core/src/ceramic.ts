@@ -18,7 +18,6 @@ import {
   LoggerProvider,
   UpdateOpts,
   SyncOptions,
-  AnchorValidator,
   AnchorStatus,
   StreamState,
   AdminApi,
@@ -186,12 +185,12 @@ export class Ceramic implements CeramicApi {
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
   readonly repository: Repository
+  readonly anchorService: AnchorService
   private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
 
   readonly _streamHandlers: HandlersMap
-  private readonly _anchorValidator: AnchorValidator
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -211,7 +210,7 @@ export class Ceramic implements CeramicApi {
     this.repository = modules.repository
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
-    this._anchorValidator = modules.anchorService.validator
+    this.anchorService = modules.anchorService
     this.providersCache = modules.providersCache
 
     this._gateway = params.gateway
@@ -227,12 +226,11 @@ export class Ceramic implements CeramicApi {
 
     this.context = {
       api: this,
-      anchorService: modules.anchorService,
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
     if (!this._gateway) {
-      this.context.anchorService.ceramic = this
+      this.anchorService.ceramic = this
     }
 
     this._streamHandlers = new HandlersMap(this._logger)
@@ -456,15 +454,11 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._gateway) {
-        await this.context.anchorService.init()
+        await this.anchorService.init()
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
-          this.context.anchorService
-        )
-        this._logger.imp(
-          `Connected to anchor service '${
-            this.context.anchorService.url
-          }' with supported anchor chains ['${this._supportedChains.join("','")}']`
+          this.anchorService,
+          this._logger
         )
       }
 
@@ -566,9 +560,9 @@ export class Ceramic implements CeramicApi {
 
   async nodeStatus(): Promise<NodeStatusResponse> {
     const anchor = {
-      anchorServiceUrl: this.context.anchorService.url,
-      ethereumRpcEndpoint: this._anchorValidator.ethereumRpcEndpoint,
-      chainId: this._anchorValidator.chainId,
+      anchorServiceUrl: this.anchorService.url,
+      ethereumRpcEndpoint: this.anchorService.validator.ethereumRpcEndpoint,
+      chainId: this.anchorService.validator.chainId,
       pendingAnchors: this.repository.numPendingAnchors,
     }
     const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
