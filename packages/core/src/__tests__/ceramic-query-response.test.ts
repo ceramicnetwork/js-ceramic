@@ -5,7 +5,13 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
-import { deserialize, MsgType, serialize } from '../pubsub/pubsub-message.js'
+import {
+  deserialize,
+  MsgType,
+  PubsubMessage,
+  QueryMessage,
+  serialize,
+} from '../pubsub/pubsub-message.js'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import { CID } from 'multiformats/cid'
 
@@ -24,10 +30,22 @@ describe('Response to pubsub queries handling', () => {
   let ceramic: CeramicApi
   let otherIpfs: IpfsApi
 
+  let receiveMessage
+
   const cids: Array<CID> = []
 
   beforeAll(async () => {
     ceramicIpfs = await createIPFS()
+
+    // Intercept the function passed to ipfs on pubsub subscription so that we can publish new
+    // messages directly
+    const originalPubsubSubscribe = ceramicIpfs.pubsub.subscribe.bind(ceramicIpfs.pubsub)
+    const pubsubSubscribeSpy = jest.spyOn(ceramicIpfs.pubsub, 'subscribe')
+    pubsubSubscribeSpy.mockImplementation(async (topic, onMessageCallback, opts) => {
+      receiveMessage = onMessageCallback
+      return originalPubsubSubscribe(topic, onMessageCallback, opts)
+    })
+
     ceramic = await createCeramic(ceramicIpfs)
     otherIpfs = await createIPFS()
 
@@ -51,34 +69,61 @@ describe('Response to pubsub queries handling', () => {
     jest.restoreAllMocks()
   })
 
-  test('sync returns after the only response', async () => {
-    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
-    const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit)
-    const streamID = new StreamID(0, genesisCID)
+  test(
+    'sync returns after the only response',
+    async () => {
+      const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
+      const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit)
+      const streamID = new StreamID(0, genesisCID)
 
-    const timeBeforeResponding = MAX_RESPONSE_INTERVAL / 2
-    await otherIpfs.pubsub.subscribe(ceramic.pubsubTopic, async (rawMessage: SignedMessage) => {
-      const message = deserialize(rawMessage)
-      if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
-        await TestUtils.delay(timeBeforeResponding)
+      const originalPubsubPublish = ceramic.dispatcher.messageBus.pubsub.next.bind(
+        ceramic.dispatcher.messageBus.pubsub
+      )
+      const pubsubPublishSpy = jest.spyOn(ceramic.dispatcher.messageBus.pubsub, 'next')
+      const queryPublished = new Promise((resolve, reject) => {
+        pubsubPublishSpy.mockImplementation(async (message: PubsubMessage) => {
+          if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
+            resolve(message)
+          }
+          return originalPubsubPublish(message)
+        })
+      })
 
-        const response = makeResponse(streamID, message.id, cids[0])
-        otherIpfs.pubsub.publish(ceramic.pubsubTopic, serialize(response))
-      }
-    })
+      // const timeBeforeResponding = MAX_RESPONSE_INTERVAL / 2
+      // await otherIpfs.pubsub.subscribe(ceramic.pubsubTopic, async (rawMessage: SignedMessage) => {
+      //   const message = deserialize(rawMessage)
+      //   if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
+      //     await TestUtils.delay(timeBeforeResponding)
+      //
+      //     const response = makeResponse(streamID, message.id, cids[0])
+      //     otherIpfs.pubsub.publish(ceramic.pubsubTopic, serialize(response))
+      //   }
+      // })
 
-    const handleUpdateSpy = jest.spyOn(ceramic.repository, 'handleUpdate')
+      const handleUpdateSpy = jest.spyOn(ceramic.repository, 'handleUpdate')
 
-    const timeBeforeSync = new Date()
-    await ceramic.loadStream(streamID, { syncTimeoutSeconds: LONG_SYNC_TIME / 1000 })
-    const timeAfterSync = new Date()
-    const syncDuration = timeAfterSync.getTime() - timeBeforeSync.getTime()
+      const timeBeforeSync = new Date()
+      const syncCompletionPromise = ceramic.loadStream(streamID, {
+        syncTimeoutSeconds: LONG_SYNC_TIME / 1000,
+      })
 
-    expect(syncDuration).toBeGreaterThan(timeBeforeResponding)
-    expect(syncDuration).toBeLessThan(LONG_SYNC_TIME)
+      const message: QueryMessage = (await queryPublished) as QueryMessage
+      const response = makeResponse(streamID, message.id, cids[0])
+      const timeBeforeResponding = MAX_RESPONSE_INTERVAL / 2
+      await TestUtils.delay(timeBeforeResponding)
+      await receiveMessage(response)
 
-    expect(handleUpdateSpy).toHaveBeenCalledTimes(1)
-  })
+      const syncedStream = await syncCompletionPromise
+      const timeAfterSync = new Date()
+      const syncDuration = timeAfterSync.getTime() - timeBeforeSync.getTime()
+
+      expect(syncDuration).toBeGreaterThan(timeBeforeResponding)
+      expect(syncDuration).toBeLessThan(LONG_SYNC_TIME)
+
+      expect(handleUpdateSpy).toHaveBeenCalledTimes(1)
+    },
+    1000 * 1000 // todo remove
+  )
 
   test('sync continues delaying for multiple responses close together', async () => {
     const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
