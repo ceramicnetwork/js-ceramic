@@ -294,15 +294,9 @@ describe('Sync tests', () => {
       await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
       // TODO: CDB-2229 once ProvidersCache is used in the validator we will not have to replace this
-      // @ts-ignore private field
-      const original = syncingCeramic._anchorValidator.validateChainInclusion.bind(
-        // @ts-ignore private field
-        syncingCeramic._anchorValidator
-      )
-      // @ts-ignore private field
-      syncingCeramic._anchorValidator.validateChainInclusion = async (
-        proof: AnchorProof
-      ): Promise<number> => {
+      const validator = syncingCeramic.anchorService.validator
+      const original = validator.validateChainInclusion.bind(validator)
+      validator.validateChainInclusion = async (proof: AnchorProof): Promise<number> => {
         const blockNumber = provider.blockNumberByRoots[proof.root.toString()]
         if (blockNumber) {
           return blockNumber
