@@ -460,12 +460,13 @@ export class Ceramic implements CeramicApi {
           this.anchorService,
           this._logger
         )
-      }
-
-      if (this.index.enabled && this.syncApi.enabled) {
-        const chainId = this._supportedChains ? this._supportedChains[0] : null
-        const provider = await this.providersCache.getProvider(chainId)
-        await this.syncApi.init(provider)
+        if (this.index.enabled && this.syncApi.enabled) {
+          const chainId = this._supportedChains[0]
+          if (chainId) {
+            const provider = await this.providersCache.getProvider(chainId)
+            await this.syncApi.init(provider)
+          }
+        }
       }
 
       await this._startupChecks()
