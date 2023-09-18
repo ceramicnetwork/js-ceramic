@@ -367,8 +367,7 @@ export class Ceramic implements CeramicApi {
 
     let anchorService = null
     if (!config.gateway) {
-      const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, networkOptions.name)
-      anchorService = makeAnchorService(config, networkOptions.name, anchorServiceUrl, logger)
+      anchorService = makeAnchorService(config, networkOptions.name, logger)
     }
 
     let ethereumRpcUrl = config.ethereumRpcUrl

@@ -112,12 +112,12 @@ export function makeAnchorServiceAuth(
 export function makeAnchorService(
   config: CeramicConfig,
   network: Networks,
-  anchorServiceUrl: string,
   logger: DiagnosticsLogger
 ): AnchorService {
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any)
   } else {
+    const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
     const anchorServiceAuth = makeAnchorServiceAuth(
       config.anchorServiceAuthMethod,
       anchorServiceUrl,
