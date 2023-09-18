@@ -111,7 +111,6 @@ export function makeAnchorServiceAuth(
 
 export function makeAnchorService(
   config: CeramicConfig,
-  anchorServiceAuth: DIDAnchorServiceAuth | null,
   network: Networks,
   anchorServiceUrl: string,
   logger: DiagnosticsLogger
@@ -119,6 +118,12 @@ export function makeAnchorService(
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any)
   } else {
+    const anchorServiceAuth = makeAnchorServiceAuth(
+      config.anchorServiceAuthMethod,
+      anchorServiceUrl,
+      network,
+      logger
+    )
     if (anchorServiceAuth) {
       return new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
     } else {

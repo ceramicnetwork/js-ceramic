@@ -67,7 +67,6 @@ import {
 import {
   usableAnchorChains,
   makeAnchorServiceUrl,
-  makeAnchorServiceAuth,
   makeAnchorService,
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
@@ -369,20 +368,7 @@ export class Ceramic implements CeramicApi {
     let anchorService = null
     if (!config.gateway) {
       const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, networkOptions.name)
-      const anchorServiceAuth = makeAnchorServiceAuth(
-        config.anchorServiceAuthMethod,
-        anchorServiceUrl,
-        networkOptions.name,
-        logger
-      )
-
-      anchorService = makeAnchorService(
-        config,
-        anchorServiceAuth,
-        networkOptions.name,
-        anchorServiceUrl,
-        logger
-      )
+      anchorService = makeAnchorService(config, networkOptions.name, anchorServiceUrl, logger)
     }
 
     let ethereumRpcUrl = config.ethereumRpcUrl
