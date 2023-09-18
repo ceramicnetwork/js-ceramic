@@ -422,7 +422,7 @@ export class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [modules, params] = await Ceramic._processConfig(ipfs, config)
+    const [modules, params] = Ceramic._processConfig(ipfs, config)
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
