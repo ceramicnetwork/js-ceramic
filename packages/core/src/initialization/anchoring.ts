@@ -110,24 +110,24 @@ export function makeAnchorServiceAuth(
 }
 
 export function makeAnchorService(
-  config: CeramicConfig,
+  config: CeramicConfig, // FIXME and partial inmemory options
   network: Networks,
   logger: DiagnosticsLogger
-): AnchorService {
+): AnchorService | null {
+  if (config.gateway) return null
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any)
+  }
+  const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
+  const anchorServiceAuth = makeAnchorServiceAuth(
+    config.anchorServiceAuthMethod,
+    anchorServiceUrl,
+    network,
+    logger
+  )
+  if (anchorServiceAuth) {
+    return new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
   } else {
-    const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
-    const anchorServiceAuth = makeAnchorServiceAuth(
-      config.anchorServiceAuthMethod,
-      anchorServiceUrl,
-      network,
-      logger
-    )
-    if (anchorServiceAuth) {
-      return new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
-    } else {
-      return new EthereumAnchorService(anchorServiceUrl, logger)
-    }
+    return new EthereumAnchorService(anchorServiceUrl, logger)
   }
 }

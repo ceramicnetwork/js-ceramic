@@ -31,13 +31,6 @@ import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
-
-import {
-  AuthenticatedEthereumAnchorService,
-  EthereumAnchorService,
-} from './anchor/ethereum/ethereum-anchor-service.js'
-import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
-
 import { LocalPinApi } from './local-pin-api.js'
 import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
@@ -64,11 +57,7 @@ import {
   networkOptionsByName,
   type CeramicNetworkOptions,
 } from './initialization/network-options.js'
-import {
-  usableAnchorChains,
-  makeAnchorServiceUrl,
-  makeAnchorService,
-} from './initialization/anchoring.js'
+import { usableAnchorChains, makeAnchorService } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
@@ -365,10 +354,7 @@ export class Ceramic implements CeramicApi {
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
     const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
-    let anchorService = null
-    if (!config.gateway) {
-      anchorService = makeAnchorService(config, networkOptions.name, logger)
-    }
+    const anchorService = makeAnchorService(config, networkOptions.name, logger)
 
     let ethereumRpcUrl = config.ethereumRpcUrl
     if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
