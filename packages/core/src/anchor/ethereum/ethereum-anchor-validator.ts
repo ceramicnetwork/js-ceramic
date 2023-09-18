@@ -260,16 +260,21 @@ export class EthereumAnchorValidator implements AnchorValidator {
     const endpoint = this.ethereumRpcEndpoint || ethNetwork?.endpoint
 
     if (endpoint) {
+      console.log('e.0', endpoint)
       const provider = new providers.StaticJsonRpcProvider(endpoint)
+      console.log('e.1')
       this.providersCache.set(chain, provider)
+      console.log('e.2')
       return provider
     }
 
-    if (ethNetwork == null) {
+    if (!ethNetwork) {
       throw new Error(`No ethereum provider available for chainId ${chain}`)
     }
 
+    console.log('c.0', ethNetwork)
     const provider = providers.getDefaultProvider(ethNetwork.network)
+    console.log('c.1', provider)
     this.providersCache.set(chain, provider)
     return provider
   }

@@ -59,6 +59,7 @@ test('re-request an anchor till get a response', async () => {
   const anchorService = new eas.AuthenticatedEthereumAnchorService(
     auth,
     url,
+    url,
     diagnosticsLogger,
     100
   )

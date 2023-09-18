@@ -41,6 +41,7 @@ test('re-request an anchor till get a response', async () => {
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const anchorService = new EthereumAnchorService(
     'http://example.com',
+    'http://example.com',
     diagnosticsLogger,
     POLL_INTERVAL
   )
@@ -66,6 +67,7 @@ test('re-poll on fetch error', async () => {
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const anchorService = new EthereumAnchorService(
+    'http://example.com',
     'http://example.com',
     diagnosticsLogger,
     POLL_INTERVAL
@@ -100,6 +102,7 @@ test('stop polling after max time', async () => {
   const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const anchorService = new EthereumAnchorService(
+    'http://example.com',
     'http://example.com',
     diagnosticsLogger,
     POLL_INTERVAL,

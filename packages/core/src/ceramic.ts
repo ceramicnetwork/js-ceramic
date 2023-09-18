@@ -16,7 +16,6 @@ import {
   MultiQuery,
   PinningBackendStatic,
   LoggerProvider,
-  Networks,
   UpdateOpts,
   SyncOptions,
   AnchorValidator,
@@ -37,7 +36,6 @@ import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
 import { ConflictResolution } from './conflict-resolution.js'
-import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-validator.js'
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
@@ -135,7 +133,6 @@ export interface CeramicConfig {
  */
 export interface CeramicModules {
   anchorService: AnchorService | null
-  anchorValidator: AnchorValidator
   dispatcher: Dispatcher
   ipfs: IpfsApi
   ipfsTopology: IpfsTopology
@@ -214,7 +211,7 @@ export class Ceramic implements CeramicApi {
     this.repository = modules.repository
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
-    this._anchorValidator = modules.anchorValidator
+    this._anchorValidator = modules.anchorService.validator
     this.providersCache = modules.providersCache
 
     this._gateway = params.gateway
@@ -247,7 +244,7 @@ export class Ceramic implements CeramicApi {
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       this._logger,
       this.dispatcher,
-      modules.anchorValidator
+      modules.anchorService.validator
     )
     const conflictResolution = new ConflictResolution(
       this._logger,
@@ -356,32 +353,9 @@ export class Ceramic implements CeramicApi {
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
     const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
-    const anchorService = makeAnchorService(config, networkOptions.name, logger)
-
-    const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name)
+    const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
+    const anchorService = makeAnchorService(config, ethereumRpcUrl, networkOptions.name, logger)
     const providersCache = new ProvidersCache(ethereumRpcUrl)
-
-    let anchorValidator
-    if (networkOptions.name == Networks.INMEMORY) {
-      // Just use the InMemoryAnchorService as the AnchorValidator
-      anchorValidator = anchorService
-    } else {
-      if (
-        !ethereumRpcUrl &&
-        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP)
-      ) {
-        logger.warn(
-          `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
-        )
-      }
-      // TODO (CDB-2229): use providers cache
-      anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
-    }
-
-    const pinStoreOptions = {
-      pinningEndpoints: config.ipfsPinningEndpoints,
-      pinningBackends: config.pinningBackends,
-    }
 
     const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}
 
@@ -408,6 +382,10 @@ export class Ceramic implements CeramicApi {
       !config.disablePeerDataSync,
       maxQueriesPerSecond
     )
+    const pinStoreOptions = {
+      pinningEndpoints: config.ipfsPinningEndpoints,
+      pinningBackends: config.pinningBackends,
+    }
     const pinStoreFactory = new PinStoreFactory(
       ipfs,
       dispatcher.ipldCache,
@@ -427,7 +405,6 @@ export class Ceramic implements CeramicApi {
 
     const modules: CeramicModules = {
       anchorService,
-      anchorValidator,
       dispatcher,
       ipfs,
       ipfsTopology,
@@ -491,10 +468,8 @@ export class Ceramic implements CeramicApi {
         )
       }
 
-      const chainId = this._supportedChains ? this._supportedChains[0] : null
-      await this._anchorValidator.init(chainId)
-
       if (this.index.enabled && this.syncApi.enabled) {
+        const chainId = this._supportedChains ? this._supportedChains[0] : null
         const provider = await this.providersCache.getProvider(chainId)
         await this.syncApi.init(provider)
       }

@@ -111,6 +111,7 @@ export function makeAnchorServiceAuth(
 
 export function makeAnchorService(
   config: CeramicConfig, // FIXME and partial inmemory options
+  ethereumRpcUrl: string | undefined,
   network: Networks,
   logger: DiagnosticsLogger
 ): AnchorService | null {
@@ -126,19 +127,30 @@ export function makeAnchorService(
     logger
   )
   if (anchorServiceAuth) {
-    return new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
+    return new AuthenticatedEthereumAnchorService(
+      anchorServiceAuth,
+      anchorServiceUrl,
+      ethereumRpcUrl,
+      logger
+    )
   } else {
-    return new EthereumAnchorService(anchorServiceUrl, logger)
+    return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger)
   }
 }
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
 export function makeEthereumRpcUrl(
   fromConfig: string | undefined,
-  network: Networks
+  network: Networks,
+  logger: DiagnosticsLogger
 ): string | undefined {
   if (!fromConfig && network == Networks.LOCAL) {
     return DEFAULT_LOCAL_ETHEREUM_RPC
+  }
+  if (!fromConfig && isMainnet(network)) {
+    logger.warn(
+      `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
+    )
   }
   return fromConfig
 }

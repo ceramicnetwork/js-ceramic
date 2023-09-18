@@ -52,6 +52,7 @@ export type AnchorEvent = NotCompleteAnchorEvent | CompleteAnchorEvent
  */
 export interface AnchorService {
   readonly events: Observable<AnchorEvent>
+  readonly validator: AnchorValidator
 
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
