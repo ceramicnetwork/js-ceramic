@@ -1,5 +1,11 @@
-import { Networks, type AnchorService, type DiagnosticsLogger } from '@ceramicnetwork/common'
+import { type AnchorService, type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
+import type { CeramicConfig } from '../ceramic.js'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+import {
+  AuthenticatedEthereumAnchorService,
+  EthereumAnchorService,
+} from '../anchor/ethereum/ethereum-anchor-service.js'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
@@ -100,5 +106,23 @@ export function makeAnchorServiceAuth(
       )
     }
     return null
+  }
+}
+
+export function makeAnchorService(
+  config: CeramicConfig,
+  anchorServiceAuth: DIDAnchorServiceAuth | null,
+  network: Networks,
+  anchorServiceUrl: string,
+  logger: DiagnosticsLogger
+): AnchorService {
+  if (network === Networks.INMEMORY) {
+    return new InMemoryAnchorService(config as any)
+  } else {
+    if (anchorServiceAuth) {
+      return new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
+    } else {
+      return new EthereumAnchorService(anchorServiceUrl, logger)
+    }
   }
 }
