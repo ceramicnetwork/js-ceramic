@@ -5,6 +5,8 @@ import { AnchorTimestampExtractor } from './anchor-timestamp-extractor.js'
 import { DiagnosticsLogger, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { applyTipToState } from './apply-tip-helper.js'
+import { concatMap, lastValueFrom } from 'rxjs'
+import { CID } from 'multiformats/cid'
 
 /**
  * Class to contain all the logic for loading a stream, including fetching the relevant commit
@@ -21,20 +23,64 @@ export class StreamLoader {
     private readonly stateManipulator: StateManipulator
   ) {}
 
-  /**
-   * Completely loads the current state of a Stream from the p2p network just from the StreamID.
-   * @param streamID
-   * @param syncTimeoutSecs
-   */
-  async loadStream(streamID: StreamID, syncTimeoutSecs: number): Promise<StreamState> {
-    const tip = await this.tipFetcher.findTip(streamID, syncTimeoutSecs)
-    const logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, tip)
+  async _loadStateFromTip(streamID: StreamID, tip: CID): Promise<StreamState | null> {
+    let logWithoutTimestamps
+    try {
+      logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, tip)
+    } catch (err) {
+      this.logger.warn(
+        `Error while syncing log for tip ${tip} received from pubsub, for StreamID ${streamID}: ${err}`
+      )
+
+      return null
+    }
     const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
       logWithoutTimestamps
     )
     return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, {
       throwOnInvalidCommit: false,
     })
+  }
+
+  /**
+   * Completely loads the current state of a Stream from the p2p network just from the StreamID.
+   * @param streamID
+   * @param syncTimeoutSecs
+   */
+  async loadStream(streamID: StreamID, syncTimeoutSecs: number): Promise<StreamState> {
+    const tipSource$ = await this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
+    let state
+    state = await lastValueFrom(
+      tipSource$.pipe(
+        concatMap(async (tip) => {
+          if (!state) {
+            // this is the first tip response, generate a new StreamState by syncing the tip.
+            state = await this._loadStateFromTip(streamID, tip)
+            return state
+          } else {
+            // This is not the first tip response we've seen, so instead of generating a completely
+            // new StreamState, we apply the received tip to the state we already have.
+            state = await applyTipToState(
+              this.logSyncer,
+              this.anchorTimestampExtractor,
+              this.stateManipulator,
+              state,
+              tip,
+              { throwOnInvalidCommit: false, throwOnConflict: false, throwIfStale: false }
+            )
+            return state
+          }
+        })
+      ),
+      { defaultValue: null }
+    )
+
+    if (state) {
+      return state
+    }
+
+    // We got no valid tip response, so return the genesis state.
+    return this._loadStateFromTip(streamID, streamID.cid)
   }
 
   /**
@@ -45,26 +91,36 @@ export class StreamLoader {
    */
   async syncStream(state: StreamState, syncTimeoutSecs: number): Promise<StreamState> {
     const streamID = StreamUtils.streamIdFromState(state)
-    const tip = await this.tipFetcher.findTip(streamID, syncTimeoutSecs)
+    const tipSource$ = await this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
 
-    return applyTipToState(
-      this.logSyncer,
-      this.anchorTimestampExtractor,
-      this.stateManipulator,
-      state,
-      tip,
-      {
-        throwOnInvalidCommit: false,
-        throwIfStale: false,
-        throwOnConflict: false,
-      }
+    return lastValueFrom(
+      tipSource$.pipe(
+        concatMap(async (tip) => {
+          try {
+            state = await applyTipToState(
+              this.logSyncer,
+              this.anchorTimestampExtractor,
+              this.stateManipulator,
+              state,
+              tip,
+              { throwOnInvalidCommit: false, throwOnConflict: false, throwIfStale: false }
+            )
+          } catch (err) {
+            this.logger.warn(
+              `Error while applying tip ${tip} received from pubsub, to StreamID ${streamID}: ${err}`
+            )
+          }
+          return state
+        })
+      ),
+      { defaultValue: state }
     )
   }
 
   /**
    * Given the currently known about StreamState for a Stream, return the state of that stream
    * at a specific CommitID.
-   * @param state
+   * @param initialState
    * @param commitId
    */
   async stateAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
