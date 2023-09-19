@@ -1,6 +1,10 @@
 FROM node:16 as ceramic
 
-RUN apt-get update && apt-get install -y netcat gettext-base
+RUN apt-get update && apt-get install -y netcat gettext-base jq
+
+COPY ci-scripts/install-rust-ceramic.sh ./
+
+RUN ./install-rust-ceramic.sh
 
 WORKDIR /js-ceramic
 
