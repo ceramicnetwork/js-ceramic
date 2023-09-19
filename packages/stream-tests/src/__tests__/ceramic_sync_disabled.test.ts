@@ -7,7 +7,6 @@ import { IpfsApi, StreamUtils, SyncOptions, TestUtils } from '@ceramicnetwork/co
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
-import type { DID } from 'dids'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'

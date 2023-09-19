@@ -23,14 +23,22 @@ export class StreamLoader {
     private readonly stateManipulator: StateManipulator
   ) {}
 
-  async _loadStateFromTip(streamID: StreamID, tip: CID): Promise<StreamState | null> {
+  async _loadStateFromTip(
+    streamID: StreamID,
+    tip: CID,
+    allowSyncErrors: boolean
+  ): Promise<StreamState | null> {
     let logWithoutTimestamps
     try {
       logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, tip)
     } catch (err) {
-      this.logger.warn(`Error while syncing log for tip ${tip}, for StreamID ${streamID}: ${err}`)
+      if (allowSyncErrors) {
+        this.logger.warn(`Error while syncing log for tip ${tip}, for StreamID ${streamID}: ${err}`)
 
-      return null
+        return null
+      } else {
+        throw err
+      }
     }
     const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
       logWithoutTimestamps
@@ -47,7 +55,7 @@ export class StreamLoader {
         concatMap(async (tip) => {
           if (!state) {
             // this is the first tip response, generate a new StreamState by syncing the tip.
-            state = await this._loadStateFromTip(streamID, tip)
+            state = await this._loadStateFromTip(streamID, tip, true)
             return state
           } else {
             // This is not the first tip response we've seen, so instead of generating a completely
@@ -81,6 +89,7 @@ export class StreamLoader {
    * @param syncTimeoutSecs
    */
   async loadStream(streamID: StreamID, syncTimeoutSecs: number): Promise<StreamState> {
+    this.stateManipulator.assertStreamTypeAppliable(streamID.type)
     const tipSource$ = this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
     return this._applyTips(streamID, tipSource$)
   }
@@ -156,7 +165,8 @@ export class StreamLoader {
    * @param streamID
    */
   async loadGenesisState(streamID: StreamID): Promise<StreamState> {
-    return this._loadStateFromTip(streamID, streamID.cid)
+    this.stateManipulator.assertStreamTypeAppliable(streamID.type)
+    return this._loadStateFromTip(streamID, streamID.cid, false)
   }
 
   /**
@@ -172,6 +182,7 @@ export class StreamLoader {
     knownTip: CID,
     syncTimeoutSecs: number
   ): Promise<StreamState> {
+    this.stateManipulator.assertStreamTypeAppliable(streamID.type)
     const pubsubTips$ = this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
     const tipSource$ = merge(of(knownTip), pubsubTips$)
     return this._applyTips(streamID, tipSource$)

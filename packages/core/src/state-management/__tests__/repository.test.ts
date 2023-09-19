@@ -522,7 +522,7 @@ describe('#load', () => {
         const fromMemory = jest.spyOn(repository._internals as any, '_fromMemory')
         fromMemory.mockReturnValueOnce(undefined)
         const fromStateStore = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-        const fromNetwork = jest.spyOn(repository.streamLoader as any, 'loadStream')
+        const fromNetwork = jest.spyOn(repository.streamLoader as any, 'resyncStream')
         const saveFromStreamStateHolder = jest.spyOn(
           repository.pinStore.stateStore,
           'saveFromStreamStateHolder'
@@ -551,7 +551,7 @@ describe('#load', () => {
 
         const fromMemory = jest.spyOn(repository._internals as any, '_fromMemory')
         const fromStateStore = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-        const fromNetwork = jest.spyOn(repository.streamLoader as any, 'loadStream')
+        const fromNetwork = jest.spyOn(repository.streamLoader as any, 'resyncStream')
         const saveFromStreamStateHolder = jest.spyOn(
           repository.pinStore.stateStore,
           'saveFromStreamStateHolder'

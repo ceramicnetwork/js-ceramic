@@ -66,12 +66,12 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
       }
     })
 
-    // TODO(CDB-2732): This shouldn't throw but instead should just return the genesis content.
-    await expect(
-      TileDocument.load(ceramic, streamID, {
-        sync: SyncOptions.SYNC_ALWAYS,
-      })
-    ).rejects.toThrow(/deadline exceeded/)
+    // The unloadable tip should be ignored and we return the content from the genesis commit.
+    const doc = await TileDocument.load(ceramic, streamID, {
+      sync: SyncOptions.SYNC_ALWAYS,
+    })
+    expect(doc.content).toEqual(content)
+    expect(doc.state.log.length).toEqual(1)
 
     await ipfs2.stop()
   })

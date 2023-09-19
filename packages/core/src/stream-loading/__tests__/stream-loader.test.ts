@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { afterEach, jest } from '@jest/globals'
 import { Dispatcher } from '../../dispatcher.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createDispatcher } from '../../__tests__/create-dispatcher.js'
@@ -371,14 +371,25 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
         state.anchorStatus = AnchorStatus.NOT_REQUESTED
       }
     })
+
+    // Close the Ceramic node before tests start so it won't respond to any pubsub messages.
+    await ceramic.close()
+  })
+
+  afterEach(() => {
+    // Ensure that the StreamLoader never mutates the state object that is passed in
     expect(states[0].log.length).toEqual(1)
     expect(states[1].log.length).toEqual(2)
     expect(states[2].log.length).toEqual(3)
     expect(states[3].log.length).toEqual(4)
     expect(states[4].log.length).toEqual(5)
-
-    // Close the Ceramic node before tests start so it won't respond to any pubsub messages.
-    await ceramic.close()
+    expect(states[0].content).toEqual(CONTENT0)
+    expect(states[1].content).toEqual(CONTENT0)
+    expect(states[2].content).toEqual(CONTENT0)
+    expect(states[2].next.content).toEqual(CONTENT1)
+    expect(states[3].content).toEqual(CONTENT0)
+    expect(states[3].next.content).toEqual(CONTENT2)
+    expect(states[4].content).toEqual(CONTENT2)
   })
 
   afterAll(async () => {
@@ -393,6 +404,15 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
   })
 
   describe('loadStream', () => {
+    test('no tip response', async () => {
+      const loaded = await streamLoader.loadStream(stream.id, 1)
+
+      // If no valid tip is received, should return genesis state
+      expect(loaded.log.length).toEqual(1)
+      expect(loaded.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      expect(loaded.content).toEqual(CONTENT0)
+    })
+
     test('Invalid tip', async () => {
       const queryPublished = getQueryPublishedPromise(dispatcher, stream.id, originalPubsubPublish)
 
@@ -489,6 +509,16 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
   })
 
   describe('syncStream', () => {
+    test('no tip response', async () => {
+      const loaded = await streamLoader.syncStream(states[1], 1)
+
+      // If no valid tip is received, state should be unmodified
+      expect(loaded).toEqual(states[1])
+      expect(loaded.log.length).toEqual(2)
+      expect(loaded.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(loaded.content).toEqual(CONTENT0)
+    })
+
     test('Invalid tip', async () => {
       const queryPublished = getQueryPublishedPromise(dispatcher, stream.id, originalPubsubPublish)
 
@@ -580,6 +610,53 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
 
       const invalidTip = TestUtils.randomCID()
       await receiveMessage(asIpfsMessage(makeResponse(stream.id, queryMessage.id, invalidTip)))
+      await receiveMessage(asIpfsMessage(makeResponse(stream.id, queryMessage.id, commitCids[4])))
+
+      const loaded = await syncStreamPromise
+
+      expect(loaded).toEqual(states[4])
+      expect(loaded.log.length).toEqual(5)
+      expect(loaded.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(loaded.content).toEqual(CONTENT2)
+    })
+  })
+
+  describe('resyncStream', () => {
+    test('no pubsub response, existing tip valid', async () => {
+      const loaded = await streamLoader.resyncStream(stream.id, commitCids[1], 1)
+
+      expect(loaded.log.length).toEqual(2)
+      expect(loaded.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(loaded.content).toEqual(CONTENT0)
+      expect(states[1].log.length).toEqual(2)
+      expect(states[1].content).toEqual(CONTENT0)
+      expect(loaded).toEqual(states[1])
+    })
+
+    test('existing tip is best', async () => {
+      const queryPublished = getQueryPublishedPromise(dispatcher, stream.id, originalPubsubPublish)
+
+      const syncStreamPromise = streamLoader.resyncStream(stream.id, commitCids[4], 1)
+
+      const queryMessage = await queryPublished
+
+      await receiveMessage(asIpfsMessage(makeResponse(stream.id, queryMessage.id, commitCids[2])))
+
+      const loaded = await syncStreamPromise
+
+      expect(loaded).toEqual(states[4])
+      expect(loaded.log.length).toEqual(5)
+      expect(loaded.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(loaded.content).toEqual(CONTENT2)
+    })
+
+    test('received tip is best', async () => {
+      const queryPublished = getQueryPublishedPromise(dispatcher, stream.id, originalPubsubPublish)
+
+      const syncStreamPromise = streamLoader.resyncStream(stream.id, commitCids[2], 1)
+
+      const queryMessage = await queryPublished
+
       await receiveMessage(asIpfsMessage(makeResponse(stream.id, queryMessage.id, commitCids[4])))
 
       const loaded = await syncStreamPromise
