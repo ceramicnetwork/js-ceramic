@@ -265,7 +265,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
       return provider
     }
 
-    if (ethNetwork == null) {
+    if (!ethNetwork) {
       throw new Error(`No ethereum provider available for chainId ${chain}`)
     }
 

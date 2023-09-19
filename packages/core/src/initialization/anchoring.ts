@@ -1,4 +1,11 @@
-import { Networks, type AnchorService } from '@ceramicnetwork/common'
+import { type AnchorService, type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
+import type { CeramicConfig } from '../ceramic.js'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+import {
+  AuthenticatedEthereumAnchorService,
+  EthereumAnchorService,
+} from '../anchor/ethereum/ethereum-anchor-service.js'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
@@ -49,11 +56,14 @@ const MAINNET_CAS_URLS = [
 ]
 export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks): string {
   const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
-  const isMainnet = network == Networks.MAINNET || network == Networks.ELP
-  if (isMainnet && !MAINNET_CAS_URLS.includes(casUrl)) {
+  if (isMainnet(network) && !MAINNET_CAS_URLS.includes(casUrl)) {
     throw new CustomMainnetCasError()
   }
   return casUrl
+}
+
+function isMainnet(network: Networks): boolean {
+  return network == Networks.MAINNET || network == Networks.ELP
 }
 
 /**
@@ -62,7 +72,8 @@ export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Ne
  */
 export async function usableAnchorChains(
   network: Networks,
-  anchorService: AnchorService
+  anchorService: AnchorService,
+  logger: DiagnosticsLogger
 ): Promise<string[]> {
   const casChains = await anchorService.getSupportedChains()
   const casUrl = anchorService.url
@@ -74,5 +85,78 @@ export async function usableAnchorChains(
   if (usableChains.length === 0) {
     throw new UnusableAnchorChainsError(network, casUrl, casChains, supportedChains)
   }
+  logger.imp(
+    `Connected to anchor service '${
+      anchorService.url
+    }' with supported anchor chains ['${usableChains.join("','")}']`
+  )
   return usableChains
+}
+
+export function makeAnchorServiceAuth(
+  authMethod: string | undefined,
+  anchorServiceUrl: string,
+  network: Networks,
+  logger: DiagnosticsLogger
+): DIDAnchorServiceAuth | null {
+  if (authMethod) {
+    try {
+      return new DIDAnchorServiceAuth(anchorServiceUrl, logger)
+    } catch (error) {
+      throw new Error(`DID auth method for anchor service failed to instantiate`)
+    }
+  } else {
+    if (isMainnet(network)) {
+      logger.warn(
+        `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
+      )
+    }
+    return null
+  }
+}
+
+export function makeAnchorService(
+  config: CeramicConfig, // FIXME and partial inmemory options
+  ethereumRpcUrl: string | undefined,
+  network: Networks,
+  logger: DiagnosticsLogger
+): AnchorService | null {
+  if (config.gateway) return null
+  if (network === Networks.INMEMORY) {
+    return new InMemoryAnchorService(config as any)
+  }
+  const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
+  const anchorServiceAuth = makeAnchorServiceAuth(
+    config.anchorServiceAuthMethod,
+    anchorServiceUrl,
+    network,
+    logger
+  )
+  if (anchorServiceAuth) {
+    return new AuthenticatedEthereumAnchorService(
+      anchorServiceAuth,
+      anchorServiceUrl,
+      ethereumRpcUrl,
+      logger
+    )
+  } else {
+    return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger)
+  }
+}
+
+const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
+export function makeEthereumRpcUrl(
+  fromConfig: string | undefined,
+  network: Networks,
+  logger: DiagnosticsLogger
+): string | undefined {
+  if (!fromConfig && network == Networks.LOCAL) {
+    return DEFAULT_LOCAL_ETHEREUM_RPC
+  }
+  if (!fromConfig && isMainnet(network)) {
+    logger.warn(
+      `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
+    )
+  }
+  return fromConfig
 }

@@ -248,7 +248,7 @@ describe('Ceramic anchoring', () => {
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const c2anchorValidator = ceramic2._anchorValidator
+    const c2anchorValidator = ceramic2.anchorService.validator
     const validateChainInclusionSpy = jest.spyOn(c2anchorValidator, 'validateChainInclusion')
     validateChainInclusionSpy.mockRejectedValue(new Error("blockNumbers don't match"))
 
@@ -293,7 +293,7 @@ describe('Ceramic anchoring', () => {
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // fail anchor
-      const anchorService = ceramic.context.anchorService as any as InMemoryAnchorService
+      const anchorService = ceramic.anchorService as any as InMemoryAnchorService
       await anchorService.failPendingAnchors()
       await stream.sync()
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)

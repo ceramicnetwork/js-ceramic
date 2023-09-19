@@ -8,6 +8,7 @@ import {
   fetchJson,
   FetchRequest,
   AnchorEvent,
+  AnchorValidator,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import {
@@ -17,7 +18,6 @@ import {
   of,
   defer,
   expand,
-  interval,
   lastValueFrom,
   Subject,
   type OperatorFunction,
@@ -28,6 +28,7 @@ import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
+import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
@@ -112,9 +113,11 @@ export class EthereumAnchorService implements AnchorService {
 
   readonly url: string
   readonly events: Observable<AnchorEvent>
+  readonly validator: AnchorValidator
 
   constructor(
     readonly anchorServiceUrl: string,
+    ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     maxPollTime = MAX_POLL_TIME,
@@ -129,6 +132,7 @@ export class EthereumAnchorService implements AnchorService {
     this.#events = new Subject()
     this.events = this.#events
     this.url = this.anchorServiceUrl
+    this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
   }
 
   /**
@@ -147,6 +151,7 @@ export class EthereumAnchorService implements AnchorService {
       throw new MultipleChainsError()
     }
     this.#chainId = response.supportedChains[0]
+    await this.validator.init(this.#chainId)
   }
 
   /**
@@ -287,13 +292,15 @@ export class AuthenticatedEthereumAnchorService
 
   constructor(
     auth: AnchorServiceAuth,
-    readonly anchorServiceUrl: string,
+    anchorServiceUrl: string,
+    ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     maxPollTime: number = MAX_POLL_TIME
   ) {
     super(
       anchorServiceUrl,
+      ethereumRpcUrl,
       logger,
       pollInterval,
       maxPollTime,

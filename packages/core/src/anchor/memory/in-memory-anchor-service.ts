@@ -79,6 +79,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   readonly url = '<inmemory>'
   readonly ethereumRpcEndpoint = null
   readonly events: Observable<AnchorEvent>
+  readonly validator: AnchorValidator
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
@@ -88,6 +89,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     // Remember the most recent AnchorEvent for each anchor request
     this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
     this.events = this.#events
+    this.validator = this
   }
 
   async init(): Promise<void> {
