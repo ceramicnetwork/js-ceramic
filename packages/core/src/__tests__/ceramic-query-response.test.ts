@@ -9,8 +9,9 @@ import {
   deserialize,
   MsgType,
   PubsubMessage,
-  QueryMessage, ResponseMessage,
-  serialize
+  QueryMessage,
+  ResponseMessage,
+  serialize,
 } from '../pubsub/pubsub-message.js'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import { CID } from 'multiformats/cid'
