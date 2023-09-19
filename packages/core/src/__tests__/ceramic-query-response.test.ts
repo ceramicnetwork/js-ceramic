@@ -9,17 +9,18 @@ import {
   deserialize,
   MsgType,
   PubsubMessage,
-  QueryMessage,
-  serialize,
+  QueryMessage, ResponseMessage,
+  serialize
 } from '../pubsub/pubsub-message.js'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import { CID } from 'multiformats/cid'
+import { asIpfsMessage } from '../pubsub/__tests__/as-ipfs-message.js'
 
 const LONG_SYNC_TIME = 60 * 1000
 
-function makeResponse(streamID: StreamID, queryId: string, cid: CID) {
+function makeResponse(streamID: StreamID, queryId: string, cid: CID): ResponseMessage {
   const tipMap = new Map().set(streamID.toString(), cid)
-  const response = { typ: MsgType.RESPONSE, id: queryId, tips: tipMap }
+  const response = { typ: MsgType.RESPONSE as const, id: queryId, tips: tipMap }
   return response
 }
 
@@ -80,8 +81,8 @@ describe('Response to pubsub queries handling', () => {
         ceramic.dispatcher.messageBus.pubsub
       )
       const pubsubPublishSpy = jest.spyOn(ceramic.dispatcher.messageBus.pubsub, 'next')
-      const queryPublished = new Promise((resolve, reject) => {
-        pubsubPublishSpy.mockImplementation(async (message: PubsubMessage) => {
+      const queryPublished = new Promise((resolve) => {
+        pubsubPublishSpy.mockImplementation((message: PubsubMessage) => {
           if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
             resolve(message)
           }
@@ -111,7 +112,7 @@ describe('Response to pubsub queries handling', () => {
       const response = makeResponse(streamID, message.id, cids[0])
       const timeBeforeResponding = MAX_RESPONSE_INTERVAL / 2
       await TestUtils.delay(timeBeforeResponding)
-      await receiveMessage(response)
+      await receiveMessage(asIpfsMessage(response))
 
       const syncedStream = await syncCompletionPromise
       const timeAfterSync = new Date()
