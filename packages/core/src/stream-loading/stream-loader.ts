@@ -28,9 +28,7 @@ export class StreamLoader {
     try {
       logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, tip)
     } catch (err) {
-      this.logger.warn(
-        `Error while syncing log for tip ${tip} received from pubsub, for StreamID ${streamID}: ${err}`
-      )
+      this.logger.warn(`Error while syncing log for tip ${tip}, for StreamID ${streamID}: ${err}`)
 
       return null
     }
@@ -80,7 +78,7 @@ export class StreamLoader {
     }
 
     // We got no valid tip response, so return the genesis state.
-    return this._loadStateFromTip(streamID, streamID.cid)
+    return this.loadGenesisState(streamID)
   }
 
   /**
@@ -154,12 +152,6 @@ export class StreamLoader {
    * @param streamID
    */
   async loadGenesisState(streamID: StreamID): Promise<StreamState> {
-    const logWithoutTimestamps = await this.logSyncer.syncFullLog(streamID, streamID.cid)
-    const logWithTimestamps = await this.anchorTimestampExtractor.verifyAnchorAndApplyTimestamps(
-      logWithoutTimestamps
-    )
-    return this.stateManipulator.applyFullLog(streamID.type, logWithTimestamps, {
-      throwOnInvalidCommit: true,
-    })
+    return this._loadStateFromTip(streamID, streamID.cid)
   }
 }

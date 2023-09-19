@@ -216,7 +216,7 @@ export class RepositoryInternals {
   }
 
   /**
-   * Helper function for loading at least the state for a stream from either the in-memory cache
+   * Helper function for loading the state for a stream from either the in-memory cache
    * or the state store, while also returning information about whether or not the state needs
    * to be synced.
    * WARNING: This should only be called from within a thread in the loadingQ!!!

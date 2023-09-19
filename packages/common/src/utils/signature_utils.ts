@@ -45,7 +45,6 @@ export class SignatureUtils {
       await did.verifyJWS(commitData.envelope, {
         atTime: atTime,
         issuer: controller,
-        disableTimecheck: commitData.disableTimecheck,
         capability: cacao,
         revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
         verifiers: verifiersCACAO,
