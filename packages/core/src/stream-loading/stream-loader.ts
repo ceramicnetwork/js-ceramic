@@ -5,7 +5,7 @@ import { AnchorTimestampExtractor } from './anchor-timestamp-extractor.js'
 import { DiagnosticsLogger, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { applyTipToState } from './apply-tip-helper.js'
-import { concatMap, lastValueFrom } from 'rxjs'
+import { concatMap, lastValueFrom, merge, Observable, of } from 'rxjs'
 import { CID } from 'multiformats/cid'
 
 /**
@@ -40,13 +40,7 @@ export class StreamLoader {
     })
   }
 
-  /**
-   * Completely loads the current state of a Stream from the p2p network just from the StreamID.
-   * @param streamID
-   * @param syncTimeoutSecs
-   */
-  async loadStream(streamID: StreamID, syncTimeoutSecs: number): Promise<StreamState> {
-    const tipSource$ = await this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
+  async _applyTips(streamID: StreamID, tipSource$: Observable<CID>): Promise<StreamState> {
     let state
     state = await lastValueFrom(
       tipSource$.pipe(
@@ -79,6 +73,16 @@ export class StreamLoader {
 
     // We got no valid tip response, so return the genesis state.
     return this.loadGenesisState(streamID)
+  }
+
+  /**
+   * Completely loads the current state of a Stream from the p2p network just from the StreamID.
+   * @param streamID
+   * @param syncTimeoutSecs
+   */
+  async loadStream(streamID: StreamID, syncTimeoutSecs: number): Promise<StreamState> {
+    const tipSource$ = this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
+    return this._applyTips(streamID, tipSource$)
   }
 
   /**
@@ -153,5 +157,23 @@ export class StreamLoader {
    */
   async loadGenesisState(streamID: StreamID): Promise<StreamState> {
     return this._loadStateFromTip(streamID, streamID.cid)
+  }
+
+  /**
+   * Given a known tip for a stream, fully resync and apply the log for that tip, while also
+   * querying pubsub in parallel to discover any new possible tips, and then return the StreamState
+   * corresponding to the best possible tip.
+   * @param streamID
+   * @param knownTip
+   * @param syncTimeoutSecs
+   */
+  async resyncStream(
+    streamID: StreamID,
+    knownTip: CID,
+    syncTimeoutSecs: number
+  ): Promise<StreamState> {
+    const pubsubTips$ = this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
+    const tipSource$ = merge(of(knownTip), pubsubTips$)
+    return this._applyTips(streamID, tipSource$)
   }
 }

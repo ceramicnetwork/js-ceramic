@@ -177,23 +177,24 @@ export class RepositoryInternals {
           return [await this._genesisFromNetwork(streamId), false]
         }
         case SyncOptions.SYNC_ALWAYS: {
-          // TODO: Restore optimization to sync alongside applying existing tip
           // When SYNC_ALWAYS is provided, we want to reapply and re-validate
           // the stream state.  We effectively throw out our locally stored state
           // as it's possible that the commits that were used to construct that
           // state are no longer valid (for example if the CACAOs used to author them
           // have expired since they were first applied to the cached state object).
-          let resyncedState = await this.#streamLoader.loadStream(streamId, opts.syncTimeoutSeconds)
+          // But if we were the only node on the network that knew about the most recent tip,
+          // we don't want to totally forget about that, so we make sure to apply the previously
+          // known about tip so that it can still be considered alongside whatever tip we learn
+          // about from the network.
+          const resyncedState = existingState$
+            ? await this.#streamLoader.resyncStream(
+                streamId,
+                existingState$.tip,
+                opts.syncTimeoutSeconds
+              )
+            : await this.#streamLoader.loadStream(streamId, opts.syncTimeoutSeconds)
+
           Metrics.count(STREAM_SYNC, 1)
-          // If we were the only node on the network that knew about the most recent tip, we don't
-          // want to totally forget about that, so apply the previously known about tip so that
-          // it can still be considered alongside whatever tip we learn about from the network.
-          if (existingState$) {
-            resyncedState = await this.#streamUpdater.applyTipFromNetwork(
-              resyncedState,
-              existingState$.tip
-            )
-          }
           const newState$ = new RunningState(resyncedState, false)
           this.add(newState$)
           return [newState$, true]
