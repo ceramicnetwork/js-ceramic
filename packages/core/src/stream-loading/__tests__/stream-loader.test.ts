@@ -323,7 +323,7 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       logger,
       dispatcher,
-      ceramic.context.anchorService as InMemoryAnchorService
+      ceramic.anchorService as InMemoryAnchorService
     )
     const handlers = new HandlersMap(logger)
     const stateManipulator = new StateManipulator(
