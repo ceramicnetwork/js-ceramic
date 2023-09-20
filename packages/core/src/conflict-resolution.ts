@@ -181,20 +181,6 @@ export async function fetchLog(
   return fetchLog(dispatcher, prevCid, stateLog, unappliedCommits)
 }
 
-export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number): CommitID {
-  let commitCid: CID = stateHolder.state.log[0].cid
-  for (const entry of stateHolder.state.log) {
-    if (entry.type === CommitType.ANCHOR) {
-      if (entry.timestamp <= timestamp) {
-        commitCid = entry.cid
-      } else {
-        break
-      }
-    }
-  }
-  return CommitID.make(stateHolder.id, commitCid)
-}
-
 export class ConflictResolution {
   constructor(
     private readonly logger: DiagnosticsLogger,
@@ -355,38 +341,5 @@ export class ConflictResolution {
       timestampStatus: 'pending',
     })
     return this.applyLog(initialState, stateLog, log.commits, opts)
-  }
-
-  /**
-   * Return state at `commitId` version.
-   */
-  async snapshotAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
-    // Throw if any commit fails to apply as we are trying to load at a specific commit and want
-    // to error if we can't.
-    const opts = { throwOnInvalidCommit: true, throwOnConflict: true, throwIfStale: false }
-
-    // If 'commit' is ahead of 'initialState', sync state up to 'commit'
-    const baseState = (await this.applyTip(initialState, commitId.commit, opts)) || initialState
-
-    const baseStateLog = HistoryLog.fromState(this.dispatcher, baseState)
-
-    // If 'commit' is not included in stream's log at this point, that means that conflict resolution
-    // rejected it.
-    const commitIndex = baseStateLog.findIndex(commitId.commit)
-    if (commitIndex < 0) {
-      // Note this should never happen. Since we set `throwOnConflict` in the opts, applyTip()
-      // have thrown already if the commit was rejected by conflict resolution.  It would indicate
-      // programming error if this Error was ever actually thrown.
-      throw new Error(
-        `Requested commit CID ${commitId.commit.toString()} not found in the log for stream ${commitId.baseID.toString()}`
-      )
-    }
-
-    // If the requested commit is included in the log, but isn't the most recent commit, we need
-    // to reset the state to the state at the requested commit.
-    // The calculated commit index applies equivalently to the CommitData array derived from the base state log
-    const resetLog = await baseStateLog.slice(0, commitIndex + 1).toCommitData()
-    const handler = this.handlers.get(initialState.type)
-    return this.applyLogToState(handler, resetLog, null, false, opts)
   }
 }

@@ -1,6 +1,6 @@
 import { Dispatcher } from '../dispatcher.js'
 import { ExecutionQueue } from './execution-queue.js'
-import { commitAtTime, ConflictResolution } from '../conflict-resolution.js'
+import { ConflictResolution } from '../conflict-resolution.js'
 import {
   AnchorOpts,
   AnchorService,
@@ -8,18 +8,16 @@ import {
   CreateOpts,
   DiagnosticsLogger,
   GenesisCommit,
-  RunningStateLike,
   StreamUtils,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
 import type { Subscription } from 'rxjs'
-import { SnapshotState } from './snapshot-state.js'
-import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { CAR, CarBlock, CARFactory } from 'cartonne'
+import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { RepositoryInternals } from './repository-internals.js'
 import { OperationType } from './operation-type.js'
@@ -48,42 +46,6 @@ export class StateManager {
     private readonly internals: RepositoryInternals
   ) {
     this.carFactory.codecs.add(DAG_JOSE)
-  }
-
-  /**
-   * Take the version of a stream state and a specific commit and returns a snapshot of a state
-   * at the requested commit. If the requested commit is for a branch of history that conflicts with the
-   * known commits, throw an error. If the requested commit is ahead of the currently known state
-   * for this stream, emit the new state.
-   *
-   * @param state$ - Currently known state of the stream.
-   * @param commitId - Requested commit.
-   */
-  async atCommit(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
-    return this.executionQ.forStream(commitId).run(async () => {
-      const snapshot = await this.conflictResolution.snapshotAtCommit(state$.value, commitId)
-
-      // If the provided CommitID is ahead of what we have in the cache, then we should update
-      // the cache to include it.
-      if (StreamUtils.isStateSupersetOf(snapshot, state$.value)) {
-        state$.next(snapshot)
-      }
-
-      return new SnapshotState(snapshot)
-    })
-  }
-
-  /**
-   * Find the relevant AnchorCommit given a particular timestamp.
-   * Will return an AnchorCommit whose timestamp is earlier to or
-   * equal the requested timestamp.
-   *
-   * @param state$
-   * @param timestamp - unix timestamp
-   */
-  atTime(state$: RunningStateLike, timestamp: number): Promise<SnapshotState> {
-    const commitId = commitAtTime(state$, timestamp)
-    return this.atCommit(state$, commitId)
   }
 
   /**
