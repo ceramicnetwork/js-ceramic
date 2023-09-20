@@ -21,6 +21,10 @@ commands:
   build-and-test:
     steps:
       - checkout
+      - run: sudo apt-get install jq
+      - run:
+          name: Install rust-ceramic
+          command: sudo bash ci-scripts/install-rust-ceramic.sh
       - node/install:
           node-version: '16'
       - node/install-packages
