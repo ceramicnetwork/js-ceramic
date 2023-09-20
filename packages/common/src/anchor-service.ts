@@ -4,7 +4,7 @@ import type { CeramicApi } from './ceramic-api.js'
 import type { FetchRequest } from './utils/http-utils.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CAR } from 'cartonne'
-import type { CASResponse, NotCompleteStatusName } from '@ceramicnetwork/codecs'
+import type { NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 /**
@@ -32,12 +32,14 @@ export type AnchorProof = {
 
 export type NotCompleteAnchorEvent = {
   status: NotCompleteStatusName
+  message: string
   streamId: StreamID
   cid: CID
 }
 
 export type CompleteAnchorEvent = {
   status: AnchorRequestStatusName.COMPLETED
+  message: string
   streamId: StreamID
   cid: CID
   witnessCar: CAR
@@ -50,6 +52,7 @@ export type AnchorEvent = NotCompleteAnchorEvent | CompleteAnchorEvent
  */
 export interface AnchorService {
   readonly events: Observable<AnchorEvent>
+  readonly validator: AnchorValidator
 
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
@@ -74,7 +77,7 @@ export interface AnchorService {
    * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
    *   request before returning.
    */
-  requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<Observable<CASResponse>>
+  requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<Observable<AnchorEvent>>
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
@@ -82,7 +85,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse>
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this

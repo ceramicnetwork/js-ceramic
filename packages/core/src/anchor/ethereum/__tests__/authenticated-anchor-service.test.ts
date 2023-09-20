@@ -31,11 +31,21 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
     const sendRequestSpy = jest.spyOn(auth, '_sendRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, diagnosticsLogger, 100)
+    const anchorService = new AuthenticatedEthereumAnchorService(
+      auth,
+      url,
+      url,
+      diagnosticsLogger,
+      100
+    )
 
     sendRequestSpy.mockImplementationOnce(async (request) => {
       expect(request.url).toEqual(chainIdUrl)
-      return { supportedChains: ['eip:1337'] }
+      return { supportedChains: ['eip155:1'] }
+    })
+
+    jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
+      // Do Nothing
     })
 
     await anchorService.init()

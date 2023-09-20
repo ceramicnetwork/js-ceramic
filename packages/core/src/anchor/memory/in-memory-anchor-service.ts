@@ -1,43 +1,32 @@
 import { CID } from 'multiformats/cid'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
-import {
+import { TestUtils } from '@ceramicnetwork/common'
+import type {
   AnchorProof,
   AnchorService,
-  StreamUtils,
   AnchorValidator,
   AnchorCommit,
-  TestUtils,
   AnchorEvent,
 } from '@ceramicnetwork/common'
 import type { Dispatcher } from '../../dispatcher.js'
-import { Ceramic } from '../../ceramic.js'
-import { StreamID } from '@ceramicnetwork/streamid'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { Utils } from '../../utils.js'
+import type { Ceramic } from '../../ceramic.js'
+import type { StreamID } from '@ceramicnetwork/streamid'
 import { LRUCache } from 'least-recent'
-import { CAR, CarBlock, CARFactory } from 'cartonne'
+import { CARFactory, type CAR } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName, type CASResponse } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
 
 class Candidate {
-  constructor(readonly carFileReader: AnchorRequestCarFileReader, readonly log?: CID[]) {}
-
-  get streamId(): StreamID {
-    return this.carFileReader.streamId
+  static fromCarFileReader(reader: AnchorRequestCarFileReader): Candidate {
+    return new Candidate(reader.streamId, reader.tip, reader.streamId.toString())
   }
 
-  get cid(): CID {
-    return this.carFileReader.tip
-  }
-
-  get key(): string {
-    return this.carFileReader.streamId.toString()
-  }
+  constructor(readonly streamId: StreamID, readonly cid: CID, readonly key: string) {}
 }
 
 type InMemoryAnchorConfig = {
@@ -54,36 +43,53 @@ const txnCache: LRUCache<string, number> = new LRUCache(100)
 const carFactory = new CARFactory()
 carFactory.codecs.add(DAG_JOSE)
 
+function groupCandidatesByStreamId(candidates: Candidate[]): Record<string, Candidate[]> {
+  const result: Record<string, Candidate[]> = {}
+  for (const req of candidates) {
+    const key = req.key
+    const items = result[key] || []
+    if (items.find((c) => c.cid.equals(req.cid))) {
+      // If we already have an identical request for the exact same commit on the same,
+      // streamid, don't create duplicate Candidates
+      continue
+    }
+    items.push(req)
+    result[key] = items
+  }
+  return result
+}
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
-  #logger: DiagnosticsLogger
 
   readonly #anchorDelay: number
   readonly #anchorOnRequest: boolean
-  readonly #feed: Subject<CASResponse> = new Subject()
+  readonly #events: Subject<AnchorEvent>
 
   // Maps CID of a specific anchor request to the current status of that request
-  readonly #anchors: Map<string, CASResponse> = new Map()
+  readonly #anchors: Map<string, AnchorEvent> = new Map()
 
   #queue: Candidate[] = []
 
+  readonly chainId = CHAIN_ID
+  readonly url = '<inmemory>'
+  readonly ethereumRpcEndpoint = null
   readonly events: Observable<AnchorEvent>
+  readonly validator: AnchorValidator
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
 
-    // Remember the most recent CASResponse for each anchor request
-    this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
-    this.events = new Observable()
-  }
-
-  get chainId(): string {
-    return CHAIN_ID
+    this.#events = new Subject()
+    // Remember the most recent AnchorEvent for each anchor request
+    this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
+    this.events = this.#events
+    this.validator = this
   }
 
   async init(): Promise<void> {
@@ -116,7 +122,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async failPendingAnchors(): Promise<void> {
     const candidates = await this._findCandidates()
     for (const candidate of candidates) {
-      this._failCandidate(candidate, 'anchor failed')
+      this.#events.next({
+        status: AnchorRequestStatusName.FAILED,
+        streamId: candidate.streamId,
+        cid: candidate.cid,
+        message: 'anchor failed',
+      })
     }
 
     this.#queue = [] // reset
@@ -139,83 +150,20 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
-    const groupedCandidates = await this._groupCandidatesByStreamId(this.#queue)
-    return this._selectValidCandidates(groupedCandidates)
-  }
-
-  async _groupCandidatesByStreamId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
-    const result: Record<string, Candidate[]> = {}
-    for (const req of candidates) {
-      try {
-        if (!result[req.key]) {
-          result[req.key] = []
-        }
-        if (result[req.key].find((c) => c.cid.equals(req.cid))) {
-          // If we already have an identical request for the exact same commit on the same,
-          // streamid, don't create duplicate Candidates
-          continue
-        }
-
-        const log = await this._loadCommitHistory(req.cid, req.streamId)
-        const candidate = new Candidate(req.carFileReader, log)
-
-        result[candidate.key].push(candidate)
-      } catch (e) {
-        this.#logger.err(e)
-        this._failCandidate(req, e.message)
+    const groupedCandidates = groupCandidatesByStreamId(this.#queue)
+    // Select last candidate per stream, mark others REPLACED
+    return Object.values(groupedCandidates).map((candidates) => {
+      const init = candidates.slice(0, candidates.length - 1)
+      const last = candidates[candidates.length - 1]
+      for (const replaced of init) {
+        this.#events.next({
+          status: AnchorRequestStatusName.REPLACED,
+          streamId: replaced.streamId,
+          cid: replaced.cid,
+          message: 'replaced',
+        })
       }
-    }
-    return result
-  }
-
-  _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
-    const result: Candidate[] = []
-    for (const compositeKey of Object.keys(groupedCandidates)) {
-      const candidates = groupedCandidates[compositeKey]
-
-      // When there are multiple valid candidate tips to anchor for the same streamId, pick the one
-      // with the largest log
-      let selected: Candidate = null
-      for (const c of candidates) {
-        if (selected == null) {
-          selected = c
-          continue
-        }
-
-        if (c.log.length < selected.log.length) {
-          this._failCandidate(c)
-        } else if (c.log.length > selected.log.length) {
-          this._failCandidate(selected)
-          selected = c
-        } else {
-          // If there are two conflicting candidates with the same log length, we must choose
-          // which to anchor deterministically. We use the same arbitrary but deterministic strategy
-          // that js-ceramic conflict resolution does: choosing the commit whose CID is smaller
-          if (c.cid.bytes < selected.cid.bytes) {
-            this._failCandidate(selected)
-            selected = c
-          } else {
-            this._failCandidate(c)
-          }
-        }
-      }
-
-      result.push(selected)
-    }
-
-    return result
-  }
-
-  _failCandidate(candidate: Candidate, message?: string): void {
-    if (!message) {
-      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`
-    }
-    this.#feed.next({
-      id: '',
-      status: AnchorRequestStatusName.FAILED,
-      streamId: candidate.streamId,
-      cid: candidate.cid,
-      message,
+      return last
     })
   }
 
@@ -223,38 +171,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     if (!message) {
       message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
     }
-    this.#feed.next({
-      id: '',
+    this.#events.next({
       status: AnchorRequestStatusName.PROCESSING,
       streamId: candidate.streamId,
       cid: candidate.cid,
       message,
     })
-  }
-
-  /**
-   * Load candidate log.
-   *
-   * @param commitId - Start CID
-   * @private
-   */
-  async _loadCommitHistory(commitId: CID, streamId: StreamID): Promise<CID[]> {
-    const history: CID[] = []
-
-    let currentCommitId = commitId
-    for (;;) {
-      const commitData = await Utils.getCommitData(this.#dispatcher, currentCommitId, streamId)
-      if (StreamUtils.isAnchorCommitData(commitData)) {
-        return history
-      }
-      const prevCommitId = commitData.commit.prev
-      if (prevCommitId == null) {
-        return history
-      }
-
-      history.push(prevCommitId)
-      currentCommitId = prevCommitId
-    }
   }
 
   /**
@@ -265,15 +187,6 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   set ceramic(ceramic: Ceramic) {
     this.#ceramic = ceramic
     this.#dispatcher = this.#ceramic.dispatcher
-    this.#logger = this.#ceramic?.context?.loggerProvider.getDiagnosticsLogger()
-  }
-
-  get url() {
-    return '<inmemory>'
-  }
-
-  get ethereumRpcEndpoint(): string | null {
-    return null
   }
 
   /**
@@ -285,13 +198,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   async requestAnchor(
     carFile: CAR,
     waitForConfirmation: boolean
-  ): Promise<Observable<CASResponse>> {
+  ): Promise<Observable<AnchorEvent>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const candidate = new Candidate(carFileReader)
+    const candidate = Candidate.fromCarFileReader(carFileReader)
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
-        this.#feed.next({
-          id: '',
+        this.#events.next({
           status: AnchorRequestStatusName.FAILED,
           streamId: candidate.streamId,
           cid: candidate.cid,
@@ -301,8 +213,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     } else {
       this.#queue.push(candidate)
     }
-    this.#feed.next({
-      id: '',
+    this.#events.next({
       status: AnchorRequestStatusName.PENDING,
       streamId: carFileReader.streamId,
       cid: carFileReader.tip,
@@ -317,35 +228,16 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<CASResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const anchorResponse = this.#anchors.get(tip.toString())
-    const feed$ = this.#feed.pipe(
+    const feed$ = this.#events.pipe(
       filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     )
     if (anchorResponse) {
-      return concat(of<CASResponse>(anchorResponse), feed$)
+      return concat(of(anchorResponse), feed$)
     } else {
       return feed$
     }
-  }
-
-  async _storeRecord(record: Record<string, unknown>): Promise<CID> {
-    let timeout: any
-
-    const putPromise = this.#dispatcher.storeCommit(record).finally(() => {
-      clearTimeout(timeout)
-    })
-
-    const timeoutPromise = new Promise((resolve) => {
-      timeout = setTimeout(resolve, 30 * 1000)
-    })
-
-    return await Promise.race([
-      putPromise,
-      timeoutPromise.then(() => {
-        throw new Error(`Timed out storing record in IPFS`)
-      }),
-    ])
   }
 
   /**
@@ -354,17 +246,10 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    * @param commit
    */
   async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
-    const anchorCid = await this._storeRecord(commit as any)
-    let resolved = false
+    const anchorCid = await this.#dispatcher.storeCommit(commit as any)
     await new Promise<void>((resolve) => {
-      this.#dispatcher.publishTip(streamId, anchorCid).add(() => {
-        if (!resolved) {
-          resolved = true
-          resolve()
-        }
-      })
+      this.#dispatcher.publishTip(streamId, anchorCid).add(resolve)
     })
-
     return anchorCid
   }
 
@@ -376,14 +261,9 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
    */
   async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
     const car = carFactory.build()
-
-    const cidToBlock = async (cid) => new CarBlock(cid, await this.#dispatcher.getIpfsBlock(cid))
-
-    car.blocks.put(await cidToBlock(proofCid))
-    car.blocks.put(await cidToBlock(anchorCommitCid))
-
+    car.blocks.put(await this.#dispatcher.getIpfsBlock(proofCid))
+    car.blocks.put(await this.#dispatcher.getIpfsBlock(anchorCommitCid))
     car.roots.push(anchorCommitCid)
-
     return car
   }
 
@@ -412,14 +292,12 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
     // add a delay
     const handle = setTimeout(() => {
-      this.#feed.next({
-        id: '',
+      this.#events.next({
         status: AnchorRequestStatusName.COMPLETED,
         streamId: leaf.streamId,
         cid: leaf.cid,
         message: 'CID successfully anchored',
-        anchorCommit: { cid: cid },
-        witnessCar,
+        witnessCar: witnessCar,
       })
       clearTimeout(handle)
     }, this.#anchorDelay)

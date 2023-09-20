@@ -201,29 +201,27 @@ export class StateManager {
       { isRoot: true }
     )
 
-    const cidToBlock = async (cid) => new CarBlock(cid, await this.dispatcher.getIpfsBlock(cid))
-
     // Genesis block
     const genesisCid = streamId.cid
-    car.blocks.put(await cidToBlock(genesisCid))
+    car.blocks.put(await this.dispatcher.getIpfsBlock(genesisCid))
 
     // Tip block
-    car.blocks.put(await cidToBlock(tip))
+    car.blocks.put(await this.dispatcher.getIpfsBlock(tip))
 
     // Genesis Link Block
     const genesisCommit = car.get(genesisCid)
     if (StreamUtils.isSignedCommit(genesisCommit)) {
-      car.blocks.put(await cidToBlock(genesisCommit.link))
+      car.blocks.put(await this.dispatcher.getIpfsBlock(genesisCommit.link))
     }
 
     // Tip Link Block
     const tipCommit = car.get(tip)
     if (StreamUtils.isSignedCommit(tipCommit)) {
-      car.blocks.put(await cidToBlock(tipCommit.link))
+      car.blocks.put(await this.dispatcher.getIpfsBlock(tipCommit.link))
       // Tip CACAO Block
       const tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
       if (tipCacaoCid) {
-        car.blocks.put(await cidToBlock(tipCacaoCid))
+        car.blocks.put(await this.dispatcher.getIpfsBlock(tipCacaoCid))
       }
     }
 

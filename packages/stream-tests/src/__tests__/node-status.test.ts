@@ -117,7 +117,7 @@ describe('Node Status Endpoint tests', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(status.anchor.pendingAnchors).toEqual(1)
 
-    await (core.context.anchorService as InMemoryAnchorService).failPendingAnchors()
+    await (core.anchorService as InMemoryAnchorService).failPendingAnchors()
     await TestUtils.waitForState(
       doc,
       1000 * 60,

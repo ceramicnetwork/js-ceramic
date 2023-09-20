@@ -27,7 +27,7 @@ import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CAR, CARFactory, CarBlock } from 'cartonne'
+import { CARFactory, CarBlock, type CAR } from 'cartonne'
 import all from 'it-all'
 import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
 
@@ -179,17 +179,19 @@ export class Dispatcher {
       })
   }
 
-  async getIpfsBlock(cid: CID): Promise<Uint8Array> {
+  async getIpfsBlock(cid: CID): Promise<CarBlock> {
     const found = this.ipldCache.get(cid)
     if (found) {
       Metrics.count(IPFS_CACHE_HIT, 1)
-      return found.block
+      return new CarBlock(cid, found.block)
     } else {
       Metrics.count(IPFS_CACHE_MISS, 1)
-      return this._shutdownSignal.abortable((signal) => {
+      const bytes = await this._shutdownSignal.abortable((signal) => {
         // @ts-expect-error
         return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
       })
+      this.ipldCache.setBlock(cid, bytes)
+      return new CarBlock(cid, bytes)
     }
   }
 

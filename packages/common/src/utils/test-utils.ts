@@ -1,4 +1,4 @@
-import { BehaviorSubject, lastValueFrom, firstValueFrom } from 'rxjs'
+import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { CID } from 'multiformats/cid'
 import * as random from '@stablelib/random'
@@ -147,7 +147,7 @@ export class TestUtils {
    * @param stream Stream to trigger anchor on.
    */
   static async anchorUpdate(ceramic: CeramicApi, stream: Stream): Promise<void> {
-    const anchorService = ceramic.context.anchorService as any
+    const anchorService = ceramic.anchorService
     if ('anchor' in anchorService) {
       const tillAnchored = firstValueFrom(
         stream.pipe(

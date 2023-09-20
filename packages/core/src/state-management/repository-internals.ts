@@ -1,5 +1,6 @@
-import { CASResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import {
+  type AnchorEvent,
   type AnchorService,
   AnchorStatus,
   CommitType,
@@ -296,25 +297,25 @@ export class RepositoryInternals {
   }
 
   /**
-   * Handle CASResponse and update state$.
+   * Handle AnchorEvent and update state$.
    *
    * @param state$ - RunningState instance to update.
-   * @param casResponse - response from CAS.
+   * @param anchorEvent - response from CAS.
    * @return boolean - `true` if polling should stop, `false` if polling continues
    */
-  async handleAnchorResponse(state$: RunningState, casResponse: CASResponse): Promise<boolean> {
+  async handleAnchorResponse(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
     // We don't want to change a stream's state due to changes to the anchor
     // status of a commit that is no longer the tip of the stream, so we early return
     // in most cases when receiving a response to an old anchor request.
-    // The one exception is if the CASResponse indicates that the old commit
+    // The one exception is if the AnchorEvent indicates that the old commit
     // is now anchored, in which case we still want to try to process the anchor commit
     // and let the stream's conflict resolution mechanism decide whether or not to update
     // the stream's state.
-    const status = casResponse.status
+    const status = anchorEvent.status
     switch (status) {
       case AnchorRequestStatusName.READY:
       case AnchorRequestStatusName.PENDING: {
-        if (!casResponse.cid.equals(state$.tip)) return
+        if (!anchorEvent.cid.equals(state$.tip)) return
         const next = {
           ...state$.value,
           anchorStatus: AnchorStatus.PENDING,
@@ -324,30 +325,25 @@ export class RepositoryInternals {
         return false
       }
       case AnchorRequestStatusName.PROCESSING: {
-        if (!casResponse.cid.equals(state$.tip)) return
+        if (!anchorEvent.cid.equals(state$.tip)) return
         state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
         await this._updateStateIfPinned(state$)
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
-        if (casResponse.cid.equals(state$.tip)) {
+        if (anchorEvent.cid.equals(state$.tip)) {
           await this.#anchorRequestStore.remove(state$.id)
         }
-        await this._handleAnchorCommit(
-          state$,
-          casResponse.cid,
-          casResponse.anchorCommit.cid,
-          casResponse.witnessCar
-        )
+        await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
         return true
       }
       case AnchorRequestStatusName.FAILED: {
         this.#logger.warn(
-          `Anchor failed for commit ${casResponse.cid} of stream ${casResponse.streamId}: ${casResponse.message}`
+          `Anchor failed for commit ${anchorEvent.cid} of stream ${anchorEvent.streamId}: ${anchorEvent.message}`
         )
 
         // if this is the anchor response for the tip update the state
-        if (casResponse.cid.equals(state$.tip)) {
+        if (anchorEvent.cid.equals(state$.tip)) {
           state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
           await this.#anchorRequestStore.remove(state$.id)
         }
@@ -356,12 +352,12 @@ export class RepositoryInternals {
       }
       case AnchorRequestStatusName.REPLACED: {
         this.#logger.verbose(
-          `Anchor request for commit ${casResponse.cid} of stream ${casResponse.streamId} is replaced`
+          `Anchor request for commit ${anchorEvent.cid} of stream ${anchorEvent.streamId} is replaced`
         )
 
         // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
         // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
-        if (casResponse.cid.equals(state$.tip)) {
+        if (anchorEvent.cid.equals(state$.tip)) {
           await this.#anchorRequestStore.remove(state$.id)
         }
 
@@ -374,7 +370,7 @@ export class RepositoryInternals {
 
   processAnchorResponse(
     state$: RunningState,
-    anchorStatus$: Observable<CASResponse>
+    anchorStatus$: Observable<AnchorEvent>
   ): Subscription {
     const stopSignal = new Subject<void>()
     this.#numPendingAnchorSubscriptions++
@@ -382,8 +378,8 @@ export class RepositoryInternals {
     const subscription = anchorStatus$
       .pipe(
         takeUntil(stopSignal),
-        concatMap(async (asr) => {
-          const shouldStop = await this.handleAnchorResponse(state$, asr)
+        concatMap(async (anchorEvent) => {
+          const shouldStop = await this.handleAnchorResponse(state$, anchorEvent)
           if (shouldStop) stopSignal.next()
         }),
         catchError((error) => {
@@ -427,28 +423,22 @@ export class RepositoryInternals {
    * heard about it already via pubsub (given that pubsub is an unreliable channel).
    * @param state$ - state of the stream being anchored
    * @param tip - The tip that anchorCommit is anchoring
-   * @param anchorCommit - cid of the anchor commit
    * @param witnessCAR - CAR file with all the IPLD objects needed to apply and verify the anchor commit
    * @private
    */
-  async _handleAnchorCommit(
-    state$: RunningState,
-    tip: CID,
-    anchorCommit: CID,
-    witnessCAR: CAR | undefined
-  ): Promise<void> {
+  async _handleAnchorCommit(state$: RunningState, tip: CID, witnessCAR: CAR): Promise<void> {
+    const anchorCommitCID = witnessCAR.roots[0]
+    if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
       remainingRetries >= 0;
       remainingRetries--
     ) {
       try {
-        if (witnessCAR) {
-          await this.#dispatcher.importCAR(witnessCAR)
-        }
+        await this.#dispatcher.importCAR(witnessCAR)
 
         await this.#executionQ.forStream(state$.id).run(async () => {
-          const applied = await this.handleTip(state$, anchorCommit)
+          const applied = await this.handleTip(state$, anchorCommitCID)
           if (applied) {
             // We hadn't already heard about the AnchorCommit via pubsub, so it's possible
             // other nodes didn't hear about it via pubsub either, so we rebroadcast it to pubsub now.
@@ -458,7 +448,7 @@ export class RepositoryInternals {
               // If we failed to apply the commit at least once, then it's worth logging when
               // we are able to do so successfully on the retry.
               this.#logger.imp(
-                `Successfully applied anchor commit ${anchorCommit} for stream ${state$.id}`
+                `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
               )
             }
           }
@@ -466,7 +456,7 @@ export class RepositoryInternals {
         return
       } catch (error) {
         this.#logger.warn(
-          `Error while applying anchor commit ${anchorCommit} for stream ${state$.id}, ${remainingRetries} retries remain. ${error}`
+          `Error while applying anchor commit ${anchorCommitCID} for stream ${state$.id}, ${remainingRetries} retries remain. ${error}`
         )
 
         if (remainingRetries == 0) {
