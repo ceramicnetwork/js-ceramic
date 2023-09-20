@@ -149,11 +149,6 @@ export class StreamLoader {
       opts
     )
 
-    // If the commitId is now the tip, we're done.
-    if (baseState.log[baseState.log.length - 1].cid.equals(commitId.commit)) {
-      return baseState
-    }
-
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
     // We set 'copyTimestampsFromRemovedAnchors' to true because we want it to be possible to load
