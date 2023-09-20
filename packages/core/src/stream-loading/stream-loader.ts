@@ -156,7 +156,13 @@ export class StreamLoader {
 
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
-    return this.stateManipulator.resetStateToCommit(baseState, commitId.commit)
+    // We set 'copyTimestampsFromRemovedAnchors' to true because we want it to be possible to load
+    // at a CommitID for a commit with a CACAO that has expired, but was anchored before it expired.
+    // For that to work we need to port over the timestamp information from the most up-to-date
+    // version of the stream state that we know about.
+    return this.stateManipulator.resetStateToCommit(baseState, commitId.commit, {
+      copyTimestampsFromRemovedAnchors: true,
+    })
   }
 
   /**
