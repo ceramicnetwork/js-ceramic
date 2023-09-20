@@ -6,6 +6,7 @@ import { IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { deserialize, MsgType, PubsubMessage, serialize } from '../../pubsub/pubsub-message.js'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { TipFetcher } from '../tip-fetcher.js'
+import { lastValueFrom } from 'rxjs'
 
 const TOPIC = '/ceramic/test12345'
 
@@ -49,7 +50,7 @@ describe('TipFetcher test', () => {
 
     const tipFetcher = new TipFetcher(dispatcher.messageBus)
 
-    const foundTip = await tipFetcher.findTip(streamID, 5)
+    const foundTip = await lastValueFrom(tipFetcher.findPossibleTips(streamID, 5))
     expect(foundTip.toString()).toEqual(tip.toString())
 
     await ipfs2.stop()
@@ -60,7 +61,9 @@ describe('TipFetcher test', () => {
 
     const tipFetcher = new TipFetcher(dispatcher.messageBus)
 
-    const foundTip = await tipFetcher.findTip(streamID, 1)
+    const foundTip = await lastValueFrom(tipFetcher.findPossibleTips(streamID, 1), {
+      defaultValue: null,
+    })
     expect(foundTip).toEqual(null)
   })
 })
