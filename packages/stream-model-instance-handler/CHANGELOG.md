@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@1.17.0...@ceramicnetwork/stream-model-instance-handler@1.18.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
 # [1.17.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@1.17.0-rc.0...@ceramicnetwork/stream-model-instance-handler@1.17.0) (2023-09-20)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

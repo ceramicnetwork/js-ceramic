@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.43.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.42.0...@ceramicnetwork/core@2.43.0-rc.0) (2023-09-20)
+
+
+### Bug Fixes
+
+* Do not start subscription until repository is ready ([#2957](https://github.com/ceramicnetwork/js-ceramic/issues/2957)) ([009aabe](https://github.com/ceramicnetwork/js-ceramic/commit/009aabeea4c83556ab8c79cc194b3def718d7ebc))
+* Fix StreamLoader test ([#2966](https://github.com/ceramicnetwork/js-ceramic/issues/2966)) ([1d8da07](https://github.com/ceramicnetwork/js-ceramic/commit/1d8da077599028159a1f975ddfcdfa9503cbff5a))
+
+
+### Features
+
+* Make StreamLoader consider multiple tip responses when syncing a stream ([#2962](https://github.com/ceramicnetwork/js-ceramic/issues/2962)) ([07019aa](https://github.com/ceramicnetwork/js-ceramic/commit/07019aadcb9b671f1246fbcc2dc163402a5b447f))
+
+
+
+
+
 # [2.42.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.42.0-rc.0...@ceramicnetwork/core@2.42.0) (2023-09-20)
 
 **Note:** Version bump only for package @ceramicnetwork/core
