@@ -188,33 +188,4 @@ export class StreamLoader {
     const tipSource$ = merge(of(knownTip), pubsubTips$)
     return this._applyTips(streamID, tipSource$)
   }
-
-  /**
-   * Completely loads the current state of a Stream from the p2p network just from the StreamID.
-   * TODO(CDB-2761): Delete this method.
-   * @param streamID
-   */
-  async loadGenesisState(streamID: StreamID): Promise<StreamState> {
-    this.stateManipulator.assertStreamTypeAppliable(streamID.type)
-    return this._loadStateFromTip(streamID, streamID.cid, false)
-  }
-
-  /**
-   * Given a known tip for a stream, fully resync and apply the log for that tip, while also
-   * querying pubsub in parallel to discover any new possible tips, and then return the StreamState
-   * corresponding to the best possible tip.
-   * @param streamID
-   * @param knownTip
-   * @param syncTimeoutSecs
-   */
-  async resyncStream(
-    streamID: StreamID,
-    knownTip: CID,
-    syncTimeoutSecs: number
-  ): Promise<StreamState> {
-    this.stateManipulator.assertStreamTypeAppliable(streamID.type)
-    const pubsubTips$ = this.tipFetcher.findPossibleTips(streamID, syncTimeoutSecs)
-    const tipSource$ = merge(of(knownTip), pubsubTips$)
-    return this._applyTips(streamID, tipSource$)
-  }
 }
