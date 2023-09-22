@@ -36,6 +36,10 @@ export interface ApplyLogToStateOpts {
   throwOnConflict: boolean
 }
 
+export interface ResetStateToCommitOpts {
+  copyTimestampsFromRemovedAnchors: boolean
+}
+
 /**
  * Entirely stateless class for applying logs of Stream commits to StreamStates.  Handles all
  * conflict resolution rules. Does not do any i/o nor does it manage anything relating to caching or
@@ -115,8 +119,9 @@ export class StateManipulator {
    * log comes from a StreamState that has already had its anchor commits validated, there is no
    * need to re-do the work of anchor commit validation.
    * Note the source log could be longer than the destination log and may contain anchors that
-   * are not a part of the destination log - it is important that we ignore timestamps from anchors
-   * that are not present in the destination log.
+   * are not a part of the destination log - the 'copyTimestampsFromRemovedAnchors' arg determines
+   * whether or not timestamps should be copied to the destination log if they derive from anchors
+   * that won't be copied.
    * @param source - a log of LogEntries (which contains less information than a full CommitData)
    *   from a StreamState for the stream in question.  Must be at least as long as 'dest', and the
    *   entries must correspond 1-1 to the entries of 'dest' (up to the length of 'dest'). Must come
@@ -125,10 +130,14 @@ export class StateManipulator {
    *   full CommitDatas that have all the information necessary to apply the commits, but are
    *   missing timestamps extracted from the AnchorCommits.
    */
-  _copyTrustedTimestamps(source: Array<LogEntry>, dest: UnappliableStreamLog): AppliableStreamLog {
+  _copyTrustedTimestamps(
+    source: Array<LogEntry>,
+    dest: UnappliableStreamLog,
+    copyTimestampsFromRemovedAnchors: boolean
+  ): AppliableStreamLog {
     let timestamp = null
     for (let i = dest.commits.length - 1; i >= 0; i--) {
-      if (source[i].type == CommitType.ANCHOR) {
+      if (copyTimestampsFromRemovedAnchors || source[i].type == CommitType.ANCHOR) {
         timestamp = source[i].timestamp
       }
       if (!source[i].cid.equals(dest.commits[i].cid)) {
@@ -253,7 +262,8 @@ export class StateManipulator {
     // First get the stream state at the divergence point
     const sharedState = await this.resetStateToCommit(
       initialState,
-      initialState.log[conflictIdx].cid
+      initialState.log[conflictIdx].cid,
+      { copyTimestampsFromRemovedAnchors: false }
     )
 
     // Now apply the new log to the shared state
@@ -267,8 +277,15 @@ export class StateManipulator {
    * representing the state of the Stream as of that commit CID.
    * @param initialState
    * @param commitCid - cid of a commit that must be in the log of 'initialState'
+   * @param opts - whether we should include timestamps from the 'initialState' in the returned
+   *   reset state if they come from anchors that aren't a part of the result state.
+   *
    */
-  async resetStateToCommit(initialState: StreamState, commitCid: CID): Promise<StreamState> {
+  async resetStateToCommit(
+    initialState: StreamState,
+    commitCid: CID,
+    opts: ResetStateToCommitOpts
+  ): Promise<StreamState> {
     const streamId = StreamUtils.streamIdFromState(initialState)
     // It is invalid to call this function if the commitCid is not a part of the initialState log.
     const commitIndex = initialState.log.findIndex((logEntry) => logEntry.cid.equals(commitCid))
@@ -283,7 +300,8 @@ export class StateManipulator {
     const sharedLogWithoutTimestamps = await this.logSyncer.syncFullLog(streamId, commitCid)
     const sharedLogWithTimestamps = this._copyTrustedTimestamps(
       initialState.log,
-      sharedLogWithoutTimestamps
+      sharedLogWithoutTimestamps,
+      opts.copyTimestampsFromRemovedAnchors
     )
 
     const handler = this.streamTypeHandlers.get(initialState.type)

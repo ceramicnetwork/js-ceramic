@@ -208,12 +208,20 @@ export class Repository {
     // the timestamp information that will reveal to us that the CACAO didn't actually expire.
     const optsSkippingCACAOChecks = { ...opts, skipCacaoExpirationChecks: true }
     const base$ = await this.load(commitId.baseID, optsSkippingCACAOChecks)
-    const stateAtCommit = await this.stateManager.atCommit(base$, commitId)
 
-    // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
-    StreamUtils.checkForCacaoExpiration(stateAtCommit.state)
+    return this.executionQ.forStream(commitId).run(async () => {
+      const stateAtCommit = await this.streamLoader.stateAtCommit(base$.state, commitId)
 
-    return stateAtCommit
+      // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
+      StreamUtils.checkForCacaoExpiration(stateAtCommit)
+
+      // If the provided CommitID is ahead of what we have in the cache, then we should update
+      // the cache to include it.
+      if (StreamUtils.isStateSupersetOf(stateAtCommit, base$.value)) {
+        base$.next(stateAtCommit)
+      }
+      return new SnapshotState(stateAtCommit)
+    })
   }
 
   /**

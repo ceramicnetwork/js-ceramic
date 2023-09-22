@@ -390,11 +390,9 @@ describe('#load', () => {
       })
       await tile1.update({ a: 1 })
 
-      // Let's pretend we have a stream in PENDING state
-      const pendingState = {
-        ...tile1.state,
-        anchorStatus: AnchorStatus.PENDING,
-      }
+      // We have a stream in PENDING state
+      expect(tile1.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      const pendingState = cloneDeep(tile1.state)
       const base$ = new StateLink(pendingState)
 
       const loadSpy = jest.spyOn(ceramic.repository, 'load')
@@ -407,7 +405,7 @@ describe('#load', () => {
       })
       // Do not fast-forward the base state: retain PENDING anchor status
       expect(base$.state).toBe(pendingState)
-      // The snapshot is reported to be anchored though
+      // The snapshot does not inherit anchor status though
       expect(snapshot.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 

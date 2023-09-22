@@ -679,18 +679,29 @@ describe('CACAO Integration test', () => {
 
       // Expire the CACAO, loading should fail
       expireCacao()
-      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/)
+      const commitIdBeforeAnchor = tile.commitId
+      await expect(TileDocument.load(ceramic, commitIdBeforeAnchor)).rejects.toThrow(
+        /CACAO expired/
+      )
 
       // Loading at the anchor commits CommitID should succeed
       const commitIDAtAnchor = CommitID.make(tile.id, anchorCommitCID)
-      const loadedAtCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
-      expect(loadedAtCommit.state.log.length).toEqual(3)
-      expect(loadedAtCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      const loadedAtAnchorCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
+      expect(loadedAtAnchorCommit.state.log.length).toEqual(3)
+      expect(loadedAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Now loading the stream should work because the node now knows about the anchor
       const loaded = await TileDocument.load(ceramic, tile.id)
       expect(loaded.state.log.length).toEqual(3)
       expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Loading at the CommitID before the AnchorCommit should still work because the timestamp
+      // information from the anchor is copied over even though the anchor commit itself isn't
+      // included in the state.
+      const loadedAtCommitBeforeAnchor = await TileDocument.load(ceramic, commitIdBeforeAnchor)
+      expect(loadedAtCommitBeforeAnchor.state.log.length).toEqual(2)
+      expect(loadedAtCommitBeforeAnchor.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       // Resyncing outdated handle with the server should pick up the anchor commit
       expect(tile.state.log.length).toEqual(2)
