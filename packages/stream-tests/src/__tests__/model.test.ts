@@ -55,9 +55,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Model model is unloadable', async () => {
-    await expect(ceramic.loadStream(Model.MODEL)).rejects.toThrow(
-      /UNLOADABLE is not a valid stream type/
-    )
+    await expect(ceramic.loadStream(Model.MODEL)).rejects.toThrow(/4 is not a valid stream type/)
   })
 
   test('Create valid model', async () => {

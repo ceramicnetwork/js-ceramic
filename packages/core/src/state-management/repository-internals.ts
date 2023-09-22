@@ -42,6 +42,8 @@ import { Utils } from '../utils.js'
 import type { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { StateCache } from './state-cache.js'
+import { StreamLoader } from '../stream-loading/stream-loader.js'
+import { StreamUpdater } from '../stream-loading/stream-updater.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const CACHE_HIT_LOCAL = 'cache_hit_local'
@@ -64,6 +66,8 @@ export type RepositoryInternalsParams = {
   loadingQ: ExecutionQueue
   logger: DiagnosticsLogger
   pinStore: PinStore
+  streamLoader: StreamLoader
+  streamUpdater: StreamUpdater
 }
 
 export class RepositoryInternals {
@@ -79,6 +83,9 @@ export class RepositoryInternals {
   #loadingQ: ExecutionQueue
   #logger: DiagnosticsLogger
   #pinStore: PinStore
+  #streamLoader: StreamLoader
+  #streamUpdater: StreamUpdater
+
   /**
    * Keeps track of every pinned StreamID that has had its state 'synced' (i.e. a query was sent to
    * pubsub requesting the current tip for that stream) since the start of this process. This set
@@ -102,6 +109,8 @@ export class RepositoryInternals {
     this.#loadingQ = params.loadingQ
     this.#logger = params.logger
     this.#pinStore = params.pinStore
+    this.#streamLoader = params.streamLoader
+    this.#streamUpdater = params.streamUpdater
   }
 
   /**
@@ -135,7 +144,6 @@ export class RepositoryInternals {
       return undefined
     }
   }
-
   /**
    * Returns a stream from wherever we can get information about it.
    * Starts by checking if the stream state is present in the in-memory cache, if not then
@@ -145,38 +153,34 @@ export class RepositoryInternals {
     const opts = { ...DEFAULT_LOAD_OPTS, ...options }
 
     const [state$, synced] = await this.#loadingQ.forStream(streamId).run(async () => {
+      const [existingState$, alreadySynced] = await this._fromMemoryOrStoreWithSyncStatus(streamId)
+
       switch (opts.sync) {
         case SyncOptions.PREFER_CACHE:
         case SyncOptions.SYNC_ON_ERROR: {
-          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
+          if (!existingState$) {
+            return [await this._loadStreamFromNetwork(streamId, opts.syncTimeoutSeconds), true]
+          }
+
           if (alreadySynced) {
-            return [streamState$, alreadySynced]
+            return [existingState$, alreadySynced]
           } else {
-            await this.sync(streamState$, opts.syncTimeoutSeconds * 1000)
-            Metrics.count(STREAM_SYNC, 1)
-            return [streamState$, true]
+            await this._sync(existingState$, opts.syncTimeoutSeconds)
+            return [existingState$, true]
           }
         }
         case SyncOptions.NEVER_SYNC: {
-          return this._loadGenesis(streamId)
+          if (existingState$) {
+            return [existingState$, alreadySynced]
+          }
+          // TODO(CDB-2761): Throw an error if stream isn't found in cache or state store.
+          return [await this._genesisFromNetwork(streamId), false]
         }
         case SyncOptions.SYNC_ALWAYS: {
-          // When SYNC_ALWAYS is provided, we want to reapply and re-validate
-          // the stream state.  We effectively throw out our locally stored state
-          // as its possible that the commits that were used to construct that
-          // state are no longer valid (for example if the CACAOs used to author them
-          // have expired since they were first applied to the cached state object).
-          // But if we were the only node on the network that knew about the most
-          // recent tip, we don't want to totally forget about that, so we pass the tip in
-          // to `sync` so that it gets considered alongside whatever tip we learn
-          // about from the network.
-          const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
-            this._fromNetwork(streamId),
-            this.fromMemoryOrStore(streamId),
-          ])
-          await this.sync(fromNetwork$, opts.syncTimeoutSeconds * 1000, fromMemoryOrStore?.tip)
-          Metrics.count(STREAM_SYNC, 1)
-          return [fromNetwork$, true]
+          return [
+            await this._resyncStreamFromNetwork(streamId, opts.syncTimeoutSeconds, existingState$),
+            true,
+          ]
         }
         default:
           throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
@@ -187,6 +191,7 @@ export class RepositoryInternals {
       StreamUtils.checkForCacaoExpiration(state$.state)
     }
 
+    await this._updateStateIfPinned(state$)
     if (synced && state$.isPinned) {
       this.markPinnedAndSynced(state$.id)
     }
@@ -195,7 +200,9 @@ export class RepositoryInternals {
   }
 
   /**
-   * Helper function for loading at least the genesis commit state for a stream.
+   * Helper function for loading the state for a stream from either the in-memory cache
+   * or the state store, while also returning information about whether or not the state needs
+   * to be synced.
    * WARNING: This should only be called from within a thread in the loadingQ!!!
    *
    * @param streamId
@@ -203,7 +210,9 @@ export class RepositoryInternals {
    *   is a boolean representing whether we believe that state should be the most update-to-date
    *   state for that stream, or whether it could be behind the current tip and needs to be synced.
    */
-  async _loadGenesis(streamId: StreamID): Promise<[RunningState, boolean]> {
+  async _fromMemoryOrStoreWithSyncStatus(
+    streamId: StreamID
+  ): Promise<[RunningState | null, boolean]> {
     let stream = this._fromMemory(streamId)
     if (stream) {
       return [stream, true]
@@ -213,9 +222,7 @@ export class RepositoryInternals {
     if (stream) {
       return [stream, this.wasPinnedStreamSynced(streamId)]
     }
-
-    stream = await this._fromNetwork(streamId)
-    return [stream, false]
+    return [null, false]
   }
 
   _fromMemory(streamId: StreamID): RunningState | undefined {
@@ -226,19 +233,10 @@ export class RepositoryInternals {
     return state
   }
 
-  async _fromNetwork(streamId: StreamID): Promise<RunningState> {
-    const handler = this.#handlers.get(streamId.typeName)
-    const genesisCid = streamId.cid
-    const commitData = await Utils.getCommitData(this.#dispatcher, genesisCid, streamId)
-    if (commitData == null) {
-      throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
-    }
+  async _genesisFromNetwork(streamId: StreamID): Promise<RunningState> {
+    const state = await this.#streamLoader.loadGenesisState(streamId)
     Metrics.count(CACHE_HIT_REMOTE, 1)
-    // Do not check for possible key revocation here, as we will do so later after loading the tip
-    // (or learning that the genesis commit *is* the current tip), when we will have timestamp
-    // information for when the genesis commit was anchored.
-    commitData.disableTimecheck = true
-    const state = await handler.applyCommit(commitData, this.#context)
+
     const state$ = new RunningState(state, false)
     this.add(state$)
     this.#logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
@@ -477,26 +475,58 @@ export class RepositoryInternals {
    * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
    *
    * @param state$ - Current stream state.
-   * @param timeoutMillis - How much time do we wait for a response from the network.
-   * @param hint - Tip to try while we are waiting for the network to respond.
+   * @param syncTimeoutSeconds - How much time do we wait for a response from the network.
    */
-  async sync(state$: RunningState, timeoutMillis: number, hint?: CID): Promise<void> {
-    // Begin querying the network for the tip immediately.
-    const tip$ = this.#dispatcher.messageBus.queryNetwork(state$.id)
-    // If a 'hint' is provided we can work on applying it while the tip is
-    // fetched from the network
-    const tipSource$ = hint ? merge(tip$, of(hint)) : tip$
-    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
-    await lastValueFrom(
-      tipSource$.pipe(
-        takeUntil(timer(timeoutMillis)),
-        concatMap((tip) => this.handleTip(state$, tip))
-      ),
-      { defaultValue: undefined }
-    )
-    if (state$.isPinned) {
-      this.markPinnedAndSynced(state$.id)
-    }
+  async _sync(state$: RunningState, syncTimeoutSeconds: number): Promise<void> {
+    const syncedState = await this.#streamLoader.syncStream(state$.state, syncTimeoutSeconds)
+    state$.next(syncedState)
+    Metrics.count(STREAM_SYNC, 1)
+  }
+
+  /**
+   * Loads a stream that the node has never seen before from the network for the first time.
+   *
+   * @param streamId
+   * @param syncTimeoutSeconds - How much time do we wait for a response from the network.
+   */
+  async _loadStreamFromNetwork(
+    streamId: StreamID,
+    syncTimeoutSeconds: number
+  ): Promise<RunningState> {
+    const state = await this.#streamLoader.loadStream(streamId, syncTimeoutSeconds)
+    Metrics.count(STREAM_SYNC, 1)
+    const newState$ = new RunningState(state, false)
+    this.add(newState$)
+    return newState$
+  }
+
+  /**
+   * When SYNC_ALWAYS is provided, we want to reapply and re-validate
+   * the stream state.  We effectively throw out our locally stored state
+   * as it's possible that the commits that were used to construct that
+   * state are no longer valid (for example if the CACAOs used to author them
+   * have expired since they were first applied to the cached state object).
+   * But if we were the only node on the network that knew about the most recent tip,
+   * we don't want to totally forget about that, so we make sure to apply the previously
+   * known about tip so that it can still be considered alongside whatever tip we learn
+   * about from the network.
+   * @param streamId
+   * @param syncTimeoutSeconds
+   * @param existingState$
+   */
+  async _resyncStreamFromNetwork(
+    streamId: StreamID,
+    syncTimeoutSeconds: number,
+    existingState$: RunningState | null
+  ): Promise<RunningState> {
+    const resyncedState = existingState$
+      ? await this.#streamLoader.resyncStream(streamId, existingState$.tip, syncTimeoutSeconds)
+      : await this.#streamLoader.loadStream(streamId, syncTimeoutSeconds)
+
+    Metrics.count(STREAM_SYNC, 1)
+    const newState$ = new RunningState(resyncedState, false)
+    this.add(newState$)
+    return newState$
   }
 
   publishTip(state$: RunningState): void {

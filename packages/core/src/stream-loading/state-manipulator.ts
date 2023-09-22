@@ -13,6 +13,7 @@ import {
 import { CID } from 'multiformats/cid'
 import { HandlersMap } from '../handlers-map.js'
 import { LogSyncer } from './log-syncer.js'
+import cloneDeep from 'lodash.clonedeep'
 
 /**
  * @param throwOnInvalidCommit - if true, throws if there is an error applying a commit, otherwise
@@ -48,12 +49,24 @@ export class StateManipulator {
     private readonly logSyncer: LogSyncer
   ) {}
 
+  /**
+   * Applies log to state and returns a new state.  Most callers should set 'cloneInput' to true
+   * so that the original StreamState is not modified.  Some codepaths may set 'cloneInput' to false
+   * if they are confident that the StreamState has already been cloned once within the
+   * StateManipulator and so the input state that was given to the StateManipulator will not be
+   * modified.
+   */
   async _applyLog<T extends Stream>(
     handler: StreamHandler<T>,
     state: StreamState | null,
     log: AppliableStreamLog,
-    throwOnInvalidCommit: boolean
+    throwOnInvalidCommit: boolean,
+    cloneInput: boolean
   ): Promise<StreamState> {
+    if (cloneInput) {
+      state = cloneDeep(state)
+    }
+
     for (const commit of log.commits) {
       try {
         state = await handler.applyCommit(commit, this.context, state)
@@ -66,6 +79,15 @@ export class StateManipulator {
       }
     }
     return state
+  }
+
+  /**
+   * Throw an Error if the given StreamType is not something that this StateManipulator knows how
+   * to apply.
+   * @param streamType
+   */
+  assertStreamTypeAppliable(streamType: number): void {
+    this.streamTypeHandlers.get(streamType)
   }
 
   /**
@@ -84,7 +106,7 @@ export class StateManipulator {
     }
     const handler = this.streamTypeHandlers.get(streamType)
 
-    return this._applyLog(handler, null, log, opts.throwOnInvalidCommit)
+    return this._applyLog(handler, null, log, opts.throwOnInvalidCommit, true)
   }
 
   /**
@@ -195,7 +217,7 @@ export class StateManipulator {
     const initialTip = initialState.log[initialState.log.length - 1].cid
     if (firstNewCommit.prev.equals(initialTip)) {
       // the new log starts where the previous one ended
-      return this._applyLog(handler, initialState, logToApply, opts.throwOnInvalidCommit)
+      return this._applyLog(handler, initialState, logToApply, opts.throwOnInvalidCommit, true)
     }
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
@@ -235,7 +257,9 @@ export class StateManipulator {
     )
 
     // Now apply the new log to the shared state
-    return this._applyLog(handler, sharedState, logToApply, opts.throwOnInvalidCommit)
+    // Can pass false as 'cloneInput' arg to _applyLog since the 'resetStateToCommit' call above
+    // will have already cloned the input state.
+    return this._applyLog(handler, sharedState, logToApply, opts.throwOnInvalidCommit, false)
   }
 
   /**
@@ -263,7 +287,7 @@ export class StateManipulator {
     )
 
     const handler = this.streamTypeHandlers.get(initialState.type)
-    return this._applyLog(handler, null, sharedLogWithTimestamps, true)
+    return this._applyLog(handler, null, sharedLogWithTimestamps, true, true)
   }
 
   /**

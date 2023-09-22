@@ -145,12 +145,6 @@ export interface CommitData extends LogEntry {
    * If this is a signed commit that was signed using a CACAO, this contains it.
    */
   capability?: Cacao
-
-  /**
-   * An option to pass down when doing signature verification on the commit that indicated not to
-   * time-check a signature.
-   */
-  disableTimecheck?: boolean
 }
 
 /**
