@@ -59,6 +59,20 @@ function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
   return index.shouldIndexStream(model)
 }
 
+function commitAtTime(state: StreamState, timestamp: number): CommitID {
+  let commitCid: CID = state.log[0].cid
+  for (const entry of state.log) {
+    if (entry.type === CommitType.ANCHOR) {
+      if (entry.timestamp <= timestamp) {
+        commitCid = entry.cid
+      } else {
+        break
+      }
+    }
+  }
+  return CommitID.make(StreamUtils.streamIdFromState(state), commitCid)
+}
+
 export class Repository {
   /**
    * Serialize loading operations per streamId.
@@ -209,16 +223,20 @@ export class Repository {
     const optsSkippingCACAOChecks = { ...opts, skipCacaoExpirationChecks: true }
     const base$ = await this.load(commitId.baseID, optsSkippingCACAOChecks)
 
+    return this._atCommit(commitId, base$)
+  }
+
+  async _atCommit(commitId: CommitID, existingState$: RunningState): Promise<SnapshotState> {
     return this.executionQ.forStream(commitId).run(async () => {
-      const stateAtCommit = await this.streamLoader.stateAtCommit(base$.state, commitId)
+      const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
 
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
       StreamUtils.checkForCacaoExpiration(stateAtCommit)
 
       // If the provided CommitID is ahead of what we have in the cache, then we should update
       // the cache to include it.
-      if (StreamUtils.isStateSupersetOf(stateAtCommit, base$.value)) {
-        base$.next(stateAtCommit)
+      if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
+        existingState$.next(stateAtCommit)
       }
       return new SnapshotState(stateAtCommit)
     })
@@ -232,7 +250,8 @@ export class Repository {
    */
   async loadAtTime(streamId: StreamID, opts: LoadOpts): Promise<SnapshotState> {
     const base$ = await this.load(streamId.baseID, opts)
-    return this.stateManager.atTime(base$, opts.atTime)
+    const commitId = commitAtTime(base$.state, opts.atTime)
+    return this._atCommit(commitId, base$)
   }
 
   /**
