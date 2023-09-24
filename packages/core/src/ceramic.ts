@@ -603,23 +603,19 @@ export class Ceramic implements CeramicApi {
     if (this._gateway) {
       throw new Error('Writes to streams are not supported in gateway mode')
     }
-
-    const id = normalizeStreamID(streamId)
-    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
+    const id = normalizeStreamID(streamId)
 
-    const stream = streamFromState<T>(
+    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
+    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
+    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+
+    return streamFromState<T>(
       this.context,
       this._streamHandlers,
       state$.value,
       this.repository.updates$
     )
-
-    await this.repository.indexStreamIfNeeded(state$)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
-
-    return stream
   }
 
   /**

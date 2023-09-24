@@ -148,6 +148,10 @@ export class Repository {
     return this.#deps.streamLoader
   }
 
+  private get streamUpdater(): StreamUpdater {
+    return this.#deps.streamUpdater
+  }
+
   /**
    * Returns the number of streams with writes that are waiting to be anchored by the CAS.
    */
@@ -267,10 +271,25 @@ export class Repository {
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
-    const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
-    await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
-    this.logger.verbose(`Repository applied write options to stream ${streamId.toString()}`)
-    return state$
+
+    const state$ = await this._internals.load(streamId, opts)
+    this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      const originalState = state$.state
+      const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
+      if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
+        return state$ // nothing changed
+      }
+
+      state$.next(updatedState) // emit the new state
+
+      await this._internals._updateStateIfPinned(state$)
+      await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
+
+      return state$
+    })
   }
 
   /**

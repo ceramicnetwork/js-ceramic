@@ -96,37 +96,6 @@ export class StateManager {
   }
 
   /**
-   * Applies commit to the existing state
-   *
-   * @param streamId - Stream ID to update
-   * @param commit - Commit data
-   * @param opts - Stream initialization options (request anchor, wait, etc.)
-   */
-  async applyCommit(
-    streamId: StreamID,
-    commit: any,
-    opts: CreateOpts | UpdateOpts
-  ): Promise<RunningState> {
-    this.logger.verbose(`StateManager apply commit to stream ${streamId.toString()}`)
-
-    const state$ = await this.internals.load(streamId, opts)
-    this.logger.verbose(`StateManager loaded state for stream ${streamId.toString()}`)
-
-    return this.executionQ.forStream(streamId).run(async () => {
-      const cid = await this.dispatcher.storeCommit(commit, streamId)
-      this.logger.verbose(
-        `StateManager stored commit for stream ${streamId.toString()}, CID: ${cid.toString()}`
-      )
-
-      await this.internals.handleTip(state$, cid, opts)
-      this.logger.verbose(
-        `StateManager handled tip for stream ${streamId.toString()}, CID: ${cid.toString()}`
-      )
-      return state$
-    })
-  }
-
-  /**
    * Request anchor for the latest stream state
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
