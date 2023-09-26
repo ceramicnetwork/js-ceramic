@@ -24,11 +24,7 @@ import {
   type Subscription,
   catchError,
   concatMap,
-  lastValueFrom,
-  merge,
-  of,
   takeUntil,
-  timer,
 } from 'rxjs'
 
 import { ConflictResolution } from '../conflict-resolution.js'
@@ -37,7 +33,6 @@ import type { HandlersMap } from '../handlers-map.js'
 
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { PinStore } from '../store/pin-store.js'
-import { Utils } from '../utils.js'
 
 import type { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
@@ -135,10 +130,6 @@ export class RepositoryInternals {
       Metrics.count(CACHE_HIT_LOCAL, 1)
       const runningState = new RunningState(streamState, true)
       this.add(runningState)
-      const storedRequest = await this.#anchorRequestStore.load(streamId)
-      if (storedRequest !== null && this.#anchorService) {
-        this.confirmAnchorResponse(runningState, storedRequest.cid)
-      }
       return runningState
     } else {
       return undefined
@@ -282,16 +273,6 @@ export class RepositoryInternals {
     }
 
     await this.#index.indexStream(streamContent)
-  }
-
-  // From StateManager, called by Repository
-
-  /**
-   * Restart polling and handle response for a previously submitted anchor request
-   */
-  confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
-    const anchorStatus$ = this.#anchorService.pollForAnchorResponse(state$.id, cid)
-    return this.processAnchorResponse(state$, anchorStatus$)
   }
 
   /**
