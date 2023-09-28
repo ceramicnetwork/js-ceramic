@@ -1,5 +1,4 @@
 import {
-  AnchorValidator,
   AppliableStreamLog,
   CommitData,
   CommitType,
@@ -7,6 +6,7 @@ import {
   UnappliableStreamLog,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
+import type { AnchorValidator } from '../anchor/anchor-service.js'
 
 interface IpfsRecordLoader {
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>

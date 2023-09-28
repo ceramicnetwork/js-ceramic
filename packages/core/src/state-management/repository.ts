@@ -1,7 +1,6 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorOpts,
-  AnchorService,
   CommitType,
   Context,
   CreateOpts,
@@ -33,6 +32,7 @@ import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
+import type { AnchorService } from '../anchor/anchor-service.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 

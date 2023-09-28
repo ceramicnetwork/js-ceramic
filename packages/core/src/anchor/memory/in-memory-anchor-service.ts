@@ -2,13 +2,7 @@ import { CID } from 'multiformats/cid'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { TestUtils } from '@ceramicnetwork/common'
-import type {
-  AnchorProof,
-  AnchorService,
-  AnchorValidator,
-  AnchorCommit,
-  AnchorEvent,
-} from '@ceramicnetwork/common'
+import type { AnchorProof, AnchorCommit, AnchorEvent } from '@ceramicnetwork/common'
 import type { Dispatcher } from '../../dispatcher.js'
 import type { Ceramic } from '../../ceramic.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
@@ -17,6 +11,7 @@ import { CARFactory, type CAR } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { AnchorService, AnchorValidator } from '../anchor-service.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'

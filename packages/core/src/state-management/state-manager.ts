@@ -3,7 +3,6 @@ import { ExecutionQueue } from './execution-queue.js'
 import { ConflictResolution } from '../conflict-resolution.js'
 import {
   AnchorOpts,
-  AnchorService,
   AnchorStatus,
   CreateOpts,
   DiagnosticsLogger,
@@ -21,6 +20,7 @@ import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { RepositoryInternals } from './repository-internals.js'
 import { OperationType } from './operation-type.js'
+import { AnchorService } from '../anchor/anchor-service.js'
 
 export class StateManager {
   private readonly carFactory = new CARFactory()

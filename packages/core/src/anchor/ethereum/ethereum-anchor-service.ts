@@ -1,14 +1,10 @@
 import { CID } from 'multiformats/cid'
 import {
   CeramicApi,
-  AnchorService,
-  AnchorServiceAuth,
-  AuthenticatedAnchorService,
   DiagnosticsLogger,
   fetchJson,
   FetchRequest,
   AnchorEvent,
-  AnchorValidator,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import {
@@ -29,8 +25,12 @@ import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
-import { AnchorRequestStore } from '../../store/anchor-request-store'
-import { AnchorProcessingLoop } from '../anchor-processing-loop'
+import type {
+  AnchorService,
+  AnchorServiceAuth,
+  AnchorValidator,
+  AuthenticatedAnchorService,
+} from '../anchor-service.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
