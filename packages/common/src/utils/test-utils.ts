@@ -101,17 +101,18 @@ export class TestUtils {
 
   /**
    * Given a stream, continuously waits for
-   * the streams anchor status to be changed to ANCHORED
+   * the streams anchor status to be changed to `status`
    * @param stream
+   * @param status - AnchorStatus to wait for
    * @param timeout - how long to wait for
    */
-  static waitForAnchor(stream: Stream, timeout: number): Promise<void> {
+  static expectAnchorStatus(stream: Stream, status: AnchorStatus, timeout = 1000) {
     return this.waitForState(
       stream,
       timeout,
-      (s) => s.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`Expect anchored`)
+      (s) => s.anchorStatus === status,
+      (s) => {
+        throw new Error(`Expected anchor status ${status} but found ${s.anchorStatus}`)
       }
     )
   }
