@@ -76,7 +76,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       logger,
       dispatcher,
-      ceramic.anchorService as InMemoryAnchorService
+      ceramic.anchorService.validator
     )
     const handlers = new HandlersMap(logger)
     const stateManipulator = new StateManipulator(
@@ -336,7 +336,7 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       logger,
       dispatcher,
-      ceramic.anchorService as InMemoryAnchorService
+      ceramic.anchorService.validator
     )
     const handlers = new HandlersMap(logger)
     const stateManipulator = new StateManipulator(
