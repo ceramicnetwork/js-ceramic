@@ -280,9 +280,7 @@ export class EthereumAnchorService implements AnchorService {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
 
-    const requestWithError = defer(() => {
-      return this.#cas.get(streamId, tip)
-    }).pipe(
+    const requestWithError = defer(() => this.#cas.get(streamId, tip)).pipe(
       retry({
         delay: (error) => {
           this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
