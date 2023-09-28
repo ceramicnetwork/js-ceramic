@@ -4,6 +4,7 @@ import type { Observable } from 'rxjs'
 import type { CID } from 'multiformats'
 import type { CAR } from 'cartonne'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
+import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader'
 
 export type HandleEventFn = (event: AnchorEvent) => Promise<boolean> // FIXME Move termination here
 /**
@@ -114,4 +115,32 @@ export interface AnchorValidator {
    * @returns The ethereum block timestamp that includes the anchor transaction from the anchorProof
    */
   validateChainInclusion(anchorProof: AnchorProof): Promise<number>
+}
+
+export interface CASClient {
+  supportedChains(): Promise<Array<string>>
+  create(carFileReader: AnchorRequestCarFileReader, shouldRetry: boolean): Promise<AnchorEvent>
+  get(streamId: StreamID, tip: CID): Promise<AnchorEvent>
+}
+
+export class MultipleChainsError extends Error {
+  constructor() {
+    super(
+      "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
+    )
+  }
+}
+
+export class CasConnectionError extends Error {
+  constructor(streamId: StreamID, tip: CID, cause: string) {
+    super(
+      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
+    )
+  }
+}
+
+export class MaxAnchorPollingError extends Error {
+  constructor() {
+    super('Exceeded max anchor polling time limit')
+  }
 }

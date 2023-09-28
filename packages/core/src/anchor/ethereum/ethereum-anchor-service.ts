@@ -32,34 +32,18 @@ import type {
   AnchorServiceAuth,
   AnchorValidator,
   AuthenticatedAnchorService,
+  CASClient,
   HandleEventFn,
 } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
+import {
+  CasConnectionError,
+  MaxAnchorPollingError,
+  MultipleChainsError,
+} from '../anchor-service.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
-
-class MultipleChainsError extends Error {
-  constructor() {
-    super(
-      "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
-    )
-  }
-}
-
-class CasConnectionError extends Error {
-  constructor(streamId: StreamID, tip: CID, cause: string) {
-    super(
-      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
-    )
-  }
-}
-
-class MaxAnchorPollingError extends Error {
-  constructor() {
-    super('Exceeded max anchor polling time limit')
-  }
-}
 
 /**
  * Parse JSON that CAS returns.
@@ -101,7 +85,7 @@ function announcePending(streamId: StreamID, tip: CID): Observable<AnchorEvent> 
   })
 }
 
-class RemoteCAS {
+class RemoteCAS implements CASClient {
   readonly #requestsApiEndpoint: string
   readonly #chainIdApiEndpoint: string
   readonly #sendRequest: FetchRequest
@@ -179,7 +163,7 @@ export class EthereumAnchorService implements AnchorService {
 
   #chainId: string
   #store: AnchorRequestStore
-  #cas: RemoteCAS // FIXME Move In-memory close to EAS, and move the logic to CASClient
+  #cas: CASClient
 
   readonly url: string
   readonly events: Observable<AnchorEvent>
