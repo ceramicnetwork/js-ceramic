@@ -100,14 +100,12 @@ class InMemoryCAS implements CASClient {
   readonly #anchorOnRequest: boolean
   #queue: Candidate[]
   readonly #events: Subject<AnchorEvent>
-  readonly #dispatcher: Dispatcher
   readonly #anchors: Map<string, AnchorEvent> = new Map() // Maps CID of a specific anchor request to the current status of that request
 
-  constructor(anchorOnRequest: boolean, dispatcher: Dispatcher) {
+  constructor(anchorOnRequest: boolean) {
     this.#anchorOnRequest = anchorOnRequest
     this.#queue = []
     this.#events = new Subject()
-    this.#dispatcher = dispatcher
     this.#events.subscribe((event) => {
       this.#anchors.set(event.cid.toString(), event)
     })
@@ -184,27 +182,33 @@ class InMemoryCAS implements CASClient {
     return firstValueFrom(concat(fromCache$, filtered$))
   }
 
-  async _process(leaf: Candidate): Promise<void> {
-    this._startProcessingCandidate(leaf)
+  async _process(candidate: Candidate): Promise<void> {
+    this._startProcessingCandidate(candidate)
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
     const txHashCid = TestUtils.randomCID()
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
       txHash: txHashCid,
-      root: leaf.cid,
+      root: candidate.cid,
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       txType: V1_PROOF_TYPE,
     }
     txnCache.set(txHashCid.toString(), timestamp)
-    const proof = await this.#dispatcher.storeCommit(proofData)
-    const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
-    const cid = await this.#dispatcher.storeCommit(commit)
-    const witnessCar = await this._buildWitnessCAR(proof, cid)
+    const witnessCar = carFactory.build()
+    const proofCid = witnessCar.put(proofData)
+    const commit: AnchorCommit = {
+      proof: proofCid,
+      path: '',
+      prev: candidate.cid,
+      id: candidate.streamId.cid,
+    }
+    witnessCar.put(commit, { isRoot: true })
+
     this.#events.next({
       status: AnchorRequestStatusName.COMPLETED,
-      streamId: leaf.streamId,
-      cid: leaf.cid,
+      streamId: candidate.streamId,
+      cid: candidate.cid,
       message: 'CID successfully anchored',
       witnessCar: witnessCar,
     })
@@ -220,20 +224,6 @@ class InMemoryCAS implements CASClient {
       cid: candidate.cid,
       message,
     })
-  }
-
-  /**
-   * Builds the CAR file that the AnchorService responds to Ceramic with for a successfully anchored
-   * request. Contains the AnchorCommit, AnchorProof, and the merkle tree path to the anchored commit.
-   * For the InMemoryAnchorService, however, the tree is always of size one, so there are no
-   * intermediate objects from the merkle tree.
-   */
-  async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
-    const car = carFactory.build()
-    car.blocks.put(await this.#dispatcher.getIpfsBlock(proofCid))
-    car.blocks.put(await this.#dispatcher.getIpfsBlock(anchorCommitCid))
-    car.roots.push(anchorCommitCid)
-    return car
   }
 
   async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
@@ -295,8 +285,6 @@ const MAX_POLL_TIME = 86_400_000 // 24 hours
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 export class InMemoryAnchorService implements AnchorService {
-  #dispatcher: Dispatcher
-
   #store: AnchorRequestStore | undefined
   #cas: InMemoryCAS
   #maxPollTime = MAX_POLL_TIME
@@ -307,14 +295,9 @@ export class InMemoryAnchorService implements AnchorService {
   readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
 
-  constructor(
-    _config: Partial<InMemoryAnchorConfig> = {},
-    dispatcher: Dispatcher,
-    logger: DiagnosticsLogger
-  ) {
+  constructor(_config: Partial<InMemoryAnchorConfig> = {}, logger: DiagnosticsLogger) {
     this.#store = undefined
-    this.#dispatcher = dispatcher
-    this.#cas = new InMemoryCAS(_config.anchorOnRequest ?? true, dispatcher)
+    this.#cas = new InMemoryCAS(_config.anchorOnRequest ?? true)
     this.events = new Subject()
     this.validator = new InMemoryAnchorValidator()
     this.#logger = logger
@@ -329,29 +312,29 @@ export class InMemoryAnchorService implements AnchorService {
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
    * anchor service
    */
-  async getSupportedChains(): Promise<Array<string>> {
+  getSupportedChains(): Promise<Array<string>> {
     return this.#cas.supportedChains()
   }
 
   /**
    * Anchor requests
    */
-  async anchor(): Promise<void> {
-    await this.#cas.anchor()
+  anchor(): Promise<void> {
+    return this.#cas.anchor()
   }
 
   /**
    * Fails all pending anchors. Useful for testing.
    */
-  async failPendingAnchors(): Promise<void> {
-    await this.#cas.failPendingAnchors()
+  failPendingAnchors(): Promise<void> {
+    return this.#cas.failPendingAnchors()
   }
 
   /**
    * Sets all pending anchors to PROCESSING status. Useful for testing.
    */
-  async startProcessingPendingAnchors(): Promise<void> {
-    await this.#cas.startProcessingPendingAnchors()
+  startProcessingPendingAnchors(): Promise<void> {
+    return this.#cas.startProcessingPendingAnchors()
   }
 
   /**
@@ -395,28 +378,6 @@ export class InMemoryAnchorService implements AnchorService {
     } else {
       return concat(requestCreated$, anchorCompleted$).pipe(catchError(errHandler))
     }
-    // FIXME Before
-    // const carFileReader = new AnchorRequestCarFileReader(carFile)
-    // const candidate = Candidate.fromCarFileReader(carFileReader)
-    // if (this.#anchorOnRequest) {
-    //   this._process(candidate).catch((error) => {
-    //     this.#events.next({
-    //       status: AnchorRequestStatusName.FAILED,
-    //       streamId: candidate.streamId,
-    //       cid: candidate.cid,
-    //       message: error.message,
-    //     })
-    //   })
-    // } else {
-    //   this.#queue.push(candidate)
-    // }
-    // this.#events.next({
-    //   status: AnchorRequestStatusName.PENDING,
-    //   streamId: carFileReader.streamId,
-    //   cid: carFileReader.tip,
-    //   message: 'Sending anchoring request',
-    // })
-    // return this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
   }
 
   /**
@@ -448,19 +409,6 @@ export class InMemoryAnchorService implements AnchorService {
         }
       })
     )
-  }
-
-  /**
-   * Sends anchor commit to Ceramic node and instructs it to publish the commit to pubsub
-   * @param streamId
-   * @param commit
-   */
-  async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
-    const anchorCid = await this.#dispatcher.storeCommit(commit as any)
-    await new Promise<void>((resolve) => {
-      this.#dispatcher.publishTip(streamId, anchorCid).add(resolve)
-    })
-    return anchorCid
   }
 
   async close(): Promise<void> {

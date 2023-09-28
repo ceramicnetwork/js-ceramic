@@ -52,7 +52,10 @@ describe('Ceramic integration', () => {
       networkName: 'local',
       indexing: { db: databaseConnectionString.href, models: [] },
     })
-    modules.anchorService = new InMemoryAnchorService({})
+    modules.anchorService = new InMemoryAnchorService(
+      {},
+      modules.loggerProvider.getDiagnosticsLogger()
+    )
     const ceramic = new Ceramic(modules, params)
     await expect(ceramic._init(false)).rejects.toThrow(
       "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']"
