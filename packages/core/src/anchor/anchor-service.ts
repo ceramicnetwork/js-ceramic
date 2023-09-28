@@ -14,6 +14,7 @@ export type AnchorLoopHandler = {
  * Describes anchoring service behavior
  */
 export interface AnchorService {
+  readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
 
   /**
@@ -42,18 +43,18 @@ export interface AnchorService {
   requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<Observable<AnchorEvent>>
 
   /**
-   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
-   * anchor service.
-   */
-  getSupportedChains(): Promise<Array<string>>
-
-  /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the
    * given tip for the given stream.
    * @param streamId - Stream ID
    * @param tip - Tip CID of the stream
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent>
+
+  /**
+   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+   * anchor service.
+   */
+  getSupportedChains(): Promise<Array<string>>
 
   close(): Promise<void>
 }
