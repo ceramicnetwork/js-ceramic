@@ -226,6 +226,14 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   /**
+   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+   * anchor service.
+   */
+  async getSupportedChains(): Promise<Array<string>> {
+    return [this.#chainId]
+  }
+
+  /**
    * Send request to the anchoring service
    * @param carFile - CAR file containing all necessary data for the CAS to anchor
    * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
@@ -260,14 +268,6 @@ export class EthereumAnchorService implements AnchorService {
     } else {
       return concat(requestCreated$, anchorCompleted$).pipe(catchError(errHandler))
     }
-  }
-
-  /**
-   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
-   * anchor service.
-   */
-  async getSupportedChains(): Promise<Array<string>> {
-    return [this.#chainId]
   }
 
   /**

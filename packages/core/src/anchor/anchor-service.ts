@@ -4,7 +4,7 @@ import type { Observable } from 'rxjs'
 import type { CID } from 'multiformats'
 import type { CAR } from 'cartonne'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader'
+import type { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 
 export type HandleEventFn = (event: AnchorEvent) => Promise<boolean> // FIXME Move termination here
 /**
