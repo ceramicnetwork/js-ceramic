@@ -25,17 +25,34 @@ import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
-import type {
-  AnchorService,
-  AnchorServiceAuth,
-  AnchorValidator,
-  AuthenticatedAnchorService,
-} from '../anchor-service.js'
-import { CasConnectionError, MaxAnchorPollingError } from '../anchor-service.js'
-import { RemoteCAS } from './remote-cas.js'
+import type { AnchorService, AnchorServiceAuth, AnchorValidator, AuthenticatedAnchorService } from '../anchor-service.js'
+import { AnchorRequestStore } from '../../store/anchor-request-store'
+import { AnchorProcessingLoop } from '../anchor-processing-loop'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
+
+class MultipleChainsError extends Error {
+  constructor() {
+    super(
+      "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
+    )
+  }
+}
+
+class CasConnectionError extends Error {
+  constructor(streamId: StreamID, tip: CID, cause: string) {
+    super(
+      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
+    )
+  }
+}
+
+class MaxAnchorPollingError extends Error {
+  constructor() {
+    super('Exceeded max anchor polling time limit')
+  }
+}
 
 /**
  * Parse JSON that CAS returns.
@@ -81,14 +98,16 @@ function announcePending(streamId: StreamID, tip: CID): Observable<AnchorEvent> 
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
 export class EthereumAnchorService implements AnchorService {
+  readonly #requestsApiEndpoint: string
+  readonly #chainIdApiEndpoint: string
   readonly #logger: DiagnosticsLogger
   /**
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
   readonly #pollInterval: number
   readonly #maxPollTime: number
+  readonly #sendRequest: FetchRequest
   readonly #events: Subject<AnchorEvent>
-  readonly #cas: RemoteCAS
   #chainId: string
 
   readonly url: string
@@ -103,14 +122,16 @@ export class EthereumAnchorService implements AnchorService {
     maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson
   ) {
+    this.#requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
+    this.#chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#logger = logger
     this.#pollInterval = pollInterval
+    this.#sendRequest = sendRequest
     this.#maxPollTime = maxPollTime
     this.#events = new Subject()
     this.events = this.#events
     this.url = this.anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
-    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, maxPollTime, sendRequest)
   }
 
   /**
@@ -123,9 +144,28 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   async init(): Promise<void> {
-    const supportedChains = await this.#cas.supportedChains()
-    this.#chainId = supportedChains[0]
+    // Get the chainIds supported by our anchor service
+    const response = await this.#sendRequest(this.#chainIdApiEndpoint)
+    if (response.supportedChains.length > 1) {
+      throw new MultipleChainsError()
+    }
+    this.#chainId = response.supportedChains[0]
     await this.validator.init(this.#chainId)
+    // let store: AnchorRequestStore
+    // FIXME
+    // pass store, create loop, update events, tie up events
+    // const loop = new AnchorProcessingLoop(store.infiniteList(10), async (value) => {
+    //   const entry = value.value
+    //   if (entry.status !== 'requested') {
+    //     console.log('create')
+    //     // save and handle
+    //     // status == terminal ? remove : save
+    //   } else {
+    //     console.log('ask')
+    //     // save and handle
+    //     // status == terminal ? remove : save
+    //   }
+    // })
   }
 
   /**
@@ -180,7 +220,35 @@ export class EthereumAnchorService implements AnchorService {
     carFileReader: AnchorRequestCarFileReader,
     shouldRetry: boolean
   ): Observable<AnchorEvent> {
-    const sendRequest$ = this.#cas.create$(carFileReader, shouldRetry)
+    let sendRequest$ = defer(() =>
+      this.#sendRequest(this.#requestsApiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/vnd.ipld.car',
+        },
+        body: carFileReader.carFile.bytes,
+      })
+    )
+
+    if (shouldRetry) {
+      sendRequest$ = sendRequest$.pipe(
+        retry({
+          delay: (error) => {
+            this.#logger.warn(
+              new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
+            )
+            return timer(this.#pollInterval)
+          },
+        })
+      )
+    } else {
+      sendRequest$ = sendRequest$.pipe(
+        catchError((error) => {
+          throw new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
+        })
+      )
+    }
+
     return sendRequest$.pipe(this._parseResponse(carFileReader.streamId, carFileReader.tip))
   }
 
@@ -193,8 +261,9 @@ export class EthereumAnchorService implements AnchorService {
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
+    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
 
-    const requestWithError = defer(() => this.#cas.get(streamId, tip)).pipe(
+    const requestWithError = defer(() => this.#sendRequest(requestUrl)).pipe(
       retry({
         delay: (error) => {
           this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
@@ -212,6 +281,7 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
+      this._parseResponse(streamId, tip),
       this._updateEvents()
     )
   }
@@ -225,7 +295,7 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   async close(): Promise<void> {
-    await this.#cas.close()
+    // Do Nothing
   }
 }
 
