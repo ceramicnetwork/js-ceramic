@@ -273,11 +273,10 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      // dag.import is called 4 times.  Once when the genesis commit is created, twice with the
-      // AnchorCommit itself (once when the InMemoryAnchorService publishes the AnchorCommit and
-      // once when Ceramic applies it), and once with the CAR file with the merkle witness
-      // received from the CAS.
-      expect(dagImportSpy).toHaveBeenCalledTimes(4)
+      // dag.import is called 2 times:
+      // 1) when the genesis commit is created on Ceramic side,
+      // 2) when Ceramic applies it
+      expect(dagImportSpy).toHaveBeenCalledTimes(2)
       dagImportSpy.mockClear()
     })
 
@@ -412,18 +411,6 @@ describe('anchor', () => {
       test('Anchor completed for non tip should not remove any requests from the store if the tip has been requested but not anchored', async () => {
         // @ts-ignore anchorRequestStore is private
         const anchorRequestStore = ceramic.repository.anchorRequestStore
-
-        // This replicates receiving the anchor commit via pubsub first
-        const originalPublishAnchorCommit =
-          inMemoryAnchorService._publishAnchorCommit.bind(inMemoryAnchorService)
-        const publishAnchorCommitSpy = jest.spyOn(inMemoryAnchorService, '_publishAnchorCommit')
-        publishAnchorCommitSpy.mockImplementationOnce(
-          async (streamId: StreamID, commit: AnchorCommit) => {
-            const anchorCommit = await originalPublishAnchorCommit(streamId, commit)
-            await ceramic.repository.handleUpdateFromNetwork(streamId, anchorCommit)
-            return anchorCommit
-          }
-        )
 
         const tile = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
         const stream$ = await ceramic.repository.load(tile.id, {})

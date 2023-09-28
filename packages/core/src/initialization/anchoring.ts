@@ -7,7 +7,6 @@ import {
   EthereumAnchorService,
 } from '../anchor/ethereum/ethereum-anchor-service.js'
 import type { AnchorService } from '../anchor/anchor-service.js'
-import type { Dispatcher } from '../dispatcher.js'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
@@ -118,11 +117,10 @@ export function makeAnchorService(
   config: CeramicConfig, // FIXME and partial inmemory options
   ethereumRpcUrl: string | undefined,
   network: Networks,
-  logger: DiagnosticsLogger,
-  dispatcher: Dispatcher
+  logger: DiagnosticsLogger
 ): AnchorService {
   if (network === Networks.INMEMORY) {
-    return new InMemoryAnchorService(config as any, dispatcher, logger) // FIXME Dependency hell
+    return new InMemoryAnchorService(config as any, logger)
   }
   const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
   if (!config.readOnly) {
