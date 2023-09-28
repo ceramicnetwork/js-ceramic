@@ -75,6 +75,22 @@ class InMemoryAnchorValidator implements AnchorValidator {
   }
 }
 
+class InMemoryCAS {
+  async supportedChains(): Promise<Array<string>> {
+    throw new Error(`InMemoryCAS.supportedChains: not implemented`)
+  }
+
+  async create(
+    carFileReader: AnchorRequestCarFileReader,
+    shouldRetry: boolean
+  ): Promise<AnchorEvent> {
+    throw new Error(`InMemoryCAS.create: not implemented`)
+  }
+  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    throw new Error(`InMemoryCAS.get: not implemented`)
+  }
+}
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
@@ -82,7 +98,6 @@ export class InMemoryAnchorService implements AnchorService {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
 
-  readonly #anchorDelay: number
   readonly #anchorOnRequest: boolean
   readonly #events: Subject<AnchorEvent>
 
@@ -97,7 +112,6 @@ export class InMemoryAnchorService implements AnchorService {
   readonly validator: AnchorValidator
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
-    this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
     this.#store = undefined
     this.#events = new Subject()
@@ -107,7 +121,8 @@ export class InMemoryAnchorService implements AnchorService {
     this.validator = new InMemoryAnchorValidator()
   }
 
-  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> { // FIXME add onEvent
+  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
+    // FIXME add onEvent
     this.#store = store
   }
 
@@ -305,17 +320,13 @@ export class InMemoryAnchorService implements AnchorService {
 
     const witnessCar = await this._buildWitnessCAR(proof, cid)
 
-    // add a delay
-    const handle = setTimeout(() => {
-      this.#events.next({
-        status: AnchorRequestStatusName.COMPLETED,
-        streamId: leaf.streamId,
-        cid: leaf.cid,
-        message: 'CID successfully anchored',
-        witnessCar: witnessCar,
-      })
-      clearTimeout(handle)
-    }, this.#anchorDelay)
+    this.#events.next({
+      status: AnchorRequestStatusName.COMPLETED,
+      streamId: leaf.streamId,
+      cid: leaf.cid,
+      message: 'CID successfully anchored',
+      witnessCar: witnessCar,
+    })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
