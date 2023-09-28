@@ -1,7 +1,22 @@
 import { CID } from 'multiformats/cid'
-import { Observable, Subject, concat, of } from 'rxjs'
+import {
+  Observable,
+  Subject,
+  concat,
+  of,
+  from,
+  lastValueFrom,
+  catchError,
+  firstValueFrom,
+  defer,
+  retry,
+  timer,
+  expand,
+  concatMap,
+  tap,
+} from 'rxjs'
 import { filter } from 'rxjs/operators'
-import { TestUtils } from '@ceramicnetwork/common'
+import { type DiagnosticsLogger, TestUtils } from '@ceramicnetwork/common'
 import type { AnchorProof, AnchorCommit, AnchorEvent } from '@ceramicnetwork/common'
 import type { Dispatcher } from '../../dispatcher.js'
 import type { Ceramic } from '../../ceramic.js'
@@ -75,62 +90,40 @@ class InMemoryAnchorValidator implements AnchorValidator {
   }
 }
 
-class InMemoryCAS {
-  async supportedChains(): Promise<Array<string>> {
-    throw new Error(`InMemoryCAS.supportedChains: not implemented`)
-  }
-
-  async create(
-    carFileReader: AnchorRequestCarFileReader,
-    shouldRetry: boolean
-  ): Promise<AnchorEvent> {
-    throw new Error(`InMemoryCAS.create: not implemented`)
-  }
-  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
-    throw new Error(`InMemoryCAS.get: not implemented`)
+class CasConnectionError extends Error {
+  constructor(streamId: StreamID, tip: CID, cause: string) {
+    super(
+      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
+    )
   }
 }
 
-/**
- * In-memory anchor service - used locally, not meant to be used in production code
- */
-export class InMemoryAnchorService implements AnchorService {
-  #ceramic: Ceramic
-  #dispatcher: Dispatcher
+class MaxAnchorPollingError extends Error {
+  constructor() {
+    super('Exceeded max anchor polling time limit')
+  }
+}
 
+// FIXME Fucking cleanup
+class InMemoryCAS {
   readonly #anchorOnRequest: boolean
+  #queue: Candidate[]
   readonly #events: Subject<AnchorEvent>
+  readonly #dispatcher: Dispatcher
+  readonly #anchors: Map<string, AnchorEvent> = new Map() // Maps CID of a specific anchor request to the current status of that request
 
-  // Maps CID of a specific anchor request to the current status of that request
-  readonly #anchors: Map<string, AnchorEvent> = new Map()
-
-  #queue: Candidate[] = []
-  #store: AnchorRequestStore | undefined
-
-  readonly url = '<inmemory>'
-  readonly events: Observable<AnchorEvent>
-  readonly validator: AnchorValidator
-
-  constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
-    this.#anchorOnRequest = _config.anchorOnRequest ?? true
-    this.#store = undefined
+  constructor(anchorOnRequest: boolean, dispatcher: Dispatcher) {
+    this.#anchorOnRequest = anchorOnRequest
+    this.#queue = []
     this.#events = new Subject()
-    // Remember the most recent AnchorEvent for each anchor request
-    this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
-    this.events = this.#events
-    this.validator = new InMemoryAnchorValidator()
+    this.#dispatcher = dispatcher
+    this.#events.subscribe((event) => {
+      this.#anchors.set(event.cid.toString(), event)
+    })
   }
 
-  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
-    // FIXME add onEvent
-    this.#store = store
-  }
-
-  /**
-   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
-   * anchor service
-   */
-  async getSupportedChains(): Promise<Array<string>> {
+  // FIXME interface with RemoteCAS
+  async supportedChains(): Promise<Array<string>> {
     return [CHAIN_ID]
   }
 
@@ -141,35 +134,6 @@ export class InMemoryAnchorService implements AnchorService {
     const candidates = await this._findCandidates()
     for (const candidate of candidates) {
       await this._process(candidate)
-    }
-
-    this.#queue = [] // reset
-  }
-
-  /**
-   * Fails all pending anchors. Useful for testing.
-   */
-  async failPendingAnchors(): Promise<void> {
-    const candidates = await this._findCandidates()
-    for (const candidate of candidates) {
-      this.#events.next({
-        status: AnchorRequestStatusName.FAILED,
-        streamId: candidate.streamId,
-        cid: candidate.cid,
-        message: 'anchor failed',
-      })
-    }
-
-    this.#queue = [] // reset
-  }
-
-  /**
-   * Sets all pending anchors to PROCESSING status. Useful for testing.
-   */
-  async startProcessingPendingAnchors(): Promise<void> {
-    const candidates = await this._findCandidates()
-    for (const candidate of candidates) {
-      this._startProcessingCandidate(candidate, 'anchor is being processed')
     }
 
     this.#queue = [] // reset
@@ -197,6 +161,81 @@ export class InMemoryAnchorService implements AnchorService {
     })
   }
 
+  // FIXME interface with RemoteCAS
+  async create(
+    carFileReader: AnchorRequestCarFileReader,
+    shouldRetry: boolean
+  ): Promise<AnchorEvent> {
+    const candidate = Candidate.fromCarFileReader(carFileReader)
+    const streamId = candidate.streamId
+    const tip = candidate.cid
+    if (this.#anchorOnRequest) {
+      this._process(candidate).catch((error) => {
+        this.#events.next({
+          status: AnchorRequestStatusName.FAILED,
+          streamId: streamId,
+          cid: tip,
+          message: error.message,
+        })
+      })
+    } else {
+      this.#queue.push(candidate)
+      this.#events.next({
+        status: AnchorRequestStatusName.PENDING,
+        streamId: streamId,
+        cid: tip,
+        message: 'Sending anchoring request',
+      })
+    }
+    const filtered$ = this.#events.pipe(
+      filter((e) => e.streamId.equals(streamId) && e.cid.equals(tip))
+    )
+    const fromCache$ = this.#anchors.has(tip.toString())
+      ? of(this.#anchors.get(tip.toString()))
+      : of()
+    return firstValueFrom(concat(fromCache$, filtered$))
+  }
+
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
+    const anchorResponse = this.#anchors.get(tip.toString())
+    const feed$ = this.#events.pipe(
+      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
+    )
+    if (anchorResponse) {
+      return concat(of(anchorResponse), feed$)
+    } else {
+      return feed$
+    }
+  }
+
+  async _process(leaf: Candidate): Promise<void> {
+    this._startProcessingCandidate(leaf)
+    // creates fake anchor commit
+    const timestamp = Math.floor(Date.now() / 1000)
+    const txHashCid = TestUtils.randomCID()
+    const proofData: AnchorProof = {
+      chainId: CHAIN_ID,
+      txHash: txHashCid,
+      root: leaf.cid,
+      //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
+      txType: V1_PROOF_TYPE,
+    }
+    txnCache.set(txHashCid.toString(), timestamp)
+    const proof = await this.#dispatcher.storeCommit(proofData)
+    const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
+    const cid = await this.#dispatcher.storeCommit(commit as any)
+
+    const witnessCar = await this._buildWitnessCAR(proof, cid)
+
+    this.#events.next({
+      status: AnchorRequestStatusName.COMPLETED,
+      streamId: leaf.streamId,
+      cid: leaf.cid,
+      message: 'CID successfully anchored',
+      witnessCar: witnessCar,
+    })
+  }
+
   _startProcessingCandidate(candidate: Candidate, message?: string): void {
     if (!message) {
       message = `Processing request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()}`
@@ -207,6 +246,159 @@ export class InMemoryAnchorService implements AnchorService {
       cid: candidate.cid,
       message,
     })
+  }
+
+  /**
+   * Builds the CAR file that the AnchorService responds to Ceramic with for a successfully anchored
+   * request. Contains the AnchorCommit, AnchorProof, and the merkle tree path to the anchored commit.
+   * For the InMemoryAnchorService, however, the tree is always of size one, so there are no
+   * intermediate objects from the merkle tree.
+   */
+  async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
+    const car = carFactory.build()
+    car.blocks.put(await this.#dispatcher.getIpfsBlock(proofCid))
+    car.blocks.put(await this.#dispatcher.getIpfsBlock(anchorCommitCid))
+    car.roots.push(anchorCommitCid)
+    return car
+  }
+
+  // FIXME interface with RemoteCAS
+  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    const found = this.#anchors.get(tip.toString())
+    if (found) {
+      return found
+    }
+    return firstValueFrom(
+      this.#events.pipe(filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip)))
+    )
+  }
+
+  async failPendingAnchors(): Promise<void> {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
+      this.#events.next({
+        status: AnchorRequestStatusName.FAILED,
+        streamId: candidate.streamId,
+        cid: candidate.cid,
+        message: 'anchor failed',
+      })
+    }
+
+    this.#queue = [] // reset
+  }
+
+  /**
+   * Sets all pending anchors to PROCESSING status. Useful for testing.
+   */
+  async startProcessingPendingAnchors(reset = false): Promise<void> {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
+      this._startProcessingCandidate(candidate, 'anchor is being processed')
+    }
+    if (reset) {
+      this.#queue = []
+    }
+  }
+
+  async close() {
+    this.#events.complete()
+  }
+}
+
+// FIXME from EAS
+function announcePending(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
+  return of({
+    status: AnchorRequestStatusName.PENDING,
+    streamId: streamId,
+    cid: tip,
+    message: 'Sending anchoring request',
+  })
+}
+
+const DEFAULT_POLL_INTERVAL = 500 // 500 milliseconds
+const MAX_POLL_TIME = 86_400_000 // 24 hours
+
+/**
+ * In-memory anchor service - used locally, not meant to be used in production code
+ */
+export class InMemoryAnchorService implements AnchorService {
+  #ceramic: Ceramic
+  #dispatcher: Dispatcher
+
+  readonly #anchorOnRequest: boolean
+  readonly #events: Subject<AnchorEvent>
+
+  // Maps CID of a specific anchor request to the current status of that request
+  readonly #anchors: Map<string, AnchorEvent> = new Map()
+
+  #queue: Candidate[] = []
+  #store: AnchorRequestStore | undefined
+  #cas: InMemoryCAS
+  #maxPollTime = MAX_POLL_TIME
+  #logger: DiagnosticsLogger
+
+  readonly url = '<inmemory>'
+  readonly events: Observable<AnchorEvent>
+  readonly validator: AnchorValidator
+  #pollInterval = DEFAULT_POLL_INTERVAL
+
+  constructor(
+    _config: Partial<InMemoryAnchorConfig> = {},
+    dispatcher: Dispatcher,
+    logger: DiagnosticsLogger
+  ) {
+    this.#anchorOnRequest = _config.anchorOnRequest ?? true
+    this.#store = undefined
+    this.#events = new Subject()
+    // Remember the most recent AnchorEvent for each anchor request
+    this.#events.subscribe((event) => {
+      this.#anchors.set(event.cid.toString(), event)
+    })
+    this.#dispatcher = dispatcher
+    this.#cas = new InMemoryCAS(_config.anchorOnRequest ?? true, dispatcher)
+    this.events = this.#events
+    this.validator = new InMemoryAnchorValidator()
+    this.#logger = logger
+  }
+
+  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
+    // FIXME add onEvent
+    this.#store = store
+  }
+
+  /**
+   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+   * anchor service
+   */
+  async getSupportedChains(): Promise<Array<string>> {
+    return this.#cas.supportedChains()
+  }
+
+  /**
+   * Anchor requests
+   */
+  async anchor(): Promise<void> {
+    await this.#cas.anchor()
+    // const candidates = await this._findCandidates()
+    // for (const candidate of candidates) {
+    //   await this._process(candidate)
+    // }
+    //
+    // this.#queue = [] // reset
+  }
+
+  /**
+   * Fails all pending anchors. Useful for testing.
+   */
+  async failPendingAnchors(): Promise<void> {
+    await this.#cas.failPendingAnchors()
+  }
+
+  /**
+   * Sets all pending anchors to PROCESSING status. Useful for testing.
+   */
+  async startProcessingPendingAnchors(): Promise<void> {
+    await this.#cas.startProcessingPendingAnchors()
   }
 
   /**
@@ -225,31 +417,54 @@ export class InMemoryAnchorService implements AnchorService {
    * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
    *   request before returning.
    */
-  async requestAnchor(
-    carFile: CAR,
-    waitForConfirmation: boolean
-  ): Promise<Observable<AnchorEvent>> {
+  async requestAnchor(carFile: CAR, waitForConfirmation = false): Promise<Observable<AnchorEvent>> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
-    const candidate = Candidate.fromCarFileReader(carFileReader)
-    if (this.#anchorOnRequest) {
-      this._process(candidate).catch((error) => {
-        this.#events.next({
-          status: AnchorRequestStatusName.FAILED,
-          streamId: candidate.streamId,
-          cid: candidate.cid,
-          message: error.message,
-        })
+    const streamId = carFileReader.streamId
+    const tip = carFileReader.tip
+
+    const requestCreated$ = concat(
+      announcePending(streamId, tip),
+      from(this.#cas.create(carFileReader, !waitForConfirmation))
+    )
+
+    const anchorCompleted$ = this.pollForAnchorResponse(streamId, tip)
+
+    const errHandler = (error: Error) =>
+      of<AnchorEvent>({
+        status: AnchorRequestStatusName.FAILED,
+        streamId: streamId,
+        cid: tip,
+        message: error.message,
       })
+
+    if (waitForConfirmation) {
+      await lastValueFrom(requestCreated$)
+      return anchorCompleted$.pipe(catchError(errHandler))
     } else {
-      this.#queue.push(candidate)
+      return concat(requestCreated$, anchorCompleted$).pipe(catchError(errHandler))
     }
-    this.#events.next({
-      status: AnchorRequestStatusName.PENDING,
-      streamId: carFileReader.streamId,
-      cid: carFileReader.tip,
-      message: 'Sending anchoring request',
-    })
-    return this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
+    // FIXME Before
+    // const carFileReader = new AnchorRequestCarFileReader(carFile)
+    // const candidate = Candidate.fromCarFileReader(carFileReader)
+    // if (this.#anchorOnRequest) {
+    //   this._process(candidate).catch((error) => {
+    //     this.#events.next({
+    //       status: AnchorRequestStatusName.FAILED,
+    //       streamId: candidate.streamId,
+    //       cid: candidate.cid,
+    //       message: error.message,
+    //     })
+    //   })
+    // } else {
+    //   this.#queue.push(candidate)
+    // }
+    // this.#events.next({
+    //   status: AnchorRequestStatusName.PENDING,
+    //   streamId: carFileReader.streamId,
+    //   cid: carFileReader.tip,
+    //   message: 'Sending anchoring request',
+    // })
+    // return this.pollForAnchorResponse(carFileReader.streamId, carFileReader.tip)
   }
 
   /**
@@ -259,15 +474,29 @@ export class InMemoryAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-    const anchorResponse = this.#anchors.get(tip.toString())
-    const feed$ = this.#events.pipe(
-      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
+    const started = new Date().getTime()
+    const maxTime = started + this.#maxPollTime
+
+    const requestWithError = defer(() => this.#cas.get(streamId, tip)).pipe(
+      retry({
+        delay: (error) => {
+          this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
+          return timer(this.#pollInterval)
+        },
+      })
     )
-    if (anchorResponse) {
-      return concat(of(anchorResponse), feed$)
-    } else {
-      return feed$
-    }
+
+    return requestWithError.pipe(
+      expand(() => {
+        const now = new Date().getTime()
+        if (now > maxTime) {
+          throw new MaxAnchorPollingError()
+        } else {
+          return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
+        }
+      }),
+      tap((event) => this.#events.next(event))
+    )
   }
 
   /**
@@ -283,61 +512,7 @@ export class InMemoryAnchorService implements AnchorService {
     return anchorCid
   }
 
-  /**
-   * Builds the CAR file that the AnchorService responds to Ceramic with for a successfully anchored
-   * request. Contains the AnchorCommit, AnchorProof, and the merkle tree path to the anchored commit.
-   * For the InMemoryAnchorService, however, the tree is always of size one, so there are no
-   * intermediate objects from the merkle tree.
-   */
-  async _buildWitnessCAR(proofCid: CID, anchorCommitCid: CID): Promise<CAR> {
-    const car = carFactory.build()
-    car.blocks.put(await this.#dispatcher.getIpfsBlock(proofCid))
-    car.blocks.put(await this.#dispatcher.getIpfsBlock(anchorCommitCid))
-    car.roots.push(anchorCommitCid)
-    return car
-  }
-
-  /**
-   * Process single candidate
-   * @private
-   */
-  async _process(leaf: Candidate): Promise<void> {
-    this._startProcessingCandidate(leaf)
-    // creates fake anchor commit
-    const timestamp = Math.floor(Date.now() / 1000)
-    const txHashCid = TestUtils.randomCID()
-    const proofData: AnchorProof = {
-      chainId: CHAIN_ID,
-      txHash: txHashCid,
-      root: leaf.cid,
-      //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
-      txType: V1_PROOF_TYPE,
-    }
-    txnCache.set(txHashCid.toString(), timestamp)
-    const proof = await this.#dispatcher.storeCommit(proofData)
-    const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
-    const cid = await this._publishAnchorCommit(leaf.streamId, commit)
-
-    const witnessCar = await this._buildWitnessCAR(proof, cid)
-
-    this.#events.next({
-      status: AnchorRequestStatusName.COMPLETED,
-      streamId: leaf.streamId,
-      cid: leaf.cid,
-      message: 'CID successfully anchored',
-      witnessCar: witnessCar,
-    })
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validateChainInclusion(proof: AnchorProof): Promise<number> {
-    const txHashString = proof.txHash.toString()
-    if (!txnCache.has(txHashString)) {
-      throw new Error(
-        `Txn ${proof.txHash.toString()} was not recently anchored by the InMemoryAnchorService`
-      )
-    }
-
-    return txnCache.get(txHashString)
+  async close(): Promise<void> {
+    this.#events.complete()
   }
 }

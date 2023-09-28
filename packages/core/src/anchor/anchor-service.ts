@@ -51,6 +51,8 @@ export interface AnchorService {
    * anchor service.
    */
   getSupportedChains(): Promise<Array<string>>
+
+  close(): Promise<void>
 }
 
 export interface AuthenticatedAnchorService extends AnchorService {

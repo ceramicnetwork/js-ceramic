@@ -353,7 +353,6 @@ export class Ceramic implements CeramicApi {
     const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
     const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
-    const anchorService = makeAnchorService(config, ethereumRpcUrl, networkOptions.name, logger)
     const providersCache = new ProvidersCache(ethereumRpcUrl)
 
     const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}
@@ -380,6 +379,13 @@ export class Ceramic implements CeramicApi {
       shutdownSignal,
       !config.disablePeerDataSync,
       maxQueriesPerSecond
+    )
+    const anchorService = makeAnchorService(
+      config,
+      ethereumRpcUrl,
+      networkOptions.name,
+      logger,
+      dispatcher
     )
     const pinStoreOptions = {
       pinningEndpoints: config.ipfsPinningEndpoints,
@@ -894,6 +900,7 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
+    await this.anchorService.close()
     await this.anchorResumingService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()
