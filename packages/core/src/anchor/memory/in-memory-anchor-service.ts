@@ -13,7 +13,6 @@ import {
   timer,
   expand,
   concatMap,
-  tap,
 } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { type DiagnosticsLogger, TestUtils } from '@ceramicnetwork/common'
@@ -25,7 +24,14 @@ import { CARFactory, type CAR } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
-import type { AnchorService, AnchorValidator, HandleEventFn } from '../anchor-service.js'
+import type {
+  AnchorService,
+  AnchorValidator,
+  CASClient,
+  CasConnectionError,
+  HandleEventFn,
+  MaxAnchorPollingError,
+} from '../anchor-service.js'
 import { InMemoryAnchorValidator, TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 
@@ -64,22 +70,7 @@ function groupCandidatesByStreamId(candidates: Candidate[]): Record<string, Cand
   return result
 }
 
-class CasConnectionError extends Error {
-  constructor(streamId: StreamID, tip: CID, cause: string) {
-    super(
-      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
-    )
-  }
-}
-
-class MaxAnchorPollingError extends Error {
-  constructor() {
-    super('Exceeded max anchor polling time limit')
-  }
-}
-
-// FIXME Fucking cleanup
-class InMemoryCAS {
+class InMemoryCAS implements CASClient {
   readonly #anchorOnRequest: boolean
   #queue: Candidate[]
   readonly #events: Subject<AnchorEvent>
@@ -96,7 +87,6 @@ class InMemoryCAS {
     })
   }
 
-  // FIXME interface with RemoteCAS
   async supportedChains(): Promise<Array<string>> {
     return [CHAIN_ID]
   }
@@ -105,7 +95,7 @@ class InMemoryCAS {
    * Anchor requests
    */
   async anchor(): Promise<void> {
-    const candidates = await this._findCandidates()
+    const candidates = await this.findCandidates()
     for (const candidate of candidates) {
       await this._process(candidate)
     }
@@ -115,9 +105,8 @@ class InMemoryCAS {
 
   /**
    * Filter candidates by stream and DIDs
-   * @private
    */
-  async _findCandidates(): Promise<Candidate[]> {
+  private async findCandidates(): Promise<Candidate[]> {
     const groupedCandidates = groupCandidatesByStreamId(this.#queue)
     // Select last candidate per stream, mark others REPLACED
     return Object.values(groupedCandidates).map((candidates) => {
@@ -135,7 +124,6 @@ class InMemoryCAS {
     })
   }
 
-  // FIXME interface with RemoteCAS
   async create(
     carFileReader: AnchorRequestCarFileReader,
     shouldRetry: boolean
@@ -170,18 +158,6 @@ class InMemoryCAS {
     return firstValueFrom(concat(fromCache$, filtered$))
   }
 
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-    const anchorResponse = this.#anchors.get(tip.toString())
-    const feed$ = this.#events.pipe(
-      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
-    )
-    if (anchorResponse) {
-      return concat(of(anchorResponse), feed$)
-    } else {
-      return feed$
-    }
-  }
-
   async _process(leaf: Candidate): Promise<void> {
     this._startProcessingCandidate(leaf)
     // creates fake anchor commit
@@ -197,10 +173,8 @@ class InMemoryCAS {
     TRANSACTION_CACHE.set(txHashCid.toString(), timestamp)
     const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
-    const cid = await this.#dispatcher.storeCommit(commit as any)
-
+    const cid = await this.#dispatcher.storeCommit(commit)
     const witnessCar = await this._buildWitnessCAR(proof, cid)
-
     this.#events.next({
       status: AnchorRequestStatusName.COMPLETED,
       streamId: leaf.streamId,
@@ -236,7 +210,6 @@ class InMemoryCAS {
     return car
   }
 
-  // FIXME interface with RemoteCAS
   async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const found = this.#anchors.get(tip.toString())
     if (found) {
@@ -248,7 +221,7 @@ class InMemoryCAS {
   }
 
   async failPendingAnchors(): Promise<void> {
-    const candidates = await this._findCandidates()
+    const candidates = await this.findCandidates()
     for (const candidate of candidates) {
       this.#events.next({
         status: AnchorRequestStatusName.FAILED,
@@ -265,7 +238,7 @@ class InMemoryCAS {
    * Sets all pending anchors to PROCESSING status. Useful for testing.
    */
   async startProcessingPendingAnchors(reset = false): Promise<void> {
-    const candidates = await this._findCandidates()
+    const candidates = await this.findCandidates()
     for (const candidate of candidates) {
       this._startProcessingCandidate(candidate, 'anchor is being processed')
     }
@@ -296,41 +269,27 @@ const MAX_POLL_TIME = 86_400_000 // 24 hours
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 export class InMemoryAnchorService implements AnchorService {
-  #ceramic: Ceramic
   #dispatcher: Dispatcher
 
-  readonly #anchorOnRequest: boolean
-  readonly #events: Subject<AnchorEvent>
-
-  // Maps CID of a specific anchor request to the current status of that request
-  readonly #anchors: Map<string, AnchorEvent> = new Map()
-
-  #queue: Candidate[] = []
   #store: AnchorRequestStore | undefined
   #cas: InMemoryCAS
   #maxPollTime = MAX_POLL_TIME
   #logger: DiagnosticsLogger
+  #pollInterval = DEFAULT_POLL_INTERVAL
 
   readonly url = '<inmemory>'
   readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
-  #pollInterval = DEFAULT_POLL_INTERVAL
 
   constructor(
     _config: Partial<InMemoryAnchorConfig> = {},
     dispatcher: Dispatcher,
     logger: DiagnosticsLogger
   ) {
-    this.#anchorOnRequest = _config.anchorOnRequest ?? true
     this.#store = undefined
-    this.#events = new Subject()
-    // Remember the most recent AnchorEvent for each anchor request
-    this.#events.subscribe((event) => {
-      this.#anchors.set(event.cid.toString(), event)
-    })
     this.#dispatcher = dispatcher
     this.#cas = new InMemoryCAS(_config.anchorOnRequest ?? true, dispatcher)
-    this.events = this.#events
+    this.events = new Subject()
     this.validator = new InMemoryAnchorValidator()
     this.#logger = logger
   }
@@ -353,12 +312,6 @@ export class InMemoryAnchorService implements AnchorService {
    */
   async anchor(): Promise<void> {
     await this.#cas.anchor()
-    // const candidates = await this._findCandidates()
-    // for (const candidate of candidates) {
-    //   await this._process(candidate)
-    // }
-    //
-    // this.#queue = [] // reset
   }
 
   /**
@@ -381,8 +334,7 @@ export class InMemoryAnchorService implements AnchorService {
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: Ceramic) {
-    this.#ceramic = ceramic
-    this.#dispatcher = this.#ceramic.dispatcher
+    // Do Nothing
   }
 
   /**
@@ -468,8 +420,7 @@ export class InMemoryAnchorService implements AnchorService {
         } else {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
-      }),
-      tap((event) => this.#events.next(event))
+      })
     )
   }
 
@@ -487,6 +438,6 @@ export class InMemoryAnchorService implements AnchorService {
   }
 
   async close(): Promise<void> {
-    this.#events.complete()
+    // Do Nothing Yet
   }
 }

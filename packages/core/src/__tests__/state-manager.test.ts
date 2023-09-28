@@ -413,8 +413,6 @@ describe('anchor', () => {
         // @ts-ignore anchorRequestStore is private
         const anchorRequestStore = ceramic.repository.anchorRequestStore
 
-        const pollForAnchorResponseSpy = jest.spyOn(inMemoryAnchorService, 'pollForAnchorResponse')
-
         // This replicates receiving the anchor commit via pubsub first
         const originalPublishAnchorCommit =
           inMemoryAnchorService._publishAnchorCommit.bind(inMemoryAnchorService)
@@ -445,22 +443,11 @@ describe('anchor', () => {
 
         // Create the 2nd commit that is valid because it builds on the anchor commit
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
-        // Emulate CAS responses to the 2nd commit
-        const secondAnchorEvent$ = new Subject<AnchorEvent>()
-        pollForAnchorResponseSpy.mockReturnValueOnce(secondAnchorEvent$)
         // Anchor the 2nd commit and subscribe
         await ceramic.repository.anchor(stream$, {})
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
-
-        // The emulated CAS accepts the 2nd request
-        secondAnchorEvent$.next({
-          status: AnchorRequestStatusName.PENDING,
-          streamId: tile.id,
-          cid: tile.state.log[1].cid,
-          message: 'CAS accepted the request',
-        })
 
         // Polling for the 1st commit should stop
         await expect(whenSubscriptionDone(firstAnchorResponseSub)).resolves.not.toThrow()
