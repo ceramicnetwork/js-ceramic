@@ -72,4 +72,28 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       }
     } while (true)
   }
+
+  // FIXME Change name
+  async *infiniteList(batchSize = 1): AsyncGenerator<AnchorRequestStoreListResult> {
+    let gt: StreamID | undefined = undefined
+    do {
+      const batch = await this.store.find({
+        limit: batchSize,
+        useCaseName: this.useCaseName,
+        gt: gt ? generateKey(gt) : undefined,
+      })
+      if (batch.length > 0) {
+        gt = StreamID.fromString(batch[batch.length - 1].key)
+        for (const item of batch) {
+          yield {
+            key: StreamID.fromString(item.key),
+            value: deserializeAnchorRequestData(item.value),
+          }
+        }
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 100)) // FIXME
+        gt = undefined
+      }
+    } while (true)
+  }
 }

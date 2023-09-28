@@ -29,6 +29,8 @@ import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
+import { AnchorRequestStore } from '../../store/anchor-request-store'
+import { AnchorProcessingLoop } from '../anchor-processing-loop'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
@@ -152,6 +154,21 @@ export class EthereumAnchorService implements AnchorService {
     }
     this.#chainId = response.supportedChains[0]
     await this.validator.init(this.#chainId)
+    // let store: AnchorRequestStore
+    // FIXME
+    // pass store, create loop, update events, tie up events
+    // const loop = new AnchorProcessingLoop(store.infiniteList(10), async (value) => {
+    //   const entry = value.value
+    //   if (entry.status !== 'requested') {
+    //     console.log('create')
+    //     // save and handle
+    //     // status == terminal ? remove : save
+    //   } else {
+    //     console.log('ask')
+    //     // save and handle
+    //     // status == terminal ? remove : save
+    //   }
+    // })
   }
 
   /**
