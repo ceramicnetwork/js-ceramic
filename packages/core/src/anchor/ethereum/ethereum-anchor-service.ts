@@ -99,6 +99,67 @@ function announcePending(streamId: StreamID, tip: CID): Observable<AnchorEvent> 
   })
 }
 
+class RemoteCAS {
+  readonly #requestsApiEndpoint: string
+  readonly #chainIdApiEndpoint: string
+  readonly #sendRequest: FetchRequest
+  readonly #logger: DiagnosticsLogger
+  readonly #pollInterval: number
+
+  constructor(
+    anchorServiceUrl: string,
+    logger: DiagnosticsLogger,
+    pollInterval: number,
+    sendRequest: FetchRequest
+  ) {
+    this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
+    this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
+    this.#logger = logger
+    this.#pollInterval = pollInterval
+    this.#sendRequest = sendRequest
+  }
+
+  async supportedChains(): Promise<Array<string>> {
+    const response = await this.#sendRequest(this.#chainIdApiEndpoint)
+    return response.supportedChains as Array<string>
+  }
+
+  async create(
+    carFileReader: AnchorRequestCarFileReader,
+    shouldRetry: boolean
+  ): Promise<AnchorEvent> {
+    throw new Error(`RemoteCAS.create: not implemented`)
+    do {
+      try {
+        const response = await this.#sendRequest(this.#requestsApiEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/vnd.ipld.car',
+          },
+          body: carFileReader.carFile.bytes,
+        })
+        return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+      } catch (error) {
+        const externalError = new CasConnectionError(
+          carFileReader.streamId,
+          carFileReader.tip,
+          error.message
+        )
+        if (shouldRetry) {
+          this.#logger.warn(externalError)
+          await new Promise((resolve) => setTimeout(resolve, this.#pollInterval)) // FIXME fucking delay
+        } else {
+          throw externalError
+        }
+      }
+    } while (shouldRetry)
+  }
+
+  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+    throw new Error(`RemoteCAS.get: not implemented`)
+  }
+}
+
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -116,28 +177,30 @@ export class EthereumAnchorService implements AnchorService {
 
   #chainId: string
   #store: AnchorRequestStore
+  #cas: RemoteCAS // FIXME Move In-memory close to EAS, and move the logic to CASClient
 
   readonly url: string
   readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
 
   constructor(
-    readonly anchorServiceUrl: string,
+    anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson
   ) {
-    this.#requestsApiEndpoint = this.anchorServiceUrl + '/api/v0/requests'
-    this.#chainIdApiEndpoint = this.anchorServiceUrl + '/api/v0/service-info/supported_chains'
+    this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
+    this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#logger = logger
     this.#pollInterval = pollInterval
     this.#sendRequest = sendRequest
     this.#maxPollTime = maxPollTime
     this.#events = new Subject()
+    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, sendRequest)
     this.events = this.#events
-    this.url = this.anchorServiceUrl
+    this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
   }
 
@@ -150,14 +213,15 @@ export class EthereumAnchorService implements AnchorService {
     // Do Nothing
   }
 
-  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> { // FIXME add onEvent
+  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
+    // FIXME add onEvent
     this.#store = store
     // Get the chainIds supported by our anchor service
-    const response = await this.#sendRequest(this.#chainIdApiEndpoint)
-    if (response.supportedChains.length > 1) {
+    const supportedChains = await this.#cas.supportedChains()
+    if (supportedChains.length > 1) {
       throw new MultipleChainsError()
     }
-    this.#chainId = response.supportedChains[0]
+    this.#chainId = supportedChains[0]
     await this.validator.init(this.#chainId)
     // let store: AnchorRequestStore
     // FIXME
