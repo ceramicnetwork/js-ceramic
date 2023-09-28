@@ -295,19 +295,17 @@ describe('Ceramic anchoring', () => {
       // fail anchor
       const anchorService = ceramic.anchorService as any as InMemoryAnchorService
       await anchorService.failPendingAnchors()
-      await stream.sync()
-      expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
       expect(stream.state.log.length).toEqual(1)
 
       // re-request anchor, should be successful
       const anchorStatus = await stream.requestAnchor()
       expect(anchorStatus).toEqual(AnchorStatus.PENDING)
-      await stream.sync()
-      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.PENDING)
 
       // fulfill anchor
       await TestUtils.anchorUpdate(ceramic, stream)
-      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.ANCHORED)
       expect(stream.state.log.length).toEqual(2)
 
       await ceramic.close()
