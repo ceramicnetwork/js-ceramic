@@ -17,7 +17,7 @@ export function generateFakeCarFile(): CAR {
     {
       timestamp: timestampISO,
       streamId: FAKE_STREAM_ID.bytes,
-      tip: FAKE_TIP_CID.bytes,
+      tip: FAKE_TIP_CID,
     },
     { isRoot: true }
   )

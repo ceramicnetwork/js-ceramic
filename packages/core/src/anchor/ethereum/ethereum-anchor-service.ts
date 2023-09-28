@@ -156,7 +156,9 @@ class RemoteCAS {
   }
 
   async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
-    throw new Error(`RemoteCAS.get: not implemented`)
+    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
+    const response = await this.#sendRequest(requestUrl)
+    return parseResponse(streamId, tip, response)
   }
 }
 
@@ -172,7 +174,6 @@ export class EthereumAnchorService implements AnchorService {
    */
   readonly #pollInterval: number
   readonly #maxPollTime: number
-  readonly #sendRequest: FetchRequest
   readonly #events: Subject<AnchorEvent>
 
   #chainId: string
@@ -195,7 +196,6 @@ export class EthereumAnchorService implements AnchorService {
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#logger = logger
     this.#pollInterval = pollInterval
-    this.#sendRequest = sendRequest
     this.#maxPollTime = maxPollTime
     this.#events = new Subject()
     this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, sendRequest)
@@ -304,9 +304,10 @@ export class EthereumAnchorService implements AnchorService {
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
-    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
 
-    const requestWithError = defer(() => this.#sendRequest(requestUrl)).pipe(
+    const requestWithError = defer(() => {
+      return this.#cas.get(streamId, tip)
+    }).pipe(
       retry({
         delay: (error) => {
           this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
@@ -324,7 +325,6 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
-      this._parseResponse(streamId, tip),
       this._updateEvents()
     )
   }
