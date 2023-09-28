@@ -6,7 +6,7 @@ import {
   FetchRequest,
   AnchorEvent,
 } from '@ceramicnetwork/common'
-import { StreamID, StreamRef } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import {
   Observable,
   concat,
@@ -17,10 +17,11 @@ import {
   expand,
   lastValueFrom,
   Subject,
-  type OperatorFunction,
-  type MonoTypeOperatorFunction,
+  tap,
+  catchError,
+  retry,
+  concatMap,
 } from 'rxjs'
-import { concatMap, catchError, map, retry, tap } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
@@ -256,7 +257,7 @@ export class EthereumAnchorService implements AnchorService {
 
     const requestCreated$ = concat(
       announcePending(streamId, tip),
-      this._makeAnchorRequest(carFileReader, !waitForConfirmation)
+      from(this.#cas.create(carFileReader, !waitForConfirmation))
     )
 
     const anchorCompleted$ = this.pollForAnchorResponse(streamId, tip)
@@ -283,16 +284,6 @@ export class EthereumAnchorService implements AnchorService {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return [this.#chainId]
-  }
-
-  /**
-   * Send requests to an external Ceramic Anchor Service
-   */
-  private _makeAnchorRequest(
-    carFileReader: AnchorRequestCarFileReader,
-    shouldRetry: boolean
-  ): Observable<AnchorEvent> {
-    return from(this.#cas.create(carFileReader, shouldRetry))
   }
 
   /**
@@ -325,16 +316,12 @@ export class EthereumAnchorService implements AnchorService {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
       }),
-      this._updateEvents()
+      tap((event) => this.#events.next(event))
     )
   }
 
-  private _parseResponse(streamId: StreamID, tip: CID): OperatorFunction<unknown, AnchorEvent> {
-    return map((response) => parseResponse(streamId, tip, response))
-  }
-
-  private _updateEvents(): MonoTypeOperatorFunction<AnchorEvent> {
-    return tap((event) => this.#events.next(event))
+  close(): Promise<void> {
+    return Promise.resolve(undefined)
   }
 }
 
