@@ -2,6 +2,7 @@ import type { AnchorEvent, AnchorProof, CeramicApi, FetchRequest } from '@cerami
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import type { CAR } from 'cartonne'
+import type { AnchorRequestStore } from '../store/anchor-request-store.js'
 import type { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import type { Observable } from 'rxjs'
 
@@ -20,7 +21,10 @@ export interface AnchorService {
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
    */
-  init(): Promise<void>
+  init(
+    store: AnchorRequestStore,
+    handleEvent: (event: AnchorEvent) => Promise<boolean> // FIXME Move termination here
+  ): Promise<void>
 
   /**
    * Set Ceramic API instance

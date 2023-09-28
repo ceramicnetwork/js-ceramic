@@ -898,7 +898,7 @@ export class Repository {
    * Adds the stream to cache.
    */
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    return await this._fromMemoryOrStore(streamId)
+    return this._fromMemoryOrStore(streamId)
   }
 
   /**

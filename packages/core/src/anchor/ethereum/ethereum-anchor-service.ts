@@ -113,7 +113,9 @@ export class EthereumAnchorService implements AnchorService {
   readonly #maxPollTime: number
   readonly #sendRequest: FetchRequest
   readonly #events: Subject<AnchorEvent>
+
   #chainId: string
+  #store: AnchorRequestStore
 
   readonly url: string
   readonly events: Observable<AnchorEvent>
@@ -148,7 +150,8 @@ export class EthereumAnchorService implements AnchorService {
     // Do Nothing
   }
 
-  async init(): Promise<void> {
+  async init(store: AnchorRequestStore): Promise<void> {
+    this.#store = store
     // Get the chainIds supported by our anchor service
     const response = await this.#sendRequest(this.#chainIdApiEndpoint)
     if (response.supportedChains.length > 1) {
@@ -158,7 +161,7 @@ export class EthereumAnchorService implements AnchorService {
     await this.validator.init(this.#chainId)
     // let store: AnchorRequestStore
     // FIXME
-    // pass store, create loop, update events, tie up events
+    // create loop, update events, tie up events
     // const loop = new AnchorProcessingLoop(store.infiniteList(10), async (value) => {
     //   const entry = value.value
     //   if (entry.status !== 'requested') {
@@ -341,8 +344,8 @@ export class AuthenticatedEthereumAnchorService
     this.auth.ceramic = ceramic
   }
 
-  async init(): Promise<void> {
+  async init(store: AnchorRequestStore): Promise<void> {
     await this.auth.init()
-    await super.init()
+    await super.init(store)
   }
 }

@@ -22,6 +22,7 @@ import {
   AdminApi,
   NodeStatusResponse,
   AnchorOpts,
+  AnchorEvent,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -439,7 +440,13 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._readOnly) {
-        await this.anchorService.init()
+        await this.anchorService.init(this.repository.anchorRequestStore) // FIXME Init dependency hell
+        const handleEvent = async (event: AnchorEvent): Promise<boolean> => {
+          // FIXME
+          const state$ = await this.repository.fromMemoryOrStore(event.streamId)
+          if (!state$) return true
+          return this.repository._internals.handleAnchorResponse(state$, event)
+        }
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
           this.anchorService,

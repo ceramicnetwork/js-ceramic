@@ -12,6 +12,7 @@ import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import type { AnchorService, AnchorValidator } from '../anchor-service.js'
 import { InMemoryAnchorValidator, TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
+import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
@@ -29,11 +30,6 @@ type InMemoryAnchorConfig = {
   anchorOnRequest: boolean
 }
 
-// Caches recent anchor txn hashes and the timestamp when they were anchored
-// This is intentionally global and not a member of InMemoryAnchorService. This is so that when
-// multiple InMemoryAnchorServices are being used simultaneously in the same process (usually by
-// tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
-// can successfully validate each others transactions.
 const carFactory = new CARFactory()
 carFactory.codecs.add(DAG_JOSE)
 
@@ -68,17 +64,16 @@ export class InMemoryAnchorService implements AnchorService {
   readonly #anchors: Map<string, AnchorEvent> = new Map()
 
   #queue: Candidate[] = []
+  #store: AnchorRequestStore | undefined
 
-  readonly chainId = CHAIN_ID
   readonly url = '<inmemory>'
-  readonly ethereumRpcEndpoint = null
   readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
-
+    this.#store = undefined
     this.#events = new Subject()
     // Remember the most recent AnchorEvent for each anchor request
     this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
@@ -86,8 +81,8 @@ export class InMemoryAnchorService implements AnchorService {
     this.validator = new InMemoryAnchorValidator(CHAIN_ID)
   }
 
-  async init(): Promise<void> {
-    return
+  async init(store: AnchorRequestStore): Promise<void> {
+    this.#store = store
   }
 
   /**
