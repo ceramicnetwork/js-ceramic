@@ -11,7 +11,7 @@ import { CARFactory, type CAR } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
-import { AnchorService, AnchorValidator } from '../anchor-service.js'
+import { AnchorService, AnchorValidator, HandleEventFn } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 
 const CHAIN_ID = 'inmemory:12345'
@@ -107,7 +107,7 @@ export class InMemoryAnchorService implements AnchorService {
     this.validator = new InMemoryAnchorValidator()
   }
 
-  async init(store: AnchorRequestStore): Promise<void> {
+  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> { // FIXME add onEvent
     this.#store = store
   }
 

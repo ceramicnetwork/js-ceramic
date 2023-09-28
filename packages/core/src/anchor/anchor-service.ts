@@ -5,7 +5,7 @@ import type { CID } from 'multiformats'
 import type { CAR } from 'cartonne'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
 
-// export type HandleEventFn = handleEvent: (event: AnchorEvent) => Promise<boolean> // FIXME
+export type HandleEventFn = (event: AnchorEvent) => Promise<boolean> // FIXME Move termination here
 /**
  * Describes anchoring service behavior
  */
@@ -16,10 +16,7 @@ export interface AnchorService {
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
    */
-  init(
-    store: AnchorRequestStore,
-    handleEvent: (event: AnchorEvent) => Promise<boolean> // FIXME Move termination here
-  ): Promise<void>
+  init(store: AnchorRequestStore, handleEvent: HandleEventFn): Promise<void>
 
   /**
    * Set Ceramic API instance

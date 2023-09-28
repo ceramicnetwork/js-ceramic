@@ -456,7 +456,7 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._gateway) {
-        await this.anchorService.init(this.repository.anchorRequestStore) // FIXME Init dependency hell
+        await this.anchorService.init(this.repository.anchorRequestStore, async () => true) // FIXME Init dependency hell
         const handleEvent = async (event: AnchorEvent): Promise<boolean> => {
           // FIXME
           const state$ = await this.repository.fromMemoryOrStore(event.streamId)

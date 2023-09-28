@@ -30,6 +30,7 @@ import type {
   AnchorServiceAuth,
   AnchorValidator,
   AuthenticatedAnchorService,
+  HandleEventFn,
 } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 
@@ -149,7 +150,7 @@ export class EthereumAnchorService implements AnchorService {
     // Do Nothing
   }
 
-  async init(store: AnchorRequestStore): Promise<void> {
+  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> { // FIXME add onEvent
     this.#store = store
     // Get the chainIds supported by our anchor service
     const response = await this.#sendRequest(this.#chainIdApiEndpoint)
@@ -339,8 +340,8 @@ export class AuthenticatedEthereumAnchorService
     this.auth.ceramic = ceramic
   }
 
-  async init(store: AnchorRequestStore): Promise<void> {
+  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
     await this.auth.init()
-    await super.init(store)
+    await super.init(store, onEvent)
   }
 }
