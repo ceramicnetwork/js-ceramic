@@ -6,12 +6,13 @@ import {
   FetchRequest,
   AnchorEvent,
 } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import {
   Observable,
   concat,
   timer,
   of,
+  from,
   defer,
   expand,
   lastValueFrom,
@@ -128,7 +129,6 @@ class RemoteCAS {
     carFileReader: AnchorRequestCarFileReader,
     shouldRetry: boolean
   ): Promise<AnchorEvent> {
-    throw new Error(`RemoteCAS.create: not implemented`)
     do {
       try {
         const response = await this.#sendRequest(this.#requestsApiEndpoint, {
@@ -292,36 +292,7 @@ export class EthereumAnchorService implements AnchorService {
     carFileReader: AnchorRequestCarFileReader,
     shouldRetry: boolean
   ): Observable<AnchorEvent> {
-    let sendRequest$ = defer(() =>
-      this.#sendRequest(this.#requestsApiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/vnd.ipld.car',
-        },
-        body: carFileReader.carFile.bytes,
-      })
-    )
-
-    if (shouldRetry) {
-      sendRequest$ = sendRequest$.pipe(
-        retry({
-          delay: (error) => {
-            this.#logger.warn(
-              new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
-            )
-            return timer(this.#pollInterval)
-          },
-        })
-      )
-    } else {
-      sendRequest$ = sendRequest$.pipe(
-        catchError((error) => {
-          throw new CasConnectionError(carFileReader.streamId, carFileReader.tip, error.message)
-        })
-      )
-    }
-
-    return sendRequest$.pipe(this._parseResponse(carFileReader.streamId, carFileReader.tip))
+    return from(this.#cas.create(carFileReader, shouldRetry))
   }
 
   /**
