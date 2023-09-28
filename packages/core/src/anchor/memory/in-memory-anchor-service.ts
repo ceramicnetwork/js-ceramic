@@ -12,6 +12,7 @@ import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { AnchorService, AnchorValidator } from '../anchor-service.js'
+import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
@@ -54,10 +55,30 @@ function groupCandidatesByStreamId(candidates: Candidate[]): Record<string, Cand
   return result
 }
 
+class InMemoryAnchorValidator implements AnchorValidator {
+  readonly chainId = CHAIN_ID
+  readonly ethereumRpcEndpoint = null
+
+  async init(): Promise<void> {
+    // Do Nothing
+  }
+
+  async validateChainInclusion(anchorProof: AnchorProof): Promise<number> {
+    const txHashString = anchorProof.txHash.toString()
+    if (!txnCache.has(txHashString)) {
+      throw new Error(
+        `Txn ${anchorProof.txHash.toString()} was not recently anchored by the InMemoryAnchorService`
+      )
+    }
+
+    return txnCache.get(txHashString)
+  }
+}
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-export class InMemoryAnchorService implements AnchorService, AnchorValidator {
+export class InMemoryAnchorService implements AnchorService {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
 
@@ -69,26 +90,25 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   readonly #anchors: Map<string, AnchorEvent> = new Map()
 
   #queue: Candidate[] = []
+  #store: AnchorRequestStore | undefined
 
-  readonly chainId = CHAIN_ID
   readonly url = '<inmemory>'
-  readonly ethereumRpcEndpoint = null
   readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}) {
     this.#anchorDelay = _config.anchorDelay ?? 0
     this.#anchorOnRequest = _config.anchorOnRequest ?? true
-
+    this.#store = undefined
     this.#events = new Subject()
     // Remember the most recent AnchorEvent for each anchor request
     this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
     this.events = this.#events
-    this.validator = this
+    this.validator = new InMemoryAnchorValidator()
   }
 
-  async init(): Promise<void> {
-    return
+  async init(store: AnchorRequestStore): Promise<void> {
+    this.#store = store
   }
 
   /**
