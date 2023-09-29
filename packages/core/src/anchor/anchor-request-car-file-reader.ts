@@ -2,9 +2,15 @@ import { CAR } from 'cartonne'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Memoize } from 'mapmoize'
 import type { CID } from 'multiformats/cid'
+import { GenesisCommit } from '@ceramicnetwork/common'
 
 export class AnchorRequestCarFileReader {
   constructor(readonly carFile: CAR) {}
+
+  @Memoize()
+  get genesis(): GenesisCommit {
+    return this.carFile.get(this.streamId.cid)
+  }
 
   @Memoize()
   private get root(): Record<string, any> {
