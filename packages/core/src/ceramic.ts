@@ -456,13 +456,14 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._gateway) {
-        await this.anchorService.init(this.repository.anchorRequestStore, async () => true) // FIXME Init dependency hell
-        const handleEvent = async (event: AnchorEvent): Promise<boolean> => {
-          // FIXME
-          const state$ = await this.repository.fromMemoryOrStore(event.streamId)
-          if (!state$) return true
-          return this.repository._internals.handleAnchorResponse(state$, event)
-        }
+        await this.anchorService.init(
+          this.repository.anchorRequestStore,
+          async (event: AnchorEvent): Promise<boolean> => {
+            const state$ = await this.repository.fromMemoryOrStore(event.streamId)
+            if (!state$) return true
+            return this.repository._internals.handleAnchorResponse2(state$, event)
+          }
+        ) // FIXME Init dependency hell
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
           this.anchorService,
@@ -480,6 +481,7 @@ export class Ceramic implements CeramicApi {
       await this._startupChecks()
 
       // We're not awaiting here on purpose, it's not supposed to be blocking
+      // FIXME Remove it
       this.anchorResumingService
         .resumeRunningStatesFromAnchorRequestStore(this.repository)
         .catch((error) => {

@@ -17,12 +17,12 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CAR } from 'cartonne'
 import type { CID } from 'multiformats/cid'
 import {
+  catchError,
+  concatMap,
   EMPTY,
   type Observable,
   Subject,
   type Subscription,
-  catchError,
-  concatMap,
   takeUntil,
 } from 'rxjs'
 
@@ -328,6 +328,80 @@ export class RepositoryInternals {
         }
         // we stop the polling as this is a terminal state
         return true
+      }
+      case AnchorRequestStatusName.REPLACED: {
+        this.#logger.verbose(
+          `Anchor request for commit ${anchorEvent.cid} of stream ${anchorEvent.streamId} is replaced`
+        )
+
+        // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
+        // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
+        if (anchorEvent.cid.equals(state$.tip)) {
+          await this.#anchorRequestStore.remove(state$.id)
+        }
+
+        return true
+      }
+      default:
+        throw new UnreachableCaseError(status, 'Unknown anchoring state')
+    }
+  }
+
+  /**
+   * Handle AnchorEvent and update state$.
+   *
+   * @param state$ - RunningState instance to update.
+   * @param anchorEvent - response from CAS.
+   * @return boolean - `true` if polling should stop, `false` if polling continues
+   */
+  async handleAnchorResponse2(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
+    // We don't want to change a stream's state due to changes to the anchor
+    // status of a commit that is no longer the tip of the stream, so we early return
+    // in most cases when receiving a response to an old anchor request.
+    // The one exception is if the AnchorEvent indicates that the old commit
+    // is now anchored, in which case we still want to try to process the anchor commit
+    // and let the stream's conflict resolution mechanism decide whether or not to update
+    // the stream's state.
+    const status = anchorEvent.status
+    switch (status) {
+      case AnchorRequestStatusName.READY:
+      case AnchorRequestStatusName.PENDING: {
+        if (!anchorEvent.cid.equals(state$.tip)) return false
+        if (state$.state.anchorStatus === AnchorStatus.PENDING) return false
+        const next = {
+          ...state$.value,
+          anchorStatus: AnchorStatus.PENDING,
+        }
+        state$.next(next)
+        await this._updateStateIfPinned(state$)
+        return false
+      }
+      case AnchorRequestStatusName.PROCESSING: {
+        if (!anchorEvent.cid.equals(state$.tip)) return false
+        if (state$.state.anchorStatus === AnchorStatus.PROCESSING) return false
+        state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
+        await this._updateStateIfPinned(state$)
+        return false
+      }
+      case AnchorRequestStatusName.COMPLETED: {
+        if (anchorEvent.cid.equals(state$.tip)) {
+          await this.#anchorRequestStore.remove(state$.id) // FIXME Suspicious
+        }
+        await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
+        return true
+      }
+      case AnchorRequestStatusName.FAILED: {
+        this.#logger.warn(
+          `Anchor failed for commit ${anchorEvent.cid} of stream ${anchorEvent.streamId}: ${anchorEvent.message}`
+        )
+
+        // if this is the anchor response for the tip update the state
+        if (anchorEvent.cid.equals(state$.tip)) {
+          state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
+          return true
+        }
+        // we stop the polling as this is a terminal state
+        return false
       }
       case AnchorRequestStatusName.REPLACED: {
         this.#logger.verbose(

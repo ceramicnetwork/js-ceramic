@@ -42,6 +42,8 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
  * This store is used to save and retrieve this data so that it can be re-sent to CAS in case of networking issues.
  */
 export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
+  #shouldStop: boolean
+
   constructor() {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.useCaseName = 'anchor-requests'
@@ -94,6 +96,11 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
         await new Promise((resolve) => setTimeout(resolve, 100)) // FIXME
         gt = undefined
       }
-    } while (true)
+    } while (!this.#shouldStop)
+  }
+
+  async close() {
+    this.#shouldStop = true
+    await super.close()
   }
 }

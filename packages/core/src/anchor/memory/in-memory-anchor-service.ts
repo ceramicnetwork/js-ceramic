@@ -12,6 +12,7 @@ import {
   of,
   retry,
   Subject,
+  tap,
   timer,
 } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -23,7 +24,7 @@ import { LRUCache } from 'least-recent'
 import { type CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import {
   AnchorService,
   AnchorValidator,
@@ -33,6 +34,8 @@ import {
   MaxAnchorPollingError,
 } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
+import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
+import { AnchorRequestStoreListResult } from '../../store/anchor-request-store.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
@@ -235,6 +238,31 @@ class InMemoryCAS implements CASClient {
     )
   }
 
+  moveAnchors(from: NotCompleteStatusName, to: NotCompleteStatusName, reset: boolean): void {
+    const candidates = this.#queue
+    for (const candidate of candidates) {
+      const current = this.#anchors.get(candidate.cid.toString())
+      if (current && from === current.status) {
+        this.#events.next({
+          status: to,
+          streamId: candidate.streamId,
+          cid: candidate.cid,
+          message: `Moved anchor to ${to}`,
+        })
+      } else if (!current) {
+        this.#events.next({
+          status: to,
+          streamId: candidate.streamId,
+          cid: candidate.cid,
+          message: `Set anchor to ${to}`,
+        })
+      }
+    }
+    if (reset) {
+      this.#queue = []
+    }
+  }
+
   async failPendingAnchors(): Promise<void> {
     const candidates = await this.findCandidates()
     for (const candidate of candidates) {
@@ -249,21 +277,9 @@ class InMemoryCAS implements CASClient {
     this.#queue = [] // reset
   }
 
-  /**
-   * Sets all pending anchors to PROCESSING status. Useful for testing.
-   */
-  async startProcessingPendingAnchors(reset = false): Promise<void> {
-    const candidates = await this.findCandidates()
-    for (const candidate of candidates) {
-      this._startProcessingCandidate(candidate, 'anchor is being processed')
-    }
-    if (reset) {
-      this.#queue = []
-    }
-  }
-
   async close() {
     this.#events.complete()
+    this.#events.unsubscribe()
   }
 }
 
@@ -286,6 +302,7 @@ const MAX_POLL_TIME = 86_400_000 // 24 hours
 export class InMemoryAnchorService implements AnchorService {
   #store: AnchorRequestStore | undefined
   #cas: InMemoryCAS
+  #loop: AnchorProcessingLoop<AnchorRequestStoreListResult>
   #maxPollTime = MAX_POLL_TIME
   #logger: DiagnosticsLogger
   #pollInterval = DEFAULT_POLL_INTERVAL
@@ -303,8 +320,22 @@ export class InMemoryAnchorService implements AnchorService {
   }
 
   async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
-    // FIXME add onEvent
     this.#store = store
+    const batchSize = 10 // FIXME
+    this.#loop = new AnchorProcessingLoop(store.infiniteList(batchSize), async (entry) => {
+      try {
+        // FIXME get or create??
+        const event = await this.#cas.get(entry.key, entry.value.cid)
+        const isTerminal = await onEvent(event)
+        if (isTerminal) {
+          await this.#store.remove(entry.key)
+        }
+      } catch (e) {
+        // Do Nothing
+      }
+      await new Promise((resolve) => setTimeout(resolve, this.#pollInterval))
+    })
+    this.#loop.start()
   }
 
   /**
@@ -322,18 +353,25 @@ export class InMemoryAnchorService implements AnchorService {
     return this.#cas.anchor()
   }
 
+  moveAnchors(
+    from: NotCompleteStatusName | Array<NotCompleteStatusName>,
+    to: NotCompleteStatusName,
+    reset = false
+  ): void {
+    if (Array.isArray(from)) {
+      for (const fromStatus of from) {
+        this.#cas.moveAnchors(fromStatus, to, reset)
+      }
+    } else {
+      this.#cas.moveAnchors(from, to, reset)
+    }
+  }
+
   /**
    * Fails all pending anchors. Useful for testing.
    */
   failPendingAnchors(): Promise<void> {
     return this.#cas.failPendingAnchors()
-  }
-
-  /**
-   * Sets all pending anchors to PROCESSING status. Useful for testing.
-   */
-  startProcessingPendingAnchors(): Promise<void> {
-    return this.#cas.startProcessingPendingAnchors()
   }
 
   /**
@@ -395,7 +433,9 @@ export class InMemoryAnchorService implements AnchorService {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
 
-    const requestWithError = defer(() => this.#cas.get(streamId, tip)).pipe(
+    const requestWithError = defer(() => {
+      return this.#cas.get(streamId, tip)
+    }).pipe(
       retry({
         delay: (error) => {
           this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
@@ -404,6 +444,7 @@ export class InMemoryAnchorService implements AnchorService {
       })
     )
 
+    let previous: AnchorEvent | undefined = undefined
     return requestWithError.pipe(
       expand(() => {
         const now = new Date().getTime()
@@ -412,11 +453,21 @@ export class InMemoryAnchorService implements AnchorService {
         } else {
           return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
         }
+      }),
+      filter((current) => {
+        if (!previous) {
+          previous = current
+          return true
+        } else {
+          return !(previous.cid.equals(current.cid) && previous.status === current.status)
+        }
       })
     )
   }
 
   async close(): Promise<void> {
-    // Do Nothing Yet
+    await this.#cas.close()
+    await this.#store.close()
+    await this.#loop.stop()
   }
 }

@@ -5,6 +5,7 @@ import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const SEED = '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83'
 
@@ -294,7 +295,11 @@ describe('Ceramic anchoring', () => {
 
       // fail anchor
       const anchorService = ceramic.anchorService as any as InMemoryAnchorService
-      await anchorService.failPendingAnchors()
+      anchorService.moveAnchors(
+        AnchorRequestStatusName.PENDING,
+        AnchorRequestStatusName.FAILED,
+        true
+      )
       await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
       expect(stream.state.log.length).toEqual(1)
 

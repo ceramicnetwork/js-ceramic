@@ -11,7 +11,7 @@ import {
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
 import { CID } from 'multiformats/cid'
-import type { Subscription } from 'rxjs'
+import { Subscription } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { CAR, CARFactory } from 'cartonne'
@@ -19,6 +19,7 @@ import * as DAG_JOSE from 'dag-jose'
 import { RepositoryInternals } from './repository-internals.js'
 import { OperationType } from './operation-type.js'
 import { AnchorService } from '../anchor/anchor-service.js'
+import { distinctUntilChanged } from 'rxjs'
 
 export class StateManager {
   private readonly carFactory = new CARFactory()
@@ -131,7 +132,7 @@ export class StateManager {
       throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
-      return
+      return Subscription.EMPTY
     }
 
     const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
