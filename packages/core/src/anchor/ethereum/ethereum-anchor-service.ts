@@ -91,17 +91,20 @@ class RemoteCAS implements CASClient {
   readonly #sendRequest: FetchRequest
   readonly #logger: DiagnosticsLogger
   readonly #pollInterval: number
+  readonly #maxPollTime: number
 
   constructor(
     anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number,
+    maxPollTime: number,
     sendRequest: FetchRequest
   ) {
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#logger = logger
     this.#pollInterval = pollInterval
+    this.#maxPollTime = maxPollTime
     this.#sendRequest = sendRequest
   }
 
@@ -114,6 +117,14 @@ class RemoteCAS implements CASClient {
     carFileReader: AnchorRequestCarFileReader,
     shouldRetry: boolean
   ): Promise<AnchorEvent> {
+    const response = await this.stubbornCreate(carFileReader, shouldRetry)
+    return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+  }
+
+  private async stubbornCreate(
+    carFileReader: AnchorRequestCarFileReader,
+    shouldRetry: boolean
+  ): Promise<unknown> {
     do {
       try {
         const response = await this.#sendRequest(this.#requestsApiEndpoint, {
@@ -123,7 +134,7 @@ class RemoteCAS implements CASClient {
           },
           body: carFileReader.carFile.bytes,
         })
-        return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+        return response
       } catch (error) {
         const externalError = new CasConnectionError(
           carFileReader.streamId,
@@ -141,9 +152,28 @@ class RemoteCAS implements CASClient {
   }
 
   async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
-    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
-    const response = await this.#sendRequest(requestUrl)
+    const response = await this.stubbornGetRequest(streamId, tip)
     return parseResponse(streamId, tip, response)
+  }
+
+  private async stubbornGetRequest(streamId: StreamID, tip: CID): Promise<any> {
+    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
+    const started = new Date().getTime()
+    const maxTime = started + this.#maxPollTime
+    let response: any = undefined
+    while (!response) {
+      const now = new Date().getTime()
+      if (now > maxTime) {
+        throw new MaxAnchorPollingError()
+      }
+      try {
+        response = await this.#sendRequest(requestUrl)
+      } catch (error: any) {
+        this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
+        await new Promise((resolve) => setTimeout(resolve, this.#pollInterval))
+      }
+    }
+    return response
   }
 }
 
@@ -183,7 +213,7 @@ export class EthereumAnchorService implements AnchorService {
     this.#pollInterval = pollInterval
     this.#maxPollTime = maxPollTime
     this.#events = new Subject()
-    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, sendRequest)
+    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, maxPollTime, sendRequest)
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
@@ -247,6 +277,12 @@ export class EthereumAnchorService implements AnchorService {
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
 
+    await this.#store.save(streamId, {
+      cid: tip,
+      genesis: carFileReader.genesis,
+      timestamp: Date.now(),
+    })
+
     const requestCreated$ = concat(
       announcePending(streamId, tip),
       from(this.#cas.create(carFileReader, !waitForConfirmation))
@@ -280,14 +316,7 @@ export class EthereumAnchorService implements AnchorService {
     const started = new Date().getTime()
     const maxTime = started + this.#maxPollTime
 
-    const requestWithError = defer(() => this.#cas.get(streamId, tip)).pipe(
-      retry({
-        delay: (error) => {
-          this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
-          return timer(this.#pollInterval)
-        },
-      })
-    )
+    const requestWithError = defer(() => this.#cas.get(streamId, tip))
 
     return requestWithError.pipe(
       expand(() => {

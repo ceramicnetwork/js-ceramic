@@ -1,6 +1,8 @@
 import { jest, test, expect } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
+import type { AnchorRequestStore } from '../../../store/anchor-request-store.js'
+import type { AnchorValidator } from '../../anchor-service.js'
 
 const MAX_FAILED_ATTEMPTS = 2
 const POLL_INTERVAL = 100 // ms
@@ -15,6 +17,11 @@ const casProcessingResponse = {
   streamId: FAKE_STREAM_ID.toString(),
   cid: FAKE_TIP_CID.toString(),
 }
+
+const FAUX_ANCHOR_STORE = {
+  save: jest.fn(),
+} as unknown as AnchorRequestStore
+const FAUX_HANDLER = async () => false
 
 jest.unstable_mockModule('cross-fetch', () => {
   const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
@@ -32,6 +39,19 @@ jest.unstable_mockModule('cross-fetch', () => {
   }
 })
 
+const fetchFunc = jest.fn(async (url: string, opts: any = {}) => {
+  if (url.includes('/service-info/supported_chains')) {
+    return {
+      supportedChains: ['eip155:1'],
+    }
+  }
+  fetchAttemptNum += 1
+  if (fetchAttemptNum <= MAX_FAILED_ATTEMPTS + 1) {
+    throw new Error(`Cas is unavailable`)
+  }
+  return casProcessingResponse
+})
+
 test('re-request an anchor till get a response', async () => {
   fetchAttemptNum = 0
   const { LoggerProvider } = await import('@ceramicnetwork/common')
@@ -43,8 +63,13 @@ test('re-request an anchor till get a response', async () => {
     'http://example.com',
     'http://example.com',
     diagnosticsLogger,
-    POLL_INTERVAL
+    POLL_INTERVAL,
+    MAX_POLL_TIME,
+    fetchFunc
   )
+
+  anchorService.validator.init = jest.fn() as AnchorValidator['init']
+  await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
   let lastResponse: any
   const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(
     (response) => {

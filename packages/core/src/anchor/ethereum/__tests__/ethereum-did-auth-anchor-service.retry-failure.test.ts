@@ -1,6 +1,8 @@
 import { jest } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
+import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
+import type { AnchorValidator } from '../../anchor-service.js'
 
 const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
@@ -13,20 +15,17 @@ const casProcessingResponse = {
   cid: FAKE_TIP_CID.toString(),
 }
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
-    ok: true,
-    json: async () => {
-      attemptNum += 1
-      if (attemptNum <= MAX_FAILED_ATTEMPTS + 1) {
-        throw new Error(`Cas is unavailable`)
-      }
-      return casProcessingResponse
-    },
-  }))
-  return {
-    default: fetchFunc,
+const fetchFunc = jest.fn(async (url: string, opts: any = {}) => {
+  if (url.includes('/service-info/supported_chains')) {
+    return {
+      supportedChains: ['eip155:1'],
+    }
   }
+  attemptNum += 1
+  if (attemptNum <= MAX_FAILED_ATTEMPTS + 1) {
+    throw new Error(`Cas is unavailable`)
+  }
+  return casProcessingResponse
 })
 
 jest.setTimeout(20000)
@@ -55,7 +54,7 @@ test('re-request an anchor till get a response', async () => {
 
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: true })
-  const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
+  const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger, fetchFunc)
   const anchorService = new eas.AuthenticatedEthereumAnchorService(
     auth,
     url,
@@ -63,6 +62,9 @@ test('re-request an anchor till get a response', async () => {
     diagnosticsLogger,
     100
   )
+  anchorService.validator.init = jest.fn() as AnchorValidator['init']
+  const anchorRequestStore = { save: jest.fn() } as unknown as AnchorRequestStore
+  await anchorService.init(anchorRequestStore, async () => false)
 
   let lastResponse: any
   const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(

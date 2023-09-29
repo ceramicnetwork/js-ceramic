@@ -7,6 +7,13 @@ import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.j
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { lastValueFrom } from 'rxjs'
+import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
+import type { AnchorValidator } from '../../anchor-service.js'
+
+const FAUX_ANCHOR_STORE = {
+  save: jest.fn(),
+} as unknown as AnchorRequestStore
+const FAUX_HANDLER = async () => false
 
 describe('AuthenticatedEthereumAnchorServiceTest', () => {
   let ipfs: any
@@ -48,7 +55,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       // Do Nothing
     })
 
-    await anchorService.init()
+    await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
 
     expect(signRequestSpy).toHaveBeenCalledTimes(1)
   })
@@ -62,9 +69,24 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
     const sendRequestSpy = jest.spyOn(auth, '_sendRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, diagnosticsLogger, 100)
+    const anchorService = new AuthenticatedEthereumAnchorService(
+      auth,
+      url,
+      '',
+      diagnosticsLogger,
+      100,
+      300
+    )
 
     sendRequestSpy.mockImplementationOnce(async (request) => {
+      return { supportedChains: ['eip155:3'] }
+    })
+
+    anchorService.validator.init = jest.fn() as AnchorValidator['init']
+    await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
+    expect(signRequestSpy).toHaveBeenCalledTimes(1)
+
+    sendRequestSpy.mockImplementation(async (request) => {
       expect(request.url).toEqual(requestsUrl)
       // this response won't pass codec deserialization b/c it doesn't conform to the proper format
       return { status: AnchorRequestStatusName.PENDING }
@@ -76,6 +98,6 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     // This is the important check: the request was signed
     // TODO: would be better to actually check the request header is constructed properly
-    expect(signRequestSpy).toHaveBeenCalledTimes(1)
+    expect(signRequestSpy).toHaveBeenCalledTimes(2)
   })
 })

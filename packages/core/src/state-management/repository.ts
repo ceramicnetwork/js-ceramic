@@ -188,7 +188,6 @@ export class Repository {
     })
     this.stateManager = new StateManager(
       deps.dispatcher,
-      deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
       deps.conflictResolution,

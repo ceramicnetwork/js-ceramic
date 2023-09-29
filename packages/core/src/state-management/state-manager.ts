@@ -6,7 +6,6 @@ import {
   AnchorStatus,
   CreateOpts,
   DiagnosticsLogger,
-  GenesisCommit,
   StreamUtils,
   UpdateOpts,
 } from '@ceramicnetwork/common'
@@ -15,7 +14,6 @@ import { CID } from 'multiformats/cid'
 import type { Subscription } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
-import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { RepositoryInternals } from './repository-internals.js'
@@ -37,7 +35,6 @@ export class StateManager {
    */
   constructor(
     private readonly dispatcher: Dispatcher,
-    private readonly anchorRequestStore: AnchorRequestStore,
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
@@ -138,10 +135,6 @@ export class StateManager {
     }
 
     const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
-    const genesisCID = state$.value.log[0].cid
-    const genesisCommit = carFile.get(genesisCID)
-    await this._saveAnchorRequestForState(state$, genesisCommit)
-
     const anchorStatus$ = await this.anchorService.requestAnchor(
       carFile,
       opts.waitForAnchorConfirmation
@@ -188,16 +181,5 @@ export class StateManager {
     }
 
     return car
-  }
-
-  private async _saveAnchorRequestForState(
-    state$: RunningState,
-    genesisCommit: GenesisCommit
-  ): Promise<void> {
-    await this.anchorRequestStore.save(state$.id, {
-      cid: state$.tip,
-      timestamp: Date.now(),
-      genesis: genesisCommit,
-    })
   }
 }
