@@ -279,7 +279,6 @@ class InMemoryCAS implements CASClient {
 
   async close() {
     this.#events.complete()
-    this.#events.unsubscribe()
   }
 }
 
