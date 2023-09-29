@@ -7,6 +7,12 @@ import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.j
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { lastValueFrom } from 'rxjs'
+import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
+
+const FAUX_ANCHOR_STORE = {
+  save: jest.fn(),
+} as unknown as AnchorRequestStore
+const FAUX_HANDLER = async () => false
 
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -46,7 +52,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       // Do Nothing
     })
 
-    await anchorService.init()
+    await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
 
     expect(signRequestSpy).toHaveBeenCalledTimes(1)
     const signRequestResult = (await signRequestSpy.mock.results[0].value) as any
@@ -76,7 +82,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const anchorStatus = await lastValueFrom(observable)
     expect(anchorStatus.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
 
-    expect(signRequestSpy).toHaveBeenCalledTimes(1)
+    expect(signRequestSpy).toHaveBeenCalledTimes(2)
     const signRequestResult = (await signRequestSpy.mock.results[0].value) as any
     const signRequestResultOpts = signRequestResult.request.opts
     expect(fauxFetchJson).toBeCalledWith(requestsUrl, signRequestResultOpts)

@@ -1,4 +1,4 @@
-import { jest, test, expect, beforeEach, afterEach } from '@jest/globals'
+import { jest, test, expect, afterEach } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
 import { type fetchJson, LoggerProvider } from '@ceramicnetwork/common'

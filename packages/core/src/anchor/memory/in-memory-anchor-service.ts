@@ -1,26 +1,25 @@
 import { CID } from 'multiformats/cid'
 import {
-  Observable,
-  Subject,
+  catchError,
   concat,
-  of,
+  concatMap,
+  defer,
+  expand,
+  firstValueFrom,
   from,
   lastValueFrom,
-  catchError,
-  firstValueFrom,
-  defer,
+  Observable,
+  of,
   retry,
+  Subject,
   timer,
-  expand,
-  concatMap,
 } from 'rxjs'
 import { filter } from 'rxjs/operators'
+import type { AnchorCommit, AnchorEvent, AnchorProof } from '@ceramicnetwork/common'
 import { type DiagnosticsLogger, TestUtils } from '@ceramicnetwork/common'
-import type { AnchorProof, AnchorCommit, AnchorEvent } from '@ceramicnetwork/common'
-import type { Dispatcher } from '../../dispatcher.js'
 import type { Ceramic } from '../../ceramic.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { CARFactory, type CAR } from 'cartonne'
+import { type CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
@@ -329,6 +328,12 @@ export class InMemoryAnchorService implements AnchorService {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
+
+    await this.#store.save(streamId, {
+      cid: tip,
+      genesis: carFileReader.genesis,
+      timestamp: Date.now(),
+    })
 
     const requestCreated$ = concat(
       announcePending(streamId, tip),
