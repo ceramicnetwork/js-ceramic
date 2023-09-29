@@ -7,25 +7,11 @@ import {
   AnchorEvent,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import {
-  Observable,
-  concat,
-  timer,
-  of,
-  from,
-  defer,
-  expand,
-  lastValueFrom,
-  Subject,
-  tap,
-  catchError,
-  retry,
-  concatMap,
-} from 'rxjs'
+import { Observable, of, Subject } from 'rxjs'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
-import { decode } from 'codeco'
+import { validate, isLeft } from 'codeco'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 import type {
   AnchorService,
@@ -33,15 +19,15 @@ import type {
   AnchorValidator,
   AuthenticatedAnchorService,
   CASClient,
-  HandleEventFn,
 } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import {
+  AnchorLoopHandler,
   CasConnectionError,
   MaxAnchorPollingError,
   MultipleChainsError,
 } from '../anchor-service.js'
-import type { AnchorProcessingLoop } from '../anchor-processing-loop.js'
+import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
@@ -50,7 +36,16 @@ const MAX_POLL_TIME = 86_400_000 // 24 hours
  * Parse JSON that CAS returns.
  */
 function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent {
-  const parsed = decode(CASResponseOrError, json)
+  const validation = validate(CASResponseOrError, json)
+  if (isLeft(validation)) {
+    return {
+      status: AnchorRequestStatusName.FAILED,
+      streamId: streamId,
+      cid: tip,
+      message: `Unexpected response from CAS: ${JSON.stringify(json)}`,
+    }
+  }
+  const parsed = validation.right
   if (ErrorResponse.is(parsed)) {
     return {
       status: AnchorRequestStatusName.FAILED,
@@ -116,10 +111,19 @@ class RemoteCAS implements CASClient {
 
   async create(
     carFileReader: AnchorRequestCarFileReader,
-    shouldRetry: boolean
+    waitForConfirmation: boolean
   ): Promise<AnchorEvent> {
-    const response = await this.stubbornCreate(carFileReader, shouldRetry)
-    return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+    if (waitForConfirmation) {
+      const response = await this.stubbornCreate(carFileReader, waitForConfirmation)
+      return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+    } else {
+      return {
+        status: AnchorRequestStatusName.PENDING,
+        streamId: carFileReader.streamId,
+        cid: carFileReader.tip,
+        message: 'Sending anchoring request',
+      }
+    }
   }
 
   private async stubbornCreate(
@@ -176,6 +180,10 @@ class RemoteCAS implements CASClient {
     }
     return response
   }
+
+  async close() {
+    // Do Nothing FIXME
+  }
 }
 
 /**
@@ -185,6 +193,7 @@ export class EthereumAnchorService implements AnchorService {
   readonly #requestsApiEndpoint: string
   readonly #chainIdApiEndpoint: string
   readonly #logger: DiagnosticsLogger
+  #loop: AnchorProcessingLoop
   /**
    * Retry a request to CAS every +pollInterval+ milliseconds.
    */
@@ -229,7 +238,7 @@ export class EthereumAnchorService implements AnchorService {
     // Do Nothing
   }
 
-  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
+  async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
     // FIXME add onEvent
     this.#store = store
     // Get the chainIds supported by our anchor service
@@ -239,21 +248,16 @@ export class EthereumAnchorService implements AnchorService {
     }
     this.#chainId = supportedChains[0]
     await this.validator.init(this.#chainId)
-    // let store: AnchorRequestStore
-    // FIXME
-    // create loop, update events, tie up events
-    // const loop = new AnchorProcessingLoop(store.infiniteList(10), async (value) => {
-    //   const entry = value.value
-    //   if (entry.status !== 'requested') {
-    //     console.log('create')
-    //     // save and handle
-    //     // status == terminal ? remove : save
-    //   } else {
-    //     console.log('ask')
-    //     // save and handle
-    //     // status == terminal ? remove : save
-    //   }
-    // })
+    const batchSize = 10 // FIXME
+    this.#loop = new AnchorProcessingLoop(
+      this.#pollInterval,
+      batchSize,
+      this.#cas,
+      this.#store,
+      this.#logger,
+      eventHandler
+    )
+    this.#loop.start()
   }
 
   /**
@@ -270,10 +274,7 @@ export class EthereumAnchorService implements AnchorService {
    * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
    *   request before returning.
    */
-  async requestAnchor(
-    carFile: CAR,
-    waitForConfirmation: boolean
-  ): Promise<Observable<AnchorEvent>> {
+  async requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<AnchorEvent> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
@@ -284,56 +285,22 @@ export class EthereumAnchorService implements AnchorService {
       timestamp: Date.now(),
     })
 
-    const requestCreated$ = concat(
-      announcePending(streamId, tip),
-      from(this.#cas.create(carFileReader, !waitForConfirmation))
-    )
-
-    const anchorCompleted$ = this.pollForAnchorResponse(streamId, tip)
-
-    const errHandler = (error: Error) =>
-      of<AnchorEvent>({
-        status: AnchorRequestStatusName.FAILED,
+    if (waitForConfirmation) {
+      return this.#cas.create(carFileReader, waitForConfirmation)
+    } else {
+      return {
+        status: AnchorRequestStatusName.PENDING,
         streamId: streamId,
         cid: tip,
-        message: error.message,
-      })
-
-    if (waitForConfirmation) {
-      await lastValueFrom(requestCreated$)
-      return anchorCompleted$.pipe(catchError(errHandler))
-    } else {
-      return concat(requestCreated$, anchorCompleted$).pipe(catchError(errHandler))
+        message: 'Sending anchoring request',
+      }
     }
   }
 
-  /**
-   * Start polling the anchor service to learn of the results of an existing anchor request for the
-   * given tip for the given stream.
-   * @param streamId - Stream ID
-   * @param tip - Tip CID of the stream
-   */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-    const started = new Date().getTime()
-    const maxTime = started + this.#maxPollTime
-
-    const requestWithError = defer(() => this.#cas.get(streamId, tip))
-
-    return requestWithError.pipe(
-      expand(() => {
-        const now = new Date().getTime()
-        if (now > maxTime) {
-          throw new MaxAnchorPollingError()
-        } else {
-          return timer(this.#pollInterval).pipe(concatMap(() => requestWithError))
-        }
-      }),
-      tap((event) => this.#events.next(event))
-    )
-  }
-
   async close(): Promise<void> {
-    // Do Nothing
+    await this.#cas.close()
+    await this.#store.close()
+    await this.#loop.stop()
   }
 }
 
@@ -374,8 +341,8 @@ export class AuthenticatedEthereumAnchorService
     this.auth.ceramic = ceramic
   }
 
-  async init(store: AnchorRequestStore, onEvent: HandleEventFn): Promise<void> {
+  async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
     await this.auth.init()
-    await super.init(store, onEvent)
+    await super.init(store, eventHandler)
   }
 }

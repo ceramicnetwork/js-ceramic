@@ -11,18 +11,16 @@ export type AnchorLoopHandler = {
   handle(event: AnchorEvent): Promise<boolean>
 }
 
-export type HandleEventFn = (event: AnchorEvent) => Promise<boolean> // FIXME Move termination here
 /**
  * Describes anchoring service behavior
  */
 export interface AnchorService {
-  readonly events: Observable<AnchorEvent>
   readonly validator: AnchorValidator
 
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
    */
-  init(store: AnchorRequestStore, handleEvent: HandleEventFn): Promise<void>
+  init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void>
 
   /**
    * Set Ceramic API instance
@@ -42,15 +40,7 @@ export interface AnchorService {
    * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
    *   request before returning.
    */
-  requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<Observable<AnchorEvent>>
-
-  /**
-   * Start polling the anchor service to learn of the results of an existing anchor request for the
-   * given tip for the given stream.
-   * @param streamId - Stream ID
-   * @param tip - Tip CID of the stream
-   */
-  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorEvent>
+  requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<AnchorEvent>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this

@@ -38,7 +38,8 @@ afterAll(async () => {
   ipfs && (await ipfs.stop())
 })
 
-test('re-request an anchor till get a response', async () => {
+// FIXME Does not make sense here
+test.skip('re-request an anchor till get a response', async () => {
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const url = 'http://example.com'

@@ -219,7 +219,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   test('Anchor genesis', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-
+    await TestUtils.hasAcceptedAnchorRequest(daemon.ceramic, doc.tip)
     await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
@@ -235,7 +235,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     await doc.replace(CONTENT1)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-
+    await TestUtils.hasAcceptedAnchorRequest(daemon.ceramic, doc.tip)
     await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
@@ -251,12 +251,14 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
+    await TestUtils.hasAcceptedAnchorRequest(daemon.ceramic, doc.tip)
     await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     await doc.replace(CONTENT2)
     await doc.replace(CONTENT3)
 
+    await TestUtils.hasAcceptedAnchorRequest(daemon.ceramic, doc.tip)
     await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
@@ -297,6 +299,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   test('Can load a stream', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
+    await TestUtils.hasAcceptedAnchorRequest(daemon.ceramic, doc.tip)
     await TestUtils.anchorUpdate(core, doc)
     await doc.sync()
 
@@ -420,8 +423,9 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   test('load updated and anchored doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic0, doc.tip)
     await TestUtils.anchorUpdate(ceramic0, doc)
-
+    await TestUtils.delay(500)
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 
     expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)

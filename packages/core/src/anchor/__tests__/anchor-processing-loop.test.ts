@@ -1,5 +1,5 @@
-import { test, jest, expect } from '@jest/globals'
-import { AnchorProcessingLoop, Deferred } from '../anchor-processing-loop.js'
+import { test, jest, expect, describe } from '@jest/globals'
+import { ProcessingLoop, Deferred } from '../processing-loop.js'
 
 async function* infiniteIntegers() {
   let n = 0
@@ -8,12 +8,26 @@ async function* infiniteIntegers() {
   }
 }
 
+describe('deferred', () => {
+  test('resolve', async () => {
+    const deferred = new Deferred<string>()
+    deferred.resolve('hello')
+    await expect(deferred).resolves.toEqual('hello')
+  })
+  test('reject', async () => {
+    const deferred = new Deferred<string>()
+    deferred.reject(new Error(`farewell`))
+    await expect(deferred).rejects.toThrow(/farewell/)
+  })
+})
+
 test('do not call next on construction', async () => {
   const generator = infiniteIntegers()
   const nextSpy = jest.spyOn(generator, 'next')
-  new AnchorProcessingLoop(generator, () => Promise.resolve())
+  new ProcessingLoop(generator, () => Promise.resolve())
   expect(nextSpy).not.toBeCalled()
 })
+
 test('process entries one by one, stop when all processed', async () => {
   const isDone = new Deferred()
   const max = 10
@@ -25,11 +39,12 @@ test('process entries one by one, stop when all processed', async () => {
     isDone.resolve()
   }
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new AnchorProcessingLoop(finiteIntegers(), noop)
+  const loop = new ProcessingLoop(finiteIntegers(), noop)
   loop.start()
   await isDone
   expect(noop).toBeCalledTimes(max)
 })
+
 test('stop generator after processing (idempotent)', async () => {
   const isDone = new Deferred()
   const max = 10
@@ -43,7 +58,7 @@ test('stop generator after processing (idempotent)', async () => {
   const source = finiteIntegers()
   const returnSpy = jest.spyOn(source, 'return')
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new AnchorProcessingLoop(source, noop)
+  const loop = new ProcessingLoop(source, noop)
   loop.start()
   await isDone
   expect(returnSpy).not.toBeCalled()
@@ -55,7 +70,7 @@ test('stop generator', async () => {
   const source = infiniteIntegers()
   const returnSpy = jest.spyOn(source, 'return')
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new AnchorProcessingLoop(source, noop)
+  const loop = new ProcessingLoop(source, noop)
   loop.start()
   expect(returnSpy).not.toBeCalled()
   await loop.stop()
@@ -72,7 +87,7 @@ test('pass error to .stop', async () => {
       throw new Error(`Valhalla welcomes you`)
     }
   }
-  const loop = new AnchorProcessingLoop(source, noop)
+  const loop = new ProcessingLoop(source, noop)
   loop.start()
   await defer
   expect(returnSpy).not.toBeCalled()

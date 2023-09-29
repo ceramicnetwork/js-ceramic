@@ -1,75 +1,45 @@
-export class Deferred<T = void> {
-  readonly resolve: (t: T) => void
-  readonly reject: (e: Error) => void
-  readonly then: Promise<T>['then']
-  readonly catch: Promise<T>['catch']
+import { ProcessingLoop } from './processing-loop.js'
+import type { CASClient } from './anchor-service.js'
+import type {
+  AnchorRequestStore,
+  AnchorRequestStoreListResult,
+} from '../store/anchor-request-store.js'
+import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
+import type { AnchorLoopHandler } from './anchor-service.js'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 
-  constructor() {
-    let dResolve: Deferred<T>['resolve']
-    let dReject: Deferred<T>['reject']
-
-    const promise = new Promise<T>((resolve, reject) => {
-      dResolve = resolve
-      dReject = reject
-    })
-    this.resolve = dResolve
-    this.reject = dReject
-    this.then = promise.then.bind(promise)
-    this.catch = promise.catch.bind(promise)
-  }
-}
-
-export class AnchorProcessingLoop<T> {
-  private readonly source: AsyncGenerator<T>
-  private readonly handleValue: (value: T) => Promise<void>
-  #processing: Promise<void> | undefined
-  #defer: Deferred
-  #abortController: AbortController
-
+export class AnchorProcessingLoop {
+  #loop: ProcessingLoop<AnchorRequestStoreListResult>
   constructor(
-    source: AnchorProcessingLoop<T>['source'],
-    onValue: AnchorProcessingLoop<T>['handleValue']
+    pollInterval: number,
+    batchSize: number,
+    cas: CASClient,
+    store: AnchorRequestStore,
+    logger: DiagnosticsLogger,
+    eventHandler: AnchorLoopHandler
   ) {
-    this.source = source
-    this.handleValue = onValue
-    this.#processing = undefined
-    this.#defer = new Deferred()
-    this.#abortController = new AbortController()
-  }
-
-  start() {
-    const abortion = new Promise<IteratorResult<T>>((resolve) => {
-      if (this.#abortController.signal.aborted) {
-        resolve({ done: true, value: undefined })
-      }
-      const done = () => {
-        this.#abortController.signal.removeEventListener('abort', done)
-        resolve({ done: true, value: undefined })
-      }
-      this.#abortController.signal.addEventListener('abort', done)
-    })
-    const processing = async (): Promise<void> => {
+    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), async (entry) => {
       try {
-        let isDone = false
-        do {
-          const next = await Promise.race([this.source.next(), abortion])
-          isDone = next.done
-          if (isDone) break
-          const value = next.value
-          await this.handleValue(value)
-        } while (!isDone)
-        this.#defer.resolve()
+        const event = await cas.get(entry.key, entry.value.cid).catch(async () => {
+          const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
+          return cas.create(new AnchorRequestCarFileReader(requestCAR), false)
+        })
+        const isTerminal = await eventHandler.handle(event)
+        if (isTerminal) {
+          await store.remove(entry.key)
+        }
       } catch (e) {
-        this.#defer.reject(e)
+        logger.err(e)
       }
-    }
-    this.#processing = processing()
+      await new Promise((resolve) => setTimeout(resolve, pollInterval))
+    })
   }
 
-  async stop() {
-    this.#abortController.abort('STOP')
-    await this.source.return(undefined)
-    await this.#processing
-    await this.#defer
+  start(): void {
+    this.#loop.start()
+  }
+
+  async stop(): Promise<void> {
+    return this.#loop.stop()
   }
 }

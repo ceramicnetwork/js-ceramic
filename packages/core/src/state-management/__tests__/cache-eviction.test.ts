@@ -3,7 +3,6 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
-import { filter, firstValueFrom } from 'rxjs'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
@@ -108,7 +107,7 @@ test('Stream subscribed, RunningState not evicted', async () => {
   const state$ = await ceramic.repository.load(stream.id, {})
   await TileDocument.create(ceramic, { evict: true }, undefined, {
     anchor: false,
-    publish: false, // FIXME Polled anchoring might be involved here
+    publish: false,
   })
 
   const state2$ = await ceramic.repository.load(stream.id, {})

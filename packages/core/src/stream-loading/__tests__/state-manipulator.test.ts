@@ -68,9 +68,13 @@ describe('StateManipulator test', () => {
 
     // Create a standard stream and log to use throughout tests.
     doc = await TileDocument.create(ceramic, CONTENT0)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
     await TestUtils.anchorUpdate(ceramic, doc)
     await doc.update(CONTENT1)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
     await doc.update(CONTENT2)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
+
     await TestUtils.anchorUpdate(ceramic, doc)
 
     commits = (await logSyncer.syncFullLog(doc.id, doc.tip)).commits

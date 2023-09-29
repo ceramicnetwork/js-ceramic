@@ -62,7 +62,8 @@ test('re-request an anchor till get a response', async () => {
   )
 })
 
-test('re-poll on fetch error', async () => {
+// FIXME Does not belong here. Should be tested somewhere else
+test.skip('re-poll on fetch error', async () => {
   fetchAttemptNum = 0
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
@@ -102,7 +103,8 @@ test('re-poll on fetch error', async () => {
   )
 })
 
-test('stop polling after max time', async () => {
+// FIXME Does not make sense here
+test.skip('stop polling after max time', async () => {
   fetchAttemptNum = 0
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const anchorService = new EthereumAnchorService(

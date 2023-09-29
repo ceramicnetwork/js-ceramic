@@ -141,6 +141,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
   describe('syncStream', () => {
     test('basic stream sync', async () => {
       const doc = await TileDocument.create(ceramic, CONTENT0)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
 
       const state0 = await streamLoader.loadStream(doc.id, 3)
       expectStatesEqualWithPendingAnchor(doc.state, state0)
@@ -158,6 +159,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       expect(state2A).toEqual(state2B)
 
       await doc.update(CONTENT2)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
       await TestUtils.anchorUpdate(ceramic, doc)
 
       const state3A = await streamLoader.syncStream(state0, 3)
@@ -172,9 +174,12 @@ describe('StreamLoader querying against real Ceramic node', () => {
   describe('stateAtCommit', () => {
     test('basic ability to load stream at various CommitIDs', async () => {
       const doc = await TileDocument.create(ceramic, CONTENT0)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
       await TestUtils.anchorUpdate(ceramic, doc)
       await doc.update(CONTENT1)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
       await doc.update(CONTENT2)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
       await TestUtils.anchorUpdate(ceramic, doc)
       const commits = doc.allCommitIds
       expect(commits.length).toEqual(5)
@@ -215,8 +220,10 @@ describe('StreamLoader querying against real Ceramic node', () => {
 
     test('commit ahead of current state', async () => {
       const stream = await TileDocument.create(ceramic, CONTENT0)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       const initialState = cloneDeep(stream.state)
       await stream.update(CONTENT1)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       await TestUtils.anchorUpdate(ceramic, stream)
 
       // Now load the stream at a commitID ahead of what is currently in the state
@@ -245,8 +252,10 @@ describe('StreamLoader querying against real Ceramic node', () => {
 
     test('throw if commit rejected by conflict resolution', async () => {
       const stream = await TileDocument.create(ceramic, CONTENT0)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       const conflictingUpdate = await stream.makeCommit(ceramic, CONTENT2)
       await stream.update(CONTENT1)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       await TestUtils.anchorUpdate(ceramic, stream)
 
       const conflictingUpdateCID = await dispatcher.storeCommit(conflictingUpdate)
@@ -260,7 +269,9 @@ describe('StreamLoader querying against real Ceramic node', () => {
   describe('loadGenesisState', () => {
     test('load at genesis commit', async () => {
       const doc = await TileDocument.create(ceramic, CONTENT0)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
       await doc.update(CONTENT1)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
       await TestUtils.anchorUpdate(ceramic, doc)
       expect(doc.state.log.length).toEqual(3)
 
@@ -354,12 +365,15 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
     )
 
     stream = await TileDocument.create(ceramic, CONTENT0)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
     states.push(stream.state)
     await TestUtils.anchorUpdate(ceramic, stream)
     states.push(stream.state)
     await stream.update(CONTENT1)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
     states.push(stream.state)
     await stream.update(CONTENT2)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
     states.push(stream.state)
     await TestUtils.anchorUpdate(ceramic, stream)
     states.push(stream.state)

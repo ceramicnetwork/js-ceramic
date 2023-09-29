@@ -60,6 +60,9 @@ import {
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
+import { AnchorLoopHandler } from './anchor/anchor-service.js'
+import { CID } from 'multiformats'
+import { CAR } from 'cartonne'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 
@@ -440,14 +443,19 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._readOnly) {
-        await this.anchorService.init(
-          this.repository.anchorRequestStore,
-          async (event: AnchorEvent): Promise<boolean> => {
-            const state$ = await this.repository.fromMemoryOrStore(event.streamId)
+        const carBuilder = this.repository._internals.anchorRequestCarBuilder
+        const repository = this.repository
+        const handler: AnchorLoopHandler = {
+          buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
+            return carBuilder.build(streamId, tip)
+          },
+          async handle(event: AnchorEvent): Promise<boolean> {
+            const state$ = await repository.fromMemoryOrStore(event.streamId)
             if (!state$) return true
-            return this.repository._internals.handleAnchorResponse2(state$, event)
-          }
-        ) // FIXME Init dependency hell
+            return repository._internals.handleAnchorResponse2(state$, event)
+          },
+        }
+        await this.anchorService.init(this.repository.anchorRequestStore, handler) // FIXME Init dependency hell
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
           this.anchorService,

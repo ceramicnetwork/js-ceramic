@@ -167,11 +167,13 @@ describe('Ceramic API', () => {
 
       const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, link.tip)
       await TestUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       await link.setDid(DID_USED, authProvider, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, link.tip)
       await TestUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 

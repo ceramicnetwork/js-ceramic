@@ -2,11 +2,15 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
 import { GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
+import { type CAR } from 'cartonne'
+import { carAsUint8Array, uint8ArrayAsBase64 } from '@ceramicnetwork/codecs'
+import { decode } from 'codeco'
 
 export type AnchorRequestData = {
   cid: CID
   timestamp: number
   genesis: GenesisCommit
+  requestCAR?: CAR
 }
 
 export type AnchorRequestStoreListResult = {
@@ -18,11 +22,14 @@ function generateKey(object: StreamID): string {
   return object.toString()
 }
 
+const carAsBase64 = uint8ArrayAsBase64.pipe(carAsUint8Array)
+
 export function serializeAnchorRequestData(value: AnchorRequestData): any {
   return JSON.stringify({
     cid: value.cid.toString(),
     timestamp: value.timestamp,
     genesis: StreamUtils.serializeCommit(value.genesis),
+    requestCAR: value.requestCAR ? carAsBase64.encode(value.requestCAR) : undefined,
   })
 }
 
@@ -32,6 +39,7 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
     cid: CID.parse(parsed.cid),
     timestamp: parsed.timestamp,
     genesis: StreamUtils.deserializeCommit(parsed.genesis),
+    requestCAR: parsed.requestCAR ? decode(carAsBase64, parsed.requestCAR) : undefined,
   }
 }
 

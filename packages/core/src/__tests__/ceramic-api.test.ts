@@ -121,6 +121,7 @@ describe('Ceramic API', () => {
 
     it('can load the previous stream commit', async () => {
       const streamOg = await TileDocument.create<any>(ceramic, { test: 321 })
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, streamOg.tip)
 
       // wait for anchor (new commit)
       await TestUtils.anchorUpdate(ceramic, streamOg)
@@ -132,6 +133,7 @@ describe('Ceramic API', () => {
       const stateOg = streamOg.state
 
       await streamOg.update({ test: 'abcde' })
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, streamOg.tip)
 
       // wait for anchor (new commit)
       await TestUtils.anchorUpdate(ceramic, streamOg)
@@ -175,9 +177,11 @@ describe('Ceramic API', () => {
       const contentRejected = { test: 'rejected' }
 
       const streamOg = await TileDocument.create<any>(ceramic, contentOg)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, streamOg.tip)
 
       // Create an anchor commit that the original stream handle won't know about
       const streamCopy = await TileDocument.load(ceramic, streamOg.id)
+
       await TestUtils.anchorUpdate(ceramic, streamCopy)
       expect(streamCopy.state.log.length).toEqual(2)
 
@@ -320,11 +324,13 @@ describe('Ceramic API', () => {
     it('can update schema and then assign to stream with now valid content', async () => {
       // Create stream with content that has type 'number'.
       const stream = await TileDocument.create(ceramic, { a: 1 })
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       await TestUtils.anchorUpdate(ceramic, stream)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the stream created above.
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, schemaDoc.tip)
 
       // wait for anchor
       await TestUtils.anchorUpdate(ceramic, schemaDoc)
@@ -335,12 +341,14 @@ describe('Ceramic API', () => {
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = 'number'
       await schemaDoc.update(updatedSchema)
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, schemaDoc.tip)
       // wait for anchor
       await TestUtils.anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the stream without error.
       await stream.update(stream.content, { schema: schemaDoc.commitId })
+      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       await TestUtils.anchorUpdate(ceramic, stream)
       expect(stream.content).toEqual({ a: 1 })
 

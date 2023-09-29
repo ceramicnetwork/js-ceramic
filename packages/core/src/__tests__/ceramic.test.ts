@@ -17,7 +17,7 @@ import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
 
 const MOCK_WAS_CALLED_DELAY = 3 * 1000
-const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
+const TEST_TIMEOUT = 1000 * 30 // 12 minutes
 
 function createCeramic(
   ipfs: IpfsApi,
@@ -90,6 +90,7 @@ describe('Ceramic integration', () => {
         const ceramic2 = await createCeramic(ipfs2)
 
         const stream1 = await TileDocument.create(ceramic1, { test: 456 })
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -161,7 +162,9 @@ describe('Ceramic integration', () => {
 
         // ceramic node 2 shouldn't need to have the stream open in order to forward the message
         const stream1 = await TileDocument.create(ceramic1, null, metadata)
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
         await stream1.update({ test: 321 })
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -174,6 +177,7 @@ describe('Ceramic integration', () => {
         expect(stream3.content).toEqual(stream1.content)
 
         await stream1.update({ test: 'abcde' })
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -204,11 +208,11 @@ describe('Ceramic integration', () => {
         const ceramic2 = await createCeramic(ipfs2)
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
-
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         await stream1.update({ test: 'abcde' })
-
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         const logCommits = await ceramic1.loadStreamCommits(stream1.id)
@@ -336,6 +340,7 @@ describe('Ceramic integration', () => {
           publish: false,
         })
         expect(stream1).toBeDefined()
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -346,7 +351,7 @@ describe('Ceramic integration', () => {
         loadSpy1.mockClear()
 
         await stream1.update({ test: 'abcde' }, null, { publish: false })
-
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
@@ -385,6 +390,7 @@ describe('Ceramic integration', () => {
         expect(addSpy1).toBeCalledTimes(1)
         expect(stream1).toBeDefined()
 
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         addSpy1.mockClear()
@@ -394,6 +400,7 @@ describe('Ceramic integration', () => {
         expect(loadSpy1).toBeCalledTimes(1)
         expect(addSpy1).toBeCalledTimes(0)
 
+        await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)

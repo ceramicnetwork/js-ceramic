@@ -152,10 +152,12 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('gets anchor commit updates', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 })
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     expect(doc1.state.log.length).toEqual(2)
     expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     const doc2 = await TileDocument.create(client, { test: 1234 })
+    await TestUtils.hasAcceptedAnchorRequest(core, doc2.tip)
     await anchorDoc(doc2)
     expect(doc2.state.log.length).toEqual(2)
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -163,12 +165,14 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('loads documents correctly', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 })
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     const doc2 = await client.loadStream(doc1.id)
     expect(doc1.content).toEqual(doc2.content)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
 
     const doc3 = await TileDocument.create(client, { test: 456 })
+    await TestUtils.hasAcceptedAnchorRequest(core, doc3.tip)
     await anchorDoc(doc3)
     const doc4 = await core.loadStream(doc3.id)
     expect(doc3.content).toEqual(doc4.content)
@@ -177,6 +181,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   it('loads document commits correctly', async () => {
     const doc1 = await TileDocument.create(core, { test: 123 })
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     const doc2 = await TileDocument.load(client, doc1.id)
     expect(doc1.content).toEqual(doc2.content)
@@ -204,12 +209,14 @@ describe('Ceramic interop: core <> http-client', () => {
     const finalContent = { ...middleContent, c: 'final' }
 
     const doc1 = await TileDocument.create(core, initialContent)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     const doc2 = await client.loadStream<TileDocument>(doc1.id)
     const subscription1 = doc1.subscribe()
     const subscription2 = doc2.subscribe()
     // change from core viewable in client
     await doc1.update(middleContent)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     await TestUtils.waitForConditionOrTimeout(async () => {
       return (
@@ -223,6 +230,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // change from client viewable in core
 
     await doc2.update(finalContent)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc2.tip)
     await anchorDoc(doc2)
     await TestUtils.waitForConditionOrTimeout(async () => {
       return JSON.stringify(doc1.content) === JSON.stringify(doc2.content)
@@ -241,10 +249,12 @@ describe('Ceramic interop: core <> http-client', () => {
     const finalContent = { ...middleContent, c: 'final' }
 
     const doc1 = await TileDocument.create(core, initialContent)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     const doc2 = await client.loadStream<TileDocument>(doc1.id)
     // change from core viewable in client
     await doc1.update(middleContent)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc1.tip)
     await anchorDoc(doc1)
     await doc2.sync()
     await doc1.sync()
@@ -254,6 +264,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // change from client viewable in core
 
     await doc2.update(finalContent)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc2.tip)
     await anchorDoc(doc2)
     await doc2.sync()
     await doc1.sync()
@@ -267,6 +278,7 @@ describe('Ceramic interop: core <> http-client', () => {
     const contentRejected = { test: 'rejected' }
 
     const streamOg = await TileDocument.create<any>(client, contentOg)
+    await TestUtils.hasAcceptedAnchorRequest(core, streamOg.tip)
 
     // Create an anchor commit that the original stream handle won't know about
     const streamCopy = await TileDocument.load(core, streamOg.id)
@@ -291,14 +303,17 @@ describe('Ceramic interop: core <> http-client', () => {
     const content2 = { test: 456 }
     const content3 = { test: 789 }
     const doc = await TileDocument.create(core, content1)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc.tip)
     await anchorDoc(doc)
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     await doc.update(content2)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc.tip)
     await anchorDoc(doc)
     expect(doc.state.log.length).toEqual(4)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     await doc.update(content3)
+    await TestUtils.hasAcceptedAnchorRequest(core, doc.tip)
     await anchorDoc(doc)
     expect(doc.state.log.length).toEqual(6)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -489,6 +504,7 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
     await doc.requestAnchor()
+    await TestUtils.hasAcceptedAnchorRequest(core, doc.tip)
     await anchorDoc(doc)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
@@ -497,13 +513,17 @@ describe('Ceramic interop: core <> http-client', () => {
     let docA, docB, docC, docD
     beforeEach(async () => {
       docD = await TileDocument.create(core, { test: '321d' })
+      await TestUtils.hasAcceptedAnchorRequest(core, docD.tip)
       docC = await TileDocument.create(core, { test: '321c' })
+      await TestUtils.hasAcceptedAnchorRequest(core, docC.tip)
       docB = await TileDocument.create(core, { d: docD.id.toUrl(), notDoc: '123' })
+      await TestUtils.hasAcceptedAnchorRequest(core, docB.tip)
       docA = await TileDocument.create(core, {
         b: docB.id.toUrl(),
         c: docC.id.toUrl(),
         notDoc: '123',
       })
+      await TestUtils.hasAcceptedAnchorRequest(core, docA.tip)
     })
 
     it('responds to multiqueries request', async () => {

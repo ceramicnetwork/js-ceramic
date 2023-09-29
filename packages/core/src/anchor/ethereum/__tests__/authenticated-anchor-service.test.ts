@@ -6,7 +6,6 @@ import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor
 import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
-import { lastValueFrom } from 'rxjs'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
 
 const FAUX_ANCHOR_STORE = {
@@ -78,9 +77,8 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       100
     )
 
-    const observable = await anchorService.requestAnchor(generateFakeCarFile(), false)
-    const anchorStatus = await lastValueFrom(observable)
-    expect(anchorStatus.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
+    const anchorEvent = await anchorService.requestAnchor(generateFakeCarFile(), true)
+    expect(anchorEvent.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
 
     expect(signRequestSpy).toHaveBeenCalledTimes(2)
     const signRequestResult = (await signRequestSpy.mock.results[0].value) as any

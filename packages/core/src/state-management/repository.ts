@@ -544,7 +544,7 @@ export class Repository {
   /**
    * Request anchor for the latest stream state
    */
-  async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
+  async anchor(state$: RunningState, opts: AnchorOpts): Promise<void> {
     if (!this.anchorService) {
       throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }

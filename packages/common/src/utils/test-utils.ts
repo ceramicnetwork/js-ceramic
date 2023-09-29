@@ -150,6 +150,13 @@ export class TestUtils {
     return new StreamID(0, this.randomCID())
   }
 
+  static async hasAcceptedAnchorRequest(ceramic: CeramicApi, tip: CID): Promise<void> {
+    const anchorService = ceramic.anchorService
+    if ('hasAccepted' in anchorService) {
+      return anchorService.hasAccepted(tip)
+    }
+  }
+
   /**
    * Trigger anchor for a stream. WARNING: can only work on Ceramic Core.
    * @param ceramic Ceramic Core instance.

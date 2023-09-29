@@ -303,6 +303,7 @@ describe('Model API multi-node tests', () => {
 
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
+    await TestUtils.hasAcceptedAnchorRequest(ceramic0, model.tip)
     await TestUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
