@@ -24,6 +24,7 @@ export class AnchorProcessingLoop<T> {
   private readonly handleValue: (value: T) => Promise<void>
   #processing: Promise<void> | undefined
   #defer: Deferred
+  #abortController: AbortController
 
   constructor(
     source: AnchorProcessingLoop<T>['source'],
@@ -33,19 +34,30 @@ export class AnchorProcessingLoop<T> {
     this.handleValue = onValue
     this.#processing = undefined
     this.#defer = new Deferred()
+    this.#abortController = new AbortController()
   }
 
   start() {
+    const abortion = new Promise<IteratorResult<T>>((resolve) => {
+      if (this.#abortController.signal.aborted) {
+        resolve({ done: true, value: undefined })
+      }
+      const done = () => {
+        this.#abortController.signal.removeEventListener('abort', done)
+        resolve({ done: true, value: undefined })
+      }
+      this.#abortController.signal.addEventListener('abort', done)
+    })
     const processing = async (): Promise<void> => {
       try {
-        let canContinue = true
+        let isDone = false
         do {
-          const next = await this.source.next()
-          canContinue = !next.done
-          if (!canContinue) break
+          const next = await Promise.race([this.source.next(), abortion])
+          isDone = next.done
+          if (isDone) break
           const value = next.value
           await this.handleValue(value)
-        } while (canContinue)
+        } while (!isDone)
         this.#defer.resolve()
       } catch (e) {
         this.#defer.reject(e)
@@ -55,6 +67,7 @@ export class AnchorProcessingLoop<T> {
   }
 
   async stop() {
+    this.#abortController.abort('STOP')
     await this.source.return(undefined)
     await this.#processing
     await this.#defer
