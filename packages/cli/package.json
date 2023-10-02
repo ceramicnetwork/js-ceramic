@@ -57,7 +57,7 @@
     "cors": "^2.8.5",
     "did-resolver": "^4.0.1",
     "dids": "^4.0.0",
-    "ethr-did-resolver": "^5.0.3",
+    "ethr-did-resolver": "^9.0.0",
     "express": "^4.17.2",
     "http-status-codes": "^2.2.0",
     "ipfs-http-client": "^60.0.0",
