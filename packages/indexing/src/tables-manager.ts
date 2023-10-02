@@ -17,6 +17,7 @@ import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import {
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
+  MODEL_IMPLEMENTS_TABLE_NAME,
   fieldsIndexName,
 } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
@@ -91,6 +92,10 @@ export class TablesManager {
         validSchema: STRUCTURES[this.dbType].CONFIG_TABLE_MODEL_INDEX,
       },
       { tableName: CONFIG_TABLE_NAME, validSchema: STRUCTURES[this.dbType].CONFIG_TABLE },
+      {
+        tableName: MODEL_IMPLEMENTS_TABLE_NAME,
+        validSchema: STRUCTURES[this.dbType].MODEL_IMPLEMENTS_TABLE,
+      },
     ]
   }
 

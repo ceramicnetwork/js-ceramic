@@ -6,12 +6,15 @@ import {
   type TypeOf,
   identity,
   literal,
+  nullCodec,
   optional,
   record,
   sparse,
   strict,
   string,
   union,
+  array,
+  boolean,
 } from 'codeco'
 import type { JSONSchema } from 'json-schema-typed/draft-2020-12'
 
@@ -62,6 +65,8 @@ export function createSchemaType<T extends SchemaType>(type: T['type'], name: st
 export const ObjectSchema = createSchemaType<JSONSchema.Object>('object', 'ObjectSchema')
 export type ObjectSchema = TypeOf<typeof ObjectSchema>
 
+export const optionalModelString = union([streamIdString, nullCodec])
+
 /**
  * Metadata for a Model Stream
  */
@@ -94,6 +99,17 @@ export const ModelAccountRelation = union(
 )
 export type ModelAccountRelation = TypeOf<typeof ModelAccountRelation>
 
+export const ModelAccountRelationV2 = union(
+  [
+    strict({ type: literal('list') }),
+    strict({ type: literal('single') }),
+    strict({ type: literal('none') }), // Interfaces have no account relation
+    strict({ type: literal('set'), fields: array(string) }),
+  ],
+  'ModelAccountRelationV2'
+)
+export type ModelAccountRelationV2 = TypeOf<typeof ModelAccountRelationV2>
+
 /**
  * Identifies types of properties that are supported as relations by the indexing service.
  *
@@ -111,6 +127,15 @@ export const ModelRelationDefinition = union(
 )
 export type ModelRelationDefinition = TypeOf<typeof ModelRelationDefinition>
 
+export const ModelRelationDefinitionV2 = union(
+  [
+    strict({ type: literal('account') }),
+    strict({ type: literal('document'), model: optionalModelString }),
+  ],
+  'ModelRelationDefinitionV2'
+)
+export type ModelRelationDefinitionV2 = TypeOf<typeof ModelRelationDefinitionV2>
+
 /**
  * A mapping between model's property names and types of relation properties
  *
@@ -122,6 +147,13 @@ export const ModelRelationsDefinition = record(
   'ModelRelationsDefinition'
 )
 export type ModelRelationsDefinition = TypeOf<typeof ModelRelationsDefinition>
+
+export const ModelRelationsDefinitionV2 = record(
+  string,
+  ModelRelationDefinitionV2,
+  'ModelRelationsDefinitionV2'
+)
+export type ModelRelationsDefinitionV2 = TypeOf<typeof ModelRelationsDefinitionV2>
 
 export const ModelDocumentMetadataViewDefinition = union(
   [strict({ type: literal('documentAccount') }), strict({ type: literal('documentVersion') })],
@@ -138,6 +170,16 @@ export const ModelRelationViewDefinition = union(
   'ModelRelationViewDefinition'
 )
 export type ModelRelationViewDefinition = TypeOf<typeof ModelRelationViewDefinition>
+
+export const ModelRelationViewDefinitionV2 = union(
+  [
+    strict({ type: literal('relationDocument'), model: optionalModelString, property: string }),
+    strict({ type: literal('relationFrom'), model: streamIdString, property: string }),
+    strict({ type: literal('relationCountFrom'), model: streamIdString, property: string }),
+  ],
+  'ModelRelationViewDefinitionV2'
+)
+export type ModelRelationViewDefinitionV2 = TypeOf<typeof ModelRelationViewDefinitionV2>
 
 /**
  * Identifies types of properties that are supported as view properties at DApps' runtime
@@ -158,6 +200,12 @@ export const ModelViewDefinition = union(
 )
 export type ModelViewDefinition = TypeOf<typeof ModelViewDefinition>
 
+export const ModelViewDefinitionV2 = union(
+  [ModelDocumentMetadataViewDefinition, ModelRelationViewDefinitionV2],
+  'ModelViewDefinitionV2'
+)
+export type ModelViewDefinitionV2 = TypeOf<typeof ModelViewDefinitionV2>
+
 /**
  * A mapping between model's property names and types of view properties
  *
@@ -166,12 +214,15 @@ export type ModelViewDefinition = TypeOf<typeof ModelViewDefinition>
 export const ModelViewsDefinition = record(string, ModelViewDefinition, 'ModelViewDefinition')
 export type ModelViewsDefinition = TypeOf<typeof ModelViewsDefinition>
 
+export const ModelViewsDefinitionV2 = record(string, ModelViewDefinitionV2, 'ModelViewDefinitionV2')
+export type ModelViewsDefinitionV2 = TypeOf<typeof ModelViewsDefinitionV2>
+
 /**
  * Contents of a Model Stream.
  */
-export const ModelDefinition = sparse(
+export const ModelDefinitionV1 = sparse(
   {
-    version: string,
+    version: literal('1.0'),
     name: string,
     description: optional(string),
     schema: ObjectSchema,
@@ -179,6 +230,25 @@ export const ModelDefinition = sparse(
     relations: optional(ModelRelationsDefinition),
     views: optional(ModelViewsDefinition),
   },
-  'ModelDefinition'
+  'ModelDefinitionV1'
 )
+export type ModelDefinitionV1 = TypeOf<typeof ModelDefinitionV1>
+
+export const ModelDefinitionV2 = sparse(
+  {
+    version: literal('2.0'),
+    name: string,
+    description: optional(string),
+    interface: boolean,
+    implements: array(streamIdString),
+    schema: ObjectSchema,
+    accountRelation: ModelAccountRelationV2,
+    relations: optional(ModelRelationsDefinitionV2),
+    views: optional(ModelViewsDefinitionV2),
+  },
+  'ModelDefinitionV2'
+)
+export type ModelDefinitionV2 = TypeOf<typeof ModelDefinitionV2>
+
+export const ModelDefinition = union([ModelDefinitionV1, ModelDefinitionV2], 'ModelDefinition')
 export type ModelDefinition = TypeOf<typeof ModelDefinition>
