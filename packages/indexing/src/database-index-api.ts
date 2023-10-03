@@ -158,7 +158,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         })
       })
       if (modelImplements.length) {
-        await trx(MODEL_IMPLEMENTS_TABLE_NAME).insert(modelImplements)
+        await trx(MODEL_IMPLEMENTS_TABLE_NAME).insert(modelImplements).onConflict().ignore()
       }
     })
   }

@@ -10,7 +10,7 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'myModel',
-  version: Model.VERSION,
+  version: '1.0',
   schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
 }
@@ -21,7 +21,7 @@ const MODEL_STREAM_ID = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc0
 
 const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
   name: 'myModelWithARelation',
-  version: Model.VERSION,
+  version: '1.0',
   schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
@@ -106,7 +106,7 @@ describe('Model API http-client tests', () => {
     // @ts-ignore this is not a valid ModelDefinition - and that's the point of this test
     const invalidIncompleteModelDefinition: ModelDefinition = {
       name: 'myModel',
-      version: Model.VERSION,
+      version: '1.0',
     }
 
     await expect(Model.create(ceramic, invalidIncompleteModelDefinition)).rejects.toThrow(
@@ -134,7 +134,7 @@ describe('Model API http-client tests', () => {
     const linkedDocType: 'account' | 'document' = 'foobar'
     const invalidRelationModelDefinition: ModelDefinition = {
       name: 'myModel',
-      version: Model.VERSION,
+      version: '1.0',
       schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
       relations: {
@@ -151,7 +151,7 @@ describe('Model API http-client tests', () => {
     // @ts-ignore this is not a valid ModelDefinition - and that's the point of this test
     const invalidRelationModelDefinition: ModelDefinition = {
       name: 'myModel',
-      version: Model.VERSION,
+      version: '1.0',
       schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
       relations: {

@@ -263,3 +263,17 @@ export interface MultiQuery {
    */
   opts?: LoadOpts
 }
+
+export type CeramicCoreApi = {
+  /**
+   * Loads Stream instance
+   * @param streamId - Stream ID
+   * @param opts - Initialization options
+   */
+  loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>
+  /**
+   * Loads Stream state
+   * @param streamId - Stream ID
+   */
+  loadStreamState(streamId: StreamID): Promise<StreamState | undefined>
+}

@@ -19,7 +19,7 @@ const CONTENT3 = { myData: 3 }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -38,7 +38,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 
 const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   name: 'MySingleModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -61,7 +61,7 @@ const MODEL_STREAM_ID = 'kjzl6hvfrbw6cbdjuaefdwodr2xb2n8ga1b5ss91roslr1iffmpgehc
 
 const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   name: 'MyModelWithARelation',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

@@ -6,79 +6,30 @@ import type {
   PaginationQuery,
   StreamState,
   DiagnosticsLogger,
-  LoadOpts,
-  Stream,
+  CeramicCoreApi,
 } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
 import { IndexStreamArgs } from './database-index-api.js'
-import { type CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { IndexingConfig } from './build-indexing.js'
 import { makeIndexApi } from './make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
-import { Model } from '@ceramicnetwork/stream-model'
+import {
+  type LoadingInterfaceImplements,
+  Model,
+  loadAllModelInterfaces,
+} from '@ceramicnetwork/stream-model'
 import { ISyncQueryApi } from './history-sync/interfaces.js'
-
-export type CeramicCoreApi = {
-  loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>
-  loadStreamState(streamId: StreamID): Promise<StreamState | undefined>
-}
-
-type LoadingInterfaceImplements = Record<string, Promise<Array<string>>>
-
-/**
- * Load a model and validate it is an interface, then return the interfaces it implements
- *
- * @param core CeramicCoreApi
- * @param modelID string
- * @returns Promise<Array<string>>
- */
-export async function loadInterfaceImplements(
-  core: CeramicCoreApi,
-  modelID: string
-): Promise<Array<string>> {
-  const modelState = await core.loadStream(modelID, {})
-  const content = modelState.state.next?.content ?? modelState.state.content
-  Model.assertVersionValid(content, 'major')
-  if (!content.interface) {
-    throw new Error(`Model ${modelID} is not an interface`)
-  }
-  return content.implements ?? []
-}
-
-/**
- * Recursively load all the interfaces implemented by the given interfaces input.
- * The output will contain duplicate entries if interfaces are implemented multiple times.
- *
- * @param interfaces Array<string>
- * @param core CeramicCoreApi
- * @param loading LoadingInterfaceImplements
- * @returns Promise<Array<string>>
- */
-export async function loadModelInterfaces(
-  interfaces: Array<string>,
-  core: CeramicCoreApi,
-  loading: LoadingInterfaceImplements
-): Promise<Array<string>> {
-  // The same interfaces could be implemented multiple times so we synchronously keep track of their loading
-  const toLoad = interfaces.map((modelID) => {
-    if (loading[modelID] == null) {
-      loading[modelID] = loadInterfaceImplements(core, modelID).then((ownImplements) => {
-        return loadModelInterfaces(ownImplements, core, loading).then((subImplements) => {
-          return [...ownImplements, ...subImplements]
-        })
-      })
-    }
-    return loading[modelID]
-  })
-  const loaded = await Promise.all(toLoad)
-  return loaded.flat().filter(Boolean) as Array<string>
-}
 
 /**
  * Takes a ModelData, loads it, and returns the IndexModelArgs necessary to prepare the
  * database for indexing that model.
  */
-async function _getIndexModelArgs(req: ModelData, core: CeramicCoreApi): Promise<IndexModelArgs> {
+async function _getIndexModelArgs(
+  req: ModelData,
+  core: CeramicCoreApi,
+  loading: LoadingInterfaceImplements = {}
+): Promise<IndexModelArgs> {
   const modelStreamId = req.streamID
   if (modelStreamId.type != Model.STREAM_TYPE_ID && !modelStreamId.equals(Model.MODEL)) {
     throw new Error(`Cannot index ${modelStreamId.toString()}, it is not a Model StreamID`)
@@ -99,9 +50,7 @@ async function _getIndexModelArgs(req: ModelData, core: CeramicCoreApi): Promise
       opts.relations = content.relations
     }
     if (content.implements) {
-      const implementsInterfaces = await loadModelInterfaces(content.implements, core, {})
-      // Convert to Set to remove possible duplicates
-      opts.implements = Array.from(new Set(implementsInterfaces))
+      opts.implements = await loadAllModelInterfaces(core, content.implements, loading)
     }
     opts.indices = req.indices
   }
@@ -210,7 +159,8 @@ export class LocalIndexApi implements IndexApi {
 
   async convertModelDataToIndexModelsArgs(
     modelsNoLongerIndexed: Array<ModelData>,
-    modelData: ModelData
+    modelData: ModelData,
+    loading: LoadingInterfaceImplements = {}
   ): Promise<IndexModelArgs> {
     const modelStreamId = modelData.streamID
     this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
@@ -225,16 +175,17 @@ export class LocalIndexApi implements IndexApi {
       )
     }
 
-    return await _getIndexModelArgs(modelData, this.core)
+    return await _getIndexModelArgs(modelData, this.core, loading)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {
     const modelsNoLongerIndexed = (await this.databaseIndexApi?.getModelsNoLongerIndexed()) ?? []
+    const loading = {}
 
     const indexModelsArgs = await Promise.all(
-      models.map(
-        async (idx) => await this.convertModelDataToIndexModelsArgs(modelsNoLongerIndexed, idx)
-      )
+      models.map(async (idx) => {
+        return await this.convertModelDataToIndexModelsArgs(modelsNoLongerIndexed, idx, loading)
+      })
     )
 
     await this.databaseIndexApi?.indexModels(indexModelsArgs)

@@ -30,7 +30,7 @@ const CONTENT6 = { myData: 6, myArray: [6], myString: 'b' }
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -70,7 +70,7 @@ const UNINDEXED_MODEL_STREAM_ID = StreamID.fromString(
 
 const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   name: 'MyModelWithARelation',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
