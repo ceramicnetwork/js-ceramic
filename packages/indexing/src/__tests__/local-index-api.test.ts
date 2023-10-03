@@ -183,7 +183,7 @@ describe('index models with interfaces', () => {
   test('throws when trying to index an interface model', async () => {
     const loadStream = jest.fn(() => ({ state: { content: { version: '2.0', interface: true } } }))
     const core = { loadStream } as unknown as CeramicCoreApi
-    const noop = () => {}
+    const noop = jest.fn()
     const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
     const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
     ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [] }
@@ -220,7 +220,7 @@ describe('index models with interfaces', () => {
       return new Model(runningState as unknown as RunningStateLike, {} as unknown as Context)
     })
     const core = { loadStream } as unknown as CeramicCoreApi
-    const noop = () => {}
+    const noop = jest.fn()
     const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
     const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
     const indexModels = jest.fn()
