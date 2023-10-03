@@ -5,7 +5,7 @@ const SCHEMA_COMMIT_ID = 'k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54a
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

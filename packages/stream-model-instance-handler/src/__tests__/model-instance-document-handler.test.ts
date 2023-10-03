@@ -197,7 +197,7 @@ async function checkSignedCommitMatchesExpectations(
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -217,7 +217,7 @@ const MODEL_DEFINITION: ModelDefinition = {
 // Same as MODEL_DEFINITION but uses the SINGLE accountRelation
 const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -236,7 +236,7 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
 
 const MODEL_DEFINITION_BLOB: ModelDefinition = {
   name: 'MyBlobModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

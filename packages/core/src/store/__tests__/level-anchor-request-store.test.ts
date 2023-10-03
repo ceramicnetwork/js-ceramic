@@ -17,7 +17,7 @@ import all from 'it-all'
 
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -35,7 +35,7 @@ const MODEL_CONTENT_1: ModelDefinition = {
 
 const MODEL_CONTENT_2: ModelDefinition = {
   name: 'MyModel 2',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'single' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -52,7 +52,7 @@ const MODEL_CONTENT_2: ModelDefinition = {
 
 const MODEL_CONTENT_3: ModelDefinition = {
   name: 'MyModel 3',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

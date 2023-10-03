@@ -18,7 +18,7 @@ import { Model, type ModelDefinition } from '@ceramicnetwork/stream-model'
 const seed = 'ADMINSEED'
 const MY_MODEL_1_CONTENT: ModelDefinition = {
   name: 'myModel1',
-  version: Model.VERSION,
+  version: '1.0',
   schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
 }

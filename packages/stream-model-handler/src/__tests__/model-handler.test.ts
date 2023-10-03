@@ -79,7 +79,7 @@ const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
 const FINAL_CONTENT: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -111,7 +111,7 @@ const CONTENT_WITH_INVALID_VIEWS: ModelDefinition = {
 
 const CONTENT_WITH_INVALID_SCHEMA = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',

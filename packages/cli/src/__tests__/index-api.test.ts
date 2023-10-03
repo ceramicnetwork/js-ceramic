@@ -15,7 +15,7 @@ const SEED = randomString(32)
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
-  version: Model.VERSION,
+  version: '1.0',
   accountRelation: { type: 'list' },
   schema: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
