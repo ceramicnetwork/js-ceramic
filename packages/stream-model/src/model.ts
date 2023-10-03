@@ -114,8 +114,8 @@ export class Model extends Stream {
     content: ModelDefinition,
     metadata?: ModelMetadataArgs
   ): Promise<Model> {
-    Model.assertComplete(content)
     Model.assertVersionValid(content, 'minor')
+    Model.assertComplete(content)
 
     const opts: CreateOpts = {
       publish: true,
@@ -145,6 +145,9 @@ export class Model extends Stream {
     content: ModelDefinition,
     satisfies: ValidVersionSatisfies = 'minor'
   ): void {
+    if (content.version == null) {
+      throw new Error(`Missing version for model ${content.name}`)
+    }
     const [expectedMajor, expectedMinor] = parseModelVersion(Model.VERSION)
     const [major, minor] = parseModelVersion(content.version)
 

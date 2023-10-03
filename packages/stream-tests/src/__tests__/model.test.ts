@@ -117,7 +117,7 @@ describe('Model API http-client tests', () => {
   test('Cannot create model without version', async () => {
     const { version, ...modelDefinition } = MODEL_DEFINITION
     await expect(Model.create(ceramic, modelDefinition)).rejects.toThrow(
-      'Invalid value undefined supplied to /(ModelDefinition)/version(string)'
+      'Missing version for model myModel'
     )
   })
 
