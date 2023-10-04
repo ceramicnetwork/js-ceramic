@@ -321,5 +321,5 @@ export interface StreamHandler<T extends Stream> {
    * @param context - Ceramic context
    * @param state - Stream state
    */
-  applyCommit(commitData: CommitData, context: Context, state?: StreamState): Promise<StreamState>
+  applyCommit(commitData: CommitData, context: Context, state?: Readonly<StreamState>): Promise<StreamState>
 }

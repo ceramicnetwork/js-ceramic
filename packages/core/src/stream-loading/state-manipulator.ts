@@ -73,7 +73,7 @@ export class StateManipulator {
 
     for (const commit of log.commits) {
       try {
-        state = await handler.applyCommit(commit, this.context, state)
+        state = await handler.applyCommit(commit, this.context, Object.freeze(state))
       } catch (err) {
         if (throwOnInvalidCommit || state == null) {
           throw err

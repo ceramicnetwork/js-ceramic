@@ -72,7 +72,7 @@ export class ModelHandler implements StreamHandler<Model> {
   async applyCommit(
     commitData: CommitData,
     context: Context,
-    state?: StreamState
+    state?: Readonly<StreamState>
   ): Promise<StreamState> {
     if (state == null) {
       // apply genesis
@@ -153,7 +153,7 @@ export class ModelHandler implements StreamHandler<Model> {
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
+  async _applyAnchor(commitData: CommitData, state: Readonly<StreamState>): Promise<StreamState> {
     return applyAnchorCommit(commitData, state)
   }
 }
