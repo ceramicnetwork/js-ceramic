@@ -661,7 +661,7 @@ export class Ceramic implements CeramicApi {
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
 
-    await this.repository.indexStreamIfNeeded(state$) // todo push down
+    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }
