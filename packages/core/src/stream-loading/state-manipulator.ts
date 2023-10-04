@@ -62,9 +62,8 @@ export class StateManipulator {
     handler: StreamHandler<T>,
     state: StreamState | null,
     log: AppliableStreamLog,
-    throwOnInvalidCommit: boolean,
+    throwOnInvalidCommit: boolean
   ): Promise<StreamState> {
-
     for (const commit of log.commits) {
       try {
         state = await handler.applyCommit(commit, this.context, state)
@@ -264,7 +263,7 @@ export class StateManipulator {
     // Now apply the new log to the shared state
     // No need to clone 'sharedState' as the 'resetStateToCommit' call above will already have
     // effectively cloned the input state.
-    return this._applyLog(handler, sharedState, logToApply, opts.throwOnInvalidCommit,)
+    return this._applyLog(handler, sharedState, logToApply, opts.throwOnInvalidCommit)
   }
 
   /**
