@@ -6,7 +6,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { applyTipToState } from './apply-tip-helper.js'
 
-interface CommitStorer {
+type CommitStorer = {
   storeCommit(data: any, streamId?: StreamID): Promise<CID>
 }
 

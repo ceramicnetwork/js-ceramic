@@ -2,7 +2,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { Observable, timer, takeUntil } from 'rxjs'
 
-interface IPFSPubsubQuerier {
+type IPFSPubsubQuerier = {
   queryNetwork(streamId: StreamID): Observable<CID>
 }
 

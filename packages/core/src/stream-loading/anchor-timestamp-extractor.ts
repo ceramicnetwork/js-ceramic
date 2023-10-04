@@ -8,7 +8,7 @@ import {
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 
-interface IpfsRecordLoader {
+type IpfsRecordLoader = {
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
 }
 
