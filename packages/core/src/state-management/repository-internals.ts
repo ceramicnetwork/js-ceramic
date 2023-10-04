@@ -191,6 +191,7 @@ export class RepositoryInternals {
       StreamUtils.checkForCacaoExpiration(state$.state)
     }
 
+    // TODO(WS1-1269): No need to update state if we loaded from the cache or state store
     await this._updateStateIfPinned(state$)
     if (synced && state$.isPinned) {
       this.markPinnedAndSynced(state$.id)

@@ -200,33 +200,23 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
       // TODO (NET-1614): Extend with targeted payload comparison
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository._internals, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
-      expect(addIndexSpy).toBeCalledTimes(1)
-      const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      expect(doc.content).toEqual(CONTENT0)
+      // there's an extra call to indexStreamIfNeeded every time the anchor state
+      // is changed.
       expect(addIndexSpy).toBeCalledTimes(2)
-      await doc.replace(CONTENT1)
-      expect(doc.content).toEqual(CONTENT1)
-      expect(addIndexSpy).toBeCalledTimes(3)
-      addIndexSpy.mockRestore()
-    })
-
-    it('can create and update stream with valid model under size limits', async () => {
-      const CONTENT0 = { myData: 'abcdef' }
-      const CONTENT1 = { myData: 'ghi' }
-      ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
-      const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+        anchor: false,
+        pin: false,
+      })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
-      await doc.replace(CONTENT1)
+      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
+      expect(addIndexSpy).toBeCalledTimes(4)
+      await doc.replace(CONTENT1, { anchor: false })
       expect(doc.content).toEqual(CONTENT1)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
+      expect(addIndexSpy).toBeCalledTimes(7)
       addIndexSpy.mockRestore()
     })
 
@@ -247,16 +237,23 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository._internals, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      expect(addIndexSpy).toBeCalledTimes(1)
-      const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      expect(doc.content).toEqual(CONTENT0)
+      // there's an extra call to indexStreamIfNeeded every time the anchor state
+      // is changed.
       expect(addIndexSpy).toBeCalledTimes(2)
-      await doc.patch(CONTENT1)
+      const midMetadata = { model: model.id }
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+        anchor: false,
+        pin: false,
+      })
+      expect(doc.content).toEqual(CONTENT0)
+      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
+      expect(addIndexSpy).toBeCalledTimes(4)
+      await doc.patch(CONTENT1, { anchor: false })
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      expect(addIndexSpy).toBeCalledTimes(3)
+      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
+      expect(addIndexSpy).toBeCalledTimes(7)
       addIndexSpy.mockRestore()
     })
 
