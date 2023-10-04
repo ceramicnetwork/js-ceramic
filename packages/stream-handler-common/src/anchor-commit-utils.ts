@@ -29,7 +29,7 @@ function applyAnchorTimestampsToLog(state: StreamState): void {
 
 export async function applyAnchorCommit(
   commitData: CommitData,
-  state: Readonly<StreamState>
+  state: StreamState
 ): Promise<StreamState> {
   StreamUtils.assertCommitLinksToState(state, commitData.commit)
 
@@ -39,25 +39,25 @@ export async function applyAnchorCommit(
     throw commitData.anchorValidationError
   }
 
-  const newState:StreamState = cloneDeep(state) // don't modify the source object
+  state = cloneDeep(state) // don't modify the source object
 
-  newState.anchorStatus = AnchorStatus.ANCHORED
-  newState.anchorProof = commitData.proof
-  newState.log.push({
+  state.anchorStatus = AnchorStatus.ANCHORED
+  state.anchorProof = commitData.proof
+  state.log.push({
     cid: commitData.cid,
     type: CommitType.ANCHOR,
     timestamp: commitData.timestamp,
   })
 
-  applyAnchorTimestampsToLog(newState)
+  applyAnchorTimestampsToLog(state)
 
-  if (newState.next?.content) {
-    newState.content = newState.next.content
+  if (state.next?.content) {
+    state.content = state.next.content
   }
-  if (newState.next?.metadata) {
-    newState.metadata = newState.next.metadata
+  if (state.next?.metadata) {
+    state.metadata = state.next.metadata
   }
-  delete newState.next
+  delete state.next
 
-  return newState
+  return state
 }

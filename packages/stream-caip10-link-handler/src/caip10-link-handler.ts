@@ -36,7 +36,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   async applyCommit(
     commitData: CommitData,
     context: Context,
-    state?: Readonly<StreamState>
+    state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
       return this._applyGenesis(commitData)
@@ -87,7 +87,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
    * @param state - Stream state
    * @private
    */
-  async _applySigned(commitData: CommitData, state: Readonly<StreamState>): Promise<StreamState> {
+  async _applySigned(commitData: CommitData, state: StreamState): Promise<StreamState> {
     const commit = commitData.commit
     StreamUtils.assertCommitLinksToState(state, commit)
 
@@ -129,7 +129,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
         `Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`
       )
     }
-    state.log.push({ cid: commitData.cid, type: CommitType.SIGNED }) // todo this should fail
+    state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
@@ -150,7 +150,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
    * @param state - Stream state
    * @private
    */
-  async _applyAnchor(commitData: CommitData, state: Readonly<StreamState>): Promise<StreamState> {
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
     return applyAnchorCommit(commitData, state)
   }
 }

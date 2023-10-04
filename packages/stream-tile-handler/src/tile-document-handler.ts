@@ -12,7 +12,7 @@ import {
   StreamConstructor,
   StreamHandler,
   StreamState,
-  StreamUtils
+  StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
@@ -60,7 +60,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   async applyCommit(
     commitData: CommitData,
     context: Context,
-    state?: Readonly<StreamState>
+    state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
       // apply genesis
@@ -127,7 +127,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    */
   async _applySigned(
     commitData: CommitData,
-    state: Readonly<StreamState>,
+    state: StreamState,
     context: Context
   ): Promise<StreamState> {
     const did = context.did
@@ -172,7 +172,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error("Changing 'forbidControllerChange' metadata property is not allowed")
     }
 
-    const nextState:StreamState = cloneDeep(state)
+    const nextState = cloneDeep(state)
 
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
@@ -182,7 +182,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const oldContent = state.next?.content ?? state.content
     const oldMetadata = state.next?.metadata ?? state.metadata
 
-    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument // todo this should fail
+    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const newMetadata = { ...oldMetadata, ...payload.header }
 
     if (newMetadata.schema) {
@@ -206,7 +206,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(commitData: CommitData, state: Readonly<StreamState>): Promise<StreamState> {
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
     return applyAnchorCommit(commitData, state)
   }
 }

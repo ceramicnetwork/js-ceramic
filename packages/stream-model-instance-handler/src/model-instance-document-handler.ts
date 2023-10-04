@@ -61,7 +61,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   async applyCommit(
     commitData: CommitData,
     context: Context,
-    state?: Readonly<StreamState>
+    state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
       // apply genesis
@@ -137,7 +137,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _applySigned(
     commitData: CommitData,
-    state: Readonly<StreamState>,
+    state: StreamState,
     context: Context
   ): Promise<StreamState> {
     // Retrieve the payload
@@ -160,11 +160,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const oldContent = state.content
-    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument // TODO this should fail
+    const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.api.loadStream<Model>(metadata.model)
     await this._validateContent(context.api, modelStream, newContent, false)
 
-    const nextState: StreamState = cloneDeep(state)
+    const nextState = cloneDeep(state)
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
     nextState.content = newContent
@@ -179,7 +179,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param state - Document state
    * @private
    */
-  async _applyAnchor(commitData: CommitData, state: Readonly<StreamState>): Promise<StreamState> {
+  async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
     return applyAnchorCommit(commitData, state)
   }
 
