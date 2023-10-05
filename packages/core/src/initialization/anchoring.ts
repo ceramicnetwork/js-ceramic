@@ -6,7 +6,7 @@ import {
   AuthenticatedEthereumAnchorService,
   EthereumAnchorService,
 } from '../anchor/ethereum/ethereum-anchor-service.js'
-import { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorService } from '../anchor/anchor-service.js'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',

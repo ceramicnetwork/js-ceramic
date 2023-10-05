@@ -25,7 +25,7 @@ import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js
 import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
-import { AnchorService, AnchorServiceAuth, AnchorValidator, AuthenticatedAnchorService } from '../anchor-service.js'
+import type { AnchorService, AnchorServiceAuth, AnchorValidator, AuthenticatedAnchorService } from '../anchor-service.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
