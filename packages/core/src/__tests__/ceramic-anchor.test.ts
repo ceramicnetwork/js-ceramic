@@ -287,7 +287,7 @@ describe('Ceramic anchoring', () => {
     })
 
     // Prod CAS does not accept re-anchoring
-    it('Can not request new anchor after failed anchor', async () => {
+    it('Can request new anchor after failed anchor', async () => {
       const ceramic = await createCeramic(ipfs1, true)
 
       // create stream without requesting anchor
@@ -311,8 +311,8 @@ describe('Ceramic anchoring', () => {
 
       // fulfill anchor
       await TestUtils.anchorUpdate(ceramic, stream)
-      await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
-      expect(stream.state.log.length).toEqual(1)
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
 
       await ceramic.close()
     })
