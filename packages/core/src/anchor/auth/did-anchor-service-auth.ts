@@ -1,5 +1,4 @@
 import {
-  AnchorServiceAuth,
   CeramicApi,
   DiagnosticsLogger,
   FetchOpts,
@@ -11,6 +10,7 @@ import * as uuid from '@stablelib/uuid'
 import { DagJWS } from 'dids'
 import { CARFactory } from 'cartonne'
 import * as u8a from 'uint8arrays'
+import type { AnchorServiceAuth } from '../anchor-service.js'
 
 export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   private _ceramic: CeramicApi

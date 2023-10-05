@@ -3,7 +3,6 @@ import { ExecutionQueue } from './execution-queue.js'
 import { ConflictResolution } from '../conflict-resolution.js'
 import {
   AnchorOpts,
-  AnchorService,
   AnchorStatus,
   CreateOpts,
   DiagnosticsLogger,
@@ -19,8 +18,9 @@ import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
-import { RepositoryInternals } from './repository-internals.js'
+import type { RepositoryInternals } from './repository-internals.js'
 import { OperationType } from './operation-type.js'
+import type { AnchorService } from '../anchor/anchor-service.js'
 
 export class StateManager {
   private readonly carFactory = new CARFactory()

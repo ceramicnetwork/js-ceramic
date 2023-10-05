@@ -1,7 +1,6 @@
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import {
   type AnchorEvent,
-  type AnchorService,
   AnchorStatus,
   CommitType,
   Context,
@@ -24,11 +23,7 @@ import {
   type Subscription,
   catchError,
   concatMap,
-  lastValueFrom,
-  merge,
-  of,
   takeUntil,
-  timer,
 } from 'rxjs'
 
 import { ConflictResolution } from '../conflict-resolution.js'
@@ -37,13 +32,13 @@ import type { HandlersMap } from '../handlers-map.js'
 
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { PinStore } from '../store/pin-store.js'
-import { Utils } from '../utils.js'
 
 import type { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { StateCache } from './state-cache.js'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
+import type { AnchorService } from '../anchor/anchor-service.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const CACHE_HIT_LOCAL = 'cache_hit_local'
