@@ -4,7 +4,6 @@ import type { CID } from 'multiformats/cid'
 import type { CAR } from 'cartonne'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
 import type { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
-import type { Observable } from 'rxjs'
 
 export type AnchorLoopHandler = {
   buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR>

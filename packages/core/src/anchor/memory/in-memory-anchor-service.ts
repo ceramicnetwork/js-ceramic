@@ -3,13 +3,7 @@ import { type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { type CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
-import type {
-  AnchorService,
-  AnchorValidator,
-  CASClient,
-  CasConnectionError,
-  MaxAnchorPollingError,
-} from '../anchor-service.js'
+import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../anchor-service.js'
 import { InMemoryAnchorValidator, TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import { InMemoryCAS } from './in-memory-cas.js'

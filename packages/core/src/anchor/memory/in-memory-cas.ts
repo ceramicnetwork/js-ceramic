@@ -7,7 +7,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { CID } from 'multiformats/cid'
-import { filter, firstValueFrom, map, Subject } from 'rxjs'
+import { filter, firstValueFrom, Subject } from 'rxjs'
 
 class Candidate {
   static fromCarFileReader(reader: AnchorRequestCarFileReader): Candidate {
