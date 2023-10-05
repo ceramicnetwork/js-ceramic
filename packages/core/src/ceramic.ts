@@ -192,6 +192,7 @@ export class Ceramic implements CeramicApi {
   public readonly admin: AdminApi
   readonly repository: Repository
   readonly anchorService: AnchorService
+  private readonly anchorRequestCarBuilder: AnchorRequestCarBuilder
   private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
@@ -217,6 +218,7 @@ export class Ceramic implements CeramicApi {
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
+    this.anchorRequestCarBuilder = modules.anchorRequestCarBuilder
     this.providersCache = modules.providersCache
 
     this._readOnly = params.readOnly
@@ -443,7 +445,7 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._readOnly) {
-        const carBuilder = this.repository._internals.anchorRequestCarBuilder
+        const carBuilder = this.anchorRequestCarBuilder
         const repository = this.repository
         const handler: AnchorLoopHandler = {
           buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
