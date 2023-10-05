@@ -1,4 +1,4 @@
-import { type AnchorService, type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
 import type { CeramicConfig } from '../ceramic.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
@@ -6,6 +6,7 @@ import {
   AuthenticatedEthereumAnchorService,
   EthereumAnchorService,
 } from '../anchor/ethereum/ethereum-anchor-service.js'
+import { AnchorService } from '../anchor/anchor-service.js'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',

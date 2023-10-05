@@ -9,7 +9,6 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   LoadOpts,
-  AnchorService,
   CeramicApi,
   CeramicCommit,
   IpfsApi,
@@ -60,6 +59,7 @@ import {
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
+import { AnchorService } from './anchor/anchor-service.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting

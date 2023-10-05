@@ -2,11 +2,12 @@ import * as uint8arrays from 'uint8arrays'
 import { decode } from 'multiformats/hashes/digest'
 import * as providers from '@ethersproject/providers'
 import { LRUCache } from 'least-recent'
-import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
+import { AnchorProof, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
+import type { AnchorValidator } from '../anchor-service.js'
 
 const SHA256_CODE = 0x12
 const DAG_CBOR_CODE = 0x71
