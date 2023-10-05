@@ -2,7 +2,7 @@ import type { CASClient } from '../anchor-service.js'
 import { AnchorCommit, AnchorEvent, AnchorProof, TestUtils } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
+import { TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
@@ -151,7 +151,7 @@ export class InMemoryCAS implements CASClient {
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       txType: V1_PROOF_TYPE,
     }
-    InMemoryAnchorValidator.TRANSACTION_CACHE.set(txHashCid.toString(), timestamp)
+    TRANSACTION_CACHE.set(txHashCid.toString(), timestamp)
     const witnessCar = carFactory.build()
     const proofCid = witnessCar.put(proofData)
     const commit: AnchorCommit = {
