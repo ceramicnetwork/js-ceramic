@@ -90,6 +90,7 @@ describe('Ceramic integration', () => {
         const ceramic2 = await createCeramic(ipfs2)
 
         const stream1 = await TileDocument.create(ceramic1, { test: 456 })
+
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         // we can't load stream from id since nodes are not connected
@@ -203,9 +204,11 @@ describe('Ceramic integration', () => {
         const ceramic2 = await createCeramic(ipfs2)
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
+
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         await stream1.update({ test: 'abcde' })
+
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         const logCommits = await ceramic1.loadStreamCommits(stream1.id)
@@ -343,6 +346,7 @@ describe('Ceramic integration', () => {
         loadSpy1.mockClear()
 
         await stream1.update({ test: 'abcde' }, null, { publish: false })
+
         await TestUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)

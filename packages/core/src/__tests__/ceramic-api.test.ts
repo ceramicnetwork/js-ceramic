@@ -178,7 +178,6 @@ describe('Ceramic API', () => {
 
       // Create an anchor commit that the original stream handle won't know about
       const streamCopy = await TileDocument.load(ceramic, streamOg.id)
-
       await TestUtils.anchorUpdate(ceramic, streamCopy)
       expect(streamCopy.state.log.length).toEqual(2)
 

@@ -322,7 +322,6 @@ describe('Ceramic anchoring', () => {
 
       // create stream without requesting anchor
       const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
-      const cidToAnchor = stream.tip
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // fulfill anchor

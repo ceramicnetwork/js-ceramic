@@ -71,7 +71,6 @@ describe('StateManipulator test', () => {
     await TestUtils.anchorUpdate(ceramic, doc)
     await doc.update(CONTENT1)
     await doc.update(CONTENT2)
-
     await TestUtils.anchorUpdate(ceramic, doc)
 
     commits = (await logSyncer.syncFullLog(doc.id, doc.tip)).commits
