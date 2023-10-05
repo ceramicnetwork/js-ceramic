@@ -115,7 +115,6 @@ export class InMemoryAnchorService implements AnchorService {
       cid: tip,
       genesis: carFileReader.genesis,
       timestamp: Date.now(),
-      requestCAR: carFile,
     })
 
     return this.#cas.create(carFileReader, waitForConfirmation)
