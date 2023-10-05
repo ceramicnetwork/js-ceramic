@@ -452,7 +452,7 @@ export class Ceramic implements CeramicApi {
           async handle(event: AnchorEvent): Promise<boolean> {
             const state$ = await repository.fromMemoryOrStore(event.streamId)
             if (!state$) return true
-            return repository._internals.handleAnchorResponse2(state$, event)
+            return repository._internals.handleAnchorResponse(state$, event)
           },
         }
         await this.anchorService.init(this.repository.anchorRequestStore, handler) // FIXME Init dependency hell
