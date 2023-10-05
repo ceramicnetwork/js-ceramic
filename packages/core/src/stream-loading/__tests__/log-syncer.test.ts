@@ -40,10 +40,8 @@ describe('LogSyncer test', () => {
 
     const stream = await TileDocument.create(ceramic, { step: 0 }, null, { anchor: false })
     await stream.update({ step: 1 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
     await TestUtils.anchorUpdate(ceramic, stream)
     await stream.update({ step: 2 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
     await TestUtils.anchorUpdate(ceramic, stream)
 
     commits = stream.state.log.map((logEntry) => logEntry.cid)

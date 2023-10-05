@@ -94,7 +94,6 @@ describe('Level data store', () => {
     const ceramic = await createCeramic(realIpfs)
 
     const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
     await TestUtils.anchorUpdate(ceramic, stream)
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add')

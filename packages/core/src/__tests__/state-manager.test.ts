@@ -220,7 +220,6 @@ describe('anchor', () => {
       const stream$ = await ceramic.repository.load(stream.id, {})
 
       await ceramic.repository.anchor(stream$, {})
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await TestUtils.anchorUpdate(ceramic, stream)
@@ -241,7 +240,6 @@ describe('anchor', () => {
       await ceramic.repository.anchor(stream$, {})
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
       await TestUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -266,7 +264,6 @@ describe('anchor', () => {
       handleTipSpy.mockImplementationOnce(realHandleTip)
 
       await ceramic.repository.anchor(stream$, {})
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -288,7 +285,6 @@ describe('anchor', () => {
       fakeHandleTip.mockRejectedValue(new Error('Handle tip failed'))
 
       await ceramic.repository.anchor(stream$, {})
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -312,7 +308,6 @@ describe('anchor', () => {
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
       expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
 
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
       await TestUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -330,7 +325,6 @@ describe('anchor', () => {
       const stream = await TileDocument.create(ceramic, { x: 1 }, null, {
         anchor: true,
       })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // @ts-ignore anchorRequestStore is private
@@ -356,7 +350,6 @@ describe('anchor', () => {
       const stream = await TileDocument.create(ceramic, { x: 1 }, null, {
         anchor: true,
       })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // @ts-ignore anchorRequestStore is private
@@ -383,7 +376,6 @@ describe('anchor', () => {
 
         // Anchor the first commit and subscribe
         await ceramic.repository.anchor(stream$, {})
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -398,7 +390,6 @@ describe('anchor', () => {
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
         // Anchor the 2nd commit and subscribe
         await ceramic.repository.anchor(stream$, {})
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -420,7 +411,6 @@ describe('anchor', () => {
 
         // Emulate CAS responses to the 1st commit
         await ceramic.repository.anchor(stream$, {})
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -432,7 +422,6 @@ describe('anchor', () => {
 
         // Create the 2nd commit and request an anchor for it
         await tile.update({ abc: 456, def: 789 }, null, { anchor: true })
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, tile.tip)
         await TestUtils.expectAnchorStatus(tile, AnchorStatus.PENDING)
 
         // Move 1st commit to FAILED
@@ -461,7 +450,6 @@ describe('anchor', () => {
 
           // anchor the first commit
           await ceramic.repository.anchor(stream$, {})
-          await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
           expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
             stream$.tip.toString()
           )
@@ -470,7 +458,6 @@ describe('anchor', () => {
           await tile.update({ x: 2 }, null, { anchor: false })
           // anchor the second commit
           await ceramic.repository.anchor(stream$, {})
-          await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
           expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
             stream$.tip.toString()
           )
@@ -503,7 +490,6 @@ describe('anchor', () => {
 
         // Anchor the first commit and subscribe
         await ceramic.repository.anchor(stream$, {})
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )
@@ -517,7 +503,6 @@ describe('anchor', () => {
         await tile.update({ abc: 456, def: 789 }, null, { anchor: false })
         // Anchor the 2nd commit and subscribe
         await ceramic.repository.anchor(stream$, {})
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, stream$.tip)
         expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
           stream$.tip.toString()
         )

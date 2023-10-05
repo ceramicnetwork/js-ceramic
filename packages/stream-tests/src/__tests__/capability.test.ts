@@ -557,7 +557,6 @@ describe('CACAO Integration test', () => {
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, tile.tip)
       await TestUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
@@ -585,7 +584,6 @@ describe('CACAO Integration test', () => {
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, tile.tip)
       await TestUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
@@ -618,7 +616,6 @@ describe('CACAO Integration test', () => {
           opts
         )
         await doc.update(content1, null, { ...opts, anchor: true })
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
         await TestUtils.anchorUpdate(ceramic, doc)
 
         expireCacao()
@@ -770,7 +767,6 @@ describe('CACAO Integration test', () => {
           },
           { ...opts, anchor: true }
         )
-        await TestUtils.hasAcceptedAnchorRequest(ceramic, doc.tip)
         await TestUtils.anchorUpdate(ceramic, doc)
 
         await doc.update(CONTENT1, null, opts)

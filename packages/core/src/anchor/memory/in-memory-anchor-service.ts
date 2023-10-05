@@ -118,16 +118,7 @@ export class InMemoryAnchorService implements AnchorService {
       requestCAR: carFile,
     })
 
-    if (waitForConfirmation) {
-      return this.#cas.create(carFileReader, waitForConfirmation)
-    } else {
-      return {
-        status: AnchorRequestStatusName.PENDING,
-        streamId: streamId,
-        cid: tip,
-        message: 'Sending anchoring request',
-      }
-    }
+    return this.#cas.create(carFileReader, waitForConfirmation)
   }
 
   hasAccepted(tip: CID): Promise<void> {

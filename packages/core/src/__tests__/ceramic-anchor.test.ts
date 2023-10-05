@@ -45,12 +45,9 @@ describe('Ceramic anchoring', () => {
     ])
 
     const stream1 = await TileDocument.create(ceramic1, { a: 1 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await stream1.update({ a: 2 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
     await stream1.update({ a: 3 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -97,7 +94,6 @@ describe('Ceramic anchoring', () => {
     ])
 
     const stream1 = await TileDocument.create<any>(ceramic1, { a: 123, b: 4567 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
     await stream1.update({ a: 4567 }, null, { anchor: false, publish: false })
     await stream1.update({ b: 123 }, null, { anchor: false, publish: false })
 
@@ -123,9 +119,7 @@ describe('Ceramic anchoring', () => {
     ])
 
     const stream1 = await TileDocument.create(ceramic1, { a: 123 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
     await stream1.update({ a: 4567 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     expect(stream1.state.log.length).toEqual(2)
 
@@ -149,10 +143,8 @@ describe('Ceramic anchoring', () => {
     ])
 
     const stream1 = await TileDocument.create(ceramic1, { x: 1 })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -179,7 +171,6 @@ describe('Ceramic anchoring', () => {
     })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -210,7 +201,6 @@ describe('Ceramic anchoring', () => {
     expect(stream1.state.log.length).toEqual(2)
 
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -220,7 +210,6 @@ describe('Ceramic anchoring', () => {
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -252,7 +241,6 @@ describe('Ceramic anchoring', () => {
     })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
-    await TestUtils.hasAcceptedAnchorRequest(ceramic1, stream1.tip)
 
     await TestUtils.anchorUpdate(ceramic1, stream1)
 
@@ -286,7 +274,6 @@ describe('Ceramic anchoring', () => {
 
       // request anchor
       const anchorStatus = await stream.requestAnchor()
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       expect(anchorStatus).toEqual(AnchorStatus.PENDING)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
       await stream.sync()
@@ -305,7 +292,6 @@ describe('Ceramic anchoring', () => {
 
       // create stream without requesting anchor
       const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // fail anchor
@@ -320,7 +306,6 @@ describe('Ceramic anchoring', () => {
 
       // re-request anchor, should be successful
       const anchorStatus = await stream.requestAnchor()
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       expect(anchorStatus).toEqual(AnchorStatus.PENDING)
       await TestUtils.expectAnchorStatus(stream, AnchorStatus.PENDING)
 
@@ -338,7 +323,6 @@ describe('Ceramic anchoring', () => {
       // create stream without requesting anchor
       const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
       const cidToAnchor = stream.tip
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, cidToAnchor)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // fulfill anchor
@@ -348,7 +332,6 @@ describe('Ceramic anchoring', () => {
 
       // request anchor, should be a no-op
       const anchorStatus = await stream.requestAnchor()
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, cidToAnchor)
       expect(anchorStatus).toEqual(AnchorStatus.ANCHORED)
       await stream.sync()
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)

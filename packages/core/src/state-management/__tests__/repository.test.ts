@@ -229,7 +229,6 @@ describe('#load', () => {
 
     test('commit history and loadAtCommit', async () => {
       const stream = await TileDocument.create<any>(ceramic, INITIAL_CONTENT)
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream.tip)
       stream.subscribe()
       const streamState = await ceramic.repository.load(stream.id, {})
 
@@ -251,7 +250,6 @@ describe('#load', () => {
         anchor: true,
         publish: false,
       })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, streamState.tip)
       expect(stream.allCommitIds.length).toEqual(3)
       expect(stream.anchorCommitIds.length).toEqual(1)
       const commit2 = stream.allCommitIds[2]
@@ -277,7 +275,6 @@ describe('#load', () => {
         anchor: true,
         publish: false,
       })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, streamState.tip)
       expect(stream.allCommitIds.length).toEqual(5)
       expect(stream.anchorCommitIds.length).toEqual(2)
       const commit4 = stream.allCommitIds[4]
@@ -355,7 +352,6 @@ describe('#load', () => {
         anchor: false,
       })
       await stream1.update({ abc: 321, def: 456, gh: 987 })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream1.tip)
       await TestUtils.anchorUpdate(ceramic, stream1)
 
       const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
@@ -436,7 +432,6 @@ describe('#load', () => {
 
     test('handles basic conflict', async () => {
       const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT)
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream1.tip)
       stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       const streamId = stream1.id
@@ -449,7 +444,6 @@ describe('#load', () => {
         anchor: true,
         publish: false,
       })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, stream1.tip)
 
       await TestUtils.anchorUpdate(ceramic, stream1)
       expect(stream1.content).toEqual(newContent)
@@ -477,7 +471,6 @@ describe('#load', () => {
         anchor: true,
         publish: false,
       })
-      await TestUtils.hasAcceptedAnchorRequest(ceramic, state$.tip)
 
       await TestUtils.anchorUpdate(ceramic, stream2)
       const tipInvalidUpdate = state$.tip
@@ -585,7 +578,6 @@ describe('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-    await TestUtils.hasAcceptedAnchorRequest(ceramic, schema.tip)
     await TestUtils.anchorUpdate(ceramic, schema)
     // Create invalid stream
     const ipfs2 = await createIPFS()
