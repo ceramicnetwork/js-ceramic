@@ -22,7 +22,7 @@ export function serializeAnchorRequestData(value: AnchorRequestData): any {
   return JSON.stringify({
     cid: value.cid.toString(),
     timestamp: value.timestamp,
-    genesis: StreamUtils.serializeCommit(value.genesis)
+    genesis: StreamUtils.serializeCommit(value.genesis),
   })
 }
 
