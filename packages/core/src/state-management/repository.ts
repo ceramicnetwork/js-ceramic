@@ -33,6 +33,7 @@ import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
 import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -48,6 +49,7 @@ export type RepositoryDependencies = {
   indexing: LocalIndexApi
   streamLoader: StreamLoader
   streamUpdater: StreamUpdater
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -194,7 +196,8 @@ export class Repository {
       deps.conflictResolution,
       this.logger,
       deps.indexing,
-      this._internals
+      this._internals,
+      deps.anchorRequestCarBuilder
     )
   }
 

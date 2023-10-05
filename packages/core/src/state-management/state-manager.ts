@@ -7,7 +7,6 @@ import {
   CreateOpts,
   DiagnosticsLogger,
   GenesisCommit,
-  StreamUtils,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
@@ -16,15 +15,12 @@ import type { Subscription } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
-import { CAR, CARFactory } from 'cartonne'
-import * as DAG_JOSE from 'dag-jose'
 import type { RepositoryInternals } from './repository-internals.js'
 import { OperationType } from './operation-type.js'
 import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 
 export class StateManager {
-  private readonly carFactory = new CARFactory()
-
   /**
    * @param dispatcher - currently used instance of Dispatcher
    * @param executionQ - currently used instance of ExecutionQueue
@@ -43,10 +39,9 @@ export class StateManager {
     public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
     private readonly _index: LocalIndexApi,
-    private readonly internals: RepositoryInternals
-  ) {
-    this.carFactory.codecs.add(DAG_JOSE)
-  }
+    private readonly internals: RepositoryInternals,
+    private readonly anchorRequestCarBuilder: AnchorRequestCarBuilder
+  ) {}
 
   /**
    * Apply options relating to authoring a new commit
@@ -137,7 +132,7 @@ export class StateManager {
       return
     }
 
-    const carFile = await this._buildAnchorRequestCARFile(state$.id, state$.tip)
+    const carFile = await this.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const genesisCID = state$.value.log[0].cid
     const genesisCommit = carFile.get(genesisCID)
     await this._saveAnchorRequestForState(state$, genesisCommit)
@@ -147,47 +142,6 @@ export class StateManager {
       opts.waitForAnchorConfirmation
     )
     return this.internals.processAnchorResponse(state$, anchorStatus$)
-  }
-
-  private async _buildAnchorRequestCARFile(streamId: StreamID, tip: CID): Promise<CAR> {
-    const car = this.carFactory.build()
-
-    // Root block
-    const timestampISO = new Date().toISOString()
-    car.put(
-      {
-        timestamp: timestampISO,
-        streamId: streamId.bytes,
-        tip: tip,
-      },
-      { isRoot: true }
-    )
-
-    // Genesis block
-    const genesisCid = streamId.cid
-    car.blocks.put(await this.dispatcher.getIpfsBlock(genesisCid))
-
-    // Tip block
-    car.blocks.put(await this.dispatcher.getIpfsBlock(tip))
-
-    // Genesis Link Block
-    const genesisCommit = car.get(genesisCid)
-    if (StreamUtils.isSignedCommit(genesisCommit)) {
-      car.blocks.put(await this.dispatcher.getIpfsBlock(genesisCommit.link))
-    }
-
-    // Tip Link Block
-    const tipCommit = car.get(tip)
-    if (StreamUtils.isSignedCommit(tipCommit)) {
-      car.blocks.put(await this.dispatcher.getIpfsBlock(tipCommit.link))
-      // Tip CACAO Block
-      const tipCacaoCid = StreamUtils.getCacaoCidFromCommit(tipCommit)
-      if (tipCacaoCid) {
-        car.blocks.put(await this.dispatcher.getIpfsBlock(tipCacaoCid))
-      }
-    }
-
-    return car
   }
 
   private async _saveAnchorRequestForState(

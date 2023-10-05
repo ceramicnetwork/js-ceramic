@@ -2,14 +2,16 @@ import { describe, expect, jest, test } from '@jest/globals'
 import type { Dispatcher } from '../../dispatcher.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import type { ExecutionQueue } from '../execution-queue.js'
-import type { AnchorService, DiagnosticsLogger } from '@ceramicnetwork/common'
+import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { ConflictResolution } from '../../conflict-resolution.js'
-import type { LocalIndexApi } from '../../indexing/local-index-api.js'
+import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import type { RepositoryInternals } from '../repository-internals.js'
+import type { AnchorService } from '../../anchor/anchor-service.js'
 import { TestUtils } from '@ceramicnetwork/common'
 import { StateManager } from '../state-manager.js'
 import { OperationType } from '../operation-type.js'
 import { RunningState } from '../running-state.js'
+import { AnchorRequestCarBuilder } from '../../anchor/anchor-request-car-builder.js'
 
 describe('applyWriteOpts', () => {
   const dispatcher = {} as unknown as Dispatcher
@@ -23,6 +25,7 @@ describe('applyWriteOpts', () => {
   const internals = {
     publishTip: publishTipFn,
   } as unknown as RepositoryInternals
+  const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
   const stateManager = new StateManager(
     dispatcher,
     anchorRequestStore,
@@ -31,7 +34,8 @@ describe('applyWriteOpts', () => {
     conflictResolution,
     logger,
     localIndexApi,
-    internals
+    internals,
+    anchorRequestCarBuilder
   )
 
   test('publish on LOAD', async () => {

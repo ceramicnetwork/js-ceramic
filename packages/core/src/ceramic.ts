@@ -60,6 +60,7 @@ import {
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
+import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -140,6 +141,7 @@ export interface CeramicModules {
   repository: Repository
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -292,6 +294,7 @@ export class Ceramic implements CeramicApi {
       indexing: localIndex,
       streamLoader,
       streamUpdater,
+      anchorRequestCarBuilder: modules.anchorRequestCarBuilder,
     })
     this.syncApi = new SyncApi(
       {
@@ -380,6 +383,7 @@ export class Ceramic implements CeramicApi {
       !config.disablePeerDataSync,
       maxQueriesPerSecond
     )
+    const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
     const pinStoreOptions = {
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
@@ -411,6 +415,7 @@ export class Ceramic implements CeramicApi {
       repository,
       shutdownSignal,
       providersCache,
+      anchorRequestCarBuilder,
     }
 
     return [modules, params]
