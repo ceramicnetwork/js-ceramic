@@ -22,6 +22,7 @@ test('supportedChains', async () => {
   expect(fetchFn).toBeCalledTimes(1)
   expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`)
 })
+
 describe('create', () => {
   test('return pending, do no request', async () => {
     const fetchFn = jest.fn() as unknown as typeof fetchJson
@@ -75,6 +76,7 @@ describe('create', () => {
     })
     expect(fetchJsonFn).toBeCalledTimes(maxAttempts)
   })
+
   test('waitForConfirmation on, stop', async () => {
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
     let n = 0
