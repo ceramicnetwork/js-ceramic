@@ -24,18 +24,34 @@ test('supportedChains', async () => {
 })
 
 describe('create', () => {
-  test('return pending, do no request', async () => {
-    const fetchFn = jest.fn() as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+  test('waitForConfirmation off', async () => {
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-    const result = await cas.create(carFileReader, false)
-    expect(fetchFn).not.toBeCalled()
-    expect(result).toEqual({
+    const fetchJsonFn = jest.fn().mockImplementation(async () => {
+      return {
+        id: 'foo',
+        status: AnchorRequestStatusName.PENDING,
+        streamId: carFileReader.streamId.toString(),
+        cid: carFileReader.tip.toString(),
+        message: 'Sending anchoring request',
+        createdAt: dateAsUnix.encode(new Date()),
+        updatedAt: dateAsUnix.encode(new Date()),
+      }
+    })
+    const cas = new RemoteCAS(
+      ANCHOR_SERVICE_URL,
+      LOGGER,
+      POLL_INTERVAL,
+      MAX_POLL_TIME,
+      fetchJsonFn as unknown as typeof fetchJson
+    )
+    const response = await cas.create(carFileReader, true)
+    expect(response).toEqual({
       status: AnchorRequestStatusName.PENDING,
       streamId: carFileReader.streamId,
       cid: carFileReader.tip,
       message: 'Sending anchoring request',
     })
+    expect(fetchJsonFn).toBeCalled()
   })
 
   // stubborn create
