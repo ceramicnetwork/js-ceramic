@@ -96,11 +96,23 @@ export class RemoteCAS implements CASClient {
     carFileReader: AnchorRequestCarFileReader,
     waitForConfirmation: boolean
   ): Promise<AnchorEvent> {
-    const response = await firstValueFrom(this.create$(carFileReader, waitForConfirmation))
-    return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+    if (waitForConfirmation) {
+      const response = await firstValueFrom(this.stubbornCreate(carFileReader, waitForConfirmation))
+      return parseResponse(carFileReader.streamId, carFileReader.tip, response)
+    } else {
+      return {
+        status: AnchorRequestStatusName.PENDING,
+        streamId: carFileReader.streamId,
+        cid: carFileReader.tip,
+        message: 'Sending anchoring request',
+      }
+    }
   }
 
-  create$(carFileReader: AnchorRequestCarFileReader, shouldRetry: boolean): Observable<unknown> {
+  private stubbornCreate(
+    carFileReader: AnchorRequestCarFileReader,
+    shouldRetry: boolean
+  ): Observable<unknown> {
     const sendRequest$ = deferAbortable((signal) =>
       this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
@@ -116,7 +128,7 @@ export class RemoteCAS implements CASClient {
       return sendRequest$.pipe(
         retry({
           delay: (error) => {
-            this.#logger.warn(
+            this.#logger.err(
               new Error(
                 `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
               )
@@ -133,8 +145,7 @@ export class RemoteCAS implements CASClient {
           throw new Error(
             `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
           )
-        }),
-        takeUntil(this.#stopSignal)
+        })
       )
     }
   }

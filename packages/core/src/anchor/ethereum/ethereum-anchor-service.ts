@@ -1,17 +1,14 @@
-import { CID } from 'multiformats/cid'
-import {
-  CeramicApi,
-  DiagnosticsLogger,
-  fetchJson,
-  FetchRequest,
+import { fetchJson } from '@ceramicnetwork/common'
+import type {
   AnchorEvent,
+  FetchRequest,
+  DiagnosticsLogger,
+  CeramicApi,
 } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
-import { Observable, of, Subject } from 'rxjs'
-import { CAR } from 'cartonne'
+import { Subject, type Observable } from 'rxjs'
+import type { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
-import { validate, isLeft } from 'codeco'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 import type {
   AnchorService,
@@ -21,177 +18,17 @@ import type {
   CASClient,
 } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
-import {
-  AnchorLoopHandler,
-  CasConnectionError,
-  MaxAnchorPollingError,
-  MultipleChainsError,
-} from '../anchor-service.js'
+import { MultipleChainsError, type AnchorLoopHandler } from '../anchor-service.js'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
+import { RemoteCAS } from './remote-cas.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
 
 /**
- * Parse JSON that CAS returns.
- */
-function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent {
-  const validation = validate(CASResponseOrError, json)
-  if (isLeft(validation)) {
-    return {
-      status: AnchorRequestStatusName.FAILED,
-      streamId: streamId,
-      cid: tip,
-      message: `Unexpected response from CAS: ${JSON.stringify(json)}`,
-    }
-  }
-  const parsed = validation.right
-  if (ErrorResponse.is(parsed)) {
-    return {
-      status: AnchorRequestStatusName.FAILED,
-      streamId: streamId,
-      cid: tip,
-      message: parsed.error,
-    }
-  } else {
-    if (parsed.status === AnchorRequestStatusName.COMPLETED) {
-      return {
-        status: parsed.status,
-        streamId: parsed.streamId,
-        cid: parsed.cid,
-        message: parsed.message,
-        witnessCar: parsed.witnessCar,
-      }
-    }
-    return {
-      status: parsed.status,
-      streamId: parsed.streamId,
-      cid: parsed.cid,
-      message: parsed.message,
-    }
-  }
-}
-
-function announcePending(streamId: StreamID, tip: CID): Observable<AnchorEvent> {
-  return of({
-    status: AnchorRequestStatusName.PENDING,
-    streamId: streamId,
-    cid: tip,
-    message: 'Sending anchoring request',
-  })
-}
-
-class RemoteCAS implements CASClient {
-  readonly #requestsApiEndpoint: string
-  readonly #chainIdApiEndpoint: string
-  readonly #sendRequest: FetchRequest
-  readonly #logger: DiagnosticsLogger
-  readonly #pollInterval: number
-  readonly #maxPollTime: number
-
-  constructor(
-    anchorServiceUrl: string,
-    logger: DiagnosticsLogger,
-    pollInterval: number,
-    maxPollTime: number,
-    sendRequest: FetchRequest
-  ) {
-    this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
-    this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
-    this.#logger = logger
-    this.#pollInterval = pollInterval
-    this.#maxPollTime = maxPollTime
-    this.#sendRequest = sendRequest
-  }
-
-  async supportedChains(): Promise<Array<string>> {
-    const response = await this.#sendRequest(this.#chainIdApiEndpoint)
-    return response.supportedChains as Array<string>
-  }
-
-  async create(
-    carFileReader: AnchorRequestCarFileReader,
-    waitForConfirmation: boolean
-  ): Promise<AnchorEvent> {
-    if (waitForConfirmation) {
-      const response = await this.stubbornCreate(carFileReader, waitForConfirmation)
-      return parseResponse(carFileReader.streamId, carFileReader.tip, response)
-    } else {
-      return {
-        status: AnchorRequestStatusName.PENDING,
-        streamId: carFileReader.streamId,
-        cid: carFileReader.tip,
-        message: 'Sending anchoring request',
-      }
-    }
-  }
-
-  private async stubbornCreate(
-    carFileReader: AnchorRequestCarFileReader,
-    shouldRetry: boolean
-  ): Promise<unknown> {
-    do {
-      try {
-        const response = await this.#sendRequest(this.#requestsApiEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/vnd.ipld.car',
-          },
-          body: carFileReader.carFile.bytes,
-        })
-        return response
-      } catch (error) {
-        const externalError = new CasConnectionError(
-          carFileReader.streamId,
-          carFileReader.tip,
-          error.message
-        )
-        if (shouldRetry) {
-          this.#logger.warn(externalError)
-          await new Promise((resolve) => setTimeout(resolve, this.#pollInterval)) // FIXME fucking delay
-        } else {
-          throw externalError
-        }
-      }
-    } while (shouldRetry)
-  }
-
-  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
-    const response = await this.stubbornGetRequest(streamId, tip)
-    return parseResponse(streamId, tip, response)
-  }
-
-  private async stubbornGetRequest(streamId: StreamID, tip: CID): Promise<any> {
-    const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
-    const started = new Date().getTime()
-    const maxTime = started + this.#maxPollTime
-    let response: any = undefined
-    while (!response) {
-      const now = new Date().getTime()
-      if (now > maxTime) {
-        throw new MaxAnchorPollingError()
-      }
-      try {
-        response = await this.#sendRequest(requestUrl)
-      } catch (error: any) {
-        this.#logger.warn(new CasConnectionError(streamId, tip, error.message))
-        await new Promise((resolve) => setTimeout(resolve, this.#pollInterval))
-      }
-    }
-    return response
-  }
-
-  async close() {
-    // Do Nothing FIXME
-  }
-}
-
-/**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
 export class EthereumAnchorService implements AnchorService {
-  readonly #requestsApiEndpoint: string
-  readonly #chainIdApiEndpoint: string
   readonly #logger: DiagnosticsLogger
   #loop: AnchorProcessingLoop
   /**
@@ -217,8 +54,6 @@ export class EthereumAnchorService implements AnchorService {
     maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson
   ) {
-    this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
-    this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#logger = logger
     this.#pollInterval = pollInterval
     this.#maxPollTime = maxPollTime
