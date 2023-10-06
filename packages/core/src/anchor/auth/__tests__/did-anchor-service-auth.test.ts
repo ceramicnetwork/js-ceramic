@@ -1,5 +1,9 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
+import { fetchJson, LoggerProvider } from '@ceramicnetwork/common'
+import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
+import { createCeramic } from '../../../__tests__/create-ceramic.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 
 const mockedUrls = {
   OFFLINE: 'http://offline.test.ts',
@@ -8,24 +12,16 @@ const mockedUrls = {
   REJECT: `https://online.test.ts.reject/api/v0/service-info/supported_chains`,
 }
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
-    ok: true,
-    json: async () => {
-      if (url.startsWith(mockedUrls.ONLINE)) {
-        if (url.startsWith(mockedUrls.ACCEPT)) {
-          return { supportedChains: ['eip155:100'] }
-        } else {
-          return 'Unauthorized'
-        }
-      }
-      throw Error('Offline')
-    },
-  }))
-  return {
-    default: fetchFunc,
+const fauxFetchJson: typeof fetchJson = async (url: string) => {
+  if (url.startsWith(mockedUrls.ONLINE)) {
+    if (url.startsWith(mockedUrls.ACCEPT)) {
+      return { supportedChains: ['eip155:100'] }
+    } else {
+      return 'Unauthorized'
+    }
   }
-})
+  throw Error('Offline')
+}
 
 let ipfs: any
 let ceramic: any
@@ -33,7 +29,6 @@ let auth: any
 let tmpFolder: any
 
 beforeAll(async () => {
-  const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
   ipfs = await createIPFS()
 })
 
@@ -45,23 +40,18 @@ describe('sendAuthenticatedRequest', () => {
   jest.setTimeout(300000) // 5mins time-out for js-ipfs
 
   beforeEach(async () => {
-    const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
-    const { LoggerProvider } = await import('@ceramicnetwork/common')
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ceramic = await createCeramic(ipfs, {
       stateStoreDirectory: tmpFolder.path,
     })
-    const { createDidAnchorServiceAuth } = await import(
-      '../../../__tests__/create-did-anchor-service-auth.js'
-    )
     const logger = new LoggerProvider().getDiagnosticsLogger()
-    auth = createDidAnchorServiceAuth(mockedUrls.ONLINE, ceramic, logger)
+    auth = createDidAnchorServiceAuth(mockedUrls.ONLINE, ceramic, logger, fauxFetchJson)
     await auth.init()
   })
 
   afterEach(async () => {
     await ceramic.close()
-    tmpFolder.cleanup()
+    await tmpFolder.cleanup()
   })
 
   test('sends request with signed payload in `authorization` header', async () => {
@@ -74,6 +64,7 @@ describe('sendAuthenticatedRequest', () => {
     const data = await ceramic.did.verifyJWS(jws)
     expect(data.payload.url).toEqual(mockedUrls.ONLINE)
   })
+
   test('does not send same nonce more than once', async () => {
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
     const res0 = (): Promise<any> => signRequestSpy.mock.results[0].value

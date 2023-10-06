@@ -1,6 +1,9 @@
 import { jest, test, expect } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
+import { fetchJson, LoggerProvider } from '@ceramicnetwork/common'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { EthereumAnchorService } from '../ethereum-anchor-service.js'
 
 const MAX_FAILED_ATTEMPTS = 2
 const POLL_INTERVAL = 100 // ms
@@ -16,34 +19,25 @@ const casProcessingResponse = {
   cid: FAKE_TIP_CID.toString(),
 }
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
-    ok: true,
-    json: async () => {
-      fetchAttemptNum += 1
-      if (fetchAttemptNum <= MAX_FAILED_ATTEMPTS + 1) {
-        throw new Error(`Cas is unavailable`)
-      }
-      return casProcessingResponse
-    },
-  }))
-  return {
-    default: fetchFunc,
+const fauxFetchFunc: typeof fetchJson = async () => {
+  fetchAttemptNum += 1
+  if (fetchAttemptNum <= MAX_FAILED_ATTEMPTS + 1) {
+    throw new Error(`Cas is unavailable`)
   }
-})
+  return casProcessingResponse
+}
 
 test('re-request an anchor till get a response', async () => {
   fetchAttemptNum = 0
-  const { LoggerProvider } = await import('@ceramicnetwork/common')
-  const { AnchorRequestStatusName } = await import('@ceramicnetwork/codecs')
-  const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const anchorService = new EthereumAnchorService(
     'http://example.com',
     'http://example.com',
     diagnosticsLogger,
-    POLL_INTERVAL
+    POLL_INTERVAL,
+    MAX_POLL_TIME,
+    fauxFetchFunc
   )
   let lastResponse: any
   const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(
@@ -61,16 +55,15 @@ test('re-request an anchor till get a response', async () => {
 
 test('re-poll on fetch error', async () => {
   fetchAttemptNum = 0
-  const { LoggerProvider } = await import('@ceramicnetwork/common')
-  const { AnchorRequestStatusName } = await import('@ceramicnetwork/codecs')
-  const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const anchorService = new EthereumAnchorService(
     'http://example.com',
     'http://example.com',
     diagnosticsLogger,
-    POLL_INTERVAL
+    POLL_INTERVAL,
+    MAX_POLL_TIME,
+    fauxFetchFunc
   )
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
@@ -98,15 +91,14 @@ test('re-poll on fetch error', async () => {
 
 test('stop polling after max time', async () => {
   fetchAttemptNum = 0
-  const { LoggerProvider } = await import('@ceramicnetwork/common')
-  const { EthereumAnchorService } = await import('../ethereum-anchor-service.js')
   const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const anchorService = new EthereumAnchorService(
     'http://example.com',
     'http://example.com',
     diagnosticsLogger,
     POLL_INTERVAL,
-    MAX_POLL_TIME
+    MAX_POLL_TIME,
+    fauxFetchFunc
   )
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)

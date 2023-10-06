@@ -1,6 +1,13 @@
 import { jest } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
+import type { fetchJson } from '@ceramicnetwork/common'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
+import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
+import { createCeramic } from '../../../__tests__/create-ceramic.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
@@ -13,21 +20,13 @@ const casProcessingResponse = {
   cid: FAKE_TIP_CID.toString(),
 }
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
-    ok: true,
-    json: async () => {
-      attemptNum += 1
-      if (attemptNum <= MAX_FAILED_ATTEMPTS + 1) {
-        throw new Error(`Cas is unavailable`)
-      }
-      return casProcessingResponse
-    },
-  }))
-  return {
-    default: fetchFunc,
+const fauxFetchJson: typeof fetchJson = async () => {
+  attemptNum += 1
+  if (attemptNum <= MAX_FAILED_ATTEMPTS + 1) {
+    throw new Error(`Cas is unavailable`)
   }
-})
+  return casProcessingResponse
+}
 
 jest.setTimeout(20000)
 
@@ -40,23 +39,14 @@ afterAll(async () => {
 })
 
 test('re-request an anchor till get a response', async () => {
-  const common = await import('@ceramicnetwork/common')
-  const codecs = await import('@ceramicnetwork/codecs')
-  const eas = await import('../ethereum-anchor-service.js')
-  const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
-  const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
-  const { createDidAnchorServiceAuth } = await import(
-    '../../../__tests__/create-did-anchor-service-auth.js'
-  )
-  const loggerProvider = new common.LoggerProvider()
-  const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
+  const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
   const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const url = 'http://example.com'
 
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: true })
-  const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
-  const anchorService = new eas.AuthenticatedEthereumAnchorService(
+  const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger, fauxFetchJson)
+  const anchorService = new AuthenticatedEthereumAnchorService(
     auth,
     url,
     url,
@@ -67,7 +57,7 @@ test('re-request an anchor till get a response', async () => {
   let lastResponse: any
   const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(
     (response) => {
-      if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
+      if (response.status === AnchorRequestStatusName.PROCESSING) {
         lastResponse = response
         subscription.unsubscribe()
       }

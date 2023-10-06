@@ -13,13 +13,20 @@ import * as u8a from 'uint8arrays'
 import type { AnchorServiceAuth } from '../anchor-service.js'
 
 export class DIDAnchorServiceAuth implements AnchorServiceAuth {
-  private _ceramic: CeramicApi
-  private readonly _anchorServiceUrl: string
-  private readonly _logger: DiagnosticsLogger
+  readonly #anchorServiceUrl: string
+  readonly #logger: DiagnosticsLogger
+  readonly #fetchFn: typeof fetchJson
 
-  constructor(anchorServiceUrl: string, logger: DiagnosticsLogger) {
-    this._anchorServiceUrl = anchorServiceUrl
-    this._logger = logger
+  #ceramic: CeramicApi
+
+  constructor(
+    anchorServiceUrl: string,
+    logger: DiagnosticsLogger,
+    fetchFn: typeof fetchJson = fetchJson
+  ) {
+    this.#anchorServiceUrl = anchorServiceUrl
+    this.#logger = logger
+    this.#fetchFn = fetchFn
   }
 
   /**
@@ -28,7 +35,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: CeramicApi) {
-    this._ceramic = ceramic
+    this.#ceramic = ceramic
   }
 
   async init(): Promise<void> {
@@ -36,14 +43,16 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   }
 
   async sendAuthenticatedRequest(url: URL | string, opts?: FetchOpts): Promise<any> {
-    if (!this._ceramic) {
+    if (!this.#ceramic) {
       throw new Error('Missing Ceramic instance required by this auth method')
     }
     const { request } = await this.signRequest({ url, opts })
     return await this._sendRequest(request).catch((err) => {
       if (err.message.includes("status 'Unauthorized'")) {
         throw new Error(
-          `You are not authorized to use the anchoring service found at: ${this._anchorServiceUrl}. Are you using the correct anchoring service url? If so please ensure that you have access to 3Box Labs’ Ceramic Anchor Service by following the steps found here: https://composedb.js.org/docs/0.4.x/guides/composedb-server/access-mainnet`
+          `You are not authorized to use the anchoring service found at: ${
+            this.#anchorServiceUrl
+          }. Are you using the correct anchoring service url? If so please ensure that you have access to 3Box Labs’ Ceramic Anchor Service by following the steps found here: https://composedb.js.org/docs/0.4.x/guides/composedb-server/access-mainnet`
         )
       }
       throw err
@@ -59,7 +68,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
       payload.digest = payloadDigest
     }
 
-    const jws = await this._ceramic.did.createJWS(payload)
+    const jws = await this.#ceramic.did.createJWS(payload)
     const Authorization = `Bearer ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
     let requestOpts: any = { headers: { Authorization } }
     if (request.opts) {
@@ -103,9 +112,9 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   }
 
   private async _sendRequest(request: FetchRequestParams): Promise<any> {
-    const data = await fetchJson(request.url, request.opts)
+    const data = await this.#fetchFn(request.url, request.opts)
     if (data.error) {
-      this._logger.err(data.error)
+      this.#logger.err(data.error)
       return data
     }
     return data
