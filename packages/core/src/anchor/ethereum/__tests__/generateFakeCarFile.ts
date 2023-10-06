@@ -7,17 +7,19 @@ export const FAKE_STREAM_ID = StreamID.fromString(
 )
 export const FAKE_TIP_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
+const carFactory = new CARFactory()
+
 export function generateFakeCarFile(): CAR {
-  const carFactory = new CARFactory()
   const car = carFactory.build()
 
   // Root block
   const timestampISO = new Date().toISOString()
+  const genesis = car.put({ a: Math.floor(Math.random() * 1000) })
   car.put(
     {
       timestamp: timestampISO,
-      streamId: FAKE_STREAM_ID.bytes,
-      tip: FAKE_TIP_CID.bytes,
+      streamId: new StreamID(1, genesis).bytes,
+      tip: FAKE_TIP_CID,
     },
     { isRoot: true }
   )
