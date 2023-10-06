@@ -46,6 +46,7 @@ describe('sendAuthenticatedRequest', () => {
 
   beforeEach(async () => {
     const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
+    const { LoggerProvider } = await import('@ceramicnetwork/common')
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ceramic = await createCeramic(ipfs, {
       stateStoreDirectory: tmpFolder.path,
@@ -53,8 +54,8 @@ describe('sendAuthenticatedRequest', () => {
     const { createDidAnchorServiceAuth } = await import(
       '../../../__tests__/create-did-anchor-service-auth.js'
     )
-    const { auth: didAuth } = createDidAnchorServiceAuth(mockedUrls.ONLINE, ceramic)
-    auth = didAuth
+    const logger = new LoggerProvider().getDiagnosticsLogger()
+    auth = createDidAnchorServiceAuth(mockedUrls.ONLINE, ceramic, logger)
     await auth.init()
   })
 

@@ -28,7 +28,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const url = 'http://example.com'
     const chainIdUrl = url + '/api/v0/service-info/supported_chains'
 
-    const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
+    const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
     const sendRequestSpy = jest.spyOn(auth, '_sendRequest')
     const anchorService = new AuthenticatedEthereumAnchorService(
@@ -59,7 +59,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const url = 'http://example.com'
     const requestsUrl = url + '/api/v0/requests'
 
-    const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
+    const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
     const sendRequestSpy = jest.spyOn(auth, '_sendRequest')
     const anchorService = new AuthenticatedEthereumAnchorService(auth, url, diagnosticsLogger, 100)

@@ -55,7 +55,7 @@ test('re-request an anchor till get a response', async () => {
 
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: true })
-  const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
+  const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
   const anchorService = new eas.AuthenticatedEthereumAnchorService(
     auth,
     url,
