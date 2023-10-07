@@ -67,6 +67,7 @@
     "@types/logfmt": "^1.2.2",
     "@types/node": "^18.0.3",
     "dids": "^4.0.0",
+    "http-request-mock": "^1.8.17",
     "ipfs-core-types": "^0.14.0",
     "json-schema-to-typescript": "^10.1.5",
     "typescript-json-schema": "^0.52.0"
