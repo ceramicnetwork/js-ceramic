@@ -2,13 +2,14 @@ import fetch from 'cross-fetch'
 import { mergeAbortSignals, TimedAbortSignal, abortable } from './abort-signal-utils.js'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
-export interface FetchOpts {
-  body?: any
-  method?: string
-  headers?: any
-  timeout?: number
-  signal?: AbortSignal
-}
+
+export type FetchOpts = Partial<{
+  body: any
+  method: HttpMethod
+  headers: any
+  timeout: number
+  signal: AbortSignal
+}>
 
 export type FetchRequestParams = {
   url: URL | string
@@ -17,12 +18,18 @@ export type FetchRequestParams = {
 
 export type FetchRequest = (url: URL | string, opts?: FetchOpts) => Promise<any>
 
-export enum HttpMethods {
-  GET = 'GET',
-  POST = 'POST',
-}
+export type RFC9110Methods =
+  | 'GET'
+  | 'HEAD'
+  | 'POST'
+  | 'PUT'
+  | 'DELETE'
+  | 'CONNECT'
+  | 'OPTIONS'
+  | 'TRACE'
+export type HttpMethod = RFC9110Methods | Lowercase<RFC9110Methods>
 
-export async function fetchJson(url: URL | string, opts: FetchOpts = {}): Promise<any> {
+export async function fetchJson(url: URL | string, opts: Partial<FetchOpts> = {}): Promise<any> {
   if (opts.body) {
     const headers = { 'Content-Type': 'application/json', ...opts.headers }
 

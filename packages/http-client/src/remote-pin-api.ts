@@ -47,7 +47,7 @@ export class RemotePinApi implements PinApi {
       headers: {
         Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, this.getBaseUrl())}`,
       },
-      method: 'post',
+      method: 'POST',
       body: args,
     })
   }
@@ -59,7 +59,7 @@ export class RemotePinApi implements PinApi {
       headers: {
         Authorization: `Basic ${await this.buildJWS(this._getDidFn(), code, this.getBaseUrl())}`,
       },
-      method: 'delete',
+      method: 'DELETE',
       body: { opts },
     })
   }
