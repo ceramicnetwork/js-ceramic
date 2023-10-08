@@ -4,7 +4,7 @@ import { UnappliableStreamLog } from '@ceramicnetwork/common'
 import { Dispatcher } from '../dispatcher.js'
 import { Utils } from '../utils.js'
 
-interface IpfsCommitLoader {
+type IpfsCommitLoader = {
   retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any>
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
 }

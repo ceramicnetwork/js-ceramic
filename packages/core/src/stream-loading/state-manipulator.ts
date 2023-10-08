@@ -19,7 +19,7 @@ import cloneDeep from 'lodash.clonedeep'
  * @param throwOnInvalidCommit - if true, throws if there is an error applying a commit, otherwise
  *   returns the state that was built so far.
  */
-interface ApplyFullLogOpts {
+type ApplyFullLogOpts = {
   throwOnInvalidCommit: boolean
 }
 
@@ -30,13 +30,13 @@ interface ApplyFullLogOpts {
  *   the existing state.
  * @param throwOnConflict - if true, throws if the log to apply is rejected by conflict resolution.
  */
-export interface ApplyLogToStateOpts {
+export type ApplyLogToStateOpts = {
   throwOnInvalidCommit: boolean
   throwIfStale: boolean
   throwOnConflict: boolean
 }
 
-export interface ResetStateToCommitOpts {
+export type ResetStateToCommitOpts = {
   copyTimestampsFromRemovedAnchors: boolean
 }
 
