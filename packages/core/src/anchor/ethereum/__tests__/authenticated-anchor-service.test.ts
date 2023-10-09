@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { expect, jest } from '@jest/globals'
 import { LoggerProvider, type fetchJson } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../../__tests__/create-ceramic.js'
@@ -8,7 +8,7 @@ import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { lastValueFrom } from 'rxjs'
 
-const fauxFetchJson = jest.fn() as unknown as typeof fetchJson
+const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
 
 describe('AuthenticatedEthereumAnchorServiceTest', () => {
   let ipfs: any
@@ -25,13 +25,15 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
   })
 
   test('Should authenticate header during call to supported_chains endpoint in init()', async () => {
-    const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+    const fauxFetchJson = jest.fn(async () => {
+      return { supportedChains: ['eip155:1'] }
+    }) as unknown as typeof fetchJson
+
     const url = 'http://example.com'
     const chainIdUrl = url + '/api/v0/service-info/supported_chains'
 
     const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const sendRequestSpy = jest.spyOn(auth, '_sendRequest')
     const anchorService = new AuthenticatedEthereumAnchorService(
       auth,
       url,
@@ -39,11 +41,6 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       diagnosticsLogger,
       100
     )
-
-    sendRequestSpy.mockImplementationOnce(async (request) => {
-      expect(request.url).toEqual(chainIdUrl)
-      return { supportedChains: ['eip155:1'] }
-    })
 
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
@@ -52,17 +49,21 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     await anchorService.init()
 
     expect(signRequestSpy).toHaveBeenCalledTimes(1)
+    const signRequestResult = (await signRequestSpy.mock.results[0].value) as any
+    const signRequestResultOpts = signRequestResult.request.opts
+    expect(fauxFetchJson).toBeCalledWith(chainIdUrl, signRequestResultOpts)
   })
 
   test('Should authenticate header when creating anchor requests', async () => {
-    const loggerProvider = new LoggerProvider()
-    const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
+    const fauxFetchJson = jest.fn(async () => {
+      return { status: AnchorRequestStatusName.PENDING }
+    }) as unknown as typeof fetchJson
+
     const url = 'http://example.com'
     const requestsUrl = url + '/api/v0/requests'
 
     const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const sendRequestSpy = jest.spyOn(auth, '_sendRequest')
     const anchorService = new AuthenticatedEthereumAnchorService(
       auth,
       url,
@@ -71,18 +72,13 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       100
     )
 
-    sendRequestSpy.mockImplementationOnce(async (request) => {
-      expect(request.url).toEqual(requestsUrl)
-      // this response won't pass codec deserialization b/c it doesn't conform to the proper format
-      return { status: AnchorRequestStatusName.PENDING }
-    })
-
     const observable = await anchorService.requestAnchor(generateFakeCarFile(), false)
     const anchorStatus = await lastValueFrom(observable)
     expect(anchorStatus.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
 
-    // This is the important check: the request was signed
-    // TODO: would be better to actually check the request header is constructed properly
     expect(signRequestSpy).toHaveBeenCalledTimes(1)
+    const signRequestResult = (await signRequestSpy.mock.results[0].value) as any
+    const signRequestResultOpts = signRequestResult.request.opts
+    expect(fauxFetchJson).toBeCalledWith(requestsUrl, signRequestResultOpts)
   })
 })

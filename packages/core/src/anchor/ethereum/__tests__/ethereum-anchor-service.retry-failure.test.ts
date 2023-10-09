@@ -1,17 +1,16 @@
-import { jest, test, expect } from '@jest/globals'
+import { jest, test, expect, beforeEach, afterEach } from '@jest/globals'
 import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
-import { fetchJson, LoggerProvider } from '@ceramicnetwork/common'
+import { type fetchJson, LoggerProvider } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { EthereumAnchorService } from '../ethereum-anchor-service.js'
+import { filter, firstValueFrom } from 'rxjs'
 
 const MAX_FAILED_ATTEMPTS = 2
 const POLL_INTERVAL = 100 // ms
 const MAX_POLL_TIME = 500 // ms - to test if polling stops after this threshold
 
-let fetchAttemptNum = 0
-
-const casProcessingResponse = {
+const CAS_PROCESSING_RESPONSE = {
   id: '',
   status: 'PROCESSING',
   message: `CAS is finally available; nonce: ${Math.random()}`,
@@ -19,13 +18,18 @@ const casProcessingResponse = {
   cid: FAKE_TIP_CID.toString(),
 }
 
-const fauxFetchFunc: typeof fetchJson = async () => {
+let fetchAttemptNum = 0
+const fauxFetchFunc = jest.fn().mockImplementation(async () => {
   fetchAttemptNum += 1
   if (fetchAttemptNum <= MAX_FAILED_ATTEMPTS + 1) {
     throw new Error(`Cas is unavailable`)
   }
-  return casProcessingResponse
-}
+  return CAS_PROCESSING_RESPONSE
+})
+
+afterEach(async () => {
+  fauxFetchFunc.mockClear()
+})
 
 test('re-request an anchor till get a response', async () => {
   fetchAttemptNum = 0
@@ -37,20 +41,25 @@ test('re-request an anchor till get a response', async () => {
     diagnosticsLogger,
     POLL_INTERVAL,
     MAX_POLL_TIME,
-    fauxFetchFunc
+    fauxFetchFunc as typeof fetchJson
   )
-  let lastResponse: any
-  const subscription = (await anchorService.requestAnchor(generateFakeCarFile(), false)).subscribe(
-    (response) => {
-      if (response.status === AnchorRequestStatusName.PROCESSING) {
-        lastResponse = response
-        subscription.unsubscribe()
-      }
-    }
+  const requestCAR = generateFakeCarFile()
+  const response$ = await anchorService.requestAnchor(requestCAR, false)
+  const lastResponse = await firstValueFrom(
+    response$.pipe(filter((r) => r.status === AnchorRequestStatusName.PROCESSING))
   )
-  await whenSubscriptionDone(subscription)
-  expect(lastResponse.message).toEqual(casProcessingResponse.message)
+  expect(lastResponse.message).toEqual(CAS_PROCESSING_RESPONSE.message)
   expect(warnSpy).toBeCalledTimes(3)
+  expect(fauxFetchFunc).toBeCalledWith(
+    'http://example.com/api/v0/requests',
+    expect.objectContaining({
+      body: requestCAR.bytes,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/vnd.ipld.car',
+      },
+    })
+  )
 })
 
 test('re-poll on fetch error', async () => {
@@ -63,7 +72,7 @@ test('re-poll on fetch error', async () => {
     diagnosticsLogger,
     POLL_INTERVAL,
     MAX_POLL_TIME,
-    fauxFetchFunc
+    fauxFetchFunc as unknown as typeof fetchJson
   )
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
@@ -83,10 +92,14 @@ test('re-poll on fetch error', async () => {
     },
   })
   await whenSubscriptionDone(subscription)
-  expect(lastResponse.message).toEqual(casProcessingResponse.message)
+  expect(lastResponse.message).toEqual(CAS_PROCESSING_RESPONSE.message)
   expect(warnSpy).toBeCalledTimes(3)
   expect(nextCount).toEqual(1)
   expect(errorCount).toEqual(0)
+  expect(fauxFetchFunc).toBeCalledWith(
+    `http://example.com/api/v0/requests/${streamId.cid}`,
+    expect.objectContaining({ signal: expect.any(AbortSignal) })
+  )
 })
 
 test('stop polling after max time', async () => {
@@ -98,7 +111,7 @@ test('stop polling after max time', async () => {
     diagnosticsLogger,
     POLL_INTERVAL,
     MAX_POLL_TIME,
-    fauxFetchFunc
+    fauxFetchFunc as unknown as typeof fetchJson
   )
   const streamId = FAKE_STREAM_ID
   const anchorResponse$ = anchorService.pollForAnchorResponse(streamId, streamId.cid)
@@ -119,4 +132,8 @@ test('stop polling after max time', async () => {
   expect(errorCount).toEqual(1)
   // During the 5 ms, there is the intial call, then 2 retries (2 ms) and 3 successes (3 ms)
   expect(nextCount).toEqual(3)
+  expect(fauxFetchFunc).toBeCalledWith(
+    `http://example.com/api/v0/requests/${streamId.cid}`,
+    expect.objectContaining({ signal: expect.any(AbortSignal) })
+  )
 })

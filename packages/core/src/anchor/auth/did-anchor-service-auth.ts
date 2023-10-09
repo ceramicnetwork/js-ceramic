@@ -47,7 +47,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
       throw new Error('Missing Ceramic instance required by this auth method')
     }
     const { request } = await this.signRequest({ url, opts })
-    return await this._sendRequest(request).catch((err) => {
+    return this._sendRequest(request).catch((err) => {
       if (err.message.includes("status 'Unauthorized'")) {
         throw new Error(
           `You are not authorized to use the anchoring service found at: ${
