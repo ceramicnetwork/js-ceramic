@@ -1,16 +1,16 @@
-import { test, describe, expect, beforeEach, jest } from '@jest/globals'
+import { test, describe, expect, afterEach, jest } from '@jest/globals'
 import HttpRequestMock from 'http-request-mock'
 import { fetchJson } from '../fetch-json.js'
 import { toString } from 'uint8arrays/to-string'
 import { TestUtils } from '../test-utils.js'
 
 const mocker = HttpRequestMock.setup()
-const ENDPOINT = 'http://example.com/api'
+const ENDPOINT = `http://example-${Math.floor(Math.random() * 1000)}.com/api`
 const RESPONSE = {
   hello: `world-${Math.random()}`,
 }
 
-beforeEach(() => {
+afterEach(() => {
   mocker.reset()
 })
 
