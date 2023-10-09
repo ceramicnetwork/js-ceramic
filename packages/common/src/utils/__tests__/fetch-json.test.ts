@@ -127,6 +127,6 @@ test('throw when not ok', async () => {
   const controller = new AbortController()
   const responseP = fetchJson(ENDPOINT, { signal: controller.signal })
   await expect(responseP).rejects.toThrow(
-    /HTTP request to 'http:\/\/example.com\/api' failed with status 'Not Found': Absent!/
+    `HTTP request to '${ENDPOINT}' failed with status 'Not Found': Absent!`
   )
 })
