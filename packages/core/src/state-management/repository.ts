@@ -1,7 +1,6 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorOpts,
-  AnchorService,
   CommitType,
   Context,
   CreateOpts,
@@ -33,6 +32,8 @@ import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
+import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -48,6 +49,7 @@ export type RepositoryDependencies = {
   indexing: LocalIndexApi
   streamLoader: StreamLoader
   streamUpdater: StreamUpdater
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -148,6 +150,10 @@ export class Repository {
     return this.#deps.streamLoader
   }
 
+  private get streamUpdater(): StreamUpdater {
+    return this.#deps.streamUpdater
+  }
+
   /**
    * Returns the number of streams with writes that are waiting to be anchored by the CAS.
    */
@@ -194,7 +200,8 @@ export class Repository {
       deps.conflictResolution,
       this.logger,
       deps.indexing,
-      this._internals
+      this._internals,
+      deps.anchorRequestCarBuilder
     )
   }
 
@@ -267,10 +274,25 @@ export class Repository {
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
-    const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
-    await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
-    this.logger.verbose(`Repository applied write options to stream ${streamId.toString()}`)
-    return state$
+
+    const state$ = await this._internals.load(streamId, opts)
+    this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      const originalState = state$.state
+      const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
+      if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
+        return state$ // nothing changed
+      }
+
+      state$.next(updatedState) // emit the new state
+
+      await this._internals._updateStateIfPinned(state$)
+      await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
+
+      return state$
+    })
   }
 
   /**

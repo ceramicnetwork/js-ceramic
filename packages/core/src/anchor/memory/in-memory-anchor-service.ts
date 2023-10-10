@@ -2,21 +2,16 @@ import { CID } from 'multiformats/cid'
 import { Observable, Subject, concat, of } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { TestUtils } from '@ceramicnetwork/common'
-import type {
-  AnchorProof,
-  AnchorService,
-  AnchorValidator,
-  AnchorCommit,
-  AnchorEvent,
-} from '@ceramicnetwork/common'
+import type { AnchorProof, AnchorCommit, AnchorEvent } from '@ceramicnetwork/common'
 import type { Dispatcher } from '../../dispatcher.js'
 import type { Ceramic } from '../../ceramic.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { LRUCache } from 'least-recent'
 import { CARFactory, type CAR } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import type { AnchorService, AnchorValidator } from '../anchor-service.js'
+import { InMemoryAnchorValidator, TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const V1_PROOF_TYPE = 'f(bytes32)'
@@ -39,7 +34,6 @@ type InMemoryAnchorConfig = {
 // multiple InMemoryAnchorServices are being used simultaneously in the same process (usually by
 // tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
 // can successfully validate each others transactions.
-const txnCache: LRUCache<string, number> = new LRUCache(100)
 const carFactory = new CARFactory()
 carFactory.codecs.add(DAG_JOSE)
 
@@ -62,7 +56,7 @@ function groupCandidatesByStreamId(candidates: Candidate[]): Record<string, Cand
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-export class InMemoryAnchorService implements AnchorService, AnchorValidator {
+export class InMemoryAnchorService implements AnchorService {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
 
@@ -89,7 +83,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     // Remember the most recent AnchorEvent for each anchor request
     this.#events.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
     this.events = this.#events
-    this.validator = this
+    this.validator = new InMemoryAnchorValidator(CHAIN_ID)
   }
 
   async init(): Promise<void> {
@@ -283,7 +277,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       txType: V1_PROOF_TYPE,
     }
-    txnCache.set(txHashCid.toString(), timestamp)
+    TRANSACTION_CACHE.set(txHashCid.toString(), timestamp)
     const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
     const cid = await this._publishAnchorCommit(leaf.streamId, commit)
@@ -303,15 +297,7 @@ export class InMemoryAnchorService implements AnchorService, AnchorValidator {
     }, this.#anchorDelay)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validateChainInclusion(proof: AnchorProof): Promise<number> {
-    const txHashString = proof.txHash.toString()
-    if (!txnCache.has(txHashString)) {
-      throw new Error(
-        `Txn ${proof.txHash.toString()} was not recently anchored by the InMemoryAnchorService`
-      )
-    }
-
-    return txnCache.get(txHashString)
+  async close(): Promise<void> {
+    // Do Nothing yet
   }
 }

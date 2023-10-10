@@ -32,6 +32,10 @@ export class StreamUtils {
     return new StreamID(state.type, state.log[0].cid)
   }
 
+  static tipFromState(state: StreamState): CID {
+    return state.log[state.log.length - 1].cid
+  }
+
   /**
    * Serializes commit
    * @param commit - Commit instance
