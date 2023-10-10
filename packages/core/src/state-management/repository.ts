@@ -19,7 +19,6 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
-import type { ConflictResolution } from '../conflict-resolution.js'
 import type { HandlersMap } from '../handlers-map.js'
 import { Observable, Subscription } from 'rxjs'
 import { StateCache } from './state-cache.js'
@@ -45,7 +44,6 @@ export type RepositoryDependencies = {
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
-  conflictResolution: ConflictResolution
   indexing: LocalIndexApi
   streamLoader: StreamLoader
   streamUpdater: StreamUpdater
@@ -179,7 +177,6 @@ export class Repository {
     this._internals = new RepositoryInternals({
       anchorRequestStore: deps.anchorRequestStore,
       anchorService: deps.anchorService,
-      conflictResolution: deps.conflictResolution,
       context: deps.context,
       dispatcher: deps.dispatcher,
       executionQ: this.executionQ,
@@ -197,7 +194,6 @@ export class Repository {
       deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
-      deps.conflictResolution,
       this.logger,
       deps.indexing,
       this._internals,

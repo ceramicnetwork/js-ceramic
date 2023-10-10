@@ -33,7 +33,6 @@ import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
-import { ConflictResolution } from './conflict-resolution.js'
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
@@ -246,13 +245,6 @@ export class Ceramic implements CeramicApi {
       this.dispatcher,
       modules.anchorService.validator
     )
-    const conflictResolution = new ConflictResolution(
-      this._logger,
-      anchorTimestampExtractor,
-      this.dispatcher,
-      this.context,
-      this._streamHandlers
-    )
     const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
     const logSyncer = new LogSyncer(this.dispatcher)
     const stateManipulator = new StateManipulator(
@@ -290,7 +282,6 @@ export class Ceramic implements CeramicApi {
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
-      conflictResolution: conflictResolution,
       indexing: localIndex,
       streamLoader,
       streamUpdater,
