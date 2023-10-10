@@ -1,7 +1,12 @@
+import type { Context } from '@ceramicnetwork/common'
+import type { ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
+import { jest } from '@jest/globals'
+import type { JSONSchema } from 'json-schema-typed'
+
 import {
+  ValidationError,
   createResolvers,
-  isValidRelationsImplementation,
-  isValidViewsImplementation,
+  getErrorMessage,
   validateAllSchemaTypes,
   validateAnySchemaTypes,
   validateArraySchema,
@@ -15,6 +20,18 @@ import {
   validateStringSchema,
   validateSchemaImplementation,
 } from '../interfaces-utils.js'
+
+test('getErrorMessage', () => {
+  expect(getErrorMessage({ path: ['foo', 'bar'], property: 'properties', expected: 'bar' })).toBe(
+    'Invalid value for property properties of foo.bar: expected bar but got no value'
+  )
+  expect(getErrorMessage({ path: ['foo'], index: 1, expected: 'foo', actual: 'bar' })).toBe(
+    'Invalid value for index 1 of foo: expected foo but got bar'
+  )
+  expect(getErrorMessage({ path: ['foo'], expected: 'foo', actual: 'bar' })).toBe(
+    'Invalid value for foo: expected foo but got bar'
+  )
+})
 
 describe('validateInterface()', () => {
   test('throws if the interface does not have schema properties or views', () => {
@@ -623,5 +640,141 @@ describe('schema validation', () => {
         validateSchemaType(context, { type: 'unknown' }, { type: 'unknown' })
       }).toThrow('Unsupported schema type: unknown')
     })
+  })
+
+  test('validateSchemaImplementation()', () => {
+    const expected: JSONSchema.Object = {
+      type: 'object',
+      properties: { foo: { type: 'string' } },
+    }
+    expect(
+      validateSchemaImplementation(expected, {
+        type: 'object',
+        properties: { foo: { type: 'number' } },
+      })
+    ).toEqual([{ path: ['foo'], property: 'type', expected: 'string', actual: 'number' }])
+    expect(validateSchemaImplementation(expected, expected)).toHaveLength(0)
+  })
+})
+
+describe('interfaces validation', () => {
+  test('validateInterfaceImplementation() validates a model implementation of an interface', () => {
+    const expected: ModelDefinitionV2 = {
+      version: '2.0',
+      name: 'ExpectedModel',
+      accountRelation: { type: 'none' },
+      interface: true,
+      implements: [],
+      schema: {
+        type: 'object',
+        properties: { foo: { type: 'string' } },
+      },
+      relations: {
+        foo: { type: 'account' },
+      },
+      views: {
+        bar: { type: 'documentAccount' },
+      },
+    }
+    try {
+      validateInterfaceImplementation('interfaceID', expected, {
+        version: '2.0',
+        name: 'Model',
+        accountRelation: { type: 'list' },
+        interface: false,
+        implements: [],
+        schema: { type: 'object', properties: { foo: { type: 'number' } } },
+      })
+    } catch (error) {
+      expect(error.message).toBe('Invalid implementation of interface interfaceID')
+      expect(error.errors).toHaveLength(3)
+      const schemaError = error.errors[0]
+      expect(schemaError.message).toBe('Invalid schema implementation of interface interfaceID')
+      expect(schemaError.errors).toEqual([
+        new ValidationError({
+          path: ['foo'],
+          property: 'type',
+          expected: 'string',
+          actual: 'number',
+        }),
+      ])
+      expect(error.errors[1].message).toBe(
+        'Invalid relations implementation of interface interfaceID'
+      )
+      expect(error.errors[2].message).toBe('Invalid views implementation of interface interfaceID')
+    }
+
+    expect(() => {
+      validateInterfaceImplementation('interfaceID', expected, expected)
+    }).not.toThrow()
+  })
+
+  test('validateImplementedInterfaces() loads and validates interfaces implemented by a model', async () => {
+    const MODEL_ID_1 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001'
+    const MODEL_ID_2 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka002'
+
+    const interfaceModel: ModelDefinitionV2 = {
+      version: '2.0',
+      name: 'ExpectedModel',
+      accountRelation: { type: 'none' },
+      interface: true,
+      implements: [],
+      schema: {
+        type: 'object',
+        properties: { foo: { type: 'string' } },
+      },
+      relations: {
+        foo: { type: 'account' },
+      },
+      views: {
+        bar: { type: 'documentAccount' },
+      },
+    }
+
+    const loadStream = jest.fn(() => ({ content: interfaceModel }))
+    const context = { api: { loadStream } } as unknown as Context
+
+    try {
+      await validateImplementedInterfaces(
+        {
+          version: '2.0',
+          name: 'MyModel',
+          accountRelation: { type: 'list' },
+          interface: false,
+          implements: [MODEL_ID_1, MODEL_ID_2],
+          schema: {
+            type: 'object',
+            properties: { foo: { type: 'string' } },
+          },
+        },
+        context
+      )
+    } catch (error) {
+      expect(error.errors).toHaveLength(2)
+    }
+    expect(loadStream).toHaveBeenCalledTimes(2)
+
+    await expect(
+      validateImplementedInterfaces(
+        {
+          version: '2.0',
+          name: 'MyModel',
+          accountRelation: { type: 'list' },
+          interface: false,
+          implements: [MODEL_ID_1, MODEL_ID_2],
+          schema: {
+            type: 'object',
+            properties: { foo: { type: 'string' } },
+          },
+          relations: {
+            foo: { type: 'account' },
+          },
+          views: {
+            bar: { type: 'documentAccount' },
+          },
+        },
+        context
+      )
+    ).resolves
   })
 })

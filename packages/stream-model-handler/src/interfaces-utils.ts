@@ -23,9 +23,9 @@ export type ValidationErrorData = {
 export function getErrorMessage(data: ValidationErrorData): string {
   const path = data.path.join('.')
   const target = data.property
-    ? `property "${data.property}" of "${path}"`
+    ? `property ${data.property} of ${path}`
     : data.index
-    ? `index ${data.index} of "${path}"`
+    ? `index ${data.index} of ${path}`
     : path
   const actual = data.actual ? String(data.actual) : 'no value'
   return `Invalid value for ${target}: expected ${String(data.expected)} but got ${actual}`
