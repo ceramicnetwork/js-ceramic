@@ -24,6 +24,7 @@ const fauxFetchJson = jest.fn().mockImplementation(async (url: string) => {
   throw Error('Offline')
 })
 
+
 let ipfs: any
 let ceramic: any
 let auth: DIDAnchorServiceAuth
