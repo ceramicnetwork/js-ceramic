@@ -316,7 +316,6 @@ export class Repository {
     this.executionQ.forStream(streamId).add(async () => {
       await this._internals.handleTip(state$, tip)
     })
-    await this._internals.indexStreamIfNeeded(state$)
   }
 
   /**
