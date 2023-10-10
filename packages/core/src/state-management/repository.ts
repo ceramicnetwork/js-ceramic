@@ -303,7 +303,20 @@ export class Repository {
    * @param model - Model Stream ID
    */
   async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    return this.stateManager.handleUpdate(streamId, tip, model)
+    let state$ = await this._internals.fromMemoryOrStore(streamId)
+    const shouldIndex = model && this.index.shouldIndexStream(model)
+    if (!shouldIndex && !state$) {
+      // stream isn't pinned or indexed, nothing to do
+      return
+    }
+
+    if (!state$) {
+      state$ = await this._internals.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._internals.handleTip(state$, tip)
+    })
+    await this._internals.indexStreamIfNeeded(state$)
   }
 
   /**
