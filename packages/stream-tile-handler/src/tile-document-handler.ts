@@ -1,4 +1,5 @@
 import jsonpatch from 'fast-json-patch'
+import cloneDeep from 'lodash.clonedeep'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
@@ -176,7 +177,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     state.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
 
-    const oldContent = state.next?.content ?? state.content
+    const oldContent = state.next?.content ?? cloneDeep(state.content)
     const oldMetadata = state.next?.metadata ?? state.metadata
 
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
