@@ -67,30 +67,6 @@ export class StateManager {
   }
 
   /**
-   * Handles update. Update may come from the PubSub topic or from running a sync
-   *
-   * @param streamId
-   * @param tip - Stream Tip CID
-   * @param model - Model Stream ID
-   */
-  async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    let state$ = await this.internals.fromMemoryOrStore(streamId)
-    const shouldIndex = model && this._index.shouldIndexStream(model)
-    if (!shouldIndex && !state$) {
-      // stream isn't pinned or indexed, nothing to do
-      return
-    }
-
-    if (!state$) {
-      state$ = await this.internals.load(streamId)
-    }
-    this.executionQ.forStream(streamId).add(async () => {
-      await this.internals.handleTip(state$, tip)
-    })
-    await this.internals.indexStreamIfNeeded(state$)
-  }
-
-  /**
    * Request anchor for the latest stream state
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
