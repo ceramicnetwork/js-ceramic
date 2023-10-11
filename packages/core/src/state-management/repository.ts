@@ -1,6 +1,7 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorOpts,
+  AnchorStatus,
   CommitType,
   Context,
   CreateOpts,
@@ -318,7 +319,27 @@ export class Repository {
    * Request anchor for the latest stream state
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
-    return this.stateManager.anchor(state$, opts)
+    if (!this.anchorService) {
+      throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
+    }
+    if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
+      return
+    }
+
+    const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
+    const genesisCID = state$.value.log[0].cid
+    const genesisCommit = carFile.get(genesisCID)
+    await this.anchorRequestStore.save(state$.id, {
+      cid: state$.tip,
+      timestamp: Date.now(),
+      genesis: genesisCommit,
+    })
+
+    const anchorStatus$ = await this.anchorService.requestAnchor(
+      carFile,
+      opts.waitForAnchorConfirmation
+    )
+    return this._internals.processAnchorResponse(state$, anchorStatus$)
   }
 
   /**

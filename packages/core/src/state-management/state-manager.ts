@@ -37,38 +37,4 @@ export class StateManager {
     private readonly internals: RepositoryInternals,
     private readonly anchorRequestCarBuilder: AnchorRequestCarBuilder
   ) {}
-
-  /**
-   * Request anchor for the latest stream state
-   */
-  async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
-    if (!this.anchorService) {
-      throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
-    }
-    if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
-      return
-    }
-
-    const carFile = await this.anchorRequestCarBuilder.build(state$.id, state$.tip)
-    const genesisCID = state$.value.log[0].cid
-    const genesisCommit = carFile.get(genesisCID)
-    await this._saveAnchorRequestForState(state$, genesisCommit)
-
-    const anchorStatus$ = await this.anchorService.requestAnchor(
-      carFile,
-      opts.waitForAnchorConfirmation
-    )
-    return this.internals.processAnchorResponse(state$, anchorStatus$)
-  }
-
-  private async _saveAnchorRequestForState(
-    state$: RunningState,
-    genesisCommit: GenesisCommit
-  ): Promise<void> {
-    await this.anchorRequestStore.save(state$.id, {
-      cid: state$.tip,
-      timestamp: Date.now(),
-      genesis: genesisCommit,
-    })
-  }
 }
