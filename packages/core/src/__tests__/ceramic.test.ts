@@ -325,11 +325,11 @@ describe('Ceramic integration', () => {
 
         const repository1 = ceramic1.repository
         const addSpy1 = jest.spyOn(repository1._internals, 'add')
-        const loadSpy1 = jest.spyOn(repository1._internals, 'load')
+        const loadSpy1 = jest.spyOn(repository1, 'load')
 
         const repository2 = ceramic2.repository
         const addSpy2 = jest.spyOn(repository2._internals, 'add')
-        const loadSpy2 = jest.spyOn(repository2._internals, 'load')
+        const loadSpy2 = jest.spyOn(repository2, 'load')
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 }, null, {
           publish: false,
@@ -373,11 +373,11 @@ describe('Ceramic integration', () => {
 
         const repository1 = ceramic1.repository
         const addSpy1 = jest.spyOn(repository1._internals, 'add')
-        const loadSpy1 = jest.spyOn(repository1._internals, 'load')
+        const loadSpy1 = jest.spyOn(repository1, 'load')
 
         const repository2 = ceramic2.repository
         const addSpy2 = jest.spyOn(repository2._internals, 'add')
-        const loadSpy2 = jest.spyOn(repository2._internals, 'load')
+        const loadSpy2 = jest.spyOn(repository2, 'load')
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
         expect(loadSpy1).toBeCalledTimes(1)
