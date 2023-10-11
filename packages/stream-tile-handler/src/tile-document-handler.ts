@@ -172,14 +172,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       throw new Error("Changing 'forbidControllerChange' metadata property is not allowed")
     }
 
-    const nextState = cloneDeep(state)
+    state.signature = SignatureStatus.SIGNED
+    state.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-    nextState.signature = SignatureStatus.SIGNED
-    nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
+    state.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
 
-    nextState.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
-
-    const oldContent = state.next?.content ?? state.content
+    const oldContent = state.next?.content ?? cloneDeep(state.content)
     const oldMetadata = state.next?.metadata ?? state.metadata
 
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
@@ -192,12 +190,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       await this._schemaValidator.validateSchema(context.api, newContent, newMetadata.schema)
     }
 
-    nextState.next = {
+    state.next = {
       content: newContent,
       metadata: newMetadata,
     }
 
-    return nextState
+    return state
   }
 
   /**
