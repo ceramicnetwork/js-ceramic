@@ -18,7 +18,6 @@ import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
-import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
 import { Observable, Subscription } from 'rxjs'
@@ -99,11 +98,6 @@ export class Repository {
    * Internal APIs
    */
   _internals: RepositoryInternals
-
-  /**
-   * Instance of StateManager for performing operations on stream state.
-   */
-  private stateManager: StateManager
 
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
@@ -190,16 +184,6 @@ export class Repository {
       streamLoader: deps.streamLoader,
       streamUpdater: deps.streamUpdater,
     })
-    this.stateManager = new StateManager(
-      deps.dispatcher,
-      deps.anchorRequestStore,
-      this.executionQ,
-      deps.anchorService,
-      this.logger,
-      deps.indexing,
-      this._internals,
-      deps.anchorRequestCarBuilder
-    )
   }
 
   /**
