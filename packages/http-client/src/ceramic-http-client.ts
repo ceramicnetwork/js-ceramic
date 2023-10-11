@@ -145,7 +145,7 @@ export class CeramicClient implements CeramicApi {
 
     const url = new URL('./multiqueries', this._apiUrl)
     const results = await fetchJson(url, {
-      method: 'post',
+      method: 'POST',
       body: {
         queries: queriesJSON,
         ...{ timeout },
@@ -192,7 +192,7 @@ export class CeramicClient implements CeramicApi {
     const { anchorStatus } = await fetchJson(
       `${this._apiUrl}/streams/${streamId.toString()}/anchor`,
       {
-        method: 'post',
+        method: 'POST',
         body: {
           opts,
         },

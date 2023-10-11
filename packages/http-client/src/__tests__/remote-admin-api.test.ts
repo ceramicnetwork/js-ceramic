@@ -110,7 +110,7 @@ test('addModelsToIndex()', async () => {
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
   expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
   const sentPayload = fauxFetch.mock.calls[1][1]
-  expect(sentPayload.method).toEqual('post')
+  expect(sentPayload.method).toEqual('POST')
   const sentJws = sentPayload.body.jws
 
   const jwsResult = await did.verifyJWS(sentJws)
@@ -128,7 +128,7 @@ test('startIndexingModelData()', async () => {
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
   expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/modelData`))
   const sentPayload = fauxFetch.mock.calls[1][1]
-  expect(sentPayload.method).toEqual('post')
+  expect(sentPayload.method).toEqual('POST')
   const sentJws = sentPayload.body.jws
 
   const jwsResult = await did.verifyJWS(sentJws)
@@ -145,7 +145,7 @@ test('removeModelsFromIndex()', async () => {
   expect(fauxFetch.mock.calls[0][0]).toEqual(new URL(`https://example.com/admin/getCode`))
   expect(fauxFetch.mock.calls[1][0]).toEqual(new URL(`https://example.com/admin/models`))
   const sentPayload = fauxFetch.mock.calls[1][1]
-  expect(sentPayload.method).toEqual('delete')
+  expect(sentPayload.method).toEqual('DELETE')
   const sentJws = sentPayload.body.jws
 
   const jwsResult = await did.verifyJWS(sentJws)
