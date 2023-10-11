@@ -626,7 +626,7 @@ describe('applyWriteOpts', () => {
     for (const operation of operations) {
       const publishSpy = jest.spyOn(repository._internals, 'publishTip')
       const pinSpy = jest.spyOn(repository, 'handlePinOpts')
-      pinSpy.mockImplementationOnce(() => {})
+      pinSpy.mockImplementationOnce(() => Promise.resolve())
       await repository.applyWriteOpts(
         new RunningState(TestUtils.makeStreamState(), false),
         { publish: true },
