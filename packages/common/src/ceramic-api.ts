@@ -1,6 +1,6 @@
 import type { DID } from 'dids'
 import type { Stream, StreamHandler, CeramicCommit, StreamState } from './stream.js'
-import type { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
+import type { AnchorOpts, CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
@@ -209,7 +209,7 @@ export interface CeramicApi extends CeramicSigner {
    * @param streamId
    * @param opts used to load the current Stream state
    */
-  requestAnchor(streamId: StreamID | string, opts?: LoadOpts): Promise<AnchorStatus>
+  requestAnchor(streamId: StreamID | string, opts?: LoadOpts & AnchorOpts): Promise<AnchorStatus>
 
   /**
    * Sets the DID instance that will be used to author commits to stream. The DID instance

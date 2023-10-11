@@ -1,5 +1,5 @@
 import * as providers from '@ethersproject/providers'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 
 /**
  * Ethereum network configuration
@@ -43,13 +43,13 @@ export interface IProvidersCache {
  * Providers cache
  */
 export class ProvidersCache {
-  private readonly cache: lru.LRUMap<string, providers.BaseProvider>
+  private readonly cache: LRUCache<string, providers.BaseProvider>
 
   /**
    * @param ethereumRpcEndpoint
    */
   constructor(readonly ethereumRpcEndpoint: string) {
-    this.cache = new lru.LRUMap(MAX_PROVIDERS_COUNT)
+    this.cache = new LRUCache(MAX_PROVIDERS_COUNT)
   }
 
   /**

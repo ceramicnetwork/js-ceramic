@@ -45,14 +45,15 @@ export class SignatureUtils {
       await did.verifyJWS(commitData.envelope, {
         atTime: atTime,
         issuer: controller,
-        disableTimecheck: commitData.disableTimecheck,
         capability: cacao,
         revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
         verifiers: verifiersCACAO,
       })
     } catch (e: any) {
       const original = e.message ? e.message : String(e)
-      throw new Error(`Can not verify signature for commit ${commitData.cid}: ${original}`)
+      throw new Error(
+        `Can not verify signature for commit ${commitData.cid} to stream ${streamId} which has controller DID ${controller}: ${original}`
+      )
     }
   }
 

@@ -27,7 +27,7 @@ import { handleHeapdumpSignal } from './daemon/handle-heapdump-signal.js'
 import { handleSigintSignal } from './daemon/handle-sigint-signal.js'
 import { generateSeedUrl } from './daemon/did-utils.js'
 import { TypedJSON } from 'typedjson'
-import { getDefaultCDBDatabaseConfig } from '@ceramicnetwork/core'
+import { getDefaultCDBDatabaseConfig } from '@ceramicnetwork/indexing'
 
 const HOMEDIR = new URL(`file://${os.homedir()}/`)
 const CWD = new URL(`file://${process.cwd()}/`)
@@ -150,9 +150,10 @@ export class CeramicCliUtils {
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
     if (process.env.COLLECTOR_HOSTNAME)
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
-    if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL) {
+    if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL)
       config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
-    }
+    if (process.env.CERAMIC_DISABLE_IPFS_PEER_DATA_SYNC == 'true')
+      config.ipfs.disablePeerDataSync = true
 
     // Validate the config after applying all the overrides
     validateConfig(config)

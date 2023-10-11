@@ -115,7 +115,8 @@ export interface LogEntry {
 }
 
 /**
- * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits.
+ * Includes all additional data necessary to apply the commit without requiring any additional i/o
+ * to load anything else from ipfs or the p2p Ceramic network.
  */
 export interface CommitData extends LogEntry {
   /**
@@ -144,13 +145,34 @@ export interface CommitData extends LogEntry {
    * If this is a signed commit that was signed using a CACAO, this contains it.
    */
   capability?: Cacao
-
-  /**
-   * An option to pass down when doing signature verification on the commit that indicated not to
-   * time-check a signature.
-   */
-  disableTimecheck?: boolean
 }
+
+/**
+ * A SyncedStreamLog that has also validated all the Anchor Commits, extracted the timestamp
+ * information from them, and applied them to all the commits in the log. This log can now be
+ * applied to a StreamState without needing to perform any additional i/o.
+ */
+export type AppliableStreamLog = {
+  commits: Array<CommitData>
+  timestampStatus: 'validated'
+}
+
+/**
+ * A SyncedStreamLog that has loaded all necessary data from the p2p network but has yet to validate
+ * the Anchor Commits and extract the timestamp information needed before the log can be applied.
+ */
+export type UnappliableStreamLog = {
+  commits: Array<CommitData>
+  timestampStatus: 'pending'
+}
+
+/**
+ * Log of commits loaded for a stream that contains all the information needed to apply the log and
+ * get a StreamState, without needing to do any additional i/o *to the p2p network*. Note there
+ * may still be i/o needed to validate the anchor commits against Ethereum and extract and apply the
+ * timestamps to the commits before the log can be fully applied.
+ */
+export type SyncedStreamLog = AppliableStreamLog | UnappliableStreamLog
 
 /**
  * Stream state
@@ -294,10 +316,13 @@ export interface StreamHandler<T extends Stream> {
   stream_constructor: StreamConstructor<T>
 
   /**
-   * Applies commit to the stream (genesis|signed|anchored)
+   * Applies commit to the stream (genesis|signed|anchored) and returns the new StreamState.
+   * StreamHandler implementations of applyCommit are allowed to modify the input state, it is up to
+   * callers to clone the input state before calling into applyCommit if they don't want the input
+   * state modified.
    * @param commitData - Commit data
    * @param context - Ceramic context
-   * @param state - Stream state
+   * @param state - The existing state to apply the commit to.
    */
   applyCommit(commitData: CommitData, context: Context, state?: StreamState): Promise<StreamState>
 }

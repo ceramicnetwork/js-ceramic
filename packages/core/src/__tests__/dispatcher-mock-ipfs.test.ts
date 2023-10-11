@@ -1,20 +1,15 @@
-import { expect, jest } from '@jest/globals'
+import { expect, jest, it, test, describe, beforeEach, afterEach } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { CommitType, StreamState, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
-import { Repository, RepositoryDependencies } from '../state-management/repository.js'
-import tmp from 'tmp-promise'
-import { PinStore } from '../store/pin-store.js'
+import { Repository } from '../state-management/repository.js'
 import { RunningState } from '../state-management/running-state.js'
-import { StateManager } from '../state-management/state-manager.js'
-import { ShutdownSignal } from '../shutdown-signal.js'
-import { LevelDbStore } from '../store/level-db-store.js'
-import { StreamStateStore } from '../store/stream-state-store.js'
 import { CARFactory } from 'cartonne'
 import * as dagJoseCodec from 'dag-jose'
 import * as dagCborCodec from '@ipld/dag-cbor'
+import { createDispatcher } from './create-dispatcher.js'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = CID.parse('bafyreihbje3f5oj6vlszlqmnrtrsmuukrjurpsv6uus4siwgikldp6wnty')
@@ -36,7 +31,7 @@ const mock_ipfs = {
   dag: {
     put: jest.fn(),
     get: jest.fn(),
-    resolve: jest.fn(async (cid: CID, opts?: any) => {
+    resolve: jest.fn(async (cid: CID, opts: any) => {
       return { cid: cid }
     }),
     import: jest.fn(() => {
@@ -50,7 +45,7 @@ const mock_ipfs = {
   id: async () => ({ id: 'ipfsid' }),
   codecs: {
     listCodecs: () => [dagJoseCodec, dagCborCodec],
-    getCodec: (codename) =>
+    getCodec: (codename: string | number) =>
       [dagJoseCodec, dagCborCodec].find(
         (codec) => codec.code === codename || codec.name === codename
       ),
@@ -63,7 +58,6 @@ const carFactory = new CARFactory()
 describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher
   let repository: Repository
-  const loggerProvider = new LoggerProvider()
   const ipfs = mock_ipfs
 
   beforeEach(async () => {
@@ -73,24 +67,8 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    const levelPath = await tmp.tmpName()
-    const levelStore = new LevelDbStore(levelPath, 'test')
-    const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
-    stateStore.open(levelStore)
-    repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
-    const pinStore = {
-      stateStore,
-    } as unknown as PinStore
-    repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    dispatcher = new Dispatcher(
-      ipfs as unknown as IpfsApi,
-      TOPIC,
-      repository,
-      loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub'),
-      new ShutdownSignal(),
-      10
-    )
+    dispatcher = await createDispatcher(ipfs as unknown as IpfsApi, TOPIC)
+    repository = dispatcher.repository
   })
 
   afterEach(async () => {
@@ -178,9 +156,7 @@ describe('Dispatcher with mock ipfs', () => {
     })
 
     const blockGetSpy = ipfs.block.get
-    blockGetSpy.mockImplementation(async function (cid: CID, opts: any) {
-      return carFile.blocks.get(cid).payload
-    })
+    blockGetSpy.mockImplementation(async (cid: CID) => carFile.blocks.get(cid).payload)
 
     expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/foo')).toEqual('foo')
     // CID+path not found in cache so IPFS lookup performed and cache updated
@@ -226,8 +202,6 @@ describe('Dispatcher with mock ipfs', () => {
   })
 
   it('handle message correctly without model', async () => {
-    dispatcher.repository.stateManager = {} as unknown as StateManager
-
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
       repository.add(runningState)
@@ -255,18 +229,14 @@ describe('Dispatcher with mock ipfs', () => {
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message without model
-    dispatcher.repository.stateManager.handleUpdate = jest.fn()
+    dispatcher.repository.handleUpdate = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
       stream: FAKE_STREAM_ID,
       tip: FAKE_CID,
       model: null,
     })
-    expect(dispatcher.repository.stateManager.handleUpdate).toBeCalledWith(
-      state$.id,
-      FAKE_CID,
-      null
-    )
+    expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, null)
 
     const continuationState = {
       ...initialState,
@@ -289,16 +259,10 @@ describe('Dispatcher with mock ipfs', () => {
     // Handle RESPONSE message
     const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
-    expect(dispatcher.repository.stateManager.handleUpdate).toBeCalledWith(
-      stream2.id,
-      FAKE_CID2,
-      undefined
-    )
+    expect(dispatcher.repository.handleUpdate).toBeCalledWith(stream2.id, FAKE_CID2, undefined)
   })
 
   it('handle message correctly with model', async () => {
-    dispatcher.repository.stateManager = {} as unknown as StateManager
-
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
       repository.add(runningState)
@@ -318,17 +282,19 @@ describe('Dispatcher with mock ipfs', () => {
     const state$ = await register(initialState)
 
     // Handle UPDATE message with model
-    dispatcher.repository.stateManager.handleUpdate = jest.fn()
+    dispatcher.repository.handleUpdate = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
       stream: FAKE_STREAM_ID,
       tip: FAKE_CID,
       model: FAKE_MODEL,
     })
-    expect(dispatcher.repository.stateManager.handleUpdate).toBeCalledWith(
-      state$.id,
-      FAKE_CID,
-      FAKE_MODEL
-    )
+    expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, FAKE_MODEL)
+  })
+
+  test('init', async () => {
+    const subscribeSpy = jest.spyOn(dispatcher.messageBus, 'subscribe')
+    await dispatcher.init()
+    expect(subscribeSpy).toBeCalled()
   })
 })

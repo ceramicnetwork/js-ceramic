@@ -3,6 +3,126 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.30.0...@ceramicnetwork/stream-caip10-link@2.31.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.30.0-rc.0...@ceramicnetwork/stream-caip10-link@2.30.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.29.0...@ceramicnetwork/stream-caip10-link@2.30.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.29.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.29.0-rc.1...@ceramicnetwork/stream-caip10-link@2.29.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.29.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.29.0-rc.0...@ceramicnetwork/stream-caip10-link@2.29.0-rc.1) (2023-09-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.29.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.28.0...@ceramicnetwork/stream-caip10-link@2.29.0-rc.0) (2023-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.28.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.28.0-rc.1...@ceramicnetwork/stream-caip10-link@2.28.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.28.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.28.0-rc.0...@ceramicnetwork/stream-caip10-link@2.28.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.27.0...@ceramicnetwork/stream-caip10-link@2.28.0-rc.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.27.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.27.0-rc.1...@ceramicnetwork/stream-caip10-link@2.27.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.27.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.27.0-rc.0...@ceramicnetwork/stream-caip10-link@2.27.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.27.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.26.0...@ceramicnetwork/stream-caip10-link@2.27.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.26.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.26.0-rc.1...@ceramicnetwork/stream-caip10-link@2.26.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.26.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.26.0-rc.0...@ceramicnetwork/stream-caip10-link@2.26.0-rc.1) (2023-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
+# [2.26.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.25.0...@ceramicnetwork/stream-caip10-link@2.26.0-rc.0) (2023-08-07)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
 # [2.25.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.25.0-rc.1...@ceramicnetwork/stream-caip10-link@2.25.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link

@@ -3,6 +3,78 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.21.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.20.0...@ceramicnetwork/blockchain-utils-linking@2.21.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.20.0-rc.0...@ceramicnetwork/blockchain-utils-linking@2.20.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.20.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.19.0...@ceramicnetwork/blockchain-utils-linking@2.20.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.19.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.19.0-rc.0...@ceramicnetwork/blockchain-utils-linking@2.19.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.19.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.18.0...@ceramicnetwork/blockchain-utils-linking@2.19.0-rc.0) (2023-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.18.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.18.0-rc.0...@ceramicnetwork/blockchain-utils-linking@2.18.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.17.0...@ceramicnetwork/blockchain-utils-linking@2.18.0-rc.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.17.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.17.0-rc.0...@ceramicnetwork/blockchain-utils-linking@2.17.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
+# [2.17.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.16.0...@ceramicnetwork/blockchain-utils-linking@2.17.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
+
+
+
+
+
 # [2.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.16.0-rc.0...@ceramicnetwork/blockchain-utils-linking@2.16.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

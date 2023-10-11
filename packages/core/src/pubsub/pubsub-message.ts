@@ -1,6 +1,5 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'
@@ -103,9 +102,6 @@ export type PubsubMessage = co.TypeOf<typeof PubsubMessage>
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder('utf-8')
 
-const PUBSUB_PUBLISHED = 'pubsub_published'
-const PUBSUB_RECEIVED = 'pubsub_received'
-
 function messageHash(message: any): string {
   // DAG-CBOR encoding
   const encoded = dagCBOR.encode(message)
@@ -130,7 +126,6 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
 }
 
 export function serialize(message: PubsubMessage): Uint8Array {
-  Metrics.count(PUBSUB_PUBLISHED, 1, { typ: message.typ }) // really attempted to publish...
   const payload = PubsubMessage.encode(message)
   return textEncoder.encode(JSON.stringify(payload))
 }
@@ -138,6 +133,5 @@ export function serialize(message: PubsubMessage): Uint8Array {
 export function deserialize(message: any): PubsubMessage {
   const asString = textDecoder.decode(message.data)
   const parsed = JSON.parse(asString)
-  Metrics.count(PUBSUB_RECEIVED, 1, { typ: parsed.typ })
   return co.decode(PubsubMessage, parsed) as PubsubMessage
 }

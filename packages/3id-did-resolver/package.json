@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "2.23.0",
+  "version": "2.29.0-rc.0",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -32,7 +32,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -40,17 +40,18 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.30.0",
-    "@ceramicnetwork/stream-tile": "^2.26.0",
+    "@ceramicnetwork/common": "^2.36.0-rc.0",
+    "@ceramicnetwork/stream-tile": "^2.32.0-rc.0",
     "@ceramicnetwork/streamid": "^2.17.0",
     "cross-fetch": "^3.1.4",
-    "lru_map": "^0.4.1",
+    "least-recent": "^1.0.3",
     "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "@ceramicnetwork/http-client": "^2.27.0",
-    "did-resolver": "^4.0.1"
+    "@ceramicnetwork/http-client": "^2.33.0-rc.0",
+    "did-resolver": "^4.0.1",
+    "http-request-mock": "^1.8.17"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

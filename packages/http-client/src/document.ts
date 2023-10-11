@@ -75,7 +75,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
   ): Promise<Document> {
     const url = new URL('./streams', apiUrl)
     const { state } = await fetchJson(url, {
-      method: 'post',
+      method: 'POST',
       body: {
         type,
         genesis: StreamUtils.serializeCommit(genesis),
@@ -94,7 +94,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
   ): Promise<Document> {
     const url = new URL('./commits', apiUrl)
     const { state } = await fetchJson(url, {
-      method: 'post',
+      method: 'POST',
       body: {
         streamId: streamId.toString(),
         commit: StreamUtils.serializeCommit(commit),

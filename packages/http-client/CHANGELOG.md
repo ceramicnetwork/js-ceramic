@@ -3,6 +3,133 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.32.0...@ceramicnetwork/http-client@2.33.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.32.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.32.0-rc.0...@ceramicnetwork/http-client@2.32.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.32.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.31.0...@ceramicnetwork/http-client@2.32.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.31.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.31.0-rc.1...@ceramicnetwork/http-client@2.31.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.31.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.31.0-rc.0...@ceramicnetwork/http-client@2.31.0-rc.1) (2023-09-12)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.30.0...@ceramicnetwork/http-client@2.31.0-rc.0) (2023-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.30.0-rc.1...@ceramicnetwork/http-client@2.30.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.30.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.30.0-rc.0...@ceramicnetwork/http-client@2.30.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.30.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.29.0...@ceramicnetwork/http-client@2.30.0-rc.0) (2023-08-23)
+
+
+### Features
+
+* Add option to wait until anchor requests are durably created on the CAS ([#2907](https://github.com/ceramicnetwork/js-ceramic/issues/2907)) ([a36ebf7](https://github.com/ceramicnetwork/js-ceramic/commit/a36ebf72b1701836a3360fb30ba935a265d0aeda))
+
+
+
+
+
+# [2.29.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.29.0-rc.1...@ceramicnetwork/http-client@2.29.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.29.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.29.0-rc.0...@ceramicnetwork/http-client@2.29.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.29.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.28.0...@ceramicnetwork/http-client@2.29.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.28.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.28.0-rc.1...@ceramicnetwork/http-client@2.28.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [2.28.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.28.0-rc.0...@ceramicnetwork/http-client@2.28.0-rc.1) (2023-08-11)
+
+
+### Bug Fixes
+
+* **core:** String in query values should be escaped ([#2891](https://github.com/ceramicnetwork/js-ceramic/issues/2891)) ([6bd02d7](https://github.com/ceramicnetwork/js-ceramic/commit/6bd02d77701b1f6195495ba994847dade7938a61))
+* **http-client:** Add a dummy pin api to not break old callers ([#2876](https://github.com/ceramicnetwork/js-ceramic/issues/2876)) ([3547e25](https://github.com/ceramicnetwork/js-ceramic/commit/3547e25773809b1fb666c31197a140937ddadf99))
+
+
+
+
+
+# [2.28.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.27.0...@ceramicnetwork/http-client@2.28.0-rc.0) (2023-08-07)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 # [2.27.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.27.0-rc.1...@ceramicnetwork/http-client@2.27.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

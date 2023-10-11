@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "2.16.0",
+  "version": "2.21.0-rc.0",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -60,6 +60,7 @@
     "@taquito/signer": "^11.2.0",
     "@taquito/taquito": "^11.2.0",
     "@tendermint/sig": "^0.6.0",
+    "@types/create-hash": "^1.2.2",
     "@zondax/filecoin-signing-tools": "^0.18.2",
     "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.2",

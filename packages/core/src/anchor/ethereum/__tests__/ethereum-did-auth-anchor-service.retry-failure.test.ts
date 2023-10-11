@@ -1,6 +1,13 @@
-import { jest } from '@jest/globals'
-import { whenSubscriptionDone } from '../../../__tests__/when-subscription-done.util.js'
+import { expect, jest } from '@jest/globals'
 import { generateFakeCarFile, FAKE_STREAM_ID, FAKE_TIP_CID } from './generateFakeCarFile.js'
+import type { fetchJson } from '@ceramicnetwork/common'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
+import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
+import { createCeramic } from '../../../__tests__/create-ceramic.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { filter, firstValueFrom } from 'rxjs'
 
 const MAX_FAILED_ATTEMPTS = 2
 let attemptNum = 0
@@ -13,20 +20,12 @@ const casProcessingResponse = {
   cid: FAKE_TIP_CID.toString(),
 }
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
-    ok: true,
-    json: async () => {
-      attemptNum += 1
-      if (attemptNum <= MAX_FAILED_ATTEMPTS + 1) {
-        throw new Error(`Cas is unavailable`)
-      }
-      return casProcessingResponse
-    },
-  }))
-  return {
-    default: fetchFunc,
+const fauxFetchJson = jest.fn().mockImplementation(async () => {
+  attemptNum += 1
+  if (attemptNum <= MAX_FAILED_ATTEMPTS + 1) {
+    throw new Error(`Cas is unavailable`)
   }
+  return casProcessingResponse
 })
 
 jest.setTimeout(20000)
@@ -40,37 +39,40 @@ afterAll(async () => {
 })
 
 test('re-request an anchor till get a response', async () => {
-  const common = await import('@ceramicnetwork/common')
-  const codecs = await import('@ceramicnetwork/codecs')
-  const eas = await import('../ethereum-anchor-service.js')
-  const { createIPFS } = await import('@ceramicnetwork/ipfs-daemon')
-  const { createCeramic } = await import('../../../__tests__/create-ceramic.js')
-  const { createDidAnchorServiceAuth } = await import(
-    '../../../__tests__/create-did-anchor-service-auth.js'
-  )
-  const loggerProvider = new common.LoggerProvider()
-  const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
-  const errSpy = jest.spyOn(diagnosticsLogger, 'err')
+  const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
+  const warnSpy = jest.spyOn(diagnosticsLogger, 'warn')
   const url = 'http://example.com'
 
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: true })
-  const { auth } = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger)
-  const anchorService = new eas.AuthenticatedEthereumAnchorService(
+  const auth = createDidAnchorServiceAuth(
+    url,
+    ceramic,
+    diagnosticsLogger,
+    fauxFetchJson as typeof fetchJson
+  )
+  const anchorService = new AuthenticatedEthereumAnchorService(
     auth,
+    url,
     url,
     diagnosticsLogger,
     100
   )
+  const signRequestSpy = jest.spyOn(auth, 'signRequest')
 
-  let lastResponse: any
-  const subscription = anchorService.requestAnchor(generateFakeCarFile()).subscribe((response) => {
-    if (response.status === codecs.AnchorRequestStatusName.PROCESSING) {
-      lastResponse = response
-      subscription.unsubscribe()
-    }
-  })
-  await whenSubscriptionDone(subscription)
+  const requestCAR = generateFakeCarFile()
+  const response$ = await anchorService.requestAnchor(requestCAR, false)
+  const lastResponse = await firstValueFrom(
+    response$.pipe(filter((r) => r.status === AnchorRequestStatusName.PROCESSING))
+  )
+  const out0 = (await signRequestSpy.mock.results[0].value) as any
   expect(lastResponse.message).toEqual(casProcessingResponse.message)
-  expect(errSpy).toBeCalledTimes(3)
+  expect(warnSpy).toBeCalledTimes(3)
+
+  const fetchOpts = out0.request.opts
+  expect(fetchOpts.method).toEqual('POST')
+  expect(fetchOpts.headers['Content-Type']).toEqual('application/vnd.ipld.car')
+  expect(fetchOpts.headers['Authorization']).toMatch(/^Bearer\s/)
+  expect(fetchOpts.body).toEqual(requestCAR.bytes)
+  expect(fauxFetchJson).toBeCalledWith('http://example.com/api/v0/requests', fetchOpts)
 })

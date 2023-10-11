@@ -9,81 +9,61 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   LoadOpts,
-  AnchorService,
   CeramicApi,
   CeramicCommit,
   IpfsApi,
-  PinApi,
   MultiQuery,
   PinningBackendStatic,
   LoggerProvider,
-  Networks,
   UpdateOpts,
   SyncOptions,
-  AnchorValidator,
   AnchorStatus,
   StreamState,
   AdminApi,
   NodeStatusResponse,
+  AnchorOpts,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 import { DID } from 'dids'
 import { PinStoreFactory } from './store/pin-store-factory.js'
 import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
-
-import { DIDAnchorServiceAuth } from './anchor/auth/did-anchor-service-auth.js'
-import {
-  AuthenticatedEthereumAnchorService,
-  EthereumAnchorService,
-} from './anchor/ethereum/ethereum-anchor-service.js'
-import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
-
-import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api.js'
 import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
-import { ConflictResolution } from './conflict-resolution.js'
-import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-validator.js'
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
-import { LocalIndexApi } from './indexing/local-index-api.js'
+import { type IndexingConfig, LocalIndexApi, SyncApi } from '@ceramicnetwork/indexing'
 import { ShutdownSignal } from './shutdown-signal.js'
-import { IndexingConfig } from './indexing/build-indexing.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
-import { SyncApi } from './sync/sync-api.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
+import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
+import { TipFetcher } from './stream-loading/tip-fetcher.js'
+import { LogSyncer } from './stream-loading/log-syncer.js'
+import { StateManipulator } from './stream-loading/state-manipulator.js'
+import { StreamLoader } from './stream-loading/stream-loader.js'
+import {
+  networkOptionsByName,
+  type CeramicNetworkOptions,
+} from './initialization/network-options.js'
+import {
+  usableAnchorChains,
+  makeAnchorService,
+  makeEthereumRpcUrl,
+} from './initialization/anchoring.js'
+import { StreamUpdater } from './stream-loading/stream-updater.js'
+import type { AnchorService } from './anchor/anchor-service.js'
+import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const TESTING = process.env.NODE_ENV == 'test'
-
-const TRAILING_SLASH = /\/$/ // slash at the end of the string
-
-const DEFAULT_ANCHOR_SERVICE_URLS = {
-  [Networks.MAINNET]: 'https://cas.3boxlabs.com',
-  [Networks.ELP]: 'https://cas.3boxlabs.com',
-  [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
-  [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
-  [Networks.LOCAL]: 'http://localhost:8081',
-}
-
-const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
-
-const SUPPORTED_CHAINS_BY_NETWORK = {
-  [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
-  [Networks.ELP]: ['eip155:1'], // Ethereum mainnet
-  [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
-  [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
-  [Networks.LOCAL]: ['eip155:1337'], // Ganache
-  [Networks.INMEMORY]: ['inmemory:12345'], // Our fake in-memory anchor service chainId
-}
 
 /**
  * For user-initiated writes that come in via the 'core' or http clients directly (as opposed to
@@ -140,6 +120,8 @@ export interface CeramicConfig {
   useCentralizedPeerDiscovery?: boolean
   syncOverride?: SyncOptions
 
+  disablePeerDataSync?: boolean
+
   [index: string]: any // allow arbitrary properties
 }
 
@@ -150,7 +132,6 @@ export interface CeramicConfig {
  */
 export interface CeramicModules {
   anchorService: AnchorService | null
-  anchorValidator: AnchorValidator
   dispatcher: Dispatcher
   ipfs: IpfsApi
   ipfsTopology: IpfsTopology
@@ -159,6 +140,7 @@ export interface CeramicModules {
   repository: Repository
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -174,16 +156,6 @@ export interface CeramicParameters {
   networkOptions: CeramicNetworkOptions
   loadOptsOverride: LoadOpts
 }
-
-/**
- * Protocol options that are derived from the specified Ceramic network name (e.g. "mainnet", "testnet-clay", etc)
- */
-interface CeramicNetworkOptions {
-  name: Networks // Must be one of the supported network names
-  pubsubTopic: string // The topic that will be used for broadcasting protocol messages
-}
-
-const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
   const streamRef = StreamRef.from(streamId)
@@ -214,12 +186,12 @@ export class Ceramic implements CeramicApi {
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
   readonly repository: Repository
+  readonly anchorService: AnchorService
   private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
 
   readonly _streamHandlers: HandlersMap
-  private readonly _anchorValidator: AnchorValidator
   private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -239,7 +211,7 @@ export class Ceramic implements CeramicApi {
     this.repository = modules.repository
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
-    this._anchorValidator = modules.anchorValidator
+    this.anchorService = modules.anchorService
     this.providersCache = modules.providersCache
 
     this._gateway = params.gateway
@@ -255,29 +227,50 @@ export class Ceramic implements CeramicApi {
 
     this.context = {
       api: this,
-      anchorService: modules.anchorService,
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
     if (!this._gateway) {
-      this.context.anchorService.ceramic = this
+      this.anchorService.ceramic = this
     }
 
     this._streamHandlers = new HandlersMap(this._logger)
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    const conflictResolution = new ConflictResolution(
-      this.loggerProvider.getDiagnosticsLogger(),
-      modules.anchorValidator,
+    // TODO(CDB-2749): Hide 'anchorTimestampExtractor', 'tipFetcher', 'logSyncer', and
+    //  'stateManipulator' as implementation details of StreamLoader and StreamUpdater.
+    const anchorTimestampExtractor = new AnchorTimestampExtractor(
+      this._logger,
       this.dispatcher,
+      modules.anchorService.validator
+    )
+    const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
+    const logSyncer = new LogSyncer(this.dispatcher)
+    const stateManipulator = new StateManipulator(
+      this._logger,
+      this._streamHandlers,
       this.context,
-      this._streamHandlers
+      logSyncer
+    )
+    const streamLoader = new StreamLoader(
+      this._logger,
+      tipFetcher,
+      logSyncer,
+      anchorTimestampExtractor,
+      stateManipulator
+    )
+    const streamUpdater = new StreamUpdater(
+      this._logger,
+      this.dispatcher,
+      logSyncer,
+      anchorTimestampExtractor,
+      stateManipulator
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
       params.indexingConfig,
-      this.repository,
+      this, // Circular dependency while core provided indexing
       this._logger,
       params.networkOptions.name
     )
@@ -289,8 +282,10 @@ export class Ceramic implements CeramicApi {
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
-      conflictResolution: conflictResolution,
       indexing: localIndex,
+      streamLoader,
+      streamUpdater,
+      anchorRequestCarBuilder: modules.anchorRequestCarBuilder,
     })
     this.syncApi = new SyncApi(
       {
@@ -298,11 +293,11 @@ export class Ceramic implements CeramicApi {
         on: params.sync,
       },
       this.dispatcher,
-      this.repository.stateManager.handleUpdate.bind(this.repository.stateManager),
+      this.repository.handleUpdate.bind(this.repository),
       this.repository.index,
       this._logger
     )
-    const pinApi = this._buildPinApi()
+    const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
     this.admin = new LocalAdminApi(
       localIndex,
@@ -315,6 +310,10 @@ export class Ceramic implements CeramicApi {
 
   get index(): LocalIndexApi {
     return this.repository.index
+  }
+
+  get pubsubTopic(): string {
+    return this._networkOptions.pubsubTopic
   }
 
   /**
@@ -340,104 +339,6 @@ export class Ceramic implements CeramicApi {
     this.context.did = did
   }
 
-  private _buildPinApi(): PinApi {
-    return new LocalPinApi(this.repository, this._logger)
-  }
-
-  private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
-    const networkName = config.networkName || DEFAULT_NETWORK
-
-    if (config.pubsubTopic && networkName !== Networks.INMEMORY && networkName !== Networks.LOCAL) {
-      throw new Error(
-        "Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks"
-      )
-    }
-
-    let pubsubTopic
-    switch (networkName) {
-      case Networks.MAINNET: {
-        pubsubTopic = '/ceramic/mainnet'
-        break
-      }
-      case Networks.ELP: {
-        pubsubTopic = '/ceramic/mainnet'
-        break
-      }
-      case Networks.TESTNET_CLAY: {
-        pubsubTopic = '/ceramic/testnet-clay'
-        break
-      }
-      case Networks.DEV_UNSTABLE: {
-        pubsubTopic = '/ceramic/dev-unstable'
-        break
-      }
-      case Networks.LOCAL: {
-        // Default to a random pub/sub topic so that local deployments are isolated from each other
-        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-        // be made to talk to each other if needed.
-        if (config.pubsubTopic) {
-          pubsubTopic = config.pubsubTopic
-        } else {
-          const rand = randomUint32()
-          pubsubTopic = '/ceramic/local-' + rand
-        }
-        break
-      }
-      case Networks.INMEMORY: {
-        // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
-        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
-        // be made to talk to each other if needed.
-        if (config.pubsubTopic) {
-          pubsubTopic = config.pubsubTopic
-        } else {
-          const rand = randomUint32()
-          pubsubTopic = '/ceramic/inmemory-' + rand
-        }
-        break
-      }
-      default: {
-        throw new Error(
-          "Unrecognized Ceramic network name: '" +
-            networkName +
-            "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
-        )
-      }
-    }
-
-    return { name: networkName, pubsubTopic }
-  }
-
-  /**
-   * Given the ceramic network we are running on and the anchor service we are connected to, figure
-   * out the set of caip2 chain IDs that are supported for stream anchoring
-   * @private
-   */
-  private async _loadSupportedChains(): Promise<void> {
-    const networkName = this._networkOptions.name
-    const anchorService = this.context.anchorService
-    const networkChains = SUPPORTED_CHAINS_BY_NETWORK[networkName]
-
-    // Now that we know the set of supported chains for the specified network, get the actually
-    // configured chainId from the anchorService and make sure it's valid.
-    const anchorServiceChains = await anchorService.getSupportedChains()
-    const usableChains = networkChains.filter((c) => anchorServiceChains.includes(c))
-    if (usableChains.length === 0) {
-      throw new Error(
-        "No usable chainId for anchoring was found.  The ceramic network '" +
-          networkName +
-          "' supports the chains: ['" +
-          networkChains.join("', '") +
-          "'], but the configured anchor service '" +
-          anchorService.url +
-          "' only supports the chains: ['" +
-          anchorServiceChains.join("', '") +
-          "']"
-      )
-    }
-
-    this._supportedChains = usableChains
-  }
-
   /**
    * Parses the given `CeramicConfig` and generates the appropriate `CeramicParameters` and
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
@@ -448,74 +349,11 @@ export class Ceramic implements CeramicApi {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const networkOptions = Ceramic._generateNetworkOptions(config)
+    const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
-    let anchorService = null
-    let anchorServiceAuth = null
-    if (!config.gateway) {
-      const anchorServiceUrl =
-        config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
-        DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
-
-      if (config.anchorServiceAuthMethod) {
-        try {
-          anchorServiceAuth = new DIDAnchorServiceAuth(anchorServiceUrl, logger)
-        } catch (error) {
-          throw new Error(`DID auth method for anchor service failed to instantiate`)
-        }
-      } else {
-        if (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) {
-          logger.warn(
-            `DEPRECATION WARNING: The default IP address authentication will soon be deprecated. Update your daemon config to use DID based authentication.`
-          )
-        }
-      }
-
-      if (
-        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
-        anchorServiceUrl !== 'https://cas-internal.3boxlabs.com' &&
-        anchorServiceUrl !== 'https://cas-direct.3boxlabs.com' &&
-        anchorServiceUrl !== DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
-      ) {
-        throw new Error('Cannot use custom anchor service on Ceramic mainnet')
-      }
-
-      if (networkOptions.name != Networks.INMEMORY) {
-        anchorService = anchorServiceAuth
-          ? new AuthenticatedEthereumAnchorService(anchorServiceAuth, anchorServiceUrl, logger)
-          : new EthereumAnchorService(anchorServiceUrl, logger)
-      } else {
-        anchorService = new InMemoryAnchorService(config as any)
-      }
-    }
-
-    let ethereumRpcUrl = config.ethereumRpcUrl
-    if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
-      ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
-    }
+    const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
+    const anchorService = makeAnchorService(config, ethereumRpcUrl, networkOptions.name, logger)
     const providersCache = new ProvidersCache(ethereumRpcUrl)
-
-    let anchorValidator
-    if (networkOptions.name == Networks.INMEMORY) {
-      // Just use the InMemoryAnchorService as the AnchorValidator
-      anchorValidator = anchorService
-    } else {
-      if (
-        !ethereumRpcUrl &&
-        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP)
-      ) {
-        logger.warn(
-          `Running on mainnet without providing an ethereumRpcUrl is not recommended. Using the default ethereum provided may result in your requests being rate limited`
-        )
-      }
-      // TODO (CDB-2229): use providers cache
-      anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
-    }
-
-    const pinStoreOptions = {
-      pinningEndpoints: config.ipfsPinningEndpoints,
-      pinningBackends: config.pinningBackends,
-    }
 
     const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}
 
@@ -531,7 +369,6 @@ export class Ceramic implements CeramicApi {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
-    const pinStoreFactory = new PinStoreFactory(ipfs, repository, pinStoreOptions, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -540,7 +377,20 @@ export class Ceramic implements CeramicApi {
       logger,
       pubsubLogger,
       shutdownSignal,
+      !config.disablePeerDataSync,
       maxQueriesPerSecond
+    )
+    const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
+    const pinStoreOptions = {
+      pinningEndpoints: config.ipfsPinningEndpoints,
+      pinningBackends: config.pinningBackends,
+    }
+    const pinStoreFactory = new PinStoreFactory(
+      ipfs,
+      dispatcher.ipldCache,
+      repository,
+      pinStoreOptions,
+      logger
     )
 
     const params: CeramicParameters = {
@@ -554,7 +404,6 @@ export class Ceramic implements CeramicApi {
 
     const modules: CeramicModules = {
       anchorService,
-      anchorValidator,
       dispatcher,
       ipfs,
       ipfsTopology,
@@ -563,6 +412,7 @@ export class Ceramic implements CeramicApi {
       repository,
       shutdownSignal,
       providersCache,
+      anchorRequestCarBuilder,
     }
 
     return [modules, params]
@@ -574,7 +424,7 @@ export class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [modules, params] = await Ceramic._processConfig(ipfs, config)
+    const [modules, params] = Ceramic._processConfig(ipfs, config)
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
@@ -600,27 +450,26 @@ export class Ceramic implements CeramicApi {
       }
 
       await this.repository.init()
+      await this.dispatcher.init()
 
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()
       }
 
       if (!this._gateway) {
-        await this.context.anchorService.init()
-        await this._loadSupportedChains()
-        this._logger.imp(
-          `Connected to anchor service '${
-            this.context.anchorService.url
-          }' with supported anchor chains ['${this._supportedChains.join("','")}']`
+        await this.anchorService.init()
+        this._supportedChains = await usableAnchorChains(
+          this._networkOptions.name,
+          this.anchorService,
+          this._logger
         )
-      }
-
-      const chainId = this._supportedChains ? this._supportedChains[0] : null
-      await this._anchorValidator.init(chainId)
-
-      if (this.syncApi.enabled) {
-        const provider = await this.providersCache.getProvider(chainId)
-        await this.syncApi.init(provider)
+        if (this.index.enabled && this.syncApi.enabled) {
+          const chainId = this._supportedChains[0]
+          if (chainId) {
+            const provider = await this.providersCache.getProvider(chainId)
+            await this.syncApi.init(provider)
+          }
+        }
       }
 
       await this._startupChecks()
@@ -642,7 +491,19 @@ export class Ceramic implements CeramicApi {
    * Throws an Error if any issues are detected
    */
   async _startupChecks(): Promise<void> {
-    return this._checkIPFSPersistence()
+    await this._checkIPFSPersistence()
+
+    if (!this.dispatcher.enableSync && this.index.enabled && this.syncApi.enabled) {
+      throw new Error(
+        `Cannot enable ComposeDB Historical Data Sync while IPFS peer data sync is disabled`
+      )
+    }
+
+    if (!this.dispatcher.enableSync) {
+      this._logger.warn(
+        `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
+      )
+    }
   }
 
   /**
@@ -703,9 +564,10 @@ export class Ceramic implements CeramicApi {
 
   async nodeStatus(): Promise<NodeStatusResponse> {
     const anchor = {
-      anchorServiceUrl: this.context.anchorService.url,
-      ethereumRpcEndpoint: this._anchorValidator.ethereumRpcEndpoint,
-      chainId: this._anchorValidator.chainId,
+      anchorServiceUrl: this.anchorService.url,
+      ethereumRpcEndpoint: this.anchorService.validator.ethereumRpcEndpoint,
+      chainId: this.anchorService.validator.chainId,
+      pendingAnchors: this.repository.numPendingAnchors,
     }
     const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
 
@@ -743,23 +605,19 @@ export class Ceramic implements CeramicApi {
     if (this._gateway) {
       throw new Error('Writes to streams are not supported in gateway mode')
     }
-
-    const id = normalizeStreamID(streamId)
-    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
+    const id = normalizeStreamID(streamId)
 
-    const stream = streamFromState<T>(
+    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
+    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
+    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+
+    return streamFromState<T>(
       this.context,
       this._streamHandlers,
       state$.value,
       this.repository.updates$
     )
-
-    await this.repository.indexStreamIfNeeded(state$)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
-
-    return stream
   }
 
   /**
@@ -768,11 +626,14 @@ export class Ceramic implements CeramicApi {
    * @param streamId
    * @param opts used to load the current Stream state
    */
-  async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
+  async requestAnchor(
+    streamId: string | StreamID,
+    opts: LoadOpts & AnchorOpts = {}
+  ): Promise<AnchorStatus> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const effectiveStreamId = normalizeStreamID(streamId)
     const state = await this.repository.load(effectiveStreamId, opts)
-    await this.repository.stateManager.anchor(state)
+    await this.repository.anchor(state, opts)
     return state.state.anchorStatus
   }
 
@@ -854,6 +715,14 @@ export class Ceramic implements CeramicApi {
         )
       }
     }
+  }
+
+  /**
+   * Load stream state for indexing queries, bypassing the stream cache and repository loading queue
+   * @param streamId - Stream ID
+   */
+  async loadStreamState(streamId: StreamID): Promise<StreamState | undefined> {
+    return await this.repository.streamState(streamId)
   }
 
   /**

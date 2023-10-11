@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { IpfsApi, Page, StreamState, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, Page, StreamState, BaseQuery, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -18,7 +18,7 @@ import { makeDID } from '@ceramicnetwork/cli/lib/__tests__/make-did.js'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import knex, { Knex } from 'knex'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/core'
+import { INDEXED_MODEL_CONFIG_TABLE_NAME } from '@ceramicnetwork/indexing'
 
 const CONTENT0 = { myData: 0, myArray: [0], myFloat: 0.5 }
 const CONTENT1 = { myData: 1, myArray: [1], myString: 'a' }
@@ -86,17 +86,20 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
 }
 
-const extractStreamStates = function (page: Page<StreamState>): Array<StreamState> {
+const extractStreamStates = function (page: Page<StreamState | null>): Array<StreamState | null> {
   return page.edges.map((edge) => edge.node)
 }
 
 const extractDocuments = function (
   ceramic: CeramicClient,
-  page: Page<StreamState>
+  page: Page<StreamState | null>
 ): Array<ModelInstanceDocument> {
-  return extractStreamStates(page).map((state) =>
-    ceramic.buildStreamFromState<ModelInstanceDocument>(state)
-  )
+  return extractStreamStates(page).map((state) => {
+    if (state === null) {
+      throw new Error('Null extracted stream state found')
+    }
+    return ceramic.buildStreamFromState<ModelInstanceDocument>(state)
+  })
 }
 
 enum DBEngine {
@@ -127,7 +130,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
   let midMetadata: ModelInstanceDocumentMetadataArgs
   let modelWithRelation: Model
   let midRelationMetadata: ModelInstanceDocumentMetadataArgs
-  let dbConnection: Knex = null
+  let dbConnection: Knex
 
   async function dropKnexTables() {
     await dbConnection.schema.dropTableIfExists(INDEXED_MODEL_CONFIG_TABLE_NAME)
@@ -188,7 +191,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         break
       }
       case DBEngine.postgres:
-        dbURL = process.env.DATABASE_URL
+        dbURL = process.env.DATABASE_URL || ''
         dbConnection = knex({
           client: 'pg',
           connection: process.env.DATABASE_URL,
@@ -403,161 +406,537 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     })
   })
 
-  describe('Queries with custom query filtering', () => {
-    test('Can query a single document by field', async () => {
+  describe('Queries and counts with custom query filtering', () => {
+    test('Can query and count a single document by field', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 2,
         queryFilters: {
           where: { myData: { equalTo: 3 } },
         },
-      })
+      }
 
-      const results = extractDocuments(ceramic, resultObj0)
-      expect(results.length).toEqual(1)
-      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+      const resultObj0 = await ceramic.index.query({
+        last: 2,
+        ...baseQuery,
+      })
+      const queryResults = extractDocuments(ceramic, resultObj0)
+      expect(queryResults.length).toEqual(1)
+      expect(JSON.stringify(queryResults[0].content)).toEqual(JSON.stringify(doc3.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
     })
-    test('Can query documents when not null', async () => {
+    test('Can query and count documents when not null', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 2,
         queryFilters: {
           where: { myString: { isNull: false } },
         },
-      })
+      }
 
+      const resultObj0 = await ceramic.index.query({
+        last: 2,
+        ...baseQuery,
+      })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(2)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(2)
     })
-    test('Can query documents by string', async () => {
+    test('Can query and count documents by string', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 2,
         queryFilters: {
           where: { myString: { equalTo: 'b' } },
         },
-      })
+      }
 
+      const resultObj0 = await ceramic.index.query({
+        last: 2,
+        ...baseQuery,
+      })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
     })
-    test('Can query multiple documents by field', async () => {
+    test('Can query and count documents by string in array', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const baseQuery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          where: { myString: { in: ['a', 'c'] } },
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 2,
+        ...baseQuery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc4.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(2)
+    })
+    test('Can query and count multiple documents by field', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 3,
         queryFilters: {
           or: [{ where: { myData: { equalTo: 2 } } }, { where: { myData: { equalTo: 3 } } }],
         },
-      })
+      }
 
+      const resultObj0 = await ceramic.index.query({ ...baseQuery, last: 3 })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(2)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
       expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc3.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(2)
     })
-    test('Can query multiple documents with negated field', async () => {
+    test('Can query and count multiple documents with negated field', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 5,
         queryFilters: {
           not: { where: { myData: { equalTo: 3 } } },
         },
-      })
+      }
 
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(4)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
       expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc2.content))
       expect(JSON.stringify(results[2].content)).toEqual(JSON.stringify(doc4.content))
       expect(JSON.stringify(results[3].content)).toEqual(JSON.stringify(doc5.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(4)
     })
-    test('Can query a single document by array', async () => {
+    test('Can query and count a single document by array', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 5,
         queryFilters: {
           where: { myData: { in: [3] } },
         },
-      })
+      }
 
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc3.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
     })
-    test('Can query a single document by float', async () => {
+    test('Can query and count a single document by float', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({
+      const baseQuery: BaseQuery = {
         model: model.id,
-        last: 5,
         queryFilters: {
           where: { myFloat: { greaterThan: 1.2 } },
         },
-      })
+      }
 
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
     })
-    test('Can query a single document by float that gets truncated', async () => {
+    test('Can query and count a single document by float that gets truncated', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
+      const baseQuery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          where: { myFloat: { greaterThan: 1.0 } },
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
+    })
+    test('Can query and count a document with a filter containing multiple key/values', async () => {
+      await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
       const resultObj0 = await ceramic.index.query({
         model: model.id,
         last: 5,
         queryFilters: {
-          where: { myFloat: { greaterThan: 1.0 } },
+          where: {
+            myString: { in: ['a', 'b'] },
+            myData: { equalTo: 6 },
+          },
         },
       })
+      const results0 = extractDocuments(ceramic, resultObj0)
+      expect(results0.length).toEqual(1)
+      expect(JSON.stringify(results0[0].content)).toEqual(JSON.stringify(doc5.content))
 
+      const countResults = await ceramic.index.count({
+        model: model.id,
+        queryFilters: {
+          where: {
+            myData: { equalTo: 6 },
+            myString: { in: ['a', 'b'] },
+          },
+        },
+      })
+      expect(countResults).toEqual(1)
+    })
+    test('Will not allow multiple filters per level', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      await expect(
+        ceramic.index.query({
+          model: model.id,
+          last: 5,
+          queryFilters: {
+            where: {
+              myData: { greaterThan: 1, lessThanOrEqualTo: 5 },
+            },
+            and: [
+              {
+                where: {
+                  myString: { in: ['a', 'c'] },
+                },
+              },
+            ],
+          },
+        })
+      ).rejects.toThrow(/Only one of where, and, or, and not can be used/)
+
+      await expect(
+        ceramic.index.count({
+          model: model.id,
+          queryFilters: {
+            and: [
+              {
+                where: {
+                  myString: { in: ['a', 'c'] },
+                },
+                not: { where: { myData: { equalTo: 3 } } },
+              },
+            ],
+          },
+        })
+      ).rejects.toThrow(/Only one of where, and, or, and not can be used/)
+    })
+    test('Can combine value filters representing valid range boundaries', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const baseQuery = {
+        model: model.id,
+        queryFilters: {
+          where: {
+            myString: { in: ['a', 'b'] },
+            myData: { greaterThan: 3, lessThanOrEqualTo: 6 },
+          },
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
       const results = extractDocuments(ceramic, resultObj0)
       expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc5.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
+    })
+    test('Cannot combine value filters that do not represent valid range boundaries', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      await expect(
+        ceramic.index.query({
+          model: model.id,
+          last: 5,
+          queryFilters: {
+            where: {
+              myString: { in: ['a', 'b'] },
+              myData: { greaterThan: 3, in: [6, 8, 10] },
+            },
+          },
+        })
+      ).rejects.toThrow(/Can only combine value filters representing valid range boundaries/)
+
+      await expect(
+        ceramic.index.count({
+          model: model.id,
+          queryFilters: {
+            where: {
+              myString: { in: ['a', 'b'] },
+              myData: { greaterThan: 3, in: [6, 8, 10] },
+            },
+          },
+        })
+      ).rejects.toThrow(/Can only combine value filters representing valid range boundaries/)
+    })
+    test('Can query and count multiple documents with negated or field', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const baseQuery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          not: {
+            or: [{ where: { myData: { equalTo: 3 } } }, { where: { myString: { equalTo: 'b' } } }],
+          },
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc5.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(2)
+    })
+
+    test('Can query and count multiple documents with negated and field', async () => {
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const basequery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          not: {
+            and: [{ where: { myData: { equalTo: 3 } } }, { where: { myString: { equalTo: 'b' } } }],
+          },
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...basequery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(3)
       expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc4.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc5.content))
+      expect(JSON.stringify(results[2].content)).toEqual(JSON.stringify(doc6.content))
+
+      const countResults = await ceramic.index.count(basequery)
+      expect(countResults).toEqual(3)
+    })
+    test('Can query and count multiple documents with multiple key values and valid boundaries, negated', async () => {
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+
+      const baseQuery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          not: {
+            where: {
+              myData: { in: [1, 3] },
+              myString: { equalTo: 'b' },
+            },
+          },
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(2)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc5.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(2)
+    })
+    test('Can query and count documents using a complex negated or filter', async () => {
+      const doc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const baseQuery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          or: [
+            {
+              not: {
+                where: {
+                  myData: { greaterThanOrEqualTo: 0, lessThan: 5 },
+                },
+              },
+            },
+            {
+              where: {
+                myData: { equalTo: 1 },
+                myString: { equalTo: 'a' },
+              },
+            },
+          ],
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(3)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc1.content))
+      expect(JSON.stringify(results[1].content)).toEqual(JSON.stringify(doc5.content))
+      expect(JSON.stringify(results[2].content)).toEqual(JSON.stringify(doc6.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(3)
+    })
+    test('Can query and count documents using a complex negated and filter', async () => {
+      const doc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+      const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
+      const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
+      const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
+
+      const baseQuery: BaseQuery = {
+        model: model.id,
+        queryFilters: {
+          and: [
+            {
+              not: {
+                where: {
+                  myData: { greaterThan: 4, lessThanOrEqualTo: 6 },
+                },
+              },
+            },
+            {
+              where: {
+                myString: { isNull: true },
+                myFloat: { equalTo: 1.0 },
+              },
+            },
+          ],
+        },
+      }
+
+      const resultObj0 = await ceramic.index.query({
+        last: 5,
+        ...baseQuery,
+      })
+      const results = extractDocuments(ceramic, resultObj0)
+      expect(results.length).toEqual(1)
+      expect(JSON.stringify(results[0].content)).toEqual(JSON.stringify(doc2.content))
+
+      const countResults = await ceramic.index.count(baseQuery)
+      expect(countResults).toEqual(1)
     })
   })
 

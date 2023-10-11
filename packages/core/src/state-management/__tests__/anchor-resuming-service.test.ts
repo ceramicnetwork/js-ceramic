@@ -2,12 +2,12 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { Observable } from 'rxjs'
-import { AnchorStatus, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { AnchorEvent, AnchorStatus, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { AnchorResumingService } from '../anchor-resuming-service.js'
-import type { CASResponse } from '@ceramicnetwork/codecs'
+import all from 'it-all'
 
 describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
   jest.setTimeout(10000)
@@ -42,11 +42,11 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       stateStoreDirectory: stateStoreDirectoryName,
     })
 
-    const anchorService = ceramic.repository.stateManager.anchorService as InMemoryAnchorService
+    const anchorService = ceramic.repository.anchorService as InMemoryAnchorService
     if (testParam.anchorStatus === AnchorStatus.NOT_REQUESTED) {
       const mockedRequestAnchor = jest.fn()
       mockedRequestAnchor.mockImplementation(() => {
-        return new Observable<CASResponse>()
+        return new Observable<AnchorEvent>()
       })
       // @ts-ignore
       anchorService.requestAnchor = mockedRequestAnchor
@@ -64,9 +64,9 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       })
     )
 
-    const loaded = (await ceramic.repository.anchorRequestStore.list()).map((result) =>
-      result.key.toString()
-    )
+    const loaded = (await all(ceramic.repository.anchorRequestStore.list()))
+      .reduce((acc, array) => acc.concat(array), [])
+      .map((result) => result.key.toString())
     // LevelDB Store stores keys ordered lexicographically
     expect(streamIds.map((streamId) => streamId.toString()).sort()).toEqual(loaded)
 
@@ -82,6 +82,11 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       expect(runningState$.state.anchorStatus).toEqual(testParam.anchorStatus)
     })
 
+    // update one of the streams but do not anchor the update
+    const tile = await TileDocument.load(ceramic, streamIds[0])
+    await tile.update({ x: 100 }, null, { anchor: false })
+    expect(runnningStates$[0].state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
     await ceramic.close()
 
     // Create a new ceramic (with the same state directory) to check that resuming works,
@@ -90,13 +95,14 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       stateStoreDirectory: stateStoreDirectoryName,
     })
 
-    const newAnchoringService = newCeramic.repository.stateManager
-      .anchorService as InMemoryAnchorService
+    const newAnchoringService = newCeramic.repository.anchorService as InMemoryAnchorService
 
     runnningStates$.forEach((state$) => {
       // We call _process(...) here to mimic the behaviour of EthereumAnchorService which would start polling CAS for anchor statuses
+      // All streams except one has only one commit. The stream with two commits has not requested an anchor for the 2nd commit. Therefore we
+      // we only need to anchor the first commit of each stream.
       // @ts-ignore { cid: , streamID: } is not an instance of Candidate class (which shouldn't be exported, if necessary)
-      newAnchoringService._process({ cid: state$.tip, streamId: state$.id })
+      newAnchoringService._process({ cid: state$.state.log[0].cid, streamId: state$.id })
     })
 
     // Use the ceramic instance with anchorOnRequest === true to resume anchors

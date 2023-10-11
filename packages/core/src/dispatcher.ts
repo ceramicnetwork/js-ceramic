@@ -22,16 +22,18 @@ import {
 import { Pubsub } from './pubsub/pubsub.js'
 import { empty, Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus.js'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './ancillary/task-queue.js'
 import type { ShutdownSignal } from './shutdown-signal.js'
-import { CAR, CARFactory, CarBlock } from 'cartonne'
+import { CARFactory, CarBlock, type CAR } from 'cartonne'
 import all from 'it-all'
+import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
 
 const IPFS_GET_RETRIES = 3
-const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_LOCAL_TIMEOUT = 1000 // 1 second to get data from local ipfs store
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_NO_MESSAGE_INTERVAL = 1000 * 60 * 1 // 1 minutes
@@ -87,7 +89,7 @@ export class Dispatcher {
   /**
    * Cache IPFS objects.
    */
-  readonly dagNodeCache: lru.LRUMap<string, any>
+  readonly ipldCache: IPLDRecordsCache
 
   /**
    * Cache recently seen tips processed via incoming pubsub UPDATE or RESPONSE messages.
@@ -100,11 +102,10 @@ export class Dispatcher {
    * to pubsub with the wrong StreamID associated in the pubsub message.
    * @private
    */
-  private readonly pubsubCache: lru.LRUMap<string, string> = new lru.LRUMap<string, string>(
-    PUBSUB_CACHE_SIZE
-  )
+  private readonly pubsubCache: LRUCache<string, string> = new LRUCache(PUBSUB_CACHE_SIZE)
 
   private readonly carFactory: CARFactory
+  private readonly _ipfsTimeout: number
 
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
@@ -115,9 +116,9 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     private readonly _shutdownSignal: ShutdownSignal,
+    readonly enableSync: boolean,
     maxQueriesPerSecond: number,
-    readonly tasks: TaskQueue = new TaskQueue(),
-    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     const pubsub = new Pubsub(
       _ipfs,
@@ -138,14 +139,28 @@ export class Dispatcher {
         ),
         _logger,
         maxQueriesPerSecond
-      )
+      ),
+      !this.enableSync
     )
-    this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.ipldCache = new IPLDRecordsCache(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
-    this._ipfs.codecs.listCodecs().forEach((codec) => {
+    for (const codec of this._ipfs.codecs.listCodecs()) {
       this.carFactory.codecs.add(codec)
-    })
+      this.ipldCache.codecs.add(codec)
+    }
+    if (this.enableSync) {
+      this._ipfsTimeout = DEFAULT_IPFS_GET_SYNC_TIMEOUT
+    } else {
+      this._ipfsTimeout = DEFAULT_IPFS_GET_LOCAL_TIMEOUT
+    }
+  }
+
+  async init() {
+    this.messageBus.subscribe(this.handleMessage.bind(this))
+  }
+
+  get shutdownSignal(): ShutdownSignal {
+    return this._shutdownSignal
   }
 
   async ipfsNodeStatus(): Promise<IpfsNodeStatus> {
@@ -156,23 +171,36 @@ export class Dispatcher {
   }
 
   async storeRecord(record: Record<string, unknown>): Promise<CID> {
-    return await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.dag.put(record, { signal: signal })
-    })
+    return this._shutdownSignal
+      .abortable((signal) => this._ipfs.dag.put(record, { signal: signal }))
+      .then((cid) => {
+        this.ipldCache.setRecord(cid, record)
+        return cid
+      })
   }
 
-  async getIpfsBlock(cid: CID): Promise<Uint8Array> {
-    return await this._shutdownSignal.abortable((signal) => {
-      return this._ipfs.block.get(cid, { signal })
-    })
+  async getIpfsBlock(cid: CID): Promise<CarBlock> {
+    const found = this.ipldCache.get(cid)
+    if (found) {
+      Metrics.count(IPFS_CACHE_HIT, 1)
+      return new CarBlock(cid, found.block)
+    } else {
+      Metrics.count(IPFS_CACHE_MISS, 1)
+      const bytes = await this._shutdownSignal.abortable((signal) => {
+        // @ts-expect-error
+        return this._ipfs.block.get(cid, { signal, offline: !this.enableSync })
+      })
+      this.ipldCache.setBlock(cid, bytes)
+      return new CarBlock(cid, bytes)
+    }
   }
 
   /**
    * Stores all the blocks in the given CAR file into the local IPFS node.
    * @param car
    */
-  async importCAR(car: CAR): Promise<void> {
-    return await this._shutdownSignal.abortable(async (signal) => {
+  importCAR(car: CAR): Promise<void> {
+    return this._shutdownSignal.abortable(async (signal) => {
       await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
     })
   }
@@ -194,18 +222,37 @@ export class Dispatcher {
           const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
           carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
           restrictBlockSize(cacaoBlock, capCID)
+          this.ipldCache.set(capCID, {
+            record: carFile.get(capCID),
+            block: cacaoBlock,
+          })
         }
 
-        carFile.blocks.put(new CarBlock(jws.link, linkedBlock)) // Encode payload
+        const payloadCID = jws.link
+        carFile.blocks.put(new CarBlock(payloadCID, linkedBlock)) // Encode payload
         restrictBlockSize(linkedBlock, jws.link)
+        this.ipldCache.set(payloadCID, {
+          record: carFile.get(payloadCID),
+          block: linkedBlock,
+        })
         const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
-        restrictBlockSize(carFile.blocks.get(cid).payload, cid)
+        const cidBlock = carFile.blocks.get(cid).payload
+        restrictBlockSize(cidBlock, cid)
+        this.ipldCache.set(cid, {
+          record: carFile.get(cid),
+          block: cidBlock,
+        })
         await this.importCAR(carFile)
         Metrics.count(COMMITS_STORED, 1)
         return cid
       }
       const cid = carFile.put(data, { isRoot: true })
-      restrictBlockSize(carFile.blocks.get(cid).payload, cid)
+      const cidBlock = carFile.blocks.get(cid).payload
+      restrictBlockSize(cidBlock, cid)
+      this.ipldCache.set(cid, {
+        record: carFile.get(cid),
+        block: cidBlock,
+      })
       await this.importCAR(carFile)
       Metrics.count(COMMITS_STORED, 1)
       return cid
@@ -276,7 +323,7 @@ export class Dispatcher {
       })
       return result != null
     } catch (err) {
-      console.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
+      this._logger.warn(`Error loading CID ${cid.toString()} from local IPFS node: ${err}`)
       return false
     }
   }
@@ -289,8 +336,12 @@ export class Dispatcher {
 
     // Lookup CID in cache before looking it up IPFS
     const resolutionPath = `${asCid}${path || ''}`
-    const cachedDagNode = this.dagNodeCache.get(resolutionPath)
-    if (cachedDagNode) return cloneDeep(cachedDagNode)
+    const fromCache = this.ipldCache.getWithResolutionPath(resolutionPath)
+    if (fromCache) {
+      Metrics.count(IPFS_CACHE_HIT, 1)
+      return cloneDeep(fromCache.record)
+    }
+    Metrics.count(IPFS_CACHE_MISS, 1)
 
     // Now lookup CID in IPFS, with retry logic
     // Note, in theory retries shouldn't be necessary, as just increasing the timeout should
@@ -313,32 +364,42 @@ export class Dispatcher {
         }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
         const block = await this._shutdownSignal.abortable((signal) =>
-          this._ipfs.block.get(blockCid, { timeout: this._ipfsTimeout, signal: signal })
+          this._ipfs.block.get(blockCid, {
+            timeout: this._ipfsTimeout,
+            signal: signal,
+            // @ts-ignore
+            offline: !this.enableSync,
+          })
         )
         restrictBlockSize(block, blockCid)
         result = codec.decode(block)
+        // CID loaded successfully, store in cache
+        this.ipldCache.setWithResolutionPath(resolutionPath, {
+          record: result,
+          block: block,
+        })
+        return cloneDeep(result)
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
           err.name == 'TimeoutError' ||
           err.message == 'Request timed out'
         ) {
-          console.warn(
+          this._logger.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           Metrics.count(ERROR_IPFS_TIMEOUT, 1)
 
           if (retries > 0) {
             continue
+          } else {
+            throw new Error(`Timeout error while loading CID ${asCid.toString()} from IPFS: ${err}`)
           }
         }
 
         throw err
       }
     }
-    // CID loaded successfully, store in cache
-    this.dagNodeCache.set(resolutionPath, result)
-    return cloneDeep(result)
   }
 
   /**
@@ -396,7 +457,7 @@ export class Dispatcher {
     // Add tip to pubsub cache and continue processing
     this.pubsubCache.set(tip.toString(), streamId.toString())
 
-    await this.repository.stateManager.handleUpdate(streamId, tip, model)
+    await this.repository.handleUpdate(streamId, tip, model)
   }
 
   /**
@@ -405,6 +466,10 @@ export class Dispatcher {
    * @private
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
+    if (!this.enableSync) {
+      // No point in trying to apply the tip if we know we won't be able to load it from IPFS.
+      return
+    }
     // TODO Add validation the message adheres to the proper format.
     const { stream: streamId, tip, model } = message
     return this._handleTip(tip, streamId, model)
@@ -438,6 +503,11 @@ export class Dispatcher {
    * @private
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
+    if (!this.enableSync) {
+      // No point in trying to apply the tip if we know we won't be able to load it from IPFS.
+      return
+    }
+
     const { id: queryId, tips } = message
     const outstandingQuery = this.messageBus.outstandingQueries.queryMap.get(queryId)
     const expectedStreamID = outstandingQuery?.streamID

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-validation",
-  "version": "2.22.0",
+  "version": "2.28.0-rc.0",
   "description": "Blockchain utils for validation of linked blockchain accounts",
   "keywords": [
     "ceramic",
@@ -37,8 +37,8 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^2.16.0",
-    "@ceramicnetwork/common": "^2.30.0",
+    "@ceramicnetwork/blockchain-utils-linking": "^2.21.0-rc.0",
+    "@ceramicnetwork/common": "^2.36.0-rc.0",
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.1",
     "@ethersproject/wallet": "^5.5.0",

@@ -17,6 +17,7 @@ import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { jest } from '@jest/globals'
 import type { CID } from 'multiformats/cid'
+import type { CAR } from 'cartonne'
 
 function getModelDef(name: string): ModelDefinition {
   return {
@@ -661,34 +662,46 @@ describe('CACAO Integration test', () => {
       await tile.update(CONTENT1, null, { ...opts, anchor: true })
 
       // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
-      const stateManager = ceramic.repository.stateManager
-      const handleAnchorSpy = jest.spyOn(stateManager, '_handleAnchorCommit')
+      const internals = ceramic.repository._internals
+      const handleAnchorSpy = jest.spyOn(internals, '_handleAnchorCommit')
       const anchorCommitPromise = new Promise<CID>((resolve) => {
-        handleAnchorSpy.mockImplementation((state, tip, anchorCommit: CID, witnessCar) => {
+        handleAnchorSpy.mockImplementation((state, tip, witnessCar: CAR) => {
           expect(tip).toEqual(tile.tip)
+          const anchorCommit = witnessCar.roots[0]
           resolve(anchorCommit)
         })
       })
 
-      const anchorService = ceramic.context.anchorService as any
+      const anchorService = ceramic.anchorService
       await anchorService.anchor()
 
       const anchorCommitCID = await anchorCommitPromise
 
       // Expire the CACAO, loading should fail
       expireCacao()
-      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/) // No sync options
+      await expect(TileDocument.load(ceramic, tile.id)).rejects.toThrow(/CACAO expired/)
+      const commitIdBeforeAnchor = tile.commitId
+      await expect(TileDocument.load(ceramic, commitIdBeforeAnchor)).rejects.toThrow(
+        /CACAO expired/
+      )
 
       // Loading at the anchor commits CommitID should succeed
       const commitIDAtAnchor = CommitID.make(tile.id, anchorCommitCID)
-      const loadedAtCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
-      expect(loadedAtCommit.state.log.length).toEqual(3)
-      expect(loadedAtCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      const loadedAtAnchorCommit = await TileDocument.load(ceramic, commitIDAtAnchor)
+      expect(loadedAtAnchorCommit.state.log.length).toEqual(3)
+      expect(loadedAtAnchorCommit.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Now loading the stream should work because the node now knows about the anchor
       const loaded = await TileDocument.load(ceramic, tile.id)
       expect(loaded.state.log.length).toEqual(3)
       expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // Loading at the CommitID before the AnchorCommit should still work because the timestamp
+      // information from the anchor is copied over even though the anchor commit itself isn't
+      // included in the state.
+      const loadedAtCommitBeforeAnchor = await TileDocument.load(ceramic, commitIdBeforeAnchor)
+      expect(loadedAtCommitBeforeAnchor.state.log.length).toEqual(2)
+      expect(loadedAtCommitBeforeAnchor.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       // Resyncing outdated handle with the server should pick up the anchor commit
       expect(tile.state.log.length).toEqual(2)
@@ -696,6 +709,7 @@ describe('CACAO Integration test', () => {
       await tile.sync()
       expect(tile.state.log.length).toEqual(3)
       expect(tile.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      jest.restoreAllMocks()
     }, 30000)
 
     test(
@@ -731,7 +745,9 @@ describe('CACAO Integration test', () => {
         // Cannot repair stream even with SyncOptions.SYNC_ALWAYS if it is the genesis commit that
         // messed up.
         await expect(doc.sync()).rejects.toThrow(/CACAO expired/)
-        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(/CACAO expired/)
+        await expect(doc.sync({ sync: SyncOptions.SYNC_ALWAYS })).rejects.toThrow(
+          /CACAO has expired/
+        )
         expect(doc.content).toEqual(CONTENT0)
       },
       1000 * 60

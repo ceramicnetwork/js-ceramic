@@ -31,7 +31,7 @@ test('Stream not subscribed, RunningState in cache', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
   const state$ = await ceramic.repository.load(stream.id, {})
   const updateCommit = await stream.makeCommit(ceramic, UPDATED)
-  await ceramic.repository.stateManager.applyCommit(state$.id, updateCommit, {
+  await ceramic.repository.applyCommit(state$.id, updateCommit, {
     anchor: false,
     publish: false,
   })
@@ -50,7 +50,7 @@ test('Stream not subscribed, RunningState evicted', async () => {
 
   const state2$ = await ceramic.repository.load(stream.id, {})
   const updateCommit = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED)
-  await ceramic.repository.stateManager.applyCommit(state2$.id, updateCommit, {
+  await ceramic.repository.applyCommit(state2$.id, updateCommit, {
     anchor: false,
     publish: false,
   })
@@ -68,7 +68,7 @@ test('Stream subscribed, RunningState in cache', async () => {
   stream.subscribe()
   const state$ = await ceramic.repository.load(stream.id, {})
   const updateCommit = await stream.makeCommit(ceramic, UPDATED)
-  await ceramic.repository.stateManager.applyCommit(state$.id, updateCommit, {
+  await ceramic.repository.applyCommit(state$.id, updateCommit, {
     anchor: false,
     publish: false,
   })
@@ -89,7 +89,7 @@ test('Stream subscribed, RunningState not evicted', async () => {
   const state2$ = await ceramic.repository.load(stream.id, {})
   expect(state2$).toBe(state$)
   const updateCommit = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED)
-  await ceramic.repository.stateManager.applyCommit(state2$.id, updateCommit, {
+  await ceramic.repository.applyCommit(state2$.id, updateCommit, {
     anchor: false,
     publish: false,
   })

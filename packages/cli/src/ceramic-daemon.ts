@@ -1,4 +1,3 @@
-import * as fs from 'fs'
 import express, { Request, Response, NextFunction } from 'express'
 import { Ceramic, CeramicConfig } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
@@ -39,9 +38,8 @@ import { collectionQuery, countQuery } from './daemon/collection-queries.js'
 import { makeNodeDIDProvider, parseSeedUrl } from './daemon/did-utils.js'
 import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-import lru from 'lru_map'
+import { version } from './version.js'
+import { LRUCache } from 'least-recent'
 import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 
@@ -118,6 +116,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
+    disablePeerDataSync: opts.ipfs.disablePeerDataSync,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
@@ -279,7 +278,7 @@ export class CeramicDaemon {
   public hostname: string
   public port: number
   private readonly adminDids: Array<string>
-  private readonly adminCodeCache = new lru.LRUMap<AdminCode, Timestamp>(ADMIN_CODE_CACHE_CAPACITY)
+  private readonly adminCodeCache = new LRUCache<AdminCode, Timestamp>(ADMIN_CODE_CACHE_CAPACITY)
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
@@ -334,9 +333,7 @@ export class CeramicDaemon {
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
     diagnosticsLogger.imp(
-      `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${
-        packageJson.version
-      }, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(
+      `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${version}, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(
         opts,
         null,
         2

@@ -3,6 +3,126 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.18.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.17.0...@ceramicnetwork/stream-model-handler@1.18.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.17.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.17.0-rc.0...@ceramicnetwork/stream-model-handler@1.17.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.17.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.16.0...@ceramicnetwork/stream-model-handler@1.17.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.16.0-rc.1...@ceramicnetwork/stream-model-handler@1.16.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.16.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.16.0-rc.0...@ceramicnetwork/stream-model-handler@1.16.0-rc.1) (2023-09-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.16.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.15.0...@ceramicnetwork/stream-model-handler@1.16.0-rc.0) (2023-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.15.0-rc.1...@ceramicnetwork/stream-model-handler@1.15.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.15.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.15.0-rc.0...@ceramicnetwork/stream-model-handler@1.15.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.15.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.14.0...@ceramicnetwork/stream-model-handler@1.15.0-rc.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.14.0-rc.1...@ceramicnetwork/stream-model-handler@1.14.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.14.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.14.0-rc.0...@ceramicnetwork/stream-model-handler@1.14.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.13.0...@ceramicnetwork/stream-model-handler@1.14.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.13.0-rc.1...@ceramicnetwork/stream-model-handler@1.13.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.13.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.13.0-rc.0...@ceramicnetwork/stream-model-handler@1.13.0-rc.1) (2023-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
+# [1.13.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.12.0...@ceramicnetwork/stream-model-handler@1.13.0-rc.0) (2023-08-07)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
 # [1.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.12.0-rc.1...@ceramicnetwork/stream-model-handler@1.12.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler

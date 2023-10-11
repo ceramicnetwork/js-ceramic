@@ -3,6 +3,187 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.43.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.42.0...@ceramicnetwork/core@2.43.0-rc.0) (2023-09-20)
+
+
+### Bug Fixes
+
+* Do not start subscription until repository is ready ([#2957](https://github.com/ceramicnetwork/js-ceramic/issues/2957)) ([009aabe](https://github.com/ceramicnetwork/js-ceramic/commit/009aabeea4c83556ab8c79cc194b3def718d7ebc))
+* Fix StreamLoader test ([#2966](https://github.com/ceramicnetwork/js-ceramic/issues/2966)) ([1d8da07](https://github.com/ceramicnetwork/js-ceramic/commit/1d8da077599028159a1f975ddfcdfa9503cbff5a))
+
+
+### Features
+
+* Make StreamLoader consider multiple tip responses when syncing a stream ([#2962](https://github.com/ceramicnetwork/js-ceramic/issues/2962)) ([07019aa](https://github.com/ceramicnetwork/js-ceramic/commit/07019aadcb9b671f1246fbcc2dc163402a5b447f))
+
+
+
+
+
+# [2.42.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.42.0-rc.0...@ceramicnetwork/core@2.42.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.42.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.41.0...@ceramicnetwork/core@2.42.0-rc.0) (2023-09-14)
+
+
+### Features
+
+* Add functionality to StreamLoader to load at a CommitID ([#2950](https://github.com/ceramicnetwork/js-ceramic/issues/2950)) ([8103038](https://github.com/ceramicnetwork/js-ceramic/commit/8103038ac2cca172470ca82778225a6ef2045385))
+* Add StreamUpdater to handle applying incoming commits ([#2953](https://github.com/ceramicnetwork/js-ceramic/issues/2953)) ([21c4df6](https://github.com/ceramicnetwork/js-ceramic/commit/21c4df615cd68f7b563435580e5488cf64e639a1))
+* Implement StateManipulator with cleaner, more efficient conflict resolution ([#2946](https://github.com/ceramicnetwork/js-ceramic/issues/2946)) ([510e811](https://github.com/ceramicnetwork/js-ceramic/commit/510e811392dfe1e4f2223113fca8cf459c1b91e3))
+
+
+
+
+
+# [2.41.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.41.0-rc.1...@ceramicnetwork/core@2.41.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.41.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.41.0-rc.0...@ceramicnetwork/core@2.41.0-rc.1) (2023-09-12)
+
+
+### Features
+
+* **core, cli, stream-tests:** Add support for filters in count ([cef2139](https://github.com/ceramicnetwork/js-ceramic/commit/cef21396e170f5cf72260ad28520c0e91177ccb1))
+
+
+
+
+
+# [2.41.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.40.0...@ceramicnetwork/core@2.41.0-rc.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* Await pubsub subscription in tip fetcher test ([#2938](https://github.com/ceramicnetwork/js-ceramic/issues/2938)) ([c0a47d4](https://github.com/ceramicnetwork/js-ceramic/commit/c0a47d42e0353d8cf21ec1373ca3e654c3630905))
+* Do not publish tip when loading from genesis ([#2933](https://github.com/ceramicnetwork/js-ceramic/issues/2933)) ([120bfd0](https://github.com/ceramicnetwork/js-ceramic/commit/120bfd0f4a7f36fab58633eba33ee1bb1695376e))
+
+
+### Features
+
+* **core:** Implement LogSyncer ([#2932](https://github.com/ceramicnetwork/js-ceramic/issues/2932)) ([886b60d](https://github.com/ceramicnetwork/js-ceramic/commit/886b60d3b5715e465e390f0e3675e7b042c1c047))
+* **core:** Implement TipFetcher ([#2930](https://github.com/ceramicnetwork/js-ceramic/issues/2930)) ([db2fdd2](https://github.com/ceramicnetwork/js-ceramic/commit/db2fdd23fa3e949c1e4f7787d5bfc1c5786ebb6b))
+* Report number of pending anchors in metrics and nodeStatus output ([#2918](https://github.com/ceramicnetwork/js-ceramic/issues/2918)) ([c93bb2a](https://github.com/ceramicnetwork/js-ceramic/commit/c93bb2afe6e346e160ba4911c2a94fdd380de52b))
+
+
+
+
+
+# [2.40.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.40.0-rc.1...@ceramicnetwork/core@2.40.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.40.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.40.0-rc.0...@ceramicnetwork/core@2.40.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.40.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.39.0...@ceramicnetwork/core@2.40.0-rc.0) (2023-08-23)
+
+
+### Bug Fixes
+
+* Slow down rate of restoring polling for streams with pending anchors ([#2912](https://github.com/ceramicnetwork/js-ceramic/issues/2912)) ([442d2e4](https://github.com/ceramicnetwork/js-ceramic/commit/442d2e4294b2bea76dec99895cf14e492585a620))
+
+
+### Features
+
+* Add option to wait until anchor requests are durably created on the CAS ([#2907](https://github.com/ceramicnetwork/js-ceramic/issues/2907)) ([a36ebf7](https://github.com/ceramicnetwork/js-ceramic/commit/a36ebf72b1701836a3360fb30ba935a265d0aeda))
+* **core, stream-tests:** negated ors/ands and multiple keys/values with where filters ([#2916](https://github.com/ceramicnetwork/js-ceramic/issues/2916)) ([9ac0ba9](https://github.com/ceramicnetwork/js-ceramic/commit/9ac0ba99c9219163a391ffcbc8c5c42745f9dad5))
+
+
+
+
+
+# [2.39.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.39.0-rc.1...@ceramicnetwork/core@2.39.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.39.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.39.0-rc.0...@ceramicnetwork/core@2.39.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.39.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0...@ceramicnetwork/core@2.39.0-rc.0) (2023-08-16)
+
+
+### Bug Fixes
+
+* **core:** fix anchor retry logic ([#2865](https://github.com/ceramicnetwork/js-ceramic/issues/2865)) ([95d57ef](https://github.com/ceramicnetwork/js-ceramic/commit/95d57ef0905d65ff882ab27016b57703a2bd7326))
+* **core:** limit IPFS load of HDS sync ([#2889](https://github.com/ceramicnetwork/js-ceramic/issues/2889)) ([4c6eae6](https://github.com/ceramicnetwork/js-ceramic/commit/4c6eae67fca9ef1ebdf80e99c7921e747eccd3a5))
+* **core:** send anchor status request once every poll interval ([#2884](https://github.com/ceramicnetwork/js-ceramic/issues/2884)) ([f9dafae](https://github.com/ceramicnetwork/js-ceramic/commit/f9dafae9c2ef69be6a56487807b2be625c6bd9fc))
+
+
+
+
+
+# [2.38.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0-rc.2...@ceramicnetwork/core@2.38.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.38.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0-rc.1...@ceramicnetwork/core@2.38.0-rc.2) (2023-08-11)
+
+
+### Bug Fixes
+
+* **core:** String in query values should be escaped ([#2891](https://github.com/ceramicnetwork/js-ceramic/issues/2891)) ([6bd02d7](https://github.com/ceramicnetwork/js-ceramic/commit/6bd02d77701b1f6195495ba994847dade7938a61))
+
+
+### Features
+
+* Add config option to disable data fetching in IPFS ([#2888](https://github.com/ceramicnetwork/js-ceramic/issues/2888)) ([ae87750](https://github.com/ceramicnetwork/js-ceramic/commit/ae87750f5d03f322114cb48ead4d03a860a175fe))
+
+
+
+
+
+# [2.38.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.38.0-rc.0...@ceramicnetwork/core@2.38.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [2.38.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0...@ceramicnetwork/core@2.38.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
 # [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.37.0-rc.3...@ceramicnetwork/core@2.37.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/core

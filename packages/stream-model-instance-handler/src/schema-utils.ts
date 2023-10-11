@@ -1,6 +1,6 @@
 import Ajv, { SchemaObject } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
-import lru from 'lru_map'
+import { LRUCache } from 'least-recent'
 
 const AJV_CACHE_SIZE = 500
 
@@ -21,10 +21,10 @@ function buildAjv(): Ajv {
  * TODO: Move schema stream loading out of this.
  */
 export class SchemaValidation {
-  readonly validators: lru.LRUMap<string, Ajv>
+  readonly validators: LRUCache<string, Ajv>
 
   constructor() {
-    this.validators = new lru.LRUMap(AJV_CACHE_SIZE)
+    this.validators = new LRUCache(AJV_CACHE_SIZE)
   }
 
   public validateSchema(content: Record<string, any>, schema: SchemaObject, schemaId: string) {

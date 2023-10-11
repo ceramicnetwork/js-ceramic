@@ -39,8 +39,6 @@ export async function applyAnchorCommit(
     throw commitData.anchorValidationError
   }
 
-  state = cloneDeep(state) // don't modify the source object
-
   state.anchorStatus = AnchorStatus.ANCHORED
   state.anchorProof = commitData.proof
   state.log.push({

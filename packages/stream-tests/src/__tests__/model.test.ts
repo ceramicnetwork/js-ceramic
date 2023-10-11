@@ -11,18 +11,18 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'myModel',
   version: Model.VERSION,
-  schema: {},
+  schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
 }
 
 // The model above will always result in this StreamID when created with the fixed did:key
 // controller used by the test.
-const MODEL_STREAM_ID = 'kjzl6hvfrbw6c83mhtyogl4xtfb4sz9mn8ij2upplvqca19ddbnp46z2bvmz0b9'
+const MODEL_STREAM_ID = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka716'
 
 const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
   name: 'myModelWithARelation',
   version: Model.VERSION,
-  schema: {},
+  schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
 }
@@ -55,9 +55,7 @@ describe('Model API http-client tests', () => {
   })
 
   test('Model model is unloadable', async () => {
-    await expect(ceramic.loadStream(Model.MODEL)).rejects.toThrow(
-      /UNLOADABLE is not a valid stream type/
-    )
+    await expect(ceramic.loadStream(Model.MODEL)).rejects.toThrow(/4 is not a valid stream type/)
   })
 
   test('Create valid model', async () => {
@@ -112,15 +110,14 @@ describe('Model API http-client tests', () => {
     }
 
     await expect(Model.create(ceramic, invalidIncompleteModelDefinition)).rejects.toThrow(
-      /missing a 'schema' field/
+      'Input is not a JSON schema of type: object'
     )
   })
 
   test('Cannot create model without version', async () => {
     const { version, ...modelDefinition } = MODEL_DEFINITION
-    // @ts-expect-error missing version field
     await expect(Model.create(ceramic, modelDefinition)).rejects.toThrow(
-      /missing a 'version' field/
+      'Invalid value undefined supplied to /(ModelDefinition)/version(string)'
     )
   })
 
@@ -138,7 +135,7 @@ describe('Model API http-client tests', () => {
     const invalidRelationModelDefinition: ModelDefinition = {
       name: 'myModel',
       version: Model.VERSION,
-      schema: {},
+      schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
       relations: {
         linkedDoc: { type: linkedDocType, model: MODEL_STREAM_ID },
@@ -146,7 +143,7 @@ describe('Model API http-client tests', () => {
     }
 
     await expect(Model.create(ceramic, invalidRelationModelDefinition)).rejects.toThrow(
-      'Relation on field linkedDoc has unexpected type foobar'
+      /Invalid value "foobar" supplied to/
     )
   })
 
@@ -155,7 +152,7 @@ describe('Model API http-client tests', () => {
     const invalidRelationModelDefinition: ModelDefinition = {
       name: 'myModel',
       version: Model.VERSION,
-      schema: {},
+      schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
       relations: {
         linkedDoc: { type: 'document', model: 'this is totally a streamid, trust me bro' },
@@ -163,7 +160,7 @@ describe('Model API http-client tests', () => {
     }
 
     await expect(Model.create(ceramic, invalidRelationModelDefinition)).rejects.toThrow(
-      /Relation on field linkedDoc has invalid model/
+      /Invalid value/
     )
   })
 

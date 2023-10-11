@@ -8,9 +8,8 @@ import {
 } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import { LocalIndexApi } from './indexing/local-index-api.js'
-import { ISyncApi, ModelSyncOptions } from './sync/interfaces.js'
 import { convertCidToEthHash } from '@ceramicnetwork/anchor-utils'
+import type { LocalIndexApi, ISyncApi, ModelSyncOptions } from '@ceramicnetwork/indexing'
 
 type NodeStatusFn = () => Promise<NodeStatusResponse>
 type LoadStreamFn<T> = (streamId: StreamID | CommitID | string, opts?: LoadOpts) => Promise<T>

@@ -3,6 +3,144 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.35.0...@ceramicnetwork/common@2.36.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.35.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.35.0-rc.0...@ceramicnetwork/common@2.35.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.35.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.34.0...@ceramicnetwork/common@2.35.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.34.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.34.0-rc.1...@ceramicnetwork/common@2.34.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.34.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.34.0-rc.0...@ceramicnetwork/common@2.34.0-rc.1) (2023-09-12)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.34.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.33.0...@ceramicnetwork/common@2.34.0-rc.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* Do not publish tip when loading from genesis ([#2933](https://github.com/ceramicnetwork/js-ceramic/issues/2933)) ([120bfd0](https://github.com/ceramicnetwork/js-ceramic/commit/120bfd0f4a7f36fab58633eba33ee1bb1695376e))
+
+
+### Features
+
+* **core:** Implement TipFetcher ([#2930](https://github.com/ceramicnetwork/js-ceramic/issues/2930)) ([db2fdd2](https://github.com/ceramicnetwork/js-ceramic/commit/db2fdd23fa3e949c1e4f7787d5bfc1c5786ebb6b))
+* Report number of pending anchors in metrics and nodeStatus output ([#2918](https://github.com/ceramicnetwork/js-ceramic/issues/2918)) ([c93bb2a](https://github.com/ceramicnetwork/js-ceramic/commit/c93bb2afe6e346e160ba4911c2a94fdd380de52b))
+
+
+
+
+
+# [2.33.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.33.0-rc.1...@ceramicnetwork/common@2.33.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.33.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.33.0-rc.0...@ceramicnetwork/common@2.33.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.32.0...@ceramicnetwork/common@2.33.0-rc.0) (2023-08-23)
+
+
+### Features
+
+* Add option to wait until anchor requests are durably created on the CAS ([#2907](https://github.com/ceramicnetwork/js-ceramic/issues/2907)) ([a36ebf7](https://github.com/ceramicnetwork/js-ceramic/commit/a36ebf72b1701836a3360fb30ba935a265d0aeda))
+
+
+
+
+
+# [2.32.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.32.0-rc.1...@ceramicnetwork/common@2.32.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.32.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.32.0-rc.0...@ceramicnetwork/common@2.32.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.32.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.31.0...@ceramicnetwork/common@2.32.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.31.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.31.0-rc.1...@ceramicnetwork/common@2.31.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.31.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.31.0-rc.0...@ceramicnetwork/common@2.31.0-rc.1) (2023-08-11)
+
+
+### Features
+
+* Add config option to disable data fetching in IPFS ([#2888](https://github.com/ceramicnetwork/js-ceramic/issues/2888)) ([ae87750](https://github.com/ceramicnetwork/js-ceramic/commit/ae87750f5d03f322114cb48ead4d03a860a175fe))
+
+
+
+
+
+# [2.31.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0...@ceramicnetwork/common@2.31.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
 # [2.30.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.30.0-rc.1...@ceramicnetwork/common@2.30.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/common

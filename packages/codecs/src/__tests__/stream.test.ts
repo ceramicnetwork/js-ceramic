@@ -2,9 +2,35 @@ import { CommitID, type StreamID } from '@ceramicnetwork/streamid'
 import { describe, test, expect } from '@jest/globals'
 import { validate, isRight, type Right } from 'codeco'
 
-import { commitIdAsString, streamIdAsString } from '../stream.js'
+import { commitIdAsString, isStreamIdString, streamIdAsString, streamIdString } from '../stream.js'
 
-import { randomStreamID } from './test-utils.js'
+import { randomCID, randomStreamID } from './test-utils.js'
+
+describe('isStreamIdString', () => {
+  test('ok', () => {
+    expect(isStreamIdString(randomStreamID().toString())).toBe(true)
+  })
+  test('not ok', () => {
+    expect(isStreamIdString(randomCID().toString())).toBe(false)
+  })
+})
+
+describe('streamIdString', () => {
+  const streamId = randomStreamID().toString()
+  test('decode: ok', () => {
+    const result = validate(streamIdString, streamId)
+    expect(isRight(result)).toEqual(true)
+    expect((result as Right<StreamID>).right).toBe(streamId)
+  })
+  test('decode: not ok', () => {
+    const result = validate(streamIdString, 'garbage')
+    expect(isRight(result)).toEqual(false)
+  })
+  test('encode', () => {
+    const result = streamIdString.encode(streamId)
+    expect(result).toBe(streamId)
+  })
+})
 
 describe('streamIdAsString', () => {
   const streamId = randomStreamID()

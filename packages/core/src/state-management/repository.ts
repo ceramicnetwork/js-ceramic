@@ -1,7 +1,6 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
-  AnchorService,
-  AnchorStatus,
+  AnchorOpts,
   CommitType,
   Context,
   CreateOpts,
@@ -12,31 +11,30 @@ import {
   PublishOpts,
   StreamState,
   StreamUtils,
-  SyncOptions,
-  UnreachableCaseError,
   UpdateOpts,
 } from '@ceramicnetwork/common'
+import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
-import type { ConflictResolution } from '../conflict-resolution.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { Observable } from 'rxjs'
+import { Observable, Subscription } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
-import { Utils } from '../utils.js'
-import { LocalIndexApi } from '../indexing/local-index-api.js'
 import { IKVStore } from '../store/ikv-store.js'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { RepositoryInternals } from './repository-internals.js'
+import { StreamLoader } from '../stream-loading/stream-loader.js'
+import { OperationType } from './operation-type.js'
+import { StreamUpdater } from '../stream-loading/stream-updater.js'
+import { CID } from 'multiformats/cid'
+import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
-const CACHE_HIT_MEMORY = 'cache_hit_memory'
-const CACHE_HIT_LOCAL = 'cache_hit_local'
-const CACHE_HIT_REMOTE = 'cache_hit_remote'
-const STREAM_SYNC = 'stream_sync'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -46,17 +44,12 @@ export type RepositoryDependencies = {
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
-  conflictResolution: ConflictResolution
   indexing: LocalIndexApi
+  streamLoader: StreamLoader
+  streamUpdater: StreamUpdater
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
-const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
-
-enum OperationType {
-  CREATE,
-  UPDATE,
-  LOAD,
-}
 /**
  * Indicate if the stream should be indexed.
  */
@@ -64,6 +57,20 @@ function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
   const model = state$.state?.metadata?.model
   if (!model) return false
   return index.shouldIndexStream(model)
+}
+
+function commitAtTime(state: StreamState, timestamp: number): CommitID {
+  let commitCid: CID = state.log[0].cid
+  for (const entry of state.log) {
+    if (entry.type === CommitType.ANCHOR) {
+      if (entry.timestamp <= timestamp) {
+        commitCid = entry.cid
+      } else {
+        break
+      }
+    }
+  }
+  return CommitID.make(StreamUtils.streamIdFromState(state), commitCid)
 }
 
 export class Repository {
@@ -88,9 +95,14 @@ export class Repository {
   #deps: RepositoryDependencies
 
   /**
+   * Internal APIs
+   */
+  _internals: RepositoryInternals
+
+  /**
    * Instance of StateManager for performing operations on stream state.
    */
-  stateManager: StateManager
+  private stateManager: StateManager
 
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
@@ -132,6 +144,25 @@ export class Repository {
     return this.#deps.pinStore
   }
 
+  private get streamLoader(): StreamLoader {
+    return this.#deps.streamLoader
+  }
+
+  private get streamUpdater(): StreamUpdater {
+    return this.#deps.streamUpdater
+  }
+
+  /**
+   * Returns the number of streams with writes that are waiting to be anchored by the CAS.
+   */
+  get numPendingAnchors(): number {
+    return this._internals.numPendingAnchorSubscriptions
+  }
+
+  private get anchorService(): AnchorService {
+    return this.#deps.anchorService
+  }
+
   get anchorRequestStore(): AnchorRequestStore {
     return this.#deps.anchorRequestStore
   }
@@ -143,148 +174,40 @@ export class Repository {
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDeps(deps: RepositoryDependencies): void {
     this.#deps = deps
+    this._internals = new RepositoryInternals({
+      anchorRequestStore: deps.anchorRequestStore,
+      anchorService: deps.anchorService,
+      context: deps.context,
+      dispatcher: deps.dispatcher,
+      executionQ: this.executionQ,
+      handlers: deps.handlers,
+      index: deps.indexing,
+      inmemory: this.inmemory,
+      loadingQ: this.loadingQ,
+      logger: this.logger,
+      pinStore: this.pinStore,
+      streamLoader: deps.streamLoader,
+      streamUpdater: deps.streamUpdater,
+    })
     this.stateManager = new StateManager(
       deps.dispatcher,
-      deps.pinStore,
       deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
-      deps.conflictResolution,
       this.logger,
-      (streamId) => this.fromMemoryOrStore(streamId),
-      (streamId, opts) => this.load(streamId, opts),
-      // TODO (NET-1687): remove as part of refactor to push indexing into state-manager.ts
-      this.indexStreamIfNeeded.bind(this),
-      deps.indexing
+      deps.indexing,
+      this._internals,
+      deps.anchorRequestCarBuilder
     )
   }
 
-  private fromMemory(streamId: StreamID): RunningState | undefined {
-    const state = this.inmemory.get(streamId.toString())
-    if (state) {
-      Metrics.count(CACHE_HIT_MEMORY, 1)
-    }
-    return state
-  }
-
-  private async fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const streamState = await this.#deps.pinStore.stateStore.load(streamId)
-    if (streamState) {
-      Metrics.count(CACHE_HIT_LOCAL, 1)
-      const runningState = new RunningState(streamState, true)
-      this.add(runningState)
-      const toRecover = await this.anchorRequestStore.exists(streamId)
-      if (toRecover && this.stateManager.anchorService) {
-        this.stateManager.confirmAnchorResponse(runningState)
-      }
-      return runningState
-    } else {
-      return undefined
-    }
-  }
-
-  private async fromNetwork(streamId: StreamID): Promise<RunningState> {
-    const handler = this.#deps.handlers.get(streamId.typeName)
-    const genesisCid = streamId.cid
-    const commitData = await Utils.getCommitData(this.#deps.dispatcher, genesisCid, streamId)
-    if (commitData == null) {
-      throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
-    }
-    Metrics.count(CACHE_HIT_REMOTE, 1)
-    // Do not check for possible key revocation here, as we will do so later after loading the tip
-    // (or learning that the genesis commit *is* the current tip), when we will have timestamp
-    // information for when the genesis commit was anchored.
-    commitData.disableTimecheck = true
-    const state = await handler.applyCommit(commitData, this.#deps.context)
-    const state$ = new RunningState(state, false)
-    this.add(state$)
-    this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
-    return state$
-  }
-
-  /**
-   * Helper function for loading at least the genesis commit state for a stream.
-   * WARNING: This should only be called from within a thread in the loadingQ!!!
-   *
-   * @param streamId
-   * @returns a tuple whose first element is the state that was loaded, and whose second element
-   *   is a boolean representing whether we believe that state should be the most update-to-date
-   *   state for that stream, or whether it could be behind the current tip and needs to be synced.
-   */
-  async _loadGenesis(streamId: StreamID): Promise<[RunningState, boolean]> {
-    let stream = this.fromMemory(streamId)
-    if (stream) {
-      return [stream, true]
-    }
-
-    stream = await this.fromStreamStateStore(streamId)
-    if (stream) {
-      return [stream, this.stateManager.wasPinnedStreamSynced(streamId)]
-    }
-
-    stream = await this.fromNetwork(streamId)
-    return [stream, false]
-  }
   /**
    * Returns a stream from wherever we can get information about it.
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
    */
   async load(streamId: StreamID, opts: LoadOpts & InternalOpts): Promise<RunningState> {
-    opts = { ...DEFAULT_LOAD_OPTS, ...opts }
-
-    const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
-      switch (opts.sync) {
-        case SyncOptions.PREFER_CACHE:
-        case SyncOptions.SYNC_ON_ERROR: {
-          const [streamState$, alreadySynced] = await this._loadGenesis(streamId)
-          if (alreadySynced) {
-            return [streamState$, alreadySynced]
-          } else {
-            await this.stateManager.sync(streamState$, opts.syncTimeoutSeconds * 1000)
-            Metrics.count(STREAM_SYNC, 1)
-            return [streamState$, true]
-          }
-        }
-        case SyncOptions.NEVER_SYNC: {
-          return this._loadGenesis(streamId)
-        }
-        case SyncOptions.SYNC_ALWAYS: {
-          // When SYNC_ALWAYS is provided, we want to reapply and re-validate
-          // the stream state.  We effectively throw out our locally stored state
-          // as its possible that the commits that were used to construct that
-          // state are no longer valid (for example if the CACAOs used to author them
-          // have expired since they were first applied to the cached state object).
-          // But if we were the only node on the network that knew about the most
-          // recent tip, we don't want to totally forget about that, so we pass the tip in
-          // to `sync` so that it gets considered alongside whatever tip we learn
-          // about from the network.
-          const [fromNetwork$, fromMemoryOrStore] = await Promise.all([
-            this.fromNetwork(streamId),
-            this.fromMemoryOrStore(streamId),
-          ])
-          await this.stateManager.sync(
-            fromNetwork$,
-            opts.syncTimeoutSeconds * 1000,
-            fromMemoryOrStore?.tip
-          )
-          Metrics.count(STREAM_SYNC, 1)
-          return [fromNetwork$, true]
-        }
-        default:
-          throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
-      }
-    })
-
-    if (!opts.skipCacaoExpirationChecks) {
-      StreamUtils.checkForCacaoExpiration(state$.state)
-    }
-
-    if (synced && state$.isPinned) {
-      this.stateManager.markPinnedAndSynced(state$.id)
-    }
-
-    return state$
+    return await this._internals.load(streamId, opts)
   }
 
   /**
@@ -302,12 +225,24 @@ export class Repository {
     // the timestamp information that will reveal to us that the CACAO didn't actually expire.
     const optsSkippingCACAOChecks = { ...opts, skipCacaoExpirationChecks: true }
     const base$ = await this.load(commitId.baseID, optsSkippingCACAOChecks)
-    const stateAtCommit = await this.stateManager.atCommit(base$, commitId)
 
-    // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
-    StreamUtils.checkForCacaoExpiration(stateAtCommit.state)
+    return this._atCommit(commitId, base$)
+  }
 
-    return stateAtCommit
+  async _atCommit(commitId: CommitID, existingState$: RunningState): Promise<SnapshotState> {
+    return this.executionQ.forStream(commitId).run(async () => {
+      const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
+
+      // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
+      StreamUtils.checkForCacaoExpiration(stateAtCommit)
+
+      // If the provided CommitID is ahead of what we have in the cache, then we should update
+      // the cache to include it.
+      if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
+        existingState$.next(stateAtCommit)
+      }
+      return new SnapshotState(stateAtCommit)
+    })
   }
 
   /**
@@ -318,7 +253,8 @@ export class Repository {
    */
   async loadAtTime(streamId: StreamID, opts: LoadOpts): Promise<SnapshotState> {
     const base$ = await this.load(streamId.baseID, opts)
-    return this.stateManager.atTime(base$, opts.atTime)
+    const commitId = commitAtTime(base$.state, opts.atTime)
+    return this._atCommit(commitId, base$)
   }
 
   /**
@@ -334,10 +270,55 @@ export class Repository {
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
-    const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
-    await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
-    this.logger.verbose(`Repository applied write options to stream ${streamId.toString()}`)
-    return state$
+
+    const state$ = await this._internals.load(streamId, opts)
+    this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      const originalState = state$.state
+      const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
+      if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
+        return state$ // nothing changed
+      }
+
+      state$.next(updatedState) // emit the new state
+
+      await this._internals._updateStateIfPinned(state$)
+      await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
+
+      return state$
+    })
+  }
+
+  /**
+   * Handles update. Update may come from the PubSub topic or from running a sync
+   *
+   * @param streamId
+   * @param tip - Stream Tip CID
+   * @param model - Model Stream ID
+   */
+  async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
+    let state$ = await this._internals.fromMemoryOrStore(streamId)
+    const shouldIndex = model && this.index.shouldIndexStream(model)
+    if (!shouldIndex && !state$) {
+      // stream isn't pinned or indexed, nothing to do
+      return
+    }
+
+    if (!state$) {
+      state$ = await this._internals.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._internals.handleTip(state$, tip)
+    })
+  }
+
+  /**
+   * Request anchor for the latest stream state
+   */
+  async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
+    return this.stateManager.anchor(state$, opts)
   }
 
   /**
@@ -348,7 +329,7 @@ export class Repository {
    * @private
    */
   async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts, opType: OperationType) {
-    await this.stateManager.applyWriteOpts(state$, opts)
+    await this.stateManager.applyWriteOpts(state$, opts, opType)
 
     await this.handlePinOpts(state$, opts as PinningOpts, opType)
   }
@@ -372,7 +353,7 @@ export class Repository {
       const pinStr = opts.pin ? 'pin' : 'unpin'
       const opStr = opType == OperationType.UPDATE ? 'update' : 'load'
       //TODO(CDB-2314): An error should be thrown once fully deprecated
-      console.warn(
+      this.logger.warn(
         `Cannot pin or unpin streams through the CRUD APIs. To change stream pin state use the admin.pin API with an authenticated admin DID. Attempting to ${pinStr} stream ${StreamUtils.streamIdFromState(
           state$.state
         ).toString()} as part of a ${opStr} operation`
@@ -411,9 +392,7 @@ export class Repository {
    * Adds the stream to cache.
    */
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const fromMemory = this.fromMemory(streamId)
-    if (fromMemory) return fromMemory
-    return this.fromStreamStateStore(streamId)
+    return await this._internals.fromMemoryOrStore(streamId)
   }
 
   /**
@@ -432,7 +411,7 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   add(state$: RunningState): void {
-    this.inmemory.set(state$.id.toString(), state$)
+    this._internals.add(state$)
   }
 
   pin(state$: RunningState, force?: boolean): Promise<void> {
@@ -449,11 +428,15 @@ export class Repository {
     }
 
     if (opts?.publish) {
-      this.stateManager.publishTip(state$)
+      this._internals.publishTip(state$)
     }
 
-    this.stateManager.markUnpinned(state$.id)
+    this._internals.markUnpinned(state$.id)
     return this.#deps.pinStore.rm(state$)
+  }
+
+  markPinnedAndSynced(streamId: StreamID): void {
+    this._internals.markPinnedAndSynced(streamId)
   }
 
   /**

@@ -3,6 +3,144 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.41.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.40.0...@ceramicnetwork/cli@2.41.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.40.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.40.0-rc.0...@ceramicnetwork/cli@2.40.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.40.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.39.0...@ceramicnetwork/cli@2.40.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.39.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.39.0-rc.1...@ceramicnetwork/cli@2.39.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.39.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.39.0-rc.0...@ceramicnetwork/cli@2.39.0-rc.1) (2023-09-12)
+
+
+### Features
+
+* **core, cli, stream-tests:** Add support for filters in count ([cef2139](https://github.com/ceramicnetwork/js-ceramic/commit/cef21396e170f5cf72260ad28520c0e91177ccb1))
+
+
+
+
+
+# [2.39.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.38.0...@ceramicnetwork/cli@2.39.0-rc.0) (2023-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.38.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.38.0-rc.1...@ceramicnetwork/cli@2.38.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.38.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.38.0-rc.0...@ceramicnetwork/cli@2.38.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.38.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.37.0...@ceramicnetwork/cli@2.38.0-rc.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.37.0-rc.1...@ceramicnetwork/cli@2.37.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.37.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.37.0-rc.0...@ceramicnetwork/cli@2.37.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.37.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0...@ceramicnetwork/cli@2.37.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.36.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0-rc.2...@ceramicnetwork/cli@2.36.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.36.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0-rc.1...@ceramicnetwork/cli@2.36.0-rc.2) (2023-08-11)
+
+
+### Features
+
+* Add config option to disable data fetching in IPFS ([#2888](https://github.com/ceramicnetwork/js-ceramic/issues/2888)) ([ae87750](https://github.com/ceramicnetwork/js-ceramic/commit/ae87750f5d03f322114cb48ead4d03a860a175fe))
+* **codecs:** model codecs ([#2825](https://github.com/ceramicnetwork/js-ceramic/issues/2825)) ([f94fb50](https://github.com/ceramicnetwork/js-ceramic/commit/f94fb5097359e40a5bc817105f0584f90a9decbd))
+
+
+
+
+
+# [2.36.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.36.0-rc.0...@ceramicnetwork/cli@2.36.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0...@ceramicnetwork/cli@2.36.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
 # [2.35.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.35.0-rc.3...@ceramicnetwork/cli@2.35.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

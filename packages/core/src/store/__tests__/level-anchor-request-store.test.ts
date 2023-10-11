@@ -12,6 +12,8 @@ import tmp from 'tmp-promise'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
+import first from 'it-first'
+import all from 'it-all'
 
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
@@ -224,10 +226,12 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
       { key: streamId3, value: anchorRequestData3 },
     ].sort(sortByKeyStreamId)
 
-    const retrieved = await anchorRequestStore.list()
+    const retrieved = await all(anchorRequestStore.list()).then((batches) =>
+      batches.reduce((acc, array) => acc.concat(array), [])
+    )
     expect(retrieved.sort(sortByKeyStreamId)).toEqual(sortedParams)
 
-    const retrievedWithLimit = await anchorRequestStore.list(1)
+    const retrievedWithLimit = await first(anchorRequestStore.list())
     expect(retrievedWithLimit).toEqual(sortedParams.slice(0, 1))
   })
 

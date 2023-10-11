@@ -1,8 +1,8 @@
-import { jest } from '@jest/globals'
+import { expect, jest, describe, test, it, beforeEach, afterEach } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import type { IpfsApi } from '@ceramicnetwork/common'
-import { TestUtils } from '@ceramicnetwork/common'
+import { Networks, TestUtils } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
@@ -48,7 +48,7 @@ describe('Ceramic integration', () => {
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
     const tmpDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
-    const [modules, params] = await Ceramic._processConfig(ipfs1, {
+    const [modules, params] = Ceramic._processConfig(ipfs1, {
       networkName: 'local',
       indexing: { db: databaseConnectionString.href, models: [] },
     })
@@ -74,4 +74,19 @@ describe('Ceramic integration', () => {
     )
     await TestUtils.delay(1000)
   }, 10000)
+
+  test('init dispatcher', async () => {
+    const tmpDirectory = await tmp.tmpName()
+    const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
+    const [modules, params] = await Ceramic._processConfig(ipfs1, {
+      networkName: Networks.INMEMORY,
+      indexing: { db: databaseConnectionString.href, models: [] },
+    })
+    const dispatcher = modules.dispatcher
+    const ceramic = new Ceramic(modules, params)
+    const dispatcherInitSpy = jest.spyOn(dispatcher, 'init')
+    await ceramic._init(false)
+    expect(dispatcherInitSpy).toBeCalled()
+    await ceramic.close()
+  })
 })

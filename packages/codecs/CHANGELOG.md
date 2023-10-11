@@ -3,6 +3,113 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.10.0...@ceramicnetwork/codecs@1.11.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.10.0-rc.0...@ceramicnetwork/codecs@1.10.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.9.0...@ceramicnetwork/codecs@1.10.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.9.0-rc.0...@ceramicnetwork/codecs@1.9.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.9.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.8.0...@ceramicnetwork/codecs@1.9.0-rc.0) (2023-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.8.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.8.0-rc.1...@ceramicnetwork/codecs@1.8.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.8.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.8.0-rc.0...@ceramicnetwork/codecs@1.8.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.8.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.7.0...@ceramicnetwork/codecs@1.8.0-rc.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.7.0-rc.1...@ceramicnetwork/codecs@1.7.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.7.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.7.0-rc.0...@ceramicnetwork/codecs@1.7.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.6.0...@ceramicnetwork/codecs@1.7.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.6.0-rc.0...@ceramicnetwork/codecs@1.6.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
+# [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.5.0...@ceramicnetwork/codecs@1.6.0-rc.0) (2023-08-11)
+
+
+### Features
+
+* **codecs:** model codecs ([#2825](https://github.com/ceramicnetwork/js-ceramic/issues/2825)) ([f94fb50](https://github.com/ceramicnetwork/js-ceramic/commit/f94fb5097359e40a5bc817105f0584f90a9decbd))
+
+
+
+
+
 # [1.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.5.0-rc.0...@ceramicnetwork/codecs@1.5.0) (2023-07-31)
 
 

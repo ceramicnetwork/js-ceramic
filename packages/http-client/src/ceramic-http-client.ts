@@ -21,6 +21,7 @@ import {
   IndexApi,
   StreamState,
   AdminApi,
+  AnchorOpts,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -29,6 +30,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { RemoteIndexApi } from './remote-index-api.js'
 import { RemoteAdminApi } from './remote-admin-api.js'
+import { DummyPinApi } from './dummy-pin-api.js'
 
 const API_PATH = '/api/v0/'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -79,6 +81,7 @@ export class CeramicClient implements CeramicApi {
     this._apiUrl = new URL(API_PATH, apiHost)
     this.context = { api: this }
 
+    this.pin = new DummyPinApi()
     this.index = new RemoteIndexApi(this._apiUrl)
     const getDidFn = (() => {
       return this.did
@@ -142,7 +145,7 @@ export class CeramicClient implements CeramicApi {
 
     const url = new URL('./multiqueries', this._apiUrl)
     const results = await fetchJson(url, {
-      method: 'post',
+      method: 'POST',
       body: {
         queries: queriesJSON,
         ...{ timeout },
@@ -181,12 +184,15 @@ export class CeramicClient implements CeramicApi {
     return this.buildStreamFromDocument<T>(document)
   }
 
-  async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
+  async requestAnchor(
+    streamId: string | StreamID,
+    opts: LoadOpts & AnchorOpts = {}
+  ): Promise<AnchorStatus> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
     const { anchorStatus } = await fetchJson(
       `${this._apiUrl}/streams/${streamId.toString()}/anchor`,
       {
-        method: 'post',
+        method: 'POST',
         body: {
           opts,
         },

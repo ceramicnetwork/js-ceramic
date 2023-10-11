@@ -3,6 +3,160 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.41.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.40.0...@ceramicnetwork/stream-tests@2.41.0-rc.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.40.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.40.0-rc.0...@ceramicnetwork/stream-tests@2.40.0) (2023-09-20)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.40.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.39.0...@ceramicnetwork/stream-tests@2.40.0-rc.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.39.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.39.0-rc.1...@ceramicnetwork/stream-tests@2.39.0) (2023-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.39.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.39.0-rc.0...@ceramicnetwork/stream-tests@2.39.0-rc.1) (2023-09-12)
+
+
+### Bug Fixes
+
+* Await pubsub subscription in invalid tip test ([#2939](https://github.com/ceramicnetwork/js-ceramic/issues/2939)) ([2d25422](https://github.com/ceramicnetwork/js-ceramic/commit/2d254224bc97e172bcb86cace131753457e94ad4))
+
+
+### Features
+
+* **core, cli, stream-tests:** Add support for filters in count ([cef2139](https://github.com/ceramicnetwork/js-ceramic/commit/cef21396e170f5cf72260ad28520c0e91177ccb1))
+
+
+
+
+
+# [2.39.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.38.0...@ceramicnetwork/stream-tests@2.39.0-rc.0) (2023-09-06)
+
+
+### Features
+
+* Report number of pending anchors in metrics and nodeStatus output ([#2918](https://github.com/ceramicnetwork/js-ceramic/issues/2918)) ([c93bb2a](https://github.com/ceramicnetwork/js-ceramic/commit/c93bb2afe6e346e160ba4911c2a94fdd380de52b))
+
+
+
+
+
+# [2.38.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.38.0-rc.1...@ceramicnetwork/stream-tests@2.38.0) (2023-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.38.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.38.0-rc.0...@ceramicnetwork/stream-tests@2.38.0-rc.1) (2023-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.38.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.37.0...@ceramicnetwork/stream-tests@2.38.0-rc.0) (2023-08-23)
+
+
+### Features
+
+* **core, stream-tests:** negated ors/ands and multiple keys/values with where filters ([#2916](https://github.com/ceramicnetwork/js-ceramic/issues/2916)) ([9ac0ba9](https://github.com/ceramicnetwork/js-ceramic/commit/9ac0ba99c9219163a391ffcbc8c5c42745f9dad5))
+
+
+
+
+
+# [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.37.0-rc.1...@ceramicnetwork/stream-tests@2.37.0) (2023-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.37.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.37.0-rc.0...@ceramicnetwork/stream-tests@2.37.0-rc.1) (2023-08-17)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.37.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.36.0...@ceramicnetwork/stream-tests@2.37.0-rc.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.36.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.36.0-rc.2...@ceramicnetwork/stream-tests@2.36.0) (2023-08-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.36.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.36.0-rc.1...@ceramicnetwork/stream-tests@2.36.0-rc.2) (2023-08-11)
+
+
+### Bug Fixes
+
+* **core:** String in query values should be escaped ([#2891](https://github.com/ceramicnetwork/js-ceramic/issues/2891)) ([6bd02d7](https://github.com/ceramicnetwork/js-ceramic/commit/6bd02d77701b1f6195495ba994847dade7938a61))
+
+
+### Features
+
+* Add config option to disable data fetching in IPFS ([#2888](https://github.com/ceramicnetwork/js-ceramic/issues/2888)) ([ae87750](https://github.com/ceramicnetwork/js-ceramic/commit/ae87750f5d03f322114cb48ead4d03a860a175fe))
+* **codecs:** model codecs ([#2825](https://github.com/ceramicnetwork/js-ceramic/issues/2825)) ([f94fb50](https://github.com/ceramicnetwork/js-ceramic/commit/f94fb5097359e40a5bc817105f0584f90a9decbd))
+
+
+
+
+
+# [2.36.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.36.0-rc.0...@ceramicnetwork/stream-tests@2.36.0-rc.1) (2023-08-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
+# [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0...@ceramicnetwork/stream-tests@2.36.0-rc.0) (2023-08-07)
+
+
+### Features
+
+* **core:** query results ordering on custom fields ([#2864](https://github.com/ceramicnetwork/js-ceramic/issues/2864)) ([d56a13f](https://github.com/ceramicnetwork/js-ceramic/commit/d56a13f0ce25983f5a60e2a78816843e56c4fda2))
+
+
+
+
+
 # [2.35.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.35.0-rc.3...@ceramicnetwork/stream-tests@2.35.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

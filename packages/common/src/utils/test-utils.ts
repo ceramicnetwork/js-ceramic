@@ -1,4 +1,4 @@
-import { BehaviorSubject, lastValueFrom, firstValueFrom } from 'rxjs'
+import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { CID } from 'multiformats/cid'
 import * as random from '@stablelib/random'
@@ -9,6 +9,8 @@ import { AnchorStatus } from '@ceramicnetwork/common'
 import type { CeramicApi } from '../ceramic-api.js'
 import first from 'it-first'
 import { create } from 'multiformats/hashes/digest'
+import { StreamUtils } from './stream-utils.js'
+import { CommitType, SignatureStatus } from '../stream.js'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
@@ -71,17 +73,29 @@ export class TestUtils {
     stream: Stream,
     timeoutMs: number,
     predicate: (state: StreamState) => boolean,
-    onFailure: (state: StreamState) => void
+    onFailure?: (state: StreamState) => void
   ): Promise<void> {
-    if (predicate(stream.state)) return
-    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs))
-    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
-    const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
-      defaultValue: undefined,
-    })
-    await Promise.race([timeoutPromise, completionPromise])
-    if (!predicate(stream.state)) {
+    let now = new Date()
+    const expiration = new Date(now.getTime() + timeoutMs)
+
+    while (now < expiration) {
+      await stream.sync()
+      if (predicate(stream.state)) {
+        return
+      }
+      now = new Date()
+      await TestUtils.delay(100) // poll every 100ms
+    }
+    if (onFailure) {
       onFailure(stream.state)
+    } else {
+      throw new Error(
+        `Timeout while waiting for desired state to be reached.  Current state: ${JSON.stringify(
+          StreamUtils.serializeState(stream.state),
+          null,
+          2
+        )}`
+      )
     }
   }
 
@@ -106,9 +120,18 @@ export class TestUtils {
     return new FakeRunningState(state)
   }
 
-  static async delay(ms: number) {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => resolve(), ms)
+  static async delay(ms: number, signal?: AbortSignal): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => resolve(), ms)
+      if (signal) {
+        const handleAbort = () => {
+          clearTimeout(timeout)
+          signal.removeEventListener('abort', handleAbort)
+          reject(signal.reason)
+        }
+        if (signal.aborted) handleAbort()
+        signal.addEventListener('abort', handleAbort)
+      }
     })
   }
 
@@ -123,13 +146,17 @@ export class TestUtils {
     return CID.create(version, codec, create(hasher, random.randomBytes(32)))
   }
 
+  static randomStreamID(): StreamID {
+    return new StreamID(0, this.randomCID())
+  }
+
   /**
    * Trigger anchor for a stream. WARNING: can only work on Ceramic Core.
    * @param ceramic Ceramic Core instance.
    * @param stream Stream to trigger anchor on.
    */
   static async anchorUpdate(ceramic: CeramicApi, stream: Stream): Promise<void> {
-    const anchorService = ceramic.context.anchorService as any
+    const anchorService = ceramic.anchorService
     if ('anchor' in anchorService) {
       const tillAnchored = firstValueFrom(
         stream.pipe(
@@ -140,6 +167,25 @@ export class TestUtils {
       )
       await anchorService.anchor()
       await tillAnchored
+    }
+  }
+
+  static makeStreamState(): StreamState {
+    const cid = TestUtils.randomCID()
+    return {
+      type: 0,
+      content: { num: 0 },
+      metadata: {
+        controllers: [''],
+      },
+      signature: SignatureStatus.GENESIS,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
+      log: [
+        {
+          type: CommitType.GENESIS,
+          cid,
+        },
+      ],
     }
   }
 }
