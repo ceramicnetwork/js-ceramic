@@ -26,7 +26,6 @@ import {
   takeUntil,
 } from 'rxjs'
 
-import { ConflictResolution } from '../conflict-resolution.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
 
@@ -51,7 +50,6 @@ const STREAM_SYNC = 'stream_sync'
 export type RepositoryInternalsParams = {
   anchorRequestStore: AnchorRequestStore
   anchorService: AnchorService
-  conflictResolution: ConflictResolution
   context: Context
   dispatcher: Dispatcher
   executionQ: ExecutionQueue
@@ -68,7 +66,6 @@ export type RepositoryInternalsParams = {
 export class RepositoryInternals {
   #anchorRequestStore: AnchorRequestStore
   #anchorService: AnchorService
-  #conflictResolution: ConflictResolution
   #context: Context
   #dispatcher: Dispatcher
   #executionQ: ExecutionQueue
@@ -94,7 +91,6 @@ export class RepositoryInternals {
   constructor(params: RepositoryInternalsParams) {
     this.#anchorRequestStore = params.anchorRequestStore
     this.#anchorService = params.anchorService
-    this.#conflictResolution = params.conflictResolution
     this.#context = params.context
     this.#dispatcher = params.dispatcher
     this.#executionQ = params.executionQ
