@@ -326,10 +326,18 @@ export class Repository {
    *
    * @param state$ - Running State
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
+   * @param opType - If we load, create or update a stream
    * @private
    */
   async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts, opType: OperationType) {
-    await this.stateManager.applyWriteOpts(state$, opts, opType)
+    const anchor = (opts as any).anchor
+    const publish = (opts as any).publish
+    if (anchor) {
+      await this.anchor(state$, opts)
+    }
+    if (publish && opType !== OperationType.LOAD) {
+      this._internals.publishTip(state$)
+    }
 
     await this.handlePinOpts(state$, opts as PinningOpts, opType)
   }
