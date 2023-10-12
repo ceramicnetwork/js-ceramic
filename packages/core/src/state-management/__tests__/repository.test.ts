@@ -1,4 +1,4 @@
-import { expect, jest } from '@jest/globals'
+import { jest } from '@jest/globals'
 import {
   AnchorStatus,
   CommitType,
@@ -275,6 +275,7 @@ describe('#load', () => {
         anchor: true,
         publish: false,
       })
+
       expect(stream.allCommitIds.length).toEqual(5)
       expect(stream.anchorCommitIds.length).toEqual(2)
       const commit4 = stream.allCommitIds[4]
@@ -532,12 +533,8 @@ describe('#load', () => {
         expect(StreamUtils.serializeState(stream1.state)).toEqual(
           StreamUtils.serializeState(stream2.state)
         )
-        // FIXME When anchoring loop is inactive
-        // expect(fromMemory).toBeCalledTimes(1)
-        // expect(fromStateStore).toBeCalledTimes(1)
-        // FIXME When anchoring loop is active though...
-        expect(fromMemory).toBeCalled()
-        expect(fromStateStore).toBeCalled()
+        expect(fromMemory).toBeCalledTimes(1)
+        expect(fromStateStore).toBeCalledTimes(1)
         expect(fromNetwork).toBeCalledTimes(1)
         expect(saveFromStreamStateHolder).toBeCalledTimes(1)
       })
@@ -597,8 +594,7 @@ describe('validation', () => {
     const invalidDoc = await TileDocument.create(
       permissiveCeramic,
       { stuff: 1 },
-      { schema: schema.commitId },
-      { anchor: false }
+      { schema: schema.commitId }
     )
 
     // Load it: Expect failure
