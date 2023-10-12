@@ -152,6 +152,7 @@ describe('anchor', () => {
       const streamState = await ceramic.repository.load(stream.id, {})
       await TestUtils.anchorUpdate(ceramic, stream)
       const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId })
+
       await expect(
         ceramic.repository.applyCommit(streamState.id, updateRec, {
           anchor: false,
