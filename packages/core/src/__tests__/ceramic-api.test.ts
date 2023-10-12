@@ -200,7 +200,7 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
       // TODO (NET-1614): Extend with targeted payload comparison
-      const addIndexSpy = jest.spyOn(ceramic.repository._internals, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
@@ -225,7 +225,9 @@ describe('Ceramic API', () => {
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      expect(addIndexSpy).toBeCalledTimes(1)
+      // there's an extra call to indexStreamIfNeeded every time the anchor state
+      // is changed.
+      expect(addIndexSpy).toBeCalledTimes(2)
       const midMetadata = { model: model.id }
       await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)).rejects.toThrow(
         /which exceeds maximum size/
@@ -237,7 +239,7 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
-      const addIndexSpy = jest.spyOn(ceramic.repository._internals, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
@@ -263,11 +265,17 @@ describe('Ceramic API', () => {
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
       const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      expect(addIndexSpy).toBeCalledTimes(1)
-      const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      expect(doc.content).toEqual(CONTENT0)
+      // there's an extra call to indexStreamIfNeeded every time the anchor state
+      // is changed.
       expect(addIndexSpy).toBeCalledTimes(2)
+      const midMetadata = { model: model.id }
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+        anchor: false,
+        pin: false,
+      })
+      expect(doc.content).toEqual(CONTENT0)
+      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
+      expect(addIndexSpy).toBeCalledTimes(4)
       await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })

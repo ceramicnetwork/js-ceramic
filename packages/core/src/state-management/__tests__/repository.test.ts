@@ -455,8 +455,8 @@ describe('#load', () => {
         .loadAtCommit(CommitID.make(streamId, streamId.cid), { syncTimeoutSeconds: 0 })
         .then((stream) => stream.state)
       const state$ = new RunningState(initialState, true)
-      ceramic.repository.add(state$)
-      await ceramic.repository._internals.handleTip(state$, tipPreUpdate)
+      ceramic.repository._registerRunningState(state$)
+      await ceramic.repository._handleTip(state$, tipPreUpdate)
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const conflictingNewContent = { asdf: 2342 }
@@ -478,12 +478,12 @@ describe('#load', () => {
       expect(stream2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to stream with invalid
       // log results in valid state
-      await ceramic.repository._internals.handleTip(state$, tipValidUpdate)
+      await ceramic.repository._handleTip(state$, tipValidUpdate)
       expect(stream2.content).toEqual(newContent)
 
       // loading tip from invalid log to stream with valid
       // log results in valid state
-      await ceramic.repository._internals.handleTip(streamState1, tipInvalidUpdate)
+      await ceramic.repository._handleTip(streamState1, tipInvalidUpdate)
       expect(stream1.content).toEqual(newContent)
 
       // Loading valid commit works
@@ -613,7 +613,7 @@ test('subscribe makes state endured', async () => {
 
 describe('applyWriteOpts', () => {
   test('dont publish on LOAD', async () => {
-    const publishSpy = jest.spyOn(repository._internals, 'publishTip')
+    const publishSpy = jest.spyOn(repository, '_publishTip')
     await repository.applyWriteOpts(
       new RunningState(TestUtils.makeStreamState(), false),
       { publish: true },
@@ -624,7 +624,7 @@ describe('applyWriteOpts', () => {
   test('publish on UPDATE or CREATE ', async () => {
     const operations = [/*OperationType.UPDATE,*/ OperationType.CREATE]
     for (const operation of operations) {
-      const publishSpy = jest.spyOn(repository._internals, 'publishTip')
+      const publishSpy = jest.spyOn(repository, '_publishTip')
       const pinSpy = jest.spyOn(repository, 'handlePinOpts')
       pinSpy.mockImplementationOnce(() => Promise.resolve())
       await repository.applyWriteOpts(
