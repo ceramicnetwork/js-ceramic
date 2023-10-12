@@ -64,6 +64,7 @@ export class ProcessingLoop<T> {
   }
 
   async stop() {
+    if (!this.#processing) return
     this.#abortController.abort('STOP')
     await this.source.return(undefined)
     await this.#processing
