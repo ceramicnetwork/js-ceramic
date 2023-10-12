@@ -119,7 +119,6 @@ export class RepositoryInternals {
     this.#inmemory.set(state$.id.toString(), state$)
   }
 
-  // From Repository, injected in StateManager
   async fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.#pinStore.stateStore.load(streamId)
     if (streamState) {
@@ -275,8 +274,6 @@ export class RepositoryInternals {
 
     await this.#index.indexStream(streamContent)
   }
-
-  // From StateManager, called by Repository
 
   /**
    * Restart polling and handle response for a previously submitted anchor request

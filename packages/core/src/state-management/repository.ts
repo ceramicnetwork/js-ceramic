@@ -1,6 +1,7 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorOpts,
+  AnchorStatus,
   CommitType,
   Context,
   CreateOpts,
@@ -17,7 +18,6 @@ import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { PinStore } from '../store/pin-store.js'
 import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
-import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
 import { Observable, Subscription } from 'rxjs'
@@ -98,11 +98,6 @@ export class Repository {
    * Internal APIs
    */
   _internals: RepositoryInternals
-
-  /**
-   * Instance of StateManager for performing operations on stream state.
-   */
-  private stateManager: StateManager
 
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
@@ -189,16 +184,6 @@ export class Repository {
       streamLoader: deps.streamLoader,
       streamUpdater: deps.streamUpdater,
     })
-    this.stateManager = new StateManager(
-      deps.dispatcher,
-      deps.anchorRequestStore,
-      this.executionQ,
-      deps.anchorService,
-      this.logger,
-      deps.indexing,
-      this._internals,
-      deps.anchorRequestCarBuilder
-    )
   }
 
   /**
@@ -318,7 +303,27 @@ export class Repository {
    * Request anchor for the latest stream state
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
-    return this.stateManager.anchor(state$, opts)
+    if (!this.anchorService) {
+      throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
+    }
+    if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
+      return
+    }
+
+    const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
+    const genesisCID = state$.value.log[0].cid
+    const genesisCommit = carFile.get(genesisCID)
+    await this.anchorRequestStore.save(state$.id, {
+      cid: state$.tip,
+      timestamp: Date.now(),
+      genesis: genesisCommit,
+    })
+
+    const anchorStatus$ = await this.anchorService.requestAnchor(
+      carFile,
+      opts.waitForAnchorConfirmation
+    )
+    return this._internals.processAnchorResponse(state$, anchorStatus$)
   }
 
   /**
@@ -326,10 +331,18 @@ export class Repository {
    *
    * @param state$ - Running State
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
+   * @param opType - If we load, create or update a stream
    * @private
    */
   async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts, opType: OperationType) {
-    await this.stateManager.applyWriteOpts(state$, opts, opType)
+    const anchor = (opts as any).anchor
+    const publish = (opts as any).publish
+    if (anchor) {
+      await this.anchor(state$, opts)
+    }
+    if (publish && opType !== OperationType.LOAD) {
+      this._internals.publishTip(state$)
+    }
 
     await this.handlePinOpts(state$, opts as PinningOpts, opType)
   }

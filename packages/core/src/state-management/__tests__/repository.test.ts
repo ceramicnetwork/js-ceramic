@@ -21,6 +21,7 @@ import { streamFromState } from '../stream-from-state.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
+import { OperationType } from '../operation-type.js'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -608,4 +609,31 @@ test('subscribe makes state endured', async () => {
   await TestUtils.delay(200) // Wait for rxjs plumbing
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
+})
+
+describe('applyWriteOpts', () => {
+  test('dont publish on LOAD', async () => {
+    const publishSpy = jest.spyOn(repository._internals, 'publishTip')
+    await repository.applyWriteOpts(
+      new RunningState(TestUtils.makeStreamState(), false),
+      { publish: true },
+      OperationType.LOAD
+    )
+    expect(publishSpy).not.toBeCalled()
+  })
+  test('publish on UPDATE or CREATE ', async () => {
+    const operations = [/*OperationType.UPDATE,*/ OperationType.CREATE]
+    for (const operation of operations) {
+      const publishSpy = jest.spyOn(repository._internals, 'publishTip')
+      const pinSpy = jest.spyOn(repository, 'handlePinOpts')
+      pinSpy.mockImplementationOnce(() => Promise.resolve())
+      await repository.applyWriteOpts(
+        new RunningState(TestUtils.makeStreamState(), false),
+        { publish: true },
+        operation
+      )
+      expect(publishSpy).toHaveBeenCalledTimes(1)
+      expect(pinSpy).toHaveBeenCalledTimes(1)
+    }
+  })
 })
