@@ -417,6 +417,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     expect(JSON.stringify(loadedState)).toEqual(JSON.stringify(docState))
   })
 
+
   test('load updated and anchored doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
