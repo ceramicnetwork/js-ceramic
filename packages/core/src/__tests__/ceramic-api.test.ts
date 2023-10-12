@@ -200,7 +200,7 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
       // TODO (NET-1614): Extend with targeted payload comparison
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
@@ -223,7 +223,7 @@ describe('Ceramic API', () => {
     it('will fail to create stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
@@ -239,7 +239,7 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
@@ -263,7 +263,7 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
-      const addIndexSpy = jest.spyOn(ceramic.repository, 'indexStreamIfNeeded')
+      const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.

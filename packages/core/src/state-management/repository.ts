@@ -248,7 +248,7 @@ export class Repository {
     return state$
   }
 
-  async _updateStateIfPinned(state$: RunningState): Promise<void> {
+  private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
     const shouldIndex =
@@ -256,10 +256,10 @@ export class Repository {
     if (isPinned || shouldIndex) {
       await this.pinStore.add(state$)
     }
-    await this.indexStreamIfNeeded(state$)
+    await this._indexStreamIfNeeded(state$)
   }
 
-  _fromMemory(streamId: StreamID): RunningState | undefined {
+  private _fromMemory(streamId: StreamID): RunningState | undefined {
     const state = this.inmemory.get(streamId.toString())
     if (state) {
       Metrics.count(CACHE_HIT_MEMORY, 1)
@@ -267,7 +267,7 @@ export class Repository {
     return state
   }
 
-  async _fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
+  private async _fromStreamStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.pinStore.stateStore.load(streamId)
     if (streamState) {
       Metrics.count(CACHE_HIT_LOCAL, 1)
@@ -287,7 +287,7 @@ export class Repository {
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
    */
-  async _fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
+  private async _fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
     const fromMemory = this._fromMemory(streamId)
     if (fromMemory) return fromMemory
     return this._fromStreamStateStore(streamId)
@@ -304,7 +304,7 @@ export class Repository {
    *   is a boolean representing whether we believe that state should be the most update-to-date
    *   state for that stream, or whether it could be behind the current tip and needs to be synced.
    */
-  async _fromMemoryOrStoreWithSyncStatus(
+  private async _fromMemoryOrStoreWithSyncStatus(
     streamId: StreamID
   ): Promise<[RunningState | null, boolean]> {
     let stream = this._fromMemory(streamId)
@@ -314,7 +314,7 @@ export class Repository {
 
     stream = await this._fromStreamStateStore(streamId)
     if (stream) {
-      return [stream, this.wasPinnedStreamSynced(streamId)]
+      return [stream, this._wasPinnedStreamSynced(streamId)]
     }
     return [null, false]
   }
@@ -325,7 +325,7 @@ export class Repository {
    * @param streamId
    * @param syncTimeoutSeconds - How much time do we wait for a response from the network.
    */
-  async _loadStreamFromNetwork(
+  private async _loadStreamFromNetwork(
     streamId: StreamID,
     syncTimeoutSeconds: number
   ): Promise<RunningState> {
@@ -336,7 +336,7 @@ export class Repository {
     return newState$
   }
 
-  async _genesisFromNetwork(streamId: StreamID): Promise<RunningState> {
+  private async _genesisFromNetwork(streamId: StreamID): Promise<RunningState> {
     const state = await this.streamLoader.loadGenesisState(streamId)
     Metrics.count(CACHE_HIT_REMOTE, 1)
 
@@ -353,7 +353,7 @@ export class Repository {
    * @param state$ - Current stream state.
    * @param syncTimeoutSeconds - How much time do we wait for a response from the network.
    */
-  async _sync(state$: RunningState, syncTimeoutSeconds: number): Promise<void> {
+  private async _sync(state$: RunningState, syncTimeoutSeconds: number): Promise<void> {
     const syncedState = await this.streamLoader.syncStream(state$.state, syncTimeoutSeconds)
     state$.next(syncedState)
     Metrics.count(STREAM_SYNC, 1)
@@ -373,7 +373,7 @@ export class Repository {
    * @param syncTimeoutSeconds
    * @param existingState$
    */
-  async _resyncStreamFromNetwork(
+  private async _resyncStreamFromNetwork(
     streamId: StreamID,
     syncTimeoutSeconds: number,
     existingState$: RunningState | null
@@ -407,7 +407,10 @@ export class Repository {
     return this._atCommit(commitId, base$)
   }
 
-  async _atCommit(commitId: CommitID, existingState$: RunningState): Promise<SnapshotState> {
+  private async _atCommit(
+    commitId: CommitID,
+    existingState$: RunningState
+  ): Promise<SnapshotState> {
     return this.executionQ.forStream(commitId).run(async () => {
       const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
 
@@ -462,7 +465,7 @@ export class Repository {
       state$.next(updatedState) // emit the new state
 
       await this._updateStateIfPinned(state$)
-      await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+      await this._applyWriteOpts(state$, opts, OperationType.UPDATE)
       this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
 
       return state$
@@ -498,7 +501,7 @@ export class Repository {
    * @param cid - tip CID
    * @returns boolean - whether or not the tip was actually applied
    */
-  async _handleTip(state$: RunningState, cid: CID): Promise<boolean> {
+  private async _handleTip(state$: RunningState, cid: CID): Promise<boolean> {
     return this.executionQ.forStream(state$.id).run(async () => {
       this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
@@ -543,7 +546,7 @@ export class Repository {
   /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  _confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
+  private _confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
     const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
     return this._processAnchorResponse(state$, anchorStatus$)
   }
@@ -555,7 +558,10 @@ export class Repository {
    * @param anchorEvent - response from CAS.
    * @return boolean - `true` if polling should stop, `false` if polling continues
    */
-  async _handleAnchorResponse(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
+  private async _handleAnchorResponse(
+    state$: RunningState,
+    anchorEvent: AnchorEvent
+  ): Promise<boolean> {
     // We don't want to change a stream's state due to changes to the anchor
     // status of a commit that is no longer the tip of the stream, so we early return
     // in most cases when receiving a response to an old anchor request.
@@ -620,7 +626,7 @@ export class Repository {
     }
   }
 
-  _processAnchorResponse(
+  private _processAnchorResponse(
     state$: RunningState,
     anchorStatus$: Observable<AnchorEvent>
   ): Subscription {
@@ -678,7 +684,11 @@ export class Repository {
    * @param witnessCAR - CAR file with all the IPLD objects needed to apply and verify the anchor commit
    * @private
    */
-  async _handleAnchorCommit(state$: RunningState, tip: CID, witnessCAR: CAR): Promise<void> {
+  private async _handleAnchorCommit(
+    state$: RunningState,
+    tip: CID,
+    witnessCAR: CAR
+  ): Promise<void> {
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
     for (
@@ -730,7 +740,11 @@ export class Repository {
    * @param opType - If we load, create or update a stream
    * @private
    */
-  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts, opType: OperationType) {
+  private async _applyWriteOpts(
+    state$: RunningState,
+    opts: CreateOpts | UpdateOpts,
+    opType: OperationType
+  ) {
     const anchor = opts.anchor
     const publish = opts.publish
     if (anchor) {
@@ -740,10 +754,10 @@ export class Repository {
       this._publishTip(state$)
     }
 
-    await this.handlePinOpts(state$, opts as PinningOpts, opType)
+    await this._handlePinOpts(state$, opts as PinningOpts, opType)
   }
 
-  _publishTip(state$: RunningState): void {
+  private _publishTip(state$: RunningState): void {
     this.dispatcher.publishTip(state$.id, state$.tip, state$.state.metadata.model)
   }
 
@@ -757,7 +771,7 @@ export class Repository {
    * @param opts
    * @param opType - what type of operation is being performed
    */
-  async handlePinOpts(
+  private async _handlePinOpts(
     state$: RunningState,
     opts: PinningOpts,
     opType: OperationType
@@ -796,7 +810,7 @@ export class Repository {
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
     const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
-    await this.applyWriteOpts(state, opts, opType)
+    await this._applyWriteOpts(state, opts, opType)
     return state
   }
 
@@ -809,7 +823,8 @@ export class Repository {
   }
 
   /**
-   * Return a stream state, either from cache or from state store.
+   * Return a stream state, either from cache or from state store. Bypasses the stream cache
+   * and loading queue, use with caution.
    */
   async streamState(streamId: StreamID): Promise<StreamState | undefined> {
     const fromMemory = this.inmemory.get(streamId.toString())
@@ -823,7 +838,7 @@ export class Repository {
   /**
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
-  _registerRunningState(state$: RunningState): void {
+  private _registerRunningState(state$: RunningState): void {
     this.inmemory.set(state$.id.toString(), state$)
   }
 
@@ -848,6 +863,14 @@ export class Repository {
     return this.#deps.pinStore.rm(state$)
   }
 
+  /**
+   * List pinned streams as array of StreamID strings.
+   * If `streamId` is passed, indicate if it is pinned.
+   */
+  async listPinned(streamId?: StreamID): Promise<string[]> {
+    return this.#deps.pinStore.ls(streamId)
+  }
+
   markPinnedAndSynced(streamId: StreamID): void {
     this.#syncedPinnedStreams.add(streamId.toString())
   }
@@ -863,16 +886,8 @@ export class Repository {
    * about updates to them.
    * @param streamId
    */
-  wasPinnedStreamSynced(streamId: StreamID): boolean {
+  private _wasPinnedStreamSynced(streamId: StreamID): boolean {
     return this.#syncedPinnedStreams.has(streamId.toString())
-  }
-
-  /**
-   * List pinned streams as array of StreamID strings.
-   * If `streamId` is passed, indicate if it is pinned.
-   */
-  async listPinned(streamId?: StreamID): Promise<string[]> {
-    return this.#deps.pinStore.ls(streamId)
   }
 
   /**
@@ -898,9 +913,9 @@ export class Repository {
 
   /**
    * Helper function to add stream to db index if it has a 'model' in its metadata.
-   * @public
+   * @private
    */
-  public async indexStreamIfNeeded(state$: RunningState): Promise<void> {
+  private async _indexStreamIfNeeded(state$: RunningState): Promise<void> {
     if (!state$.value.metadata.model) {
       return
     }

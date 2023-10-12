@@ -614,7 +614,7 @@ test('subscribe makes state endured', async () => {
 describe('applyWriteOpts', () => {
   test('dont publish on LOAD', async () => {
     const publishSpy = jest.spyOn(repository, '_publishTip')
-    await repository.applyWriteOpts(
+    await repository._applyWriteOpts(
       new RunningState(TestUtils.makeStreamState(), false),
       { publish: true },
       OperationType.LOAD
@@ -625,9 +625,9 @@ describe('applyWriteOpts', () => {
     const operations = [/*OperationType.UPDATE,*/ OperationType.CREATE]
     for (const operation of operations) {
       const publishSpy = jest.spyOn(repository, '_publishTip')
-      const pinSpy = jest.spyOn(repository, 'handlePinOpts')
+      const pinSpy = jest.spyOn(repository, '_handlePinOpts')
       pinSpy.mockImplementationOnce(() => Promise.resolve())
-      await repository.applyWriteOpts(
+      await repository._applyWriteOpts(
         new RunningState(TestUtils.makeStreamState(), false),
         { publish: true },
         operation
