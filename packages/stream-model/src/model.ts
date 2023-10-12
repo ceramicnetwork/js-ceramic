@@ -11,6 +11,7 @@ import {
   SignedCommitContainer,
   CeramicSigner,
   GenesisHeader,
+  CeramicCoreApi,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
@@ -21,6 +22,57 @@ import { asDIDString } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
 import { ModelDefinition, type ModelMetadata, ModelRelationsDefinition } from './codecs.js'
+
+export type LoaderApi = CeramicApi | CeramicCoreApi
+
+export type LoadingInterfaceImplements = Record<string, Promise<Array<string>>>
+
+/**
+ * Load a model and validate it is an interface, then return the interfaces it implements
+ *
+ * @param loader LoaderApi
+ * @param modelID string
+ * @returns Promise<Array<string>>
+ */
+export async function loadInterfaceImplements(
+  loader: LoaderApi,
+  modelID: string
+): Promise<Array<string>> {
+  const model = await Model.load(loader, modelID)
+  if (model.content.version === '1.0' || !model.content.interface) {
+    throw new Error(`Model ${modelID} is not an interface`)
+  }
+  return model.content.implements ?? []
+}
+
+/**
+ * Recursively load all the interfaces implemented by the given interfaces input.
+ * The output will contain duplicate entries if interfaces are implemented multiple times.
+ *
+ * @param loader LoaderApi
+ * @param interfaces Array<string>
+ * @param loading LoadingInterfaceImplements
+ * @returns Promise<Array<string>>
+ */
+export async function loadAllModelInterfaces(
+  loader: LoaderApi,
+  interfaces: Array<string>,
+  loading: LoadingInterfaceImplements = {}
+): Promise<Array<string>> {
+  // The same interfaces could be implemented multiple times so we synchronously keep track of their loading
+  const toLoad = interfaces.map((modelID) => {
+    if (loading[modelID] == null) {
+      loading[modelID] = loadInterfaceImplements(loader, modelID).then((ownImplements) => {
+        return loadAllModelInterfaces(loader, ownImplements, loading).then((subImplements) => {
+          return [...ownImplements, ...subImplements]
+        })
+      })
+    }
+    return loading[modelID]
+  })
+  const loaded = await Promise.all(toLoad)
+  return Array.from(new Set(interfaces.concat(loaded.flat())))
+}
 
 export const MODEL_VERSION_REGEXP = /^[0-9]+\.[0-9]+$/
 
@@ -88,7 +140,7 @@ export class Model extends Stream {
     return new StreamID('UNLOADABLE', cid)
   })()
 
-  static readonly VERSION = '1.0'
+  static readonly VERSION = '2.0'
 
   private _isReadOnly = false
 
@@ -114,8 +166,8 @@ export class Model extends Stream {
     content: ModelDefinition,
     metadata?: ModelMetadataArgs
   ): Promise<Model> {
-    Model.assertComplete(content)
     Model.assertVersionValid(content, 'minor')
+    Model.assertComplete(content)
 
     const opts: CreateOpts = {
       publish: true,
@@ -145,6 +197,9 @@ export class Model extends Stream {
     content: ModelDefinition,
     satisfies: ValidVersionSatisfies = 'minor'
   ): void {
+    if (content.version == null) {
+      throw new Error(`Missing version for model ${content.name}`)
+    }
     const [expectedMajor, expectedMinor] = parseModelVersion(Model.VERSION)
     const [major, minor] = parseModelVersion(content.version)
 
@@ -175,7 +230,7 @@ export class Model extends Stream {
    * @param opts - Additional options
    */
   static async load(
-    ceramic: CeramicApi,
+    ceramic: LoaderApi,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<Model> {

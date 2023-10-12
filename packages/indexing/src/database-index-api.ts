@@ -21,6 +21,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { indexNameFromTableName } from './migrations/1-create-model-table.js'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
+export const MODEL_IMPLEMENTS_TABLE_NAME = 'ceramic_model_implements'
 
 export interface IndexStreamArgs {
   readonly streamID: StreamID
@@ -55,6 +56,7 @@ export interface IndexModelArgs {
   readonly model: StreamID
   relations?: ModelRelationsDefinition
   indices?: Array<FieldsIndex>
+  implements?: Array<string>
 }
 
 type IndexedData<DateType> = {
@@ -127,26 +129,38 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     if (models.length === 0) return
     await this.tablesManager.initMidTables(models)
     await this.tablesManager.verifyTables(models)
-    //
-    // : CDB-1866 - populate the updated_by field properly when auth is implemented
-    await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME)
-      .insert(
-        models.map((indexModelArgs) => {
-          return {
-            model: indexModelArgs.model.toString(),
-            ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
-            is_indexed: true,
-            updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
-            updated_at: this.now(),
-          }
+
+    await this.dbConnection.transaction(async (trx) => {
+      // : CDB-1866 - populate the updated_by field properly when auth is implemented
+      await trx(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .insert(
+          models.map((indexModelArgs) => {
+            return {
+              model: indexModelArgs.model.toString(),
+              ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
+              is_indexed: true,
+              updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+              updated_at: this.now(),
+            }
+          })
+        )
+        .onConflict('model')
+        .merge({
+          updated_at: this.now(),
+          is_indexed: true,
+          updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
         })
-      )
-      .onConflict('model')
-      .merge({
-        updated_at: this.now(),
-        is_indexed: true,
-        updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+
+      const modelImplements = models.flatMap((args) => {
+        const modelID = args.model.toString()
+        return (args.implements ?? []).map((interfaceID) => {
+          return { interface_id: interfaceID, implemented_by_id: modelID }
+        })
       })
+      if (modelImplements.length) {
+        await trx(MODEL_IMPLEMENTS_TABLE_NAME).insert(modelImplements).onConflict().ignore()
+      }
+    })
   }
 
   /**

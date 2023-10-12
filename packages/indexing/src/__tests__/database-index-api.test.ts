@@ -7,12 +7,13 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { asTableName } from '../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { LoggerProvider, Networks } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks, type CeramicCoreApi } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import {
   asTimestamp,
   fieldsIndexName,
   INDEXED_MODEL_CONFIG_TABLE_NAME,
+  MODEL_IMPLEMENTS_TABLE_NAME,
   IndexModelArgs,
   PostgresIndexApi,
   SqliteIndexApi,
@@ -54,6 +55,12 @@ const STREAM_TEST_DATA_PROFILE_B = {
 const FAKE_CID_A = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_B = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const logger = new LoggerProvider().getDiagnosticsLogger()
+
+const MODEL_ID_1 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001'
+const MODEL_ID_2 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka002'
+const MODEL_ID_3 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka003'
+const MODEL_ID_4 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka004'
+const MODEL_ID_5 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka005'
 
 let tmpFolder: tmp.DirectoryResult
 let dbConnection: Knex
@@ -662,6 +669,36 @@ describe('postgres', () => {
       ])
       expect(indexApi.getIndexedModels().map((idx) => idx.streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      ])
+    })
+
+    test('interfaces relations are added when indexing models', async () => {
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
+      await indexApi.init()
+
+      await indexApi.indexModels([
+        { model: StreamID.fromString(MODEL_ID_3), implements: [MODEL_ID_1, MODEL_ID_2] },
+      ])
+      await expect(
+        dbConnection(MODEL_IMPLEMENTS_TABLE_NAME).select('interface_id', 'implemented_by_id')
+      ).resolves.toEqual([
+        { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_3 },
+        { interface_id: MODEL_ID_2, implemented_by_id: MODEL_ID_3 },
+      ])
+
+      await indexApi.indexModels([
+        // Indexing the same model again does not create duplicates
+        { model: StreamID.fromString(MODEL_ID_3), implements: [MODEL_ID_1, MODEL_ID_2] },
+        { model: StreamID.fromString(MODEL_ID_5), implements: [MODEL_ID_1, MODEL_ID_4] },
+      ])
+      await expect(
+        dbConnection(MODEL_IMPLEMENTS_TABLE_NAME).select('interface_id', 'implemented_by_id')
+      ).resolves.toEqual([
+        { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_3 },
+        { interface_id: MODEL_ID_2, implemented_by_id: MODEL_ID_3 },
+        { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_5 },
+        { interface_id: MODEL_ID_4, implemented_by_id: MODEL_ID_5 },
       ])
     })
   })
@@ -1460,6 +1497,36 @@ describe('sqlite', () => {
       ])
       expect(indexApi.getIndexedModels().map((idx) => idx.streamID.toString())).toEqual([
         'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      ])
+    })
+
+    test('interfaces relations are added when indexing models', async () => {
+      const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
+      await indexApi.init()
+
+      await indexApi.indexModels([
+        { model: StreamID.fromString(MODEL_ID_3), implements: [MODEL_ID_1, MODEL_ID_2] },
+      ])
+      await expect(
+        dbConnection(MODEL_IMPLEMENTS_TABLE_NAME).select('interface_id', 'implemented_by_id')
+      ).resolves.toEqual([
+        { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_3 },
+        { interface_id: MODEL_ID_2, implemented_by_id: MODEL_ID_3 },
+      ])
+
+      await indexApi.indexModels([
+        // Indexing the same model again does not create duplicates
+        { model: StreamID.fromString(MODEL_ID_3), implements: [MODEL_ID_1, MODEL_ID_2] },
+        { model: StreamID.fromString(MODEL_ID_5), implements: [MODEL_ID_1, MODEL_ID_4] },
+      ])
+      await expect(
+        dbConnection(MODEL_IMPLEMENTS_TABLE_NAME).select('interface_id', 'implemented_by_id')
+      ).resolves.toEqual([
+        { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_3 },
+        { interface_id: MODEL_ID_2, implemented_by_id: MODEL_ID_3 },
+        { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_5 },
+        { interface_id: MODEL_ID_4, implemented_by_id: MODEL_ID_5 },
       ])
     })
   })

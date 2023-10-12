@@ -1,9 +1,48 @@
 import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
-import type { DiagnosticsLogger, Page } from '@ceramicnetwork/common'
+import type {
+  CeramicCoreApi,
+  Context,
+  DiagnosticsLogger,
+  Page,
+  RunningStateLike,
+  StreamState,
+} from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
-import { type CeramicCoreApi, LocalIndexApi } from '../local-index-api.js'
-import { Networks } from '@ceramicnetwork/common'
+import { LocalIndexApi } from '../local-index-api.js'
+import { Networks, StreamUtils } from '@ceramicnetwork/common'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { Model } from '@ceramicnetwork/stream-model'
+import { BehaviorSubject, Observable } from 'rxjs'
+
+class StateLink extends Observable<StreamState> implements RunningStateLike {
+  private readonly state$: BehaviorSubject<StreamState>
+
+  /**
+   * @param initial - initial state
+   * @param update$ - external feed of StreamState updates to this stream
+   */
+  constructor(private readonly initial: StreamState) {
+    super()
+    this.state$ = new BehaviorSubject(initial)
+  }
+
+  next(state: StreamState): void {
+    this.state$.next(state)
+  }
+
+  get state(): StreamState {
+    return this.state$.value
+  }
+
+  get value(): StreamState {
+    return this.state$.value
+  }
+
+  get id(): StreamID {
+    return StreamUtils.streamIdFromState(this.state)
+  }
+}
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
@@ -132,4 +171,80 @@ test('count', async () => {
   const actual = await indexApi.count(query)
   expect(actual).toEqual(expected)
   expect(countFn).toBeCalledWith(query)
+})
+
+describe('index models with interfaces', () => {
+  const MODEL_ID_1 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001'
+  const MODEL_ID_2 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka002'
+  const MODEL_ID_3 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka003'
+  const MODEL_ID_4 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka004'
+  const MODEL_ID_5 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka005'
+
+  test('throws when trying to index an interface model', async () => {
+    const loadStream = jest.fn(() => ({ state: { content: { version: '2.0', interface: true } } }))
+    const core = { loadStream } as unknown as CeramicCoreApi
+    const noop = jest.fn()
+    const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
+    const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
+    ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [] }
+
+    await expect(
+      indexApi.indexModels([{ streamID: StreamID.fromString(MODEL_ID_1) }])
+    ).rejects.toThrow(
+      'Model kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001 is an interface and cannot be indexed'
+    )
+  })
+
+  test('recursively loads the implemented interfaces', async () => {
+    const streamImplements = {
+      [MODEL_ID_1]: [],
+      [MODEL_ID_2]: [MODEL_ID_1],
+      [MODEL_ID_3]: [MODEL_ID_2],
+      [MODEL_ID_4]: [MODEL_ID_1, MODEL_ID_3],
+      [MODEL_ID_5]: [MODEL_ID_1],
+    }
+    const loadStream = jest.fn((streamId: StreamID) => {
+      const id = streamId.toString()
+      const found = streamImplements[id]
+      if (found == null) {
+        throw new Error(`Stream not found: ${id}`)
+      }
+
+      const runningState = new StateLink({
+        content: {
+          version: '2.0',
+          interface: [MODEL_ID_1, MODEL_ID_2, MODEL_ID_3].includes(id),
+          implements: found,
+        },
+      } as unknown as StreamState)
+      return new Model(runningState as unknown as RunningStateLike, {} as unknown as Context)
+    })
+    const core = { loadStream } as unknown as CeramicCoreApi
+    const noop = jest.fn()
+    const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
+    const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
+    const indexModels = jest.fn()
+    ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [], indexModels }
+
+    const model4streamID = StreamID.fromString(MODEL_ID_4)
+    const model5streamID = StreamID.fromString(MODEL_ID_5)
+    await indexApi.indexModels([{ streamID: model4streamID }, { streamID: model5streamID }])
+
+    expect(indexModels).toHaveBeenCalledWith([
+      {
+        model: model4streamID,
+        implements: [
+          'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001',
+          'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka003',
+          'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka002',
+        ],
+        indices: undefined,
+      },
+      {
+        model: model5streamID,
+        implements: ['kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001'],
+        indices: undefined,
+      },
+    ])
+  })
 })

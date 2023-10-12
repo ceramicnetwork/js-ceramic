@@ -1,6 +1,10 @@
 import type { Knex } from 'knex'
 import { UnreachableCaseError, FieldsIndex, Networks } from '@ceramicnetwork/common'
-import { INDEXED_MODEL_CONFIG_TABLE_NAME, fieldsIndexName } from '../database-index-api.js'
+import {
+  INDEXED_MODEL_CONFIG_TABLE_NAME,
+  MODEL_IMPLEMENTS_TABLE_NAME,
+  fieldsIndexName,
+} from '../database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
 import { addColumnPrefix } from '../column-name.util.js'
 
@@ -307,6 +311,13 @@ export async function createConfigTable(
         value: NETWORK_DEFAULT_CONFIG['run_historical_sync_worker'],
       })
       break
+    case MODEL_IMPLEMENTS_TABLE_NAME:
+      await dataSource.schema.createTable(tableName, (table) => {
+        table.string('interface_id', 1024).notNullable()
+        table.string('implemented_by_id', 1024).notNullable()
+        table.unique(['interface_id', 'implemented_by_id'], 'idx_interface_model')
+      })
+      break
     default:
       throw new Error(`Invalid config table creation requested: ${tableName}`)
   }
@@ -330,6 +341,7 @@ export async function migrateConfigTable(
       }
       break
     case CONFIG_TABLE_NAME:
+    case MODEL_IMPLEMENTS_TABLE_NAME:
       //no migrations
       break
     default:

@@ -8,7 +8,11 @@ interface ColumnInfo {
   nullable: boolean
 }
 type TableInfo = Record<string, ColumnInfo>
-type TableName = 'COMMON_TABLE' | 'CONFIG_TABLE_MODEL_INDEX' | 'CONFIG_TABLE'
+type TableName =
+  | 'COMMON_TABLE'
+  | 'CONFIG_TABLE_MODEL_INDEX'
+  | 'CONFIG_TABLE'
+  | 'MODEL_IMPLEMENTS_TABLE'
 type StructuresRecord = Record<TableName, TableInfo> & { RELATION_COLUMN: ColumnInfo }
 
 export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
@@ -161,6 +165,24 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         defaultValue: null,
       },
     },
+    /**
+     * Valid Postgres table structure for model interfaces table
+     * Used to verify table integrity during node startup
+     */
+    MODEL_IMPLEMENTS_TABLE: {
+      interface_id: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null,
+      },
+      implemented_by_id: {
+        type: 'character varying',
+        maxLength: 1024,
+        nullable: false,
+        defaultValue: null,
+      },
+    },
   },
   [DatabaseType.SQLITE]: {
     /**
@@ -308,6 +330,24 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
         type: 'varchar',
         maxLength: '1024',
         nullable: true,
+        defaultValue: null,
+      },
+    },
+    /**
+     * Valid SQLite table structure for model interfaces table
+     * Used to verify table integrity during node startup
+     */
+    MODEL_IMPLEMENTS_TABLE: {
+      interface_id: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
+        defaultValue: null,
+      },
+      implemented_by_id: {
+        type: 'varchar',
+        maxLength: '1024',
+        nullable: false,
         defaultValue: null,
       },
     },

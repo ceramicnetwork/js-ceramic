@@ -22,7 +22,7 @@ import type { CAR } from 'cartonne'
 function getModelDef(name: string): ModelDefinition {
   return {
     name: name,
-    version: Model.VERSION,
+    version: '1.0',
     accountRelation: { type: 'list' },
     schema: {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
