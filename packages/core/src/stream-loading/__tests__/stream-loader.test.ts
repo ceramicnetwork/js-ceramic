@@ -20,7 +20,6 @@ import { HandlersMap } from '../../handlers-map.js'
 import { StreamLoader } from '../stream-loader.js'
 import { TipFetcher } from '../tip-fetcher.js'
 import { AnchorTimestampExtractor } from '../anchor-timestamp-extractor.js'
-import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
@@ -76,7 +75,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       logger,
       dispatcher,
-      ceramic.anchorService as InMemoryAnchorService
+      ceramic.anchorService.validator
     )
     const handlers = new HandlersMap(logger)
     const stateManipulator = new StateManipulator(
@@ -336,7 +335,7 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
     const anchorTimestampExtractor = new AnchorTimestampExtractor(
       logger,
       dispatcher,
-      ceramic.anchorService as InMemoryAnchorService
+      ceramic.anchorService.validator
     )
     const handlers = new HandlersMap(logger)
     const stateManipulator = new StateManipulator(

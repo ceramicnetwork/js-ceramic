@@ -80,18 +80,25 @@ describe('anchor', () => {
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       await ceramic.repository.anchor(streamState1, {})
 
+      // Wait for anchor to propagate to stream state
+      await TestUtils.delay(1000)
+      expect(stream1.state.log).toHaveLength(2)
+      expect(stream1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
       const ceramic2 = await createCeramic(ipfs)
       const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id, { syncTimeoutSeconds: 0 })
       stream2.subscribe()
       const streamState2 = await ceramic2.repository.load(stream2.id, {})
 
       expect(stream2.content).toEqual(stream1.content)
+      expect(stream2.state.log).toHaveLength(1)
       expect(stream2.state).toEqual(
         expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 })
       )
 
       await ceramic2.repository._internals.handleTip(streamState2, stream1.state.log[1].cid)
 
+      expect(stream2.state.log).toHaveLength(2)
       expect(stream2.state).toEqual(stream1.state)
       await ceramic2.close()
     })

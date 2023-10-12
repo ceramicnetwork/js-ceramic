@@ -9,7 +9,6 @@ import {
   DiagnosticsLogger,
   StreamUtils,
   LoadOpts,
-  AnchorService,
   CeramicApi,
   CeramicCommit,
   IpfsApi,
@@ -34,7 +33,6 @@ import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
-import { ConflictResolution } from './conflict-resolution.js'
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
@@ -60,6 +58,8 @@ import {
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
 import { StreamUpdater } from './stream-loading/stream-updater.js'
+import type { AnchorService } from './anchor/anchor-service.js'
+import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -140,6 +140,7 @@ export interface CeramicModules {
   repository: Repository
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -244,13 +245,6 @@ export class Ceramic implements CeramicApi {
       this.dispatcher,
       modules.anchorService.validator
     )
-    const conflictResolution = new ConflictResolution(
-      this._logger,
-      anchorTimestampExtractor,
-      this.dispatcher,
-      this.context,
-      this._streamHandlers
-    )
     const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
     const logSyncer = new LogSyncer(this.dispatcher)
     const stateManipulator = new StateManipulator(
@@ -288,10 +282,10 @@ export class Ceramic implements CeramicApi {
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
-      conflictResolution: conflictResolution,
       indexing: localIndex,
       streamLoader,
       streamUpdater,
+      anchorRequestCarBuilder: modules.anchorRequestCarBuilder,
     })
     this.syncApi = new SyncApi(
       {
@@ -380,6 +374,7 @@ export class Ceramic implements CeramicApi {
       !config.disablePeerDataSync,
       maxQueriesPerSecond
     )
+    const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
     const pinStoreOptions = {
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
@@ -411,6 +406,7 @@ export class Ceramic implements CeramicApi {
       repository,
       shutdownSignal,
       providersCache,
+      anchorRequestCarBuilder,
     }
 
     return [modules, params]
@@ -603,23 +599,19 @@ export class Ceramic implements CeramicApi {
     if (this._gateway) {
       throw new Error('Writes to streams are not supported in gateway mode')
     }
-
-    const id = normalizeStreamID(streamId)
-    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
+    const id = normalizeStreamID(streamId)
 
-    const stream = streamFromState<T>(
+    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
+    const state$ = await this.repository.applyCommit(id, commit, opts as CreateOpts)
+    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+
+    return streamFromState<T>(
       this.context,
       this._streamHandlers,
       state$.value,
       this.repository.updates$
     )
-
-    await this.repository.indexStreamIfNeeded(state$)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
-
-    return stream
   }
 
   /**

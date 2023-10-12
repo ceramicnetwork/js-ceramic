@@ -6,7 +6,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { applyTipToState } from './apply-tip-helper.js'
 
-interface CommitStorer {
+type CommitStorer = {
   storeCommit(data: any, streamId?: StreamID): Promise<CID>
 }
 
@@ -57,19 +57,34 @@ export class StreamUpdater {
    * @param commit
    */
   async applyCommitFromUser(state: StreamState, commit: CeramicCommit): Promise<StreamState> {
-    const tip = await this.commitStorer.storeCommit(commit, StreamUtils.streamIdFromState(state))
+    const streamId = StreamUtils.streamIdFromState(state)
 
-    return applyTipToState(
+    const commitCid = await this.commitStorer.storeCommit(
+      commit,
+      StreamUtils.streamIdFromState(state)
+    )
+    this.logger.verbose(
+      `StreamUpdater stored commit for stream ${streamId.toString()}, CID: ${commitCid.toString()}`
+    )
+
+    const updatedState = await applyTipToState(
       this.logSyncer,
       this.anchorTimestampExtractor,
       this.stateManipulator,
       state,
-      tip,
+      commitCid,
       {
         throwOnInvalidCommit: true,
         throwIfStale: true,
         throwOnConflict: true,
       }
     )
+
+    const newTip = StreamUtils.tipFromState(updatedState)
+    this.logger.verbose(
+      `StreamUpdater applied commit ${commitCid.toString()} to stream ${streamId.toString()}. New tip: ${newTip.toString()} `
+    )
+
+    return updatedState
   }
 }

@@ -164,13 +164,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const modelStream = await context.api.loadStream<Model>(metadata.model)
     await this._validateContent(context.api, modelStream, newContent, false)
 
-    const nextState = cloneDeep(state)
-    nextState.signature = SignatureStatus.SIGNED
-    nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
-    nextState.content = newContent
-    nextState.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
+    state.signature = SignatureStatus.SIGNED
+    state.anchorStatus = AnchorStatus.NOT_REQUESTED
+    state.content = newContent
+    state.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
 
-    return nextState
+    return state
   }
 
   /**

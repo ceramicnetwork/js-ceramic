@@ -120,9 +120,18 @@ export class TestUtils {
     return new FakeRunningState(state)
   }
 
-  static async delay(ms: number) {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => resolve(), ms)
+  static async delay(ms: number, signal?: AbortSignal): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => resolve(), ms)
+      if (signal) {
+        const handleAbort = () => {
+          clearTimeout(timeout)
+          signal.removeEventListener('abort', handleAbort)
+          reject(signal.reason)
+        }
+        if (signal.aborted) handleAbort()
+        signal.addEventListener('abort', handleAbort)
+      }
     })
   }
 

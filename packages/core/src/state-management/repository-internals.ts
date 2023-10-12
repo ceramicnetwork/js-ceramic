@@ -1,7 +1,6 @@
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import {
   type AnchorEvent,
-  type AnchorService,
   AnchorStatus,
   CommitType,
   Context,
@@ -24,26 +23,21 @@ import {
   type Subscription,
   catchError,
   concatMap,
-  lastValueFrom,
-  merge,
-  of,
   takeUntil,
-  timer,
 } from 'rxjs'
 
-import { ConflictResolution } from '../conflict-resolution.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
 
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { PinStore } from '../store/pin-store.js'
-import { Utils } from '../utils.js'
 
 import type { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { StateCache } from './state-cache.js'
 import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
+import type { AnchorService } from '../anchor/anchor-service.js'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 const CACHE_HIT_LOCAL = 'cache_hit_local'
@@ -56,7 +50,6 @@ const STREAM_SYNC = 'stream_sync'
 export type RepositoryInternalsParams = {
   anchorRequestStore: AnchorRequestStore
   anchorService: AnchorService
-  conflictResolution: ConflictResolution
   context: Context
   dispatcher: Dispatcher
   executionQ: ExecutionQueue
@@ -73,7 +66,6 @@ export type RepositoryInternalsParams = {
 export class RepositoryInternals {
   #anchorRequestStore: AnchorRequestStore
   #anchorService: AnchorService
-  #conflictResolution: ConflictResolution
   #context: Context
   #dispatcher: Dispatcher
   #executionQ: ExecutionQueue
@@ -99,7 +91,6 @@ export class RepositoryInternals {
   constructor(params: RepositoryInternalsParams) {
     this.#anchorRequestStore = params.anchorRequestStore
     this.#anchorService = params.anchorService
-    this.#conflictResolution = params.conflictResolution
     this.#context = params.context
     this.#dispatcher = params.dispatcher
     this.#executionQ = params.executionQ
@@ -191,6 +182,7 @@ export class RepositoryInternals {
       StreamUtils.checkForCacaoExpiration(state$.state)
     }
 
+    // TODO(WS1-1269): No need to update state if we loaded from the cache or state store
     await this._updateStateIfPinned(state$)
     if (synced && state$.isPinned) {
       this.markPinnedAndSynced(state$.id)
@@ -537,18 +529,15 @@ export class RepositoryInternals {
    * Applies the given tip CID as a new commit to the given running state.
    * @param state$ - State to apply tip to
    * @param cid - tip CID
-   * @param opts - options that control the behavior when applying the commit
    * @returns boolean - whether or not the tip was actually applied
    */
-  async handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<boolean> {
-    // by default swallow and log errors applying commits
-    opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
+  async handleTip(state$: RunningState, cid: CID): Promise<boolean> {
     this.#logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
-    const next = await this.#conflictResolution.applyTip(state$.value, cid, opts)
+    const next = await this.#streamUpdater.applyTipFromNetwork(state$.state, cid)
     if (next) {
+      await this._updateStateIfPinned(state$)
       state$.next(next)
       this.#logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
-      await this._updateStateIfPinned(state$)
       return true
     } else {
       return false

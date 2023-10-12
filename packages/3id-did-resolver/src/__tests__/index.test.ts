@@ -1,32 +1,30 @@
-import { jest } from '@jest/globals'
+import { jest, afterAll } from '@jest/globals'
+import HttpRequestMock from 'http-request-mock'
+import { Resolver } from 'did-resolver'
 import { readFileSync } from 'node:fs'
 
 const VECTORS_PATH = new URL('./vectors.json', import.meta.url)
 const vectors = JSON.parse(readFileSync(VECTORS_PATH, 'utf-8'))
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const mockedCalls = vectors['http-mock']
-  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
-    ok: true,
-    json: async () => {
-      const call = mockedCalls[url]
-      if (opts.method === 'post') {
-        const result = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
+const mockedCalls = vectors['http-mock']
+const mocker = HttpRequestMock.setup()
+for (const url of Object.keys(mockedCalls)) {
+  mocker.mock({
+    url: url,
+    body: async (req) => {
+      const call = mockedCalls[req.url]
+      if (req.method === 'POST') {
+        const result = call.find(({ expectedBody }) => req.body === JSON.stringify(expectedBody))
         if (result?.response) {
           return result.response
         } else {
-          throw new Error('Could not find response for http body: ' + opts.body)
+          throw new Error('Could not find response for http body: ' + req.body)
         }
       }
       return call.response
     },
-  }))
-  return {
-    default: fetchFunc,
-  }
-})
-
-import { Resolver } from 'did-resolver'
+  })
+}
 
 const DID_LD_JSON = 'application/did+ld+json'
 const v1 = '3IDv1'
@@ -40,6 +38,10 @@ const toLdFormat = (result) => {
   newResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
   return newResult
 }
+
+afterAll(() => {
+  mocker.reset()
+})
 
 describe('3ID DID Resolver', () => {
   jest.setTimeout(20000)

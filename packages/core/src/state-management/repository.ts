@@ -1,7 +1,6 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import {
   AnchorOpts,
-  AnchorService,
   CommitType,
   Context,
   CreateOpts,
@@ -20,7 +19,6 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
-import type { ConflictResolution } from '../conflict-resolution.js'
 import type { HandlersMap } from '../handlers-map.js'
 import { Observable, Subscription } from 'rxjs'
 import { StateCache } from './state-cache.js'
@@ -33,6 +31,8 @@ import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
+import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 
 const CACHE_EVICTED_MEMORY = 'cache_eviction_memory'
 
@@ -44,10 +44,10 @@ export type RepositoryDependencies = {
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
-  conflictResolution: ConflictResolution
   indexing: LocalIndexApi
   streamLoader: StreamLoader
   streamUpdater: StreamUpdater
+  anchorRequestCarBuilder: AnchorRequestCarBuilder
 }
 
 /**
@@ -148,6 +148,10 @@ export class Repository {
     return this.#deps.streamLoader
   }
 
+  private get streamUpdater(): StreamUpdater {
+    return this.#deps.streamUpdater
+  }
+
   /**
    * Returns the number of streams with writes that are waiting to be anchored by the CAS.
    */
@@ -173,7 +177,6 @@ export class Repository {
     this._internals = new RepositoryInternals({
       anchorRequestStore: deps.anchorRequestStore,
       anchorService: deps.anchorService,
-      conflictResolution: deps.conflictResolution,
       context: deps.context,
       dispatcher: deps.dispatcher,
       executionQ: this.executionQ,
@@ -191,10 +194,10 @@ export class Repository {
       deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
-      deps.conflictResolution,
       this.logger,
       deps.indexing,
-      this._internals
+      this._internals,
+      deps.anchorRequestCarBuilder
     )
   }
 
@@ -267,10 +270,25 @@ export class Repository {
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
-    const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
-    await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
-    this.logger.verbose(`Repository applied write options to stream ${streamId.toString()}`)
-    return state$
+
+    const state$ = await this._internals.load(streamId, opts)
+    this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      const originalState = state$.state
+      const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
+      if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
+        return state$ // nothing changed
+      }
+
+      state$.next(updatedState) // emit the new state
+
+      await this._internals._updateStateIfPinned(state$)
+      await this.applyWriteOpts(state$, opts, OperationType.UPDATE)
+      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
+
+      return state$
+    })
   }
 
   /**
@@ -281,7 +299,19 @@ export class Repository {
    * @param model - Model Stream ID
    */
   async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    return this.stateManager.handleUpdate(streamId, tip, model)
+    let state$ = await this._internals.fromMemoryOrStore(streamId)
+    const shouldIndex = model && this.index.shouldIndexStream(model)
+    if (!shouldIndex && !state$) {
+      // stream isn't pinned or indexed, nothing to do
+      return
+    }
+
+    if (!state$) {
+      state$ = await this._internals.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._internals.handleTip(state$, tip)
+    })
   }
 
   /**
