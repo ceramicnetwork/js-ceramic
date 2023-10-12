@@ -11,7 +11,7 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import type { ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
   CeramicApi,
   CommitType,
@@ -66,6 +66,9 @@ const FAKE_MODEL_ID2 = StreamID.fromString(
 )
 const FAKE_MODEL_IDBLOB = StreamID.fromString(
   'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5b'
+)
+const FAKE_MODEL_INTERFACE_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5c'
 )
 
 const CONTENT0 = { myData: 0 }
@@ -251,6 +254,25 @@ const MODEL_DEFINITION_BLOB: ModelDefinition = {
   },
 }
 
+const MODEL_INTERFACE_DEFINITION: ModelDefinition = {
+  name: 'MyInterfaceModel',
+  version: '2.0',
+  interface: true,
+  implements: [],
+  accountRelation: { type: 'none' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'string',
+      },
+    },
+    required: ['myData'],
+  },
+}
+
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
@@ -306,6 +328,12 @@ describe('ModelInstanceDocumentHandler', () => {
           return {
             content: MODEL_DEFINITION_BLOB,
             commitId: FAKE_MODEL_IDBLOB,
+          }
+        } else if (streamId.toString() == FAKE_MODEL_INTERFACE_ID.toString()) {
+          return {
+            id: FAKE_MODEL_INTERFACE_ID,
+            content: MODEL_INTERFACE_DEFINITION,
+            commitId: FAKE_MODEL_ID,
           }
         } else {
           throw new Error(
@@ -1080,5 +1108,26 @@ describe('ModelInstanceDocumentHandler', () => {
     delete state.metadata.unique
 
     expect(state).toMatchSnapshot()
+  })
+
+  test('throws when trying to create a MID with an interface model', async () => {
+    const commit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
+      controller: METADATA.controller,
+      model: FAKE_MODEL_INTERFACE_ID,
+    })) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
+
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
+    await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
+      `ModelInstanceDocument Streams cannot be created on interface Models. Use a different model than ${FAKE_MODEL_INTERFACE_ID.toString()} to create the ModelInstanceDocument.`
+    )
   })
 })

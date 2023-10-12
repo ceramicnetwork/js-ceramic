@@ -115,6 +115,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const modelStream = await context.api.loadStream<Model>(metadata.model)
+    this._validateModel(modelStream)
     await this._validateContent(context.api, modelStream, payload.data, true)
     await this._validateHeader(modelStream, payload.header)
 
@@ -181,6 +182,19 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _applyAnchor(commitData: CommitData, state: StreamState): Promise<StreamState> {
     return applyAnchorCommit(commitData, state)
+  }
+
+  /**
+   * Validates the ModelInstanceDocument can be created for the given model
+   * @param model - The model that this ModelInstanceDocument belongs to
+   * @private
+   */
+  _validateModel(model: Model): void {
+    if (model.content.version !== '1.0' && model.content.interface) {
+      throw new Error(
+        `ModelInstanceDocument Streams cannot be created on interface Models. Use a different model than ${model.id.toString()} to create the ModelInstanceDocument.`
+      )
+    }
   }
 
   /**
