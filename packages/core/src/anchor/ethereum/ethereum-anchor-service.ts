@@ -54,7 +54,7 @@ export class EthereumAnchorService implements AnchorService {
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson,
-    enableLoop = false
+    enableLoop = true
   ) {
     this.#logger = logger
     this.#pollInterval = pollInterval

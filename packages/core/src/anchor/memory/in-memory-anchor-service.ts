@@ -15,6 +15,7 @@ const CHAIN_ID = 'inmemory:12345'
 type InMemoryAnchorConfig = {
   anchorDelay: number
   anchorOnRequest: boolean
+  enableLoop: boolean
 }
 
 const DEFAULT_POLL_INTERVAL = 100 // 100 milliseconds
@@ -24,12 +25,13 @@ const MAX_POLL_TIME = 86_400_000 // 24 hours
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 export class InMemoryAnchorService implements AnchorService {
-  #store: AnchorRequestStore | undefined
-  #cas: InMemoryCAS
+  readonly #cas: InMemoryCAS
+  readonly #logger: DiagnosticsLogger
+  readonly #pollInterval = DEFAULT_POLL_INTERVAL
+  readonly #enableLoop: boolean
+
   #loop: AnchorProcessingLoop
-  #maxPollTime = MAX_POLL_TIME
-  #logger: DiagnosticsLogger
-  #pollInterval = DEFAULT_POLL_INTERVAL
+  #store: AnchorRequestStore | undefined
 
   readonly url = '<inmemory>'
   readonly validator: AnchorValidator
@@ -39,6 +41,7 @@ export class InMemoryAnchorService implements AnchorService {
     this.#cas = new InMemoryCAS(CHAIN_ID, _config.anchorOnRequest ?? true)
     this.validator = new InMemoryAnchorValidator(CHAIN_ID)
     this.#logger = logger
+    this.#enableLoop = _config.enableLoop ?? true
   }
 
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
@@ -52,7 +55,9 @@ export class InMemoryAnchorService implements AnchorService {
       this.#logger,
       eventHandler
     )
-    this.#loop.start()
+    if (this.#enableLoop) {
+      this.#loop.start()
+    }
   }
 
   /**
