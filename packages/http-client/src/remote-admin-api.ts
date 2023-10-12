@@ -88,7 +88,7 @@ export class RemoteAdminApi implements AdminApi {
       models: modelsIDs.map((idx) => idx.toString()),
     }
     await this._fetchJson(this.getModelsUrl(), {
-      method: 'post',
+      method: 'POST',
       body: {
         jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
       },
@@ -106,7 +106,7 @@ export class RemoteAdminApi implements AdminApi {
       }),
     }
     await this._fetchJson(this.getModelDataUrl(), {
-      method: 'post',
+      method: 'POST',
       body: {
         jws: await this.buildJWS(this._getDidFn(), code, this.getModelDataUrl().pathname, body),
       },
@@ -156,7 +156,7 @@ export class RemoteAdminApi implements AdminApi {
       models: modelsIDs.map((data) => data.toString()),
     }
     await this._fetchJson(this.getModelsUrl(), {
-      method: 'delete',
+      method: 'DELETE',
       body: {
         jws: await this.buildJWS(this._getDidFn(), code, this.getModelsUrl().pathname, body),
       },
@@ -173,7 +173,7 @@ export class RemoteAdminApi implements AdminApi {
       }),
     }
     await this._fetchJson(this.getModelDataUrl(), {
-      method: 'delete',
+      method: 'DELETE',
       body: {
         jws: await this.buildJWS(this._getDidFn(), code, this.getModelDataUrl().pathname, body),
       },

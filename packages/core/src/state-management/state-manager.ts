@@ -1,6 +1,5 @@
 import { Dispatcher } from '../dispatcher.js'
 import { ExecutionQueue } from './execution-queue.js'
-import { ConflictResolution } from '../conflict-resolution.js'
 import {
   AnchorOpts,
   AnchorStatus,
@@ -10,9 +9,7 @@ import {
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state.js'
-import { CID } from 'multiformats/cid'
 import type { Subscription } from 'rxjs'
-import { StreamID } from '@ceramicnetwork/streamid'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { AnchorRequestStore } from '../store/anchor-request-store.js'
 import type { RepositoryInternals } from './repository-internals.js'
@@ -25,7 +22,6 @@ export class StateManager {
    * @param dispatcher - currently used instance of Dispatcher
    * @param executionQ - currently used instance of ExecutionQueue
    * @param anchorService - currently used instance of AnchorService
-   * @param conflictResolution - currently used instance of ConflictResolution
    * @param logger - Logger
    * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#fromMemoryOrStore`.
    * @param load - `Repository#load`
@@ -36,7 +32,6 @@ export class StateManager {
     private readonly anchorRequestStore: AnchorRequestStore,
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
-    public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
     private readonly _index: LocalIndexApi,
     private readonly internals: RepositoryInternals,
@@ -64,30 +59,6 @@ export class StateManager {
     if (publish && opType !== OperationType.LOAD) {
       this.internals.publishTip(state$)
     }
-  }
-
-  /**
-   * Handles update. Update may come from the PubSub topic or from running a sync
-   *
-   * @param streamId
-   * @param tip - Stream Tip CID
-   * @param model - Model Stream ID
-   */
-  async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    let state$ = await this.internals.fromMemoryOrStore(streamId)
-    const shouldIndex = model && this._index.shouldIndexStream(model)
-    if (!shouldIndex && !state$) {
-      // stream isn't pinned or indexed, nothing to do
-      return
-    }
-
-    if (!state$) {
-      state$ = await this.internals.load(streamId)
-    }
-    this.executionQ.forStream(streamId).add(async () => {
-      await this.internals.handleTip(state$, tip)
-    })
-    await this.internals.indexStreamIfNeeded(state$)
   }
 
   /**

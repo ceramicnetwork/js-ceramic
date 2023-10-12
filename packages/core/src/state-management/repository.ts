@@ -19,7 +19,6 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import { StateManager } from './state-manager.js'
 import type { Dispatcher } from '../dispatcher.js'
-import type { ConflictResolution } from '../conflict-resolution.js'
 import type { HandlersMap } from '../handlers-map.js'
 import { Observable, Subscription } from 'rxjs'
 import { StateCache } from './state-cache.js'
@@ -45,7 +44,6 @@ export type RepositoryDependencies = {
   context: Context
   handlers: HandlersMap
   anchorService: AnchorService
-  conflictResolution: ConflictResolution
   indexing: LocalIndexApi
   streamLoader: StreamLoader
   streamUpdater: StreamUpdater
@@ -179,7 +177,6 @@ export class Repository {
     this._internals = new RepositoryInternals({
       anchorRequestStore: deps.anchorRequestStore,
       anchorService: deps.anchorService,
-      conflictResolution: deps.conflictResolution,
       context: deps.context,
       dispatcher: deps.dispatcher,
       executionQ: this.executionQ,
@@ -197,7 +194,6 @@ export class Repository {
       deps.anchorRequestStore,
       this.executionQ,
       deps.anchorService,
-      deps.conflictResolution,
       this.logger,
       deps.indexing,
       this._internals,
@@ -303,7 +299,19 @@ export class Repository {
    * @param model - Model Stream ID
    */
   async handleUpdate(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    return this.stateManager.handleUpdate(streamId, tip, model)
+    let state$ = await this._internals.fromMemoryOrStore(streamId)
+    const shouldIndex = model && this.index.shouldIndexStream(model)
+    if (!shouldIndex && !state$) {
+      // stream isn't pinned or indexed, nothing to do
+      return
+    }
+
+    if (!state$) {
+      state$ = await this._internals.load(streamId)
+    }
+    this.executionQ.forStream(streamId).add(async () => {
+      await this._internals.handleTip(state$, tip)
+    })
   }
 
   /**

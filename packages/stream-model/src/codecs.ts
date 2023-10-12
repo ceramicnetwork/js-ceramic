@@ -99,11 +99,20 @@ export const ModelAccountRelation = union(
 )
 export type ModelAccountRelation = TypeOf<typeof ModelAccountRelation>
 
+/**
+ * Represents the relationship between an instance of this model and the controller account:
+ * - 'list' means there can be many instances of this model for a single account
+ * - 'single' means there can be only one instance of this model per account (if a new instance is created it
+ * overrides the old one)
+ * - 'none' means there can be no instance associated to an account (for interfaces notably)
+ * - 'set' means there can be only one instance of this model per account and value of the specified content 'fields'
+ *
+ */
 export const ModelAccountRelationV2 = union(
   [
     strict({ type: literal('list') }),
     strict({ type: literal('single') }),
-    strict({ type: literal('none') }), // Interfaces have no account relation
+    strict({ type: literal('none') }),
     strict({ type: literal('set'), fields: array(string) }),
   ],
   'ModelAccountRelationV2'
@@ -127,6 +136,14 @@ export const ModelRelationDefinition = union(
 )
 export type ModelRelationDefinition = TypeOf<typeof ModelRelationDefinition>
 
+/**
+ * Identifies types of properties that are supported as relations by the indexing service.
+ *
+ * Currently supported types of relation properties:
+ * - 'account': references a DID property
+ * - 'document': references a StreamID property with associated 'model' the related document must use if provided
+ *
+ */
 export const ModelRelationDefinitionV2 = union(
   [
     strict({ type: literal('account') }),
@@ -200,6 +217,19 @@ export const ModelViewDefinition = union(
 )
 export type ModelViewDefinition = TypeOf<typeof ModelViewDefinition>
 
+/**
+ * Identifies types of properties that are supported as view properties at DApps' runtime
+ *
+ * A view-property is one that is not stored in related MIDs' content, but is derived from their other properties
+ *
+ * Currently supported types of view properties:
+ * - 'documentAccount': view properties of this type have the MID's controller DID as values
+ * - 'documentVersion': view properties of this type have the MID's commit ID as values
+ * - 'relationDocument': view properties of this type represent document relations identified by the given 'property' field
+ * - 'relationFrom': view properties of this type represent inverse relations identified by the given 'model' and 'property' fields
+ * - 'relationCountFrom': view properties of this type represent the number of inverse relations identified by the given 'model' and 'property' fields
+ *
+ */
 export const ModelViewDefinitionV2 = union(
   [ModelDocumentMetadataViewDefinition, ModelRelationViewDefinitionV2],
   'ModelViewDefinitionV2'
@@ -214,12 +244,14 @@ export type ModelViewDefinitionV2 = TypeOf<typeof ModelViewDefinitionV2>
 export const ModelViewsDefinition = record(string, ModelViewDefinition, 'ModelViewDefinition')
 export type ModelViewsDefinition = TypeOf<typeof ModelViewsDefinition>
 
+/**
+ * A mapping between model's property names and types of view properties
+ *
+ * It indicates which properties of a model are view properties and of what type
+ */
 export const ModelViewsDefinitionV2 = record(string, ModelViewDefinitionV2, 'ModelViewDefinitionV2')
 export type ModelViewsDefinitionV2 = TypeOf<typeof ModelViewsDefinitionV2>
 
-/**
- * Contents of a Model Stream.
- */
 export const ModelDefinitionV1 = sparse(
   {
     version: literal('1.0'),
@@ -250,5 +282,8 @@ export const ModelDefinitionV2 = sparse(
 )
 export type ModelDefinitionV2 = TypeOf<typeof ModelDefinitionV2>
 
+/**
+ * Contents of a Model Stream.
+ */
 export const ModelDefinition = union([ModelDefinitionV1, ModelDefinitionV2], 'ModelDefinition')
 export type ModelDefinition = TypeOf<typeof ModelDefinition>

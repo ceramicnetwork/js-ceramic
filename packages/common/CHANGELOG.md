@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.37.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.36.0...@ceramicnetwork/common@2.37.0-rc.0) (2023-10-11)
+
+
+### Features
+
+* Use StreamLoader for loading streams ([#2963](https://github.com/ceramicnetwork/js-ceramic/issues/2963)) ([ca6c3ef](https://github.com/ceramicnetwork/js-ceramic/commit/ca6c3ef117c4377bab297e83bd250b238dcd4c5c))
+
+
+
+
+
+# [2.36.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.36.0-rc.0...@ceramicnetwork/common@2.36.0) (2023-10-11)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 # [2.36.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.35.0...@ceramicnetwork/common@2.36.0-rc.0) (2023-09-20)
 
 **Note:** Version bump only for package @ceramicnetwork/common
