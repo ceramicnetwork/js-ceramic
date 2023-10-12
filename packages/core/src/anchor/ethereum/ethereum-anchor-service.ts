@@ -36,6 +36,7 @@ export class EthereumAnchorService implements AnchorService {
    */
   readonly #pollInterval: number
   readonly #maxPollTime: number
+  readonly #enableLoop: boolean
   readonly #events: Subject<AnchorEvent>
 
   #chainId: string
@@ -52,7 +53,8 @@ export class EthereumAnchorService implements AnchorService {
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     maxPollTime = MAX_POLL_TIME,
-    sendRequest: FetchRequest = fetchJson
+    sendRequest: FetchRequest = fetchJson,
+    enableLoop = false
   ) {
     this.#logger = logger
     this.#pollInterval = pollInterval
@@ -62,6 +64,7 @@ export class EthereumAnchorService implements AnchorService {
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
+    this.#enableLoop = enableLoop
   }
 
   /**
@@ -92,7 +95,9 @@ export class EthereumAnchorService implements AnchorService {
       this.#logger,
       eventHandler
     )
-    this.#loop.start()
+    if (this.#enableLoop) {
+      this.#loop.start()
+    }
   }
 
   /**
@@ -154,7 +159,8 @@ export class AuthenticatedEthereumAnchorService
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    maxPollTime: number = MAX_POLL_TIME
+    maxPollTime: number = MAX_POLL_TIME,
+    enableLoop = false
   ) {
     super(
       anchorServiceUrl,
@@ -162,7 +168,8 @@ export class AuthenticatedEthereumAnchorService
       logger,
       pollInterval,
       maxPollTime,
-      auth.sendAuthenticatedRequest.bind(auth)
+      auth.sendAuthenticatedRequest.bind(auth),
+      enableLoop
     )
     this.auth = auth
   }

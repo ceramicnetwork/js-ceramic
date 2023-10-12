@@ -111,7 +111,7 @@ describe('create', () => {
     })
   })
 
-  // stubborn create
+  // Re-request on fetch error
   test('waitForConfirmation on', async () => {
     const maxAttempts = 10
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())

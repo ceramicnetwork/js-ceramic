@@ -7,11 +7,23 @@ import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.j
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
+import type { AnchorLoopHandler } from '../../anchor-service.js'
+import { CARFactory, type CAR } from 'cartonne'
 
 const FAUX_ANCHOR_STORE = {
   save: jest.fn(),
+  infiniteList: function* () {
+    yield null
+  },
 } as unknown as AnchorRequestStore
-const FAUX_HANDLER = async () => false
+const FAUX_HANDLER: AnchorLoopHandler = {
+  async buildRequestCar(): Promise<CAR> {
+    return new CARFactory().build()
+  },
+  async handle(): Promise<boolean> {
+    return true
+  },
+}
 
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -60,7 +72,12 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
   })
 
   test('Should authenticate header when creating anchor requests', async () => {
-    const fauxFetchJson = jest.fn(async () => {
+    const fauxFetchJson = jest.fn(async (url) => {
+      if (url === 'http://example.com/api/v0/service-info/supported_chains') {
+        return {
+          supportedChains: ['eip155:1'],
+        }
+      }
       return { status: AnchorRequestStatusName.PENDING }
     }) as unknown as typeof fetchJson
 
@@ -76,13 +93,20 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
       diagnosticsLogger,
       100
     )
+    jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
+      // Do Nothing
+    })
+    await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
 
     const anchorEvent = await anchorService.requestAnchor(generateFakeCarFile(), true)
     expect(anchorEvent.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
 
-    expect(signRequestSpy).toHaveBeenCalledTimes(2)
-    const signRequestResult = (await signRequestSpy.mock.results[0].value) as any
+    expect(signRequestSpy).toHaveBeenCalledTimes(2) // 1 to get supported chains + 1 to send request
+    const signRequestResult = (await signRequestSpy.mock.results[1].value) as any
     const signRequestResultOpts = signRequestResult.request.opts
-    expect(fauxFetchJson).toBeCalledWith(requestsUrl, signRequestResultOpts)
+    expect(fauxFetchJson).toBeCalledWith(
+      requestsUrl,
+      expect.objectContaining(signRequestResultOpts)
+    )
   })
 })
