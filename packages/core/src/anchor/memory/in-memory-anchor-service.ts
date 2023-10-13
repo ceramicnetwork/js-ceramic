@@ -2,7 +2,7 @@ import type { AnchorEvent, CeramicApi } from '@ceramicnetwork/common'
 import { type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { type CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
+import { NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../anchor-service.js'
 import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
@@ -11,15 +11,14 @@ import { CID } from 'multiformats'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 
 const CHAIN_ID = 'inmemory:12345'
+const BATCH_SIZE = 10
+const DEFAULT_POLL_INTERVAL = 100 // 100 milliseconds
 
 type InMemoryAnchorConfig = {
   anchorDelay: number
   anchorOnRequest: boolean
   enableLoop: boolean
 }
-
-const DEFAULT_POLL_INTERVAL = 100 // 100 milliseconds
-const MAX_POLL_TIME = 86_400_000 // 24 hours
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -46,10 +45,9 @@ export class InMemoryAnchorService implements AnchorService {
 
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
     this.#store = store
-    const batchSize = 10 // FIXME
     this.#loop = new AnchorProcessingLoop(
       this.#pollInterval,
-      batchSize,
+      BATCH_SIZE,
       this.#cas,
       this.#store,
       this.#logger,

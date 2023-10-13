@@ -24,6 +24,7 @@ import { RemoteCAS } from './remote-cas.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const MAX_POLL_TIME = 86_400_000 // 24 hours
+const BATCH_SIZE = 10
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -77,7 +78,6 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
-    // FIXME add onEvent
     this.#store = store
     // Get the chainIds supported by our anchor service
     const supportedChains = await this.#cas.supportedChains()
@@ -86,10 +86,9 @@ export class EthereumAnchorService implements AnchorService {
     }
     this.#chainId = supportedChains[0]
     await this.validator.init(this.#chainId)
-    const batchSize = 10 // FIXME
     this.#loop = new AnchorProcessingLoop(
       this.#pollInterval,
-      batchSize,
+      BATCH_SIZE,
       this.#cas,
       this.#store,
       this.#logger,
