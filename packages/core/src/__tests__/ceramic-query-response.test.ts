@@ -67,7 +67,7 @@ describe('Response to pubsub queries handling', () => {
 
     ceramic = await createCeramic(ceramicIpfs)
 
-    handleUpdateSpy = jest.spyOn(ceramic.repository, 'handleUpdate')
+    handleUpdateSpy = jest.spyOn(ceramic.repository, 'handleUpdateFromNetwork')
     originalPubsubPublish = ceramic.dispatcher.messageBus.pubsub.next.bind(
       ceramic.dispatcher.messageBus.pubsub
     )

@@ -204,7 +204,7 @@ describe('Dispatcher with mock ipfs', () => {
   it('handle message correctly without model', async () => {
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
-      repository.add(runningState)
+      repository._registerRunningState(runningState)
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
       return runningState
     }
@@ -229,14 +229,14 @@ describe('Dispatcher with mock ipfs', () => {
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message without model
-    dispatcher.repository.handleUpdate = jest.fn()
+    dispatcher.repository.handleUpdateFromNetwork = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
       stream: FAKE_STREAM_ID,
       tip: FAKE_CID,
       model: null,
     })
-    expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, null)
+    expect(dispatcher.repository.handleUpdateFromNetwork).toBeCalledWith(state$.id, FAKE_CID, null)
 
     const continuationState = {
       ...initialState,
@@ -259,13 +259,17 @@ describe('Dispatcher with mock ipfs', () => {
     // Handle RESPONSE message
     const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
-    expect(dispatcher.repository.handleUpdate).toBeCalledWith(stream2.id, FAKE_CID2, undefined)
+    expect(dispatcher.repository.handleUpdateFromNetwork).toBeCalledWith(
+      stream2.id,
+      FAKE_CID2,
+      undefined
+    )
   })
 
   it('handle message correctly with model', async () => {
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
-      repository.add(runningState)
+      repository._registerRunningState(runningState)
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
       return runningState
     }
@@ -282,14 +286,18 @@ describe('Dispatcher with mock ipfs', () => {
     const state$ = await register(initialState)
 
     // Handle UPDATE message with model
-    dispatcher.repository.handleUpdate = jest.fn()
+    dispatcher.repository.handleUpdateFromNetwork = jest.fn()
     await dispatcher.handleMessage({
       typ: MsgType.UPDATE,
       stream: FAKE_STREAM_ID,
       tip: FAKE_CID,
       model: FAKE_MODEL,
     })
-    expect(dispatcher.repository.handleUpdate).toBeCalledWith(state$.id, FAKE_CID, FAKE_MODEL)
+    expect(dispatcher.repository.handleUpdateFromNetwork).toBeCalledWith(
+      state$.id,
+      FAKE_CID,
+      FAKE_MODEL
+    )
   })
 
   test('init', async () => {

@@ -57,9 +57,9 @@ afterEach(async () => {
 describe('#load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
-    const fromMemorySpy = jest.spyOn(repository._internals as any, '_fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-    const fromNetworkSpy = jest.spyOn(repository._internals as any, '_genesisFromNetwork')
+    const fromMemorySpy = jest.spyOn(repository, '_fromMemory')
+    const fromStateStoreSpy = jest.spyOn(repository, '_fromStreamStateStore')
+    const fromNetworkSpy = jest.spyOn(repository, '_genesisFromNetwork')
     const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 })
     expect(StreamUtils.serializeState(stream1.state)).toEqual(
       StreamUtils.serializeState(stream2.state)
@@ -70,10 +70,10 @@ describe('#load', () => {
   })
 
   test('from state store', async () => {
-    const fromMemorySpy = jest.spyOn(repository._internals as any, '_fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-    const fromNetworkSpy = jest.spyOn(repository._internals as any, '_genesisFromNetwork')
-    const syncSpy = jest.spyOn(repository._internals, '_sync')
+    const fromMemorySpy = jest.spyOn(repository, '_fromMemory')
+    const fromStateStoreSpy = jest.spyOn(repository, '_fromStreamStateStore')
+    const fromNetworkSpy = jest.spyOn(repository, '_genesisFromNetwork')
+    const syncSpy = jest.spyOn(repository, '_sync')
 
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false })
     await ceramic.admin.pin.add(stream1.id)
@@ -107,7 +107,7 @@ describe('#load', () => {
 
   test('Sync pinned stream first time loaded from state store', async () => {
     const content = { foo: 'bar' }
-    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' })
+    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamId = new StreamID('tile', genesisCid)
     const streamState = {
@@ -123,15 +123,15 @@ describe('#load', () => {
     } as unknown as StreamState
     const runningState = new RunningState(streamState, true)
 
-    const fromMemorySpy = jest.spyOn(repository._internals as any, '_fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-    const fromNetworkSpy = jest.spyOn(repository._internals as any, '_genesisFromNetwork')
-    const syncSpy = jest.spyOn(repository._internals, '_sync')
+    const fromMemorySpy = jest.spyOn(repository, '_fromMemory')
+    const fromStateStoreSpy = jest.spyOn(repository, '_fromStreamStateStore')
+    const fromNetworkSpy = jest.spyOn(repository, '_genesisFromNetwork')
+    const syncSpy = jest.spyOn(repository, '_sync')
 
     fromMemorySpy.mockReturnValueOnce(null)
     fromMemorySpy.mockReturnValueOnce(null)
-    fromStateStoreSpy.mockReturnValueOnce(runningState)
-    fromStateStoreSpy.mockReturnValueOnce(runningState)
+    fromStateStoreSpy.mockReturnValueOnce(Promise.resolve(runningState))
+    fromStateStoreSpy.mockReturnValueOnce(Promise.resolve(runningState))
 
     const stream1 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
     expect(stream1.state.content).toEqual(content)
@@ -156,11 +156,11 @@ describe('#load', () => {
 
   test('Pinning a stream prevents it from needing to be synced', async () => {
     const content = { foo: 'bar' }
-    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' })
+    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamId = new StreamID('tile', genesisCid)
-    const syncSpy = jest.spyOn(repository._internals, '_sync')
-    const loadFromNetworkSpy = jest.spyOn(repository._internals, '_loadStreamFromNetwork')
+    const syncSpy = jest.spyOn(repository, '_sync')
+    const loadFromNetworkSpy = jest.spyOn(repository, '_loadStreamFromNetwork')
 
     const stream1 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
     expect(stream1.state.content).toEqual(content)
@@ -204,7 +204,7 @@ describe('#load', () => {
 
     // Now remove the stream from both the cache and the syncedPinnedStreams set
     repository.inmemory.delete(streamId.toString())
-    repository._internals.markUnpinned(streamId)
+    repository.markUnpinned(streamId)
 
     const stream5 = await repository.load(streamId, { syncTimeoutSeconds: 0 })
     expect(StreamUtils.serializeState(stream5.state)).toEqual(
@@ -455,8 +455,8 @@ describe('#load', () => {
         .loadAtCommit(CommitID.make(streamId, streamId.cid), { syncTimeoutSeconds: 0 })
         .then((stream) => stream.state)
       const state$ = new RunningState(initialState, true)
-      ceramic.repository.add(state$)
-      await ceramic.repository._internals.handleTip(state$, tipPreUpdate)
+      ceramic.repository._registerRunningState(state$)
+      await ceramic.repository._handleTip(state$, tipPreUpdate)
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const conflictingNewContent = { asdf: 2342 }
@@ -478,12 +478,12 @@ describe('#load', () => {
       expect(stream2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to stream with invalid
       // log results in valid state
-      await ceramic.repository._internals.handleTip(state$, tipValidUpdate)
+      await ceramic.repository._handleTip(state$, tipValidUpdate)
       expect(stream2.content).toEqual(newContent)
 
       // loading tip from invalid log to stream with valid
       // log results in valid state
-      await ceramic.repository._internals.handleTip(streamState1, tipInvalidUpdate)
+      await ceramic.repository._handleTip(streamState1, tipInvalidUpdate)
       expect(stream1.content).toEqual(newContent)
 
       // Loading valid commit works
@@ -518,10 +518,10 @@ describe('#load', () => {
         })
         await stream1.update({ a: 2 }, null, { anchor: false })
 
-        const fromMemory = jest.spyOn(repository._internals as any, '_fromMemory')
+        const fromMemory = jest.spyOn(repository, '_fromMemory')
         fromMemory.mockReturnValueOnce(undefined)
-        const fromStateStore = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-        const fromNetwork = jest.spyOn(repository.streamLoader as any, 'resyncStream')
+        const fromStateStore = jest.spyOn(repository, '_fromStreamStateStore')
+        const fromNetwork = jest.spyOn(repository.streamLoader, 'resyncStream')
         const saveFromStreamStateHolder = jest.spyOn(
           repository.pinStore.stateStore,
           'saveFromStreamStateHolder'
@@ -548,9 +548,9 @@ describe('#load', () => {
         })
         await stream1.update({ a: 2 }, null, { anchor: false })
 
-        const fromMemory = jest.spyOn(repository._internals as any, '_fromMemory')
-        const fromStateStore = jest.spyOn(repository._internals as any, 'fromStreamStateStore')
-        const fromNetwork = jest.spyOn(repository.streamLoader as any, 'resyncStream')
+        const fromMemory = jest.spyOn(repository, '_fromMemory')
+        const fromStateStore = jest.spyOn(repository, '_fromStreamStateStore')
+        const fromNetwork = jest.spyOn(repository.streamLoader, 'resyncStream')
         const saveFromStreamStateHolder = jest.spyOn(
           repository.pinStore.stateStore,
           'saveFromStreamStateHolder'
@@ -613,8 +613,8 @@ test('subscribe makes state endured', async () => {
 
 describe('applyWriteOpts', () => {
   test('dont publish on LOAD', async () => {
-    const publishSpy = jest.spyOn(repository._internals, 'publishTip')
-    await repository.applyWriteOpts(
+    const publishSpy = jest.spyOn(repository, '_publishTip')
+    await repository._applyWriteOpts(
       new RunningState(TestUtils.makeStreamState(), false),
       { publish: true },
       OperationType.LOAD
@@ -624,10 +624,10 @@ describe('applyWriteOpts', () => {
   test('publish on UPDATE or CREATE ', async () => {
     const operations = [/*OperationType.UPDATE,*/ OperationType.CREATE]
     for (const operation of operations) {
-      const publishSpy = jest.spyOn(repository._internals, 'publishTip')
-      const pinSpy = jest.spyOn(repository, 'handlePinOpts')
+      const publishSpy = jest.spyOn(repository, '_publishTip')
+      const pinSpy = jest.spyOn(repository, '_handlePinOpts')
       pinSpy.mockImplementationOnce(() => Promise.resolve())
-      await repository.applyWriteOpts(
+      await repository._applyWriteOpts(
         new RunningState(TestUtils.makeStreamState(), false),
         { publish: true },
         operation

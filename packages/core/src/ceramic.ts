@@ -272,7 +272,7 @@ export class Ceramic implements CeramicApi {
         on: params.sync,
       },
       this.dispatcher,
-      this.repository.handleUpdate.bind(this.repository),
+      this.repository.handleUpdateFromNetwork.bind(this.repository),
       this.repository.index,
       this._logger
     )
@@ -635,8 +635,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-
-    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }
