@@ -88,13 +88,6 @@ export class InMemoryAnchorService implements AnchorService {
   }
 
   /**
-   * Fails all pending anchors. Useful for testing.
-   */
-  failPendingAnchors(): Promise<void> {
-    return this.#cas.failPendingAnchors()
-  }
-
-  /**
    * Set Ceramic API instance
    *
    * @param ceramic - Ceramic API used for various purposes

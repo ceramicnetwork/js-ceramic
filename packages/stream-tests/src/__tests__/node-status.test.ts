@@ -1,28 +1,13 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import {
-  AnchorStatus,
-  CeramicApi,
-  IpfsApi,
-  NodeStatusResponse,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { CeramicApi, IpfsApi, NodeStatusResponse } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
-import tmp from 'tmp-promise'
-import * as fs from 'fs/promises'
 import { DID } from 'dids'
 import { makeDID } from '@ceramicnetwork/cli/lib/__tests__/make-did.js'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { InMemoryAnchorService } from '@ceramicnetwork/core/lib/anchor/memory/in-memory-anchor-service.js'
-
-const CONTENT0 = { myData: 0 }
-const CONTENT1 = { myData: 1 }
 
 describe('Node Status Endpoint tests', () => {
   jest.setTimeout(1000 * 90)
@@ -92,42 +77,5 @@ describe('Node Status Endpoint tests', () => {
     for (const addr of status.ipfs.addresses) {
       expect(typeof addr).toEqual('string')
     }
-  })
-
-  // FIXME Do not make sense now, as there are no subscriptions
-  test.skip('Pending anchor counter test', async () => {
-    let status = await getStatus(ceramic)
-    expect(status.anchor.pendingAnchors).toEqual(0)
-
-    const doc = await TileDocument.create(ceramic, CONTENT0)
-
-    status = await getStatus(ceramic)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    expect(status.anchor.pendingAnchors).toEqual(0) // FIXME No subscriptions, ma!
-
-    await TestUtils.anchorUpdate(core, doc)
-
-    // Counter gets reset when stream is anchored
-    status = await getStatus(ceramic)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    expect(status.anchor.pendingAnchors).toEqual(0)
-
-    await doc.update(CONTENT1)
-
-    status = await getStatus(ceramic)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-    expect(status.anchor.pendingAnchors).toEqual(0) // FIXME No subscriptions, ma!
-
-    await (core.anchorService as InMemoryAnchorService).failPendingAnchors()
-    await TestUtils.waitForState(
-      doc,
-      1000 * 60,
-      (state) => state.anchorStatus == AnchorStatus.FAILED
-    )
-
-    // Counter gets reset if anchor fails
-    status = await getStatus(ceramic)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.FAILED)
-    expect(status.anchor.pendingAnchors).toEqual(0)
   })
 })

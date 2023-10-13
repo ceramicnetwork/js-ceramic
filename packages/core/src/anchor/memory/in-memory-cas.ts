@@ -203,21 +203,6 @@ export class InMemoryCAS implements CASClient {
     await firstValueFrom(this.#events.pipe(filter((event) => event.cid.equals(tip))))
   }
 
-  // FIXME Remove
-  async failPendingAnchors(): Promise<void> {
-    const candidates = this.findCandidates()
-    for (const candidate of candidates) {
-      this.#events.next({
-        status: AnchorRequestStatusName.FAILED,
-        streamId: candidate.streamId,
-        cid: candidate.cid,
-        message: 'anchor failed',
-      })
-    }
-
-    this.#queue = [] // reset
-  }
-
   async close() {
     this.#events.complete()
   }
