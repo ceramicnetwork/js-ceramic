@@ -112,7 +112,7 @@ export class LevelDbStore implements IKVStore {
 
   async exists(key: string, useCaseName?: string): Promise<boolean> {
     try {
-      const val = await this.get(key)
+      const val = await this.get(key, useCaseName)
       return typeof val === 'string'
     } catch (e) {
       if (/Key not found in database/.test(e.toString())) {
