@@ -92,11 +92,6 @@ export class Repository {
   readonly loadingQ: ExecutionQueue
 
   /**
-   * Serialize operations on state per streamId.
-   */
-  readonly executionQ: ExecutionQueue
-
-  /**
    * In-memory cache of the currently running streams.
    */
   readonly inmemory: StateCache<RunningState>
@@ -127,7 +122,6 @@ export class Repository {
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
-    this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -411,7 +405,7 @@ export class Repository {
     commitId: CommitID,
     existingState$: RunningState
   ): Promise<SnapshotState> {
-    return this.executionQ.forStream(commitId).run(async () => {
+    return this.loadingQ.forStream(commitId).run(async () => {
       const stateAtCommit = await this.streamLoader.stateAtCommit(existingState$.state, commitId)
 
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
@@ -455,7 +449,7 @@ export class Repository {
     const state$ = await this.load(streamId, opts)
     this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
 
-    return this.executionQ.forStream(streamId).run(async () => {
+    return this.loadingQ.forStream(streamId).run(async () => {
       const originalState = state$.state
       const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
       if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
@@ -496,13 +490,12 @@ export class Repository {
 
   /**
    * Applies the given tip CID as a new commit to the given running state.
-   * NOTE: Must be called from inside the ExecutionQueue!
    * @param state$ - State to apply tip to
    * @param cid - tip CID
    * @returns boolean - whether or not the tip was actually applied
    */
   private async _handleTip(state$: RunningState, cid: CID): Promise<boolean> {
-    return this.executionQ.forStream(state$.id).run(async () => {
+    return this.loadingQ.forStream(state$.id).run(async () => {
       this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
@@ -670,7 +663,7 @@ export class Repository {
 
   /**
    * Takes the CID of an anchor commit received from an anchor service and applies it. Runs the
-   * work of loading and applying the commit on the execution queue so it gets serialized alongside
+   * work of loading and applying the commit on the loading queue so it gets serialized alongside
    * any other updates to the same stream. Includes logic to retry up to a total of 3 attempts to
    * handle transient failures of loading the anchor commit from IPFS.
    *
@@ -973,7 +966,6 @@ export class Repository {
 
   async close(): Promise<void> {
     await this.loadingQ.close()
-    await this.executionQ.close()
     Array.from(this.inmemory).forEach(([id, stream]) => {
       this.inmemory.delete(id)
       stream.complete()
