@@ -114,7 +114,7 @@ export function makeAnchorServiceAuth(
 }
 
 export function makeAnchorService(
-  config: CeramicConfig, // FIXME and partial inmemory options
+  config: CeramicConfig,
   ethereumRpcUrl: string | undefined,
   network: Networks,
   logger: DiagnosticsLogger

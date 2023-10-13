@@ -41,14 +41,8 @@ import { type IndexingConfig, LocalIndexApi, SyncApi } from '@ceramicnetwork/ind
 import { ShutdownSignal } from './shutdown-signal.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
-import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
-import { TipFetcher } from './stream-loading/tip-fetcher.js'
-import { LogSyncer } from './stream-loading/log-syncer.js'
-import { StateManipulator } from './stream-loading/state-manipulator.js'
-import { StreamLoader } from './stream-loading/stream-loader.js'
 import {
   networkOptionsByName,
   type CeramicNetworkOptions,
@@ -58,11 +52,7 @@ import {
   makeAnchorService,
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
-import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
-import { AnchorLoopHandler } from './anchor/anchor-service.js'
-import { CID } from 'multiformats'
-import { CAR } from 'cartonne'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 
@@ -192,8 +182,6 @@ export class Ceramic implements CeramicApi {
   public readonly admin: AdminApi
   readonly repository: Repository
   readonly anchorService: AnchorService
-  private readonly anchorRequestCarBuilder: AnchorRequestCarBuilder
-  private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
 
@@ -213,12 +201,10 @@ export class Ceramic implements CeramicApi {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
-    this.anchorResumingService = new AnchorResumingService(this._logger)
     this.repository = modules.repository
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
-    this.anchorRequestCarBuilder = modules.anchorRequestCarBuilder
     this.providersCache = modules.providersCache
 
     this._readOnly = params.readOnly
@@ -445,19 +431,10 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._readOnly) {
-        const carBuilder = this.anchorRequestCarBuilder
-        const repository = this.repository
-        const handler: AnchorLoopHandler = {
-          buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
-            return carBuilder.build(streamId, tip)
-          },
-          async handle(event: AnchorEvent): Promise<boolean> {
-            const state$ = await repository.fromMemoryOrStore(event.streamId)
-            if (!state$) return true
-            return repository._internals.handleAnchorResponse(state$, event)
-          },
-        }
-        await this.anchorService.init(this.repository.anchorRequestStore, handler) // FIXME Init dependency hell
+        await this.anchorService.init(
+          this.repository.anchorRequestStore,
+          this.repository.anchorLoopHandler()
+        )
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
           this.anchorService,
@@ -473,14 +450,6 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._startupChecks()
-
-      // We're not awaiting here on purpose, it's not supposed to be blocking
-      // FIXME Remove it
-      this.anchorResumingService
-        .resumeRunningStatesFromAnchorRequestStore(this.repository)
-        .catch((error) => {
-          this._logger.err(`Error while resuming anchors: ${error}`)
-        })
     } catch (err) {
       await this.close()
       throw err
@@ -884,7 +853,6 @@ export class Ceramic implements CeramicApi {
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
     await this.anchorService.close()
-    await this.anchorResumingService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()
     await this.dispatcher.close()

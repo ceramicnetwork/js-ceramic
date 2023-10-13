@@ -14,9 +14,7 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
 
-const MOCK_WAS_CALLED_DELAY = 3 * 1000
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
 
 function createCeramic(
@@ -866,47 +864,5 @@ describe('buildStreamFromState', () => {
     expect(created).toBeInstanceOf(TileDocument)
     expect(created.id).toEqual(tile.id)
     expect(created.content).toEqual(tile.content)
-  })
-})
-
-describe('Resuming anchors', () => {
-  jest.setTimeout(10000)
-
-  let ipfs: IpfsApi
-  let mockWasCalled: boolean
-  let mockCompleted: boolean
-
-  beforeEach(async () => {
-    ipfs = await createIPFS()
-
-    mockWasCalled = false
-    mockCompleted = false
-
-    jest
-      .spyOn(AnchorResumingService.prototype, 'resumeRunningStatesFromAnchorRequestStore')
-      .mockImplementation(() => {
-        mockWasCalled = true
-        return new Promise<void>(() => {
-          setTimeout(() => {
-            mockCompleted = true
-          }, MOCK_WAS_CALLED_DELAY)
-        })
-      })
-  })
-
-  afterEach(async () => {
-    await ipfs.stop()
-  })
-
-  it('Resume method is called (but is not blocking) when ceramic core is created', async () => {
-    const ceramic = await createCeramic(ipfs)
-    // resumeRunningStatesFromAnchorRequestStore() is not blocking for CeramicDaemon.create(...)
-    expect(mockWasCalled).toBeTruthy()
-    expect(mockCompleted).toBeFalsy()
-
-    // resumeRunningStatesFromAnchorRequestStore() is triggered by CeramicDaemon.create(...)
-    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100) // TODO(CDB-2090): use less brittle approach to waiting for this condition
-    expect(mockCompleted).toBeTruthy()
-    await ceramic.close()
   })
 })

@@ -62,7 +62,7 @@ export class InMemoryCAS implements CASClient {
   /**
    * Anchor requests
    */
-  async anchor(): Promise<void> {
+  anchor(): void {
     const candidates = this.findCandidates()
     for (const candidate of candidates) {
       const event = this.process(candidate)
@@ -92,6 +92,10 @@ export class InMemoryCAS implements CASClient {
         }
       }
     } else {
+      const found = this.#anchors.get(tip.toString())
+      if (found) {
+        return found
+      }
       this.#queue.push(candidate)
       event = {
         status: AnchorRequestStatusName.PENDING as const,

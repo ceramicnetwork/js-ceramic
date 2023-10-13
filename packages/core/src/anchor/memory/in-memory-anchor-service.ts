@@ -69,8 +69,8 @@ export class InMemoryAnchorService implements AnchorService {
   /**
    * Anchor requests
    */
-  anchor(): Promise<void> {
-    return this.#cas.anchor()
+  async anchor(): Promise<void> {
+    this.#cas.anchor()
   }
 
   moveAnchors(

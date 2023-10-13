@@ -75,8 +75,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     } while (true)
   }
 
-  // FIXME Change name
-  async *infiniteList(batchSize = 1): AsyncGenerator<AnchorRequestStoreListResult> {
+  async *infiniteList(batchSize = 1, batchDelay: number = 100): AsyncGenerator<AnchorRequestStoreListResult> {
     let gt: StreamID | undefined = undefined
     do {
       const batch = await this.store.find({
@@ -93,7 +92,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           }
         }
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 100)) // FIXME
+        await new Promise((resolve) => setTimeout(resolve, batchDelay))
         gt = undefined
       }
     } while (!this.#shouldStop)

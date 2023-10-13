@@ -304,15 +304,9 @@ describe('Ceramic anchoring', () => {
       await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
       expect(stream.state.log.length).toEqual(1)
 
-      // re-request anchor, should be successful
+      // re-request anchor, still FAILED as in production CAS
       const anchorStatus = await stream.requestAnchor()
-      expect(anchorStatus).toEqual(AnchorStatus.PENDING)
-      await TestUtils.expectAnchorStatus(stream, AnchorStatus.PENDING)
-
-      // fulfill anchor
-      await TestUtils.anchorUpdate(ceramic, stream)
-      await TestUtils.expectAnchorStatus(stream, AnchorStatus.ANCHORED)
-      expect(stream.state.log.length).toEqual(2)
+      expect(anchorStatus).toEqual(AnchorStatus.FAILED)
 
       await ceramic.close()
     })

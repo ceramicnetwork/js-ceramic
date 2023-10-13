@@ -32,7 +32,7 @@ import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
-import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.js'
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
@@ -163,7 +163,7 @@ export class Repository {
   async init(): Promise<void> {
     await this.#deps.keyValueStore.init()
     await this.pinStore.open(this.#deps.keyValueStore)
-    await this.anchorRequestStore.open(this.#deps.keyValueStore) // FIXME initialization hell
+    await this.anchorRequestStore.open(this.#deps.keyValueStore) // Initialization hell
     await this.index.init()
   }
 
@@ -1054,6 +1054,21 @@ export class Repository {
           subscriber.error(error)
         })
     })
+  }
+
+  anchorLoopHandler(): AnchorLoopHandler {
+    const carBuilder = this.#deps.anchorRequestCarBuilder
+    const internals = this._internals
+    return {
+      buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
+        return carBuilder.build(streamId, tip)
+      },
+      async handle(event: AnchorEvent): Promise<boolean> {
+        const state$ = await internals.fromMemoryOrStoreSafe(event.streamId)
+        if (!state$) return true
+        return internals.handleAnchorResponse(state$, event)
+      },
+    }
   }
 
   async close(): Promise<void> {
