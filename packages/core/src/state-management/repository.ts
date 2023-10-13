@@ -87,7 +87,7 @@ function commitAtTime(state: StreamState, timestamp: number): CommitID {
 
 export class Repository {
   /**
-   * Serialize loading operations per streamId.
+   * Serialize operations on stream state per streamId.
    */
   readonly loadingQ: ExecutionQueue
 
