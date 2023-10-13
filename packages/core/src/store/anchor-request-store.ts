@@ -75,7 +75,10 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     } while (true)
   }
 
-  async *infiniteList(batchSize = 1, batchDelay: number = 100): AsyncGenerator<AnchorRequestStoreListResult> {
+  async *infiniteList(
+    batchSize = 1,
+    batchDelay = 100
+  ): AsyncGenerator<AnchorRequestStoreListResult> {
     let gt: StreamID | undefined = undefined
     do {
       const batch = await this.store.find({
