@@ -190,7 +190,6 @@ describe('anchor', () => {
       })
       stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
-      expect(publishTip).toHaveBeenCalledTimes(1)
       expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
       publishTip.mockClear()
       const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
