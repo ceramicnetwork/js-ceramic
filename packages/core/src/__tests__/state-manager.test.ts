@@ -230,7 +230,7 @@ describe('anchor', () => {
       // dag.import is called 2 times:
       // 1) when the genesis commit is created on Ceramic side,
       // 2) when Ceramic applies it
-      // expect(dagImportSpy).toHaveBeenCalledTimes(2) // FIXME dependent on the underlying logic :(
+      expect(dagImportSpy).toHaveBeenCalledTimes(2)
       dagImportSpy.mockClear()
     })
 
@@ -270,8 +270,8 @@ describe('anchor', () => {
 
       await TestUtils.anchorUpdate(ceramic, stream)
 
-      // Check that fakeHandleTip was called only three times
-      expect(handleTipSpy).toHaveBeenCalledTimes(2) // FIXME WHAT? An artifact of double-handling maybe
+      // Check that fakeHandleTip was called only two times
+      expect(handleTipSpy).toHaveBeenCalledTimes(2)
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
@@ -292,7 +292,7 @@ describe('anchor', () => {
       await TestUtils.anchorUpdate(ceramic, stream)
 
       // Check that fakeHandleTip was called only three times
-      // expect(fakeHandleTip).toHaveBeenCalledTimes(6) // FIXME WHAT? An artifact of double-handling maybe
+      expect(fakeHandleTip).toHaveBeenCalledTimes(3)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED)
     })
@@ -400,9 +400,39 @@ describe('anchor', () => {
         )
       })
 
-      test.todo(
-        'Anchor REPLACED for non tip should not remove any requests from the store if the tip has been requested but not anchored'
-      ) // FIXME Handle replacing
+      test('Anchor REPLACED for non tip should not remove any requests from the store if the tip has been requested but not anchored', async () => {
+        const anchorRequestStore = ceramic.repository.anchorRequestStore
+
+        const tile = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
+        const stream$ = await ceramic.repository.load(tile.id, {})
+
+        // Emulate CAS responses to the 1st commit
+        await ceramic.repository.anchor(stream$, {})
+        expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
+          stream$.tip.toString()
+        )
+        inMemoryAnchorService.moveAnchors(
+          AnchorRequestStatusName.PENDING,
+          AnchorRequestStatusName.PROCESSING
+        )
+        await TestUtils.expectAnchorStatus(tile, AnchorStatus.PROCESSING)
+
+        // Create the 2nd commit and request an anchor for it
+        await tile.update({ abc: 456, def: 789 }, null, { anchor: true })
+        await TestUtils.expectAnchorStatus(tile, AnchorStatus.PENDING)
+
+        // Move 1st commit to REPLACED
+        inMemoryAnchorService.moveAnchors(
+          AnchorRequestStatusName.PROCESSING,
+          AnchorRequestStatusName.REPLACED
+        )
+
+        // Polling for the 1st commit should stop
+        // There should still be an request in the anchorRequestStore for the stream's tip
+        expect(await anchorRequestStore.load(tile.id).then((ar) => ar.cid.toString())).toEqual(
+          stream$.tip.toString()
+        )
+      })
 
       test('Anchor failing for non tip should not remove any requests from the store if the tip has been requested but not anchored', async () => {
         const anchorRequestStore = ceramic.repository.anchorRequestStore
