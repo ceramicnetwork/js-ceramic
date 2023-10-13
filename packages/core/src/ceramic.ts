@@ -43,11 +43,6 @@ import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
-import { TipFetcher } from './stream-loading/tip-fetcher.js'
-import { LogSyncer } from './stream-loading/log-syncer.js'
-import { StateManipulator } from './stream-loading/state-manipulator.js'
-import { StreamLoader } from './stream-loading/stream-loader.js'
 import {
   networkOptionsByName,
   type CeramicNetworkOptions,
@@ -57,12 +52,11 @@ import {
   makeAnchorService,
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
-import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 
-const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
+const DEFAULT_CACHE_LIMIT = 1000 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const TESTING = process.env.NODE_ENV == 'test'
 
