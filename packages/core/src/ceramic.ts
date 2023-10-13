@@ -222,6 +222,7 @@ export class Ceramic implements CeramicApi {
     this._startTime = new Date()
 
     this._levelStore = new LevelDbStore(
+      this._logger,
       params.stateStoreDirectory ?? DEFAULT_STATE_STORE_DIRECTORY,
       this._networkOptions.name
     )

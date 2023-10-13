@@ -8,6 +8,7 @@ import {
   SignatureStatus,
   TestUtils,
   LoggerProvider,
+  DiagnosticsLogger,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
@@ -38,6 +39,7 @@ const repository = {
 
 describe('Level data store', () => {
   let store: PinStore
+  let logger: DiagnosticsLogger
 
   const streamId = new StreamID('tile', FAKE_CID)
   const streamState: StreamState = {
@@ -50,6 +52,7 @@ describe('Level data store', () => {
   }
 
   beforeEach(async () => {
+    logger = new LoggerProvider().getDiagnosticsLogger()
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
     const storeFactory = new PinStoreFactory(
       ipfs,
@@ -58,9 +61,9 @@ describe('Level data store', () => {
       {
         pinningEndpoints: ['ipfs+context'],
       },
-      new LoggerProvider().getDiagnosticsLogger()
+      logger
     )
-    const levelStore = new LevelDbStore(levelPath, 'inmemory')
+    const levelStore = new LevelDbStore(logger, levelPath, 'inmemory')
     store = storeFactory.createPinStore()
     await store.open(levelStore)
   })
@@ -143,7 +146,7 @@ describe('Level data store', () => {
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path
-    const localLevelStore = new LevelDbStore(levelPath, 'local')
+    const localLevelStore = new LevelDbStore(logger, levelPath, 'local')
     const storeFactoryLocal = new PinStoreFactory(
       ipfs,
       new IPLDRecordsCache(10),
@@ -162,7 +165,7 @@ describe('Level data store', () => {
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const inmemoryLevelStore = new LevelDbStore(levelPath, 'inmemory')
+    const inmemoryLevelStore = new LevelDbStore(logger, levelPath, 'inmemory')
     const storeFactoryInMemory = new PinStoreFactory(
       ipfs,
       new IPLDRecordsCache(10),

@@ -1,6 +1,13 @@
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { LevelDbStore } from '../level-db-store.js'
-import { CeramicApi, GenesisCommit, IpfsApi, Networks, TestUtils } from '@ceramicnetwork/common'
+import {
+  CeramicApi,
+  DiagnosticsLogger,
+  GenesisCommit,
+  IpfsApi,
+  Networks,
+  TestUtils,
+} from '@ceramicnetwork/common'
 import {
   AnchorRequestData,
   AnchorRequestStore,
@@ -72,6 +79,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   let anchorRequestStore: AnchorRequestStore
   let ipfs: IpfsApi
   let ceramic: CeramicApi
+  let logger: DiagnosticsLogger
   let streamId1: StreamID
   let genesisCommit1: GenesisCommit
   let streamId2: StreamID
@@ -82,6 +90,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   beforeAll(async () => {
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
+    logger = ceramic.loggerProvider.getDiagnosticsLogger()
 
     const model1 = await Model.create(ceramic, MODEL_CONTENT_1)
     streamId1 = model1.id
@@ -118,7 +127,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelDbStore(tmpFolder.path, 'fakeNetwork')
+    levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
     anchorRequestStore = new AnchorRequestStore()
     await anchorRequestStore.open(levelStore)
 
@@ -236,7 +245,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpLevelStore = new LevelDbStore(tmpFolder.path, Networks.ELP)
+    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.ELP)
     await anchorRequestStore.open(elpLevelStore)
 
     const anchorRequestData: AnchorRequestData = {
@@ -251,7 +260,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     await anchorRequestStore.close()
 
-    const mainnetLevelStore = new LevelDbStore(tmpFolder.path, Networks.MAINNET)
+    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
     await anchorRequestStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await anchorRequestStore.load(streamId1)
@@ -259,7 +268,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   })
 
   test('switch from Clay to Mainnet does not preserve data', async () => {
-    const elpLevelStore = new LevelDbStore(tmpFolder.path, Networks.TESTNET_CLAY)
+    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.TESTNET_CLAY)
     await anchorRequestStore.open(elpLevelStore)
 
     const anchorRequestData: AnchorRequestData = {
@@ -274,7 +283,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     await anchorRequestStore.close()
 
-    const mainnetLevelStore = new LevelDbStore(tmpFolder.path, Networks.MAINNET)
+    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
     await anchorRequestStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await anchorRequestStore.load(streamId1)

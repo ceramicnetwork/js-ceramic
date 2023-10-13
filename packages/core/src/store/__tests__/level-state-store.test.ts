@@ -7,6 +7,7 @@ import {
   StreamState,
   LoggerProvider,
   Networks,
+  DiagnosticsLogger,
 } from '@ceramicnetwork/common'
 import { LevelDbStore } from '../level-db-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
@@ -28,10 +29,12 @@ describe('LevelDB-backed StateStore', () => {
   let tmpFolder: any
   let levelStore: LevelDbStore
   let stateStore: StreamStateStore
+  let logger: DiagnosticsLogger
 
   beforeEach(async () => {
+    logger = new LoggerProvider().getDiagnosticsLogger()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelDbStore(tmpFolder.path, 'fakeNetwork')
+    levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
     stateStore = new StreamStateStore(new LoggerProvider().getDiagnosticsLogger())
     await stateStore.open(levelStore)
 
@@ -154,10 +157,12 @@ describe('LevelDB-backed StateStore', () => {
 describe('LevelDB-backed StateStore network change tests', () => {
   let tmpFolder: any
   let stateStore: StreamStateStore
+  let logger: DiagnosticsLogger
 
   beforeEach(async () => {
+    logger = new LoggerProvider().getDiagnosticsLogger()
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    stateStore = new StreamStateStore(new LoggerProvider().getDiagnosticsLogger())
+    stateStore = new StreamStateStore(logger)
   })
 
   afterEach(async () => {
@@ -165,7 +170,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
-    const elpLevelStore = new LevelDbStore(tmpFolder.path, Networks.ELP)
+    const elpLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.ELP)
     await stateStore.open(elpLevelStore)
 
     const state = TestUtils.makeStreamState()
@@ -176,7 +181,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
 
     await stateStore.close()
 
-    const mainnetLevelStore = new LevelDbStore(tmpFolder.path, Networks.MAINNET)
+    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
     await stateStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await stateStore.load(stream.id.baseID)
@@ -184,7 +189,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
   })
 
   test('switch from Clay to Mainnet does not preserve data', async () => {
-    const clayLevelStore = new LevelDbStore(tmpFolder.path, Networks.TESTNET_CLAY)
+    const clayLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.TESTNET_CLAY)
     await stateStore.open(clayLevelStore)
 
     const state = TestUtils.makeStreamState()
@@ -195,7 +200,7 @@ describe('LevelDB-backed StateStore network change tests', () => {
 
     await stateStore.close()
 
-    const mainnetLevelStore = new LevelDbStore(tmpFolder.path, Networks.MAINNET)
+    const mainnetLevelStore = new LevelDbStore(logger, tmpFolder.path, Networks.MAINNET)
     await stateStore.open(mainnetLevelStore)
 
     const retrievedFromMainnet = await stateStore.load(stream.id.baseID)

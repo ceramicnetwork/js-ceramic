@@ -10,11 +10,12 @@ import { TaskQueue } from '../ancillary/task-queue.js'
 
 export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Promise<Dispatcher> {
   const loggerProvider = new LoggerProvider()
+  const logger = loggerProvider.getDiagnosticsLogger()
   const levelPath = await tmp.tmpName()
-  const levelStore = new LevelDbStore(levelPath, 'test')
-  const stateStore = new StreamStateStore(loggerProvider.getDiagnosticsLogger())
+  const levelStore = new LevelDbStore(logger, levelPath, 'test')
+  const stateStore = new StreamStateStore(logger)
   await stateStore.open(levelStore)
-  const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
+  const repository = new Repository(100, 100, logger)
   const pinStore = {
     stateStore,
   } as unknown as PinStore
@@ -25,7 +26,7 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
     ipfs,
     pubsubTopic,
     repository,
-    loggerProvider.getDiagnosticsLogger(),
+    logger,
     loggerProvider.makeServiceLogger('pubsub'),
     shutdownSignal,
     true,
