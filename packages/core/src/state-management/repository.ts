@@ -85,6 +85,17 @@ function commitAtTime(state: StreamState, timestamp: number): CommitID {
   return CommitID.make(StreamUtils.streamIdFromState(state), commitCid)
 }
 
+/**
+ * Whether a stream has been synced with the network (ie we've queried the network for the tip).
+ * ALREADY_SYNCED means it was synced at some point in the past before the current load operation.
+ * DID_SYNC means it was just synced as part of processing the current load operation.
+ */
+enum SyncStatus {
+  NOT_SYNCED,
+  ALREADY_SYNCED,
+  DID_SYNC,
+}
+
 export class Repository {
   /**
    * Serialize loading operations per streamId.
@@ -200,21 +211,24 @@ export class Repository {
   async load(streamId: StreamID, loadOptions: LoadOpts & InternalOpts = {}): Promise<RunningState> {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
-    const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
+    const [state$, syncStatus] = await this.loadingQ.forStream(streamId).run(async () => {
       const [existingState$, alreadySynced] = await this._fromMemoryOrStoreWithSyncStatus(streamId)
 
       switch (opts.sync) {
         case SyncOptions.PREFER_CACHE:
         case SyncOptions.SYNC_ON_ERROR: {
           if (!existingState$) {
-            return [await this._loadStreamFromNetwork(streamId, opts.syncTimeoutSeconds), true]
+            return [
+              await this._loadStreamFromNetwork(streamId, opts.syncTimeoutSeconds),
+              SyncStatus.DID_SYNC,
+            ]
           }
 
-          if (alreadySynced) {
-            return [existingState$, alreadySynced]
+          if (alreadySynced == SyncStatus.ALREADY_SYNCED) {
+            return [existingState$, SyncStatus.ALREADY_SYNCED]
           } else {
             await this._sync(existingState$, opts.syncTimeoutSeconds)
-            return [existingState$, true]
+            return [existingState$, SyncStatus.DID_SYNC]
           }
         }
         case SyncOptions.NEVER_SYNC: {
@@ -222,12 +236,12 @@ export class Repository {
             return [existingState$, alreadySynced]
           }
           // TODO(CDB-2761): Throw an error if stream isn't found in cache or state store.
-          return [await this._genesisFromNetwork(streamId), false]
+          return [await this._genesisFromNetwork(streamId), SyncStatus.NOT_SYNCED]
         }
         case SyncOptions.SYNC_ALWAYS: {
           return [
             await this._resyncStreamFromNetwork(streamId, opts.syncTimeoutSeconds, existingState$),
-            true,
+            SyncStatus.DID_SYNC,
           ]
         }
         default:
@@ -239,10 +253,14 @@ export class Repository {
       StreamUtils.checkForCacaoExpiration(state$.state)
     }
 
-    // TODO(WS1-1269): No need to update state if we loaded from the cache or state store
-    await this._updateStateIfPinned(state$)
-    if (synced && state$.isPinned) {
-      this.markPinnedAndSynced(state$.id)
+    if (syncStatus != SyncStatus.ALREADY_SYNCED) {
+      // Only update the pinned state if we actually did anything that might change it. If we just
+      // loaded from the cache and didn't even query the network, there's no reason to bother
+      // writing to the state store and index, since nothing could have changed.
+      await this._updateStateIfPinned(state$)
+      if (syncStatus == SyncStatus.DID_SYNC && state$.isPinned) {
+        this.markPinnedAndSynced(state$.id)
+      }
     }
 
     return state$
@@ -306,17 +324,20 @@ export class Repository {
    */
   private async _fromMemoryOrStoreWithSyncStatus(
     streamId: StreamID
-  ): Promise<[RunningState | null, boolean]> {
+  ): Promise<[RunningState | null, SyncStatus]> {
     let stream = this._fromMemory(streamId)
     if (stream) {
-      return [stream, true]
+      return [stream, SyncStatus.ALREADY_SYNCED]
     }
 
     stream = await this._fromStreamStateStore(streamId)
     if (stream) {
-      return [stream, this._wasPinnedStreamSynced(streamId)]
+      return [
+        stream,
+        this._wasPinnedStreamSynced(streamId) ? SyncStatus.ALREADY_SYNCED : SyncStatus.NOT_SYNCED,
+      ]
     }
-    return [null, false]
+    return [null, SyncStatus.NOT_SYNCED]
   }
 
   /**
