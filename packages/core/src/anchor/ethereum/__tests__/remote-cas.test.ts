@@ -99,7 +99,7 @@ describe('RemoteCAS supportedChains', () => {
 describe('create', () => {
   test('return pending, do no request', async () => {
     const fetchFn = jest.fn() as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
     const result = await cas.create(carFileReader, false)
     expect(fetchFn).not.toBeCalled()
@@ -137,7 +137,6 @@ describe('create', () => {
       ANCHOR_SERVICE_URL,
       LOGGER,
       POLL_INTERVAL,
-      MAX_POLL_TIME,
       fetchJsonFn as unknown as typeof fetchJson
     )
     const response = await cas.create(carFileReader, true)
@@ -160,7 +159,6 @@ describe('create', () => {
       ANCHOR_SERVICE_URL,
       LOGGER,
       POLL_INTERVAL,
-      MAX_POLL_TIME,
       fetchJsonFn as unknown as typeof fetchJson
     )
     const responseP = cas.create(carFileReader, true)
@@ -189,7 +187,6 @@ describe('get', () => {
       ANCHOR_SERVICE_URL,
       LOGGER,
       POLL_INTERVAL,
-      MAX_POLL_TIME,
       fetchJsonFn as unknown as typeof fetchJson
     )
     const response = await cas.getStatusForRequest(streamId, tip)
@@ -216,7 +213,6 @@ describe('get', () => {
       ANCHOR_SERVICE_URL,
       LOGGER,
       POLL_INTERVAL,
-      MAX_POLL_TIME,
       fetchJsonFn as unknown as typeof fetchJson
     )
     const responseP = cas.getStatusForRequest(streamId, tip)
