@@ -8,6 +8,13 @@ import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import type { AnchorLoopHandler } from './anchor-service.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 
+/**
+ * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
+ * and handle the response via `eventHandler.handle`.
+ *
+ * If CAS does not know about an anchor request, we consider it being not created previously for some reason.
+ * We create a request on CAS then.
+ */
 export class AnchorProcessingLoop {
   #loop: ProcessingLoop<AnchorRequestStoreListResult>
   constructor(
@@ -39,10 +46,16 @@ export class AnchorProcessingLoop {
     })
   }
 
+  /**
+   * Start looping.
+   */
   start(): void {
     this.#loop.start()
   }
 
+  /**
+   * Stop looping.
+   */
   async stop(): Promise<void> {
     return this.#loop.stop()
   }
