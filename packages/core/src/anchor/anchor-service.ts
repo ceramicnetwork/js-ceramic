@@ -112,12 +112,28 @@ export interface AnchorValidator {
 }
 
 export interface CASClient {
+  /**
+   * Return supported chains by CAS as array of CAIP-2 identifiers.
+   */
   supportedChains(): Promise<Array<string>>
+
+  /**
+   * Create an anchor request on CAS through `fetch`. If `waitForConfirmation` is `true`,
+   * it only returns after getting a confirmation from CAS.
+   */
   create(
     carFileReader: AnchorRequestCarFileReader,
     waitForConfirmation: boolean
   ): Promise<AnchorEvent>
-  getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent>
+
+  /**
+   * Get current status of an anchor request from CAS for `streamId` and its `tip`.
+   */
+  getStatusForRequest(streamId: StreamID, commitCID: CID): Promise<AnchorEvent>
+
+  /**
+   * Abort any fetch requests to CAS.
+   */
   close(): Promise<void>
 }
 
