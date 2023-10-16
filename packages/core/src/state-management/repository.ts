@@ -554,14 +554,6 @@ export class Repository {
     }
 
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
-    const genesisCID = state$.value.log[0].cid
-    const genesisCommit = carFile.get(genesisCID)
-    await this.anchorRequestStore.save(state$.id, {
-      cid: state$.tip,
-      timestamp: Date.now(),
-      genesis: genesisCommit,
-    })
-
     const anchorEvent = await this.anchorService.requestAnchor(
       carFile,
       opts.waitForAnchorConfirmation
