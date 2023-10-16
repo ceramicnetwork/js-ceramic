@@ -319,8 +319,8 @@ export class Repository {
    * Usual `_fromMemoryOrStore` might create a duplicate instance of RunningState for the same StreamId.
    * "safe" version makes sure we still have one instance of RunningState in memory per StreamId.
    */
-  private async _fromMemoryOrStoreSafe(streamId: StreamID): Promise<RunningState | undefined> {
-    return this.loadingQ.forStream(streamId).run(async () => {
+  private _fromMemoryOrStoreSafe(streamId: StreamID): Promise<RunningState | undefined> {
+    return this.loadingQ.forStream(streamId).run(() => {
       return this._fromMemoryOrStore(streamId)
     })
   }
