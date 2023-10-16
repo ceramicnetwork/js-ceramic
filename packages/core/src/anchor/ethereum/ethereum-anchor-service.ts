@@ -159,7 +159,7 @@ export class AuthenticatedEthereumAnchorService
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     maxPollTime: number = MAX_POLL_TIME,
-    enableLoop = false
+    enableLoop = true
   ) {
     super(
       anchorServiceUrl,
