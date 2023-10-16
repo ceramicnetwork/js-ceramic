@@ -63,7 +63,7 @@ export class IncomingChannel extends Observable<Message> {
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
+      const subscription = new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
         .pipe(
           checkSlowObservable(
             lateMessageAfter,
@@ -78,6 +78,10 @@ export class IncomingChannel extends Observable<Message> {
           )
         )
         .subscribe(subscriber)
+
+      return () => {
+        subscription.unsubscribe()
+      }
     })
   }
 }
