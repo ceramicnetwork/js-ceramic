@@ -61,7 +61,7 @@ export class ProcessingLoop<T> {
    * Used to intercept fulfillment inside `#processing`. Node.js forces you to handle Promise errors by
    * issuing a warning to console. Passing an error to an instance of `Deferred` solves that.
    */
-  #deferred: Deferred
+  #whenComplete: Deferred
 
   /**
    * Stop promises in `#processing` by issuing abort signal.
@@ -72,7 +72,7 @@ export class ProcessingLoop<T> {
     this.source = source
     this.handleValue = onValue
     this.#processing = undefined
-    this.#deferred = new Deferred()
+    this.#whenComplete = new Deferred()
     this.#abortController = new AbortController()
   }
 
@@ -97,9 +97,9 @@ export class ProcessingLoop<T> {
           const value = next.value
           await Promise.race([this.handleValue(value), rejectOnAbortSignal])
         } while (!isDone)
-        this.#deferred.resolve()
+        this.#whenComplete.resolve()
       } catch (e) {
-        this.#deferred.reject(e)
+        this.#whenComplete.reject(e)
       }
     }
     this.#processing = processing()
@@ -117,7 +117,7 @@ export class ProcessingLoop<T> {
     this.#abortController.abort('STOP')
     await this.source.return(undefined)
     await this.#processing
-    await this.#deferred
+    await this.#whenComplete
     this.#processing = undefined
   }
 }
