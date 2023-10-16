@@ -175,6 +175,63 @@ describe('Model API http-client tests', () => {
     expect(loaded.state.log.length).toEqual(2)
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
   })
+
+  test('Checks interface implementation on model creation', async () => {
+    const interfaceModel = await Model.create(ceramic, {
+      version: '2.0',
+      name: 'TestInterface',
+      accountRelation: { type: 'none' },
+      interface: true,
+      implements: [],
+      schema: {
+        type: 'object',
+        properties: { foo: { type: 'string' } },
+        additionalProperties: false,
+      },
+      relations: {
+        foo: { type: 'account' },
+      },
+      views: {
+        bar: { type: 'documentAccount' },
+      },
+    })
+
+    await expect(
+      Model.create(ceramic, {
+        version: '2.0',
+        name: 'TestModel',
+        accountRelation: { type: 'list' },
+        interface: false,
+        implements: [interfaceModel.id.toString()],
+        schema: {
+          type: 'object',
+          properties: { foo: { type: 'string' } },
+          additionalProperties: false,
+        },
+      })
+    ).rejects.toThrow()
+
+    await expect(
+      Model.create(ceramic, {
+        version: '2.0',
+        name: 'TestModel',
+        accountRelation: { type: 'list' },
+        interface: false,
+        implements: [interfaceModel.id.toString()],
+        schema: {
+          type: 'object',
+          properties: { foo: { type: 'string' } },
+          additionalProperties: false,
+        },
+        relations: {
+          foo: { type: 'account' },
+        },
+        views: {
+          bar: { type: 'documentAccount' },
+        },
+      })
+    ).resolves.toBeInstanceOf(Model)
+  })
 })
 
 describe('Model API multi-node tests', () => {

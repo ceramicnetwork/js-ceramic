@@ -15,6 +15,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { ViewsValidation } from './views-utils.js'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
+import { validateInterface, validateImplementedInterfaces } from './interfaces-utils.js'
 
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
@@ -26,6 +27,8 @@ const ALLOWED_CONTENT_KEYS = new Set([
   'accountRelation',
   'relations',
   'views',
+  'interface',
+  'implements',
 ])
 
 /**
@@ -142,6 +145,12 @@ export class ModelHandler implements StreamHandler<Model> {
     await this._schemaValidator.validateSchema(state.content.schema)
     if (state.content.views) {
       this._viewsValidator.validateViews(state.content.views, state.content.schema)
+    }
+    if (state.content.interface) {
+      validateInterface(state.content)
+    }
+    if (state.content.implements?.length) {
+      await validateImplementedInterfaces(state.content, context)
     }
 
     return state
