@@ -228,7 +228,7 @@ describe('anchor', () => {
 
       // dag.import is called 2 times:
       // 1) when the genesis commit is created on Ceramic side,
-      // 2) when Ceramic applies it
+      // 2) when Ceramic applies an anchor commit
       expect(dagImportSpy).toHaveBeenCalledTimes(2)
       dagImportSpy.mockClear()
     })
