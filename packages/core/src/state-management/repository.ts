@@ -45,7 +45,6 @@ const CACHE_HIT_LOCAL = 'cache_hit_local'
 const CACHE_HIT_MEMORY = 'cache_hit_memory'
 const CACHE_HIT_REMOTE = 'cache_hit_remote'
 const STREAM_SYNC = 'stream_sync'
-const ANCHOR_POLL_COUNT = 'anchor_poll_count'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -299,10 +298,6 @@ export class Repository {
       Metrics.count(CACHE_HIT_LOCAL, 1)
       const runningState = new RunningState(streamState, true)
       this._registerRunningState(runningState)
-      const storedRequest = await this.anchorRequestStore.load(streamId)
-      if (storedRequest !== null && this.anchorService) {
-        await this._confirmAnchorResponse(runningState, storedRequest.cid)
-      }
       return runningState
     } else {
       return undefined
@@ -317,6 +312,12 @@ export class Repository {
     const fromMemory = this._fromMemory(streamId)
     if (fromMemory) return fromMemory
     return this._fromStreamStateStore(streamId)
+  }
+
+  private async _fromMemoryOrStoreSafe(streamId: StreamID): Promise<RunningState | undefined> {
+    return this.loadingQ.forStream(streamId).run(async () => {
+      return this._fromMemoryOrStore(streamId)
+    })
   }
 
   /**
@@ -561,54 +562,11 @@ export class Repository {
       genesis: genesisCommit,
     })
 
-    const anchorStatus$ = await this.anchorService.requestAnchor(
+    const anchorEvent = await this.anchorService.requestAnchor(
       carFile,
       opts.waitForAnchorConfirmation
     )
-    return this._processAnchorResponse(state$, anchorStatus$)
-  }
-
-  /**
-   * If, when checking an entry in the AnchorRequestStore, we notice that the commit CID from the
-   * stored request has in fact already been anchored, we need to clean up the entry from the store
-   * so it doesn't stick around forever.  We need to do that from within the ExecutionQueue, however,
-   * or we risk deleting a valid entry for a newer request on the same Stream from the store.
-   */
-  private async _cleanUpStaleAnchorRequestStore(state$: RunningState, commit: CID): Promise<void> {
-    return this.executionQ.forStream(state$.id).run(async () => {
-      const request = await this.anchorRequestStore.load(state$.id)
-      if (!request.cid.equals(commit)) {
-        // We've already moved on to a newer request, don't accidentally delete the new request
-        return
-      }
-
-      // Even if we may have already checked this condition before calling into this function,
-      // we need to check it again under the execution queue as the state may have changed in the
-      // meantime otherwise.
-      if (
-        state$.state.anchorStatus == AnchorStatus.ANCHORED &&
-        StreamUtils.stateContainsCommit(state$.state, commit)
-      ) {
-        // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
-        await this.anchorRequestStore.remove(state$.id)
-      }
-    })
-  }
-
-  /**
-   * Restart polling and handle response for a previously submitted anchor request
-   */
-  private async _confirmAnchorResponse(state$: RunningState, cid: CID): Promise<Subscription> {
-    if (
-      state$.state.anchorStatus == AnchorStatus.ANCHORED &&
-      StreamUtils.stateContainsCommit(state$.state, cid)
-    ) {
-      // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
-      await this._cleanUpStaleAnchorRequestStore(state$, cid)
-    }
-
-    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
-    return this._processAnchorResponse(state$, anchorStatus$)
+    await this.handleAnchorResponse(state$, anchorEvent)
   }
 
   /**
@@ -618,10 +576,7 @@ export class Repository {
    * @param anchorEvent - response from CAS.
    * @return boolean - `true` if polling should stop, `false` if polling continues
    */
-  private async _handleAnchorResponse(
-    state$: RunningState,
-    anchorEvent: AnchorEvent
-  ): Promise<boolean> {
+  async handleAnchorResponse(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
     // We don't want to change a stream's state due to changes to the anchor
     // status of a commit that is no longer the tip of the stream, so we early return
     // in most cases when receiving a response to an old anchor request.
@@ -633,7 +588,8 @@ export class Repository {
     switch (status) {
       case AnchorRequestStatusName.READY:
       case AnchorRequestStatusName.PENDING: {
-        if (!anchorEvent.cid.equals(state$.tip)) return
+        if (!anchorEvent.cid.equals(state$.tip)) return false
+        if (state$.state.anchorStatus === AnchorStatus.PENDING) return false
         const next = {
           ...state$.value,
           anchorStatus: AnchorStatus.PENDING,
@@ -643,22 +599,14 @@ export class Repository {
         return false
       }
       case AnchorRequestStatusName.PROCESSING: {
-        if (!anchorEvent.cid.equals(state$.tip)) return
+        if (!anchorEvent.cid.equals(state$.tip)) return false
+        if (state$.state.anchorStatus === AnchorStatus.PROCESSING) return false
         state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
         await this._updateStateIfPinned(state$)
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
-        const anchorCommitCID = anchorEvent.witnessCar.roots[0]
         await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
-        if (state$.tip.equals(anchorCommitCID)) {
-          // TODO: This check is brittle.  If the anchor commit is rejected by conflict resolution
-          // or if the stream already has the anchor commit but has newer commits as well, then we
-          // won't ever clean up the entry in the AnchorRequestStore.  To do this well we need a
-          // transactional AnchorRequestStore where we can do a compare-and-swap based on the tip
-          // in the request.
-          await this.anchorRequestStore.remove(state$.id)
-        }
         return true
       }
       case AnchorRequestStatusName.FAILED: {
@@ -669,10 +617,9 @@ export class Repository {
         // if this is the anchor response for the tip update the state
         if (anchorEvent.cid.equals(state$.tip)) {
           state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
-          await this.anchorRequestStore.remove(state$.id)
+          return true
         }
-        // we stop the polling as this is a terminal state
-        return true
+        return false
       }
       case AnchorRequestStatusName.REPLACED: {
         this.logger.verbose(
@@ -681,57 +628,11 @@ export class Repository {
 
         // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
         // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
-        if (anchorEvent.cid.equals(state$.tip)) {
-          await this.anchorRequestStore.remove(state$.id)
-        }
-
-        return true
+        return anchorEvent.cid.equals(state$.tip)
       }
       default:
         throw new UnreachableCaseError(status, 'Unknown anchoring state')
     }
-  }
-
-  private _processAnchorResponse(
-    state$: RunningState,
-    anchorStatus$: Observable<AnchorEvent>
-  ): Subscription {
-    const stopSignal = new Subject<void>()
-    this.#numPendingAnchorSubscriptions++
-    Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-    const subscription = anchorStatus$
-      .pipe(
-        takeUntil(stopSignal),
-        concatMap(async (anchorEvent) => {
-          const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
-          if (shouldStop) stopSignal.next()
-        }),
-        catchError((error) => {
-          // TODO: Combine these two log statements into one line so that they can't get split up in the
-          // log output.
-          this.logger.warn(`Error while anchoring stream ${state$.id}:${error}`)
-          this.logger.warn(error) // Log stack trace
-
-          // TODO: This can leave a stream with AnchorStatus PENDING or PROCESSING indefinitely.
-          // We should distinguish whether the error is transient or permanent, and either transition
-          // to AnchorStatus FAILED or keep retrying.
-          return EMPTY
-        })
-      )
-      .subscribe(
-        null,
-        (err) => {
-          this.#numPendingAnchorSubscriptions--
-          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-          throw err
-        },
-        () => {
-          this.#numPendingAnchorSubscriptions--
-          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-        }
-      )
-    state$.add(subscription)
-    return subscription
   }
 
   /**
@@ -1058,15 +959,16 @@ export class Repository {
 
   anchorLoopHandler(): AnchorLoopHandler {
     const carBuilder = this.#deps.anchorRequestCarBuilder
-    const internals = this._internals
+    const fromMemoryOrStoreSafe = this._fromMemoryOrStoreSafe.bind(this)
+    const handleAnchorResponse = this.handleAnchorResponse.bind(this)
     return {
       buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
         return carBuilder.build(streamId, tip)
       },
       async handle(event: AnchorEvent): Promise<boolean> {
-        const state$ = await internals.fromMemoryOrStoreSafe(event.streamId)
+        const state$ = await fromMemoryOrStoreSafe(event.streamId)
         if (!state$) return true
-        return internals.handleAnchorResponse(state$, event)
+        return handleAnchorResponse(state$, event)
       },
     }
   }
