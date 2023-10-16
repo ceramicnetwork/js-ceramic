@@ -1,6 +1,30 @@
-export class Deferred<T = void> {
+/**
+ * Deferred pattern is one of the most commonly used design patterns in JavaScript world and in programming in general.
+ * It postpones the action to a later stage for whatever reason, but mostly because the expected value is not available yet.
+ *
+ * Unlike Promise that encapsulation fulfillment (resolve or reject) in `new Promise()`,
+ * `Deferred` allows you to return promise, and then fulfill it manually.
+ *
+ * ```typescript
+ * const promiseLike = new Deferred<T>() // Feel free to do whatever you like with it
+ * // When you _want_ the promise to resolve, just pass a value:
+ * promiseLike.resolve(value)
+ * // Same with rejection:
+ * promiseLike.reject(new Error("I am done"))
+ * ```
+ */
+export class Deferred<T = void> implements PromiseLike<T> {
+  /**
+   * Resolve the promise manually.
+   */
   readonly resolve: (t: T) => void
+
+  /**
+   * Reject the promise.
+   */
   readonly reject: (e: Error) => void
+
+  // Parts of Promise API
   readonly then: Promise<T>['then']
   readonly catch: Promise<T>['catch']
 
