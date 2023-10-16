@@ -59,21 +59,18 @@ export class RemoteCAS implements CASClient {
   readonly #sendRequest: FetchRequest
   readonly #logger: DiagnosticsLogger
   readonly #pollInterval: number
-  readonly #maxPollTime: number
   readonly #stopSignal: Subject<void>
 
   constructor(
     anchorServiceUrl: string,
     logger: DiagnosticsLogger,
     pollInterval: number,
-    maxPollTime: number,
     sendRequest: FetchRequest
   ) {
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#logger = logger
     this.#pollInterval = pollInterval
-    this.#maxPollTime = maxPollTime
     this.#sendRequest = sendRequest
     this.#stopSignal = new Subject()
   }

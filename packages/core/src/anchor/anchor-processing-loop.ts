@@ -18,7 +18,6 @@ import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 export class AnchorProcessingLoop {
   #loop: ProcessingLoop<AnchorRequestStoreListResult>
   constructor(
-    pollInterval: number,
     batchSize: number,
     cas: CASClient,
     store: AnchorRequestStore,
@@ -42,7 +41,6 @@ export class AnchorProcessingLoop {
       } catch (e) {
         logger.err(e)
       }
-      await new Promise((resolve) => setTimeout(resolve, pollInterval))
     })
   }
 

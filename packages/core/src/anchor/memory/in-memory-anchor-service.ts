@@ -26,7 +26,6 @@ type InMemoryAnchorConfig = {
 export class InMemoryAnchorService implements AnchorService {
   readonly #cas: InMemoryCAS
   readonly #logger: DiagnosticsLogger
-  readonly #pollInterval = DEFAULT_POLL_INTERVAL
   readonly #enableLoop: boolean
 
   #loop: AnchorProcessingLoop
@@ -46,7 +45,6 @@ export class InMemoryAnchorService implements AnchorService {
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
     this.#store = store
     this.#loop = new AnchorProcessingLoop(
-      this.#pollInterval,
       BATCH_SIZE,
       this.#cas,
       this.#store,

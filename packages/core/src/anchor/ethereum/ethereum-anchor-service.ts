@@ -23,7 +23,6 @@ import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { RemoteCAS } from './remote-cas.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
-const MAX_POLL_TIME = 86_400_000 // 24 hours
 const BATCH_SIZE = 10
 
 /**
@@ -32,11 +31,6 @@ const BATCH_SIZE = 10
 export class EthereumAnchorService implements AnchorService {
   readonly #logger: DiagnosticsLogger
   #loop: AnchorProcessingLoop
-  /**
-   * Retry a request to CAS every +pollInterval+ milliseconds.
-   */
-  readonly #pollInterval: number
-  readonly #maxPollTime: number
   readonly #enableLoop: boolean
   readonly #events: Subject<AnchorEvent>
 
@@ -53,15 +47,12 @@ export class EthereumAnchorService implements AnchorService {
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    maxPollTime = MAX_POLL_TIME,
     sendRequest: FetchRequest = fetchJson,
     enableLoop = true
   ) {
     this.#logger = logger
-    this.#pollInterval = pollInterval
-    this.#maxPollTime = maxPollTime
     this.#events = new Subject()
-    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, maxPollTime, sendRequest)
+    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, sendRequest)
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
@@ -87,7 +78,6 @@ export class EthereumAnchorService implements AnchorService {
     this.#chainId = supportedChains[0]
     await this.validator.init(this.#chainId)
     this.#loop = new AnchorProcessingLoop(
-      this.#pollInterval,
       BATCH_SIZE,
       this.#cas,
       this.#store,
@@ -158,7 +148,6 @@ export class AuthenticatedEthereumAnchorService
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    maxPollTime: number = MAX_POLL_TIME,
     enableLoop = true
   ) {
     super(
@@ -166,7 +155,6 @@ export class AuthenticatedEthereumAnchorService
       ethereumRpcUrl,
       logger,
       pollInterval,
-      maxPollTime,
       auth.sendAuthenticatedRequest.bind(auth),
       enableLoop
     )
