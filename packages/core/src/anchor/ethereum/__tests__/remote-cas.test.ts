@@ -192,7 +192,7 @@ describe('get', () => {
       MAX_POLL_TIME,
       fetchJsonFn as unknown as typeof fetchJson
     )
-    const response = await cas.get(streamId, tip)
+    const response = await cas.getStatusForRequest(streamId, tip)
     expect(response).toEqual({
       status: casResponse.status,
       streamId: streamId,
@@ -219,7 +219,7 @@ describe('get', () => {
       MAX_POLL_TIME,
       fetchJsonFn as unknown as typeof fetchJson
     )
-    const responseP = cas.get(streamId, tip)
+    const responseP = cas.getStatusForRequest(streamId, tip)
     await TestUtils.delay(POLL_INTERVAL)
     await cas.close()
     await expect(responseP).rejects.toThrow()

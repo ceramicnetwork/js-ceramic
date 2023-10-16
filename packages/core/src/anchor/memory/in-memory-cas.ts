@@ -108,7 +108,7 @@ export class InMemoryCAS implements CASClient {
     return event
   }
 
-  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+  async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const found = this.#anchors.get(tip.toString())
     if (found) {
       return found

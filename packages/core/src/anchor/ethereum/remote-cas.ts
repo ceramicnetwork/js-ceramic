@@ -148,7 +148,7 @@ export class RemoteCAS implements CASClient {
     }
   }
 
-  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+  async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
     const sendRequest$ = deferAbortable((signal) =>
       this.#sendRequest(requestUrl, { timeout: this.#pollInterval, signal: signal })

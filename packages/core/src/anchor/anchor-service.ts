@@ -117,7 +117,7 @@ export interface CASClient {
     carFileReader: AnchorRequestCarFileReader,
     waitForConfirmation: boolean
   ): Promise<AnchorEvent>
-  get(streamId: StreamID, tip: CID): Promise<AnchorEvent>
+  getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent>
   close(): Promise<void>
 }
 

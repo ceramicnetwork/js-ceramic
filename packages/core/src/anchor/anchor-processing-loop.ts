@@ -27,7 +27,7 @@ export class AnchorProcessingLoop {
   ) {
     this.#loop = new ProcessingLoop(store.infiniteList(batchSize), async (entry) => {
       try {
-        const event = await cas.get(entry.key, entry.value.cid).catch(async () => {
+        const event = await cas.getStatusForRequest(entry.key, entry.value.cid).catch(async () => {
           const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
           return cas.create(new AnchorRequestCarFileReader(requestCAR), false)
         })
