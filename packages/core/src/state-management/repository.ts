@@ -462,10 +462,11 @@ export class Repository {
         return state$ // nothing changed
       }
 
+      await this._applyWriteOpts(state$, opts, OperationType.UPDATE)
+      await this._updateStateIfPinned(state$)
+
       state$.next(updatedState) // emit the new state
 
-      await this._updateStateIfPinned(state$)
-      await this._applyWriteOpts(state$, opts, OperationType.UPDATE)
       this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
 
       return state$
