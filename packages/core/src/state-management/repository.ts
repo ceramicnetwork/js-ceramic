@@ -7,7 +7,6 @@ import {
   Context,
   CreateOpts,
   DiagnosticsLogger,
-  InternalOpts,
   LoadOpts,
   PinningOpts,
   PublishOpts,
@@ -197,7 +196,11 @@ export class Repository {
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
    */
-  async load(streamId: StreamID, loadOptions: LoadOpts & InternalOpts = {}): Promise<RunningState> {
+  async load(
+    streamId: StreamID,
+    loadOptions: LoadOpts = {},
+    checkCacaoExpiration = true
+  ): Promise<RunningState> {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
     const [state$, synced] = await this.loadingQ.forStream(streamId).run(async () => {
@@ -235,7 +238,7 @@ export class Repository {
       }
     })
 
-    if (!opts.skipCacaoExpirationChecks) {
+    if (checkCacaoExpiration) {
       StreamUtils.checkForCacaoExpiration(state$.state)
     }
 
@@ -401,8 +404,7 @@ export class Repository {
     // We also skip CACAO expiration checking during this initial load as its possible
     // that the CommitID we are being asked to load may in fact be an anchor commit with
     // the timestamp information that will reveal to us that the CACAO didn't actually expire.
-    const optsSkippingCACAOChecks = { ...opts, skipCacaoExpirationChecks: true }
-    const base$ = await this.load(commitId.baseID, optsSkippingCACAOChecks)
+    const base$ = await this.load(commitId.baseID, opts, false)
 
     return this._atCommit(commitId, base$)
   }
