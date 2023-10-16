@@ -44,10 +44,28 @@ export class Deferred<T = void> implements PromiseLike<T> {
 }
 
 export class ProcessingLoop<T> {
+  /**
+   * Source of entries we process in a loop.
+   */
   private readonly source: AsyncGenerator<T>
+  /**
+   * External action that processes an entry.
+   */
   private readonly handleValue: (value: T) => Promise<void>
+  /**
+   * `for await ()` loop wrapped in a function. It resolves, when `source` reports it has no entries.
+   * If absent, i.e. `undefined`, it means, we have not started processing the entries.
+   */
   #processing: Promise<void> | undefined
+  /**
+   * Used to intercept fulfillment inside `#processing`. Node.js forces you to handle Promise errors by
+   * issuing a warning to console. Passing an error to an instance of `Deferred` solves that.
+   */
   #deferred: Deferred
+
+  /**
+   * Stop promises in `#processing` by issuing abort signal.
+   */
   #abortController: AbortController
 
   constructor(source: ProcessingLoop<T>['source'], onValue: ProcessingLoop<T>['handleValue']) {
@@ -59,7 +77,7 @@ export class ProcessingLoop<T> {
   }
 
   start() {
-    const abortion = new Promise<IteratorResult<T>>((resolve) => {
+    const rejectOnAbortSignal = new Promise<IteratorResult<T>>((resolve) => {
       if (this.#abortController.signal.aborted) {
         resolve({ done: true, value: undefined })
       }
@@ -73,11 +91,11 @@ export class ProcessingLoop<T> {
       try {
         let isDone = false
         do {
-          const next = await Promise.race([this.source.next(), abortion])
+          const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
           isDone = next.done
           if (isDone) break
           const value = next.value
-          await Promise.race([this.handleValue(value), abortion])
+          await Promise.race([this.handleValue(value), rejectOnAbortSignal])
         } while (!isDone)
         this.#deferred.resolve()
       } catch (e) {
@@ -87,6 +105,13 @@ export class ProcessingLoop<T> {
     this.#processing = processing()
   }
 
+  /**
+   * Stop processing:
+   * 1. Emit an abort signal to `#abortController`
+   * 2. Command `source` that we are done.
+   * 3. Wait till the processing is over.
+   * 4. Clean up internal state.
+   */
   async stop() {
     if (!this.#processing) return
     this.#abortController.abort('STOP')
