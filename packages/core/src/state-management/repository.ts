@@ -566,17 +566,23 @@ export class Repository {
       carFile,
       opts.waitForAnchorConfirmation
     )
-    await this.handleAnchorResponse(state$, anchorEvent)
+    await this.handleAnchorEvent(state$, anchorEvent)
   }
 
   /**
    * Handle AnchorEvent and update state$.
+   * Used in two places:
+   * 1. When handling the first AnchorEvent from CAS when requesting an anchor => anchorEvent is for tip
+   * 2. When handling a response from CAS => anchorEvent is for what is stored in AnchorRequestStore.
+   *
+   * It always stores just the most recently requested commit.
+   * We assume CAS issues a REPLACED status when getting a request for a previous commit.
    *
    * @param state$ - RunningState instance to update.
    * @param anchorEvent - response from CAS.
-   * @return boolean - `true` if polling should stop, `false` if polling continues
+   * @return boolean - `true` if polling should stop, i.e. we reached a terminal state, `false` if polling continues.
    */
-  async handleAnchorResponse(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
+  async handleAnchorEvent(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
     // We don't want to change a stream's state due to changes to the anchor
     // status of a commit that is no longer the tip of the stream, so we early return
     // in most cases when receiving a response to an old anchor request.
@@ -619,7 +625,7 @@ export class Repository {
           state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
           return true
         }
-        return false
+        return true
       }
       case AnchorRequestStatusName.REPLACED: {
         this.logger.verbose(
@@ -628,7 +634,7 @@ export class Repository {
 
         // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
         // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
-        return anchorEvent.cid.equals(state$.tip)
+        return true
       }
       default:
         throw new UnreachableCaseError(status, 'Unknown anchoring state')
@@ -960,7 +966,7 @@ export class Repository {
   anchorLoopHandler(): AnchorLoopHandler {
     const carBuilder = this.#deps.anchorRequestCarBuilder
     const fromMemoryOrStoreSafe = this._fromMemoryOrStoreSafe.bind(this)
-    const handleAnchorResponse = this.handleAnchorResponse.bind(this)
+    const handleAnchorEvent = this.handleAnchorEvent.bind(this)
     return {
       buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
         return carBuilder.build(streamId, tip)
@@ -968,7 +974,7 @@ export class Repository {
       async handle(event: AnchorEvent): Promise<boolean> {
         const state$ = await fromMemoryOrStoreSafe(event.streamId)
         if (!state$) return true
-        return handleAnchorResponse(state$, event)
+        return handleAnchorEvent(state$, event)
       },
     }
   }

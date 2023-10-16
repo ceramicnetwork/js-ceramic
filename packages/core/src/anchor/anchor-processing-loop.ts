@@ -26,7 +26,11 @@ export class AnchorProcessingLoop {
         })
         const isTerminal = await eventHandler.handle(event)
         if (isTerminal) {
-          await store.remove(entry.key)
+          // We might store a new entry during the processing, so we better check if the current entry is indeed terminal.
+          const current = await store.load(entry.key)
+          if (current.cid.equals(entry.value.cid)) {
+            await store.remove(entry.key)
+          }
         }
       } catch (e) {
         logger.err(e)
