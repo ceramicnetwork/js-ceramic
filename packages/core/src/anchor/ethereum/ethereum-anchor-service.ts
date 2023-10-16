@@ -18,7 +18,7 @@ import type {
   CASClient,
 } from '../anchor-service.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
-import { MultipleChainsError, type AnchorLoopHandler } from '../anchor-service.js'
+import { NotSingleChainError, type AnchorLoopHandler } from '../anchor-service.js'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { RemoteCAS } from './remote-cas.js'
 
@@ -81,8 +81,8 @@ export class EthereumAnchorService implements AnchorService {
     this.#store = store
     // Get the chainIds supported by our anchor service
     const supportedChains = await this.#cas.supportedChains()
-    if (supportedChains.length > 1) {
-      throw new MultipleChainsError()
+    if (supportedChains.length !== 1) {
+      throw new NotSingleChainError()
     }
     this.#chainId = supportedChains[0]
     await this.validator.init(this.#chainId)

@@ -121,7 +121,7 @@ export interface CASClient {
   close(): Promise<void>
 }
 
-export class MultipleChainsError extends Error {
+export class NotSingleChainError extends Error {
   constructor() {
     super(
       "Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet"
