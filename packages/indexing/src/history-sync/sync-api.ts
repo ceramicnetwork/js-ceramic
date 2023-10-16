@@ -22,6 +22,7 @@ import {
   SyncJobType,
   type JobData,
   type SyncJob,
+  type ModelSyncOptions,
 } from './interfaces.js'
 import { RebuildAnchorWorker } from './workers/rebuild-anchor.js'
 import {
@@ -107,7 +108,7 @@ export class SyncApi implements ISyncApi {
   private subscription: Subscription | undefined
   private provider!: Provider
   private chainId!: SupportedNetwork
-  private initialIndexingBlock!: number
+  private defaultStartBlock!: number
   private periodicStatusLogger: Subscription | undefined
   private currentBlock!: number
   private startBlock!: number
@@ -115,8 +116,8 @@ export class SyncApi implements ISyncApi {
   constructor(
     private readonly syncConfig: SyncConfig,
     private readonly ipfsService: IpfsService,
-    private readonly handleCommit: HandleCommit,
-    private readonly localIndex: LocalIndexApi,
+    private readonly handleCommit: HandleCommit, // TODO(CDB-2653): circular dependency
+    private readonly localIndex: LocalIndexApi, // TODO(CDB-2653): circular dependency
     private readonly diagnosticsLogger: DiagnosticsLogger
   ) {
     if (!this.syncConfig.on) return
@@ -131,7 +132,7 @@ export class SyncApi implements ISyncApi {
 
     const chainIdNumber = (await provider.getNetwork()).chainId
     this.chainId = `eip155:${chainIdNumber}` as SupportedNetwork
-    this.initialIndexingBlock = INITIAL_INDEXING_BLOCKS[this.chainId] || 0
+    this.defaultStartBlock = INITIAL_INDEXING_BLOCKS[this.chainId] || 0
 
     const [latestBlock, { processedBlockNumber }] = await Promise.all([
       this.provider.getBlock(-BLOCK_CONFIRMATIONS),
@@ -148,7 +149,7 @@ export class SyncApi implements ISyncApi {
       //no sync happened before
       await this._addSyncJob(HISTORY_SYNC_JOB, {
         jobType: SyncJobType.Catchup,
-        fromBlock: this.initialIndexingBlock,
+        fromBlock: this.defaultStartBlock,
         toBlock: latestBlock.number,
         models: Array.from(this.modelsToSync),
       })
@@ -399,8 +400,7 @@ export class SyncApi implements ISyncApi {
    */
   async startModelSync(
     models: string | string[],
-    startBlock = this.initialIndexingBlock,
-    knownEndBlock?: number
+    syncOptions: ModelSyncOptions = {}
   ): Promise<void> {
     if (!this.syncConfig.on) return
 
@@ -412,9 +412,12 @@ export class SyncApi implements ISyncApi {
       this.modelsToSync.add(modelId)
     }
 
-    const endBlock: number =
-      knownEndBlock ??
-      (await this.provider.getBlock('latest').then(({ number }) => number - BLOCK_CONFIRMATIONS))
+    const startBlock = Math.max(this.defaultStartBlock, syncOptions.startBlock || 0)
+
+    const endBlock =
+      !syncOptions.endBlock || syncOptions.endBlock < startBlock
+        ? await this.provider.getBlock('latest').then(({ number }) => number - BLOCK_CONFIRMATIONS)
+        : syncOptions.endBlock
 
     // start a new full sync on a model
     await this._addSyncJob(HISTORY_SYNC_JOB, {
@@ -474,6 +477,6 @@ export class SyncApi implements ISyncApi {
   }
 
   get enabled() {
-    return this.syncConfig.on
+    return Boolean(this.syncConfig.on)
   }
 }

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { jest } from '@jest/globals'
-import type { Block, BlockTag, Filter, Log } from '@ethersproject/providers'
+import type { Block, BlockTag, Filter, Log, TransactionResponse } from '@ethersproject/providers'
 import { TestUtils } from '@ceramicnetwork/common'
 import type { IpfsApi, AnchorProof, Page, StreamState, Stream } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
@@ -17,6 +17,8 @@ import {
   STATE_TABLE_NAME,
 } from '@ceramicnetwork/indexing'
 import { Ceramic } from '@ceramicnetwork/core'
+// import { NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC } from '../../local-admin-api.js'
+// import { IProvidersCache } from '../../providers-cache.js'
 
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
@@ -37,6 +39,8 @@ import {
 } from '@ceramicnetwork/anchor-utils'
 import { FauxBloomMetadata } from '../faux-bloom-metadata.js'
 import { createCeramic } from '../create-ceramic.js'
+
+const DEFAULT_START_BLOCK = 1000
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -97,14 +101,15 @@ const parseBlockHashOrBlockTag = async (
 }
 
 class MockProvider extends EventEmitter {
-  firstBlock = 25
+  firstBlock = 100025
   lastBlock = this.firstBlock
   rootsByBlockNumber: Record<number, string> = {}
   blockNumberByRoots: Record<string, number> = {}
+
   async getBlock(
     blockHashOrBlockTag?: BlockTag | string | Promise<BlockTag | string>
   ): Promise<Block> {
-    if (!blockHashOrBlockTag || blockHashOrBlockTag === 'latest') {
+    if ((!blockHashOrBlockTag && blockHashOrBlockTag != 0) || blockHashOrBlockTag === 'latest') {
       return createBlock(this.lastBlock) as Block
     }
 
@@ -119,29 +124,29 @@ class MockProvider extends EventEmitter {
 
   async getLogs(filter: Filter): Promise<Array<Log>> {
     const { fromBlock, toBlock } = filter
-    const fromBlockNumber = fromBlock ? await parseBlockHashOrBlockTag(fromBlock) : this.firstBlock
-    const toBlockNumber = toBlock ? await parseBlockHashOrBlockTag(toBlock) : this.lastBlock
+    const fromBlockNumber =
+      fromBlock || fromBlock == 0 ? await parseBlockHashOrBlockTag(fromBlock) : this.firstBlock
+    const toBlockNumber =
+      toBlock || toBlock == 0 ? await parseBlockHashOrBlockTag(toBlock) : this.lastBlock
 
     const logs: Log[] = []
     for (let blockNumber = fromBlockNumber; blockNumber <= toBlockNumber; blockNumber++) {
       const root = this.rootsByBlockNumber[blockNumber]
-      if (!root) {
-        return []
+      if (root) {
+        const hexRoot = '0x' + uint8arrays.toString(CID.parse(root).bytes.slice(4), 'base16')
+        const encodedArgs = contractInterface.encodeEventLog(
+          contractInterface.events['DidAnchor(address,bytes32)'],
+          ['0xB37fedf93df2fF5BcDC38328634A8C1926d85631', hexRoot]
+        )
+
+        logs.push({
+          blockNumber,
+          blockHash: `blockHash_${blockNumber}`,
+          data: encodedArgs.data,
+          topics: encodedArgs.topics,
+          transactionHash: createTransactionHash(blockNumber),
+        } as Log)
       }
-
-      const hexRoot = '0x' + uint8arrays.toString(CID.parse(root).bytes.slice(4), 'base16')
-      const encodedArgs = contractInterface.encodeEventLog(
-        contractInterface.events['DidAnchor(address,bytes32)'],
-        ['0xB37fedf93df2fF5BcDC38328634A8C1926d85631', hexRoot]
-      )
-
-      logs.push({
-        blockNumber,
-        blockHash: `blockHash_${blockNumber}`,
-        data: encodedArgs.data,
-        topics: encodedArgs.topics,
-        transactionHash: createTransactionHash(blockNumber),
-      } as Log)
     }
 
     return logs
@@ -167,12 +172,16 @@ class MockProvider extends EventEmitter {
     }
   }
 
+  async getTransaction(): Promise<TransactionResponse> {
+    return {
+      blockNumber: 100000,
+    } as any
+  }
+
   async getNetwork(): Promise<{ chainId: number }> {
     return { chainId: 1337 }
   }
 }
-
-const provider = new MockProvider()
 
 const extractStreamStates = (page: Page<StreamState | null>): Array<StreamState> => {
   if (page.edges.find((edge) => edge.node === null)) {
@@ -193,10 +202,13 @@ const extractDocuments = (
   )
 }
 
-const waitForMidsToBeIndexed = async (ceramic: Ceramic, docs: ModelInstanceDocument[]) => {
+const waitForMidsToBeIndexed = async (
+  ceramic: Ceramic,
+  docs: ModelInstanceDocument[]
+): Promise<boolean> => {
   // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
   // in the index, instead of this polling-based approach.
-  await TestUtils.waitForConditionOrTimeout(async () => {
+  return TestUtils.waitForConditionOrTimeout(async () => {
     const results = await ceramic.index
       .query({ model: MODEL_STREAM_ID, last: 100 })
       .then((resultObj) => extractDocuments(ceramic, resultObj))
@@ -239,6 +251,15 @@ function candidateFromStream(stream: Stream): ICandidate {
   }
 }
 
+const provider = new MockProvider()
+
+const mockProvidersCache = {
+  ethereumRpcEndpoint: 'test',
+  async getProvider() {
+    return provider as any
+  },
+}
+
 describe('Sync tests', () => {
   jest.setTimeout(150000)
   const logger = new LoggerProvider().getDiagnosticsLogger()
@@ -246,6 +267,7 @@ describe('Sync tests', () => {
   let ipfs1: IpfsApi
   let ipfs2: IpfsApi
   let creatingCeramic: Ceramic
+  let createdModel: Model
   let syncingCeramic: Ceramic | null
   let merkleTreeFactory: MerkleTreeFactory<CIDHolder, ICandidate, TreeMetadata>
   let dbConnection: Knex
@@ -266,8 +288,9 @@ describe('Sync tests', () => {
 
     // syncing is not enabled
     creatingCeramic = await createCeramic(ipfs2 as any)
-    const model = await Model.create(creatingCeramic, MODEL_DEFINITION)
-    expect(model.id.toString()).toEqual(MODEL_STREAM_ID.toString())
+    createdModel = await Model.create(creatingCeramic, MODEL_DEFINITION)
+    expect(createdModel.id.toString()).toEqual(MODEL_STREAM_ID.toString())
+    await TestUtils.anchorUpdate(creatingCeramic, createdModel)
     await creatingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
     const ipfsMerge: MergeFunction<CIDHolder, TreeMetadata> = new IpfsMerge(
@@ -280,18 +303,22 @@ describe('Sync tests', () => {
 
     //create a ceramic where syncing is enabled
     createSyncingCeramic = async () => {
-      const syncingCeramic = await createCeramic(ipfs1 as any, {
-        indexing: {
-          db: process.env.DATABASE_URL as string,
-          allowQueriesBeforeHistoricalSync: true,
-          enableHistoricalSync: false,
-          disableComposedb: false,
+      const syncingCeramic = await createCeramic(
+        ipfs1 as any,
+        {
+          ethereumRpcUrl: 'test',
+          indexing: {
+            db: process.env.DATABASE_URL as string,
+            allowQueriesBeforeHistoricalSync: true,
+            enableHistoricalSync: true,
+            disableComposedb: false,
+          },
+          sync: true,
+          // change pubsub topic so that we aren't getting updates via pubsub
+          pubsubTopic: '/ceramic/random/test',
         },
-        sync: true,
-        // change pubsub topic so that we aren't getting updates via pubsub
-        pubsubTopic: '/ceramic/random/test',
-      })
-      await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
+        mockProvidersCache
+      )
 
       // TODO: CDB-2229 once ProvidersCache is used in the validator we will not have to replace this
       const validator = syncingCeramic.anchorService.validator
@@ -304,6 +331,9 @@ describe('Sync tests', () => {
 
         return original(proof)
       }
+
+      // @ts-ignore private field
+      syncingCeramic.syncApi.defaultStartBlock = DEFAULT_START_BLOCK
 
       return syncingCeramic
     }
@@ -332,6 +362,7 @@ describe('Sync tests', () => {
     await dbConnection.schema.dropTableIfExists(STATE_TABLE_NAME)
 
     syncingCeramic = await createSyncingCeramic()
+    await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
     const mid = await ModelInstanceDocument.create(
       creatingCeramic,
       { myData: 0 },
@@ -365,10 +396,11 @@ describe('Sync tests', () => {
 
     await provider.mineBlocks([merkleTree1.root, merkleTree2.root, merkleTree3.root])
 
-    await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2, mid3])
+    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2, mid3])
+    expect(success).toEqual(true)
   })
 
-  test('Can perform sync for the first time', async () => {
+  test('Can perform sync for the first time starting from the model`s anchored block', async () => {
     await dbConnection.schema.dropTableIfExists(STATE_TABLE_NAME)
 
     const mid = await ModelInstanceDocument.create(
@@ -388,10 +420,59 @@ describe('Sync tests', () => {
     const merkleTree1 = await merkleTreeFactory.build([mid, mid2].map(candidateFromStream))
 
     await provider.mineBlocks([merkleTree1.root])
+    await provider.mineBlocks([])
 
     syncingCeramic = await createSyncingCeramic()
+    // since we disabled receiving updates from the pubsub, we cannot retrieve the anchor, so we load the model at the anchor commit.
+    await syncingCeramic.loadStream(createdModel.commitId)
 
-    await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
+    // @ts-ignore private field
+    const addSyncJobSpy = jest.spyOn(syncingCeramic.syncApi, '_addSyncJob')
+
+    await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
+
+    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
+    expect(success).toEqual(true)
+
+    const jobData = addSyncJobSpy.mock.calls[0][1] as any
+    expect(jobData.fromBlock).toBeGreaterThan(DEFAULT_START_BLOCK)
+    expect(jobData.toBlock).toEqual(provider.lastBlock - BLOCK_CONFIRMATIONS)
+  })
+
+  test('Can perform sync for the first time starting from the default start block if the model has not been anchored', async () => {
+    await dbConnection.schema.dropTableIfExists(STATE_TABLE_NAME)
+
+    const mid = await ModelInstanceDocument.create(
+      creatingCeramic,
+      { myData: 3 },
+      {
+        model: MODEL_STREAM_ID,
+      }
+    )
+    const mid2 = await ModelInstanceDocument.create(
+      creatingCeramic,
+      { myData: 4 },
+      {
+        model: MODEL_STREAM_ID,
+      }
+    )
+    const merkleTree1 = await merkleTreeFactory.build([mid, mid2].map(candidateFromStream))
+
+    await provider.mineBlocks([merkleTree1.root])
+    await provider.mineBlocks([])
+
+    syncingCeramic = await createSyncingCeramic()
+    // @ts-ignore private field
+    const addSyncJobSpy = jest.spyOn(syncingCeramic.syncApi, '_addSyncJob')
+
+    await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
+
+    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
+    expect(success).toEqual(true)
+
+    const jobData = addSyncJobSpy.mock.calls[0][1] as any
+    expect(jobData.fromBlock).toEqual(DEFAULT_START_BLOCK)
+    expect(jobData.toBlock).toEqual(provider.lastBlock - BLOCK_CONFIRMATIONS)
   })
 
   test('Should catch up if the node went offline', async () => {
@@ -412,6 +493,8 @@ describe('Sync tests', () => {
     await provider.mineBlocks()
 
     syncingCeramic = await createSyncingCeramic()
-    await waitForMidsToBeIndexed(syncingCeramic, [mid])
+    await syncingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
+    const success = await waitForMidsToBeIndexed(syncingCeramic, [mid])
+    expect(success).toEqual(true)
   })
 })
