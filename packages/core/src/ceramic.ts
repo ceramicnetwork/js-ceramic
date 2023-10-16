@@ -304,6 +304,7 @@ export class Ceramic implements CeramicApi {
       this.syncApi,
       this.nodeStatus.bind(this),
       pinApi,
+      this.providersCache,
       this.loadStream.bind(this)
     )
   }

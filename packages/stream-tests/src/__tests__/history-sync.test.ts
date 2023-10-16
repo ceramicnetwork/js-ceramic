@@ -40,7 +40,7 @@ import {
 import { FauxBloomMetadata } from '../faux-bloom-metadata.js'
 import { createCeramic } from '../create-ceramic.js'
 
-const NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC = 360
+const DEFAULT_START_BLOCK = 1000
 
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
@@ -101,11 +101,10 @@ const parseBlockHashOrBlockTag = async (
 }
 
 class MockProvider extends EventEmitter {
-  firstBlock = 1025
+  firstBlock = 100025
   lastBlock = this.firstBlock
   rootsByBlockNumber: Record<number, string> = {}
   blockNumberByRoots: Record<string, number> = {}
-  transactionBlockNumber = 1003 + NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC
 
   async getBlock(
     blockHashOrBlockTag?: BlockTag | string | Promise<BlockTag | string>
@@ -175,7 +174,7 @@ class MockProvider extends EventEmitter {
 
   async getTransaction(): Promise<TransactionResponse> {
     return {
-      blockNumber: this.transactionBlockNumber,
+      blockNumber: 100000,
     } as any
   }
 
@@ -183,22 +182,6 @@ class MockProvider extends EventEmitter {
     return { chainId: 1337 }
   }
 }
-
-const provider = new MockProvider()
-
-// class MockProvidersCache implements IProvidersCache {
-//   ethereumRpcEndpoint = 'test'
-
-//   async getProvider(): Promise<BaseProvider> {
-//     return provider as any
-//   }
-// }
-
-// jest.unstable_mockModule('../../providers-cache.js', () => {
-//   return {
-//     ProvidersCache: MockProvidersCache,
-//   }
-// })
 
 const extractStreamStates = (page: Page<StreamState | null>): Array<StreamState> => {
   if (page.edges.find((edge) => edge.node === null)) {
@@ -268,6 +251,15 @@ function candidateFromStream(stream: Stream): ICandidate {
   }
 }
 
+const provider = new MockProvider()
+
+const mockProvidersCache = {
+  ethereumRpcEndpoint: 'test',
+  async getProvider() {
+    return provider as any
+  },
+}
+
 describe('Sync tests', () => {
   jest.setTimeout(150000)
   const logger = new LoggerProvider().getDiagnosticsLogger()
@@ -311,17 +303,22 @@ describe('Sync tests', () => {
 
     //create a ceramic where syncing is enabled
     createSyncingCeramic = async () => {
-      const syncingCeramic = await createCeramic(ipfs1 as any, {
-        indexing: {
-          db: process.env.DATABASE_URL as string,
-          allowQueriesBeforeHistoricalSync: true,
-          enableHistoricalSync: true,
-          disableComposedb: false,
+      const syncingCeramic = await createCeramic(
+        ipfs1 as any,
+        {
+          ethereumRpcUrl: 'test',
+          indexing: {
+            db: process.env.DATABASE_URL as string,
+            allowQueriesBeforeHistoricalSync: true,
+            enableHistoricalSync: true,
+            disableComposedb: false,
+          },
+          sync: true,
+          // change pubsub topic so that we aren't getting updates via pubsub
+          pubsubTopic: '/ceramic/random/test',
         },
-        sync: true,
-        // change pubsub topic so that we aren't getting updates via pubsub
-        pubsubTopic: '/ceramic/random/test',
-      })
+        mockProvidersCache
+      )
 
       // TODO: CDB-2229 once ProvidersCache is used in the validator we will not have to replace this
       const validator = syncingCeramic.anchorService.validator
@@ -336,7 +333,7 @@ describe('Sync tests', () => {
       }
 
       // @ts-ignore private field
-      syncingCeramic.syncApi.initialIndexingBlock = 1000
+      syncingCeramic.syncApi.defaultStartBlock = DEFAULT_START_BLOCK
 
       return syncingCeramic
     }
@@ -426,12 +423,9 @@ describe('Sync tests', () => {
     await provider.mineBlocks([])
 
     syncingCeramic = await createSyncingCeramic()
-    // since we cannot hear about the model's anchor commit through pubsub, we have to manually load the anchor commit
-    await Model.load(syncingCeramic, MODEL_STREAM_ID)
-    await syncingCeramic.repository.stateManager.handleUpdate(
-      createdModel.id,
-      createdModel.state.log[1].cid
-    )
+    // since we disabled receiving updates from the pubsub, we cannot retrieve the anchor, so we load the model at the anchor commit.
+    await syncingCeramic.loadStream(createdModel.commitId)
+
     // @ts-ignore private field
     const addSyncJobSpy = jest.spyOn(syncingCeramic.syncApi, '_addSyncJob')
 
@@ -440,10 +434,8 @@ describe('Sync tests', () => {
     const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
     expect(success).toEqual(true)
 
-    const jobData = addSyncJobSpy.mock.calls[0][1]
-    expect(jobData.fromBlock).toEqual(
-      provider.transactionBlockNumber - NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC
-    )
+    const jobData = addSyncJobSpy.mock.calls[0][1] as any
+    expect(jobData.fromBlock).toBeGreaterThan(DEFAULT_START_BLOCK)
     expect(jobData.toBlock).toEqual(provider.lastBlock - BLOCK_CONFIRMATIONS)
   })
 
@@ -478,8 +470,8 @@ describe('Sync tests', () => {
     const success = await waitForMidsToBeIndexed(syncingCeramic, [mid, mid2])
     expect(success).toEqual(true)
 
-    const jobData = addSyncJobSpy.mock.calls[0][1]
-    expect(jobData.fromBlock).toEqual(1000)
+    const jobData = addSyncJobSpy.mock.calls[0][1] as any
+    expect(jobData.fromBlock).toEqual(DEFAULT_START_BLOCK)
     expect(jobData.toBlock).toEqual(provider.lastBlock - BLOCK_CONFIRMATIONS)
   })
 

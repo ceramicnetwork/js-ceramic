@@ -332,7 +332,7 @@ describe('Sync API', () => {
       )
 
       // @ts-ignore private field
-      sync.initialIndexingBlock = 0
+      sync.defaultStartBlock = 0
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
 
@@ -353,7 +353,7 @@ describe('Sync API', () => {
       )
 
       // @ts-ignore private field
-      sync.initialIndexingBlock = 0
+      sync.defaultStartBlock = 0
       const addSyncJob = jest.fn()
       sync._addSyncJob = addSyncJob as any
 
