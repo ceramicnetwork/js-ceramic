@@ -327,6 +327,7 @@ export class Repository {
   ): Promise<[RunningState | null, SyncStatus]> {
     let stream = this._fromMemory(streamId)
     if (stream) {
+      // TODO(CAT-2818): A stream being in the cache doesn't necessarily mean it was synced
       return [stream, SyncStatus.ALREADY_SYNCED]
     }
 
