@@ -169,7 +169,7 @@ export class CeramicClient implements CeramicApi {
   async applyCommit<T extends Stream>(
     streamId: string | StreamID,
     commit: CeramicCommit,
-    opts: CreateOpts | UpdateOpts = {}
+    opts: UpdateOpts = {}
   ): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts }
     const effectiveStreamId: StreamID = typeStreamID(streamId)

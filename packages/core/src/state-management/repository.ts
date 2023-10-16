@@ -447,14 +447,10 @@ export class Repository {
    * @param commit - Commit data
    * @param opts - Stream initialization options (request anchor, wait, etc.)
    */
-  async applyCommit(
-    streamId: StreamID,
-    commit: any,
-    opts: CreateOpts | UpdateOpts
-  ): Promise<RunningState> {
+  async applyCommit(streamId: StreamID, commit: any, opts: UpdateOpts): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
 
-    const state$ = await this.load(streamId, opts)
+    const state$ = await this.load(streamId)
     this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
 
     return this.executionQ.forStream(streamId).run(async () => {
