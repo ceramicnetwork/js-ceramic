@@ -1,6 +1,6 @@
 import tmp from 'tmp-promise'
 import { LevelDbStore } from '../level-db-store.js'
-import { TestUtils } from '@ceramicnetwork/common'
+import { LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 
 describe('LevelStore', () => {
   let tmpFolder: any
@@ -8,7 +8,11 @@ describe('LevelStore', () => {
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    levelStore = new LevelDbStore(tmpFolder.path, 'fakeNetwork')
+    levelStore = new LevelDbStore(
+      new LoggerProvider().getDiagnosticsLogger(),
+      tmpFolder.path,
+      'fakeNetwork'
+    )
 
     // add a small delay after creating the leveldb instance before trying to use it.
     await TestUtils.delay(100)

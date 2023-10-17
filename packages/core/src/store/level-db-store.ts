@@ -3,7 +3,7 @@ import type Level from 'level-ts'
 import { IKVStore, IKVStoreFindResult, StoreSearchParams } from './ikv-store.js'
 import path from 'path'
 import * as fs from 'fs'
-import { Networks } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 
 // When Node.js imports a CJS module from ESM, it considers whole contents of `module.exports` as ESM default export.
 // 'level-ts' is a CommomJS module, which exports Level constructor as `exports.default`.
@@ -18,6 +18,10 @@ import { Networks } from '@ceramicnetwork/common'
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
 const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
+
+class NotFoundError extends Error {
+  readonly notFound = true
+}
 
 class LevelDBStoreMap {
   readonly #storeRoot
@@ -71,7 +75,7 @@ class LevelDBStoreMap {
 export class LevelDbStore implements IKVStore {
   readonly #storeMap: LevelDBStoreMap
 
-  constructor(storeRoot: string, networkName: string) {
+  constructor(readonly logger: DiagnosticsLogger, storeRoot: string, networkName: string) {
     this.#storeMap = new LevelDBStoreMap(storeRoot, networkName)
   }
 
@@ -86,12 +90,28 @@ export class LevelDbStore implements IKVStore {
 
   async del(key: string, useCaseName?: string): Promise<void> {
     const store = await this.#storeMap.get(useCaseName)
-    return await store.del(key)
+    try {
+      return await store.del(key)
+    } catch (err) {
+      const msg = `Error deleting key ${key} from leveldb state store: ${err}`
+      this.logger.warn(msg)
+      throw new Error(msg)
+    }
   }
 
   async get(key: string, useCaseName?: string): Promise<any> {
     const store = await this.#storeMap.get(useCaseName)
-    return await store.get(key)
+    try {
+      return await store.get(key)
+    } catch (err) {
+      const msg = `Error fetching key ${key} from leveldb state store: ${err}`
+      this.logger.warn(msg)
+      if (err.notFound) {
+        throw new NotFoundError(msg)
+      } else {
+        throw new Error(msg)
+      }
+    }
   }
 
   async isEmpty(params?: StoreSearchParams): Promise<boolean> {
@@ -100,9 +120,9 @@ export class LevelDbStore implements IKVStore {
   }
 
   async exists(key: string, useCaseName?: string): Promise<boolean> {
-    const store = await this.#storeMap.get(useCaseName)
     try {
-      return typeof (await store.get(key)) === 'string'
+      const val = await this.get(key, useCaseName)
+      return typeof val === 'string'
     } catch (e) {
       if (/Key not found in database/.test(e.toString())) {
         return false
@@ -137,6 +157,12 @@ export class LevelDbStore implements IKVStore {
 
   async put(key: string, value: any, useCaseName?: string): Promise<void> {
     const store = await this.#storeMap.get(useCaseName)
-    return await store.put(key, value)
+    try {
+      await store.put(key, value)
+    } catch (err) {
+      const msg = `Error storing key ${key} to leveldb state store: ${err}`
+      this.logger.warn(msg)
+      throw new Error(msg)
+    }
   }
 }
