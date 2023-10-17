@@ -211,12 +211,10 @@ describe('Ceramic API', () => {
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       await doc.replace(CONTENT1, { anchor: false })
       expect(doc.content).toEqual(CONTENT1)
-      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
-      expect(addIndexSpy).toBeCalledTimes(7)
+      expect(addIndexSpy).toBeCalledTimes(4)
       addIndexSpy.mockRestore()
     })
 
@@ -250,12 +248,10 @@ describe('Ceramic API', () => {
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       await doc.patch(CONTENT1, { anchor: false })
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
-      expect(addIndexSpy).toBeCalledTimes(7)
+      expect(addIndexSpy).toBeCalledTimes(4)
       addIndexSpy.mockRestore()
     })
 
@@ -274,8 +270,7 @@ describe('Ceramic API', () => {
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      // TODO(WS1-1269): This should only add one more indexStreamIfNeeded call
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })
