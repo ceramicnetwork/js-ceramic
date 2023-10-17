@@ -19,6 +19,10 @@ const LevelC = (levelTs as any).default as unknown as typeof Level
 
 const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
 
+class NotFoundError extends Error {
+  readonly notFound = true
+}
+
 class LevelDBStoreMap {
   readonly #storeRoot
   readonly networkName
@@ -100,8 +104,13 @@ export class LevelDbStore implements IKVStore {
     try {
       return await store.get(key)
     } catch (err) {
-      this.logger.warn(`Error fetching key ${key} from leveldb state store: ${err}`)
-      throw err
+      const msg = `Error fetching key ${key} from leveldb state store: ${err}`
+      this.logger.warn(msg)
+      if (err.notFound) {
+        throw new NotFoundError(msg)
+      } else {
+        throw new Error(msg)
+      }
     }
   }
 
