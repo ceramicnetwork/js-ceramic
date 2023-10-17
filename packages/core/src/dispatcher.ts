@@ -457,7 +457,7 @@ export class Dispatcher {
     // Add tip to pubsub cache and continue processing
     this.pubsubCache.set(tip.toString(), streamId.toString())
 
-    await this.repository.handleUpdate(streamId, tip, model)
+    await this.repository.handleUpdateFromNetwork(streamId, tip, model)
   }
 
   /**

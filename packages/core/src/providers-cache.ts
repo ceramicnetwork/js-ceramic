@@ -72,7 +72,6 @@ export class ProvidersCache {
     let provider
     if (endpoint) {
       provider = new providers.StaticJsonRpcProvider(endpoint)
-      return provider
     } else {
       if (ethNetwork == null) {
         throw new Error(`No ethereum provider available for chainId ${chainId}`)

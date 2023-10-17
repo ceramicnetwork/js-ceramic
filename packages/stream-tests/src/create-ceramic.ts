@@ -6,7 +6,8 @@ import { createDid } from './create_did.js'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config: CeramicConfig & { seed?: string } = {}
+  config: CeramicConfig & { seed?: string } = {},
+  providersCache?
 ): Promise<Ceramic> {
   const stateStoreDirectory = await tmp.tmpName()
   const appliedConfig: CeramicConfig = mergeOpts(
@@ -25,7 +26,14 @@ export async function createCeramic(
     },
     config
   )
-  const ceramic = await Ceramic.create(ipfs, appliedConfig)
+
+  const [modules, params] = Ceramic._processConfig(ipfs, appliedConfig)
+  if (providersCache) {
+    modules.providersCache = providersCache
+  }
+  const ceramic = new Ceramic(modules, params)
+  await ceramic._init(false)
+
   const did = createDid(ceramic, appliedConfig.seed || 'SEED')
   await ceramic.setDID(did)
   await did.authenticate()

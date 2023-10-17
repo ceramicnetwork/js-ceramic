@@ -316,10 +316,13 @@ export interface StreamHandler<T extends Stream> {
   stream_constructor: StreamConstructor<T>
 
   /**
-   * Applies commit to the stream (genesis|signed|anchored)
+   * Applies commit to the stream (genesis|signed|anchored) and returns the new StreamState.
+   * StreamHandler implementations of applyCommit are allowed to modify the input state, it is up to
+   * callers to clone the input state before calling into applyCommit if they don't want the input
+   * state modified.
    * @param commitData - Commit data
    * @param context - Ceramic context
-   * @param state - Stream state
+   * @param state - The existing state to apply the commit to.
    */
   applyCommit(commitData: CommitData, context: Context, state?: StreamState): Promise<StreamState>
 }

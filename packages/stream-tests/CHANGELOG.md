@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.42.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.41.0...@ceramicnetwork/stream-tests@2.42.0-rc.0) (2023-10-11)
+
+
+### Features
+
+* Update loading at a CommitID to use the StreamLoader ([#2967](https://github.com/ceramicnetwork/js-ceramic/issues/2967)) ([c6318ba](https://github.com/ceramicnetwork/js-ceramic/commit/c6318bab01d9023d50378e9ade3df20bb014af18))
+* Use StreamLoader for loading streams ([#2963](https://github.com/ceramicnetwork/js-ceramic/issues/2963)) ([ca6c3ef](https://github.com/ceramicnetwork/js-ceramic/commit/ca6c3ef117c4377bab297e83bd250b238dcd4c5c))
+
+
+
+
+
+# [2.41.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.41.0-rc.0...@ceramicnetwork/stream-tests@2.41.0) (2023-10-11)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tests
+
+
+
+
+
 # [2.41.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@2.40.0...@ceramicnetwork/stream-tests@2.41.0-rc.0) (2023-09-20)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

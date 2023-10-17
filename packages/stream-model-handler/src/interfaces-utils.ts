@@ -324,6 +324,52 @@ export function validateStringSchema(
     })
   }
 
+  // enum value must be a valid subset
+  if (expected.enum != null) {
+    if (implemented.const != null) {
+      if (!expected.enum.includes(implemented.const)) {
+        errors.push({
+          path: context.path,
+          property: 'enum',
+          expected: expected.enum,
+          actual: implemented.const,
+        })
+      }
+    } else if (implemented.enum != null) {
+      // check for missing expected value
+      let hasAnyValue = false
+      for (const value of expected.enum) {
+        if (implemented.enum.includes(value)) {
+          hasAnyValue = true
+          break
+        }
+      }
+      if (hasAnyValue) {
+        // check for additional implemented value
+        for (const value of implemented.enum) {
+          if (!expected.enum.includes(value)) {
+            errors.push({
+              path: context.path,
+              property: 'enum',
+              expected: expected.enum,
+              actual: implemented.enum,
+            })
+            break
+          }
+        }
+      } else {
+        errors.push({
+          path: context.path,
+          property: 'enum',
+          expected: expected.enum,
+          actual: implemented.enum,
+        })
+      }
+    } else {
+      errors.push({ path: context.path, property: 'enum', expected: expected.enum })
+    }
+  }
+
   // pattern value must be the same
   if (expected.pattern != null && implemented.pattern !== expected.pattern) {
     errors.push({
@@ -333,6 +379,7 @@ export function validateStringSchema(
       actual: implemented.pattern,
     })
   }
+
   // maxLength value implementation must be at least as restrictive as expected
   if (expected.maxLength != null) {
     if (implemented.const != null) {
@@ -353,6 +400,7 @@ export function validateStringSchema(
       })
     }
   }
+
   // minLength value implementation must be at least as restrictive as expected
   if (expected.minLength != null) {
     if (implemented.const != null) {

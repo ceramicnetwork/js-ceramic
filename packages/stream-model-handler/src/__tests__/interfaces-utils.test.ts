@@ -169,6 +169,39 @@ describe('schema validation', () => {
       expect(validateStringSchema(context, { const: 'foo' }, { const: 'foo' })).toHaveLength(0)
     })
 
+    test('handles enum value', () => {
+      expect(validateStringSchema(context, { enum: ['a', 'b', 'c'] }, {})).toEqual([
+        { path: [], property: 'enum', expected: ['a', 'b', 'c'] },
+      ])
+      expect(validateStringSchema(context, { enum: ['a', 'b', 'c'] }, { const: 'd' })).toEqual([
+        { path: [], property: 'enum', expected: ['a', 'b', 'c'], actual: 'd' },
+      ])
+      expect(
+        validateStringSchema(context, { enum: ['a', 'b', 'c'] }, { enum: ['e', 'f'] })
+      ).toEqual([{ path: [], property: 'enum', expected: ['a', 'b', 'c'], actual: ['e', 'f'] }])
+      expect(
+        validateStringSchema(
+          context,
+          { enum: ['a', 'b', 'c'] },
+          { enum: ['a', 'b', 'c', 'e', 'f'] }
+        )
+      ).toEqual([
+        {
+          path: [],
+          property: 'enum',
+          expected: ['a', 'b', 'c'],
+          actual: ['a', 'b', 'c', 'e', 'f'],
+        },
+      ])
+      expect(validateStringSchema(context, {}, { enum: ['e', 'f'] })).toHaveLength(0)
+      expect(validateStringSchema(context, { enum: ['a', 'b', 'c'] }, { const: 'a' })).toHaveLength(
+        0
+      )
+      expect(
+        validateStringSchema(context, { enum: ['a', 'b', 'c'] }, { enum: ['a', 'b'] })
+      ).toHaveLength(0)
+    })
+
     test('handles pattern value', () => {
       expect(validateStringSchema(context, { pattern: '^[0-9]{2}$' }, {})).toEqual([
         { path: [], property: 'pattern', expected: '^[0-9]{2}$' },

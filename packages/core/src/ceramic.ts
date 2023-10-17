@@ -33,7 +33,6 @@ import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
 import { HandlersMap } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
-import { ConflictResolution } from './conflict-resolution.js'
 import * as fs from 'fs'
 import os from 'os'
 import * as path from 'path'
@@ -61,6 +60,7 @@ import {
 import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
+import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -239,41 +239,12 @@ export class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    // TODO(CDB-2749): Hide 'anchorTimestampExtractor', 'tipFetcher', 'logSyncer', and
-    //  'stateManipulator' as implementation details of StreamLoader and StreamUpdater.
-    const anchorTimestampExtractor = new AnchorTimestampExtractor(
+    const [streamLoader, streamUpdater] = makeStreamLoaderAndUpdater(
       this._logger,
       this.dispatcher,
-      modules.anchorService.validator
-    )
-    const conflictResolution = new ConflictResolution(
-      this._logger,
-      anchorTimestampExtractor,
-      this.dispatcher,
-      this.context,
-      this._streamHandlers
-    )
-    const tipFetcher = new TipFetcher(this.dispatcher.messageBus)
-    const logSyncer = new LogSyncer(this.dispatcher)
-    const stateManipulator = new StateManipulator(
-      this._logger,
+      modules.anchorService.validator,
       this._streamHandlers,
-      this.context,
-      logSyncer
-    )
-    const streamLoader = new StreamLoader(
-      this._logger,
-      tipFetcher,
-      logSyncer,
-      anchorTimestampExtractor,
-      stateManipulator
-    )
-    const streamUpdater = new StreamUpdater(
-      this._logger,
-      this.dispatcher,
-      logSyncer,
-      anchorTimestampExtractor,
-      stateManipulator
+      this.context
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
@@ -290,7 +261,6 @@ export class Ceramic implements CeramicApi {
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
-      conflictResolution: conflictResolution,
       indexing: localIndex,
       streamLoader,
       streamUpdater,
@@ -302,13 +272,20 @@ export class Ceramic implements CeramicApi {
         on: params.sync,
       },
       this.dispatcher,
-      this.repository.handleUpdate.bind(this.repository),
+      this.repository.handleUpdateFromNetwork.bind(this.repository),
       this.repository.index,
       this._logger
     )
     const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
-    this.admin = new LocalAdminApi(localIndex, this.syncApi, this.nodeStatus.bind(this), pinApi)
+    this.admin = new LocalAdminApi(
+      localIndex,
+      this.syncApi,
+      this.nodeStatus.bind(this),
+      pinApi,
+      this.providersCache,
+      this.loadStream.bind(this)
+    )
   }
 
   get index(): LocalIndexApi {
@@ -665,8 +642,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-
-    await this.repository.indexStreamIfNeeded(state$)
 
     return stream
   }
