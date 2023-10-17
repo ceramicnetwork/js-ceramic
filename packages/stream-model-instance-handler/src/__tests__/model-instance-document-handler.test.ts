@@ -70,6 +70,27 @@ const FAKE_MODEL_IDBLOB = StreamID.fromString(
 const FAKE_MODEL_INTERFACE_ID = StreamID.fromString(
   'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5c'
 )
+const FAKE_MODEL_REQUIRED_RELATION_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5d'
+)
+const FAKE_MODEL_OPTIONAL_RELATION_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5e'
+)
+const FAKE_MODEL_INTERFACE_RELATION_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5f'
+)
+const FAKE_MODEL_IMPLEMENTS_RELATION_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5g'
+)
+const FAKE_MID_ID = StreamID.fromString(
+  'k2t6wzhkh1dbrv7qx7oii5uwjngvzgatek9lzvqnv2wq87jvfhafvi1lxbx200'
+)
+const FAKE_MID_ID2 = StreamID.fromString(
+  'k2t6wzhkh1dbrv7qx7oii5uwjngvzgatek9lzvqnv2wq87jvfhafvi1lxbx202'
+)
+const FAKE_MID_ID3 = StreamID.fromString(
+  'k2t6wzhkh1dbrv7qx7oii5uwjngvzgatek9lzvqnv2wq87jvfhafvi1lxbx203'
+)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -273,6 +294,136 @@ const MODEL_INTERFACE_DEFINITION: ModelDefinition = {
   },
 }
 
+const MODEL_DEFINITION_REQUIRED_RELATION: ModelDefinition = {
+  name: 'MyModel',
+  version: '1.0',
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: { type: 'integer', maximum: 100, minimum: 0 },
+      relationID: { type: 'string' },
+    },
+    required: ['myData', 'relationID'],
+  },
+  relations: {
+    relationID: { type: 'document', model: FAKE_MODEL_ID.toString() },
+  },
+}
+
+const MODEL_DEFINITION_OPTIONAL_RELATION: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: { type: 'integer', maximum: 100, minimum: 0 },
+      relationID: { type: 'string' },
+    },
+    required: ['myData'],
+  },
+  relations: {
+    relationID: { type: 'document', model: null },
+  },
+}
+
+const MODEL_DEFINITION_INTERFACE_RELATION: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: { type: 'integer', maximum: 100, minimum: 0 },
+      relationID: { type: 'string' },
+    },
+    required: ['myData'],
+  },
+  relations: {
+    relationID: { type: 'document', model: FAKE_MODEL_INTERFACE_ID.toString() },
+  },
+}
+
+const MODEL_DEFINITION_IMPLEMENTS_RELATION: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [FAKE_MODEL_INTERFACE_ID.toString()],
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: { type: 'integer', maximum: 100, minimum: 0 },
+    },
+    required: ['myData'],
+  },
+}
+
+const STREAMS = {
+  [FAKE_MODEL_ID.toString()]: {
+    content: MODEL_DEFINITION,
+    commitId: FAKE_MODEL_ID,
+  },
+  [FAKE_MODEL_ID2.toString()]: {
+    content: MODEL_DEFINITION_SINGLE,
+    commitId: FAKE_MODEL_ID2,
+  },
+  [FAKE_MODEL_IDBLOB.toString()]: {
+    content: MODEL_DEFINITION_BLOB,
+    commitId: FAKE_MODEL_IDBLOB,
+  },
+  [FAKE_MODEL_INTERFACE_ID.toString()]: {
+    id: FAKE_MODEL_INTERFACE_ID,
+    content: MODEL_INTERFACE_DEFINITION,
+    commitId: FAKE_MODEL_ID,
+  },
+  [FAKE_MODEL_REQUIRED_RELATION_ID.toString()]: {
+    id: FAKE_MODEL_REQUIRED_RELATION_ID,
+    content: MODEL_DEFINITION_REQUIRED_RELATION,
+    commitId: FAKE_MODEL_ID,
+  },
+  [FAKE_MODEL_OPTIONAL_RELATION_ID.toString()]: {
+    id: FAKE_MODEL_OPTIONAL_RELATION_ID,
+    content: MODEL_DEFINITION_OPTIONAL_RELATION,
+    commitId: FAKE_MODEL_ID,
+  },
+  [FAKE_MODEL_INTERFACE_RELATION_ID.toString()]: {
+    id: FAKE_MODEL_INTERFACE_RELATION_ID,
+    content: MODEL_DEFINITION_INTERFACE_RELATION,
+    commitId: FAKE_MODEL_ID,
+  },
+  [FAKE_MODEL_IMPLEMENTS_RELATION_ID.toString()]: {
+    id: FAKE_MODEL_IMPLEMENTS_RELATION_ID,
+    content: MODEL_DEFINITION_IMPLEMENTS_RELATION,
+    commitId: FAKE_MODEL_ID,
+  },
+  [FAKE_MID_ID.toString()]: {
+    content: {},
+    metadata: { model: FAKE_MODEL_ID },
+  },
+  [FAKE_MID_ID2.toString()]: {
+    content: {},
+    metadata: { model: FAKE_MODEL_ID2 },
+  },
+  [FAKE_MID_ID3.toString()]: {
+    content: {},
+    metadata: { model: FAKE_MODEL_IMPLEMENTS_RELATION_ID },
+  },
+}
+
 describe('ModelInstanceDocumentHandler', () => {
   let did: DID
   let handler: ModelInstanceDocumentHandler
@@ -314,32 +465,13 @@ describe('ModelInstanceDocumentHandler', () => {
         return ['fakechain:123']
       }),
       loadStream: jest.fn(async (streamId: StreamID) => {
-        if (streamId.toString() === FAKE_MODEL_ID.toString()) {
-          return {
-            content: MODEL_DEFINITION,
-            commitId: FAKE_MODEL_ID,
-          }
-        } else if (streamId.toString() === FAKE_MODEL_ID2.toString()) {
-          return {
-            content: MODEL_DEFINITION_SINGLE,
-            commitId: FAKE_MODEL_ID2,
-          }
-        } else if (streamId.toString() == FAKE_MODEL_IDBLOB.toString()) {
-          return {
-            content: MODEL_DEFINITION_BLOB,
-            commitId: FAKE_MODEL_IDBLOB,
-          }
-        } else if (streamId.toString() == FAKE_MODEL_INTERFACE_ID.toString()) {
-          return {
-            id: FAKE_MODEL_INTERFACE_ID,
-            content: MODEL_INTERFACE_DEFINITION,
-            commitId: FAKE_MODEL_ID,
-          }
-        } else {
+        const stream = STREAMS[streamId.toString()]
+        if (stream == null) {
           throw new Error(
             'Trying to load unexpected stream in model-instance-document-handler.test.ts'
           )
         }
+        return stream
       }),
       did,
     }
@@ -1129,5 +1261,112 @@ describe('ModelInstanceDocumentHandler', () => {
     await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
       `ModelInstanceDocument Streams cannot be created on interface Models. Use a different model than ${FAKE_MODEL_INTERFACE_ID.toString()} to create the ModelInstanceDocument.`
     )
+  })
+
+  test('validates relations with required model - throws if invalid', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      signerUsingNewKey,
+      { myData: 3, relationID: FAKE_MID_ID2.toString() },
+      { controller: METADATA.controller, model: FAKE_MODEL_REQUIRED_RELATION_ID }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
+      `Relation on field relationID points to Stream ${FAKE_MID_ID2.toString()}, which belongs to Model ${FAKE_MODEL_ID2.toString()}, but this Stream's Model (${FAKE_MODEL_REQUIRED_RELATION_ID.toString()}) specifies that this relation must be to a Stream in the Model ${FAKE_MODEL_ID.toString()}`
+    )
+  })
+
+  test('validates relations with required model - model match', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      signerUsingNewKey,
+      { myData: 3, relationID: FAKE_MID_ID.toString() },
+      { controller: METADATA.controller, model: FAKE_MODEL_REQUIRED_RELATION_ID }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+  })
+
+  test('validates relations with optional model - linked MID not provided', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      signerUsingNewKey,
+      { myData: 3 },
+      { controller: METADATA.controller, model: FAKE_MODEL_OPTIONAL_RELATION_ID }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+  })
+
+  test('validates relations with optional model - linked MID provided', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      signerUsingNewKey,
+      { myData: 3, relationID: FAKE_MID_ID2.toString() },
+      { controller: METADATA.controller, model: FAKE_MODEL_OPTIONAL_RELATION_ID }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+  })
+
+  test('validates relations with interface model', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      signerUsingNewKey,
+      { myData: 3, relationID: FAKE_MID_ID3.toString() },
+      { controller: METADATA.controller, model: FAKE_MODEL_INTERFACE_RELATION_ID }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves
   })
 })
