@@ -115,6 +115,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     const modelStream = await context.api.loadStream<Model>(metadata.model)
+    this._validateModel(modelStream)
     await this._validateContent(context.api, modelStream, payload.data, true)
     await this._validateHeader(modelStream, payload.header)
 
@@ -183,6 +184,19 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   }
 
   /**
+   * Validates the ModelInstanceDocument can be created for the given model
+   * @param model - The model that this ModelInstanceDocument belongs to
+   * @private
+   */
+  _validateModel(model: Model): void {
+    if (model.content.version !== '1.0' && model.content.interface) {
+      throw new Error(
+        `ModelInstanceDocument Streams cannot be created on interface Models. Use a different model than ${model.id.toString()} to create the ModelInstanceDocument.`
+      )
+    }
+  }
+
+  /**
    * Validates content against the schema of the model stream with given stream id
    * @param ceramic - Ceramic handle that can be used to load Streams
    * @param model - The model that this ModelInstanceDocument belongs to
@@ -227,7 +241,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         case 'account':
           continue
         case 'document': {
-          const expectedModelStreamId = relationDefinition.model
+          // Ignore validation if the target field is empty
+          if (content[fieldName] == null) {
+            continue
+          }
+
+          // Validate StreamID value
           let midStreamId
           try {
             midStreamId = StreamID.fromString(content[fieldName])
@@ -237,13 +256,33 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
             )
           }
 
+          // Ensure linked stream can be loaded and is a MID
           const linkedMid = await ModelInstanceDocument.load(ceramic, midStreamId)
-          const foundModelStreamId = linkedMid.metadata.model.toString()
-          if (expectedModelStreamId !== foundModelStreamId) {
-            throw new Error(
-              `Relation on field ${fieldName} points to Stream ${midStreamId.toString()}, which belongs to Model ${foundModelStreamId}, but this Stream's Model (${model.id.toString()}) specifies that this relation must be to a Stream in the Model ${expectedModelStreamId}`
-            )
+
+          // Check for expected model the MID must use
+          const expectedModelStreamId = relationDefinition.model
+          if (expectedModelStreamId == null) {
+            continue
           }
+
+          const foundModelStreamId = linkedMid.metadata.model.toString()
+          if (foundModelStreamId === expectedModelStreamId) {
+            // Exact model used
+            continue
+          }
+
+          // Other model used, check if it implements the expected interface
+          const linkedModel = await Model.load(ceramic, foundModelStreamId)
+          if (
+            linkedModel.content.version !== '1.0' &&
+            linkedModel.content.implements.includes(expectedModelStreamId)
+          ) {
+            continue
+          }
+
+          throw new Error(
+            `Relation on field ${fieldName} points to Stream ${midStreamId.toString()}, which belongs to Model ${foundModelStreamId}, but this Stream's Model (${model.id.toString()}) specifies that this relation must be to a Stream in the Model ${expectedModelStreamId}`
+          )
         }
       }
     }
