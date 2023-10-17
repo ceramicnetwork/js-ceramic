@@ -58,38 +58,6 @@ interface SyncOpts {
 }
 
 /**
- * Options that are used internally but aren't designed to be set by end users.
- */
-export interface InternalOpts {
-  /**
-   * If true, when loading a stream log will throw an exception if any commit fails to apply.
-   * If false, the error will be logged, but the log application operation will return as much
-   * of the log as it was able to successfully apply.
-   * This option is used internally but is not designed to be set by user applications.
-   * @private
-   */
-  throwOnInvalidCommit?: boolean
-
-  /**
-   * If true, when applying commits to a stream will throw an Error if any commit is rejected due to conflict resolution
-   * @private
-   */
-  throwOnConflict?: boolean
-
-  /**
-   * If true, when applying commits to a stream will throw an Error if the log does not build directly on top of the
-   * local state.
-   * @private
-   */
-  throwIfStale?: boolean
-
-  /**
-   * If true, will not validate that CACAOs used to authorize commit signatures have not expired.
-   */
-  skipCacaoExpirationChecks?: boolean
-}
-
-/**
  * Extra options passed as part of operations that load a stream.
  */
 export interface LoadOpts extends SyncOpts {
@@ -130,7 +98,7 @@ export interface AnchorOpts {
 /**
  * Extra options passed as part of operations that update streams.
  */
-export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts {
+export interface UpdateOpts extends PublishOpts, AnchorOpts {
   asDID?: DID
 }
 

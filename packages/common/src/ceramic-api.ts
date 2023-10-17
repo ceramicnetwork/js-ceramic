@@ -200,7 +200,7 @@ export interface CeramicApi extends CeramicSigner {
   applyCommit<T extends Stream>(
     streamId: StreamID | string,
     commit: CeramicCommit,
-    opts?: CreateOpts | UpdateOpts
+    opts?: UpdateOpts
   ): Promise<T>
 
   /**
