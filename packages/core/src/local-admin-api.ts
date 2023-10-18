@@ -5,6 +5,7 @@ import {
   NodeStatusResponse,
   PinApi,
   LoadOpts,
+  DiagnosticsLogger,
 } from '@ceramicnetwork/common'
 import { Model } from '@ceramicnetwork/stream-model'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
@@ -16,7 +17,7 @@ import { Provider } from '@ethersproject/providers'
 type NodeStatusFn = () => Promise<NodeStatusResponse>
 type LoadStreamFn<T> = (streamId: StreamID | CommitID | string, opts?: LoadOpts) => Promise<T>
 
-export const NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC = 5760 // 24 hours
+export const NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC = 7200 // 24 hours at 1 block every 12 seconds
 /**
  * AdminApi for Ceramic core.
  */
@@ -24,6 +25,7 @@ export class LocalAdminApi implements AdminApi {
   #provider: Provider
 
   constructor(
+    private readonly logger: DiagnosticsLogger,
     private readonly indexApi: LocalIndexApi,
     private readonly syncApi: ISyncApi,
     private readonly nodeStatusFn: NodeStatusFn, // TODO(CDB-2293): circular dependency back into Ceramic
@@ -50,6 +52,9 @@ export class LocalAdminApi implements AdminApi {
     })
 
     if (unachoredModel) {
+      this.logger.warn(
+        `Detected an indexed Model without an anchor timestamp ${unachoredModel.id}. Starting historical sync at ethereum block representing the beginning of time for indexable ComposeDB Models`
+      )
       return null
     }
 
@@ -63,6 +68,10 @@ export class LocalAdminApi implements AdminApi {
 
       return oldestModel
     })
+
+    this.logger.imp(
+      `Oldest indexed Model (${oldestModel}) was indexed at time ${oldestModel.state.log[0].timestamp}. Starting Historical Data Sync 24 hours earlier.`
+    )
 
     if (!this.#provider) {
       const nodeStatus = await this.nodeStatus()

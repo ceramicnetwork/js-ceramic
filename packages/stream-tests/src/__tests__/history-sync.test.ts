@@ -17,8 +17,6 @@ import {
   STATE_TABLE_NAME,
 } from '@ceramicnetwork/indexing'
 import { Ceramic } from '@ceramicnetwork/core'
-// import { NUMBER_OF_BLOCKS_BEFORE_TX_TO_START_SYNC } from '../../local-admin-api.js'
-// import { IProvidersCache } from '../../providers-cache.js'
 
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'

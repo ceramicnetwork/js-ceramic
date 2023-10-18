@@ -280,6 +280,7 @@ export class Ceramic implements CeramicApi {
     const pinApi = new LocalPinApi(this.repository, this._logger)
     this.repository.index.setSyncQueryApi(this.syncApi)
     this.admin = new LocalAdminApi(
+      this._logger,
       localIndex,
       this.syncApi,
       this.nodeStatus.bind(this),
