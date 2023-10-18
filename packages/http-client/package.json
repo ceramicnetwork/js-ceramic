@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/http-client",
   "version": "2.34.0-rc.0",
   "description": "An http client for the ceramic network",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "Ceramic",
     "DID",

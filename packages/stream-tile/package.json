@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/stream-tile",
   "version": "2.33.0-rc.0",
   "description": "Ceramic Tile Document stream type",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "tile"

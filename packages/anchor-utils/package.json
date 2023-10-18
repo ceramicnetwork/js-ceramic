@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/anchor-utils",
   "version": "1.20.0-rc.0",
   "description": "Ceramic anchor contract constants, interface and utilities",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "anchor"

@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/ipfs-daemon",
   "version": "2.30.0-rc.0",
   "description": "IPFS daemon wraps js-ipfs instance with dag-jose codec enabled",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ipfs",
     "dag-jose"

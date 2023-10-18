@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/indexing",
   "version": "1.3.0-rc.0",
   "description": "Ceramic indexing and querying logic",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "indexing"

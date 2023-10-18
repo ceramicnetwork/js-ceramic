@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/pinning-powergate-backend",
   "version": "2.29.0-rc.0",
   "description": "Powergate Pinning backend",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "ipfs",

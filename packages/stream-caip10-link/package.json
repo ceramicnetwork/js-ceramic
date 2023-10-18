@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/stream-caip10-link",
   "version": "2.32.0-rc.0",
   "description": "Ceramic AccountLink stream type",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "account-link",

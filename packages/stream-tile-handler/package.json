@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/stream-tile-handler",
   "version": "2.32.0-rc.0",
   "description": "Ceramic Tile Document stream handler",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "tile",

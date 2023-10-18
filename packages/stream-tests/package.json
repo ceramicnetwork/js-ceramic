@@ -3,6 +3,9 @@
   "version": "2.42.0-rc.0",
   "private": true,
   "description": "Canary integration test for Ceramic components",
+  "engines": {
+    "node": ">=20.8"
+  },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --verbose --coverage --runInBand --forceExit",
     "build": "npx tsc -p tsconfig.json",

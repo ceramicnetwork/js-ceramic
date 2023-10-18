@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/stream-model",
   "version": "1.19.0-rc.0",
   "description": "Ceramic Model stream type",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "ceramic",
     "model"
