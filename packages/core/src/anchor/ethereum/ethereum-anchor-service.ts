@@ -21,6 +21,7 @@ import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import { NotSingleChainError, type AnchorLoopHandler } from '../anchor-service.js'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { RemoteCAS } from './remote-cas.js'
+import { doNotWait } from '../../ancillary/do-not-wait.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const BATCH_SIZE = 10
@@ -117,6 +118,7 @@ export class EthereumAnchorService implements AnchorService {
     if (waitForConfirmation) {
       return this.#cas.create(carFileReader, waitForConfirmation)
     } else {
+      doNotWait(this.#cas.create(carFileReader, false))
       return {
         status: AnchorRequestStatusName.PENDING,
         streamId: streamId,

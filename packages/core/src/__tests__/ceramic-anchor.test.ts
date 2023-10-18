@@ -296,17 +296,13 @@ describe('Ceramic anchoring', () => {
 
       // fail anchor
       const anchorService = ceramic.anchorService as any as InMemoryAnchorService
-      anchorService.moveAnchors(
-        AnchorRequestStatusName.PENDING,
-        AnchorRequestStatusName.FAILED,
-        true
-      )
+      anchorService.moveAnchors(AnchorRequestStatusName.PENDING, AnchorRequestStatusName.FAILED)
       await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
       expect(stream.state.log.length).toEqual(1)
 
       // re-request anchor, still FAILED as in production CAS
-      const anchorStatus = await stream.requestAnchor()
-      expect(anchorStatus).toEqual(AnchorStatus.FAILED)
+      await stream.requestAnchor()
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
 
       await ceramic.close()
     })

@@ -2,17 +2,17 @@ import type { AnchorEvent, CeramicApi } from '@ceramicnetwork/common'
 import { type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { type CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { NotCompleteStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../anchor-service.js'
 import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import { InMemoryCAS } from './in-memory-cas.js'
 import { CID } from 'multiformats'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
+import { doNotWait } from '../../ancillary/do-not-wait.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const BATCH_SIZE = 10
-const DEFAULT_POLL_INTERVAL = 100 // 100 milliseconds
 
 type InMemoryAnchorConfig = {
   anchorDelay: number
@@ -111,7 +111,17 @@ export class InMemoryAnchorService implements AnchorService {
       timestamp: Date.now(),
     })
 
-    return this.#cas.create(carFileReader, waitForConfirmation)
+    if (waitForConfirmation) {
+      return this.#cas.create(carFileReader, waitForConfirmation)
+    } else {
+      doNotWait(this.#cas.create(carFileReader, false))
+      return {
+        status: AnchorRequestStatusName.PENDING,
+        streamId: streamId,
+        cid: tip,
+        message: 'Sending anchoring request',
+      }
+    }
   }
 
   hasAccepted(tip: CID): Promise<void> {
