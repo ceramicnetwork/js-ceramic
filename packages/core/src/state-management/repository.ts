@@ -707,7 +707,7 @@ export class Repository {
   private async _handleAnchorCommit(
     state$: RunningState,
     tip: CID,
-    witnessCAR: CAR
+    witnessCAR: CAR | undefined
   ): Promise<void> {
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
@@ -717,7 +717,9 @@ export class Repository {
       remainingRetries--
     ) {
       try {
-        await this.dispatcher.importCAR(witnessCAR)
+        if (witnessCAR) {
+          await this.dispatcher.importCAR(witnessCAR)
+        }
 
         const applied = await this._handleTip(state$, anchorCommitCID)
         if (applied) {
