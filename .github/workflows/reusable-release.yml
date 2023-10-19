@@ -35,7 +35,7 @@ jobs:
         name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: 16
       -
         name: Checkout main branch
         uses: actions/checkout@v3
@@ -118,7 +118,7 @@ jobs:
         name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: 16
       -
         name: Checkout rc branch
         uses: actions/checkout@v3
@@ -200,7 +200,7 @@ jobs:
         name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: 16
       -
         name: Branch check
         if: ${{ inputs.branch == '' }}

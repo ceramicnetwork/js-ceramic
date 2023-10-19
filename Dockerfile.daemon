@@ -1,6 +1,6 @@
-FROM node:20 as ceramic
+FROM node:16 as ceramic
 
-RUN apt-get update && apt-get install -y netcat-traditional gettext-base jq
+RUN apt-get update && apt-get install -y netcat gettext-base jq
 
 COPY ci-scripts/install-rust-ceramic.sh ./
 
