@@ -55,10 +55,8 @@ class LevelDBStoreMap {
 
   private getFullLocation(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): string {
     if (useCaseName === DEFAULT_LEVELDB_STORE_USE_CASE_NAME) {
-      console.log('1', this.getDefaultLocation())
       return this.getDefaultLocation()
     } else {
-      console.log('2', `${this.getDefaultLocation()}-${useCaseName}`)
       return `${this.getDefaultLocation()}-${useCaseName}`
     }
   }
