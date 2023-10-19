@@ -18,7 +18,8 @@ import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 const LevelC = (levelTs as any).default as unknown as typeof Level
 
 const DEFAULT_LEVELDB_STORE_USE_CASE_NAME = 'default'
-// When ELP existed ELP and Mainnet shared data by utilizing the elp location
+// When ELP existed ELP and Mainnet both utilized the elp location because they shared data.
+// In order to not lose the data stored there we will continue to do use the elp location for mainnet.
 export const OLD_ELP_DEFAULT_LOCATION = 'elp'
 
 class NotFoundError extends Error {
