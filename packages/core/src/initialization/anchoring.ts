@@ -10,7 +10,6 @@ import type { AnchorService } from '../anchor/anchor-service.js'
 
 export const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
-  [Networks.ELP]: 'https://cas.3boxlabs.com',
   [Networks.TESTNET_CLAY]: 'https://cas-clay.3boxlabs.com',
   [Networks.DEV_UNSTABLE]: 'https://cas-qa.3boxlabs.com',
   [Networks.LOCAL]: 'http://localhost:8081',
@@ -18,7 +17,6 @@ export const DEFAULT_ANCHOR_SERVICE_URLS = {
 
 const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.MAINNET]: ['eip155:1'], // Ethereum mainnet
-  [Networks.ELP]: ['eip155:1'], // Ethereum mainnet
   [Networks.TESTNET_CLAY]: ['eip155:3', 'eip155:4', 'eip155:100'], // Ethereum Ropsten, Rinkeby, Gnosis Chain
   [Networks.DEV_UNSTABLE]: ['eip155:3', 'eip155:4', 'eip155:5'], // Ethereum Ropsten, Rinkeby, Goerli
   [Networks.LOCAL]: ['eip155:1337'], // Ganache
@@ -53,7 +51,6 @@ const MAINNET_CAS_URLS = [
   'https://cas-internal.3boxlabs.com',
   'https://cas-direct.3boxlabs.com',
   DEFAULT_ANCHOR_SERVICE_URLS[Networks.MAINNET],
-  DEFAULT_ANCHOR_SERVICE_URLS[Networks.ELP],
 ]
 export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Networks): string {
   const casUrl = fromConfig?.replace(TRAILING_SLASH, '') || DEFAULT_ANCHOR_SERVICE_URLS[network]
@@ -64,7 +61,7 @@ export function makeAnchorServiceUrl(fromConfig: string | undefined, network: Ne
 }
 
 function isMainnet(network: Networks): boolean {
-  return network == Networks.MAINNET || network == Networks.ELP
+  return network == Networks.MAINNET
 }
 
 /**
