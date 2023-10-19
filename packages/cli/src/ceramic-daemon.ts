@@ -15,6 +15,7 @@ import {
   MultiQuery,
   StreamUtils,
   SyncOptions,
+  UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -244,6 +245,7 @@ type AdminAPIJWSContents = {
   requestPath: string
   models?: Array<string>
   modelData?: Array<AdminAPIJWSModelData>
+  force?: boolean
 }
 
 type AdminApiJWSValidationResult = {
@@ -254,17 +256,40 @@ type AdminApiJWSValidationResult = {
   onSuccess?: () => Promise<void>
 }
 
-type AdminApiMutationMethod = AdminApiModelIdsMutationMethod | AdminApiModelDataMutationMethod
+enum AdminApiSuccessCallbackType {
+  shutdownServer,
+  modelData,
+  modelIDs,
+}
 
+/**
+ * Admin API method that shuts down the server
+ */
+type AdminApiShutdownServerMethod = {
+  type: AdminApiSuccessCallbackType.shutdownServer
+  method: (force: boolean) => Promise<void>
+}
+
+/**
+ * Admin API methods that mutate the node state and take as input a list of ModelData about some Models
+ */
 type AdminApiModelDataMutationMethod = {
-  type: 'modelData'
+  type: AdminApiSuccessCallbackType.modelData
   method: (modelData: Array<ModelData>) => Promise<void>
 }
 
+/**
+ * Admin API methods that mutate the node state and take as input a list of Model StreamIDs.
+ */
 type AdminApiModelIdsMutationMethod = {
-  type: 'modelIDs'
+  type: AdminApiSuccessCallbackType.modelIDs
   method: (modelsIDs: Array<StreamID>) => Promise<void>
 }
+
+type AdminApiMutationMethod =
+  | AdminApiModelIdsMutationMethod
+  | AdminApiModelDataMutationMethod
+  | AdminApiShutdownServerMethod
 
 const MODELS_DEPRECATION_AT = 'Thu, 29 Jun 2023 23:59:59 GMT'
 
@@ -401,6 +426,7 @@ export class CeramicDaemon {
     const adminPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const legacyPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const adminShutdownRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -414,6 +440,7 @@ export class CeramicDaemon {
     baseRouter.use('/admin/models', adminModelRouter)
     baseRouter.use('/admin/modelData', adminModelDataRouter)
     baseRouter.use('/admin/status', adminNodeStatusRouter)
+    baseRouter.use('/admin/shutdown', adminShutdownRouter)
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
     baseRouter.use('/admin/pins', adminPinsRouter)
@@ -448,6 +475,7 @@ export class CeramicDaemon {
     adminModelDataRouter.deleteAsync('/', this.stopIndexingModelData.bind(this))
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
+    adminShutdownRouter.postAsync('/', this.shutdownServer.bind(this))
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -737,6 +765,7 @@ export class CeramicDaemon {
       requestPath: result.payload.requestPath,
       models: result.payload.requestBody ? result.payload.requestBody.models : undefined,
       modelData: result.payload.requestBody ? result.payload.requestBody.modelData : undefined,
+      force: result.payload.requestBody ? result.payload.requestBody.force : undefined,
     }
   }
 
@@ -762,8 +791,9 @@ export class CeramicDaemon {
     } else {
       let onSuccess
       if (successCallback) {
-        switch (successCallback.type) {
-          case 'modelData': {
+        const callbackType: AdminApiSuccessCallbackType = successCallback.type
+        switch (callbackType) {
+          case AdminApiSuccessCallbackType.modelData: {
             const modelData = parsedJWS.modelData?.map((idx) => {
               return {
                 streamID: StreamID.fromString(idx.streamID),
@@ -781,7 +811,7 @@ export class CeramicDaemon {
             onSuccess = () => successCallback.method(modelData)
             break
           }
-          case 'modelIDs': {
+          case AdminApiSuccessCallbackType.modelIDs: {
             const models = parsedJWS.models?.map((modelIDString) =>
               StreamID.fromString(modelIDString)
             )
@@ -796,6 +826,16 @@ export class CeramicDaemon {
             onSuccess = () => successCallback.method(models)
             break
           }
+          case AdminApiSuccessCallbackType.shutdownServer: {
+            const force = parsedJWS.force
+            onSuccess = () => successCallback.method(force)
+            break
+          }
+          default:
+            throw new UnreachableCaseError(
+              callbackType,
+              'Unsupported admin API success callback type'
+            )
         }
       }
       return {
@@ -956,14 +996,14 @@ export class CeramicDaemon {
   async startIndexingModels(req: Request, res: Response): Promise<void> {
     res.header('Deprecation', MODELS_DEPRECATION_AT)
     await this._processAdminModelsMutationRequest(req, res, {
-      type: 'modelIDs',
+      type: AdminApiSuccessCallbackType.modelIDs,
       method: (modelIDs) => this.ceramic.admin.startIndexingModels(modelIDs),
     })
   }
 
   async startIndexingModelData(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, {
-      type: 'modelData',
+      type: AdminApiSuccessCallbackType.modelData,
       method: (modelData) => this.ceramic.admin.startIndexingModelData(modelData),
     })
   }
@@ -971,15 +1011,31 @@ export class CeramicDaemon {
   async stopIndexingModels(req: Request, res: Response): Promise<void> {
     res.header('Deprecation', MODELS_DEPRECATION_AT)
     await this._processAdminModelsMutationRequest(req, res, {
-      type: 'modelIDs',
+      type: AdminApiSuccessCallbackType.modelIDs,
       method: (modelsIDs) => this.ceramic.admin.stopIndexingModels(modelsIDs),
     })
   }
 
   async stopIndexingModelData(req: Request, res: Response): Promise<void> {
     await this._processAdminModelsMutationRequest(req, res, {
-      type: 'modelData',
+      type: AdminApiSuccessCallbackType.modelData,
       method: (modelData) => this.ceramic.admin.stopIndexingModelData(modelData),
+    })
+  }
+
+  async shutdownServer(req: Request, res: Response): Promise<void> {
+    const closeClosure = this.close.bind(this)
+    const successCallback = async function (force: boolean) {
+      if (force) {
+        process.exit(1)
+      } else {
+        await closeClosure()
+        process.exit(0)
+      }
+    }
+    await this._processAdminModelsMutationRequest(req, res, {
+      type: AdminApiSuccessCallbackType.shutdownServer,
+      method: successCallback,
     })
   }
 
