@@ -47,13 +47,13 @@ export const NotCompleteCASResponse = sparse(
 )
 export type NotCompleteCASResponse = TypeOf<typeof NotCompleteCASResponse>
 
-export const CompleteCASResponse = type(
+export const CompleteCASResponse = sparse(
   {
     ...NotCompleteCASResponse.props,
     status: literal(AnchorRequestStatusName.COMPLETED),
     // TODO CDB-2759 Drop this after enough Ceramic nodes can 100% rely on WitnessCAR
     anchorCommit: AnchorCommitPresentation,
-    witnessCar: uint8ArrayAsBase64.pipe(carAsUint8Array),
+    witnessCar: optional(uint8ArrayAsBase64.pipe(carAsUint8Array)),
   },
   'CompleteCASResponse'
 )
