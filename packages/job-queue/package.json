@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/job-queue",
   "version": "1.4.0-rc.0",
   "description": "Ceramic persistent job queue",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ceramic",
     "job",

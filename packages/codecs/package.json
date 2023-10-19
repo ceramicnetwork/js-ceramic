@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/codecs",
   "version": "1.12.0-rc.0",
   "description": "Ceramic Codecs",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ceramic",
     "codecs"

@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/pinning-ipfs-backend",
   "version": "2.29.0-rc.0",
   "description": "IPFS Pinning backend",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ceramic",
     "ipfs"

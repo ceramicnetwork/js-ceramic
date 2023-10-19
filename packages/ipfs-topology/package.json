@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/ipfs-topology",
   "version": "2.31.0-rc.0",
   "description": "Setup IPFS topology right",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ipfs",
     "ceramic"

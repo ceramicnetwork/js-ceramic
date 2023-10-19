@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/common",
   "version": "2.37.0-rc.0",
   "description": "Ceramic common types and utilities",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ceramic",
     "types",

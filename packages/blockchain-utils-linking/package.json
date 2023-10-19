@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/blockchain-utils-linking",
   "version": "2.22.0-rc.0",
   "description": "Blockchain utils for linking blockchain accounts to DID",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ceramic",
     "caip10-link"

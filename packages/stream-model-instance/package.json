@@ -2,9 +2,6 @@
   "name": "@ceramicnetwork/stream-model-instance",
   "version": "1.19.0-rc.0",
   "description": "Ceramic Model Instance Document stream type",
-  "engines": {
-    "node": ">=20.8"
-  },
   "keywords": [
     "ceramic",
     "mid",
