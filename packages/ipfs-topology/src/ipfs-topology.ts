@@ -32,13 +32,13 @@ const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
     case Networks.DEV_UNSTABLE:
       return [
         multiaddr(
-          '/dns4/go-ipfs-ceramic-public-qa-external.3boxlabs.com/tcp/4011/ws/p2p/QmPP3RdaSWDkhcxZReGo591FWanLw9ucvgmUZhtSLt9t6D'
+          '/dns4/ipfs-ceramic-public-qa-swarm.3boxlabs.com/tcp/4010/p2p/QmPP3RdaSWDkhcxZReGo591FWanLw9ucvgmUZhtSLt9t6D'
         ),
         multiaddr(
-          '/dns4/go-ipfs-ceramic-private-qa-external.3boxlabs.com/tcp/4011/ws/p2p/QmXcmXfLkkaGbQdj98cgGvHr5gkwJp4r79j9xbJajsoYHr'
+          '/dns4/ipfs-ceramic-private-qa-swarm.3boxlabs.com/tcp/4010/p2p/12D3KooWAQvp6Wnqho9ririWvbmtodnNQX9GECQEps2gb6kwBf2h'
         ),
         multiaddr(
-          '/dns4/go-ipfs-ceramic-private-cas-qa-external.3boxlabs.com/tcp/4011/ws/p2p/QmRvJ4HX4N6H26NgtqjoJEUyaDyDRUhGESP1aoyCJE1X1b'
+          '/dns4/ipfs-ceramic-private-cas-qa-swarm.3boxlabs.com/tcp/4010/p2p/QmRvJ4HX4N6H26NgtqjoJEUyaDyDRUhGESP1aoyCJE1X1b'
         ),
       ]
     case Networks.LOCAL:
