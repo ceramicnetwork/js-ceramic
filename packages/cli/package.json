@@ -2,6 +2,9 @@
   "name": "@ceramicnetwork/cli",
   "version": "2.43.0-rc.0",
   "description": "Typescript implementation of the Ceramic CLI",
+  "engines": {
+    "node": ">=20.8"
+  },
   "keywords": [
     "Ceramic",
     "DID",
