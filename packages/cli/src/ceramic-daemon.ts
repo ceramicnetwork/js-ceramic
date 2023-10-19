@@ -831,11 +831,11 @@ export class CeramicDaemon {
             onSuccess = () => successCallback.method(force)
             break
           }
-          // default:
-          //   throw new UnreachableCaseError(
-          //     successCallback.type,
-          //     'Unsupported admin API success callback type'
-          //   )
+          default:
+            throw new UnreachableCaseError(
+              callbackType,
+              'Unsupported admin API success callback type'
+            )
         }
       }
       return {
