@@ -212,7 +212,7 @@ describe('Ceramic interop: core <> http-client', () => {
     // change from core viewable in client
     await doc1.update(middleContent)
     await anchorDoc(doc1)
-    await TestUtils.waitForConditionOrTimeout(() => {
+    await TestUtils.waitForConditionOrTimeout(async () => {
       return JSON.stringify(doc1.content) === JSON.stringify(doc2.content)
     })
     expect(doc1.content).toEqual(middleContent)
@@ -222,7 +222,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
     await doc2.update(finalContent)
     await anchorDoc(doc2)
-    await TestUtils.waitForConditionOrTimeout(() => {
+    await TestUtils.waitForConditionOrTimeout(async () => {
       return JSON.stringify(doc1.content) === JSON.stringify(doc2.content)
     })
     expect(doc1.content).toEqual(doc2.content)

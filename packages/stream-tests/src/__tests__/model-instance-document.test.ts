@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadataArgs,
@@ -370,6 +370,8 @@ describe('ModelInstanceDocument API multi-node tests', () => {
   beforeAll(async () => {
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
+    await swarmConnect(ipfs0, ipfs1)
+
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
 

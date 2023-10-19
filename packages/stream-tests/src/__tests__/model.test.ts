@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
@@ -245,6 +245,7 @@ describe('Model API multi-node tests', () => {
   beforeAll(async () => {
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
+    await swarmConnect(ipfs0, ipfs1)
   }, 12000)
 
   beforeEach(async () => {

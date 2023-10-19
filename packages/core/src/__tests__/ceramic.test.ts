@@ -199,6 +199,7 @@ describe('Ceramic integration', () => {
     'can apply existing commits successfully',
     async () => {
       await withFleet(2, async ([ipfs1, ipfs2]) => {
+        await swarmConnect(ipfs1, ipfs2)
         const ceramic1 = await createCeramic(ipfs1)
         const ceramic2 = await createCeramic(ipfs2)
 
@@ -616,6 +617,7 @@ describe('Ceramic integration', () => {
     'Multiquery with genesis commit provided',
     async () => {
       await withFleet(2, async ([ipfs1, ipfs2]) => {
+        await swarmConnect(ipfs1, ipfs2)
         const ceramic1 = await createCeramic(ipfs1, false)
         const ceramic2 = await createCeramic(ipfs2, false)
 

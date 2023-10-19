@@ -31,9 +31,6 @@ commands:
       - run: npm run build
       - run: npm run lint
       - run:
-          name: Run ceramic-one
-          command: ceramic-one daemon &
-      - run:
           name: Test
           command: npm run test
           no_output_timeout: 30m
@@ -70,6 +67,7 @@ jobs:
       image: ubuntu-2204:2023.07.2
     environment:
       IPFS_FLAVOR: rust
+      CERAMIC_ONE_PATH: /usr/local/bin/ceramic-one
     steps:
       - build-and-test
       - run:

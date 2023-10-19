@@ -86,6 +86,7 @@ async function createIpfsOptions(
   const apiPort = await getPort()
   const gatewayPort = await getPort()
 
+  // The default options do not peer with any nodes and do not have any discovery mechanism.
   return mergeOptions(
     {
       start: true,
@@ -100,39 +101,10 @@ async function createIpfsOptions(
           SeenMessagesTTL: '10m',
         },
         Bootstrap: [],
-        Peering: {
-          Peers: [
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL',
-              ],
-              ID: 'QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8',
-              ],
-              ID: 'QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-elp-1-1-external.3boxlabs.com/tcp/4011/ws/p2p/QmUiF8Au7wjhAF9BYYMNQRW5KhY7o8fq4RUozzkWvHXQrZ',
-              ],
-              ID: 'QmUiF8Au7wjhAF9BYYMNQRW5KhY7o8fq4RUozzkWvHXQrZ',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-elp-1-2-external.3boxlabs.com/tcp/4011/ws/p2p/QmRNw9ZimjSwujzS3euqSYxDW9EHDU5LB3NbLQ5vJ13hwJ',
-              ],
-              ID: 'QmRNw9ZimjSwujzS3euqSYxDW9EHDU5LB3NbLQ5vJ13hwJ',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-private-cas-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
-              ],
-              ID: 'QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
-            },
-          ],
+        Discovery: {
+          MDNS: {
+            Enabled: false,
+          },
         },
       },
     },
@@ -153,8 +125,7 @@ export type RustIpfsFlavor = {
 
 type IpfsFlavor = GoIpfsFlavor | RustIpfsFlavor
 
-export async function createIPFS(goOptions: IPFSOptions = {}, disposable = true, rustOptions: RustIpfsOptions = { type: 'remote' } as RustIpfsRemoteOptions): Promise<IpfsApi> {
-  console.log('createIPFS', goOptions, disposable, rustOptions);
+export async function createIPFS(goOptions: IPFSOptions = {}, disposable = true, rustOptions: RustIpfsOptions = { type: 'binary' } as RustIpfsOptions): Promise<IpfsApi> {
   const env_flavor = process.env.IPFS_FLAVOR || 'go'
   if (env_flavor == 'go') {
     return (
