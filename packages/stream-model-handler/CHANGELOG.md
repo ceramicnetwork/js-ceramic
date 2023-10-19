@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.20.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.19.0...@ceramicnetwork/stream-model-handler@1.20.0-rc.0) (2023-10-19)
+
+
+### Features
+
+* **indexing,stream-model:** Indexing logic for interfaces ([#2972](https://github.com/ceramicnetwork/js-ceramic/issues/2972)) ([6f1b8b9](https://github.com/ceramicnetwork/js-ceramic/commit/6f1b8b9bb03428766b0da2851d2f37e9bc45e5c4))
+* **stream-model-handler:** Support model interfaces creation ([#2981](https://github.com/ceramicnetwork/js-ceramic/issues/2981)) ([1ff338e](https://github.com/ceramicnetwork/js-ceramic/commit/1ff338ec32a8fad32cc15a27596ed03b18fcf384))
+
+
+
+
+
 # [1.19.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@1.19.0-rc.0...@ceramicnetwork/stream-model-handler@1.19.0) (2023-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler

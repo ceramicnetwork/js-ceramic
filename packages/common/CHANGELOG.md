@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.38.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.37.0...@ceramicnetwork/common@2.38.0-rc.0) (2023-10-19)
+
+
+### Features
+
+* **indexing,stream-model:** Indexing logic for interfaces ([#2972](https://github.com/ceramicnetwork/js-ceramic/issues/2972)) ([6f1b8b9](https://github.com/ceramicnetwork/js-ceramic/commit/6f1b8b9bb03428766b0da2851d2f37e9bc45e5c4))
+* Remove InternalOpts ([#2996](https://github.com/ceramicnetwork/js-ceramic/issues/2996)) ([24ab567](https://github.com/ceramicnetwork/js-ceramic/commit/24ab567bcb3ae1bd13b2f3556c90048f1319ea3d))
+
+
+
+
+
 # [2.37.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.37.0-rc.0...@ceramicnetwork/common@2.37.0) (2023-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/common

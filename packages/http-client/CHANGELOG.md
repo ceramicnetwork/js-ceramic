@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.35.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.34.0...@ceramicnetwork/http-client@2.35.0-rc.0) (2023-10-19)
+
+
+### Features
+
+* Remove InternalOpts ([#2996](https://github.com/ceramicnetwork/js-ceramic/issues/2996)) ([24ab567](https://github.com/ceramicnetwork/js-ceramic/commit/24ab567bcb3ae1bd13b2f3556c90048f1319ea3d))
+
+
+
+
+
 # [2.34.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.34.0-rc.0...@ceramicnetwork/http-client@2.34.0) (2023-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

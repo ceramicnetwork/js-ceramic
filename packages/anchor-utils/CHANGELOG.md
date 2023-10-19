@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.21.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.20.0...@ceramicnetwork/anchor-utils@1.21.0-rc.0) (2023-10-19)
+
+
+### Features
+
+* **core, anchor-utils:** sync start block 24 hours before model anchor ([#2881](https://github.com/ceramicnetwork/js-ceramic/issues/2881)) ([2d62e6c](https://github.com/ceramicnetwork/js-ceramic/commit/2d62e6c5bfb95fe44b28af6b76f854c4925a3b73))
+
+
+
+
+
 # [1.20.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-utils@1.20.0-rc.0...@ceramicnetwork/anchor-utils@1.20.0) (2023-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-utils

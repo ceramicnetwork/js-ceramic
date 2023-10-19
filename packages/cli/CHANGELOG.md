@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.43.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.42.0...@ceramicnetwork/cli@2.43.0-rc.0) (2023-10-19)
+
+
+### Features
+
+* Add admin-DID protected HTTP endpoint for shutting down a node ([#3001](https://github.com/ceramicnetwork/js-ceramic/issues/3001)) ([f48b237](https://github.com/ceramicnetwork/js-ceramic/commit/f48b237afea4f682aea4e404d9a46aa902379b6d))
+* **indexing,stream-model:** Indexing logic for interfaces ([#2972](https://github.com/ceramicnetwork/js-ceramic/issues/2972)) ([6f1b8b9](https://github.com/ceramicnetwork/js-ceramic/commit/6f1b8b9bb03428766b0da2851d2f37e9bc45e5c4))
+
+
+
+
+
 # [2.42.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.42.0-rc.0...@ceramicnetwork/cli@2.42.0) (2023-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
