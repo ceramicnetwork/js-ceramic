@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/indexing",
-  "version": "1.4.0-rc.0",
+  "version": "1.4.0-rc.1",
   "description": "Ceramic indexing and querying logic",
   "keywords": [
     "ceramic",
@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.31.0-rc.0",
-    "@ceramicnetwork/ipfs-daemon": "^2.31.0-rc.0",
+    "@ceramicnetwork/ipfs-daemon": "^2.31.0-rc.1",
     "@ceramicnetwork/stream-model-instance": "^1.20.0-rc.0",
     "@ceramicnetwork/stream-tile": "^2.34.0-rc.0",
     "@stablelib/sha256": "^1.0.1",
