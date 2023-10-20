@@ -8,7 +8,6 @@ import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
 const BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
   switch (ceramicNetwork) {
     case Networks.MAINNET:
-    case Networks.ELP:
       return [
         multiaddr(
           '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL'
