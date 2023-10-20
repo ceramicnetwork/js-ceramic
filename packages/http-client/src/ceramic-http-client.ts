@@ -78,7 +78,7 @@ export class CeramicClient implements CeramicApi {
   constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
-    this._apiUrl = new URL(API_PATH, apiHost)
+    this._apiUrl = new URL(apiHost.replace(/\/$/, '') + API_PATH) 
     this.context = { api: this }
 
     this.pin = new DummyPinApi()
