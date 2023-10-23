@@ -16,7 +16,7 @@ import {
   StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
-import { StreamID, StreamType } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as PkhDidResolver from 'pkh-did-resolver'
@@ -57,12 +57,8 @@ const STREAM_UNPINNED = 'stream_unpinned'
 type AdminCode = string
 type Timestamp = number
 
-interface MultiQueryWithDocId extends MultiQuery {
-  docId?: string
-}
-
 interface MultiQueries {
-  queries: Array<MultiQueryWithDocId>
+  queries: Array<MultiQuery>
   timeout?: number
 }
 
@@ -389,7 +385,6 @@ export class CeramicDaemon {
   registerAPIPaths(app: ExpressWithAsync, gateway: boolean): void {
     const baseRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const commitsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
-    const documentsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const multiqueriesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const nodeRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
@@ -404,7 +399,6 @@ export class CeramicDaemon {
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
-    baseRouter.use('/documents', documentsRouter)
     baseRouter.use('/multiqueries', multiqueriesRouter)
     baseRouter.use('/node', nodeRouter)
     baseRouter.use('/records', recordsRouter)
@@ -432,7 +426,6 @@ export class CeramicDaemon {
     streamsRouter.getAsync('/:streamid/content', this.content.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
     nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
-    documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
     collectionRouter.getAsync('/', this.getCollection_get.bind(this)) // Deprecated
     collectionRouter.postAsync('/', this.getCollection_post.bind(this))
@@ -456,13 +449,11 @@ export class CeramicDaemon {
       adminPinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
       adminPinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
 
-      documentsRouter.postAsync('/', this.createDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this.applyCommit.bind(this)) // Deprecated
     } else {
       streamsRouter.postAsync('/', this.createReadOnlyStreamFromGenesis.bind(this))
       commitsRouter.postAsync('/', this._notSupported.bind(this))
 
-      documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this._notSupported.bind(this)) // Deprecated
     }
   }
@@ -536,28 +527,7 @@ export class CeramicDaemon {
   }
 
   /**
-   * Create document from genesis commit
-   * @dev Useful when the streamId is unknown, but you have the genesis contents
-   * @deprecated
-   */
-  async createDocFromGenesis(req: Request, res: Response): Promise<void> {
-    const { doctype, genesis, docOpts } = req.body
-    upconvertLegacySyncOption(docOpts)
-    const type = StreamType.codeByName(doctype)
-    const doc = await this.ceramic.createStreamFromGenesis(
-      type,
-      StreamUtils.deserializeCommit(genesis),
-      docOpts
-    )
-    res.json({
-      streamId: doc.id.toString(),
-      docId: doc.id.toString(),
-      state: StreamUtils.serializeState(doc.state),
-    })
-  }
-
-  /**
-   * Create document from genesis commit
+   * Create stream from genesis commit
    * @dev Useful when the streamId is unknown, but you have the genesis contents
    */
   async createStreamFromGenesis(req: Request, res: Response): Promise<void> {
@@ -581,34 +551,9 @@ export class CeramicDaemon {
   }
 
   /**
-   * Create read-only document from genesis commit
+   * Create read-only stream from genesis commit
    * @dev Useful when the streamId is unknown, but you have the genesis contents
-   * @TODO Should return null if document does not already exist instead of
-   * current behavior, publishing to IPFS. With that change it will make sense
-   * to rename this, e.g. `loadStreamFromGenesis`
-   * @deprecated
-   */
-  async createReadOnlyDocFromGenesis(req: Request, res: Response): Promise<void> {
-    const { doctype, genesis, docOpts } = req.body
-    upconvertLegacySyncOption(docOpts)
-    const type = StreamType.codeByName(doctype)
-    const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
-    const doc = await this.ceramic.createStreamFromGenesis(
-      type,
-      StreamUtils.deserializeCommit(genesis),
-      readOnlyDocOpts
-    )
-    res.json({
-      streamId: doc.id.toString(),
-      docId: doc.id.toString(),
-      state: StreamUtils.serializeState(doc.state),
-    })
-  }
-
-  /**
-   * Create read-only document from genesis commit
-   * @dev Useful when the docId is unknown, but you have the genesis contents
-   * @TODO Should return null if document does not already exist instead of
+   * @TODO Should return null if stream does not already exist instead of
    * current behavior, publishing to IPFS. With that change it will make sense
    * to rename this, e.g. `loadStreamFromGenesis`
    */
@@ -633,22 +578,10 @@ export class CeramicDaemon {
   }
 
   /**
-   * Get document state
-   * @deprecated
-   * // todo remove when 'documents' endpoint is removed
-   */
-  async stateOld(req: Request, res: Response): Promise<void> {
-    const opts = parseQueryObject(req.query)
-    upconvertLegacySyncOption(opts)
-    const doc = await this.ceramic.loadStream(req.params.docid, opts)
-    res.json({ docId: doc.id.toString(), state: StreamUtils.serializeState(doc.state) })
-  }
-
-  /**
-   * Get all document commits
+   * Get all stream commits
    */
   async commits(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const streamId = StreamID.fromString(req.params.streamid)
     const commits = await this.ceramic.loadStreamCommits(streamId)
     const serializedCommits = commits.map((r: any) => {
       return {
@@ -657,10 +590,8 @@ export class CeramicDaemon {
       }
     })
 
-    // TODO remove docId from output when we are no longer supporting clients older than v1.0.0
     res.json({
       streamId: streamId.toString(),
-      docId: streamId.toString(),
       commits: serializedCommits,
     })
   }
@@ -984,14 +915,14 @@ export class CeramicDaemon {
   }
 
   /**
-   * Apply one commit to the existing document
+   * Apply one commit to the existing stream
    */
   async applyCommit(req: Request, res: Response): Promise<void> {
-    const { docId, commit, docOpts } = req.body
-    const opts = req.body.opts || docOpts
+    const { commit } = req.body
+    const opts = req.body.opts
     upconvertLegacySyncOption(opts)
 
-    const streamId = req.body.streamId || docId
+    const streamId = req.body.streamId
     if (!(streamId && commit)) {
       throw new Error('streamId and commit are required in order to apply commit')
     }
@@ -1003,27 +934,16 @@ export class CeramicDaemon {
     )
     res.json({
       streamId: stream.id.toString(),
-      docId: stream.id.toString(),
       state: StreamUtils.serializeState(stream.state),
     })
   }
 
   /**
-   * Load multiple documents and paths using an array of multiqueries
+   * Load multiple streams and paths using an array of multiqueries
    */
   async multiQuery(req: Request, res: Response): Promise<void> {
-    let { queries } = <MultiQueries>req.body
+    const { queries } = <MultiQueries>req.body
     const { timeout } = <MultiQueries>req.body
-
-    // Handle queries from old clients by replacing the `docId` arguments with `streamId`.
-    // TODO: Remove this once we no longer need to support http clients older than version 1.0.0
-    queries = queries.map((q: MultiQueryWithDocId): MultiQuery => {
-      if (q.docId) {
-        q.streamId = q.docId
-        delete q.docId
-      }
-      return q
-    })
 
     const results = await this.ceramic.multiQuery(queries, timeout)
     const response = Object.entries(results).reduce((acc, e) => {
@@ -1047,13 +967,12 @@ export class CeramicDaemon {
    * Pin stream
    */
   async pinStream(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const streamId = StreamID.fromString(req.params.streamid)
     const { force } = req.body
     await this.ceramic.admin.pin.add(streamId, force)
     Metrics.count(STREAM_PINNED, 1)
     res.json({
       streamId: streamId.toString(),
-      docId: streamId.toString(),
       isPinned: true,
     })
   }
@@ -1062,13 +981,12 @@ export class CeramicDaemon {
    * Unpin stream
    */
   async unpinStream(req: Request, res: Response): Promise<void> {
-    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const streamId = StreamID.fromString(req.params.streamid)
     const { opts } = req.body
     await this.ceramic.admin.pin.rm(streamId, opts)
     Metrics.count(STREAM_UNPINNED, 1)
     res.json({
       streamId: streamId.toString(),
-      docId: streamId.toString(),
       isPinned: false,
     })
   }
@@ -1078,8 +996,8 @@ export class CeramicDaemon {
    */
   async listPinned(req: Request, res: Response): Promise<void> {
     let streamId: StreamID
-    if (req.params.streamid || req.params.docid) {
-      streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    if (req.params.streamid) {
+      streamId = StreamID.fromString(req.params.streamid)
     }
     const pinnedStreamIds = []
     const iterator = await this.ceramic.admin.pin.ls(streamId)
@@ -1087,10 +1005,7 @@ export class CeramicDaemon {
       pinnedStreamIds.push(id)
     }
 
-    // Return the same data in two formats: 'pinnedStreamids' and 'pinnedDocIds', to support old clients
-    // TODO: Remove 'pinnedDocIds' once we are okay with no longer supporting applications using a
-    // version of '@ceramicnetwork/http-client' older than v1.0.0
-    res.json({ pinnedStreamIds, pinnedDocIds: pinnedStreamIds })
+    res.json({ pinnedStreamIds })
   }
 
   async _notSupported(req: Request, res: Response): Promise<void> {
