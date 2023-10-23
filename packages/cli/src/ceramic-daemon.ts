@@ -387,7 +387,6 @@ export class CeramicDaemon {
     const commitsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const multiqueriesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const nodeRouter = ErrorHandlingRouter(this.diagnosticsLogger)
-    const recordsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const streamsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const collectionRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminCodesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
@@ -401,7 +400,6 @@ export class CeramicDaemon {
     baseRouter.use('/commits', commitsRouter)
     baseRouter.use('/multiqueries', multiqueriesRouter)
     baseRouter.use('/node', nodeRouter)
-    baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
     baseRouter.use('/collection', collectionRouter)
     baseRouter.use('/admin/getCode', adminCodesRouter)
@@ -426,10 +424,7 @@ export class CeramicDaemon {
     streamsRouter.getAsync('/:streamid/content', this.content.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
     nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
-    recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
-    collectionRouter.getAsync('/', this.getCollection_get.bind(this)) // Deprecated
     collectionRouter.postAsync('/', this.getCollection_post.bind(this))
-    collectionRouter.getAsync('/count', this.getCollectionCount_get.bind(this)) // Deprecated
     collectionRouter.postAsync('/count', this.getCollectionCount_post.bind(this))
     adminCodesRouter.getAsync('/', this.getAdminCode.bind(this))
     adminNodeStatusRouter.getAsync('/', this.nodeStatus.bind(this))
@@ -448,13 +443,9 @@ export class CeramicDaemon {
       commitsRouter.postAsync('/', this.applyCommit.bind(this))
       adminPinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
       adminPinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
-
-      recordsRouter.postAsync('/', this.applyCommit.bind(this)) // Deprecated
     } else {
       streamsRouter.postAsync('/', this.createReadOnlyStreamFromGenesis.bind(this))
       commitsRouter.postAsync('/', this._notSupported.bind(this))
-
-      recordsRouter.postAsync('/', this._notSupported.bind(this)) // Deprecated
     }
   }
 
@@ -597,17 +588,6 @@ export class CeramicDaemon {
   }
 
   /**
-   * Implementation of collection queries (the 'collection' http endpoint) using the HTTP GET method.
-   * TODO: Remove this once we no longer need to support version 2.4.0 and earlier of the
-   * http-client.
-   */
-  async getCollection_get(req: Request, res: Response): Promise<void> {
-    const httpQuery = parseQueryObject(req.query)
-    const response = await this._getCollection(httpQuery)
-    res.json(response)
-  }
-
-  /**
    * Implementation of collection queries (the 'collection' http endpoint) using the HTTP POST method.
    */
   async getCollection_post(req: Request, res: Response): Promise<void> {
@@ -632,17 +612,6 @@ export class CeramicDaemon {
       }),
       pageInfo: indexResponse.pageInfo,
     }
-  }
-
-  /**
-   * Implementation of count queries (the 'collection/count' http endpoint) using the HTTP GET method.
-   * TODO: Remove this once we no longer need to support version 2.4.0 and earlier of the
-   * http-client.
-   */
-  async getCollectionCount_get(req: Request, res: Response): Promise<void> {
-    const httpQuery = parseQueryObject(req.query)
-    const response = await this._getCollectionCount(httpQuery)
-    res.json(response)
   }
 
   /**
