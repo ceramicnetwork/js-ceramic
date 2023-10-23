@@ -20,7 +20,7 @@ export function readCsvFixture(filepath: URL) {
       .pipe(csvReader)
       .on('data', (row) => {
         result.push({
-          model: MODEL,
+          model: row.model,
           streamID: StreamID.fromString(row.stream_id),
           controller: row.controller,
           streamContent: row.stream_content ? row.stream_content : '{}',
