@@ -35,7 +35,6 @@ const DEFAULT_CONFIG_PATH = new URL('.ceramic/', HOMEDIR)
 const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH)
 const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
-const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 
 /**
@@ -640,25 +639,6 @@ export class CeramicCliUtils {
       // Swallow error
     }
 
-    // If nothing found in default config file path, check legacy path too
-    // TODO(1615): Remove this backwards compatibility code
-    try {
-      await fs.access(LEGACY_CLI_CONFIG_FILENAME)
-      const fileContents = await fs.readFile(LEGACY_CLI_CONFIG_FILENAME, { encoding: 'utf8' })
-
-      console.warn(
-        `Legacy client config file detected at '${LEGACY_CLI_CONFIG_FILENAME}', renaming to ${DEFAULT_CLI_CONFIG_FILENAME}`
-      )
-      try {
-        await fs.rename(LEGACY_CLI_CONFIG_FILENAME, DEFAULT_CLI_CONFIG_FILENAME)
-      } catch (err) {
-        console.error(`Rename failed: ${err}`)
-        throw err
-      }
-      return fileContents
-    } catch (e) {
-      // Swallow error
-    }
     return ''
   }
 
