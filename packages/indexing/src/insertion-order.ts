@@ -23,6 +23,9 @@ export type QueryResult = {
 }
 export type QueryBuilder = Knex.QueryBuilder<any, Array<QueryResult>>
 
+type InternalQuery = Omit<BaseQuery, 'model' | 'models'>
+type PageQuery = InternalQuery & Pagination
+
 /**
  * Stream `id` is always present in cursor, with the `value` either a record of content keys and values (if custom ordering is provided) or the `created_at` field value as fallback, based on the `type` value
  */
@@ -110,7 +113,7 @@ const INSERTION_ORDER = [{ column: 'created_at', order: 'ASC' as const }]
 export class InsertionOrder {
   constructor(private readonly dbConnection: Knex) {}
 
-  async page(models: Set<string>, query: BaseQuery & Pagination): Promise<Page<StreamID>> {
+  async page(models: Set<string>, query: PageQuery): Promise<Page<StreamID>> {
     const orderByKeys = Object.keys(query.sorting ?? {})
     const pagination = parsePagination(query)
     const paginationKind = pagination.kind
@@ -167,7 +170,7 @@ export class InsertionOrder {
    */
   private async forwardQuery(
     models: Set<string>,
-    query: BaseQuery,
+    query: InternalQuery,
     pagination: ForwardPaginationQuery
   ): Promise<Array<QueryResult>> {
     return await this.query(models, query, false, Cursor.parse(pagination.after)).limit(
@@ -180,7 +183,7 @@ export class InsertionOrder {
    */
   private async backwardQuery(
     models: Set<string>,
-    query: BaseQuery,
+    query: InternalQuery,
     pagination: BackwardPaginationQuery
   ): Promise<Array<QueryResult>> {
     const response = await this.query(models, query, true, Cursor.parse(pagination.before)).limit(
@@ -193,7 +196,7 @@ export class InsertionOrder {
 
   private query(
     models: Set<string>,
-    query: BaseQuery,
+    query: InternalQuery,
     isReverseOrder: boolean,
     cursor?: CursorData
   ): QueryBuilder {
@@ -212,7 +215,7 @@ export class InsertionOrder {
           // Handle filters (account, fields and/or legacy relations)
           return this.applyFilters(subQuery, query)
         })
-        return qb.unionAll(subQueries)
+        return qb.unionAll(subQueries).as('models')
       })
     }
     builder = builder.columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD]).select()

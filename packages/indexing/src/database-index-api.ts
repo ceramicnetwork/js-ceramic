@@ -117,11 +117,9 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     return interfaces
   }
 
-  addModelImplements(modelID: string, interfaceIDs: Iterable<string>): void {
-    for (const interfaceID of interfaceIDs) {
-      const models = this.getInterfaceModels(interfaceID).add(modelID)
-      this.#interfacesModels[interfaceID] = models
-    }
+  addModelImplements(modelID: string, interfaceID: string): void {
+    const models = this.getInterfaceModels(interfaceID).add(modelID)
+    this.#interfacesModels[interfaceID] = models
   }
 
   /**
@@ -177,7 +175,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       const modelImplements = models.flatMap((args) => {
         const modelID = args.model.toString()
         return (args.implements ?? []).map((interfaceID) => {
-          this.addModelImplements(interfaceID, modelID)
+          this.addModelImplements(modelID, interfaceID)
           return { interface_id: interfaceID, implemented_by_id: modelID }
         })
       })
@@ -400,7 +398,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
             query
           )
         })
-        return qb.unionAll(subQueries)
+        return qb.unionAll(subQueries).as('models')
       })
       .then((response) => this.getCountFromResult(response as any))
   }

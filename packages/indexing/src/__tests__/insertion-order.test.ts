@@ -4,20 +4,15 @@ import { PostgresIndexApi, SqliteIndexApi } from '../database-index-api.js'
 import { readCsvFixture } from './read-csv-fixture.util.js'
 import { chunks } from './chunks.util.js'
 import { InsertionOrder } from '../insertion-order.js'
-import { asTableName } from '../as-table-name.util.js'
 import { jest } from '@jest/globals'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 
-const MODEL_IDS = [
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabe',
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabf',
-]
-const MODELS_TO_INDEX = MODEL_IDS.map(StreamID.fromString)
-const MODEL = MODELS_TO_INDEX[0]
+const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
+const MODELS = new Set([MODEL_ID])
 const logger = new LoggerProvider().getDiagnosticsLogger()
 
 let EXPECTED: Array<string>
@@ -28,9 +23,7 @@ jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
 
 describe('postgres', () => {
   async function dropMidTables() {
-    for (const id of MODEL_IDS) {
-      await dbConnection.schema.dropTableIfExists(asTableName(id))
-    }
+    await dbConnection.schema.dropTableIfExists(MODEL_ID)
   }
 
   beforeAll(async () => {
@@ -74,8 +67,7 @@ describe('postgres', () => {
       const pages = chunks(EXPECTED, pageSize)
       let afterCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
-        const result = await order.page(new Set(MODEL_IDS), {
-          model: MODEL,
+        const result = await order.page(MODELS, {
           first: pageSize,
           after: afterCursor,
         })
@@ -94,14 +86,12 @@ describe('postgres', () => {
       const pageSize = 5
       const pages = chunks(EXPECTED, pageSize)
       const expectedFirstPage = pages[0]
-      const firstPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const firstPage = await order.page(MODELS, {
         first: pageSize,
       })
       expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
       const secondEntry = firstPage.edges[1]
-      const customPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const customPage = await order.page(MODELS, {
         first: 3,
         after: secondEntry.cursor,
       })
@@ -121,8 +111,7 @@ describe('postgres', () => {
     test('pagination', async () => {
       let beforeCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
-        const result = await order.page(new Set(MODEL_IDS), {
-          model: MODEL,
+        const result = await order.page(MODELS, {
           last: PAGE_SIZE,
           before: beforeCursor,
         })
@@ -140,14 +129,12 @@ describe('postgres', () => {
 
     test('using edge cursor', async () => {
       const expectedFirstPage = pages[0]
-      const firstPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const firstPage = await order.page(MODELS, {
         last: PAGE_SIZE,
       })
       expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
       const secondLastEntry = firstPage.edges[firstPage.edges.length - 2]
-      const customPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const customPage = await order.page(MODELS, {
         last: 3,
         before: secondLastEntry.cursor,
       })
@@ -160,15 +147,13 @@ describe('postgres', () => {
   test('filtered by account', async () => {
     const presentAccount = 'did:key:foo' // We have that in the populated table
     const absentAccount = 'did:key:absent' // We do not have that in the populated table
-    const withPresentAccount = await order.page(new Set(MODEL_IDS), {
-      model: MODEL,
+    const withPresentAccount = await order.page(MODELS, {
       account: presentAccount,
       first: 5,
     })
     expect(withPresentAccount.edges.map((e) => String(e.node))).toEqual(EXPECTED.slice(0, 5))
     // Should return an empty page
-    const withAbsentAccount = await order.page(new Set(MODEL_IDS), {
-      model: MODEL,
+    const withAbsentAccount = await order.page(MODELS, {
       account: absentAccount,
       first: 5,
     })
@@ -221,8 +206,7 @@ describe('sqlite', () => {
       const pages = chunks(EXPECTED, pageSize)
       let afterCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
-        const result = await order.page(new Set(MODEL_IDS), {
-          model: MODEL,
+        const result = await order.page(MODELS, {
           first: pageSize,
           after: afterCursor,
         })
@@ -237,19 +221,16 @@ describe('sqlite', () => {
         expect(result.pageInfo.startCursor).toBeTruthy()
       }
     })
-
     test('using edge cursor', async () => {
       const pageSize = 5
       const pages = chunks(EXPECTED, pageSize)
       const expectedFirstPage = pages[0]
-      const firstPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const firstPage = await order.page(MODELS, {
         first: pageSize,
       })
       expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
       const secondEntry = firstPage.edges[1]
-      const customPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const customPage = await order.page(MODELS, {
         first: 3,
         after: secondEntry.cursor,
       })
@@ -269,8 +250,7 @@ describe('sqlite', () => {
     test('pagination', async () => {
       let beforeCursor: string | undefined = undefined
       for (let i = 0; i < pages.length; i++) {
-        const result = await order.page(new Set(MODEL_IDS), {
-          model: MODEL,
+        const result = await order.page(MODELS, {
           last: PAGE_SIZE,
           before: beforeCursor,
         })
@@ -288,14 +268,12 @@ describe('sqlite', () => {
 
     test('using edge cursor', async () => {
       const expectedFirstPage = pages[0]
-      const firstPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const firstPage = await order.page(MODELS, {
         last: PAGE_SIZE,
       })
       expect(firstPage.edges.map((e) => String(e.node))).toEqual(expectedFirstPage)
       const secondLastEntry = firstPage.edges[firstPage.edges.length - 2]
-      const customPage = await order.page(new Set(MODEL_IDS), {
-        model: MODEL,
+      const customPage = await order.page(MODELS, {
         last: 3,
         before: secondLastEntry.cursor,
       })
@@ -308,15 +286,13 @@ describe('sqlite', () => {
   test('filtered by account', async () => {
     const presentAccount = 'did:key:foo' // We have that in the populated table
     const absentAccount = 'did:key:absent' // We do not have that in the populated table
-    const withPresentAccount = await order.page(new Set(MODEL_IDS), {
-      model: MODEL,
+    const withPresentAccount = await order.page(MODELS, {
       account: presentAccount,
       first: 5,
     })
     expect(withPresentAccount.edges.map((e) => String(e.node))).toEqual(EXPECTED.slice(0, 5))
     // Should return an empty page
-    const withAbsentAccount = await order.page(new Set(MODEL_IDS), {
-      model: MODEL,
+    const withAbsentAccount = await order.page(MODELS, {
       account: absentAccount,
       first: 5,
     })

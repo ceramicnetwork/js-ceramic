@@ -7,7 +7,7 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { asTableName } from '../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { LoggerProvider, Networks } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks, type CeramicCoreApi } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import {
   asTimestamp,
@@ -62,13 +62,6 @@ const MODEL_ID_3 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka
 const MODEL_ID_4 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka004'
 const MODEL_ID_5 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka005'
 
-const MODEL_IDS = [
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabe',
-  'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabf',
-]
-const MODELS_TO_INDEX = MODEL_IDS.map(StreamID.fromString)
-
 let tmpFolder: tmp.DirectoryResult
 let dbConnection: Knex
 jest.setTimeout(150000) // 2.5mins timeout for initial docker fetch+init
@@ -116,9 +109,6 @@ describe('postgres', () => {
     await dbConnection.schema.dropTableIfExists(Model.MODEL.toString())
     await dbConnection.schema.dropTableIfExists(STREAM_ID_A)
     await dbConnection.schema.dropTableIfExists(STREAM_ID_B)
-    for (const id of MODEL_IDS) {
-      await dbConnection.schema.dropTableIfExists(asTableName(id))
-    }
   }
 
   afterAll(async () => {
@@ -933,6 +923,10 @@ and indexname in (${expectedIndices});
   })
 
   describe('count', () => {
+    const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+    const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
+    const MODEL = MODELS_TO_INDEX[0]
+
     test('all', async () => {
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
@@ -947,15 +941,11 @@ and indexname in (${expectedIndices});
         await indexApi.indexStream(row)
       }
       // all
-      await expect(indexApi.count({ models: MODEL_IDS })).resolves.toEqual(rows.length)
-      // not all models
-      await expect(indexApi.count({ models: MODEL_IDS.slice(1) })).resolves.toBe(13)
+      await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
       // by account
       const account = 'did:key:blah'
       const expected = rows.filter((r) => r.controller === account).length
-      await expect(indexApi.count({ models: MODEL_IDS, account: account })).resolves.toEqual(
-        expected
-      )
+      await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
     })
   })
 })
@@ -1708,6 +1698,10 @@ and name in (${expectedIndices})
   })
 
   describe('count', () => {
+    const MODEL_ID = 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd'
+    const MODELS_TO_INDEX = [StreamID.fromString(MODEL_ID)]
+    const MODEL = MODELS_TO_INDEX[0]
+
     test('all', async () => {
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
@@ -1722,15 +1716,11 @@ and name in (${expectedIndices})
         await indexApi.indexStream(row)
       }
       // all
-      await expect(indexApi.count({ models: MODEL_IDS })).resolves.toEqual(rows.length)
-      // not all models
-      await expect(indexApi.count({ models: MODEL_IDS.slice(1) })).resolves.toBe(13)
+      await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
       // by account
       const account = 'did:key:blah'
       const expected = rows.filter((r) => r.controller === account).length
-      await expect(indexApi.count({ models: MODEL_IDS, account: account })).resolves.toEqual(
-        expected
-      )
+      await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
     })
   })
 })
