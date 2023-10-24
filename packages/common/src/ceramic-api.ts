@@ -253,12 +253,6 @@ export interface MultiQuery {
   paths?: Array<string>
 
   /**
-   * Load a previous version of the stream based on unix timestamp.
-   * @deprecated Use opts.atTime instead.
-   */
-  atTime?: number // TODO(CDB-2417): Remove this
-
-  /**
    * Additional options for the loadStream operation.
    */
   opts?: LoadOpts
