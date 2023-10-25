@@ -105,10 +105,11 @@ export class LevelDbStore implements IKVStore {
       return await store.get(key)
     } catch (err) {
       const msg = `Error fetching key ${key} from leveldb state store: ${err}`
-      this.logger.warn(msg)
       if (err.notFound) {
+        // Key not found errors are common and expected, it's too verbose to log them every time.
         throw new NotFoundError(msg)
       } else {
+        this.logger.warn(msg)
         throw new Error(msg)
       }
     }
