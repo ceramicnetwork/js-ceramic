@@ -103,22 +103,9 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     this.syncApi = api
   }
 
-  getInterfaceModels(interfaceID: string): Set<string> {
-    return this.#interfacesModels[interfaceID] ?? new Set()
-  }
-
-  getModelInterfaces(modelID: string): Set<string> {
-    const interfaces = new Set<string>()
-    for (const [interfaceID, modelIDs] of Object.entries(this.#interfacesModels)) {
-      if (modelIDs.has(modelID)) {
-        interfaces.add(interfaceID)
-      }
-    }
-    return interfaces
-  }
-
   addModelImplements(modelID: string, interfaceID: string): void {
-    const models = this.getInterfaceModels(interfaceID).add(modelID)
+    const models = this.#interfacesModels[interfaceID] ?? new Set()
+    models.add(modelID)
     this.#interfacesModels[interfaceID] = models
   }
 
@@ -382,19 +369,12 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       return 0
     }
 
-    const tables = Array.from(models).map(asTableName)
-    if (tables.length === 1) {
-      return this.insertionOrder
-        .applyFilters(this.dbConnection(tables[0]).count('*'), query)
-        .then((response) => this.getCountFromResult(response))
-    }
-
     return this.dbConnection
       .count('*')
       .from((qb: QueryBuilder) => {
-        const subQueries = tables.map((tableName) => {
+        const subQueries = Array.from(models).map((model) => {
           return this.insertionOrder.applyFilters(
-            this.dbConnection.from(tableName).select('stream_id'),
+            this.dbConnection.from(asTableName(model)).select('stream_id'),
             query
           )
         })

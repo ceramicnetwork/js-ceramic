@@ -200,16 +200,11 @@ export class InsertionOrder {
     isReverseOrder: boolean,
     cursor?: CursorData
   ): QueryBuilder {
-    let builder: QueryBuilder
-    const tables = Array.from(models).map(asTableName)
-    if (tables.length === 1) {
-      // Handle filters (account, fields and/or legacy relations)
-      builder = this.applyFilters(this.dbConnection.from(tables[0] as string), query)
-    } else {
-      builder = this.dbConnection.from((qb: QueryBuilder) => {
-        const subQueries = tables.map((tableName) => {
+    let builder = this.dbConnection
+      .from((qb: QueryBuilder) => {
+        const subQueries = Array.from(models).map((model) => {
           const subQuery = this.dbConnection
-            .from(tableName)
+            .from(asTableName(model))
             .columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD])
             .select()
           // Handle filters (account, fields and/or legacy relations)
@@ -217,8 +212,8 @@ export class InsertionOrder {
         })
         return qb.unionAll(subQueries).as('models')
       })
-    }
-    builder = builder.columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD]).select()
+      .columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD])
+      .select()
 
     const sorting = query.sorting ?? {}
     // Handle cursor if present
