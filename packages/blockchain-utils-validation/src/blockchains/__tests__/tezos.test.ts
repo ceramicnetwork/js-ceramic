@@ -4,16 +4,16 @@ import { InMemorySigner } from '@taquito/signer'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { AccountId, ChainId } from 'caip'
 import { normalizeAccountId } from '@ceramicnetwork/common'
+import HttpRequestMock from 'http-request-mock'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
 
-type HttpResponse = Response
-
 type IoTestCase = {
   testName?: string
   error?: any
-  pubkeyObject?(publicKey: string): Promise<HttpResponse>
+  returnsPubkey?: boolean
+  pubkeyFound?: boolean
 }
 
 type ProofTestCase = {
@@ -36,28 +36,16 @@ const ioTestCases: IoTestCase[] = [
   // - signature can not be verified
   {
     testName: 'unable to validate when wallet address has not been published to the blockchain',
-    async pubkeyObject(): Promise<HttpResponse> {
-      const { Response } = await import('cross-fetch')
-      return new Response(
-        JSON.stringify({
-          pubkey: undefined,
-        })
-      )
-    },
+    returnsPubkey: true,
+    pubkeyFound: false,
   },
 
   // Able to test validation
   // - the public key is published/found on the blockchain
   // - the signature can be verified
   {
-    async pubkeyObject(publicKey?: string): Promise<HttpResponse> {
-      const { Response } = await import('cross-fetch')
-      return new Response(
-        JSON.stringify({
-          pubkey: publicKey,
-        })
-      )
-    },
+    returnsPubkey: true,
+    pubkeyFound: true,
   },
 ]
 
@@ -84,18 +72,10 @@ let publicKey: string
 let validProof: LinkProof
 let invalidSignatureProof: LinkProof
 let invalidChainIdProof: LinkProof
-let responseResult: () => Promise<any>
 
 // cache Date.now() to restore it after all tests
 const dateNow = Date.now
-
-jest.unstable_mockModule('cross-fetch', () => {
-  const originalModule = jest.requireActual('cross-fetch') as any
-  return {
-    ...originalModule,
-    default: () => responseResult(),
-  }
-})
+const mocker = HttpRequestMock.setupForUnitTest('fetch')
 
 beforeAll(async () => {
   // Mock Date.now() to return a constant value
@@ -136,16 +116,27 @@ describe('Blockchain: Tezos', () => {
   describe('validateLink', () => {
     // create test cases
     // run test cases
-    for (const { testName, pubkeyObject, error } of ioTestCases) {
+    for (const { testName, returnsPubkey, pubkeyFound, error } of ioTestCases) {
       for (const { message, proof } of proofTestCases) {
         test(testName || message, async () => {
           const { validateLink } = await import('../../index.js')
           // mock axios response or error
-          if (pubkeyObject) {
-            responseResult = async () => pubkeyObject(publicKey)
+          if (returnsPubkey) {
+            mocker.mock({
+              url: 'https://api.tzstats.com/explorer/account/',
+              body: async () => {
+                return { pubkey: pubkeyFound ? publicKey : undefined }
+              },
+              times: 1,
+            })
           }
           if (error) {
-            responseResult = async () => Promise.reject(error)
+            mocker.mock({
+              url: 'https://api.tzstats.com/explorer/account/',
+              status: 400,
+              body: error,
+              times: 1,
+            })
           }
           // wait for test with the proof from the test case
           await expect(validateLink(proof())).resolves.toMatchSnapshot()

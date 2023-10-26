@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
+import HttpRequestMock from 'http-request-mock'
 
 const tx = {
   signAndSend: jest.fn(() => ''),
@@ -38,17 +39,12 @@ const cids = [
   CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
 ]
 const cidsArray = cids.map((cid) => ({ args: str2HexStr(cid.toString()) }))
-jest.unstable_mockModule('cross-fetch', () => {
-  const mockFetch = jest.fn(() => {
-    return {
-      status: 200,
-      json: () => Promise.resolve({ data: { substrate_extrinsic: cidsArray } }),
-    }
-  })
-
-  return {
-    default: mockFetch,
-  }
+const mocker = HttpRequestMock.setupForUnitTest('fetch')
+mocker.mock({
+  url: 'https://crust.indexer.gc.subsquid.io/v4/graphql',
+  body: async () => {
+    return { data: { substrate_extrinsic: cidsArray } }
+  },
 })
 
 let CrustPinningBackend: any

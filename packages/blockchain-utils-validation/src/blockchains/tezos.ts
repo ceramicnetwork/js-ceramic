@@ -2,7 +2,6 @@ import { ChainId } from 'caip'
 import { verifySignature } from '@taquito/utils'
 import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof, tezos } from '@ceramicnetwork/blockchain-utils-linking'
-import fetch from 'cross-fetch'
 import * as uint8arrays from 'uint8arrays'
 import { normalizeAccountId } from '@ceramicnetwork/common'
 
