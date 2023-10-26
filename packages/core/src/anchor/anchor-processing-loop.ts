@@ -26,10 +26,13 @@ export class AnchorProcessingLoop {
   ) {
     this.#loop = new ProcessingLoop(store.infiniteList(batchSize), async (entry) => {
       try {
-        const event = await cas.getStatusForRequest(entry.key, entry.value.cid).catch(async () => {
-          const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
-          return cas.create(new AnchorRequestCarFileReader(requestCAR), false)
-        })
+        const event = await cas
+          .getStatusForRequest(entry.key, entry.value.cid)
+          .catch(async (error) => {
+            logger.warn(`No request present for ${entry.value.cid} of ${entry.key}: ${error}`)
+            const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
+            return cas.create(new AnchorRequestCarFileReader(requestCAR), false)
+          })
         const isTerminal = await eventHandler.handle(event)
         if (isTerminal) {
           // We might store a new entry during the processing, so we better check if the current entry is indeed terminal.
