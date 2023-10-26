@@ -29,7 +29,7 @@ export class AnchorProcessingLoop {
         const event = await cas
           .getStatusForRequest(entry.key, entry.value.cid)
           .catch(async (error) => {
-            logger.warn(`No request present for ${entry.value.cid} of ${entry.key}: ${error}`)
+            logger.warn(`No request present on CAS for ${entry.value.cid} of ${entry.key}: ${error}`)
             const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
             return cas.create(new AnchorRequestCarFileReader(requestCAR), false)
           })
