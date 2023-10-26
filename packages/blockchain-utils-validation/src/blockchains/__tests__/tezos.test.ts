@@ -124,9 +124,7 @@ describe('Blockchain: Tezos', () => {
           if (returnsPubkey) {
             mocker.mock({
               url: 'https://api.tzstats.com/explorer/account/',
-              body: async () => {
-                return { pubkey: pubkeyFound ? publicKey : undefined }
-              },
+              body: { pubkey: pubkeyFound ? publicKey : undefined },
               times: 1,
             })
           }

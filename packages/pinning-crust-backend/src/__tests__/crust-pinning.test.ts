@@ -42,9 +42,7 @@ const cidsArray = cids.map((cid) => ({ args: str2HexStr(cid.toString()) }))
 const mocker = HttpRequestMock.setupForUnitTest('fetch')
 mocker.mock({
   url: 'https://crust.indexer.gc.subsquid.io/v4/graphql',
-  body: async () => {
-    return { data: { substrate_extrinsic: cidsArray } }
-  },
+  body: { data: { substrate_extrinsic: cidsArray } },
 })
 
 let CrustPinningBackend: any
