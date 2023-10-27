@@ -67,7 +67,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
     dispatcher = await createDispatcher(dispatcherIpfs, TOPIC)
     // We need this timeout to be short enough that the non-existent lookup timesout before
     // the test case itself timesout.
-    dispatcher._ipfsTimeout = 1000
+    dispatcher._ipfsTimeout = 200
     await dispatcher.init()
 
     const logger = new LoggerProvider().getDiagnosticsLogger()
