@@ -99,7 +99,7 @@ export class CeramicCliUtils {
    * @param ipfsPinningEndpoints - Ipfs pinning endpoints. Deprecated, use config file if you want to configure this.
    * @param stateStoreDirectory - Path to the directory that will be used for storing state. Deprecated, use config file if you want to configure this.
    * @param stateStoreS3Bucket - S3 bucket name for storing data. Deprecated, use config file if you want to configure this.
-   * @param gateway - read only endpoints available. It is disabled by default
+   * @param gateway - read only endpoints available. It is disabled by default. Deprecated, please use readonly instead.
    * @param port - port on which daemon is available. Default is 7007
    * @param hostname - hostname to listen on.
    * @param debug - Enable debug logging level
@@ -113,6 +113,8 @@ export class CeramicCliUtils {
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
    * @param disableComposedb - Disable ComposeDB Indexing service.
+   * @param readOnly - read only endpoints available. It is disabled by default
+   *
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -135,7 +137,8 @@ export class CeramicCliUtils {
     pubsubTopic: string,
     corsAllowedOrigins: string,
     syncOverride: string,
-    disableComposedb: boolean
+    disableComposedb: boolean,
+    readOnly: boolean
   ): Promise<CeramicDaemon> {
     const configFilepath = configFilename
       ? new URL(configFilename, CWD)
@@ -210,8 +213,8 @@ export class CeramicCliUtils {
       if (pubsubTopic) {
         config.network.pubsubTopic = pubsubTopic
       }
-      if (gateway) {
-        config.node.gateway = gateway
+      if (gateway || readOnly) {
+        config.node.gateway = gateway || readOnly
       }
       if (syncOverride) {
         config.node.syncOverride = syncOverride
