@@ -234,7 +234,6 @@ describe('StreamLoader querying against real Ceramic node', () => {
     })
 
     test('non-existent commit', async () => {
-
       const doc = await TileDocument.create(ceramic, CONTENT0)
 
       const nonExistentCommitID = CommitID.make(doc.id, TestUtils.randomCID())

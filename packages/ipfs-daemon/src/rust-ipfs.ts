@@ -8,8 +8,6 @@ import { spawn, ChildProcess } from 'child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
-
-
 export type RustIpfsRemoteOptions = {
   type: 'remote'
   host: string | undefined
@@ -32,7 +30,7 @@ class BinaryRunningIpfs implements RunningIpfs {
   constructor(proc: ChildProcess, api: IpfsApi, dir: tmp.DirectoryResult) {
     this.proc = proc
     this.dir = dir
-    const shutdown = this.shutdown.bind(this);
+    const shutdown = this.shutdown.bind(this)
     this._api = new Proxy(api, {
       get(target: any, p: PropertyKey): any {
         if (p === 'stop') {
@@ -60,38 +58,46 @@ class BinaryRunningIpfs implements RunningIpfs {
 }
 
 async function binary(binary_path?: string, port?: number): Promise<RunningIpfs> {
-  const bin = binary_path || process.env.CERAMIC_ONE_PATH;
+  const bin = binary_path || process.env.CERAMIC_ONE_PATH
 
-  const apiPort = port || await getPort();
-  const metricsPort = await getPort();
+  const apiPort = port || (await getPort())
+  const metricsPort = await getPort()
   const dir = await tmp.dir({ unsafeCleanup: true })
 
+  const out = fs.openSync(path.join(dir.path, '/stdout.log'), 'a')
+  const err = fs.openSync(path.join(dir.path, '/stderr.log'), 'a')
 
-  const out = fs.openSync(path.join(dir.path, '/stdout.log'), 'a');
-  const err = fs.openSync(path.join(dir.path, '/stderr.log'), 'a');
-
-
-  const proc = spawn(bin, [
-    'daemon',
-    '--bind-address', `127.0.0.1:${apiPort}`,
-    '--store-dir', dir.path,
-    '--metrics-bind-address', `127.0.0.1:${metricsPort}`,
-    // Use quic as it has fewer RTT which makes for lower latencies improving the stability of tests.
-    '--swarm-addresses', '/ip4/0.0.0.0/udp/0/quic-v1',
-    '--network', 'local',
-    // We can use a hard coded local network id since
-    // nodes that should not be in the same network will never discover each other
-    '--local-network-id', '0',
-  ], {
-    env: {
-      'RUST_LOG': process.env.RUST_LOG || 'info',
-    },
-    stdio: ['ignore', out, err],
-  });
+  const proc = spawn(
+    bin,
+    [
+      'daemon',
+      '--bind-address',
+      `127.0.0.1:${apiPort}`,
+      '--store-dir',
+      dir.path,
+      '--metrics-bind-address',
+      `127.0.0.1:${metricsPort}`,
+      // Use quic as it has fewer RTT which makes for lower latencies improving the stability of tests.
+      '--swarm-addresses',
+      '/ip4/0.0.0.0/udp/0/quic-v1',
+      '--network',
+      'local',
+      // We can use a hard coded local network id since
+      // nodes that should not be in the same network will never discover each other
+      '--local-network-id',
+      '0',
+    ],
+    {
+      env: {
+        RUST_LOG: process.env.RUST_LOG || 'info',
+      },
+      stdio: ['ignore', out, err],
+    }
+  )
   const ipfs = createIpfsClient({
     host: '127.0.0.1',
     port: apiPort,
-  });
+  })
 
   let ipfsOnline = false
   while (!ipfsOnline) {
