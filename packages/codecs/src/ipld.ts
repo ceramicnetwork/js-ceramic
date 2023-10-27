@@ -3,7 +3,6 @@ import { Type, type Context } from 'codeco'
 import { CAR, CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 
-
 /**
  * Passthrough codeco codec for CID.
  */

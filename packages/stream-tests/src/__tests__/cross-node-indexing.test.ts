@@ -7,7 +7,7 @@ import {
   StreamUtils,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadataArgs,
@@ -98,6 +98,7 @@ describe.each(envs)(
 
       ipfs1 = await createIPFS()
       ipfs2 = await createIPFS()
+      await swarmConnect(ipfs1, ipfs2)
 
       // Temporarily start a Ceramic node and use it to create the Model that will be used in the
       // rest of the tests.
