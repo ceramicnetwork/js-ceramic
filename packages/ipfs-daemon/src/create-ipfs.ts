@@ -159,7 +159,7 @@ export interface RunningIpfs {
 /**
  * Create an IPFS instance
  * @param flavor - IPFS flavor to create
- * @param disposable - ???
+ * @param disposable - Stop the IPFS process when its no longer needed.
  */
 export async function createIPFSFlavor(
   flavor: IpfsFlavor,
