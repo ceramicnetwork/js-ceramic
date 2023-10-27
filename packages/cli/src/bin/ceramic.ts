@@ -24,7 +24,10 @@ program
     '--state-store-s3-bucket <string>',
     `The S3 bucket name to use for state store. If not provided data will only be saved locally but not to S3. Deprecated.`
   )
-  .option('--gateway', 'Makes read only endpoints available. It is disabled by default. Replaced by --read-only. Deprecated.')
+  .option(
+    '--gateway',
+    'Makes read only endpoints available. It is disabled by default. Replaced by --read-only. Deprecated.'
+  )
   .option('--port <int>', 'Port daemon is available on. Default is 7007')
   .option('--hostname <string>', 'Host daemon is available on. Default is 0.0.0.0')
   .option('--debug', 'Enable debug logging level. Default is false')
