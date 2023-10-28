@@ -1,7 +1,8 @@
 import type { Cacao } from '@didtools/cacao'
-import type { DID } from 'dids'
 import type { CommitData } from '../index.js'
+import { DidVerifier, ThreadedDid } from '../index.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import type { DID } from 'dids'
 import { getEIP191Verifier } from '@didtools/pkh-ethereum'
 import { getSolanaVerifier } from '@didtools/pkh-solana'
 import { getStacksVerifier } from '@didtools/pkh-stacks'
@@ -21,6 +22,12 @@ const verifiersCACAO = {
  * Utils related to cryptographic signatures
  */
 export class SignatureUtils {
+  static async didContext(did: DID): Promise<[DidVerifier, ThreadedDid]> {
+    const verifier = new DidVerifier(did, verifiersCACAO)
+    await verifier.init()
+    const threadedDid = await verifier.addDid(did)
+    return [verifier, threadedDid]
+  }
   /**
    * Verifies commit signature. If a revoked key is used to create the signature, the signature is valid for 24h after the revocation. This is so that if an update made before the key revocation winds up getting anchored after the revocation does, we don't fail the write unnecessarily.
    * TODO: Remove or significantly shorten this grace period once anchors happen far more frequently on the network.
@@ -33,7 +40,7 @@ export class SignatureUtils {
    */
   static async verifyCommitSignature(
     commitData: CommitData,
-    did: DID,
+    did: ThreadedDid,
     controller: string,
     model: StreamID | null,
     streamId: StreamID
@@ -47,7 +54,6 @@ export class SignatureUtils {
         issuer: controller,
         capability: cacao,
         revocationPhaseOutSecs: DEFAULT_CACAO_REVOCATION_PHASE_OUT,
-        verifiers: verifiersCACAO,
       })
     } catch (e: any) {
       const original = e.message ? e.message : String(e)

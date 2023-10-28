@@ -1,9 +1,8 @@
-import type { DID } from 'dids'
 import type { Stream, StreamHandler, CeramicCommit, StreamState } from './stream.js'
 import type { AnchorOpts, CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
-import type { GenesisCommit } from './index.js'
+import type { ThreadedDid, GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
 import { NodeStatusResponse } from './node-status-interface.js'
 import type { AnchorStatus } from './stream.js'
@@ -75,7 +74,7 @@ interface CeramicCommon {
  * available users can provide any object containing an authenticated DID instance.
  */
 export interface CeramicSigner extends CeramicCommon {
-  did: DID | undefined
+  did: ThreadedDid | undefined
 
   [index: string]: any // allow arbitrary properties
 }
@@ -210,13 +209,6 @@ export interface CeramicApi extends CeramicSigner {
    * @param opts used to load the current Stream state
    */
   requestAnchor(streamId: StreamID | string, opts?: LoadOpts & AnchorOpts): Promise<AnchorStatus>
-
-  /**
-   * Sets the DID instance that will be used to author commits to stream. The DID instance
-   * also includes the DID Resolver that will be used to verify commits from others.
-   * @param did
-   */
-  setDID(did: DID): Promise<void>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring

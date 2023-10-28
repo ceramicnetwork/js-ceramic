@@ -16,6 +16,7 @@ import {
   CeramicApi,
   CommitType,
   Context,
+  DidVerifier,
   StreamUtils,
   SignedCommitContainer,
   TestUtils,
@@ -23,6 +24,7 @@ import {
   CeramicSigner,
   GenesisCommit,
   RawCommit,
+  SignatureUtils,
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -460,6 +462,7 @@ describe('ModelInstanceDocumentHandler', () => {
       },
     })
     ;(did as any)._id = DID_ID
+    const verifierAndDid = await SignatureUtils.didContext(did)
     const api = {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
@@ -473,16 +476,18 @@ describe('ModelInstanceDocumentHandler', () => {
         }
         return stream
       }),
-      did,
+      did: verifierAndDid[1],
     }
 
-    signerUsingNewKey = { did: new DID({}) }
-    ;(signerUsingNewKey.did as any)._id = DID_ID
-    signerUsingNewKey.did.createJWS = async () => jwsForVersion1
+    const verifierAndDidNew = await SignatureUtils.didContext(new DID({}))
+    signerUsingNewKey = { did: verifierAndDidNew[1] }
+    signerUsingNewKey.did.did._id = DID_ID
+    signerUsingNewKey.did.did.requestJWS = async () => jwsForVersion1
 
-    signerUsingOldKey = { did: new DID({}) }
-    ;(signerUsingOldKey.did as any)._id = DID_ID
-    signerUsingOldKey.did.createJWS = async () => jwsForVersion0
+    const verifierAndDidOld = await SignatureUtils.didContext(new DID({}))
+    signerUsingOldKey = { did: verifierAndDidOld[1] }
+    signerUsingOldKey.did.did._id = DID_ID
+    signerUsingOldKey.did.did.requestJWS = async () => jwsForVersion0
 
     context = {
       did,

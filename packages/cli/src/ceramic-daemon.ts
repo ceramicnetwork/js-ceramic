@@ -14,6 +14,7 @@ import {
   ModelData,
   MultiQuery,
   Networks,
+  SignatureUtils,
   StreamUtils,
   SyncOptions,
   UnreachableCaseError,
@@ -360,7 +361,7 @@ export class CeramicDaemon {
         `Node DID set to '${did.id}. This DID will be used to authenticate to the anchor service'`
       )
     }
-    ceramic.did = did
+    await ceramic.createDidContext(did)
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3Store = new S3Store(

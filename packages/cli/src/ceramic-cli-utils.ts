@@ -431,7 +431,7 @@ export class CeramicCliUtils {
       if (privateKey) {
         await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       } else {
-        await ceramic.did.authenticate()
+        await ceramic.did!.authenticate()
       }
       const result = await ceramic.admin.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
@@ -450,7 +450,7 @@ export class CeramicCliUtils {
       if (privateKey) {
         await CeramicCliUtils._authenticateClient(ceramic, privateKey)
       } else {
-        await ceramic.did.authenticate()
+        await ceramic.did!.authenticate()
       }
       const result = await ceramic.admin.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
@@ -527,7 +527,7 @@ export class CeramicCliUtils {
     const pk = u8a.fromString(privateKey, 'base16')
     const did = CeramicCliUtils._makeDID(pk, ceramic)
     await did.authenticate()
-    await ceramic.setDID(did)
+    await ceramic.createDidContext(did)
   }
 
   /**
@@ -555,7 +555,7 @@ export class CeramicCliUtils {
     const seed = u8a.fromString(cliConfig.seed, 'base16')
     const did = CeramicCliUtils._makeDID(seed, ceramic)
     await did.authenticate()
-    await ceramic.setDID(did)
+    await ceramic.createDidContext(did)
 
     try {
       await fn(ceramic)

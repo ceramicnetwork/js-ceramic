@@ -1,6 +1,6 @@
 import mergeOpts from 'merge-options'
 import { CeramicConfig, Ceramic } from '@ceramicnetwork/core'
-import { IpfsApi } from '@ceramicnetwork/common'
+import { IpfsApi, SignatureUtils } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { createDid } from './create_did.js'
 
@@ -35,8 +35,8 @@ export async function createCeramic(
   await ceramic._init(false)
 
   const did = createDid(ceramic, appliedConfig.seed || 'SEED')
-  await ceramic.setDID(did)
   await did.authenticate()
+  ceramic.createDidContext(did)
 
   return ceramic
 }

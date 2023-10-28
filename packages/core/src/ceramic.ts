@@ -2,6 +2,8 @@ import { Dispatcher } from './dispatcher.js'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import {
+  DidVerifier,
+  ThreadedDid,
   CreateOpts,
   Stream,
   StreamHandler,
@@ -290,6 +292,10 @@ export class Ceramic implements CeramicApi {
     )
   }
 
+  get did(): ThreadedDid | undefined {
+    return this.context.did
+  }
+
   get index(): LocalIndexApi {
     return this.repository.index
   }
@@ -305,20 +311,14 @@ export class Ceramic implements CeramicApi {
     return this.context.ipfs
   }
 
-  /**
-   * Get DID
-   */
-  get did(): DID | undefined {
-    return this.context.did
-  }
-
-  /**
-   * Sets the DID instance that will be used to author commits to streams. The DID instance
-   * also includes the DID Resolver that will be used to verify commits from others.
-   * @param did
-   */
-  set did(did: DID) {
-    this.context.did = did
+  async createDidContext(did: DID): Promise<ThreadedDid> {
+    if (!this.context.didVerifier) {
+      this.context.didVerifier = new DidVerifier()
+      await this.context.didVerifier.init()
+    }
+    const threadedDid = await this.context.didVerifier.addDid(did)
+    this.context.did = threadedDid
+    return threadedDid
   }
 
   /**
@@ -527,13 +527,6 @@ export class Ceramic implements CeramicApi {
         )
       }
     }
-  }
-
-  /**
-   * @deprecated - use the Ceramic.did setter instead
-   */
-  async setDID(did: DID): Promise<void> {
-    this.context.did = did
   }
 
   /**

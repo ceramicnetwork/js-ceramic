@@ -12,6 +12,7 @@ import {
   TimedAbortSignal,
   GenesisCommit,
   TestUtils,
+  SignatureUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
@@ -53,8 +54,8 @@ describe('Ceramic interop: core <> http-client', () => {
     })
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-    await core.setDID(makeDID(core, seed))
-    await client.setDID(makeDID(client, seed))
+    await core.createDidContext(makeDID(core, seed))
+    await client.createDidContext(makeDID(client, seed))
   })
 
   afterEach(async () => {

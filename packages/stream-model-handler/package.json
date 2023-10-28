@@ -59,7 +59,7 @@
     "@types/lodash.ismatch": "^4.4.7",
     "@types/node": "^18.0.3",
     "did-resolver": "^4.0.1",
-    "dids": "^4.0.0",
+    "dids": "4.0.5-next.0",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
     "key-did-resolver": "^3.0.0",

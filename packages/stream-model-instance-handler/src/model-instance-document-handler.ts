@@ -19,9 +19,9 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
+import { SchemaValidation } from 'ajv-threads'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
@@ -34,10 +34,14 @@ interface ModelInstanceDocumentHeader extends ModelInstanceDocumentMetadata {
  * ModelInstanceDocument stream handler implementation
  */
 export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstanceDocument> {
-  private readonly _schemaValidator: SchemaValidation
+  private _schemaValidator?: SchemaValidation
 
-  constructor() {
-    this._schemaValidator = new SchemaValidation()
+  async init(): Promise<SchemaValidation> {
+    if (!this._schemaValidator) {
+      this._schemaValidator = new SchemaValidation()
+      await this._schemaValidator.init()
+    }
+    return this._schemaValidator
   }
 
   get type(): number {
@@ -82,6 +86,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @private
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+    if (!context.didVerifier) throw new Error(`Did Verifier is not set`)
     const payload = commitData.commit
     const { controllers, model } = payload.header
     const controller = controllers[0]
@@ -141,6 +146,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
+    if (!context.didVerifier) throw new Error(`Did Verifier is not set`)
     // Retrieve the payload
     const payload = commitData.commit
     StreamUtils.assertCommitLinksToState(state, payload)
@@ -150,7 +156,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const controller = metadata.controllers[0]
     const model = metadata.model
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
+    await SignatureUtils.verifyCommitSignature(
+      commitData,
+      context.did,
+      controller,
+      model,
+      streamId
+    )
 
     if (payload.header) {
       throw new Error(
@@ -221,6 +233,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     validateContentLength(content)
 
+    await this.init()
     await this._schemaValidator.validateSchema(
       content,
       model.content.schema,

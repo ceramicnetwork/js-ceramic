@@ -1,4 +1,4 @@
-import type { DID } from 'dids'
+import type { ThreadedDid } from './index.js'
 
 /**
  * Options that are related to pinning streams.
@@ -99,7 +99,7 @@ export interface AnchorOpts {
  * Extra options passed as part of operations that update streams.
  */
 export interface UpdateOpts extends PublishOpts, AnchorOpts {
-  asDID?: DID
+  asDid?: ThreadedDid
 }
 
 /**

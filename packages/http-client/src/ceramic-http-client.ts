@@ -1,12 +1,13 @@
 import { typeStreamID } from './utils.js'
 import { Document } from './document.js'
-
-import type { DID } from 'dids'
+import { DID } from 'dids'
 import {
   CreateOpts,
   CeramicApi,
   CeramicCommit,
   Context,
+  DidVerifier,
+  ThreadedDid,
   fetchJson,
   Stream,
   StreamConstructor,
@@ -22,6 +23,7 @@ import {
   StreamState,
   AdminApi,
   AnchorOpts,
+  SignatureUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -87,7 +89,7 @@ export class CeramicClient implements CeramicApi {
     this.pin = new DummyPinApi()
     this.index = new RemoteIndexApi(this._apiUrl)
     const getDidFn = (() => {
-      return this.did
+      return this.context.did.did
     }).bind(this)
     this.admin = new RemoteAdminApi(this._apiUrl, getDidFn)
 
@@ -99,16 +101,14 @@ export class CeramicClient implements CeramicApi {
     }
   }
 
-  get did(): DID | undefined {
+  get did(): ThreadedDid | undefined {
     return this.context.did
   }
 
-  /**
-   * Sets the DID instance that will be used to author commits to streams.
-   * @param did
-   */
-  set did(did: DID) {
-    this.context.did = did
+  async createDidContext(did: DID) {
+    const verifierAndDid = await SignatureUtils.didContext(did)
+    this.context.didVerifier = verifierAndDid[0]
+    this.context.did = verifierAndDid[1]
   }
 
   async createStreamFromGenesis<T extends Stream>(
@@ -224,10 +224,6 @@ export class CeramicClient implements CeramicApi {
     const streamConstructor = this._streamConstructors[type]
     if (!streamConstructor) throw new Error(`Failed to find constructor for stream ${type}`)
     return new streamConstructor(stream, this.context) as T
-  }
-
-  async setDID(did: DID): Promise<void> {
-    this.context.did = did
   }
 
   async getSupportedChains(): Promise<Array<string>> {

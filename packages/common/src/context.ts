@@ -1,12 +1,13 @@
 import type { CeramicApi } from './ceramic-api.js'
-import type { DID } from 'dids'
+import type { ThreadedDid, DIDVerifier } from 'dids-threads'
 import type { IpfsApi, LoggerProvider } from './index.js'
 
 /**
  * Encapsulates Ceramic context
  */
 export interface Context {
-  did?: DID
+  did?: ThreadedDid
+  didVerifier?: DIDVerifier
   ipfs?: IpfsApi // an ipfs instance
   loggerProvider?: LoggerProvider
 

@@ -66,7 +66,7 @@ describe('sendAuthenticatedRequest', () => {
     const out = (await signRequestSpy.mock.results[0].value) as any
     expect(out.request.url).toEqual(MOCKED_URLS.ONLINE)
     const jws = out.request.opts.headers['Authorization'].split(' ')[1]
-    const data = await ceramic.did.verifyJWS(jws)
+    const data = await ceramic.didVerifier.verifyJWS(jws)
     expect(data.payload.url).toEqual(MOCKED_URLS.ONLINE)
     expect(fauxFetchJson).toBeCalledWith(MOCKED_URLS.ONLINE, {
       headers: { Authorization: `Bearer ${jws}` },
@@ -82,9 +82,9 @@ describe('sendAuthenticatedRequest', () => {
     await auth.sendAuthenticatedRequest(MOCKED_URLS.ONLINE)
     const out2 = (await signRequestSpy.mock.results[2].value) as any
 
-    const jws0 = await ceramic.did.verifyJWS(out0.jws)
-    const jws1 = await ceramic.did.verifyJWS(out1.jws)
-    const jws2 = await ceramic.did.verifyJWS(out2.jws)
+    const jws0 = await ceramic.didVerifier.verifyJWS(out0.jws)
+    const jws1 = await ceramic.didVerifier.verifyJWS(out1.jws)
+    const jws2 = await ceramic.didVerifier.verifyJWS(out2.jws)
     const arr = [jws0, jws1, jws2]
     const set = new Set(arr.map((jws) => jws.payload.nonce))
     expect(set.size).toBe(3)

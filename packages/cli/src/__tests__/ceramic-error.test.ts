@@ -60,8 +60,8 @@ beforeAll(async () => {
   const apiUrl = `http://localhost:${daemonPort}`
   client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
-  await core.setDID(makeDID(core))
-  await client.setDID(makeDID(client, SEED))
+  await core.createDidContext(makeDID(core))
+  await client.secreateDidContexttDID(makeDID(client, SEED))
 })
 
 afterAll(async () => {

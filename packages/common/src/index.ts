@@ -27,3 +27,5 @@ export * from './abort-options.js'
 
 import type { IPFS } from 'ipfs-core-types'
 export type IpfsApi = IPFS
+
+export { DidVerifier, ThreadedDid } from 'dids-threads'

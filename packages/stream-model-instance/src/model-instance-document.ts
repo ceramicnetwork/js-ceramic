@@ -73,7 +73,7 @@ const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
   if (signer.did == null) {
-    throw new Error('No DID provided')
+    throw new Error('No DID verifier provided')
   }
   if (!signer.did.authenticated) {
     await signer.did.authenticate()
@@ -123,7 +123,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : ceramic
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
 
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
@@ -145,7 +145,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : ceramic
     metadata = { ...metadata, deterministic: true }
 
     const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata)
@@ -188,7 +188,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : this.api
     const updateCommit = await this._makeCommit(signer, content)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
@@ -306,7 +306,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
         await _ensureAuthenticated(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        controller = signer.did.hasParent ? signer.did.parent : signer.did.id
+        controller = signer.did.did.hasParent ? signer.did.did.parent : signer.did.did.id
       } else {
         throw new Error('No controller specified')
       }

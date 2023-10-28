@@ -5,6 +5,7 @@ import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 import {
+  ThreadedDid,
   CreateOpts,
   LoadOpts,
   UpdateOpts,
@@ -23,7 +24,6 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import type { DID } from 'dids'
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -131,12 +131,14 @@ function headerFromMetadata(
 /**
  * Get signer.did. Authenticate if not authenticated previously.
  */
-async function getAuthenticatedDID(signer: CeramicSigner): Promise<DID> {
+async function getAuthenticatedDID(signer: CeramicSigner): Promise<ThreadedDid> {
   if (!signer.did) throw new Error(`No DID provided`)
   if (!signer.did.authenticated) {
     await signer.did.authenticate()
     if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
+      signer.loggerProvider
+        .getDiagnosticsLogger()
+        .imp(`Now authenticated as DID ${signer.did.did.id}`)
     }
   }
   return signer.did
@@ -192,7 +194,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : ceramic
     const commit = await TileDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
@@ -289,7 +291,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : this.api
     const updateCommit = await this.makeCommit(signer, content, metadata)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
@@ -397,7 +399,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       if (signer.did) {
         const did = await getAuthenticatedDID(signer)
         // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
-        metadata.controllers = [did.hasParent ? did.parent : did.id]
+        metadata.controllers = [did.did.hasParent ? did.did.parent : did.did.id]
       } else {
         throw new Error('No controllers specified')
       }

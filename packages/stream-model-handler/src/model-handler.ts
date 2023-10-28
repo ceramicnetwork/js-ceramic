@@ -96,6 +96,7 @@ export class ModelHandler implements StreamHandler<Model> {
    * @private
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+    if (!context.did) throw new Error(`Did is not set`)
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (!isSigned) {

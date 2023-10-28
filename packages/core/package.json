@@ -77,7 +77,7 @@
     "cartonne": "^2.1.1",
     "codeco": "^1.1.0",
     "dag-jose": "^4.0.0",
-    "dids": "^4.0.0",
+    "dids": "4.0.5-next.0",
     "it-all": "^3.0.1",
     "it-batch": "^3.0.1",
     "it-first": "^3.0.1",

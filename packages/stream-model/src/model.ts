@@ -103,7 +103,9 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
   if (!signer.did.authenticated) {
     await signer.did.authenticate()
     if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
+      signer.loggerProvider
+        .getDiagnosticsLogger()
+        .imp(`Now authenticated as DID ${signer.did.did.id}`)
     }
   }
 }
@@ -281,7 +283,9 @@ export class Model extends Stream {
         await _ensureAuthenticated(signer)
         // When did has a parent, it has a capability, and the did issuer (parent) of the capability
         // is the stream controller
-        metadata = { controller: signer.did.hasParent ? signer.did.parent : signer.did.id }
+        metadata = {
+          controller: signer.did.did.hasParent ? signer.did.did.parent : signer.did.did.id,
+        }
       } else {
         throw new Error('No controller specified')
       }
