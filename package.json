@@ -17,7 +17,7 @@
     "publish:release-candidate-followup": "npx lerna publish --dist-tag next --preid rc --no-verify-access --conventional-prerelease",
     "publish:release": "npx lerna publish --dist-tag latest --create-release github --no-verify-access --conventional-graduate bump minor",
     "publish:hotfix": "npx lerna publish --dist-tag latest --no-verify-access --conventional-graduate bump patch",
-    "format": "npx prettier -w packages/**/src/**/*.ts",
+    "format": "npx prettier --write 'packages/**/src/**/*{.ts,.tsx,.js}'",
     "lint": "npx lerna run lint && npx prettier --check packages/**/src/**/*.ts",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
     "clean:install:build": "npm run clean && npm install && npm run build",

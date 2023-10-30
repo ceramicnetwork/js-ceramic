@@ -125,7 +125,11 @@ export type RustIpfsFlavor = {
 
 type IpfsFlavor = GoIpfsFlavor | RustIpfsFlavor
 
-export async function createIPFS(goOptions: IPFSOptions = {}, disposable = true, rustOptions: RustIpfsOptions = { type: 'binary' } as RustIpfsOptions): Promise<IpfsApi> {
+export async function createIPFS(
+  goOptions: IPFSOptions = {},
+  disposable = true,
+  rustOptions: RustIpfsOptions = { type: 'binary' } as RustIpfsOptions
+): Promise<IpfsApi> {
   const env_flavor = process.env.IPFS_FLAVOR || 'go'
   if (env_flavor == 'go') {
     return (

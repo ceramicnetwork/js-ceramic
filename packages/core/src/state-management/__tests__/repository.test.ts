@@ -590,13 +590,12 @@ describe('validation', () => {
       'validateSchema'
     )
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    validateSchemaSpy.mockImplementation(() => { })
+    validateSchemaSpy.mockImplementation(() => {})
     const invalidDoc = await TileDocument.create(
       permissiveCeramic,
       { stuff: 1 },
       { schema: schema.commitId }
     )
-
 
     // Load it: Expect failure
     await expect(repository.load(invalidDoc.id, { syncTimeoutSeconds: 0 })).rejects.toThrow(

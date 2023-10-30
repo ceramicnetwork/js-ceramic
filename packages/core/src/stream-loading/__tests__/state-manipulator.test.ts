@@ -214,7 +214,7 @@ describe('StateManipulator test', () => {
 
     afterEach(() => {
       // Reset any changes to timestamps made by the test
-      const clearTimestamps = function(log: Array<CommitData>) {
+      const clearTimestamps = function (log: Array<CommitData>) {
         for (const commit of log) {
           commit.timestamp = undefined
         }
@@ -382,7 +382,7 @@ describe('StateManipulator test', () => {
           TestUtils.randomCID(),
           TestUtils.randomCID(),
         ]
-        cids.sort(function(cid1, cid2) {
+        cids.sort(function (cid1, cid2) {
           if (cid1.bytes < cid2.bytes) {
             return -1
           } else if (cid1.bytes > cid2.bytes) {

@@ -48,7 +48,6 @@ describe('TipFetcher test', () => {
       }
     })
 
-
     // Wait for peers to discover they are mutually interested in the same topic.
     await TestUtils.delay(500)
 
