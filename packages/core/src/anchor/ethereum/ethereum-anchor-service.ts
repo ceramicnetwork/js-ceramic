@@ -22,7 +22,7 @@ import {
 import { concatMap, catchError, map, retry, tap } from 'rxjs/operators'
 import { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName, uint8ArrayAsBase64 } from '@ceramicnetwork/codecs'
+import { CASResponseOrError, ErrorResponse, AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 import type {
@@ -138,7 +138,6 @@ export class EthereumAnchorService implements AnchorService {
     carFile: CAR,
     waitForConfirmation: boolean
   ): Promise<Observable<AnchorEvent>> {
-    console.log('car-as-base64url', uint8ArrayAsBase64.encode(carFile.bytes))
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
