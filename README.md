@@ -32,11 +32,11 @@
 
 Full protocol documentation can be found on the [Ceramic documentation site →](https://developers.ceramic.network/protocol/overview/).
 
-[Quickstart to run a ceramic node](docs/quickstart-daemon.md)
+[Quickstart to run a ceramic node](docs-dev/QUICKSTART.md)
 
 ### Upgrading
 
-[Upgrade a ceramic node to latest version](docs/upgrade-node.md)
+[Upgrade a ceramic node to latest version](docs-dev/UPGRADING.md)
 
 ## Troubleshooting
 
