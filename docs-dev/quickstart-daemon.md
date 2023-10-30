@@ -17,8 +17,14 @@ This command will start a local JS Ceramic node connected to the Clay Testnet at
 
 `ceramic daemon`
 
-## Develop on Ceramic
+## Configuration
 
-See [Launch a local Ceramic Node](https://developers.ceramic.network/build/cli/installation/) for more information about configuring your new ceramic node.
+The default configuration file is located at 
+
+`$HOME/.ceramic/daemon.config.json`
+
+For more information about the configuration options see [Server Configurations](https://composedb.js.org/docs/0.5.x/guides/composedb-server/server-configurations)
+
+## Develop on Ceramic using ComposeDB
 
 See [ComposeDB on Ceramic](https://composedb.js.org/) for a guide on how to build interoperable applications on Ceramic using ComposeDB.
