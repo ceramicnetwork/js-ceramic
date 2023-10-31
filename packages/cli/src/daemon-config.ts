@@ -324,10 +324,10 @@ export class DaemonCeramicNodeConfig {
   }
 
   /**
-   * Whether to run the Ceramic node in read-only gateway mode.
+   * Whether to run the Ceramic node in read-only mode.
    */
   @jsonMember(Boolean)
-  gateway?: boolean
+  readOnly?: boolean
 
   /**
    * If set, overrides the 'sync' flag for all stream load operations.  Most users should never have

@@ -102,7 +102,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
 
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
-    gateway: opts.node.gateway || false,
+    readOnly: opts.node.readOnly || false,
     anchorServiceUrl: opts.anchor.anchorServiceUrl,
     anchorServiceAuthMethod: opts.anchor.authMethod,
     ethereumRpcUrl: opts.anchor.ethereumRpcUrl,
@@ -297,7 +297,7 @@ export class CeramicDaemon {
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
-    this.registerAPIPaths(this.app, opts.node?.gateway)
+    this.registerAPIPaths(this.app, opts.node?.readOnly)
 
     this.app.use(errorHandler(this.diagnosticsLogger))
   }
@@ -382,7 +382,7 @@ export class CeramicDaemon {
     return daemon
   }
 
-  registerAPIPaths(app: ExpressWithAsync, gateway: boolean): void {
+  registerAPIPaths(app: ExpressWithAsync, readOnly: boolean): void {
     const baseRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const commitsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const multiqueriesRouter = ErrorHandlingRouter(this.diagnosticsLogger)
@@ -437,7 +437,7 @@ export class CeramicDaemon {
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
 
-    if (!gateway) {
+    if (!readOnly) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
       streamsRouter.postAsync('/:streamid/anchor', this.requestAnchor.bind(this))
       commitsRouter.postAsync('/', this.applyCommit.bind(this))
@@ -978,9 +978,7 @@ export class CeramicDaemon {
   }
 
   async _notSupported(req: Request, res: Response): Promise<void> {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ error: 'Method not supported by read only Ceramic Gateway' })
+    res.status(StatusCodes.BAD_REQUEST).json({ error: 'Method not supported by read only Ceramic' })
   }
 
   async _pinNotSupported(req: Request, res: Response): Promise<void> {
