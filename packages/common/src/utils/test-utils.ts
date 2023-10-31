@@ -5,12 +5,11 @@ import * as random from '@stablelib/random'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { StreamState, Stream } from '../stream.js'
 import { RunningStateLike } from '../running-state-like.js'
-import { AnchorStatus } from '@ceramicnetwork/common'
 import type { CeramicApi } from '../ceramic-api.js'
 import first from 'it-first'
 import { create } from 'multiformats/hashes/digest'
 import { StreamUtils } from './stream-utils.js'
-import { CommitType, SignatureStatus } from '../stream.js'
+import { AnchorStatus, CommitType, SignatureStatus } from '../stream.js'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
