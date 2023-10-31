@@ -109,7 +109,14 @@ export type Sorting = Record<string, SortOrder>
  * Base query to the index. Disregards pagination.
  */
 export type BaseQuery = {
-  model: StreamID | string
+  /**
+   * @deprecated single model filter used by ComposeDB <= 0.5
+   */
+  model?: StreamID | string
+  /**
+   * TODO(v3): make "models" required when removing the "model" key
+   */
+  models?: Array<StreamID | string>
   account?: string
   /**
    * @deprecated relation filters used by ComposeDB <= 0.4

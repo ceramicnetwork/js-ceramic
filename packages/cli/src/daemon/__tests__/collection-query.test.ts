@@ -29,18 +29,13 @@ describe('parsePagination', () => {
 })
 
 describe('collectionQuery', () => {
-  const model = new StreamID(1, TestUtils.randomCID())
+  const model = new StreamID(1, TestUtils.randomCID()).toString()
   test('parse model', () => {
-    const parsed = collectionQuery({ first: 10, model: model.toString() })
-    expect(parsed).toEqual({ first: 10, model: model })
-  })
-  test('throw on invalid model', () => {
-    expect(() => {
-      collectionQuery({ first: 10, model: 'garbage' })
-    }).toThrow()
+    const parsed = collectionQuery({ first: 10, model })
+    expect(parsed).toEqual({ first: 10, model })
   })
   test('pass account', () => {
-    const parsed = collectionQuery({ first: 10, model: model.toString(), account: 'did:key:foo' })
+    const parsed = collectionQuery({ first: 10, model, account: 'did:key:foo' })
     expect(parsed).toEqual({ first: 10, model: model, account: 'did:key:foo' })
   })
 })

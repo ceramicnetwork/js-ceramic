@@ -19,6 +19,7 @@ import { addColumnPrefix } from './column-name.util.js'
 import { ISyncQueryApi } from './history-sync/interfaces.js'
 import cloneDeep from 'lodash.clonedeep'
 import { indexNameFromTableName } from './migrations/1-create-model-table.js'
+import type { QueryBuilder } from './insertion-order.js'
 
 export const INDEXED_MODEL_CONFIG_TABLE_NAME = 'ceramic_models'
 export const MODEL_IMPLEMENTS_TABLE_NAME = 'ceramic_model_implements'
@@ -79,6 +80,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
   // to
   private readonly modelRelations = new Map<string, Array<string>>()
+  #interfacesModels: Record<string, Set<string>> = {}
   tablesManager!: TablesManager
   syncApi!: ISyncQueryApi
 
@@ -99,6 +101,12 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
 
   setSyncQueryApi(api: ISyncQueryApi) {
     this.syncApi = api
+  }
+
+  addModelImplements(modelID: string, interfaceID: string): void {
+    const models = this.#interfacesModels[interfaceID] ?? new Set()
+    models.add(modelID)
+    this.#interfacesModels[interfaceID] = models
   }
 
   /**
@@ -154,6 +162,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       const modelImplements = models.flatMap((args) => {
         const modelID = args.model.toString()
         return (args.implements ?? []).map((interfaceID) => {
+          this.addModelImplements(modelID, interfaceID)
           return { interface_id: interfaceID, implemented_by_id: modelID }
         })
       })
@@ -241,6 +250,22 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     })
   }
 
+  async _getInterfacesModelsFromDataBase(): Promise<Record<string, Set<string>>> {
+    const interfacesModels: Record<string, Set<string>> = {}
+    const results = await this.dbConnection(MODEL_IMPLEMENTS_TABLE_NAME).select(
+      'interface_id',
+      'implemented_by_id'
+    )
+    for (const result of results) {
+      const interfaceID = result.interface_id
+      if (interfacesModels[interfaceID] == null) {
+        interfacesModels[interfaceID] = new Set()
+      }
+      interfacesModels[interfaceID]!.add(result.implemented_by_id)
+    }
+    return interfacesModels
+  }
+
   async getModelsNoLongerIndexed(): Promise<Array<ModelData>> {
     return (
       await this.dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'indices').where({
@@ -262,14 +287,16 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     await this.assertNoOngoingSyncForModel(modelStreamId)
   }
 
+  _getIndexedModel(id: StreamID): ModelData | undefined {
+    return this.indexedModels.find((indexedModel) => id.equals(indexedModel.streamID))
+  }
+
   /**
    * Assert that a model has been indexed
    * @param modelStreamId
    */
   async assertModelIsIndexed(modelStreamId: StreamID) {
-    const foundModelToIndex = this.indexedModels.find((indexedModel) =>
-      modelStreamId.equals(indexedModel.streamID)
-    )
+    const foundModelToIndex = this._getIndexedModel(modelStreamId)
     if (foundModelToIndex == undefined) {
       const err = new Error(
         `Query failed: Model ${modelStreamId.toString()} is not indexed on this node`
@@ -294,28 +321,77 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
 
   abstract getCountFromResult(response: Array<Record<string, string | number>>): number
 
+  async getQueryModels(query: BaseQuery): Promise<Set<string>> {
+    let ids: Array<StreamID | string> = []
+    // Use models array by default, but may not be provided by older clients
+    if (Array.isArray(query.models) && query.models.length !== 0) {
+      ids = query.models
+    } else if (query.model != null) {
+      // Fallback to single model
+      ids = [query.model]
+    } else {
+      // As neither the models or model values are required, it's possible no model is provided
+      throw new Error(`Missing "models" values to execute query`)
+    }
+
+    // Collect all models implementing interfaces
+    const models = new Set<string>()
+    for (const modelID of ids) {
+      const id = modelID.toString()
+      const interfaceModels = this.#interfacesModels[id]
+      if (interfaceModels == null) {
+        // Assume non-interface model
+        models.add(id)
+      } else {
+        // Add all indexed models implementing the interface
+        for (const model of interfaceModels) {
+          if (this._getIndexedModel(StreamID.fromString(model)) != null) {
+            models.add(model)
+          }
+        }
+      }
+    }
+    // Check models are queryable
+    await Promise.all(
+      Array.from(models).map(async (id) => {
+        await this.assertModelQueryable(StreamID.fromString(id))
+      })
+    )
+    return models
+  }
+
   /**
    * Return number of suitable indexed records.
    */
   async count(query: BaseQuery): Promise<number> {
-    const model = StreamID.fromString(query.model.toString())
-    await this.assertModelQueryable(model)
+    const models = await this.getQueryModels(query)
+    if (models.size === 0) {
+      return 0
+    }
 
-    const tableName = asTableName(query.model)
-    let dbQuery = this.dbConnection(tableName).count('*')
-
-    dbQuery = this.insertionOrder.applyFilters(dbQuery, query)
-
-    return dbQuery.then((response) => this.getCountFromResult(response))
+    return this.dbConnection
+      .count('*')
+      .from((qb: QueryBuilder) => {
+        const subQueries = Array.from(models).map((model) => {
+          return this.insertionOrder.applyFilters(
+            this.dbConnection.from(asTableName(model)).select('stream_id'),
+            query
+          )
+        })
+        return qb.unionAll(subQueries).as('models')
+      })
+      .then((response) => this.getCountFromResult(response as any))
   }
 
   /**
    * Query the index.
    */
   async page(query: BaseQuery & Pagination): Promise<Page<StreamID>> {
-    const model = StreamID.fromString(query.model.toString())
-    await this.assertModelQueryable(model)
-    return this.insertionOrder.page(query)
+    const models = await this.getQueryModels(query)
+    if (models.size === 0) {
+      return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
+    }
+    return this.insertionOrder.page(models, query)
   }
 
   /**
@@ -323,7 +399,12 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    */
   async init(): Promise<void> {
     await this.tablesManager.initConfigTables(this.network)
-    this.indexedModels = await this.getIndexedModelsFromDatabase()
+    const [indexedModels, interfacesModels] = await Promise.all([
+      this.getIndexedModelsFromDatabase(),
+      this._getInterfacesModelsFromDataBase(),
+    ])
+    this.indexedModels = indexedModels
+    this.#interfacesModels = interfacesModels
   }
 
   /**

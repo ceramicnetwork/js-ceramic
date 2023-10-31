@@ -86,6 +86,69 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
 }
 
+const MODEL_INTERFACE_DEFINITION: ModelDefinition = {
+  name: 'ModelInterface',
+  version: '2.0',
+  interface: true,
+  implements: [],
+  accountRelation: { type: 'none' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      title: { type: 'string' },
+      rating: { type: 'number' },
+    },
+    required: ['title'],
+  },
+}
+const MODEL_INTERFACE_ID = 'kjzl6hvfrbw6c5ys8hkncc8o0959gtbjin40jqa60apwsd62y1n5m930ozx4puf'
+
+const MODEL_IMPLEMENTS_DEFINITION1: ModelDefinition = {
+  name: 'ModelImplements1',
+  version: '2.0',
+  interface: false,
+  implements: [MODEL_INTERFACE_ID],
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      title: { type: 'string' },
+      rating: { type: 'number' },
+      text: { type: 'string' },
+    },
+    required: ['title'],
+  },
+}
+const MODEL_IMPLEMENTS_ID1 = StreamID.fromString(
+  'kjzl6hvfrbw6cb1jhl1tr9ug1z7b228lnw14srfig632iruvqau9f9sq4buiqib'
+)
+
+const MODEL_IMPLEMENTS_DEFINITION2: ModelDefinition = {
+  name: 'ModelImplements2',
+  version: '2.0',
+  interface: false,
+  implements: [MODEL_INTERFACE_ID],
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      title: { type: 'string' },
+      rating: { type: 'number' },
+      date: { type: 'string' },
+    },
+    required: ['title'],
+  },
+}
+const MODEL_IMPLEMENTS_ID2 = StreamID.fromString(
+  'kjzl6hvfrbw6c76d29f4gwkor70bioye40mmbpng8wc8s2rwrhi97a4kydlawy6'
+)
+
 const extractStreamStates = function (page: Page<StreamState | null>): Array<StreamState | null> {
   return page.edges.map((edge) => edge.node)
 }
@@ -1445,6 +1508,94 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       results = extractDocuments(ceramic, resultObj)
       expect(results.length).toEqual(1)
       expect(results[0].id.toString()).toEqual(doc0.id.toString())
+    })
+  })
+
+  describe('queries by interface', () => {
+    async function indexInterfaceModels() {
+      await Model.create(ceramic, MODEL_INTERFACE_DEFINITION)
+      await Promise.all([
+        Model.create(ceramic, MODEL_IMPLEMENTS_DEFINITION1),
+        Model.create(ceramic, MODEL_IMPLEMENTS_DEFINITION2),
+      ])
+      await core.index.indexModels([
+        { streamID: MODEL_IMPLEMENTS_ID1 },
+        { streamID: MODEL_IMPLEMENTS_ID2 },
+      ])
+    }
+
+    test('matches all documents implementing an interface', async () => {
+      await indexInterfaceModels()
+
+      // Should be included in results
+      const doc0 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'one' },
+        { model: MODEL_IMPLEMENTS_ID1 }
+      )
+      const doc1 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'two' },
+        { model: MODEL_IMPLEMENTS_ID1 }
+      )
+      const doc2 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'three' },
+        { model: MODEL_IMPLEMENTS_ID2 }
+      )
+      // Should not be included in results
+      const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+      const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT1, midMetadata)
+
+      const query: BaseQuery = { models: [MODEL_INTERFACE_ID] }
+      await expect(ceramic.index.count(query)).resolves.toBe(3)
+
+      const results = await ceramic.index.query({ ...query, first: 5 })
+      const ids = extractDocuments(ceramic, results).map((doc) => doc.id.toString())
+      expect(ids).toEqual([doc0.id.toString(), doc1.id.toString(), doc2.id.toString()])
+    })
+
+    test('applies filters', async () => {
+      await indexInterfaceModels()
+
+      // Should be included in results
+      const doc0 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'one', rating: 4.7 },
+        { model: MODEL_IMPLEMENTS_ID1 }
+      )
+      const doc1 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'two', rating: 2.7 },
+        { model: MODEL_IMPLEMENTS_ID1 }
+      )
+      const doc2 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'three', rating: 3.4 },
+        { model: MODEL_IMPLEMENTS_ID2 }
+      )
+      // Should not be included in results
+      const doc3 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'four', rating: 1.4 },
+        { model: MODEL_IMPLEMENTS_ID2 }
+      )
+      const doc4 = await ModelInstanceDocument.create(
+        ceramic,
+        { title: 'five', rating: 2.1 },
+        { model: MODEL_IMPLEMENTS_ID1 }
+      )
+
+      const query: BaseQuery = {
+        models: [MODEL_INTERFACE_ID],
+        queryFilters: { where: { rating: { greaterThan: 2.3 } } },
+        sorting: { rating: 'ASC' },
+      }
+      await expect(ceramic.index.count(query)).resolves.toBe(3)
+
+      const results = await ceramic.index.query({ ...query, first: 5 })
+      const ids = extractDocuments(ceramic, results).map((doc) => doc.id.toString())
+      expect(ids).toEqual([doc1.id.toString(), doc2.id.toString(), doc0.id.toString()])
     })
   })
 })
