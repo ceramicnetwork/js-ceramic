@@ -119,7 +119,7 @@ export function makeAnchorService(
   network: Networks,
   logger: DiagnosticsLogger
 ): AnchorService | null {
-  if (config.gateway) return null
+  if (config.readOnly) return null
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any)
   }
