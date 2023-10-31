@@ -69,13 +69,11 @@
     "levelup": "^5.1.1",
     "merge-options": "^3.0.4",
     "morgan": "^1.10.0",
-    "nft-did-resolver": "^3.0.0",
     "p-queue": "7.3.0",
     "picocolors": "^1.0.0",
     "pkh-did-resolver": "^1.2.0",
     "reflect-metadata": "^0.1.13",
     "s3leveldown": "^2.2.2",
-    "safe-did-resolver": "^2.0.0",
     "stream-to-array": "^2.3.0",
     "typedjson": "^1.8.0",
     "uint8arrays": "^4.0.3"
