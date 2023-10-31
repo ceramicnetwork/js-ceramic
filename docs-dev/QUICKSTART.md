@@ -25,7 +25,7 @@ The default configuration file is located at
 
 For more information about the configuration options see [Server Configurations](https://composedb.js.org/docs/0.5.x/guides/composedb-server/server-configurations)
 
-For an example how to run in the cloud using Digital Ocean and Kubernetes see [Running in the Cloud](https://composedb.js.org/docs/0.4.x/guides/composedb-server/running-in-the-cloud)
+For an example how to run in the cloud using Digital Ocean and Kubernetes see [Running in the Cloud](https://composedb.js.org/docs/0.5.x/guides/composedb-server/running-in-the-cloud)
 
 ## Develop on Ceramic using ComposeDB
 
