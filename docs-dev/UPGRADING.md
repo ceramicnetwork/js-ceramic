@@ -1,6 +1,8 @@
-# Upgrade a Ceramic Node
+# Upgrade a Ceramic Node - Example
 
-This document is a quick reference for minor version upgrades only, of a running ceramic node running in daemon mode with the package installed globally. 
+In general, upgrading a ceramic node involves installing a newer `@ceramicnetwork/cli` package.  The exact steps to follow will depend on how you have configured your ceramic server.  
+
+For example, if you are using systemd and have installed the package globally, you would follow these steps:
 
 1) ssh into the server running the ceramic daemon
 
