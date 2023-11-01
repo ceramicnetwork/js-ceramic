@@ -37,11 +37,11 @@
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
     "@stablelib/sha256": "^1.0.1",
-    "cross-fetch": "^3.1.4",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^2.37.0-rc.0",
+    "http-request-mock": "^1.8.17",
     "multiformats": "^11.0.1"
   },
   "publishConfig": {

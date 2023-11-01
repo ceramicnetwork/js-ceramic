@@ -1,76 +1,80 @@
 import { test, describe, expect, afterEach, jest } from '@jest/globals'
-import HttpRequestMock from 'http-request-mock'
 import { fetchJson } from '../fetch-json.js'
 import { toString } from 'uint8arrays/to-string'
 import { TestUtils } from '../test-utils.js'
+import express, { Request, Response } from 'express'
+import getPort from 'get-port'
 
-const mocker = HttpRequestMock.setup()
-const ENDPOINT = `http://example-${Math.floor(Math.random() * 1000)}.com/api`
 const RESPONSE = {
   hello: `world-${Math.random()}`,
 }
 
+const interceptFn = jest.fn()
+let sendResponse = async (res: Response, signal: AbortSignal) => {
+  res.send(JSON.stringify(RESPONSE))
+}
+
+let server
+let endpoint
+
+beforeAll(async () => {
+  const port = await getPort()
+  endpoint = `http://localhost:${port}`
+
+  const app = express()
+  app.use(express.text({ type: '*/*' }))
+  app.all('/', async (req: Request, res: Response) => {
+    interceptFn(req.body, req.headers)
+
+    const controller = new AbortController()
+    const signal = controller.signal
+    req.on('close', () => {
+      controller.abort()
+    })
+
+    await sendResponse(res, signal).catch((err) => {
+      if (!signal.aborted) {
+        throw err
+      }
+    })
+  })
+  server = app.listen(port)
+})
+
+afterAll(() => {
+  server.close()
+})
+
 afterEach(() => {
-  mocker.reset()
+  interceptFn.mockClear()
 })
 
 test('plain GET request', async () => {
-  mocker.mock({
-    url: ENDPOINT,
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(RESPONSE),
-  })
-  const response = await fetchJson(ENDPOINT)
+  const response = await fetchJson(endpoint)
   expect(response).toEqual(RESPONSE)
 })
 
 describe('POST request', () => {
   test('json', async () => {
-    const interceptFn = jest.fn()
-    mocker.mock({
-      url: ENDPOINT,
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: async (req) => {
-        interceptFn(req)
-        return JSON.stringify(RESPONSE)
-      },
-    })
     const requestPayload = {
       hello: 'world',
     }
-    const response = await fetchJson(ENDPOINT, {
+    const response = await fetchJson(endpoint, {
       method: 'POST',
       body: requestPayload,
     })
     expect(response).toEqual(RESPONSE)
-    const requestParameters = interceptFn.mock.calls[0][0] as any
+    const requestBody = interceptFn.mock.calls[0][0] as any
+    const requestHeaders = interceptFn.mock.calls[0][1] as any
     // Request is application/json by default
-    expect(requestParameters.headers['content-type']).toEqual('application/json')
+    expect(requestHeaders['content-type']).toEqual('application/json')
     // Request payload gets JSON-stringified
-    expect(requestParameters.body).toEqual(JSON.stringify(requestPayload))
+    expect(requestBody).toEqual(JSON.stringify(requestPayload))
   })
 
   test('not json, custom header', async () => {
-    const interceptFn = jest.fn()
-    mocker.mock({
-      url: ENDPOINT,
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: async (req) => {
-        interceptFn(req)
-        return JSON.stringify(RESPONSE)
-      },
-    })
-    const body = new Uint8Array([1, 2, 3])
-    const response = await fetchJson(ENDPOINT, {
+    const body = new Uint8Array(Buffer.from('test'))
+    const response = await fetchJson(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-strange',
@@ -78,55 +82,45 @@ describe('POST request', () => {
       body: body,
     })
     expect(response).toEqual(RESPONSE)
-    const requestParameters = interceptFn.mock.calls[0][0] as any
+    // const requestParameters = interceptFn.mock.calls[0][0] as any
+    const requestBody = interceptFn.mock.calls[0][0] as any
+    const requestHeaders = interceptFn.mock.calls[0][1] as any
     // Request is not application/json if custom header is provided
-    expect(requestParameters.headers['content-type']).toEqual('application/x-strange')
+    expect(requestHeaders['content-type']).toEqual('application/x-strange')
     // Request payload gets "stringified" by HTTP transport
-    expect(requestParameters.body).toEqual(toString(body))
+    expect(requestBody).toEqual(toString(body))
   })
 })
 
 test('respect timeout', async () => {
-  mocker.mock({
-    url: ENDPOINT,
-    method: 'GET',
-    delay: 2000,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(RESPONSE),
-  })
-  const responseP = fetchJson(ENDPOINT, { timeout: 300 })
-  await expect(responseP).rejects.toThrow(/The user aborted a request/)
+  sendResponse = async (res: Response, signal: AbortSignal) => {
+    await TestUtils.delay(1000, signal)
+    res.send(JSON.stringify(RESPONSE))
+  }
+  const responseP = fetchJson(endpoint, { timeout: 300 })
+  await expect(responseP).rejects.toThrow(/This operation was aborted/)
 })
 
 test('respect abort signal', async () => {
-  mocker.mock({
-    url: ENDPOINT,
-    method: 'GET',
-    delay: 2000,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(RESPONSE),
-  })
+  sendResponse = async (res, signal: AbortSignal) => {
+    await TestUtils.delay(1000, signal)
+    res.send(JSON.stringify(RESPONSE))
+  }
   const controller = new AbortController()
-  const responseP = fetchJson(ENDPOINT, { signal: controller.signal })
+  const responseP = fetchJson(endpoint, { signal: controller.signal })
   await TestUtils.delay(200)
   controller.abort()
-  await expect(responseP).rejects.toThrow(/The user aborted a request/)
+  await expect(responseP).rejects.toThrow(/This operation was aborted/)
 })
 
 test('throw when not ok', async () => {
-  mocker.mock({
-    url: ENDPOINT,
-    method: 'GET',
-    status: 404,
-    body: 'Absent!',
-  })
+  sendResponse = async (res) => {
+    res.sendStatus(404)
+  }
+
   const controller = new AbortController()
-  const responseP = fetchJson(ENDPOINT, { signal: controller.signal })
+  const responseP = fetchJson(endpoint, { signal: controller.signal })
   await expect(responseP).rejects.toThrow(
-    `HTTP request to '${ENDPOINT}' failed with status 'Not Found': Absent!`
+    `HTTP request to '${endpoint}' failed with status 'Not Found': Not Found`
   )
 })

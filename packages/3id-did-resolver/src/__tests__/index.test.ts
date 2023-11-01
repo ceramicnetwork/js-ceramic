@@ -7,18 +7,21 @@ const VECTORS_PATH = new URL('./vectors.json', import.meta.url)
 const vectors = JSON.parse(readFileSync(VECTORS_PATH, 'utf-8'))
 
 const mockedCalls = vectors['http-mock']
-const mocker = HttpRequestMock.setup()
+const mocker = HttpRequestMock.setupForUnitTest('fetch')
 for (const url of Object.keys(mockedCalls)) {
   mocker.mock({
     url: url,
     body: async (req) => {
       const call = mockedCalls[req.url]
       if (req.method === 'POST') {
-        const result = call.find(({ expectedBody }) => req.body === JSON.stringify(expectedBody))
+        const result = call.find(
+          // http-request-mock parses the req body into an obj
+          ({ expectedBody }) => JSON.stringify(req.body) === JSON.stringify(expectedBody)
+        )
         if (result?.response) {
           return result.response
         } else {
-          throw new Error('Could not find response for http body: ' + req.body)
+          throw new Error('Could not find response for http body: ' + JSON.stringify(req.body))
         }
       }
       return call.response

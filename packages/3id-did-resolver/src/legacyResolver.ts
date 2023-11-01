@@ -1,4 +1,3 @@
-import fetch from 'cross-fetch'
 import * as u8a from 'uint8arrays'
 import { LRUCache } from 'least-recent'
 
