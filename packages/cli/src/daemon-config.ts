@@ -266,18 +266,6 @@ export class IndexingConfig {
   enableHistoricalSync = false
 }
 
-@jsonObject
-@toJson
-export class DaemonDidResolversConfig {
-  /**
-   * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
-   *
-   * When specifying in a config file, use the name 'ethr-did-resolver'.
-   */
-  @jsonMember(AnyT, { name: 'ethr-did-resolver' })
-  ethrDidResolver?: any
-}
-
 /**
  * Ceramic Daemon options for configuring miscellaneous behaviors of the underlying Ceramic node.
  */
@@ -450,12 +438,6 @@ export class DaemonConfig {
    */
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
-
-  /**
-   * Options related to DID-resolvers.
-   */
-  @jsonMember(DaemonDidResolversConfig, { name: 'did-resolvers' })
-  didResolvers?: DaemonDidResolversConfig
 
   /**
    * Options related to indexing
