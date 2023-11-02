@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.46.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.45.0...@ceramicnetwork/core@2.46.0-rc.0) (2023-11-02)
+
+
+### Features
+
+* rust ceramic tests ([#2965](https://github.com/ceramicnetwork/js-ceramic/issues/2965)) ([e6bbb11](https://github.com/ceramicnetwork/js-ceramic/commit/e6bbb11fe124d71ddfc5aabb73bf260a437ee707))
+
+
+
+
+
 # [2.45.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.45.0-rc.2...@ceramicnetwork/core@2.45.0) (2023-10-26)
 
 **Note:** Version bump only for package @ceramicnetwork/core

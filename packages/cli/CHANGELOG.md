@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.44.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.43.0...@ceramicnetwork/cli@2.44.0-rc.0) (2023-11-02)
+
+
+### Features
+
+* **cli,common,indexing:** support interfaces queries ([#3011](https://github.com/ceramicnetwork/js-ceramic/issues/3011)) ([620babd](https://github.com/ceramicnetwork/js-ceramic/commit/620babde2ca913f4571a44a529270b893a1c6668))
+* rust ceramic tests ([#2965](https://github.com/ceramicnetwork/js-ceramic/issues/2965)) ([e6bbb11](https://github.com/ceramicnetwork/js-ceramic/commit/e6bbb11fe124d71ddfc5aabb73bf260a437ee707))
+
+
+
+
+
 # [2.43.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@2.43.0-rc.2...@ceramicnetwork/cli@2.43.0) (2023-10-26)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.14.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.13.0...@ceramicnetwork/codecs@1.14.0-rc.0) (2023-11-02)
+
+
+### Features
+
+* rust ceramic tests ([#2965](https://github.com/ceramicnetwork/js-ceramic/issues/2965)) ([e6bbb11](https://github.com/ceramicnetwork/js-ceramic/commit/e6bbb11fe124d71ddfc5aabb73bf260a437ee707))
+
+
+
+
+
 # [1.13.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@1.13.0-rc.0...@ceramicnetwork/codecs@1.13.0) (2023-10-26)
 
 
