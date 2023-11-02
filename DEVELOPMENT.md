@@ -2,7 +2,7 @@
 > Getting started with development on js-ceramic
 
 ## Prerequisites
-This project requires Docker to be installed and actively running in your development environment.
+This project requires Docker to be installed and actively running in your development environment for the unit tests to run.
 
 ## Project setup
 First clone the repo:
@@ -31,10 +31,6 @@ npx prettier --write "packages/**/src/**/*.ts"
 First build a docker image of the project, 
 ```
 docker build -t js-ceramic -f Dockerfile.daemon .
-```
-Run the docker container,
-```
-docker run -it --rm js-ceramic
 ```
 Then you can run all tests at the top level,
 ```
