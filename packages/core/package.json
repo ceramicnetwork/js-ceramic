@@ -63,7 +63,7 @@
     "@ceramicnetwork/wasm-bloom-filter": "^0.1.0",
     "@datastructures-js/priority-queue": "^6.1.0",
     "@ethersproject/providers": "^5.5.1",
-    "@ipld/dag-cbor": "^7.0.0",
+    "@ipld/dag-cbor": "^9.0.6",
     "@scarf/scarf": "^1.1.1",
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",

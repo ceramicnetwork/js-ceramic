@@ -40,7 +40,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.39.0-rc.0",
     "@ceramicnetwork/streamid": "^2.17.0",
-    "@ipld/dag-cbor": "^7.0.0",
+    "@ipld/dag-cbor": "^9.0.6",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
     "object-sizeof": "^2.6.1",
