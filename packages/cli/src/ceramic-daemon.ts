@@ -20,9 +20,6 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as PkhDidResolver from 'pkh-did-resolver'
-import EthrDidResolver from 'ethr-did-resolver'
-import * as NftDidResolver from 'nft-did-resolver'
-import * as SafeDidResolver from 'safe-did-resolver'
 
 import { DID, DIDOptions, DIDProvider } from 'dids'
 import cors from 'cors'
@@ -168,44 +165,12 @@ function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
 /**
  * Prepare DID resolvers to use in the daemon.
  */
-function makeResolvers(
-  ceramic: Ceramic,
-  ceramicConfig: CeramicConfig,
-  opts: DaemonConfig
-): ResolverRegistry {
-  let result = {
+function makeResolvers(ceramic: Ceramic): ResolverRegistry {
+  return {
     ...KeyDidResolver.getResolver(),
     ...PkhDidResolver.getResolver(),
     ...ThreeIdResolver.getResolver(ceramic),
-    ...NftDidResolver.getResolver({
-      ceramic: ceramic,
-      ...opts.didResolvers?.nftDidResolver,
-    }),
-    ...SafeDidResolver.getResolver({
-      ceramic: ceramic,
-      ...opts.didResolvers?.safeDidResolver,
-    }),
   }
-  if (
-    opts.didResolvers?.ethrDidResolver?.networks &&
-    opts.didResolvers?.ethrDidResolver?.networks.length > 0
-  ) {
-    // Custom ethr-did-resolver configuration passed
-    result = { ...result, ...EthrDidResolver.getResolver(opts.didResolvers.ethrDidResolver) }
-  } else if (ceramicConfig.ethereumRpcUrl) {
-    // Use default network from ceramic config's ethereumRpcUrl
-    result = {
-      ...result,
-      ...EthrDidResolver.getResolver({
-        networks: [
-          {
-            rpcUrl: ceramicConfig.ethereumRpcUrl,
-          },
-        ],
-      }),
-    }
-  }
-  return result
 }
 
 /**
@@ -351,7 +316,7 @@ export class CeramicDaemon {
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
 
-    let didOptions: DIDOptions = { resolver: makeResolvers(ceramic, ceramicConfig, opts) }
+    let didOptions: DIDOptions = { resolver: makeResolvers(ceramic) }
     let provider: DIDProvider
 
     if (opts.node.sensitive_privateSeedUrl()) {

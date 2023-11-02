@@ -4,19 +4,21 @@ import { toCID } from './cid-utils.js'
 
 import {
   AnchorCommit,
+  AnchorStatus,
   CeramicCommit,
   CommitData,
   CommitType,
-  IpfsApi,
+  LogEntry,
   RawCommit,
   SignedCommit,
   SignedCommitContainer,
-} from '../index.js'
-import { LogEntry, StreamState } from '../stream.js'
+  StreamState,
+} from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { base64urlToJSON, AnchorStatus } from '@ceramicnetwork/common'
+import { base64urlToJSON } from './uint8array-utils.js'
+import { IpfsApi } from '../index.js'
 
 const TILE_TYPE_ID = 0
 
