@@ -28,11 +28,7 @@ npx prettier --write "packages/**/src/**/*.ts"
 ```
 
 ## Run tests
-First build a docker image of the project, 
-```
-docker build -t js-ceramic -f Dockerfile.daemon .
-```
-Then you can run all tests at the top level,
+You can run all tests at the top level,
 ```
 $ npm test
 ```
