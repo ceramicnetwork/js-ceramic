@@ -285,8 +285,7 @@ export class CeramicDaemon {
   static async create(opts: DaemonConfig): Promise<CeramicDaemon> {
     const ceramicConfig = makeCeramicConfig(opts)
 
-    const onMainnet = opts.network?.name == Networks.MAINNET || opts.network?.name == Networks.ELP
-    if (opts.ipfs.mode != IpfsMode.REMOTE && onMainnet) {
+    if (opts.ipfs.mode != IpfsMode.REMOTE && opts.network?.name == Networks.MAINNET) {
       throw new Error(
         "Cannot run IPFS in 'bundled' mode on Mainnet. Bundled IPFS is for testing only and not suitable for production deployments.  Please set up a dedicated IPFS node and provide the URL for a REMOTE connection"
       )
