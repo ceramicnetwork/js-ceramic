@@ -13,6 +13,7 @@ import {
   LogStyle,
   ModelData,
   MultiQuery,
+  Networks,
   StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
@@ -28,7 +29,7 @@ import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { instrumentRequests } from './daemon/instrument-requests.js'
 import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
-import { DaemonConfig, StateStoreMode } from './daemon-config.js'
+import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 import { ErrorHandlingRouter } from './error-handling-router.js'
 import { collectionQuery, countQuery } from './daemon/collection-queries.js'
@@ -284,6 +285,11 @@ export class CeramicDaemon {
   static async create(opts: DaemonConfig): Promise<CeramicDaemon> {
     const ceramicConfig = makeCeramicConfig(opts)
 
+    if (opts.ipfs.mode != IpfsMode.REMOTE && opts.network?.name == Networks.MAINNET) {
+      throw new Error(
+        "Cannot run IPFS in 'bundled' mode on Mainnet. Bundled IPFS is for testing only and not suitable for production deployments.  Please set up a dedicated IPFS node and provide the URL for a REMOTE connection"
+      )
+    }
     const ipfs = await IpfsConnectionFactory.buildIpfsConnection(
       opts.ipfs.mode,
       opts.network?.name,
