@@ -68,14 +68,19 @@ export class IpfsTopology {
   ) {}
 
   async forceConnection(): Promise<void> {
-    this.logger.debug(`Performing periodic reconnection to bootstrap peers`)
     const bootstrapList: Multiaddr[] = BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || []
     await this._forceBootstrapConnection(this.ipfs, bootstrapList)
   }
 
   async start() {
+    this.logger.imp(`Connecting to bootstrap peers for network ${this.ceramicNetwork}`)
+
     await this.forceConnection()
+    const connectedPeers = (await this.ipfs.swarm.peers()).map((peer) => peer.addr.toString())
+    this.logger.debug(`Connected to peers: ${connectedPeers.join(',')}`)
+
     this.intervalId = setInterval(async () => {
+      this.logger.debug(`Performing periodic reconnection to bootstrap peers`)
       await this.forceConnection()
     }, this.period)
   }
