@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-REPO=3box/rust-ceramic/releases
+REPO=ceramicnetwork/rust-ceramic/releases
 ARCH=x86_64
 OS=unknown-linux-gnu
 TARGET=$ARCH-$OS
@@ -20,4 +20,4 @@ echo "Extracting "$OUTPUT_FILE
 tar -xvf $OUTPUT_FILE
 rm $OUTPUT_FILE
 
-DEBIAN_FRONTEND=noninteractive dpkg -i $DEB_NAME 
+DEBIAN_FRONTEND=noninteractive dpkg -i $DEB_NAME
