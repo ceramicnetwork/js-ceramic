@@ -181,5 +181,50 @@ describe('Admin API tests', () => {
         /is not indexed on this node/
       )
     })
+    test('Dynamic indexing with fields for loaded model', async () => {
+      const model = await Model.create(ceramic, MODEL_DEFINITION)
+
+      ceramic.did = adminDid
+
+      await ceramic.admin.startIndexingModelData([
+        {
+          streamID: model.id,
+          indices: [],
+        },
+      ])
+
+      ceramic.did = nonAdminDid
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      const doc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: loadedModel.id })
+
+      ceramic.did = adminDid
+
+      let indexedModels = await ceramic.admin.getIndexedModelData()
+      expect(indexedModels.length).toEqual(1)
+
+      // Now start indexing the first model
+      await ceramic.admin.startIndexingModelData([
+        {
+          streamID: loadedModel.id,
+          indices: [{ fields: [{ path: ['myData'] }] }],
+        },
+      ])
+      indexedModels = await ceramic.admin.getIndexedModelData()
+      expect(indexedModels.length).toEqual(1)
+
+      // Discovers the first doc when it is updated
+      ceramic.did = nonAdminDid // Set did back to the stream controller so it can be updated
+      await doc1.replace(CONTENT1)
+
+      // Now stop indexing the model
+      ceramic.did = adminDid
+      await ceramic.admin.stopIndexingModels([loadedModel.id])
+
+      await expect(ceramic.index.count({ model: loadedModel.id })).rejects.toThrow(
+        /is not indexed on this node/
+      )
+    })
   })
 })

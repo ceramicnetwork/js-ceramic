@@ -18,7 +18,6 @@ import {
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
   MODEL_IMPLEMENTS_TABLE_NAME,
-  fieldsIndexName,
 } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
@@ -70,7 +69,7 @@ export class TablesManager {
    * @param tableName
    * @param args
    */
-  async hasMidIndices(_tableName: string, _args: IndexModelArgs): Promise<boolean> {
+  async hasMidIndices(_tableName: string): Promise<boolean> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -202,7 +201,7 @@ export class TablesManager {
       )
     }
 
-    if (!(await this.hasMidIndices(tableName, modelIndexArgs))) {
+    if (!(await this.hasMidIndices(tableName))) {
       throw new Error(
         `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
@@ -273,13 +272,8 @@ export class PostgresTablesManager extends TablesManager {
    * @param tableName
    * @param args
    */
-  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async hasMidIndices(tableName: string): Promise<boolean> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
-    if (args && args.indices) {
-      for (const index of args.indices) {
-        expectedIndices.push(fieldsIndexName(index, tableName))
-      }
-    }
     const sqlIndices = expectedIndices.map((s) => `'${s}'`)
     const actualIndices = await this.dataSource.raw(`
 select *
@@ -345,13 +339,8 @@ export class SqliteTablesManager extends TablesManager {
    * @param tableName
    * @param args IndexModelArgs for checking indices
    */
-  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async hasMidIndices(tableName: string): Promise<boolean> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
-    if (args && args.indices) {
-      for (const index of args.indices) {
-        expectedIndices.push(fieldsIndexName(index, tableName))
-      }
-    }
     const sqlIndices = expectedIndices.map((s) => `'${s}'`)
     const actualIndices = await this.dataSource.raw(`
 select name, tbl_name
