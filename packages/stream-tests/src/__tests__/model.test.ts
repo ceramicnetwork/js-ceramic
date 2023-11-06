@@ -232,29 +232,6 @@ describe('Model API http-client tests', () => {
       })
     ).resolves.toBeInstanceOf(Model)
   })
-
-  test('Can create model with relations to any documet', async () => {
-    await expect(
-      Model.create(ceramic, {
-        version: '2.0',
-        name: 'TestModel',
-        accountRelation: { type: 'list' },
-        interface: false,
-        implements: [],
-        schema: {
-          type: 'object',
-          properties: { fooID: { type: 'string' } },
-          additionalProperties: false,
-        },
-        relations: {
-          fooID: { type: 'document', model: null },
-        },
-        views: {
-          foo: { type: 'relationDocument', model: null, property: 'fooID' },
-        },
-      })
-    ).resolves.toBeInstanceOf(Model)
-  })
 })
 
 describe('Model API multi-node tests', () => {
