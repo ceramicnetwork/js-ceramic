@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/job-queue",
-  "version": "1.6.0-rc.0",
+  "version": "1.6.0-rc.1",
   "description": "Ceramic persistent job queue",
   "keywords": [
     "ceramic",

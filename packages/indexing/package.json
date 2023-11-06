@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/indexing",
-  "version": "1.5.0-rc.0",
+  "version": "1.5.0-rc.1",
   "description": "Ceramic indexing and querying logic",
   "keywords": [
     "ceramic",
@@ -33,8 +33,8 @@
     "@ceramicnetwork/anchor-listener": "^1.24.0-rc.0",
     "@ceramicnetwork/anchor-utils": "^1.22.0-rc.0",
     "@ceramicnetwork/common": "^2.39.0-rc.0",
-    "@ceramicnetwork/job-queue": "^1.6.0-rc.0",
-    "@ceramicnetwork/stream-model": "^1.21.0-rc.0",
+    "@ceramicnetwork/job-queue": "^1.6.0-rc.1",
+    "@ceramicnetwork/stream-model": "^1.21.0-rc.1",
     "@ceramicnetwork/streamid": "^2.17.0",
     "@ethersproject/providers": "^5.5.1",
     "knex": "^2.5.1",
@@ -46,8 +46,8 @@
     "uint8arrays": "^4.0.6"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.32.0-rc.0",
-    "@ceramicnetwork/ipfs-daemon": "^2.32.0-rc.0",
+    "@ceramicnetwork/3id-did-resolver": "^2.32.0-rc.1",
+    "@ceramicnetwork/ipfs-daemon": "^2.32.0-rc.1",
     "@ceramicnetwork/stream-model-instance": "^1.21.0-rc.0",
     "@ceramicnetwork/stream-tile": "^2.35.0-rc.0",
     "@stablelib/sha256": "^1.0.1",

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-daemon",
-  "version": "2.32.0-rc.0",
+  "version": "2.32.0-rc.1",
   "description": "IPFS daemon wraps js-ipfs instance with dag-jose codec enabled",
   "keywords": [
     "ipfs",
@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.39.0-rc.0",
-    "@ceramicnetwork/ipfs-topology": "^2.33.0-rc.0",
+    "@ceramicnetwork/ipfs-topology": "^2.33.0-rc.1",
     "express": "^4.17.2",
     "get-port": "^6.0.0",
     "go-ipfs": "^0.18.1",

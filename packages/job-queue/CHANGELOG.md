@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.6.0-rc.0...@ceramicnetwork/job-queue@1.6.0-rc.1) (2023-11-06)
+
+
+### Bug Fixes
+
+* Pin version of @types/pg to unbreak build ([#3031](https://github.com/ceramicnetwork/js-ceramic/issues/3031)) ([270e927](https://github.com/ceramicnetwork/js-ceramic/commit/270e92737160926275a52c64dda50850c1443bbe))
+
+
+
+
+
 # [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.5.0...@ceramicnetwork/job-queue@1.6.0-rc.0) (2023-11-02)
 
 **Note:** Version bump only for package @ceramicnetwork/job-queue
