@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.6.0-rc.1...@ceramicnetwork/job-queue@1.6.0) (2023-11-08)
+
+**Note:** Version bump only for package @ceramicnetwork/job-queue
+
+
+
+
+
 # [1.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.6.0-rc.0...@ceramicnetwork/job-queue@1.6.0-rc.1) (2023-11-06)
 
 
