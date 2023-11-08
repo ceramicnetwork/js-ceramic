@@ -6,7 +6,7 @@ OS=unknown-linux-gnu
 TARGET=$ARCH-$OS
 
 NAME=ceramic-one
-VERSION=$(curl https://api.github.com/repos/$REPO/latest -s |  jq .name -r)
+VERSION=$(curl https://api.github.com/repos/$REPO/v0.8.1 -s |  jq .name -r)
 TAR_NAME=${NAME}_$TARGET.tar.gz
 DEB_NAME=${NAME}.deb
 OUTPUT_FILE=$NAME.tar.gz
