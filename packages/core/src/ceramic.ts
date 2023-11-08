@@ -108,7 +108,7 @@ export interface CeramicConfig {
   pinningBackends?: PinningBackendStatic[]
 
   loggerProvider?: LoggerProvider
-  gateway?: boolean
+  readOnly?: boolean
 
   indexing?: IndexingConfig
 
@@ -150,7 +150,7 @@ export interface CeramicModules {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicParameters {
-  gateway: boolean
+  readOnly: boolean
   stateStoreDirectory?: string
   indexingConfig: IndexingConfig
   sync?: boolean
@@ -193,7 +193,7 @@ export class Ceramic implements CeramicApi {
   private readonly syncApi: SyncApi
 
   readonly _streamHandlers: HandlersMap
-  private readonly _gateway: boolean
+  private readonly _readOnly: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
@@ -215,7 +215,7 @@ export class Ceramic implements CeramicApi {
     this.anchorService = modules.anchorService
     this.providersCache = modules.providersCache
 
-    this._gateway = params.gateway
+    this._readOnly = params.readOnly
     this._networkOptions = params.networkOptions
     this._loadOptsOverride = params.loadOptsOverride
     this._runId = crypto.randomUUID()
@@ -232,7 +232,7 @@ export class Ceramic implements CeramicApi {
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
-    if (!this._gateway) {
+    if (!this._readOnly) {
       this.anchorService.ceramic = this
     }
 
@@ -376,7 +376,7 @@ export class Ceramic implements CeramicApi {
     )
 
     const params: CeramicParameters = {
-      gateway: config.gateway,
+      readOnly: config.readOnly,
       stateStoreDirectory: config.stateStoreDirectory,
       indexingConfig: config.indexing,
       networkOptions,
@@ -427,8 +427,8 @@ export class Ceramic implements CeramicApi {
         `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
       )
 
-      if (this._gateway) {
-        this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
+      if (this._readOnly) {
+        this._logger.warn(`Starting in read-only mode. All write operations will fail`)
       }
 
       await this.repository.init()
@@ -438,7 +438,7 @@ export class Ceramic implements CeramicApi {
         await this._ipfsTopology.start()
       }
 
-      if (!this._gateway) {
+      if (!this._readOnly) {
         await this.anchorService.init()
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
@@ -584,8 +584,8 @@ export class Ceramic implements CeramicApi {
     commit: CeramicCommit,
     opts: UpdateOpts = {}
   ): Promise<T> {
-    if (this._gateway) {
-      throw new Error('Writes to streams are not supported in gateway mode')
+    if (this._readOnly) {
+      throw new Error('Writes to streams are not supported in readOnly mode')
     }
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
     const id = normalizeStreamID(streamId)
@@ -744,8 +744,7 @@ export class Ceramic implements CeramicApi {
 
     const index = {}
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
-      const queryAtTime = query.opts?.atTime ? query.opts?.atTime : query.atTime
-      const opts = (queryAtTime ? { atTime: queryAtTime, ...query.opts } : query.opts) ?? {}
+      const opts = query.opts ?? {}
       let stream
       try {
         stream = await promiseTimeout(
@@ -770,7 +769,7 @@ export class Ceramic implements CeramicApi {
         Metrics.count(ERROR_LOADING_STREAM, 1)
         return Promise.resolve()
       }
-      const streamRef = opts?.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
+      const streamRef = opts.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
       index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map((key) => {

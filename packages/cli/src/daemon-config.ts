@@ -266,34 +266,6 @@ export class IndexingConfig {
   enableHistoricalSync = false
 }
 
-@jsonObject
-@toJson
-export class DaemonDidResolversConfig {
-  /**
-   * Configuration for nft-did-resolver. Its README contains appropriate documentation.
-   *
-   * When specifying in a config file, use the name 'nft-did-resolver'.
-   */
-  @jsonMember(AnyT, { name: 'nft-did-resolver' })
-  nftDidResolver?: any
-
-  /**
-   * Configuration for safe-did-resolver. Its README contains appropriate documentation.
-   *
-   * When specifying in a config file, use the name 'safe-did-resolver'.
-   */
-  @jsonMember(AnyT, { name: 'safe-did-resolver' })
-  safeDidResolver?: any
-
-  /**
-   * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
-   *
-   * When specifying in a config file, use the name 'ethr-did-resolver'.
-   */
-  @jsonMember(AnyT, { name: 'ethr-did-resolver' })
-  ethrDidResolver?: any
-}
-
 /**
  * Ceramic Daemon options for configuring miscellaneous behaviors of the underlying Ceramic node.
  */
@@ -324,10 +296,10 @@ export class DaemonCeramicNodeConfig {
   }
 
   /**
-   * Whether to run the Ceramic node in read-only gateway mode.
+   * Whether to run the Ceramic node in read-only mode.
    */
   @jsonMember(Boolean)
-  gateway?: boolean
+  readOnly?: boolean
 
   /**
    * If set, overrides the 'sync' flag for all stream load operations.  Most users should never have
@@ -466,12 +438,6 @@ export class DaemonConfig {
    */
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
-
-  /**
-   * Options related to DID-resolvers.
-   */
-  @jsonMember(DaemonDidResolversConfig, { name: 'did-resolvers' })
-  didResolvers?: DaemonDidResolversConfig
 
   /**
    * Options related to indexing

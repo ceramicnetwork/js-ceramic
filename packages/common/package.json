@@ -52,7 +52,6 @@
     "@didtools/pkh-tezos": "^0.2.1",
     "@stablelib/random": "^1.0.1",
     "caip": "~1.1.0",
-    "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
     "it-first": "^1.0.7",
     "jet-logger": "1.2.2",
@@ -67,7 +66,8 @@
     "@types/logfmt": "^1.2.2",
     "@types/node": "^18.0.3",
     "dids": "^4.0.0",
-    "http-request-mock": "^1.8.17",
+    "express": "^4.18.2",
+    "get-port": "^7.0.0",
     "ipfs-core-types": "^0.14.0",
     "json-schema-to-typescript": "^10.1.5",
     "typescript-json-schema": "^0.52.0"

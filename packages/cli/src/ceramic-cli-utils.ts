@@ -35,7 +35,6 @@ const DEFAULT_CONFIG_PATH = new URL('.ceramic/', HOMEDIR)
 const DEFAULT_STATE_STORE_DIRECTORY = new URL('statestore/', DEFAULT_CONFIG_PATH)
 const DEFAULT_DAEMON_CONFIG_FILENAME = new URL('daemon.config.json', DEFAULT_CONFIG_PATH)
 const DEFAULT_CLI_CONFIG_FILENAME = new URL('client.config.json', DEFAULT_CONFIG_PATH)
-const LEGACY_CLI_CONFIG_FILENAME = new URL('config.json', DEFAULT_CONFIG_PATH) // todo(1615): Remove this backwards compatibility support
 const DEFAULT_INDEXING_DB_FILENAME = new URL('./indexing.sqlite', DEFAULT_CONFIG_PATH)
 
 /**
@@ -100,7 +99,6 @@ export class CeramicCliUtils {
    * @param ipfsPinningEndpoints - Ipfs pinning endpoints. Deprecated, use config file if you want to configure this.
    * @param stateStoreDirectory - Path to the directory that will be used for storing state. Deprecated, use config file if you want to configure this.
    * @param stateStoreS3Bucket - S3 bucket name for storing data. Deprecated, use config file if you want to configure this.
-   * @param gateway - read only endpoints available. It is disabled by default
    * @param port - port on which daemon is available. Default is 7007
    * @param hostname - hostname to listen on.
    * @param debug - Enable debug logging level
@@ -114,6 +112,8 @@ export class CeramicCliUtils {
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
    * @param disableComposedb - Disable ComposeDB Indexing service.
+   * @param readOnly - read only endpoints available. It is disabled by default
+   *
    */
   static async createDaemon(
     configFilename: string | undefined,
@@ -123,7 +123,6 @@ export class CeramicCliUtils {
     ipfsPinningEndpoints: string[],
     stateStoreDirectory: string,
     stateStoreS3Bucket: string,
-    gateway: boolean,
     port: number,
     hostname: string,
     debug: boolean,
@@ -136,7 +135,8 @@ export class CeramicCliUtils {
     pubsubTopic: string,
     corsAllowedOrigins: string,
     syncOverride: string,
-    disableComposedb: boolean
+    disableComposedb: boolean,
+    readOnly: boolean
   ): Promise<CeramicDaemon> {
     const configFilepath = configFilename
       ? new URL(configFilename, CWD)
@@ -211,8 +211,8 @@ export class CeramicCliUtils {
       if (pubsubTopic) {
         config.network.pubsubTopic = pubsubTopic
       }
-      if (gateway) {
-        config.node.gateway = gateway
+      if (readOnly) {
+        config.node.readOnly = readOnly
       }
       if (syncOverride) {
         config.node.syncOverride = syncOverride
@@ -640,25 +640,6 @@ export class CeramicCliUtils {
       // Swallow error
     }
 
-    // If nothing found in default config file path, check legacy path too
-    // TODO(1615): Remove this backwards compatibility code
-    try {
-      await fs.access(LEGACY_CLI_CONFIG_FILENAME)
-      const fileContents = await fs.readFile(LEGACY_CLI_CONFIG_FILENAME, { encoding: 'utf8' })
-
-      console.warn(
-        `Legacy client config file detected at '${LEGACY_CLI_CONFIG_FILENAME}', renaming to ${DEFAULT_CLI_CONFIG_FILENAME}`
-      )
-      try {
-        await fs.rename(LEGACY_CLI_CONFIG_FILENAME, DEFAULT_CLI_CONFIG_FILENAME)
-      } catch (err) {
-        console.error(`Rename failed: ${err}`)
-        throw err
-      }
-      return fileContents
-    } catch (e) {
-      // Swallow error
-    }
     return ''
   }
 

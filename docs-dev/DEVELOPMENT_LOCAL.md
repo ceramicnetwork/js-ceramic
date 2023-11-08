@@ -24,7 +24,7 @@ __*Note*__ that using `--network dev-unstable` will cause your node connecting t
 
 ## PRE-REQUISITES
 
-* Node `v16`
+* Node `20`
 * npm `v8`
 
 ### macOS specific (11.x+)
