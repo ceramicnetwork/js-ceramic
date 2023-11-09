@@ -24,7 +24,7 @@ commands:
       - run: sudo apt-get install jq
       - run:
           name: Install rust-ceramic
-          command: sudo bash ci-scripts/install-rust-ceramic.sh
+          command: sudo bash ci-scripts/install-rust-ceramic.sh 0.8.3
       - node/install:
           node-version: '20'
       - node/install-packages
