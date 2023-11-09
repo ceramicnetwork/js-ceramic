@@ -5,8 +5,12 @@ ARCH=x86_64
 OS=unknown-linux-gnu
 TARGET=$ARCH-$OS
 
+if [ -z ${1+x} ] || [ "$1" == "latest" ]; then
+  VERSION=$(curl https://api.github.com/repos/$REPO/latest -s |  jq .name -r)
+else
+  VERSION="v"$1
+fi
 NAME=ceramic-one
-VERSION=$(curl https://api.github.com/repos/$REPO/tags/v0.8.1 -s |  jq .name -r)
 TAR_NAME=${NAME}_$TARGET.tar.gz
 DEB_NAME=${NAME}.deb
 OUTPUT_FILE=$NAME.tar.gz
