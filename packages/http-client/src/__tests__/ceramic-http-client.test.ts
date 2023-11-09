@@ -19,7 +19,6 @@ const API_URLS = [
   'https://example.com/extension/another-extension/',
 ]
 
-
 const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 const initial = {
@@ -88,7 +87,7 @@ describe('URL constructor', () => {
       const client = new CeramicClient(API_URL)
 
       const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
-      ;(client as CeramicClient)._fetchJson = fauxFetch
+      ;(client as any)._fetchJson = fauxFetch
 
       await client.getSupportedChains()
       expect(fauxFetch.mock.calls[0][0]).toEqual(new URL('./api/v0/node/chains', API_URL))
@@ -101,11 +100,12 @@ describe('URL constructor', () => {
       const a = client.buildStreamFromState(initial)
 
       const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
-      ;(client as CeramicClient)._fetchJson = fauxFetch
+      ;(client as any)._fetchJson = fauxFetch
 
       await client.requestAnchor(a.id)
-      expect(fauxFetch.mock.calls[0][0].toString()).toEqual(new URL(`./api/v0/streams/${a.id}/anchor`, API_URL).toString())
+      expect(fauxFetch.mock.calls[0][0].toString()).toEqual(
+        new URL(`./api/v0/streams/${a.id}/anchor`, API_URL).toString()
+      )
     }
   })
-
 })
