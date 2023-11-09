@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -ex
+
 REPO=3box/rust-ceramic/releases
 ARCH=x86_64
 OS=unknown-linux-gnu
