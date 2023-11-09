@@ -39,8 +39,6 @@ const GET_RESPONSE = {
 
 let did: DID
 let getDidFn
-let noDidFn
-let expectedKid: string
 let client: CeramicClient
 
 beforeEach(() => {
@@ -66,12 +64,8 @@ describe('URL constructor', () => {
     getDidFn = () => {
       return did
     }
-    noDidFn = () => {
-      return undefined
-    }
-    const didKeyVerStr = did.id.split('did:key:')[1]
-    expectedKid = `${did.id}#${didKeyVerStr}`
   })
+
   test('build instances of Streamtype from URLs with extensions', async () => {
     for (const URL of API_URLS) {
       client = new CeramicClient(URL)
@@ -80,6 +74,7 @@ describe('URL constructor', () => {
       expect(a.id.cid).toEqual(FAKE_CID_1)
     }
   })
+
   test('setDID()', async () => {
     for (const URL of API_URLS) {
       const client = new CeramicClient(URL)
@@ -87,7 +82,8 @@ describe('URL constructor', () => {
       expect(client.did).toEqual(getDidFn())
     }
   })
-  test('loadStream()', async () => {
+
+  test('getSupportedChains()', async () => {
     for (const API_URL of API_URLS) {
       const client = new CeramicClient(API_URL)
 
@@ -99,29 +95,17 @@ describe('URL constructor', () => {
     }
   })
 
-  // it('doesnt really fetch', async () => {
-  //   const client = new CeramicClient(API_URLS[0])
-  //   const a = client.buildStreamFromState(initial)
-  //   jest.spyOn(global, "fetch").mockResolvedValueOnce({
-  //     json: async () => {
-  //       return {
-  //         ...SUCCESS_RESPONSE,
-  //         state: initial,
-  //       }
-  //     },
-  //   } as any)
-  //   const res = client.loadStream(a.id, { sync: 1 })
+  test('requestAnchor()', async () => {
+    for (const API_URL of API_URLS) {
+      const client = new CeramicClient(API_URL)
+      const a = client.buildStreamFromState(initial)
 
-  //   const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
-  //   ;(client as any)._fetchJson = fauxFetch
+      const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
+      ;(client as CeramicClient)._fetchJson = fauxFetch
 
-  //   const onResponse = jest.fn()
-  //   const onError = jest.fn()
-  //   res.then(onResponse).catch(onError)
-  //   await res
-
-  //   global.fetch.mockClear()
-  // })
-
+      await client.requestAnchor(a.id)
+      expect(fauxFetch.mock.calls[0][0].toString()).toEqual(new URL(`./api/v0/streams/${a.id}/anchor`, API_URL).toString())
+    }
+  })
 
 })

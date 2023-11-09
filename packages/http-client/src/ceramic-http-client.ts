@@ -193,7 +193,7 @@ export class CeramicClient implements CeramicApi {
   ): Promise<AnchorStatus> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
     const { anchorStatus } = await this._fetchJson(
-      `${this._apiUrl}/streams/${streamId.toString()}/anchor`,
+      `${this._apiUrl}streams/${streamId.toString()}/anchor`,
       {
         method: 'POST',
         body: {
