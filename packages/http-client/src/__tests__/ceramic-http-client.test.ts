@@ -98,17 +98,15 @@ describe('URL constructor', () => {
     }
   })
   test('loadStream()', async () => {
-    // for (const URL of API_URLS) {
-      const client = new CeramicClient('https://ceramic-private-dev.3boxlabs.com')
-      const a = client.buildStreamFromState(initial)
-      
+    for (const API_URL of API_URLS) {
+      const client = new CeramicClient(API_URL)
+
       const fauxFetch = jest.fn(async () => GET_RESPONSE) as typeof fetchJson
       ;(client as CeramicClient)._fetchJson = fauxFetch
 
-      const res = await client.loadStream(a.id, { sync: 0 })
-      expect(1).toEqual(1)
-      
-    // }
+      await client.getSupportedChains()
+      expect(fauxFetch.mock.calls[0][0]).toEqual(new URL('./api/v0/node/chains', API_URL))
+    }
   })
 
   // it('doesnt really fetch', async () => {

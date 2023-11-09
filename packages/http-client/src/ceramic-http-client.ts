@@ -32,7 +32,7 @@ import { RemoteIndexApi } from './remote-index-api.js'
 import { RemoteAdminApi } from './remote-admin-api.js'
 import { DummyPinApi } from './dummy-pin-api.js'
 
-const API_PATH = '/api/v0/'
+const API_PATH = './api/v0/'
 const CERAMIC_HOST = 'http://localhost:7007'
 
 /**
@@ -64,6 +64,8 @@ export interface CeramicClientConfig {
  * Ceramic client implementation
  */
 export class CeramicClient implements CeramicApi {
+  // Stored as a member to make it easier to inject a mock in unit tests
+  private readonly _fetchJson: typeof fetchJson = fetchJson
   private readonly _apiUrl: URL
   private _supportedChains: Array<string>
 
@@ -79,8 +81,7 @@ export class CeramicClient implements CeramicApi {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     // Regex to remove trailing slash if exists
-    const _fullUrl = apiHost.replace(/\/$/, '')
-    this._apiUrl = new URL(_fullUrl.concat(API_PATH)) 
+    this._apiUrl = new URL(API_PATH, apiHost)
     this.context = { api: this }
 
     this.pin = new DummyPinApi()
@@ -146,7 +147,7 @@ export class CeramicClient implements CeramicApi {
     })
 
     const url = new URL('./multiqueries', this._apiUrl)
-    const results = await fetchJson(url, {
+    const results = await this._fetchJson(url, {
       method: 'POST',
       body: {
         queries: queriesJSON,
@@ -191,7 +192,7 @@ export class CeramicClient implements CeramicApi {
     opts: LoadOpts & AnchorOpts = {}
   ): Promise<AnchorStatus> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
-    const { anchorStatus } = await fetchJson(
+    const { anchorStatus } = await this._fetchJson(
       `${this._apiUrl}/streams/${streamId.toString()}/anchor`,
       {
         method: 'POST',
@@ -235,7 +236,7 @@ export class CeramicClient implements CeramicApi {
     }
 
     // Fetch the chainId from the daemon and cache the result
-    const { supportedChains } = await fetchJson(this._apiUrl + '/node/chains')
+    const { supportedChains } = await this._fetchJson(new URL('./node/chains', this._apiUrl))
     this._supportedChains = supportedChains
     return supportedChains
   }
