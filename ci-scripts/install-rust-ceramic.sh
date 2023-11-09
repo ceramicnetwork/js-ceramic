@@ -5,7 +5,7 @@ ARCH=x86_64
 OS=unknown-linux-gnu
 TARGET=$ARCH-$OS
 
-if [ -z ${1+x} ]; then
+if [ -z ${1+x} ] || [ "$1" == "latest" ]; then
   VERSION=$(curl https://api.github.com/repos/$REPO/latest -s |  jq .name -r)
 else
   VERSION="v"$1
