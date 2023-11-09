@@ -1,4 +1,3 @@
-import fetch from 'cross-fetch'
 import { mergeAbortSignals, TimedAbortSignal, abortable } from './abort-signal-utils.js'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
@@ -30,7 +29,7 @@ export type RFC9110Methods =
 // Native `fetch` converts lowercase HTTP methods mentioned in RFC9110 to uppercase.
 // Custom HTTP methods have to be passed as uppercase. So, to be on the safe side, we better uppercase
 // the method names in our codebase to set an example.
-export type HttpMethod = RFC9110Methods | Lowercase<RFC9110Methods>
+export type HttpMethod = RFC9110Methods
 
 export async function fetchJson(url: URL | string, opts: Partial<FetchOpts> = {}): Promise<any> {
   if (opts.body) {

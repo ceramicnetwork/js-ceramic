@@ -11,7 +11,7 @@ import {
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Repository } from '../repository.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
@@ -578,7 +578,13 @@ describe('validation', () => {
     await TestUtils.anchorUpdate(ceramic, schema)
     // Create invalid stream
     const ipfs2 = await createIPFS()
+    await swarmConnect(ipfs, ipfs2)
+
     const permissiveCeramic = await createCeramic(ipfs2)
+
+    // Wait for peers to discover they are both subscribed to same topic
+    await TestUtils.delay(500)
+
     const validateSchemaSpy = jest.spyOn(
       (permissiveCeramic._streamHandlers.get('tile') as TileDocumentHandler)._schemaValidator,
       'validateSchema'
@@ -590,6 +596,7 @@ describe('validation', () => {
       { stuff: 1 },
       { schema: schema.commitId }
     )
+
     // Load it: Expect failure
     await expect(repository.load(invalidDoc.id, { syncTimeoutSeconds: 0 })).rejects.toThrow(
       'Validation Error: data/stuff must be string'

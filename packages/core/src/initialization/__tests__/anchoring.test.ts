@@ -26,10 +26,9 @@ describe('makeAnchorServiceUrl', () => {
   })
   test('throw on custom CAS on mainnet', () => {
     expect(() => makeAnchorServiceUrl(CUSTOM_URL, Networks.MAINNET)).toThrow(CustomMainnetCasError)
-    expect(() => makeAnchorServiceUrl(CUSTOM_URL, Networks.ELP)).toThrow(CustomMainnetCasError)
     const casInternal = 'https://cas-internal.3boxlabs.com'
     expect(makeAnchorServiceUrl(casInternal, Networks.MAINNET)).toEqual(casInternal)
     const casDirect = 'https://cas-direct.3boxlabs.com'
-    expect(makeAnchorServiceUrl(casDirect, Networks.ELP)).toEqual(casDirect)
+    expect(makeAnchorServiceUrl(casDirect, Networks.MAINNET)).toEqual(casDirect)
   })
 })

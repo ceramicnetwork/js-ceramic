@@ -80,6 +80,7 @@ describe('Ceramic integration', () => {
     const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
     const [modules, params] = await Ceramic._processConfig(ipfs1, {
       networkName: Networks.INMEMORY,
+      stateStoreDirectory: tmpDirectory,
       indexing: { db: databaseConnectionString.href, models: [] },
     })
     const dispatcher = modules.dispatcher

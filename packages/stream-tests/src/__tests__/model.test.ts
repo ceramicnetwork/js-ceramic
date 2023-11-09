@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
 import { Ceramic } from '@ceramicnetwork/core'
@@ -232,6 +232,29 @@ describe('Model API http-client tests', () => {
       })
     ).resolves.toBeInstanceOf(Model)
   })
+
+  test('Can create model with relations to any documet', async () => {
+    await expect(
+      Model.create(ceramic, {
+        version: '2.0',
+        name: 'TestModel',
+        accountRelation: { type: 'list' },
+        interface: false,
+        implements: [],
+        schema: {
+          type: 'object',
+          properties: { fooID: { type: 'string' } },
+          additionalProperties: false,
+        },
+        relations: {
+          fooID: { type: 'document', model: null },
+        },
+        views: {
+          foo: { type: 'relationDocument', model: null, property: 'fooID' },
+        },
+      })
+    ).resolves.toBeInstanceOf(Model)
+  })
 })
 
 describe('Model API multi-node tests', () => {
@@ -245,6 +268,7 @@ describe('Model API multi-node tests', () => {
   beforeAll(async () => {
     ipfs0 = await createIPFS()
     ipfs1 = await createIPFS()
+    await swarmConnect(ipfs0, ipfs1)
   }, 12000)
 
   beforeEach(async () => {

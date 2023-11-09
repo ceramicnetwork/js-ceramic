@@ -1,4 +1,4 @@
-import { createController } from './create-ipfs.js'
+import { createGoController } from './create-ipfs.js'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/common'
 import { HealthcheckServer } from './healthcheck-server.js'
@@ -83,7 +83,7 @@ export class IpfsDaemon {
       logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
     }
 
-    const ipfsd = await createController(
+    const ipfsd = await createGoController(
       {
         start: false,
         init: {

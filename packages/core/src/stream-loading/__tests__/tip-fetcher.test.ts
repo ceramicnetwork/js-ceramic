@@ -48,6 +48,9 @@ describe('TipFetcher test', () => {
       }
     })
 
+    // Wait for peers to discover they are mutually interested in the same topic.
+    await TestUtils.delay(500)
+
     const tipFetcher = new TipFetcher(dispatcher.messageBus)
 
     const foundTip = await lastValueFrom(tipFetcher.findPossibleTips(streamID, 5))

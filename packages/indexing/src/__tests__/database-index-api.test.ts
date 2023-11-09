@@ -700,6 +700,12 @@ describe('postgres', () => {
         { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_5 },
         { interface_id: MODEL_ID_4, implemented_by_id: MODEL_ID_5 },
       ])
+
+      await expect(indexApi._getInterfacesModelsFromDataBase()).resolves.toEqual({
+        [MODEL_ID_1]: new Set([MODEL_ID_3, MODEL_ID_5]),
+        [MODEL_ID_2]: new Set([MODEL_ID_3]),
+        [MODEL_ID_4]: new Set([MODEL_ID_5]),
+      })
     })
   })
 
@@ -1528,6 +1534,12 @@ describe('sqlite', () => {
         { interface_id: MODEL_ID_1, implemented_by_id: MODEL_ID_5 },
         { interface_id: MODEL_ID_4, implemented_by_id: MODEL_ID_5 },
       ])
+
+      await expect(indexApi._getInterfacesModelsFromDataBase()).resolves.toEqual({
+        [MODEL_ID_1]: new Set([MODEL_ID_3, MODEL_ID_5]),
+        [MODEL_ID_2]: new Set([MODEL_ID_3]),
+        [MODEL_ID_4]: new Set([MODEL_ID_5]),
+      })
     })
   })
 

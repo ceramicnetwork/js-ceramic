@@ -5,6 +5,9 @@ import getPort from 'get-port'
 import mergeOpts from 'merge-options'
 import type { IpfsApi } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
+import { RustIpfsOptions, RustIpfs, RustIpfsRemoteOptions } from './rust-ipfs.js'
+import { IPFSOptions } from 'ipfsd-ctl'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
@@ -32,7 +35,27 @@ const createFactory = () => {
   )
 }
 
-export async function createController(
+class GoRunningIpfs implements RunningIpfs {
+  private readonly _api: IpfsApi
+
+  constructor(api: IpfsApi) {
+    this._api = api
+  }
+
+  api(): IpfsApi {
+    return this._api
+  }
+
+  isOnline(): boolean {
+    return this._api.isOnline()
+  }
+
+  async shutdown(logger?: DiagnosticsLogger): Promise<void> {
+    return await this._api.stop()
+  }
+}
+
+export async function createGoController(
   ipfsOptions: Ctl.IPFSOptions,
   disposable = true
 ): Promise<Ctl.Controller> {
@@ -63,6 +86,7 @@ async function createIpfsOptions(
   const apiPort = await getPort()
   const gatewayPort = await getPort()
 
+  // The default options do not peer with any nodes and do not have any discovery mechanism.
   return mergeOptions(
     {
       start: true,
@@ -77,39 +101,10 @@ async function createIpfsOptions(
           SeenMessagesTTL: '10m',
         },
         Bootstrap: [],
-        Peering: {
-          Peers: [
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL',
-              ],
-              ID: 'QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8',
-              ],
-              ID: 'QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-elp-1-1-external.3boxlabs.com/tcp/4011/ws/p2p/QmUiF8Au7wjhAF9BYYMNQRW5KhY7o8fq4RUozzkWvHXQrZ',
-              ],
-              ID: 'QmUiF8Au7wjhAF9BYYMNQRW5KhY7o8fq4RUozzkWvHXQrZ',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-elp-1-2-external.3boxlabs.com/tcp/4011/ws/p2p/QmRNw9ZimjSwujzS3euqSYxDW9EHDU5LB3NbLQ5vJ13hwJ',
-              ],
-              ID: 'QmRNw9ZimjSwujzS3euqSYxDW9EHDU5LB3NbLQ5vJ13hwJ',
-            },
-            {
-              Addrs: [
-                '/dns4/go-ipfs-ceramic-private-cas-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
-              ],
-              ID: 'QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
-            },
-          ],
+        Discovery: {
+          MDNS: {
+            Enabled: false,
+          },
         },
       },
     },
@@ -118,54 +113,102 @@ async function createIpfsOptions(
   )
 }
 
-const createInstanceByType = {
-  go: async (ipfsOptions: Ctl.IPFSOptions, disposable = true): Promise<IpfsApi> => {
-    if (!ipfsOptions.start) {
-      throw Error('go IPFS instances must be started')
-    }
-    const ipfsd = await createController(ipfsOptions, disposable)
-    // API is only set on started controllers
-    const started = await ipfsd.start()
-    return started.api
-  },
+export type GoIpfsFlavor = {
+  name: 'go'
+  options: IPFSOptions
 }
+
+export type RustIpfsFlavor = {
+  name: 'rust'
+  options: RustIpfsOptions
+}
+
+type IpfsFlavor = GoIpfsFlavor | RustIpfsFlavor
+
+export async function createIPFS(
+  goOptions: IPFSOptions = {},
+  disposable = true,
+  rustOptions: RustIpfsOptions = { type: 'binary' } as RustIpfsOptions
+): Promise<IpfsApi> {
+  const env_flavor = process.env.IPFS_FLAVOR || 'go'
+  if (env_flavor == 'go') {
+    return (
+      await createIPFSFlavor(
+        {
+          name: 'go',
+          options: goOptions,
+        } as GoIpfsFlavor,
+        disposable
+      )
+    ).api()
+  } else {
+    return (
+      await createIPFSFlavor(
+        {
+          name: 'rust',
+          options: rustOptions,
+        } as RustIpfsFlavor,
+        disposable
+      )
+    ).api()
+  }
+}
+
+export interface RunningIpfs {
+  api(): IpfsApi
+
+  shutdown(logger?: DiagnosticsLogger): Promise<void>
+}
+
 /**
  * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
+ * @param flavor - IPFS flavor to create
+ * @param disposable - Stop the IPFS process when its no longer needed.
  */
-export async function createIPFS(
-  overrideConfig: Partial<Ctl.IPFSOptions> = {},
+export async function createIPFSFlavor(
+  flavor: IpfsFlavor,
   disposable = true
-): Promise<IpfsApi> {
-  const flavor = process.env.IPFS_FLAVOR || 'go'
-  if (!(flavor in createInstanceByType)) throw new Error(`Unsupported IPFS flavor "${flavor}"`)
+): Promise<RunningIpfs> {
+  switch (flavor.name) {
+    case 'go': {
+      let options
+      let tmpFolder
+      if (flavor.options.repo) {
+        options = await createIpfsOptions(flavor.options)
+      } else {
+        tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-  if (!overrideConfig.repo) {
-    const tmpFolder = await tmp.dir({ unsafeCleanup: true })
+        options = await createIpfsOptions(flavor.options, tmpFolder.path)
+      }
 
-    const ipfsOptions = await createIpfsOptions(overrideConfig, tmpFolder.path)
-
-    const instance = await createInstanceByType[flavor](ipfsOptions, disposable)
-
-    // IPFS does not notify you when it stops.
-    // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
-    // Poor man's hook.
-    return new Proxy(instance, {
-      get(target: any, p: PropertyKey): any {
-        if (p === 'stop') {
-          return () => {
-            const vanilla = target[p]
-            return vanilla().finally(() => tmpFolder.cleanup())
-          }
-        }
-        return target[p]
-      },
-    })
+      const ipfsd = await createGoController(options, disposable)
+      // API is only set on started controllers
+      const started = await ipfsd.start()
+      if (!tmpFolder) {
+        return new GoRunningIpfs(started.api)
+      } else {
+        // IPFS does not notify you when it stops.
+        // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
+        // Poor man's hook.
+        const p = new Proxy(started.api, {
+          get(target: any, p: PropertyKey): any {
+            if (p === 'stop') {
+              return () => {
+                const vanilla = target[p]
+                return vanilla().finally(() => tmpFolder.cleanup())
+              }
+            }
+            return target[p]
+          },
+        })
+        return new GoRunningIpfs(p)
+      }
+    }
+    case 'rust': {
+      const ipfs = new RustIpfs(flavor.options)
+      return await ipfs.start()
+    }
   }
-
-  const ipfsOptions = await createIpfsOptions(overrideConfig)
-
-  return createInstanceByType[flavor](ipfsOptions, disposable)
 }
 
 /**
@@ -182,29 +225,12 @@ export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
 }
 
 /**
- * Start `n` IPFS (go-ipfs or js-ipfs based on `process.env.IPFS_FLAVOR`) instances, and stop them after `task` is done.
- * @param n - Number of IPFS instances to create.
- * @param task - Function that uses the IPFS instances.
- */
-export async function withFleet(
-  n: number,
-  task: (instances: IpfsApi[]) => Promise<void>
-): Promise<void> {
-  const flavor = process.env.IPFS_FLAVOR || 'go'
-
-  if (flavor.toLowerCase() == 'js') {
-    return withJsFleet(n, task)
-  } else {
-    return withGoFleet(n, task)
-  }
-}
-
-/**
  * Start `n` go-ipfs instances, and stop them after `task` is done.
  * @param n - Number of go-ipfs instances to create.
  * @param task - Function that uses go-ipfs instances.
+ * @param overrideConfig - config to pass to go-ipfs
  */
-async function withGoFleet(
+export async function withFleet(
   n: number,
   task: (instances: IpfsApi[]) => Promise<void>,
   overrideConfig: Record<string, unknown> = {}
@@ -226,25 +252,5 @@ async function withGoFleet(
     await task(instances)
   } finally {
     await factory.clean()
-  }
-}
-
-/**
- * Start `n` js-ipfs instances, and stop them after `task` is done.
- * @param n - Number of js-ipfs instances to create.
- * @param task - Function that uses the IPFS instances.
- */
-async function withJsFleet(
-  n: number,
-  task: (instances: IpfsApi[]) => Promise<void>,
-  overrideConfig: Record<string, unknown> = {}
-): Promise<void> {
-  const instances = await Promise.all(
-    Array.from({ length: n }).map(() => createIPFS(overrideConfig))
-  )
-  try {
-    await task(instances)
-  } finally {
-    instances.map((instance) => instance.stop())
   }
 }

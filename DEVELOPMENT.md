@@ -1,6 +1,9 @@
 # Development
 > Getting started with development on js-ceramic
 
+## Prerequisites
+This project requires Docker to be installed and actively running in your development environment for the unit tests to run.
+
 ## Project setup
 First clone the repo:
 ```

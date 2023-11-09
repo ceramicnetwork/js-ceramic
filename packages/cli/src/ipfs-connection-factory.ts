@@ -57,6 +57,11 @@ export class IpfsConnectionFactory {
           Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`,
           API: `/ip4/127.0.0.1/tcp/${apiPort}`,
         },
+        Discovery: {
+          MDNS: {
+            Enabled: true,
+          },
+        },
         Bootstrap: [
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
@@ -65,6 +70,28 @@ export class IpfsConnectionFactory {
           '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
           '/ip4/104.131.131.82/udp/4001/quic/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
         ],
+        Peering: {
+          Peers: [
+            {
+              Addrs: [
+                '/dns4/go-ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL',
+              ],
+              ID: 'QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL',
+            },
+            {
+              Addrs: [
+                '/dns4/go-ipfs-ceramic-private-cas-mainnet-external.3boxlabs.com/tcp/4011/ws/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8',
+              ],
+              ID: 'QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8',
+            },
+            {
+              Addrs: [
+                '/dns4/go-ipfs-ceramic-private-cas-clay-external.3boxlabs.com/tcp/4011/ws/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
+              ],
+              ID: 'QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
+            },
+          ],
+        },
       },
     }
 

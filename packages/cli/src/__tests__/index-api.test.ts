@@ -90,7 +90,7 @@ test('model in query', async () => {
   })
   expect(indexSpy).toBeCalledWith({
     first: 100,
-    model: modelStreamId,
+    model: modelStreamId.toString(),
   })
 })
 test('too much entries requested: forward pagination', async () => {
@@ -119,7 +119,7 @@ test('model, account in query', async () => {
   })
   expect(indexSpy).toBeCalledWith({
     first: 100,
-    model: modelStreamId,
+    model: modelStreamId.toString(),
     account: account,
   })
 })

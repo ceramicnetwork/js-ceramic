@@ -1,5 +1,4 @@
 import type { BaseQuery, Pagination } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
 
 /**
  * Maximum number of indexing entries requested.
@@ -64,13 +63,14 @@ export function parsePagination(params: Record<string, any>): Pagination {
 /**
  * Return index query based on the query string params from HTTP request.
  *
- * @throws If parsed +query.model+ is not a valid StreamID, or if pagination is absent.
+ * @throws If pagination is absent.
  */
 export function collectionQuery(query: Record<string, any>): BaseQuery & Pagination {
   try {
     const pagination = parsePagination(query)
     return {
-      model: StreamID.fromString(query.model),
+      model: query.model,
+      models: query.models,
       account: query.account,
       filter: query.filter,
       queryFilters: query.queryFilters,
@@ -84,7 +84,8 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
 
 export function countQuery(query: Record<string, any>): BaseQuery {
   return {
-    model: StreamID.fromString(query.model),
+    model: query.model,
+    models: query.models,
     account: query.account,
     filter: query.filter,
     queryFilters: query.queryFilters,

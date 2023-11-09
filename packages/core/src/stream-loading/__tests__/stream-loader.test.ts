@@ -65,8 +65,9 @@ describe('StreamLoader querying against real Ceramic node', () => {
 
     dispatcherIpfs = await createIPFS()
     dispatcher = await createDispatcher(dispatcherIpfs, TOPIC)
-    // speed up how quickly the dispatcher gives up on loading a non-existent commit from ipfs.
-    dispatcher._ipfsTimeout = 100
+    // We need this timeout to be short enough that the non-existent lookup timesout before
+    // the test case itself timesout.
+    dispatcher._ipfsTimeout = 200
     await dispatcher.init()
 
     const logger = new LoggerProvider().getDiagnosticsLogger()

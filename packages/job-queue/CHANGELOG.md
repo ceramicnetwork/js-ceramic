@@ -3,6 +3,49 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.6.0-rc.1...@ceramicnetwork/job-queue@1.6.0) (2023-11-08)
+
+**Note:** Version bump only for package @ceramicnetwork/job-queue
+
+
+
+
+
+# [1.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.6.0-rc.0...@ceramicnetwork/job-queue@1.6.0-rc.1) (2023-11-06)
+
+
+### Bug Fixes
+
+* Pin version of @types/pg to unbreak build ([#3031](https://github.com/ceramicnetwork/js-ceramic/issues/3031)) ([270e927](https://github.com/ceramicnetwork/js-ceramic/commit/270e92737160926275a52c64dda50850c1443bbe))
+
+
+
+
+
+# [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.5.0...@ceramicnetwork/job-queue@1.6.0-rc.0) (2023-11-02)
+
+**Note:** Version bump only for package @ceramicnetwork/job-queue
+
+
+
+
+
+# [1.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.5.0-rc.0...@ceramicnetwork/job-queue@1.5.0) (2023-10-26)
+
+
+### Features
+
+* **3id-did-resolver, anchor-listener, anchor-utils, blockchain-utils-linking, blockchain-utils-validation, cli, codecs, common, core, http-client, indexing, ipfs-daemon, ipfs-topology, job-queue, logger, pinning-aggregation, pinning-crust-backend, pinning-ipfs-backend, pinning-powergate-backend, stream-caip10-link, stream-caip10-link-handler, stream-handler-common, stream-model, stream-model-handler, stream-model-instance, stream-model-instance-handler, stream-tests, stream-tile, stream-tile-handler, streamid:** upgrade to node 20 and add engine ([#3003](https://github.com/ceramicnetwork/js-ceramic/issues/3003)) ([aae5ccd](https://github.com/ceramicnetwork/js-ceramic/commit/aae5ccdcec3009e411098df434a6e29b935b74fd))
+
+
+### Reverts
+
+* Revert "feat(3id-did-resolver, anchor-listener, anchor-utils, blockchain-utils-linking, blockchain-utils-validation, cli, codecs, common, core, http-client, indexing, ipfs-daemon, ipfs-topology, job-queue, logger, pinning-aggregation, pinning-crust-backend, pinning-ipfs-backend, pinning-powergate-backend, stream-caip10-link, stream-caip10-link-handler, stream-handler-common, stream-model, stream-model-handler, stream-model-instance, stream-model-instance-handler, stream-tests, stream-tile, stream-tile-handler, streamid): upgrade to node 20 and add engine (#3003)" (#3005) ([81b525a](https://github.com/ceramicnetwork/js-ceramic/commit/81b525afbaff04060aa1b6aaed1faf3c5bb8fa81)), closes [#3003](https://github.com/ceramicnetwork/js-ceramic/issues/3003) [#3005](https://github.com/ceramicnetwork/js-ceramic/issues/3005)
+
+
+
+
+
 # [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/job-queue@1.4.0...@ceramicnetwork/job-queue@1.5.0-rc.0) (2023-10-19)
 
 **Note:** Version bump only for package @ceramicnetwork/job-queue
