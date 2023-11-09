@@ -37,21 +37,11 @@ const GET_RESPONSE = {
   state: initial,
 }
 
-const EMPTY_RESPONSE: Page<StreamState> = {
-  edges: [],
-  pageInfo: {
-    hasPreviousPage: false,
-    hasNextPage: false,
-  },
-}
 let did: DID
 let getDidFn
 let noDidFn
 let expectedKid: string
 let client: CeramicClient
-
-
-
 
 beforeEach(() => {
   jest.resetAllMocks()

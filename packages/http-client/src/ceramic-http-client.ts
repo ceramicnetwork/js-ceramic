@@ -80,7 +80,7 @@ export class CeramicClient implements CeramicApi {
   constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
-    // Regex to remove trailing slash if exists
+    // API_PATCH contains leading dot-slash, so preserves the full path
     this._apiUrl = new URL(API_PATH, apiHost)
     this.context = { api: this }
 
