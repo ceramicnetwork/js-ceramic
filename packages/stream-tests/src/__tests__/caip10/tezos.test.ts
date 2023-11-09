@@ -4,6 +4,7 @@ import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
+import HttpRequestMock from 'http-request-mock'
 
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
 
@@ -13,14 +14,12 @@ let publicKey: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-jest.unstable_mockModule('cross-fetch', () => {
-  const originalModule = jest.requireActual('cross-fetch') as any
-  const fakeFetch = async () => {
-    return new originalModule.Response(JSON.stringify({ pubkey: publicKey }))
-  }
-  return {
-    default: fakeFetch,
-  }
+const mocker = HttpRequestMock.setupForUnitTest('fetch')
+mocker.mock({
+  url: 'https://api.tzstats.com/explorer/account/',
+  body: async () => {
+    return { pubkey: publicKey }
+  },
 })
 
 beforeAll(async () => {

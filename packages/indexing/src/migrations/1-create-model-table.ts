@@ -108,8 +108,7 @@ export function defaultIndices(tableName: string): TableIndices {
  */
 export function getDefaultCDBDatabaseConfig(networkName: string): { [key: string]: any } {
   switch (networkName) {
-    case 'mainnet':
-    case 'elp': {
+    case 'mainnet': {
       return {
         enable_historical_sync: true,
         allow_queries_before_historical_sync: true,
