@@ -1,9 +1,10 @@
 import { describe, expect, jest, test } from '@jest/globals'
 import { RemoteCAS } from '../remote-cas.js'
-import { fetchJson, FetchRequest, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { fetchJson, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
+
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
 const POLL_INTERVAL = 100
@@ -40,7 +41,9 @@ describe('RemoteCAS supportedChains', () => {
       supportedChains: ['eip155:42', 'eip155:1'], 
     })) as unknown as typeof fetchJson;
     const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
-    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : {\"supportedChains\":[\"eip155:42\",\"eip155:1\"]} does not contain contain the field <supportedChains> or is of size more than 1`);
+    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
+      supportedChains: ['eip155:42', 'eip155:1'], 
+    })} does not contain contain the field <supportedChains> or is of size more than 1`);
   });
 
   test('throws an error on invalid response format, format contains a field other than `supportedChains`', async () => {
@@ -48,7 +51,9 @@ describe('RemoteCAS supportedChains', () => {
       incorrectFieldName: ['eip155:42'], 
     })) as unknown as typeof fetchJson;
     const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
-    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : {\"incorrectFieldName\":[\"eip155:42\"]} does not contain contain the field <supportedChains> or is of size more than 1`);
+    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
+      incorrectFieldName: ['eip155:42'], 
+    })} does not contain contain the field <supportedChains> or is of size more than 1`);
   });  
 
   test('throws an error on invalid response format, format contains null or empty supportedChains value', async () => {
@@ -56,13 +61,17 @@ describe('RemoteCAS supportedChains', () => {
       supportedChains: null, 
     })) as unknown as typeof fetchJson;
     const casForNull = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFnNull);
-    await expect(casForNull.supportedChains()).rejects.toThrow(`SupportedChains response : {\"supportedChains\":null} does not contain contain the field <supportedChains> or is of size more than 1`);
+    await expect(casForNull.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
+      supportedChains: null, 
+    })} does not contain contain the field <supportedChains> or is of size more than 1`);
 
     const fetchFnEmpty = jest.fn(async () => ({
       supportedChains: [], 
     })) as unknown as typeof fetchJson;
     const casForEmpty = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFnEmpty);
-    await expect(casForEmpty.supportedChains()).rejects.toThrow(`SupportedChains response : {\"supportedChains\":[]} does not contain contain the field <supportedChains> or is of size more than 1`);
+    await expect(casForEmpty.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
+      supportedChains: [], 
+    })} does not contain contain the field <supportedChains> or is of size more than 1`);
   });  
 
 });
