@@ -79,7 +79,6 @@ export class RemoteCAS implements CASClient {
   }
 
 
-  // TODO_1 : Change existing test case to one that supports the positive flow for this function
   // TODO_2 : Add test case to validate different error scenarios
   // TODO_3 : Think of a better flow than this function returning a null value, might break the caller code
   async supportedChains(): Promise<Array<string>> {

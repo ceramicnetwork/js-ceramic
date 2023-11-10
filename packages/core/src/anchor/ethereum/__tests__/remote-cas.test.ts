@@ -1,27 +1,30 @@
 import { describe, expect, jest, test } from '@jest/globals'
 import { RemoteCAS } from '../remote-cas.js'
-import { fetchJson, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { fetchJson, FetchRequest, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
-
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
 const POLL_INTERVAL = 100
 const MAX_POLL_TIME = 1000
 
-test('supportedChains', async () => {
-  const fetchFn = jest.fn(async () => {
-    return {
-      supportedChains: ['eip155:42'],
-    }
-  }) as unknown as typeof fetchJson
-  const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
-  const supportedChains = await cas.supportedChains()
-  expect(supportedChains).toEqual(['eip155:42'])
-  expect(fetchFn).toBeCalledTimes(1)
-  expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`)
-})
+
+describe('RemoteCAS supportedChains', () => {
+  test('returns decoded supported chains on valid response', async () => {
+      const fetchFn = jest.fn(async () => ({
+        supportedChains: ['eip155:42'],
+      })) as unknown as typeof fetchJson;
+      const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
+
+      const supportedChains = await cas.supportedChains();
+      console.log(supportedChains)
+      expect(supportedChains).toEqual(['eip155:42']);
+      expect(fetchFn).toBeCalledTimes(1);
+      expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`);
+  });
+});
+
 
 describe('create', () => {
   test('waitForConfirmation off', async () => {
