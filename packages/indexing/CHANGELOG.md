@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.0](/compare/@ceramicnetwork/indexing@1.5.0...@ceramicnetwork/indexing@2.0.0-rc.0) (2023-11-10)
+
+**Note:** Version bump only for package @ceramicnetwork/indexing
+
+
+
+
+
 # [1.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@1.5.0-rc.1...@ceramicnetwork/indexing@1.5.0) (2023-11-08)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing
