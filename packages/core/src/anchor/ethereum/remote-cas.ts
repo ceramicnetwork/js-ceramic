@@ -80,7 +80,6 @@ export class RemoteCAS implements CASClient {
 
 
   // TODO_2 : Add test case to validate different error scenarios
-  // TODO_3 : Think of a better flow than this function returning a null value, might break the caller code
   async supportedChains(): Promise<Array<string>> {
     const response = await this.#sendRequest(this.#chainIdApiEndpoint);
     let supportedChainsResponse = null
@@ -88,7 +87,7 @@ export class RemoteCAS implements CASClient {
       supportedChainsResponse = decode(SupportedChainsResponse, response);
     }
     catch (error){
-      throw new Error(`SupportedChains response : ${response} does not contain contain the field <supportedChains> or is of size more than 1`);
+      throw new Error(`SupportedChains response : ${JSON.stringify(response)} does not contain contain the field <supportedChains> or is of size more than 1`);
     }
     return supportedChainsResponse.supportedChains
   }

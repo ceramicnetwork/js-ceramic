@@ -18,11 +18,39 @@ describe('RemoteCAS supportedChains', () => {
       const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
 
       const supportedChains = await cas.supportedChains();
-      console.log(supportedChains)
       expect(supportedChains).toEqual(['eip155:42']);
       expect(fetchFn).toBeCalledTimes(1);
       expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`);
   });
+
+  test('returns decoded supported chains on a response that contains the field supportedChains', async () => {
+    const fetchFn = jest.fn(async () => ({
+      someOtherField: 'SomeOtherContent', 
+      supportedChains: ['eip155:42']
+    })) as unknown as typeof fetchJson;
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
+    const supportedChains = await cas.supportedChains();
+    expect(supportedChains).toEqual(['eip155:42']);
+    expect(fetchFn).toBeCalledTimes(1);
+    expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`);
+  });
+
+  test('throws an error on invalid response format, format contains a list of two supported chains current codebase only handles logic for one', async () => {
+    const fetchFn = jest.fn(async () => ({
+      supportedChains: ['eip155:42', 'eip155:1'], 
+    })) as unknown as typeof fetchJson;
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
+    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : {\"supportedChains\":[\"eip155:42\",\"eip155:1\"]} does not contain contain the field <supportedChains> or is of size more than 1`);
+  });
+
+  test('throws an error on invalid response format, format contains a field other than `supportedChains`', async () => {
+    const fetchFn = jest.fn(async () => ({
+      incorrectFieldName: ['eip155:42'], 
+    })) as unknown as typeof fetchJson;
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
+    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : {\"incorrectFieldName\":[\"eip155:42\"]} does not contain contain the field <supportedChains> or is of size more than 1`);
+  });  
+
 });
 
 
