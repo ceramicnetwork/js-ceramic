@@ -79,7 +79,6 @@ export class RemoteCAS implements CASClient {
   }
 
 
-  // TODO_2 : Add test case to validate different error scenarios
   async supportedChains(): Promise<Array<string>> {
     const response = await this.#sendRequest(this.#chainIdApiEndpoint);
     let supportedChainsResponse = null

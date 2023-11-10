@@ -3,8 +3,6 @@ import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 import { uint8ArrayAsBase64 } from './binary.js'
 import { dateAsUnix } from './date.js'
-// import { array, string, refinement, type TypeOf } from 'codeco';
-
 
 export enum AnchorRequestStatusName {
   PENDING = 'PENDING',
@@ -26,7 +24,6 @@ export const AnchorCommitPresentation = sparse(
   'AnchorCommitPresentation'
 )
 export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
-// import types only
 
 export const NotCompleteStatusName = union([
   literal(AnchorRequestStatusName.PENDING),
