@@ -51,6 +51,20 @@ describe('RemoteCAS supportedChains', () => {
     await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : {\"incorrectFieldName\":[\"eip155:42\"]} does not contain contain the field <supportedChains> or is of size more than 1`);
   });  
 
+  test('throws an error on invalid response format, format contains null or empty supportedChains value', async () => {
+    const fetchFnNull = jest.fn(async () => ({
+      supportedChains: null, 
+    })) as unknown as typeof fetchJson;
+    const casForNull = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFnNull);
+    await expect(casForNull.supportedChains()).rejects.toThrow(`SupportedChains response : {\"supportedChains\":null} does not contain contain the field <supportedChains> or is of size more than 1`);
+
+    const fetchFnEmpty = jest.fn(async () => ({
+      supportedChains: [], 
+    })) as unknown as typeof fetchJson;
+    const casForEmpty = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFnEmpty);
+    await expect(casForEmpty.supportedChains()).rejects.toThrow(`SupportedChains response : {\"supportedChains\":[]} does not contain contain the field <supportedChains> or is of size more than 1`);
+  });  
+
 });
 
 
