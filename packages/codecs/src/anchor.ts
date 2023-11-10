@@ -1,8 +1,10 @@
-import { type, string, number, sparse, optional, literal, union, type TypeOf } from 'codeco'
+import { type, string, number, sparse, optional, literal, union, refinement, array, type TypeOf } from 'codeco'
 import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 import { uint8ArrayAsBase64 } from './binary.js'
 import { dateAsUnix } from './date.js'
+// import { array, string, refinement, type TypeOf } from 'codeco';
+
 
 export enum AnchorRequestStatusName {
   PENDING = 'PENDING',
@@ -15,6 +17,7 @@ export enum AnchorRequestStatusName {
 
 /**
  * Part of CAS response that sends AnchorCommit content. Effectively a historical artefact.
+ * sparse datatype : some of the key values can be missing
  */
 export const AnchorCommitPresentation = sparse(
   {
@@ -23,6 +26,7 @@ export const AnchorCommitPresentation = sparse(
   'AnchorCommitPresentation'
 )
 export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
+// import types only
 
 export const NotCompleteStatusName = union([
   literal(AnchorRequestStatusName.PENDING),
@@ -72,3 +76,16 @@ export type ErrorResponse = TypeOf<typeof ErrorResponse>
 
 export const CASResponseOrError = union([CASResponse, ErrorResponse], 'CASResponseOrError')
 export type CASResponseOrError = TypeOf<typeof CASResponseOrError>
+
+
+export const SupportedChainsResponse = type(
+  {
+    supportedChains:   refinement(
+      array(string),
+      (chains) => chains.length === 1,
+      'supportedChains'
+    ),
+  },
+  'SupportedChainsResponse'
+)
+export type SupportedChainsResponse = TypeOf<typeof SupportedChainsResponse>

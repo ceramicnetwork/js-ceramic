@@ -1,10 +1,15 @@
 import type { CASClient } from '../anchor-service.js'
 import type { AnchorEvent, DiagnosticsLogger, FetchRequest } from '@ceramicnetwork/common'
 import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName, CASResponseOrError, ErrorResponse } from '@ceramicnetwork/codecs'
+import {
+  AnchorRequestStatusName,
+  CASResponseOrError,
+  ErrorResponse,
+  SupportedChainsResponse,
+} from '@ceramicnetwork/codecs'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
-import { validate, isValid } from 'codeco'
+import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, retry, Subject, takeUntil, timer, type Observable } from 'rxjs'
 
@@ -73,9 +78,20 @@ export class RemoteCAS implements CASClient {
     this.#stopSignal = new Subject()
   }
 
+
+  // TODO_1 : Change existing test case to one that supports the positive flow for this function
+  // TODO_2 : Add test case to validate different error scenarios
+  // TODO_3 : Think of a better flow than this function returning a null value, might break the caller code
   async supportedChains(): Promise<Array<string>> {
-    const response = await this.#sendRequest(this.#chainIdApiEndpoint)
-    return response.supportedChains as Array<string>
+    const response = await this.#sendRequest(this.#chainIdApiEndpoint);
+    const supportedChainsResponse = null
+    try {
+      const supportedChainsResponse = decode(SupportedChainsResponse, { hello: [ 'eip155:42' ], steph: "want to see" });
+    }
+    catch (error){
+      throw new Error(`SupportedChains response : ${response} does not contain contain the field <supportedChains> or is of size more than 1`);
+    }
+    return supportedChainsResponse
   }
 
   async create(
