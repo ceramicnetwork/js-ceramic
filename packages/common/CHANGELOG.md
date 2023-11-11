@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.39.0...@ceramicnetwork/common@3.0.0-rc.0) (2023-11-10)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.39.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.39.0-rc.0...@ceramicnetwork/common@2.39.0) (2023-11-08)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [2.39.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.38.0...@ceramicnetwork/common@2.39.0-rc.0) (2023-11-02)
+
+
+### Features
+
+* **cli,common,indexing:** support interfaces queries ([#3011](https://github.com/ceramicnetwork/js-ceramic/issues/3011)) ([620babd](https://github.com/ceramicnetwork/js-ceramic/commit/620babde2ca913f4571a44a529270b893a1c6668))
+
+
+
+
+
 # [2.38.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.38.0-rc.0...@ceramicnetwork/common@2.38.0) (2023-10-26)
 
 

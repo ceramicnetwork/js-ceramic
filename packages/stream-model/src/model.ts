@@ -21,7 +21,7 @@ import { identity } from 'multiformats/hashes/identity'
 import { asDIDString } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
-import { ModelDefinition, type ModelMetadata, ModelRelationsDefinition } from './codecs.js'
+import { ModelDefinition, type ModelMetadata, ModelRelationsDefinitionV2 } from './codecs.js'
 
 export type LoaderApi = CeramicApi | CeramicCoreApi
 
@@ -219,7 +219,7 @@ export class Model extends Stream {
    */
   static assertRelationsValid(content: ModelDefinition) {
     if (content.relations != null) {
-      decode(ModelRelationsDefinition, content.relations)
+      decode(ModelRelationsDefinitionV2, content.relations)
     }
   }
 

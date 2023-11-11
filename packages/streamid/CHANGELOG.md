@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0-rc.0](/compare/@ceramicnetwork/streamid@2.17.0...@ceramicnetwork/streamid@3.0.0-rc.0) (2023-11-10)
+
+
+### Features
+
+* **3id-did-resolver, anchor-listener, anchor-utils, blockchain-utils-linking, blockchain-utils-validation, cli, codecs, common, core, http-client, indexing, ipfs-daemon, ipfs-topology, job-queue, logger, pinning-aggregation, pinning-crust-backend, pinning-ipfs-backend, pinning-powergate-backend, stream-caip10-link, stream-caip10-link-handler, stream-handler-common, stream-model, stream-model-handler, stream-model-instance, stream-model-instance-handler, stream-tests, stream-tile, stream-tile-handler, streamid:** upgrade to node 20 and add engine (#3003) aae5ccd, closes #3003
+
+
+### Reverts
+
+* Revert "feat(3id-did-resolver, anchor-listener, anchor-utils, blockchain-utils-linking, blockchain-utils-validation, cli, codecs, common, core, http-client, indexing, ipfs-daemon, ipfs-topology, job-queue, logger, pinning-aggregation, pinning-crust-backend, pinning-ipfs-backend, pinning-powergate-backend, stream-caip10-link, stream-caip10-link-handler, stream-handler-common, stream-model, stream-model-handler, stream-model-instance, stream-model-instance-handler, stream-tests, stream-tile, stream-tile-handler, streamid): upgrade to node 20 and add engine (#3003)" (#3005) 81b525a, closes #3003 #3005
+
+
+
+
+
 # [2.17.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@2.17.0-rc.0...@ceramicnetwork/streamid@2.17.0) (2023-07-31)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid

@@ -48,18 +48,6 @@ export class StreamStateStore extends ObjectStore<StreamID, StreamState> {
   }
 
   async open(store: IKVStore): Promise<void> {
-    if (store.networkName == Networks.MAINNET || store.networkName == Networks.ELP) {
-      // If using "mainnet", check for data under an 'elp' directory first. This is because older
-      // versions of Ceramic only supported an 'elp' network as an alias for mainnet and stored
-      // state store data under 'elp' instead of 'mainnet' by mistake, and we don't want to lose
-      // that data if it exists.
-      const hasPinnedStreams = !(await store.isEmpty())
-      if (hasPinnedStreams) {
-        this.#logger.verbose(
-          `Detected existing state store data under 'elp' directory. Continuing to use 'elp' directory to store state store data`
-        )
-      }
-    }
     return super.open(store)
   }
 

@@ -5,7 +5,6 @@ const DEFAULT_NETWORK = Networks.INMEMORY
 
 const TOPIC_BY_NETWORK = {
   [Networks.MAINNET]: '/ceramic/mainnet',
-  [Networks.ELP]: '/ceramic/mainnet',
   [Networks.TESTNET_CLAY]: '/ceramic/testnet-clay',
   [Networks.DEV_UNSTABLE]: '/ceramic/dev-unstable',
   // Default to a random pub/sub topic so that local deployments are isolated from each other

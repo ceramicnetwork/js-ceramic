@@ -6,7 +6,7 @@ import type { LoggerProvider } from './logger-provider.js'
 import type { GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
 import { NodeStatusResponse } from './node-status-interface.js'
-import type { AnchorStatus } from '@ceramicnetwork/common'
+import type { AnchorStatus } from './stream.js'
 
 /**
  * Field definition for index
@@ -251,12 +251,6 @@ export interface MultiQuery {
    * An array of paths used to look for linked stream
    */
   paths?: Array<string>
-
-  /**
-   * Load a previous version of the stream based on unix timestamp.
-   * @deprecated Use opts.atTime instead.
-   */
-  atTime?: number // TODO(CDB-2417): Remove this
 
   /**
    * Additional options for the loadStream operation.

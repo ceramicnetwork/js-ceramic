@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.33.0...@ceramicnetwork/ipfs-topology@3.0.0-rc.0) (2023-11-10)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [2.33.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.33.0-rc.1...@ceramicnetwork/ipfs-topology@2.33.0) (2023-11-08)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [2.33.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.33.0-rc.0...@ceramicnetwork/ipfs-topology@2.33.0-rc.1) (2023-11-06)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [2.33.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.32.0...@ceramicnetwork/ipfs-topology@2.33.0-rc.0) (2023-11-02)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
 # [2.32.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.32.0-rc.1...@ceramicnetwork/ipfs-topology@2.32.0) (2023-10-26)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology

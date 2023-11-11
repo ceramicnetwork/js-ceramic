@@ -54,66 +54,6 @@ describe('multiquery API http-client tests', () => {
     expect(Math.abs(expectedTimestamp - givenTimestamp)).toBeLessThan(5)
   }
 
-  it('loads the same stream at multiple points in time using atTime', async () => {
-    const streamTimestamps = []
-    const streamStates = []
-    const stream = await TileDocument.create(ceramic, { test: '321f' })
-
-    // test data for the atTime feature
-    streamStates.push(stream.state)
-    // timestamp before the first anchor commit
-    streamTimestamps.push(Math.floor(Date.now() / 1000))
-    advanceTime()
-    await stream.update({ ...stream.content, update: 'new stuff' })
-    await TestUtils.anchorUpdate(core, stream)
-    advanceTime()
-    // timestamp between the first and the second anchor commit
-    streamTimestamps.push(Math.floor(Date.now() / 1000))
-    streamStates.push(stream.state)
-    advanceTime()
-    await stream.update({ ...stream.content, update: 'newer stuff' })
-    await TestUtils.anchorUpdate(core, stream)
-    advanceTime()
-    // timestamp after the second anchor commit
-    streamTimestamps.push(Math.floor(Date.now() / 1000))
-    streamStates.push(stream.state)
-
-    const queries = [
-      {
-        streamId: stream.id,
-        atTime: streamTimestamps[0],
-      },
-      {
-        streamId: stream.id,
-        atTime: streamTimestamps[1],
-      },
-      {
-        streamId: stream.id,
-        atTime: streamTimestamps[2],
-      },
-      {
-        streamId: stream.id,
-      },
-    ]
-    const streams = await ceramic.multiQuery(queries)
-    const states = Object.values(streams).map((stream) => stream.state)
-    expect(states.length).toEqual(4)
-    // annoying thing, was pending when snapshotted but will
-    // obviously not be when loaded at a specific commit
-    streamStates[0].anchorStatus = 0
-
-    // first stream state didn't have an anchor timestamp when it was added to the streamStates
-    // array, but it does get a timestamp after being anchored
-    // Assert that the timestamp it got from being anchored is within 10 seconds of when it was created
-    expectTimestampsClose(states[0].log[0].timestamp, streamTimestamps[0])
-    delete states[0].log[0].timestamp
-
-    expect(states[0]).toEqual(streamStates[0])
-    expect(states[1]).toEqual(streamStates[1])
-    expect(states[2]).toEqual(streamStates[2])
-    expect(states[3]).toEqual(stream.state)
-  }, 60000)
-
   it('loads the same stream at multiple points in time using opts.atTime', async () => {
     const streamTimestamps = []
     const streamStates = []

@@ -24,7 +24,6 @@ program
     '--state-store-s3-bucket <string>',
     `The S3 bucket name to use for state store. If not provided data will only be saved locally but not to S3. Deprecated.`
   )
-  .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
   .option('--port <int>', 'Port daemon is available on. Default is 7007')
   .option('--hostname <string>', 'Host daemon is available on. Default is 0.0.0.0')
   .option('--debug', 'Enable debug logging level. Default is false')
@@ -48,6 +47,10 @@ program
     'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache". Deprecated.'
   )
   .option('--disable-composedb', 'Run node without ComposeDB indexing enabled.')
+  .option(
+    '--read-only',
+    'Disables http endpoints that perform writes, making the node effective for reading data from the network but not for writing to it.  It is disabled by default'
+  )
   .description('Start the daemon')
   .action(
     async ({
@@ -58,7 +61,6 @@ program
       ipfsPinningEndpoint,
       stateStoreDirectory,
       stateStoreS3Bucket,
-      gateway,
       port,
       hostname,
       debug,
@@ -72,6 +74,7 @@ program
       corsAllowedOrigins,
       syncOverride,
       disableComposedb,
+      readOnly,
     }) => {
       await CeramicCliUtils.createDaemon(
         config,
@@ -81,7 +84,6 @@ program
         ipfsPinningEndpoint,
         stateStoreDirectory,
         stateStoreS3Bucket,
-        gateway,
         port,
         hostname,
         debug,
@@ -94,7 +96,8 @@ program
         pubsubTopic,
         corsAllowedOrigins,
         syncOverride,
-        disableComposedb
+        disableComposedb,
+        readOnly
       ).catch((err: Error) => {
         console.error('Ceramic daemon failed to start up:')
         if (err instanceof StartupError) {
