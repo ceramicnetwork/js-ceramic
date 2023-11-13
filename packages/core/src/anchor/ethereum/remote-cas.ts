@@ -78,17 +78,18 @@ export class RemoteCAS implements CASClient {
     this.#stopSignal = new Subject()
   }
 
-
   async supportedChains(): Promise<Array<string>> {
-    const response = await this.#sendRequest(this.#chainIdApiEndpoint);
-    let supportedChainsResponse = null
+    const response = await this.#sendRequest(this.#chainIdApiEndpoint)
     try {
-      supportedChainsResponse = decode(SupportedChainsResponse, response);
+      const supportedChainsResponse = decode(SupportedChainsResponse, response)
+      return supportedChainsResponse.supportedChains
+    } catch (error) {
+      throw new Error(
+        `SupportedChains response : ${JSON.stringify(
+          response
+        )} does not contain contain the field <supportedChains> or is of size more than 1`
+      )
     }
-    catch (error){
-      throw new Error(`SupportedChains response : ${JSON.stringify(response)} does not contain contain the field <supportedChains> or is of size more than 1`);
-    }
-    return supportedChainsResponse.supportedChains
   }
 
   async create(

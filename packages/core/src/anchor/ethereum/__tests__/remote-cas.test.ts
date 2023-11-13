@@ -10,72 +10,89 @@ const LOGGER = new LoggerProvider().getDiagnosticsLogger()
 const POLL_INTERVAL = 100
 const MAX_POLL_TIME = 1000
 
-
 describe('RemoteCAS supportedChains', () => {
   test('returns decoded supported chains on valid response', async () => {
-      const fetchFn = jest.fn(async () => ({
-        supportedChains: ['eip155:42'],
-      })) as unknown as typeof fetchJson;
-      const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
+    const fetchFn = jest.fn(async () => ({
+      supportedChains: ['eip155:42'],
+    })) as unknown as typeof fetchJson
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
 
-      const supportedChains = await cas.supportedChains();
-      expect(supportedChains).toEqual(['eip155:42']);
-      expect(fetchFn).toBeCalledTimes(1);
-      expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`);
-  });
+    const supportedChains = await cas.supportedChains()
+    expect(supportedChains).toEqual(['eip155:42'])
+    expect(fetchFn).toBeCalledTimes(1)
+    expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`)
+  })
 
   test('returns decoded supported chains on a response that contains the field supportedChains', async () => {
     const fetchFn = jest.fn(async () => ({
-      someOtherField: 'SomeOtherContent', 
-      supportedChains: ['eip155:42']
-    })) as unknown as typeof fetchJson;
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
-    const supportedChains = await cas.supportedChains();
-    expect(supportedChains).toEqual(['eip155:42']);
-    expect(fetchFn).toBeCalledTimes(1);
-    expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`);
-  });
+      someOtherField: 'SomeOtherContent',
+      supportedChains: ['eip155:42'],
+    })) as unknown as typeof fetchJson
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    const supportedChains = await cas.supportedChains()
+    expect(supportedChains).toEqual(['eip155:42'])
+    expect(fetchFn).toBeCalledTimes(1)
+    expect(fetchFn).toBeCalledWith(`${ANCHOR_SERVICE_URL}/api/v0/service-info/supported_chains`)
+  })
 
   test('throws an error on invalid response format, format contains a list of two supported chains current codebase only handles logic for one', async () => {
     const fetchFn = jest.fn(async () => ({
-      supportedChains: ['eip155:42', 'eip155:1'], 
-    })) as unknown as typeof fetchJson;
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
-    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
-      supportedChains: ['eip155:42', 'eip155:1'], 
-    })} does not contain contain the field <supportedChains> or is of size more than 1`);
-  });
+      supportedChains: ['eip155:42', 'eip155:1'],
+    })) as unknown as typeof fetchJson
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    await expect(cas.supportedChains()).rejects.toThrow(
+      `SupportedChains response : ${JSON.stringify({
+        supportedChains: ['eip155:42', 'eip155:1'],
+      })} does not contain contain the field <supportedChains> or is of size more than 1`
+    )
+  })
 
   test('throws an error on invalid response format, format contains a field other than `supportedChains`', async () => {
     const fetchFn = jest.fn(async () => ({
-      incorrectFieldName: ['eip155:42'], 
-    })) as unknown as typeof fetchJson;
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn);
-    await expect(cas.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
-      incorrectFieldName: ['eip155:42'], 
-    })} does not contain contain the field <supportedChains> or is of size more than 1`);
-  });  
+      incorrectFieldName: ['eip155:42'],
+    })) as unknown as typeof fetchJson
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    await expect(cas.supportedChains()).rejects.toThrow(
+      `SupportedChains response : ${JSON.stringify({
+        incorrectFieldName: ['eip155:42'],
+      })} does not contain contain the field <supportedChains> or is of size more than 1`
+    )
+  })
 
   test('throws an error on invalid response format, format contains null or empty supportedChains value', async () => {
     const fetchFnNull = jest.fn(async () => ({
-      supportedChains: null, 
-    })) as unknown as typeof fetchJson;
-    const casForNull = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFnNull);
-    await expect(casForNull.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
-      supportedChains: null, 
-    })} does not contain contain the field <supportedChains> or is of size more than 1`);
+      supportedChains: null,
+    })) as unknown as typeof fetchJson
+    const casForNull = new RemoteCAS(
+      ANCHOR_SERVICE_URL,
+      LOGGER,
+      POLL_INTERVAL,
+      MAX_POLL_TIME,
+      fetchFnNull
+    )
+    await expect(casForNull.supportedChains()).rejects.toThrow(
+      `SupportedChains response : ${JSON.stringify({
+        supportedChains: null,
+      })} does not contain contain the field <supportedChains> or is of size more than 1`
+    )
 
     const fetchFnEmpty = jest.fn(async () => ({
-      supportedChains: [], 
-    })) as unknown as typeof fetchJson;
-    const casForEmpty = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFnEmpty);
-    await expect(casForEmpty.supportedChains()).rejects.toThrow(`SupportedChains response : ${JSON.stringify({
-      supportedChains: [], 
-    })} does not contain contain the field <supportedChains> or is of size more than 1`);
-  });  
-
-});
-
+      supportedChains: [],
+    })) as unknown as typeof fetchJson
+    const casForEmpty = new RemoteCAS(
+      ANCHOR_SERVICE_URL,
+      LOGGER,
+      POLL_INTERVAL,
+      MAX_POLL_TIME,
+      fetchFnEmpty
+    )
+    await expect(casForEmpty.supportedChains()).rejects.toThrow(
+      `SupportedChains response : ${JSON.stringify({
+        supportedChains: [],
+      })} does not contain contain the field <supportedChains> or is of size more than 1`
+    )
+  })
+})
 
 describe('create', () => {
   test('waitForConfirmation off', async () => {

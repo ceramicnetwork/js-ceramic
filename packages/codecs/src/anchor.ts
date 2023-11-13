@@ -1,4 +1,15 @@
-import { type, string, number, sparse, optional, literal, union, refinement, array, type TypeOf } from 'codeco'
+import {
+  type,
+  string,
+  number,
+  sparse,
+  optional,
+  literal,
+  union,
+  refinement,
+  array,
+  type TypeOf,
+} from 'codeco'
 import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 import { uint8ArrayAsBase64 } from './binary.js'
@@ -74,14 +85,9 @@ export type ErrorResponse = TypeOf<typeof ErrorResponse>
 export const CASResponseOrError = union([CASResponse, ErrorResponse], 'CASResponseOrError')
 export type CASResponseOrError = TypeOf<typeof CASResponseOrError>
 
-
 export const SupportedChainsResponse = type(
   {
-    supportedChains:   refinement(
-      array(string),
-      (chains) => chains.length === 1,
-      'supportedChains'
-    ),
+    supportedChains: refinement(array(string), (chains) => chains.length === 1, 'supportedChains'),
   },
   'SupportedChainsResponse'
 )
