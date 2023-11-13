@@ -29,13 +29,13 @@ describe('parsePagination', () => {
 })
 
 describe('collectionQuery', () => {
-  const model = new StreamID(1, TestUtils.randomCID()).toString()
+  const models = [new StreamID(1, TestUtils.randomCID()).toString()]
   test('parse model', () => {
-    const parsed = collectionQuery({ first: 10, model })
-    expect(parsed).toEqual({ first: 10, model })
+    const parsed = collectionQuery({ first: 10, models })
+    expect(parsed).toEqual({ first: 10, models })
   })
   test('pass account', () => {
-    const parsed = collectionQuery({ first: 10, model, account: 'did:key:foo' })
-    expect(parsed).toEqual({ first: 10, model: model, account: 'did:key:foo' })
+    const parsed = collectionQuery({ first: 10, models, account: 'did:key:foo' })
+    expect(parsed).toEqual({ first: 10, models, account: 'did:key:foo' })
   })
 })

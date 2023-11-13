@@ -75,7 +75,7 @@ test('count', async () => {
   const returnCount = Math.random()
   indexSpy.mockReturnValueOnce(Promise.resolve(returnCount))
   const query = {
-    model: modelStreamId,
+    models: [modelStreamId],
   }
   const result = await client.index.count(query)
   expect(result).toEqual(returnCount)
@@ -85,18 +85,18 @@ test('count', async () => {
 test('model in query', async () => {
   const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
   await client.index.query({
-    model: modelStreamId,
+    models: [modelStreamId],
     first: 100,
   })
   expect(indexSpy).toBeCalledWith({
     first: 100,
-    model: modelStreamId.toString(),
+    models: [modelStreamId.toString()],
   })
 })
 test('too much entries requested: forward pagination', async () => {
   await expect(
     client.index.query({
-      model: modelStreamId,
+      models: [modelStreamId],
       first: 20000,
     })
   ).rejects.toThrow(/Requested too many entries: 20000/)
@@ -104,7 +104,7 @@ test('too much entries requested: forward pagination', async () => {
 test('too much entries requested: forward pagination', async () => {
   await expect(
     client.index.query({
-      model: modelStreamId,
+      models: [modelStreamId],
       last: 20000,
     })
   ).rejects.toThrow(/Requested too many entries: 20000/)
@@ -113,13 +113,13 @@ test('model, account in query', async () => {
   const account = `did:key:${randomString(10)}`
   const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
   await client.index.query({
-    model: modelStreamId,
+    models: [modelStreamId],
     account: account,
     first: 100,
   })
   expect(indexSpy).toBeCalledWith({
     first: 100,
-    model: modelStreamId.toString(),
+    models: [modelStreamId.toString()],
     account: account,
   })
 })
@@ -154,7 +154,7 @@ test('serialize StreamState', async () => {
   }
   // It gets serialized
   const response = await client.index.query({
-    model: modelStreamId,
+    models: [modelStreamId],
     first: 100,
   })
   // const response = await fetchJson(query.toString())
