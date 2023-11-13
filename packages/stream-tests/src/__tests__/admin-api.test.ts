@@ -113,7 +113,7 @@ describe('Admin API tests', () => {
       let indexedModels = await ceramic.admin.getIndexedModels()
       expect(indexedModels.length).toEqual(0)
 
-      await expect(ceramic.index.count({ model: model.id })).rejects.toThrow(
+      await expect(ceramic.index.count({ models: [model.id] })).rejects.toThrow(
         /is not indexed on this node/
       )
 
@@ -123,19 +123,19 @@ describe('Admin API tests', () => {
       expect(indexedModels.length).toEqual(1)
 
       // Doesn't know about the doc created before the model was indexed
-      await expect(ceramic.index.count({ model: model.id })).resolves.toEqual(0)
+      await expect(ceramic.index.count({ models: [model.id] })).resolves.toEqual(0)
       await ModelInstanceDocument.create(ceramic, CONTENT0, { model: model.id })
-      await expect(ceramic.index.count({ model: model.id })).resolves.toEqual(1)
+      await expect(ceramic.index.count({ models: [model.id] })).resolves.toEqual(1)
       // Discovers the first doc when it is updated
       ceramic.did = nonAdminDid // Set did back to the stream controller so it can be updated
       await doc1.replace(CONTENT1)
-      await expect(ceramic.index.count({ model: model.id })).resolves.toEqual(2)
+      await expect(ceramic.index.count({ models: [model.id] })).resolves.toEqual(2)
 
       // Now stop indexing the model
       ceramic.did = adminDid
       await ceramic.admin.stopIndexingModels([model.id])
 
-      await expect(ceramic.index.count({ model: model.id })).rejects.toThrow(
+      await expect(ceramic.index.count({ models: [model.id] })).rejects.toThrow(
         /is not indexed on this node/
       )
     })
@@ -150,7 +150,7 @@ describe('Admin API tests', () => {
       let indexedModels = await ceramic.admin.getIndexedModelData()
       expect(indexedModels.length).toEqual(0)
 
-      await expect(ceramic.index.count({ model: model.id })).rejects.toThrow(
+      await expect(ceramic.index.count({ models: [model.id] })).rejects.toThrow(
         /is not indexed on this node/
       )
 
@@ -165,19 +165,19 @@ describe('Admin API tests', () => {
       expect(indexedModels.length).toEqual(1)
 
       // Doesn't know about the doc created before the model was indexed
-      await expect(ceramic.index.count({ model: model.id })).resolves.toEqual(0)
+      await expect(ceramic.index.count({ models: [model.id] })).resolves.toEqual(0)
       await ModelInstanceDocument.create(ceramic, CONTENT0, { model: model.id })
-      await expect(ceramic.index.count({ model: model.id })).resolves.toEqual(1)
+      await expect(ceramic.index.count({ models: [model.id] })).resolves.toEqual(1)
       // Discovers the first doc when it is updated
       ceramic.did = nonAdminDid // Set did back to the stream controller so it can be updated
       await doc1.replace(CONTENT1)
-      await expect(ceramic.index.count({ model: model.id })).resolves.toEqual(2)
+      await expect(ceramic.index.count({ models: [model.id] })).resolves.toEqual(2)
 
       // Now stop indexing the model
       ceramic.did = adminDid
       await ceramic.admin.stopIndexingModels([model.id])
 
-      await expect(ceramic.index.count({ model: model.id })).rejects.toThrow(
+      await expect(ceramic.index.count({ models: [model.id] })).rejects.toThrow(
         /is not indexed on this node/
       )
     })

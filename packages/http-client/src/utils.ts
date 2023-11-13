@@ -32,7 +32,9 @@ export function serializeObjectToSearchParams(
 export function serializeObjectForHttpPost(query: Record<string, any>): Record<string, any> {
   const result = {}
   for (const [key, value] of Object.entries(query)) {
-    if (StreamID.isInstance(value)) {
+    if (Array.isArray(value)) {
+      result[key] = value.map((v) => (StreamID.isInstance(v) ? v.toString() : v))
+    } else if (StreamID.isInstance(value)) {
       result[key] = value.toString()
     } else {
       result[key] = value

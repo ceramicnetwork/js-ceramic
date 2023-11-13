@@ -915,14 +915,14 @@ and indexname in (${expectedIndices});
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
       indexApi.insertionOrder.page = mockPage
-      await indexApi.page({ model: STREAM_ID_A, first: 100 })
+      await indexApi.page({ models: [STREAM_ID_A], first: 100 })
       expect(mockPage).toBeCalled()
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
       indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
-      await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
+      await expect(indexApi.page({ models: [STREAM_ID_A], first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )
     })
@@ -947,11 +947,11 @@ and indexname in (${expectedIndices});
         await indexApi.indexStream(row)
       }
       // all
-      await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+      await expect(indexApi.count({ models: [MODEL] })).resolves.toEqual(rows.length)
       // by account
       const account = 'did:key:blah'
       const expected = rows.filter((r) => r.controller === account).length
-      await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
+      await expect(indexApi.count({ models: [MODEL], account: account })).resolves.toEqual(expected)
     })
   })
 })
@@ -1696,14 +1696,14 @@ and name in (${expectedIndices})
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
       indexApi.insertionOrder.page = mockPage
-      await indexApi.page({ model: STREAM_ID_A, first: 100 })
+      await indexApi.page({ models: [STREAM_ID_A], first: 100 })
       expect(mockPage).toBeCalled()
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
       indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
-      await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
+      await expect(indexApi.page({ models: [STREAM_ID_A], first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )
     })
@@ -1728,11 +1728,11 @@ and name in (${expectedIndices})
         await indexApi.indexStream(row)
       }
       // all
-      await expect(indexApi.count({ model: MODEL })).resolves.toEqual(rows.length)
+      await expect(indexApi.count({ models: [MODEL] })).resolves.toEqual(rows.length)
       // by account
       const account = 'did:key:blah'
       const expected = rows.filter((r) => r.controller === account).length
-      await expect(indexApi.count({ model: MODEL, account: account })).resolves.toEqual(expected)
+      await expect(indexApi.count({ models: [MODEL], account: account })).resolves.toEqual(expected)
     })
   })
 })

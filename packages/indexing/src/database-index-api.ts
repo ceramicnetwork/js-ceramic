@@ -322,21 +322,13 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   abstract getCountFromResult(response: Array<Record<string, string | number>>): number
 
   async getQueryModels(query: BaseQuery): Promise<Set<string>> {
-    let ids: Array<StreamID | string> = []
-    // Use models array by default, but may not be provided by older clients
-    if (Array.isArray(query.models) && query.models.length !== 0) {
-      ids = query.models
-    } else if (query.model != null) {
-      // Fallback to single model
-      ids = [query.model]
-    } else {
-      // As neither the models or model values are required, it's possible no model is provided
-      throw new Error(`Missing "models" values to execute query`)
+    if (query.models.length === 0) {
+      throw new Error(`At least one model must be provided to execute query`)
     }
 
     // Collect all models implementing interfaces
     const models = new Set<string>()
-    for (const modelID of ids) {
+    for (const modelID of query.models) {
       const id = modelID.toString()
       const interfaceModels = this.#interfacesModels[id]
       if (interfaceModels == null) {

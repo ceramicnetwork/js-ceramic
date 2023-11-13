@@ -292,7 +292,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       // Indexed streams should always get pinned, regardless of the 'pin' flag
       await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
 
-      const resultObj = await ceramic.index.query({ model: model.id, first: 100 })
+      const resultObj = await ceramic.index.query({ models: [model.id], first: 100 })
       const results = extractDocuments(ceramic, resultObj)
 
       expect(results.length).toEqual(1)
@@ -303,7 +303,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
     test("query a model that isn't indexed", async () => {
       await expect(
-        ceramic.index.query({ model: UNINDEXED_MODEL_STREAM_ID, first: 100 })
+        ceramic.index.query({ models: [UNINDEXED_MODEL_STREAM_ID], first: 100 })
       ).rejects.toThrow(/is not indexed on this node/)
     })
 
@@ -319,11 +319,11 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     })
 
     test('basic count query', async () => {
-      await expect(ceramic.index.count({ model: model.id.toString() })).resolves.toEqual(0)
+      await expect(ceramic.index.count({ models: [model.id.toString()] })).resolves.toEqual(0)
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      await expect(ceramic.index.count({ model: model.id.toString() })).resolves.toEqual(1)
+      await expect(ceramic.index.count({ models: [model.id.toString()] })).resolves.toEqual(1)
       await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-      await expect(ceramic.index.count({ model: model.id.toString() })).resolves.toEqual(2)
+      await expect(ceramic.index.count({ models: [model.id.toString()] })).resolves.toEqual(2)
 
       // Use a different model
       await ModelInstanceDocument.create(
@@ -332,15 +332,15 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         midRelationMetadata
       )
       await expect(
-        ceramic.index.count({ model: modelWithRelation.id.toString() })
+        ceramic.index.count({ models: [modelWithRelation.id.toString()] })
       ).resolves.toEqual(1)
 
       // Creating a document in a different model doesn't affect the count
-      await expect(ceramic.index.count({ model: model.id.toString() })).resolves.toEqual(2)
+      await expect(ceramic.index.count({ models: [model.id.toString()] })).resolves.toEqual(2)
     })
 
     test("count query on a model that isn't indexed", async () => {
-      await expect(ceramic.index.count({ model: UNINDEXED_MODEL_STREAM_ID })).rejects.toThrow(
+      await expect(ceramic.index.count({ models: [UNINDEXED_MODEL_STREAM_ID] })).rejects.toThrow(
         /is not indexed on this node/
       )
     })
@@ -351,7 +351,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
-      const resultObj = await ceramic.index.query({ model: model.id, first: 100 })
+      const resultObj = await ceramic.index.query({ models: [model.id], first: 100 })
       const results = extractDocuments(ceramic, resultObj)
 
       expect(results.length).toEqual(3)
@@ -371,16 +371,16 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({ model: model.id, first: 2 })
+      const resultObj0 = await ceramic.index.query({ models: [model.id], first: 2 })
       expect(resultObj0.pageInfo.hasNextPage).toBeTruthy()
       const resultObj1 = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         first: 2,
         after: resultObj0.pageInfo.endCursor,
       })
       expect(resultObj1.pageInfo.hasNextPage).toBeTruthy()
       const resultObj2 = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         first: 2,
         after: resultObj1.pageInfo.endCursor,
       })
@@ -411,7 +411,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
       const doc3 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
-      const resultObj = await ceramic.index.query({ model: model.id, last: 100 })
+      const resultObj = await ceramic.index.query({ models: [model.id], last: 100 })
       const results = extractDocuments(ceramic, resultObj)
 
       // Using `last` doesn't change the order of documents returned within each page
@@ -432,16 +432,16 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
-      const resultObj0 = await ceramic.index.query({ model: model.id, last: 2 })
+      const resultObj0 = await ceramic.index.query({ models: [model.id], last: 2 })
       expect(resultObj0.pageInfo.hasPreviousPage).toBeTruthy()
       const resultObj1 = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         last: 2,
         before: resultObj0.pageInfo.startCursor,
       })
       expect(resultObj1.pageInfo.hasPreviousPage).toBeTruthy()
       const resultObj2 = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         last: 2,
         before: resultObj1.pageInfo.startCursor,
       })
@@ -478,7 +478,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myData: { equalTo: 3 } },
         },
@@ -502,7 +502,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc4 = await ModelInstanceDocument.create(ceramic, CONTENT3, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myString: { isNull: false } },
         },
@@ -527,7 +527,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT4, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myString: { equalTo: 'b' } },
         },
@@ -552,7 +552,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myString: { in: ['a', 'c'] } },
         },
@@ -578,7 +578,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           or: [{ where: { myData: { equalTo: 2 } } }, { where: { myData: { equalTo: 3 } } }],
         },
@@ -601,7 +601,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           not: { where: { myData: { equalTo: 3 } } },
         },
@@ -629,7 +629,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myData: { in: [3] } },
         },
@@ -654,7 +654,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myFloat: { greaterThan: 1.2 } },
         },
@@ -679,7 +679,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: { myFloat: { greaterThan: 1.0 } },
         },
@@ -704,7 +704,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const resultObj0 = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         last: 5,
         queryFilters: {
           where: {
@@ -718,7 +718,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       expect(JSON.stringify(results0[0].content)).toEqual(JSON.stringify(doc5.content))
 
       const countResults = await ceramic.index.count({
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: {
             myData: { equalTo: 6 },
@@ -737,7 +737,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
       await expect(
         ceramic.index.query({
-          model: model.id,
+          models: [model.id],
           last: 5,
           queryFilters: {
             where: {
@@ -756,7 +756,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
       await expect(
         ceramic.index.count({
-          model: model.id,
+          models: [model.id],
           queryFilters: {
             and: [
               {
@@ -778,7 +778,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const baseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           where: {
             myString: { in: ['a', 'b'] },
@@ -807,7 +807,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
       await expect(
         ceramic.index.query({
-          model: model.id,
+          models: [model.id],
           last: 5,
           queryFilters: {
             where: {
@@ -820,7 +820,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
       await expect(
         ceramic.index.count({
-          model: model.id,
+          models: [model.id],
           queryFilters: {
             where: {
               myString: { in: ['a', 'b'] },
@@ -839,7 +839,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           not: {
             or: [{ where: { myData: { equalTo: 3 } } }, { where: { myString: { equalTo: 'b' } } }],
@@ -867,7 +867,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const basequery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           not: {
             and: [{ where: { myData: { equalTo: 3 } } }, { where: { myString: { equalTo: 'b' } } }],
@@ -894,7 +894,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc5 = await ModelInstanceDocument.create(ceramic, CONTENT5, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           not: {
             where: {
@@ -927,7 +927,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           or: [
             {
@@ -970,7 +970,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc6 = await ModelInstanceDocument.create(ceramic, CONTENT6, midMetadata)
 
       const baseQuery: BaseQuery = {
-        model: model.id,
+        models: [model.id],
         queryFilters: {
           and: [
             {
@@ -1010,7 +1010,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
 
       const resultObj = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         sorting: { myData: 'ASC' },
         first: 100,
       })
@@ -1028,7 +1028,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
 
       const resultObj = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         sorting: { myData: 'DESC' },
         first: 100,
       })
@@ -1046,7 +1046,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
 
       const resultObj = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         sorting: { myData: 'ASC' },
         last: 100,
       })
@@ -1064,7 +1064,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const doc2 = await ModelInstanceDocument.create(ceramic, CONTENT2, midMetadata)
 
       const resultObj = await ceramic.index.query({
-        model: model.id,
+        models: [model.id],
         sorting: { myData: 'DESC' },
         last: 100,
       })
@@ -1086,7 +1086,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
-        model: model.id,
+        models: [model.id],
         queryFilters: { where: { myString: { isNull: false } } },
         sorting: { myString: 'ASC' },
         first: 2,
@@ -1123,7 +1123,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
-        model: model.id,
+        models: [model.id],
         queryFilters: { where: { myString: { isNull: false } } },
         sorting: { myString: 'DESC' },
         first: 2,
@@ -1160,7 +1160,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
-        model: model.id,
+        models: [model.id],
         queryFilters: { where: { myString: { isNull: false } } },
         sorting: { myString: 'ASC' }, // Need to flip to DESC in query
         last: 2,
@@ -1197,7 +1197,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       const [b1id, b2id] = [doc3.id.toString(), doc6.id.toString()].sort()
 
       const query = {
-        model: model.id,
+        models: [model.id],
         queryFilters: { where: { myString: { isNull: false } } },
         sorting: { myString: 'DESC' },
         last: 2,
@@ -1251,9 +1251,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         )
 
         let resultObj = await ceramic.index.query({
-          model: modelWithRelation.id,
+          models: [modelWithRelation.id],
           first: 100,
-          filter: { linkedDoc: referencedDoc0.id.toString() },
+          queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
         })
         let results = extractDocuments(ceramic, resultObj)
         expect(results.length).toEqual(1)
@@ -1262,9 +1262,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         expect(results[0].state).toEqual(doc0.state)
 
         resultObj = await ceramic.index.query({
-          model: modelWithRelation.id,
+          models: [modelWithRelation.id],
           first: 100,
-          filter: { linkedDoc: referencedDoc1.id.toString() },
+          queryFilters: { where: { linkedDoc: { equalTo: referencedDoc1.id.toString() } } },
         })
         results = extractDocuments(ceramic, resultObj)
         expect(results.length).toEqual(2)
@@ -1277,9 +1277,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
         // Now check with 'last' queries
         resultObj = await ceramic.index.query({
-          model: modelWithRelation.id,
+          models: [modelWithRelation.id],
           last: 100,
-          filter: { linkedDoc: referencedDoc0.id.toString() },
+          queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
         })
         results = extractDocuments(ceramic, resultObj)
         expect(results.length).toEqual(1)
@@ -1288,9 +1288,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         expect(results[0].state).toEqual(doc0.state)
 
         resultObj = await ceramic.index.query({
-          model: modelWithRelation.id,
+          models: [modelWithRelation.id],
           last: 100,
-          filter: { linkedDoc: referencedDoc1.id.toString() },
+          queryFilters: { where: { linkedDoc: { equalTo: referencedDoc1.id.toString() } } },
         })
         results = extractDocuments(ceramic, resultObj)
         expect(results.length).toEqual(2)
@@ -1343,19 +1343,19 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
         // Querying for a single relation should find two documents - one with each controller
         const resultObj0 = await ceramic.index.query({
-          model: modelWithRelation.id,
+          models: [modelWithRelation.id],
           first: 100,
-          filter: { linkedDoc: referencedDoc0.id.toString() },
+          queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
         })
         const results0 = extractDocuments(ceramic, resultObj0)
         expect(results0.length).toEqual(2)
 
         // Querying for a single relation should find two documents - one with each controller
         const resultObj1 = await ceramic.index.query({
-          model: modelWithRelation.id,
+          models: [modelWithRelation.id],
           account: originalDid.id.toString(),
           first: 100,
-          filter: { linkedDoc: referencedDoc0.id.toString() },
+          queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
         })
         const results1 = extractDocuments(ceramic, resultObj1)
         expect(results1.length).toEqual(1)
@@ -1369,7 +1369,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       async () => {
         const referencedDoc0 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
         const referencedDoc1 = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-        await expect(ceramic.index.count({ model: model.id.toString() })).resolves.toEqual(2)
+        await expect(ceramic.index.count({ models: [model.id.toString()] })).resolves.toEqual(2)
 
         // Create two docs with the original DID, referencing two different docs in the linked model
         const originalDid = ceramic.did
@@ -1380,7 +1380,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         )
 
         await expect(
-          ceramic.index.count({ model: modelWithRelation.id.toString() })
+          ceramic.index.count({ models: [modelWithRelation.id.toString()] })
         ).resolves.toEqual(1)
 
         await ModelInstanceDocument.create(
@@ -1390,13 +1390,13 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         )
 
         await expect(
-          ceramic.index.count({ model: modelWithRelation.id.toString() })
+          ceramic.index.count({ models: [modelWithRelation.id.toString()] })
         ).resolves.toEqual(2)
 
         await expect(
           ceramic.index.count({
-            model: modelWithRelation.id.toString(),
-            filter: { linkedDoc: referencedDoc0.id.toString() },
+            models: [modelWithRelation.id.toString()],
+            queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
           })
         ).resolves.toEqual(1)
 
@@ -1414,7 +1414,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         )
 
         await expect(
-          ceramic.index.count({ model: modelWithRelation.id.toString() })
+          ceramic.index.count({ models: [modelWithRelation.id.toString()] })
         ).resolves.toEqual(3)
 
         await ModelInstanceDocument.create(
@@ -1425,21 +1425,21 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
 
         // Count all docs in the model with the relation
         await expect(
-          ceramic.index.count({ model: modelWithRelation.id.toString() })
+          ceramic.index.count({ models: [modelWithRelation.id.toString()] })
         ).resolves.toEqual(4)
 
         // Count docs with a specific relation
         await expect(
           ceramic.index.count({
-            model: modelWithRelation.id.toString(),
-            filter: { linkedDoc: referencedDoc0.id.toString() },
+            models: [modelWithRelation.id.toString()],
+            queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
           })
         ).resolves.toEqual(2)
 
         // count docs with a specific controller
         await expect(
           ceramic.index.count({
-            model: modelWithRelation.id.toString(),
+            models: [modelWithRelation.id.toString()],
             account: originalDid.id.toString(),
           })
         ).resolves.toEqual(2)
@@ -1447,9 +1447,9 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         // count docs with a specific relation AND a specific controller
         await expect(
           ceramic.index.count({
-            model: modelWithRelation.id.toString(),
+            models: [modelWithRelation.id.toString()],
             account: originalDid.id.toString(),
-            filter: { linkedDoc: referencedDoc0.id.toString() },
+            queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
           })
         ).resolves.toEqual(1)
       },
@@ -1472,12 +1472,12 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
       )
 
       await expect(
-        ceramic.index.count({ model: modelWithRelation.id.toString() })
+        ceramic.index.count({ models: [modelWithRelation.id.toString()] })
       ).resolves.toEqual(2)
       let resultObj = await ceramic.index.query({
-        model: modelWithRelation.id,
+        models: [modelWithRelation.id],
         first: 100,
-        filter: { linkedDoc: referencedDoc0.id.toString() },
+        queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
       })
       let results = extractDocuments(ceramic, resultObj)
       expect(results.length).toEqual(1)
@@ -1498,12 +1498,12 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         midRelationMetadata
       )
       await expect(
-        ceramic.index.count({ model: modelWithRelation.id.toString() })
+        ceramic.index.count({ models: [modelWithRelation.id.toString()] })
       ).resolves.toEqual(3)
       resultObj = await ceramic.index.query({
-        model: modelWithRelation.id,
+        models: [modelWithRelation.id],
         first: 100,
-        filter: { linkedDoc: referencedDoc0.id.toString() },
+        queryFilters: { where: { linkedDoc: { equalTo: referencedDoc0.id.toString() } } },
       })
       results = extractDocuments(ceramic, resultObj)
       expect(results.length).toEqual(1)

@@ -208,7 +208,7 @@ const waitForMidsToBeIndexed = async (
   // in the index, instead of this polling-based approach.
   return TestUtils.waitForConditionOrTimeout(async () => {
     const results = await ceramic.index
-      .query({ model: MODEL_STREAM_ID, last: 100 })
+      .query({ models: [MODEL_STREAM_ID], last: 100 })
       .then((resultObj) => extractDocuments(ceramic, resultObj))
 
     return docs.every((doc) => {

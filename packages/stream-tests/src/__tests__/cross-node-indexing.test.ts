@@ -184,11 +184,11 @@ describe.each(envs)(
       // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
       // in the index, instead of this polling-based approach
       await TestUtils.waitForConditionOrTimeout(async () => {
-        const count = await countResults(ceramic2, { model: model.id, first: 100 })
+        const count = await countResults(ceramic2, { models: [model.id], first: 100 })
         return count > 0
       })
 
-      let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
+      let resultObj = await ceramic2.index.query({ models: [model.id], first: 100 })
       let results = extractDocuments(ceramic2, resultObj)
 
       expect(results.length).toEqual(1)
@@ -205,11 +205,11 @@ describe.each(envs)(
       // TODO: Once we support subscriptions, use a subscription to wait for the stream to show up
       // in the index, instead of this polling-based approach.
       await TestUtils.waitForConditionOrTimeout(async () => {
-        const count = await countResults(ceramic2, { model: model.id, first: 100 })
+        const count = await countResults(ceramic2, { models: [model.id], first: 100 })
         return count > 1
       })
 
-      resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
+      resultObj = await ceramic2.index.query({ models: [model.id], first: 100 })
       results = extractDocuments(ceramic2, resultObj)
 
       expect(results.length).toEqual(2)
@@ -231,7 +231,7 @@ describe.each(envs)(
       })
 
       // Since ceramic1 didn't publish the commit, ceramic2 won't know about it.
-      let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
+      let resultObj = await ceramic2.index.query({ models: [model.id], first: 100 })
       let results = extractDocuments(ceramic2, resultObj)
       expect(results.length).toEqual(0)
 
@@ -241,7 +241,7 @@ describe.each(envs)(
       // Indexed streams should always get pinned, regardless of the 'pin' flag
       await expect(TestUtils.isPinned(ceramic2, doc1.id)).toBeTruthy()
 
-      resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
+      resultObj = await ceramic2.index.query({ models: [model.id], first: 100 })
       results = extractDocuments(ceramic2, resultObj)
       expect(results.length).toEqual(1)
       expect(results[0].id.toString()).toEqual(doc1.id.toString())

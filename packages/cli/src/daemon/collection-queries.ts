@@ -69,10 +69,8 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
   try {
     const pagination = parsePagination(query)
     return {
-      model: query.model,
       models: query.models,
       account: query.account,
-      filter: query.filter,
       queryFilters: query.queryFilters,
       sorting: query.sorting,
       ...pagination,
@@ -84,10 +82,8 @@ export function collectionQuery(query: Record<string, any>): BaseQuery & Paginat
 
 export function countQuery(query: Record<string, any>): BaseQuery {
   return {
-    model: query.model,
     models: query.models,
     account: query.account,
-    filter: query.filter,
     queryFilters: query.queryFilters,
   }
 }

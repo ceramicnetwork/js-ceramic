@@ -10,7 +10,6 @@ import {
 } from './parse-pagination.js'
 import { asTableName } from './as-table-name.util.js'
 import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
-import { addColumnPrefix } from './column-name.util.js'
 import { contentKey, convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
 import { parseQueryFilters } from './query-filter-parser.js'
 
@@ -23,7 +22,7 @@ export type QueryResult = {
 }
 export type QueryBuilder = Knex.QueryBuilder<any, Array<QueryResult>>
 
-type InternalQuery = Omit<BaseQuery, 'model' | 'models'>
+type InternalQuery = Omit<BaseQuery, 'models'>
 type PageQuery = InternalQuery & Pagination
 
 /**
@@ -207,7 +206,7 @@ export class InsertionOrder {
             .from(asTableName(model))
             .columns(['stream_id', 'last_anchored_at', 'created_at', DATA_FIELD])
             .select()
-          // Handle filters (account, fields and/or legacy relations)
+          // Handle account and fields filters
           return this.applyFilters(subQuery, query)
         })
         return qb.unionAll(subQueries).as('models')
@@ -226,7 +225,7 @@ export class InsertionOrder {
     return builder
   }
 
-  applyFilters(builder: Knex.QueryBuilder, query: BaseQuery): Knex.QueryBuilder {
+  applyFilters(builder: Knex.QueryBuilder, query: InternalQuery): Knex.QueryBuilder {
     if (query.account) {
       builder = builder.where({ controller_did: query.account })
     }
@@ -236,13 +235,6 @@ export class InsertionOrder {
       const converted = convertQueryFilter(parsed)
       if (converted) {
         builder = builder.where(converted.where)
-      }
-    } else if (query.filter) {
-      // Handle legacy `filter` object used for relations
-      for (const [key, value] of Object.entries(query.filter)) {
-        const filterObj: Record<string, string> = {}
-        filterObj[addColumnPrefix(key)] = value
-        builder = builder.andWhere(filterObj)
       }
     }
 
