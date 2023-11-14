@@ -8,7 +8,6 @@ import { randomBytes } from '@stablelib/random'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
 
-const API_URL = 'https://example.com'
 const API_URLS = [
   `https://example.com`,
   `https://example.com/`,
@@ -35,52 +34,30 @@ const GET_RESPONSE = {
   state: initial,
 }
 
-let did: DID
-let getDidFn
-let client: CeramicClient
-
-beforeEach(() => {
-  jest.resetAllMocks()
-})
-
-describe('buildStreamFromState', () => {
-  test('build instance of Streamtype', async () => {
-    client = new CeramicClient(API_URL)
-    const a = client.buildStreamFromState(initial)
-    expect(a).toBeInstanceOf(TileDocument)
-    expect(a.id.cid).toEqual(FAKE_CID_1)
-  })
-})
-
 describe('URL constructor', () => {
-  beforeAll(async () => {
-    const seed = randomBytes(32)
-    const provider = new Ed25519Provider(seed)
-    const actingDid = new DID({ provider, resolver: KeyResolver.getResolver() })
-    await actingDid.authenticate()
-    did = actingDid
-    getDidFn = () => {
-      return did
-    }
-  })
-
   test('build instances of Streamtype from URLs with extensions', async () => {
     for (const URL of API_URLS) {
-      client = new CeramicClient(URL)
+      const client = new CeramicClient(URL)
       const a = client.buildStreamFromState(initial)
       expect(a).toBeInstanceOf(TileDocument)
       expect(a.id.cid).toEqual(FAKE_CID_1)
     }
   })
-
   test('setDID()', async () => {
     for (const URL of API_URLS) {
+      const seed = randomBytes(32)
+      const provider = new Ed25519Provider(seed)
+      const actingDid = new DID({ provider, resolver: KeyResolver.getResolver() })
+      await actingDid.authenticate()
+      const did = actingDid
       const client = new CeramicClient(URL)
+      const getDidFn = () => {
+        return did
+      }
       await client.setDID(getDidFn())
       expect(client.did).toEqual(getDidFn())
     }
   })
-
   test('getSupportedChains()', async () => {
     for (const API_URL of API_URLS) {
       const client = new CeramicClient(API_URL)
@@ -92,7 +69,6 @@ describe('URL constructor', () => {
       expect(fauxFetch.mock.calls[0][0]).toEqual(new URL('./api/v0/node/chains', API_URL))
     }
   })
-
   test('requestAnchor()', async () => {
     for (const API_URL of API_URLS) {
       const client = new CeramicClient(API_URL)
