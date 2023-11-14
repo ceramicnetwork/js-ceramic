@@ -71,7 +71,8 @@ describe('RemoteCAS supportedChains', () => {
       MAX_POLL_TIME,
       fetchFnNull
     )
-    const expectedErrorNull = "Error: Invalid value null supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)"
+    const expectedErrorNull =
+      'Error: Invalid value null supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)'
     await expect(casForNull.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         supportedChains: null,
