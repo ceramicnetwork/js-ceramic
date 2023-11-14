@@ -15,9 +15,10 @@ import { Knex } from 'knex'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import {
+  fieldsIndexName,
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
-  MODEL_IMPLEMENTS_TABLE_NAME,
+  MODEL_IMPLEMENTS_TABLE_NAME
 } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
@@ -67,9 +68,17 @@ export class TablesManager {
   /**
    * Determine if a mid table has the indices we expect
    * @param tableName
-   * @param args
    */
   async hasMidIndices(_tableName: string): Promise<boolean> {
+    throw new Error('Must be implemented in extending class')
+  }
+
+  /**
+   * Determine if a mid table has the field indices we expect
+   * @param tableName
+   * @param args
+   */
+  async hasMidFieldIndices(_tableName: string, _args: IndexModelArgs): Promise<boolean> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -206,6 +215,10 @@ export class TablesManager {
         `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
     }
+
+    if (!(await this.hasMidFieldIndices(tableName, modelIndexArgs))) {
+      this.logger.warn(`${tableName} does not have expected field indices, performance may be impacted. Are you reusing a model with different indices?`)
+    }
   }
 
   /**
@@ -284,6 +297,26 @@ and indexname in (${sqlIndices});
     return expectedIndices.length == actualIndices.rowCount
   }
 
+  /**
+   * Determine if a MID table has the field indices we expect
+   * @param tableName
+   * @param args
+   */
+  override async hasMidFieldIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+    if (!args || !args.indices) {
+      return true
+    }
+    const expectedIndices = args.indices.map((index) => fieldsIndexName(index, tableName))
+    const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+    const actualIndices = await this.dataSource.raw(`
+select *
+from pg_indexes
+where tablename like '${tableName}'
+and indexname in (${sqlIndices});
+  `)
+    return expectedIndices.length == actualIndices.rowCount
+  }
+
   override hasJsonBSupport(): boolean {
     return true
   }
@@ -335,12 +368,34 @@ export class SqliteTablesManager extends TablesManager {
   }
 
   /**
-   * Determine if a mid table has the indices we expect
+   * Determine if a MID table has the indices we expect
    * @param tableName
    * @param args IndexModelArgs for checking indices
    */
   override async hasMidIndices(tableName: string): Promise<boolean> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
+    const sqlIndices = expectedIndices.map((s) => `'${s}'`)
+    const actualIndices = await this.dataSource.raw(`
+select name, tbl_name
+FROM sqlite_master
+WHERE type='index'
+and tbl_name like '${tableName}'
+and name in (${sqlIndices})
+;
+  `)
+    return expectedIndices.length == actualIndices.length
+  }
+
+  /**
+   * Determine if a mid table has the indices we expect
+   * @param tableName
+   * @param args IndexModelArgs for checking indices
+   */
+  override async hasMidFieldIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+    if (!args || !args.indices) {
+      return true
+    }
+    const expectedIndices = args.indices.map((index) => fieldsIndexName(index, tableName))
     const sqlIndices = expectedIndices.map((s) => `'${s}'`)
     const actualIndices = await this.dataSource.raw(`
 select name, tbl_name
