@@ -87,7 +87,7 @@ export class RemoteCAS implements CASClient {
       throw new Error(
         `SupportedChains response : ${JSON.stringify(
           response
-        )} does not contain contain the field <supportedChains> or is of size more than 1`
+        )} does not contain contain the field <supportedChains> or is of size more than 1: ${error}`
       )
     }
   }

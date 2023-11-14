@@ -4,6 +4,7 @@ import { fetchJson, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
+import { error } from 'console'
 
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
@@ -70,10 +71,11 @@ describe('RemoteCAS supportedChains', () => {
       MAX_POLL_TIME,
       fetchFnNull
     )
+    const expectedErrorNull = "Error: Invalid value null supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)"
     await expect(casForNull.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         supportedChains: null,
-      })} does not contain contain the field <supportedChains> or is of size more than 1`
+      })} does not contain contain the field <supportedChains> or is of size more than 1: ${expectedErrorNull}`
     )
 
     const fetchFnEmpty = jest.fn(async () => ({
@@ -86,10 +88,11 @@ describe('RemoteCAS supportedChains', () => {
       MAX_POLL_TIME,
       fetchFnEmpty
     )
+    const expectedErrorUndefined = `Error: Invalid value [] supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)`
     await expect(casForEmpty.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         supportedChains: [],
-      })} does not contain contain the field <supportedChains> or is of size more than 1`
+      })} does not contain contain the field <supportedChains> or is of size more than 1: ${expectedErrorUndefined}`
     )
   })
 })
