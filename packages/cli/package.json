@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "2.44.0",
+  "version": "3.0.0-rc.0",
   "description": "Typescript implementation of the Ceramic CLI",
   "engines": {
     "node": ">=20.8"
@@ -44,16 +44,16 @@
   },
   "dependencies": {
     "@awaitjs/express": "^0.9.0",
-    "@ceramicnetwork/3id-did-resolver": "^2.32.0",
-    "@ceramicnetwork/common": "^2.39.0",
-    "@ceramicnetwork/core": "^2.46.0",
-    "@ceramicnetwork/http-client": "^2.36.0",
-    "@ceramicnetwork/indexing": "^1.5.0",
-    "@ceramicnetwork/ipfs-daemon": "^2.32.0",
-    "@ceramicnetwork/logger": "^2.5.0",
+    "@ceramicnetwork/3id-did-resolver": "^3.0.0-rc.0",
+    "@ceramicnetwork/common": "^3.0.0-rc.0",
+    "@ceramicnetwork/core": "^3.0.0-rc.0",
+    "@ceramicnetwork/http-client": "^3.0.0-rc.0",
+    "@ceramicnetwork/indexing": "^2.0.0-rc.0",
+    "@ceramicnetwork/ipfs-daemon": "^3.0.0-rc.0",
+    "@ceramicnetwork/logger": "^3.0.0-rc.0",
     "@ceramicnetwork/observability": "^1.4.1",
-    "@ceramicnetwork/stream-tile": "^2.35.0",
-    "@ceramicnetwork/streamid": "^2.17.0",
+    "@ceramicnetwork/stream-tile": "^3.0.0-rc.0",
+    "@ceramicnetwork/streamid": "^3.0.0-rc.0",
     "@stablelib/random": "^1.0.1",
     "aws-sdk": "^2.1049.0",
     "commander": "^9.4.1",
@@ -78,8 +78,8 @@
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "@ceramicnetwork/stream-model": "^1.21.0",
-    "@ceramicnetwork/stream-tile-handler": "^2.34.0",
+    "@ceramicnetwork/stream-model": "^2.0.0-rc.0",
+    "@ceramicnetwork/stream-tile-handler": "^3.0.0-rc.0",
     "@stablelib/sha256": "^1.0.1",
     "@types/express": "^4.17.13",
     "@types/levelup": "^5.1.0",

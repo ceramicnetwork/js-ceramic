@@ -1001,6 +1001,7 @@ export class Repository {
       stream.complete()
     })
     await this.#deps.pinStore.close()
+    await this.#deps.anchorRequestStore.close()
     await this.index.close()
   }
 }

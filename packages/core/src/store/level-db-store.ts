@@ -31,7 +31,7 @@ class LevelDBStoreMap {
   readonly networkName
   readonly #map: Map<string, Level>
 
-  constructor(storeRoot: string, networkName: string) {
+  constructor(storeRoot: string, networkName: string, readonly logger: DiagnosticsLogger) {
     this.networkName = networkName
     this.#storeRoot = storeRoot
     this.#map = new Map<string, Level>()
@@ -45,7 +45,18 @@ class LevelDBStoreMap {
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#map.set(fullLocation, new LevelC(storePath))
+
+    const levelDb = new LevelC(storePath)
+    // level-ts does not have an error handling exposed for opening errors. I access the private DB variable to add callbacks for logging.
+    // @ts-ignore private field
+    levelDb.DB.on('error', (err) => {
+      this.logger.warn(
+        `Received error when starting up leveldb at ${storePath} using level-ts: ${err}`
+      )
+    })
+
+    this.#map.set(fullLocation, levelDb)
+
     // add a small delay after creating the leveldb instance before trying to use it.
     return new Promise((res) => setTimeout(res, 100))
   }
@@ -78,7 +89,7 @@ export class LevelDbStore implements IKVStore {
   readonly #storeMap: LevelDBStoreMap
 
   constructor(readonly logger: DiagnosticsLogger, storeRoot: string, networkName: string) {
-    this.#storeMap = new LevelDBStoreMap(storeRoot, networkName)
+    this.#storeMap = new LevelDBStoreMap(storeRoot, networkName, logger)
   }
 
   get networkName(): string {

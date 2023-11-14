@@ -72,4 +72,8 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       }
     } while (true)
   }
+
+  async close(): Promise<void> {
+    await this.store.close(this.useCaseName)
+  }
 }

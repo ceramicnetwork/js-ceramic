@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/anchor-utils",
-  "version": "1.22.0",
+  "version": "2.0.0-rc.0",
   "description": "Ceramic anchor contract constants, interface and utilities",
   "keywords": [
     "ceramic",
@@ -30,13 +30,13 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/common": "^2.39.0",
+    "@ceramicnetwork/common": "^3.0.0-rc.0",
     "@ethersproject/abi": "^5.7.0",
     "multiformats": "^11.0.1",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {
-    "@ceramicnetwork/streamid": "^2.17.0",
+    "@ceramicnetwork/streamid": "^3.0.0-rc.0",
     "@ethersproject/providers": "^5.5.1",
     "@stablelib/sha256": "^1.0.1"
   },
