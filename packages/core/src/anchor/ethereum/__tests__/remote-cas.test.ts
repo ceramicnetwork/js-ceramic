@@ -4,7 +4,6 @@ import { fetchJson, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
-import { error } from 'console'
 
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
