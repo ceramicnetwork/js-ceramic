@@ -26,7 +26,6 @@ export enum AnchorRequestStatusName {
 
 /**
  * Part of CAS response that sends AnchorCommit content. Effectively a historical artefact.
- * sparse datatype : some of the key values can be missing
  */
 export const AnchorCommitPresentation = sparse(
   {
