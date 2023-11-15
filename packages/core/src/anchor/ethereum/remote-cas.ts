@@ -1,10 +1,15 @@
 import type { CASClient } from '../anchor-service.js'
 import type { AnchorEvent, DiagnosticsLogger, FetchRequest } from '@ceramicnetwork/common'
 import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName, CASResponseOrError, ErrorResponse } from '@ceramicnetwork/codecs'
+import {
+  AnchorRequestStatusName,
+  CASResponseOrError,
+  ErrorResponse,
+  SupportedChainsResponse,
+} from '@ceramicnetwork/codecs'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
-import { validate, isValid } from 'codeco'
+import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, retry, Subject, takeUntil, timer, type Observable } from 'rxjs'
 
@@ -75,7 +80,16 @@ export class RemoteCAS implements CASClient {
 
   async supportedChains(): Promise<Array<string>> {
     const response = await this.#sendRequest(this.#chainIdApiEndpoint)
-    return response.supportedChains as Array<string>
+    try {
+      const supportedChainsResponse = decode(SupportedChainsResponse, response)
+      return supportedChainsResponse.supportedChains
+    } catch (error) {
+      throw new Error(
+        `SupportedChains response : ${JSON.stringify(
+          response
+        )} does not contain contain the field <supportedChains> or is of size more than 1: ${error}`
+      )
+    }
   }
 
   async create(
