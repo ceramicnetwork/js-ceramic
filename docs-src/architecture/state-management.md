@@ -20,7 +20,7 @@ Disposition:
 
 Let us see what happens when 4α starts. As per Node.js execution model, processing is event-based. After IO/event is emitted, Node.js executes all the code non-interrupted until it stumbles upon wait for the next IO/event. Ceramic tasks are heavily IO based, so it would be fair to assume here, that at some point task 1α starts to wait for IO, for example, for IPFS retrieval. At that point Node.js starts handing the next event which in our case is task 4α.
 
-![Execution Queue](media://state-management/execution-queue.png)
+![Execution Queue](../media/state-management/execution-queue.png)
 
 When task 4α starts, the cache exceeds the limit, so it evicts the oldest document 1. Yet, it does not pause the task 1α. It still runs. This rises two questions.
 
@@ -48,7 +48,7 @@ So, at any time, we are sure we start subscription with the latest available sta
 
 As part of state refactor effort we have decided to maintain a certain semantics for how Stream updates state. After created, Stream maintains just the state it was initialized with. It only updates state after being manually changed or when subscribed. In the latter case, the state gets continuously updated. If looked from the inside, one could notice a Stream relies on `RunningStateLike` instance to maintain the state. One could see `RunningStateLike` as either an [Observable](https://rxjs.dev/guide/observable) of DocState with an access to the current value, or as [BehaviorSubject](https://rxjs.dev/guide/subject#behaviorsubject) with some additional getters. The reason for this, is we want to avoid explicit memory management in Stream instances. Anyway `RunningStateLike` is a kind of [Subject](https://rxjs.dev/guide/subject), that has to be explicitly closed, and as one could see from sections above managing document state life cycle is complicated. Ceramic instance performs that closing behavior when the CeramicAPI instance itself is closed, and that frees a developer from closing every Stream manually. However, the more open and subscribed Stream instances there, the more memory is used, as having lots of subscribed Stream instances can cause the in-memory cache to grow behind the configured max cache size.
 
-![Relationship between doctype and state](media://state-management/doctype-and-state.png)
+![Relationship between doctype and state](../media/state-management/doctype-and-state.png)
 
 ## Components
 
@@ -64,7 +64,7 @@ Repository shepherds a list of document states, be they running or sleeping. In 
 
 We also have `StateLink`  implementing `RunningStateLike`. Its initial state is set on construction time. It can be updated, and update only changes local state. It can be subscribed to, and this actually triggers subscription to another upstream Observable (returned from `Repository#updates$` in production case). This way we achieve behavior outlined in Subscriptions section, while maintaining single responsibility for the entity. `StateLink` maintains state local to Stream. The upstream observable handles Repository-specific logic.
 
-![Running State Hierarchy](media://state-management/running-state-hierarchy.png)
+![Running State Hierarchy](../media/state-management/running-state-hierarchy.png)
 
 ### Repository
 
