@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@3.0.0-rc.0...@ceramicnetwork/common@3.0.0) (2023-11-16)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 # [3.0.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.39.0...@ceramicnetwork/common@3.0.0-rc.0) (2023-11-10)
 
 **Note:** Version bump only for package @ceramicnetwork/common
