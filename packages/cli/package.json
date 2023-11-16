@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Typescript implementation of the Ceramic CLI",
   "engines": {
     "node": ">=20.8"

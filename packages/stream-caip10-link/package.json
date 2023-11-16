@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Ceramic AccountLink stream type",
   "keywords": [
     "ceramic",
