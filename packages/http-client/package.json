@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/http-client",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",

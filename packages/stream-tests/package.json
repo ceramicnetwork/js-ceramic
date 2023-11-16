@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tests",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {

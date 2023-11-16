@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/anchor-listener",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Ceramic anchor events listener",
   "keywords": [
     "ceramic",
