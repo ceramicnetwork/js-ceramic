@@ -86,7 +86,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      const streamId = await StreamID.fromGenesis('tile', commitData.commit)
+      const streamId = new StreamID(TileDocument.STREAM_TYPE_ID, commitData.cid)
       const { controllers } = payload.header
       await SignatureUtils.verifyCommitSignature(commitData, did, controllers[0], null, streamId)
     } else if (payload.data) {
