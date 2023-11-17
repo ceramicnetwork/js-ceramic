@@ -337,16 +337,6 @@ export class CeramicDaemon {
     )
 
     const ceramic = new Ceramic(modules, params)
-    if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3Store = new S3Store(
-        params.networkOptions.name,
-        opts.stateStore?.s3Bucket,
-        opts.stateStore?.s3Endpoint
-      )
-
-      await ceramic.repository.injectKeyValueStore(s3Store)
-    }
-
     let didOptions: DIDOptions = { resolver: makeResolvers(ceramic) }
     let provider: DIDProvider
 
@@ -371,6 +361,18 @@ export class CeramicDaemon {
       )
     }
     ceramic.did = did
+
+    // This needs to happen after the DID is set up so that any stream operations have a valid DID to use
+    if (opts.stateStore?.mode == StateStoreMode.S3) {
+      const s3Store = new S3Store(
+        params.networkOptions.name,
+        opts.stateStore?.s3Bucket,
+        opts.stateStore?.s3Endpoint
+      )
+
+      await ceramic.repository.injectKeyValueStore(s3Store)
+    }
+
     await ceramic._init(true)
 
     const daemon = new CeramicDaemon(ceramic, opts)
