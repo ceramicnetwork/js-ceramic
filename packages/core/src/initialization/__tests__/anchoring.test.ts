@@ -2,9 +2,15 @@ import { describe, expect, test } from '@jest/globals'
 import {
   CustomMainnetCasError,
   DEFAULT_ANCHOR_SERVICE_URLS,
+  makeAnchorService,
   makeAnchorServiceUrl,
 } from '../anchoring.js'
-import { Networks } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
+import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
+import {
+  AuthenticatedEthereumAnchorService,
+  EthereumAnchorService,
+} from '../../anchor/ethereum/ethereum-anchor-service.js'
 
 describe('makeAnchorServiceUrl', () => {
   const CUSTOM_URL = 'https://cas.com'
@@ -30,5 +36,30 @@ describe('makeAnchorServiceUrl', () => {
     expect(makeAnchorServiceUrl(casInternal, Networks.MAINNET)).toEqual(casInternal)
     const casDirect = 'https://cas-direct.3boxlabs.com'
     expect(makeAnchorServiceUrl(casDirect, Networks.MAINNET)).toEqual(casDirect)
+  })
+})
+
+describe('makeAnchorService', () => {
+  const logger = new LoggerProvider().getDiagnosticsLogger()
+  test('readOnly means null', () => {
+    const result = makeAnchorService({ readOnly: true }, '', Networks.MAINNET, logger)
+    expect(result).toEqual(null)
+  })
+  test('inmemory', () => {
+    const result = makeAnchorService({ readOnly: false }, '', Networks.INMEMORY, logger)
+    expect(result).toBeInstanceOf(InMemoryAnchorService)
+  })
+  test('auth', () => {
+    const result = makeAnchorService(
+      { readOnly: false, anchorServiceAuthMethod: 'auth' },
+      '',
+      Networks.MAINNET,
+      logger
+    )
+    expect(result).toBeInstanceOf(AuthenticatedEthereumAnchorService)
+  })
+  test('no auth', () => {
+    const result = makeAnchorService({ readOnly: false }, '', Networks.MAINNET, logger)
+    expect(result).toBeInstanceOf(EthereumAnchorService)
   })
 })
