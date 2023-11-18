@@ -43,7 +43,7 @@ describe('makeAnchorService', () => {
   const logger = new LoggerProvider().getDiagnosticsLogger()
   test('readOnly means null', () => {
     const result = makeAnchorService({ readOnly: true }, '', Networks.MAINNET, logger)
-    expect(result).toEqual(null)
+    expect(result).toBeInstanceOf(EthereumAnchorService)
   })
   test('inmemory', () => {
     const result = makeAnchorService({ readOnly: false }, '', Networks.INMEMORY, logger)

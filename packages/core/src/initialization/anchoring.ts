@@ -118,28 +118,28 @@ export function makeAnchorService(
   ethereumRpcUrl: string | undefined,
   network: Networks,
   logger: DiagnosticsLogger
-): AnchorService | null {
-  if (config.readOnly) return null
+): AnchorService {
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any)
   }
   const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
-  const anchorServiceAuth = makeAnchorServiceAuth(
-    config.anchorServiceAuthMethod,
-    anchorServiceUrl,
-    network,
-    logger
-  )
-  if (anchorServiceAuth) {
-    return new AuthenticatedEthereumAnchorService(
-      anchorServiceAuth,
+  if (!config.readOnly) {
+    const anchorServiceAuth = makeAnchorServiceAuth(
+      config.anchorServiceAuthMethod,
       anchorServiceUrl,
-      ethereumRpcUrl,
+      network,
       logger
     )
-  } else {
-    return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger)
+    if (anchorServiceAuth) {
+      return new AuthenticatedEthereumAnchorService(
+        anchorServiceAuth,
+        anchorServiceUrl,
+        ethereumRpcUrl,
+        logger
+      )
+    }
   }
+  return new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger)
 }
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = 'http://localhost:7545' // default Ganache port
