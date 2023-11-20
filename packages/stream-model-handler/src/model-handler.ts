@@ -106,7 +106,7 @@ export class ModelHandler implements StreamHandler<Model> {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const streamId = await StreamID.fromGenesis('model', commitData.commit)
+    const streamId = new StreamID(Model.STREAM_TYPE_ID, commitData.cid)
     const { controllers, model } = payload.header
     const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)

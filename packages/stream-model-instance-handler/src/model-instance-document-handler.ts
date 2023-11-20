@@ -86,7 +86,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const { controllers, model } = payload.header
     const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
-    const streamId = await StreamID.fromGenesis('MID', commitData.commit)
+    const streamId = new StreamID(ModelInstanceDocument.STREAM_TYPE_ID, commitData.cid)
     const metadata = { controllers: [controller], model: modelStreamID }
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
