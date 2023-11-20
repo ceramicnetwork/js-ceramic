@@ -149,7 +149,7 @@ export class Repository {
   }
 
   /**
-   * Sets the StateStore to sue.
+   * Sets the StateStore to use.
    * This must be called before init().
    * @param stateStore
    */
