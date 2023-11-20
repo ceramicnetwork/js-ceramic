@@ -362,7 +362,6 @@ export class CeramicDaemon {
     }
     ceramic.did = did
 
-    // This needs to happen after the DID is set up so that any stream operations have a valid DID to use
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3Store = new S3Store(
         params.networkOptions.name,

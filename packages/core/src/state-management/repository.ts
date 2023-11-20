@@ -148,12 +148,16 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  /**
+   * Sets the StateStore to sue.
+   * This must be called before init().
+   * @param stateStore
+   */
   async injectKeyValueStore(stateStore: IKVStore): Promise<void> {
     this.setDeps({
       ...this.#deps,
       keyValueStore: stateStore,
     })
-    await this.init()
   }
 
   async init(): Promise<void> {
