@@ -22,6 +22,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as PkhDidResolver from 'pkh-did-resolver'
+import AWSSDK from 'aws-sdk'
 
 import { DID, DIDOptions, DIDProvider } from 'dids'
 import cors from 'cors'
@@ -364,8 +365,28 @@ export class CeramicDaemon {
 
     // This needs to happen after the DID is set up so that any stream operations have a valid DID to use
     if (opts.stateStore?.mode == StateStoreMode.S3) {
+      let networkName = params.networkOptions.name
+
+      // Check if ELP bucket is used
+      if (networkName === Networks.MAINNET) {
+        const s3 = new AWSSDK.S3()
+        const storeRoot = opts.stateStore?.s3Bucket
+          ? `${opts.stateStore?.s3Bucket}/ceramic/elp`
+          : 'ceramic/elp'
+        try {
+          await s3.headBucket({ Bucket: storeRoot }).promise()
+          // Bucket exists and needs to be used
+          console.warn(
+            `S3 bucket found with ELP location, using it instead of default mainnet location for state store`
+          )
+          networkName = 'elp' as Networks
+        } catch (error) {
+          // Ignore error
+        }
+      }
+
       const s3Store = new S3Store(
-        params.networkOptions.name,
+        networkName,
         opts.stateStore?.s3Bucket,
         opts.stateStore?.s3Endpoint
       )
