@@ -75,9 +75,7 @@ jobs:
           dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
-        run: |
-          npm set unsafe-perm true
-          npm ci && npm run build
+        run: npm ci && npm run build
       -
         name: Publish packages to NPM
         env:
@@ -156,9 +154,7 @@ jobs:
           dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
-        run: |
-          npm set unsafe-perm true
-          npm ci && npm run build
+        run: npm ci && npm run build
       -
         name: Publish packages to NPM
         env:
@@ -235,9 +231,7 @@ jobs:
           dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Initialize and build code
-        run: |
-          npm set unsafe-perm true
-          npm ci && npm run build
+        run: npm ci && npm run build
       -
         name: Publish packages to NPM
         env:
