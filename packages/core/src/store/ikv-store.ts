@@ -11,7 +11,7 @@ export type IKVStoreFindResult = {
 
 export interface IKVStore {
   networkName: string
-
+  init(): Promise<void>
   close(useCaseName?: string): Promise<void>
   isEmpty(params?: StoreSearchParams): Promise<boolean>
   findKeys(params?: StoreSearchParams): Promise<Array<string>>

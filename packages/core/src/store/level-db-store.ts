@@ -37,10 +37,9 @@ class LevelDBStoreMap {
     this.#map = new Map<string, Level>()
   }
 
-  createStore(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): Promise<void> {
+  createStore(fullLocation: string): Promise<void> {
     // Different LevelDB stores live in different subdirectories (named based use-cases with the default being 'networkName'
     // and others being `networkName-<useCaseName>` with useCaseNames passed as params by owners of the store map) in #storeRoot
-    const fullLocation = this.getFullLocation(useCaseName)
     const storePath = path.join(this.#storeRoot, fullLocation)
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
@@ -61,23 +60,32 @@ class LevelDBStoreMap {
     return new Promise((res) => setTimeout(res, 100))
   }
 
-  private getDefaultLocation(): string {
-    return this.networkName === Networks.MAINNET ? OLD_ELP_DEFAULT_LOCATION : this.networkName
+  private getStoreLocation(useCaseName: string, networkName = this.networkName): string {
+    return useCaseName === DEFAULT_LEVELDB_STORE_USE_CASE_NAME
+      ? networkName
+      : `${networkName}-${useCaseName}`
   }
 
   private getFullLocation(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): string {
-    if (useCaseName === DEFAULT_LEVELDB_STORE_USE_CASE_NAME) {
-      return this.getDefaultLocation()
-    } else {
-      return `${this.getDefaultLocation()}-${useCaseName}`
+    // Check if store exists at legacy ELP location
+    if (this.networkName === Networks.MAINNET) {
+      const elpLocation = this.getStoreLocation(useCaseName, OLD_ELP_DEFAULT_LOCATION)
+      if (fs.existsSync(elpLocation)) {
+        console.warn(
+          `LevelDB store ${useCaseName} found with ELP location, using it instead of default mainnet location`
+        )
+        return elpLocation
+      }
     }
+    return this.getStoreLocation(useCaseName)
   }
 
   async get(useCaseName?: string): Promise<Level> {
-    if (!this.#map.get(this.getFullLocation(useCaseName))) {
-      await this.createStore(useCaseName)
+    const location = this.getFullLocation(useCaseName)
+    if (!this.#map.get(location)) {
+      await this.createStore(location)
     }
-    return this.#map.get(this.getFullLocation(useCaseName))
+    return this.#map.get(location)
   }
 
   values(): IterableIterator<Level> {
@@ -95,6 +103,8 @@ export class LevelDbStore implements IKVStore {
   get networkName(): string {
     return this.#storeMap.networkName
   }
+
+  async init(): Promise<void> {}
 
   close(useCaseName?: string): Promise<void> {
     // do nothing
