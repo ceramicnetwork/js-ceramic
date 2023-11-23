@@ -105,7 +105,10 @@ export class LevelDbStore implements IKVStore {
     return this.#storeMap.networkName
   }
 
-  async init(): Promise<void> {}
+  async init(): Promise<void> {
+    // do nothing
+    return
+  }
 
   close(useCaseName?: string): Promise<void> {
     // do nothing
