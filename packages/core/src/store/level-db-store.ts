@@ -70,7 +70,8 @@ class LevelDBStoreMap {
     // Check if store exists at legacy ELP location
     if (this.networkName === Networks.MAINNET) {
       const elpLocation = this.getStoreLocation(useCaseName, OLD_ELP_DEFAULT_LOCATION)
-      if (fs.existsSync(elpLocation)) {
+      const storePath = path.join(this.#storeRoot, elpLocation)
+      if (fs.existsSync(storePath)) {
         console.warn(
           `LevelDB store ${useCaseName} found with ELP location, using it instead of default mainnet location`
         )
