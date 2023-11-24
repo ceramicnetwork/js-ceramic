@@ -22,7 +22,6 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as PkhDidResolver from 'pkh-did-resolver'
-import AWSSDK from 'aws-sdk'
 
 import { DID, DIDOptions, DIDProvider } from 'dids'
 import cors from 'cors'
@@ -369,6 +368,7 @@ export class CeramicDaemon {
         opts.stateStore?.s3Bucket,
         opts.stateStore?.s3Endpoint
       )
+
       await ceramic.repository.injectKeyValueStore(s3Store)
     }
 
