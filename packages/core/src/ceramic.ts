@@ -61,6 +61,7 @@ import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
+import { Observable, Subject } from 'rxjs'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -176,6 +177,13 @@ const tryStreamId = (id: string): StreamID | null => {
 }
 
 /**
+ * Internal API for js-ceramic core, mimics the HTTP API outlined above
+ *
+ * - `ceramic.feed.aggregation.streamStates`
+ *     - all as Observable<T>
+ */
+
+/**
  * ### Ceramic core implementation.<br/>
  *
  * To install this library:<br/>
@@ -191,6 +199,16 @@ export class Ceramic implements CeramicApi {
   private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
+
+  readonly #feed = {
+    aggregation: {
+      streamStates: new Subject<StreamState>(),
+    },
+  }
+
+  get feed(): { aggregation: { streamStates: Observable<StreamState> } } {
+    return this.#feed
+  }
 
   readonly _streamHandlers: HandlersMap
   private readonly _readOnly: boolean
@@ -593,6 +611,8 @@ export class Ceramic implements CeramicApi {
     this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     const state$ = await this.repository.applyCommit(id, commit, opts)
     this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+
+    this.#feed.aggregation.streamStates.next(state$.value)
 
     return streamFromState<T>(
       this.context,
