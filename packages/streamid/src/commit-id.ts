@@ -180,8 +180,8 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get bytes(): Uint8Array {
-    const codec = varint.encode(STREAMID_CODEC)
-    const type = varint.encode(this.type)
+    const codec = new Uint8Array(varint.encode(STREAMID_CODEC))
+    const type = new Uint8Array(varint.encode(this.type))
 
     const commitBytes = this.#commit?.bytes || new Uint8Array([0])
     return uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes])
