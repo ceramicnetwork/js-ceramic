@@ -23,9 +23,9 @@ const verifiersCACAO = {
  */
 export class SignatureUtils {
   static async didContext(did: DID): Promise<[DidVerifier, ThreadedDid]> {
-    const verifier = new DidVerifier(did, verifiersCACAO)
+    const verifier = new DidVerifier()
     await verifier.init()
-    const threadedDid = await verifier.addDid(did)
+    const threadedDid = await verifier.addDid(did, verifiersCACAO)
     return [verifier, threadedDid]
   }
   /**

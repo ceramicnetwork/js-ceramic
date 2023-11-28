@@ -51,11 +51,8 @@ describe('URL constructor', () => {
       await actingDid.authenticate()
       const did = actingDid
       const client = new CeramicClient(URL)
-      const getDidFn = () => {
-        return did
-      }
-      await client.createDidContext(getDidFn())
-      expect(client.did).toEqual(getDidFn())
+      await client.createDidContext(did)
+      expect(client.did.did).toEqual(did)
     }
   })
   test('getSupportedChains()', async () => {
