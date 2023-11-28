@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/http-client",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -40,12 +40,12 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^3.0.4",
-    "@ceramicnetwork/stream-caip10-link": "^3.0.4",
-    "@ceramicnetwork/stream-model": "^2.0.4",
-    "@ceramicnetwork/stream-model-instance": "^2.0.4",
-    "@ceramicnetwork/stream-tile": "^3.0.4",
-    "@ceramicnetwork/streamid": "^3.0.4",
+    "@ceramicnetwork/common": "^3.0.5",
+    "@ceramicnetwork/stream-caip10-link": "^3.0.5",
+    "@ceramicnetwork/stream-model": "^2.0.5",
+    "@ceramicnetwork/stream-model-instance": "^2.0.5",
+    "@ceramicnetwork/stream-tile": "^3.0.5",
+    "@ceramicnetwork/streamid": "^3.0.5",
     "@scarf/scarf": "^1.1.1",
     "query-string": "^7.1.0",
     "rxjs": "^7.5.2"

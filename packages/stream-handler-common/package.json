@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-handler-common",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Ceramic stream handler common types and utilities",
   "keywords": [
     "ceramic",
@@ -41,8 +41,8 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^3.0.4",
-    "@ceramicnetwork/streamid": "^3.0.4",
+    "@ceramicnetwork/common": "^3.0.5",
+    "@ceramicnetwork/streamid": "^3.0.5",
     "lodash.clonedeep": "^4.5.0"
   }
 }
