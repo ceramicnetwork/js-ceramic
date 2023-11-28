@@ -79,7 +79,9 @@ export class IpfsTopology {
     this.logger.debug(`Connected to peers: ${connectedPeers.join(',')}`)
 
     this.intervalId = setInterval(async () => {
-      this.logger.debug(`Performing periodic reconnection to bootstrap peers for network ${this.ceramicNetwork}`)
+      this.logger.debug(
+        `Performing periodic reconnection to bootstrap peers for network ${this.ceramicNetwork}`
+      )
       await this.forceConnection()
     }, this.period)
   }
