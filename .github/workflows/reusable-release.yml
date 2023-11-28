@@ -265,10 +265,3 @@ jobs:
           echo "VERSION=$(echo $PROPS | jq -r '.version')" >> $GITHUB_ENV
           echo "SHA=$(echo $PROPS | jq -r '.sha')" >> $GITHUB_ENV
           echo "SHA_TAG=$(echo $PROPS | jq -r '.shaTag')" >> $GITHUB_ENV
-      -
-        # Pretend to be the main branch since a hotfix is a patch for the main branch
-        name: Push Docker image
-        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":prod:main:\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
-      -
-        name: Create deployment job
-        run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":prod:\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
