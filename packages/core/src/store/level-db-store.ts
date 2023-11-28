@@ -30,6 +30,7 @@ class LevelDBStoreMap {
   readonly #storeRoot
   readonly networkName
   readonly #map: Map<string, Level>
+  #fullLocations: Record<string, string> = {}
 
   constructor(storeRoot: string, networkName: string, readonly logger: DiagnosticsLogger) {
     this.networkName = networkName
@@ -67,18 +68,32 @@ class LevelDBStoreMap {
   }
 
   private getFullLocation(useCaseName = DEFAULT_LEVELDB_STORE_USE_CASE_NAME): string {
+    let fullLocation = this.#fullLocations[useCaseName]
+    if (fullLocation != null) {
+      return fullLocation
+    }
+
     // Check if store exists at legacy ELP location
     if (this.networkName === Networks.MAINNET) {
       const elpLocation = this.getStoreLocation(useCaseName, OLD_ELP_DEFAULT_LOCATION)
       const storePath = path.join(this.#storeRoot, elpLocation)
       if (fs.existsSync(storePath)) {
-        console.warn(
+        // Use ELP location if store exists
+        this.logger.warn(
           `LevelDB store ${useCaseName} found with ELP location, using it instead of default mainnet location`
         )
-        return elpLocation
+        fullLocation = elpLocation
       }
     }
-    return this.getStoreLocation(useCaseName)
+
+    // Get store location if not already set
+    if (fullLocation == null) {
+      fullLocation = this.getStoreLocation(useCaseName)
+    }
+    // Cache resolved location
+    this.#fullLocations[useCaseName] = fullLocation
+
+    return fullLocation
   }
 
   async get(useCaseName?: string): Promise<Level> {

@@ -1,4 +1,4 @@
-import { Networks } from '@ceramicnetwork/common'
+import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
@@ -69,6 +69,7 @@ class S3StoreMap {
 export class S3Store implements IKVStore {
   readonly #bucketName: string
   readonly #customEndpoint?: string
+  readonly #diagnosticsLogger: DiagnosticsLogger
   #storeMap: S3StoreMap
 
   readonly #loadingLimit = new PQueue({
@@ -77,9 +78,15 @@ export class S3Store implements IKVStore {
     carryoverConcurrencyCount: true,
   })
 
-  constructor(networkName: string, bucketName: string, customEndpoint?: string) {
+  constructor(
+    networkName: string,
+    diagnosticsLogger: DiagnosticsLogger,
+    bucketName: string,
+    customEndpoint?: string
+  ) {
     this.#bucketName = bucketName
     this.#customEndpoint = customEndpoint
+    this.#diagnosticsLogger = diagnosticsLogger
     this.#storeMap = new S3StoreMap(networkName, bucketName, customEndpoint)
   }
 
@@ -94,7 +101,7 @@ export class S3Store implements IKVStore {
       try {
         await s3.headBucket({ Bucket: `${this.#bucketName}/ceramic/elp` }).promise()
         // Bucket exists and needs to be used
-        console.warn(
+        this.#diagnosticsLogger.warn(
           `S3 bucket found with ELP location, using it instead of default mainnet location for state store`
         )
         // Re-create store map with 'elp' network name
