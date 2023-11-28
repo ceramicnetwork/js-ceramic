@@ -107,7 +107,9 @@ describe('Ceramic API', () => {
 
     afterEach(async () => {
       await ceramic.close()
-      tmpFolder.cleanup()
+      await tmpFolder.cleanup().catch((error) => {
+        console.error('Error while cleaning up tmpFolder:', error)
+      })
     })
 
     it('can load the previous stream commit', async () => {

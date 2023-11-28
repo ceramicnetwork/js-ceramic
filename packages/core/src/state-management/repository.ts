@@ -985,15 +985,19 @@ export class Repository {
   updates$(init: StreamState): Observable<StreamState> {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
-      this.fromMemoryOrStore(id).then((found) => {
-        const state$ = found || new RunningState(init, false)
-        this.inmemory.endure(id.toString(), state$)
-        state$.subscribe(subscriber).add(() => {
-          if (state$.observers.length === 0) {
-            this.inmemory.free(id.toString())
-          }
+      this.fromMemoryOrStore(id)
+        .then((found) => {
+          const state$ = found || new RunningState(init, false)
+          this.inmemory.endure(id.toString(), state$)
+          state$.subscribe(subscriber).add(() => {
+            if (state$.observers.length === 0) {
+              this.inmemory.free(id.toString())
+            }
+          })
         })
-      })
+        .catch((error) => {
+          this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error.message}`)
+        })
     })
   }
 

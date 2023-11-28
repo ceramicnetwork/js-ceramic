@@ -102,7 +102,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
       // All streams except one has only one commit. The stream with two commits has not requested an anchor for the 2nd commit. Therefore we
       // we only need to anchor the first commit of each stream.
       // @ts-ignore { cid: , streamID: } is not an instance of Candidate class (which shouldn't be exported, if necessary)
-      newAnchoringService._process({ cid: state$.state.log[0].cid, streamId: state$.id })
+      await newAnchoringService._process({ cid: state$.state.log[0].cid, streamId: state$.id })
     })
 
     // Use the ceramic instance with anchorOnRequest === true to resume anchors

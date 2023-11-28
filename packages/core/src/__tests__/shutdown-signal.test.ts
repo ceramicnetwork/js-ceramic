@@ -6,7 +6,13 @@ const fn = (abortSignal: AbortSignal) => {
     abortSignal.addEventListener('abort', () => {
       reject(new Error(`aborted after run`))
     })
-    new Promise((resolve1) => setTimeout(resolve1, 500)).then(() => resolve('ok'))
+    new Promise((resolve1) => setTimeout(resolve1, 500))
+      .then(() => {
+        resolve('ok')
+      })
+      .catch((error) => {
+        reject(error)
+      })
   })
 }
 
