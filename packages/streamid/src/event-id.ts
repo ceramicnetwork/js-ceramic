@@ -98,9 +98,9 @@ export class EventID {
    */
   @Memoize()
   get bytes(): Uint8Array {
-    const streamCodec = varint.encode(STREAMID_CODEC)
-    const eventIDCodec = varint.encode(EVENT_ID_CODEC)
-    const networkID = varint.encode(this._networkID)
+    const streamCodec = new Uint8Array(varint.encode(STREAMID_CODEC))
+    const eventIDCodec = new Uint8Array(varint.encode(EVENT_ID_CODEC))
+    const networkID = new Uint8Array(varint.encode(this._networkID))
     const eventHeight = cbor.encode(this._eventHeight)
     const event = this._event.bytes
     return u8a.concat([
