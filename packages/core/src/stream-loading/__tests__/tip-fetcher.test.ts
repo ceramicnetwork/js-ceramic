@@ -47,7 +47,9 @@ describe('TipFetcher test', () => {
         const tipMap = new Map().set(streamID.toString(), tip)
         const response: PubsubMessage = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
         ipfs2.pubsub.publish(TOPIC, serialize(response)).catch((error) => {
-          logger.err('Error occurred in the "basic tip fetch" test while publishing to ipfs' + error.message);
+          logger.err(
+            'Error occurred in the "basic tip fetch" test while publishing to ipfs' + error.message
+          )
         })
       }
     })

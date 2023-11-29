@@ -11,7 +11,13 @@ import {
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { AnchorStatus, IpfsApi, StreamUtils, TestUtils } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  IpfsApi,
+  StreamUtils,
+  TestUtils,
+  LoggerProvider,
+} from '@ceramicnetwork/common'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -96,6 +102,7 @@ describe('Ceramic API', () => {
   describe('API', () => {
     let ceramic: Ceramic
     let tmpFolder: tmp.DirectoryResult
+    const logger = new LoggerProvider().getDiagnosticsLogger()
 
     beforeEach(async () => {
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 16_000_000
@@ -108,7 +115,7 @@ describe('Ceramic API', () => {
     afterEach(async () => {
       await ceramic.close()
       await tmpFolder.cleanup().catch((error) => {
-        console.error('Error while cleaning up tmpFolder:', error)
+        logger.err('Error while cleaning up tmpFolder:' + error.message)
       })
     })
 
