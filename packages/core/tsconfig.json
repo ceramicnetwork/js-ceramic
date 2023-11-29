@@ -4,6 +4,5 @@
     "outDir": "lib",
     "rootDir": "src"
   },
-  // override exclude imported above as we want lint rules to be applied to mocks and test files as well
-  "exclude": ["node_modules", "coverage", "src/*.spec.ts"]
+  "include": ["./src/**/*"]
 }
