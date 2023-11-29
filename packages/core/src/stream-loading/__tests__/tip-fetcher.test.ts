@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../../dispatcher.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createDispatcher } from '../../__tests__/create-dispatcher.js'
-import { IpfsApi, TestUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { deserialize, MsgType, PubsubMessage, serialize } from '../../pubsub/pubsub-message.js'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { TipFetcher } from '../tip-fetcher.js'
@@ -20,7 +20,6 @@ describe('TipFetcher test', () => {
     ipfsClient = await createIPFS()
 
     dispatcher = await createDispatcher(ipfsClient, TOPIC)
-    const logger = new LoggerProvider().getDiagnosticsLogger()
   })
 
   afterAll(async () => {
@@ -34,7 +33,6 @@ describe('TipFetcher test', () => {
   })
 
   test('basic tip fetch', async () => {
-    const logger = new LoggerProvider().getDiagnosticsLogger()
     const streamID = TestUtils.randomStreamID()
     const tip = TestUtils.randomCID()
 
@@ -47,9 +45,8 @@ describe('TipFetcher test', () => {
         const tipMap = new Map().set(streamID.toString(), tip)
         const response: PubsubMessage = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
         ipfs2.pubsub.publish(TOPIC, serialize(response)).catch((error) => {
-          logger.err(
-            'Error occurred in the "basic tip fetch" test while publishing to ipfs' + error.message
-          )
+          // we want the test to fail if an error occurs thus we are rethrowing the error
+          throw error
         })
       }
     })
