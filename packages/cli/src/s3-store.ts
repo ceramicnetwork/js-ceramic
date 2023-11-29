@@ -98,16 +98,16 @@ export class S3Store implements IKVStore {
     // Check if ELP bucket is used
     if (this.networkName === Networks.MAINNET) {
       const s3 = new AWSSDK.S3()
-      try {
-        await s3.headBucket({ Bucket: `${this.#bucketName}/ceramic/elp` }).promise()
-        // Bucket exists and needs to be used
+      const res = await s3
+        .listObjectsV2({ Bucket: this.#bucketName, Prefix: 'ceramic/elp', MaxKeys: 1 })
+        .promise()
+      if (res.Contents?.length) {
+        // state store exists and needs to be used
         this.#diagnosticsLogger.warn(
           `S3 bucket found with ELP location, using it instead of default mainnet location for state store`
         )
         // Re-create store map with 'elp' network name
         this.#storeMap = new S3StoreMap('elp' as Networks, this.#bucketName, this.#customEndpoint)
-      } catch (error) {
-        // Ignore bucket not found or other error from S3
       }
     }
   }
