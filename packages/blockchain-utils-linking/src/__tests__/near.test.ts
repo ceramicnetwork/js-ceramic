@@ -9,7 +9,7 @@ const chainRef = 'testnet'
 const accountName = 'crustykitty.testnet'
 const keyPair = nearApiJs.utils.KeyPair.fromString(privateKey)
 const keyStore = new nearApiJs.keyStores.InMemoryKeyStore()
-keyStore.setKey(chainRef, accountName, keyPair)
+await keyStore.setKey(chainRef, accountName, keyPair)
 
 const config = {
   keyStore, // instance of InMemoryKeyStore
