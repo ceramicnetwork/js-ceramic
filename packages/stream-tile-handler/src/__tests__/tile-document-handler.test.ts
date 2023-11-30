@@ -21,6 +21,8 @@ import {
   GenesisCommit,
   CeramicSigner,
   CommitData,
+  SignatureUtils,
+  ThreadedDid
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -180,18 +182,22 @@ const ThreeIdResolver = {
   }),
 }
 
-const setDidToNotRotatedState = (did: DID) => {
+const setDidToNotRotatedState = (did: ThreadedDid) => {
   const keyDidResolver = KeyDidResolver.getResolver()
-  did.setResolver({
+  did.did.setResolver({
     ...keyDidResolver,
     ...ThreeIdResolver,
   })
 
+  did.did._client = {
+    request: () => { return { jws: jwsForVersion0 } }
+  }
+  did.verifyJWS = async () => {}
   did.createJWS = async () => jwsForVersion0
 }
 
-const rotateKey = (did: DID, rotateDate: string) => {
-  did.resolve = async (didUrl) => {
+const rotateKey = (did: ThreadedDid, rotateDate: string) => {
+  did.did.resolve = async (didUrl) => {
     const { did } = parseDidUrl(didUrl)
     const isVersion0 = /version=0/.exec(didUrl)
 
@@ -230,11 +236,15 @@ const rotateKey = (did: DID, rotateDate: string) => {
     }
   }
 
+  did.did._client = {
+    request: () => { return { jws: jwsForVersion1 } }
+  }
+  did.verifyJWS = async () => {}
   did.createJWS = async () => jwsForVersion1
 }
 
 describe('TileDocumentHandler', () => {
-  let did: DID
+  let did: ThreadedDid
   let tileDocumentHandler: TileDocumentHandler
   let context: Context
   let signerUsingNewKey: CeramicSigner
@@ -263,12 +273,14 @@ describe('TileDocumentHandler', () => {
 
     const keyDidResolver = KeyDidResolver.getResolver()
     const { DID } = await import('dids')
-    did = new DID({
-      resolver: {
-        ...keyDidResolver,
-      },
-    })
-    ;(did as any)._id = DID_ID
+    const ntDid = new DID({
+        resolver: {
+          ...keyDidResolver,
+        },
+      })
+    ;(ntDid as any)._id = DID_ID
+    const verifierAndDid = await SignatureUtils.didContext(ntDid)
+    did = verifierAndDid[1]
     const api = {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
@@ -276,12 +288,20 @@ describe('TileDocumentHandler', () => {
       did,
     }
 
-    signerUsingNewKey = { did: new DID({}) }
-    ;(signerUsingNewKey.did as any)._id = DID_ID
+    const verifierAndDidNew = await SignatureUtils.didContext(new DID({}))
+    signerUsingNewKey = { did: verifierAndDidNew[1], didVerifier: verifierAndDidNew[0] }
+    signerUsingNewKey.did.did._id = DID_ID
+    signerUsingNewKey.did.did._client = {
+      request: () => { return { jws: jwsForVersion1 } }
+    }
     signerUsingNewKey.did.createJWS = async () => jwsForVersion1
 
-    signerUsingOldKey = { did: new DID({}) }
-    ;(signerUsingOldKey.did as any)._id = DID_ID
+    const verifierAndDidOld = await SignatureUtils.didContext(new DID({}))
+    signerUsingOldKey = { did: verifierAndDidOld[1], didVerifier: verifierAndDidOld[0] }
+    signerUsingOldKey.did.did._id = DID_ID
+    signerUsingOldKey.did.did._client = {
+      request: () => { return { jws: jwsForVersion0 } }
+    }
     signerUsingOldKey.did.createJWS = async () => jwsForVersion0
 
     context = {
@@ -336,7 +356,7 @@ describe('TileDocumentHandler', () => {
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
     const commit = (await TileDocument.makeGenesis(context.api, null)) as GenesisCommit
-    expect(commit.header.controllers[0]).toEqual(did.id)
+    expect(commit.header.controllers[0]).toEqual(did.did.id)
   })
 
   it('Does not sign commit if no content', async () => {
@@ -350,14 +370,14 @@ describe('TileDocumentHandler', () => {
 
     const payload = dagCBOR.decode<any>(linkedBlock)
     expect(payload.data).toEqual(COMMITS.genesis.data)
-    expect(payload.header.controllers[0]).toEqual(did.id)
+    expect(payload.header.controllers[0]).toEqual(did.did.id)
 
     const commitWithoutContent = (await TileDocument.makeGenesis(
       context.api,
       null
     )) as GenesisCommit
     expect(commitWithoutContent.data).toBeUndefined
-    expect(commitWithoutContent.header.controllers[0]).toEqual(did.id)
+    expect(commitWithoutContent.header.controllers[0]).toEqual(did.did.id)
   })
 
   it('throws if more than one controller', async () => {
@@ -388,7 +408,7 @@ describe('TileDocumentHandler', () => {
       TileDocument.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })
     ).rejects.toThrow('No DID provided')
     const commit1 = await TileDocument.makeGenesis({} as CeramicApi, null, {
-      controllers: [did.id],
+      controllers: [did.did.id],
     })
 
     expect(commit1).toBeDefined()
@@ -593,7 +613,7 @@ describe('TileDocumentHandler', () => {
     const tileDocumentHandler = new TileDocumentHandler()
 
     const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
-      controllers: [did.id],
+      controllers: [did.did.id],
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
@@ -609,7 +629,7 @@ describe('TileDocumentHandler', () => {
     const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
     const doc = new TileDocument(TestUtils.runningState(state), context)
     const makeCommit = doc.makeCommit(context.api, COMMITS.r1.desiredContent, {
-      controllers: [did.id, did.id],
+      controllers: [did.did.id, did.did.id],
     })
     await expect(makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
   })

@@ -2,7 +2,7 @@ import type { Stream, StreamHandler, CeramicCommit, StreamState } from './stream
 import type { AnchorOpts, CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts.js'
 import type { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { LoggerProvider } from './logger-provider.js'
-import type { ThreadedDid, GenesisCommit } from './index.js'
+import type { DidVerifier, ThreadedDid, GenesisCommit } from './index.js'
 import type { IndexApi } from './index-api.js'
 import { NodeStatusResponse } from './node-status-interface.js'
 import type { AnchorStatus } from './stream.js'
@@ -75,6 +75,7 @@ interface CeramicCommon {
  */
 export interface CeramicSigner extends CeramicCommon {
   did: ThreadedDid | undefined
+  didVerifier: DidVerifier | undefined
 
   [index: string]: any // allow arbitrary properties
 }

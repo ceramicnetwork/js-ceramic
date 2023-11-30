@@ -24,6 +24,7 @@ import {
   AdminApi,
   NodeStatusResponse,
   AnchorOpts,
+  DEFAULT_CACAO_VERIFIERS
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -292,6 +293,10 @@ export class Ceramic implements CeramicApi {
     )
   }
 
+  get didVerifier(): DidVerifier | undefined {
+    return this.context.didVerifier
+  }
+
   get did(): ThreadedDid | undefined {
     return this.context.did
   }
@@ -316,7 +321,7 @@ export class Ceramic implements CeramicApi {
       this.context.didVerifier = new DidVerifier()
       await this.context.didVerifier.init()
     }
-    const threadedDid = await this.context.didVerifier.addDid(did)
+    const threadedDid = await this.context.didVerifier.addDid(did, DEFAULT_CACAO_VERIFIERS)
     this.context.did = threadedDid
     return threadedDid
   }

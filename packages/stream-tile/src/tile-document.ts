@@ -194,7 +194,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : ceramic
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid, didVerifier: ceramic.didVerifier } : ceramic
     const commit = await TileDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
@@ -281,6 +281,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Update an existing Tile document.
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param content - New content to replace old content
    * @param metadata - Changes to make to the metadata.  Only fields that are specified will be changed.
    * @param opts - Additional options
@@ -291,7 +292,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : this.api
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid, didVerifier: this.api.didVerifier } : this.api
     const updateCommit = await this.makeCommit(signer, content, metadata)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)

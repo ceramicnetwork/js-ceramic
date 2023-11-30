@@ -2,7 +2,6 @@ import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
-import type { DID } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { ModelHandler } from '../model-handler.js'
@@ -19,6 +18,7 @@ import {
   CeramicSigner,
   GenesisCommit,
   RawCommit,
+  ThreadedDid, SignatureUtils
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
 
@@ -143,19 +143,23 @@ const ThreeIdResolver = {
   }),
 }
 
-const setDidToNotRotatedState = (did: DID) => {
+const setDidToNotRotatedState = (did: ThreadedDid) => {
   const keyDidResolver = KeyDidResolver.getResolver()
-  did.setResolver({
+  did.did.setResolver({
     ...keyDidResolver,
     ...ThreeIdResolver,
   })
 
+  did.did._client = {
+    request: () => { return { jws: jwsForVersion1 } }
+  }
+  did.verifyJWS = async () => {}
   did.createJWS = async () => jwsForVersion0
 }
 
 // TODO: De-dupe this with similar code from tile-document-handler.test.ts and model-instance-document.test.ts
-const rotateKey = (did: DID, rotateDate: string) => {
-  did.resolve = async (didUrl) => {
+const rotateKey = (did: ThreadedDid, rotateDate: string) => {
+  did.did.resolve = async (didUrl) => {
     const { did } = parseDidUrl(didUrl)
     const isVersion0 = /version=0/.exec(didUrl)
 
@@ -194,11 +198,15 @@ const rotateKey = (did: DID, rotateDate: string) => {
     }
   }
 
+  did.did._client = {
+    request: () => { return { jws: jwsForVersion1 } }
+  }
+  did.verifyJWS = async () => {}
   did.createJWS = async () => jwsForVersion1
 }
 
 async function checkSignedCommitMatchesExpectations(
-  did: DID,
+  did: ThreadedDid,
   commit: SignedCommitContainer,
   expectedCommit: GenesisCommit | RawCommit
 ) {
@@ -221,7 +229,7 @@ async function checkSignedCommitMatchesExpectations(
 }
 
 describe('ModelHandler', () => {
-  let did: DID
+  let did: ThreadedDid
   let handler: ModelHandler
   let context: Context
   let signerUsingNewKey: CeramicSigner
@@ -250,12 +258,14 @@ describe('ModelHandler', () => {
 
     const keyDidResolver = KeyDidResolver.getResolver()
     const { DID } = await import('dids')
-    did = new DID({
+    const ntDid = new DID({
       resolver: {
         ...keyDidResolver,
       },
     })
-    ;(did as any)._id = DID_ID
+    ;(ntDid as any)._id = DID_ID
+    const verifierAndDid = await SignatureUtils.didContext(ntDid)
+    did = verifierAndDid[1]
     const api = {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
@@ -263,16 +273,25 @@ describe('ModelHandler', () => {
       did,
     }
 
-    signerUsingNewKey = { did: new DID({}) }
-    ;(signerUsingNewKey.did as any)._id = DID_ID
+    const verifierAndDidNew = await SignatureUtils.didContext(new DID({}))
+    signerUsingNewKey = { did: verifierAndDidNew[1], didVerifier: verifierAndDidNew[0] }
+    signerUsingNewKey.did.did._id = DID_ID
+    signerUsingNewKey.did.did._client = {
+      request: () => { return { jws: jwsForVersion1 } }
+    }
     signerUsingNewKey.did.createJWS = async () => jwsForVersion1
 
-    signerUsingOldKey = { did: new DID({}) }
-    ;(signerUsingOldKey.did as any)._id = DID_ID
+    const verifierAndDidOld = await SignatureUtils.didContext(new DID({}))
+    signerUsingOldKey = { did: verifierAndDidOld[1], didVerifier: verifierAndDidOld[1] }
+    signerUsingOldKey.did.did._id = DID_ID
+    signerUsingOldKey.did.did._client = {
+      request: () => { return { jws: jwsForVersion1 } }
+    }
     signerUsingOldKey.did.createJWS = async () => jwsForVersion0
 
     context = {
       did,
+      didVerifier: verifierAndDid[0],
       ipfs,
       anchorService: null,
       api: api as unknown as CeramicApi,
@@ -295,7 +314,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
+      header: { controllers: [context.api.did.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
@@ -307,7 +326,7 @@ describe('ModelHandler', () => {
 
     const expectedGenesis = {
       data: FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW,
-      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
+      header: { controllers: [context.api.did.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)

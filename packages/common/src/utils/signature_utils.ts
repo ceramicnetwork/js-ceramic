@@ -11,7 +11,7 @@ import { getTezosVerifier } from '@didtools/pkh-tezos'
 const DEFAULT_CACAO_REVOCATION_PHASE_OUT = 24 * 60 * 60
 
 // Register supported CACAO Verifiers
-const verifiersCACAO = {
+export const DEFAULT_CACAO_VERIFIERS = {
   ...getEIP191Verifier(),
   ...getSolanaVerifier(),
   ...getStacksVerifier(),
@@ -25,7 +25,7 @@ export class SignatureUtils {
   static async didContext(did: DID): Promise<[DidVerifier, ThreadedDid]> {
     const verifier = new DidVerifier()
     await verifier.init()
-    const threadedDid = await verifier.addDid(did, verifiersCACAO)
+    const threadedDid = await verifier.addDid(did, DEFAULT_CACAO_VERIFIERS)
     return [verifier, threadedDid]
   }
   /**

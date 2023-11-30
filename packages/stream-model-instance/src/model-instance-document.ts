@@ -76,7 +76,7 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
     throw new Error('No DID verifier provided')
   }
   if (!signer.did.authenticated) {
-    await signer.did.authenticate()
+    await signer.didVerifier.authenticate(signer.did)
     if (signer.loggerProvider) {
       signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
     }
@@ -123,7 +123,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : ceramic
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid, didVerifier: ceramic.didVerifier } : ceramic
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
 
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
@@ -145,7 +145,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : ceramic
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid, didVerifier: ceramic.didVerifier } : ceramic
     metadata = { ...metadata, deterministic: true }
 
     const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata)
@@ -188,7 +188,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
-    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid } : this.api
+    const signer: CeramicSigner = opts.asDid ? { did: opts.asDid, didVerifier: this.api.didVerifier } : this.api
     const updateCommit = await this._makeCommit(signer, content)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)

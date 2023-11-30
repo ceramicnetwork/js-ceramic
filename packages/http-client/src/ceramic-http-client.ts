@@ -101,6 +101,10 @@ export class CeramicClient implements CeramicApi {
     }
   }
 
+  get didVerifier(): DidVerifier | undefined {
+    return this.context.didVerifier
+  }
+
   get did(): ThreadedDid | undefined {
     return this.context.did
   }
