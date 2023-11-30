@@ -8,14 +8,13 @@ import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const LOGGER = new LoggerProvider().getDiagnosticsLogger()
 const POLL_INTERVAL = 100
-const MAX_POLL_TIME = 1000
 
 describe('RemoteCAS supportedChains', () => {
   test('returns decoded supported chains on valid response', async () => {
     const fetchFn = jest.fn(async () => ({
       supportedChains: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
 
     const supportedChains = await cas.supportedChains()
     expect(supportedChains).toEqual(['eip155:42'])
@@ -28,7 +27,7 @@ describe('RemoteCAS supportedChains', () => {
       someOtherField: 'SomeOtherContent',
       supportedChains: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
     const supportedChains = await cas.supportedChains()
     expect(supportedChains).toEqual(['eip155:42'])
     expect(fetchFn).toBeCalledTimes(1)
@@ -39,7 +38,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       supportedChains: ['eip155:42', 'eip155:1'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
     await expect(cas.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         supportedChains: ['eip155:42', 'eip155:1'],
@@ -51,7 +50,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       incorrectFieldName: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, MAX_POLL_TIME, fetchFn)
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
     await expect(cas.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         incorrectFieldName: ['eip155:42'],
@@ -63,13 +62,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFnNull = jest.fn(async () => ({
       supportedChains: null,
     })) as unknown as typeof fetchJson
-    const casForNull = new RemoteCAS(
-      ANCHOR_SERVICE_URL,
-      LOGGER,
-      POLL_INTERVAL,
-      MAX_POLL_TIME,
-      fetchFnNull
-    )
+    const casForNull = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFnNull)
     const expectedErrorNull =
       'Error: Invalid value null supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)'
     await expect(casForNull.supportedChains()).rejects.toThrow(
@@ -81,13 +74,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFnEmpty = jest.fn(async () => ({
       supportedChains: [],
     })) as unknown as typeof fetchJson
-    const casForEmpty = new RemoteCAS(
-      ANCHOR_SERVICE_URL,
-      LOGGER,
-      POLL_INTERVAL,
-      MAX_POLL_TIME,
-      fetchFnEmpty
-    )
+    const casForEmpty = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFnEmpty)
     const expectedErrorUndefined = `Error: Invalid value [] supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)`
     await expect(casForEmpty.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({

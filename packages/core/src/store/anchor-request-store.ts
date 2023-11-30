@@ -105,8 +105,4 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     this.#shouldStop = true
     await super.close()
   }
-
-  async close(): Promise<void> {
-    await this.store.close(this.useCaseName)
-  }
 }
