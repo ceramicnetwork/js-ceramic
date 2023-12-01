@@ -365,6 +365,7 @@ export class CeramicDaemon {
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3Store = new S3Store(
         params.networkOptions.name,
+        diagnosticsLogger,
         opts.stateStore?.s3Bucket,
         opts.stateStore?.s3Endpoint
       )

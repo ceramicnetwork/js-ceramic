@@ -161,6 +161,7 @@ export class Repository {
   }
 
   async init(): Promise<void> {
+    await this.#deps.keyValueStore.init()
     await this.pinStore.open(this.#deps.keyValueStore)
     await this.anchorRequestStore.open(this.#deps.keyValueStore)
     await this.index.init()

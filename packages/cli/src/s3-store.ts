@@ -1,3 +1,4 @@
+import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { IKVStore, IKVStoreFindResult, StoreSearchParams } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
@@ -66,7 +67,10 @@ class S3StoreMap {
 }
 
 export class S3Store implements IKVStore {
-  readonly #storeMap: S3StoreMap
+  readonly #bucketName: string
+  readonly #customEndpoint?: string
+  readonly #diagnosticsLogger: DiagnosticsLogger
+  #storeMap: S3StoreMap
 
   readonly #loadingLimit = new PQueue({
     intervalCap: MAX_LOAD_RPS,
@@ -74,12 +78,38 @@ export class S3Store implements IKVStore {
     carryoverConcurrencyCount: true,
   })
 
-  constructor(networkName: string, bucketName: string, customEndpoint?: string) {
+  constructor(
+    networkName: string,
+    diagnosticsLogger: DiagnosticsLogger,
+    bucketName: string,
+    customEndpoint?: string
+  ) {
+    this.#bucketName = bucketName
+    this.#customEndpoint = customEndpoint
+    this.#diagnosticsLogger = diagnosticsLogger
     this.#storeMap = new S3StoreMap(networkName, bucketName, customEndpoint)
   }
 
   get networkName(): string {
     return this.#storeMap.networkName
+  }
+
+  async init(): Promise<void> {
+    // Check if ELP bucket is used
+    if (this.networkName === Networks.MAINNET) {
+      const s3 = new AWSSDK.S3()
+      const res = await s3
+        .listObjectsV2({ Bucket: this.#bucketName, Prefix: 'ceramic/elp', MaxKeys: 1 })
+        .promise()
+      if (res.Contents?.length) {
+        // state store exists and needs to be used
+        this.#diagnosticsLogger.warn(
+          `S3 bucket found with ELP location, using it instead of default mainnet location for state store`
+        )
+        // Re-create store map with 'elp' network name
+        this.#storeMap = new S3StoreMap('elp' as Networks, this.#bucketName, this.#customEndpoint)
+      }
+    }
   }
 
   async close(useCaseName?: string): Promise<void> {
