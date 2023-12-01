@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.0.4...@ceramicnetwork/core@3.1.0-rc.0) (2023-12-01)
+
+
+### Bug Fixes
+
+* Don't initialize Repository before Ceramic ([#3045](https://github.com/ceramicnetwork/js-ceramic/issues/3045)) ([c61623e](https://github.com/ceramicnetwork/js-ceramic/commit/c61623e9761872070fa86768137d9286ba54cf2b))
+* gateway flag is broken ([#3044](https://github.com/ceramicnetwork/js-ceramic/issues/3044)) ([c1c5c50](https://github.com/ceramicnetwork/js-ceramic/commit/c1c5c50c35246cd9e4e812edda9d0bc7cf154ab7))
+
+
+
+
+
 ## [3.0.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.0.2...@ceramicnetwork/core@3.0.4) (2023-11-16)
 
 **Note:** Version bump only for package @ceramicnetwork/core

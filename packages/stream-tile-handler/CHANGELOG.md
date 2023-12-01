@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@3.0.4...@ceramicnetwork/stream-tile-handler@3.1.0-rc.0) (2023-12-01)
+
+
+### Bug Fixes
+
+* Use envelope not payload when building StreamID for applying genesis commits ([#3042](https://github.com/ceramicnetwork/js-ceramic/issues/3042)) ([a333ef9](https://github.com/ceramicnetwork/js-ceramic/commit/a333ef98dadcd4287c208dcb52c7501770a1b42e))
+
+
+
+
+
 ## [3.0.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@3.0.2...@ceramicnetwork/stream-tile-handler@3.0.4) (2023-11-16)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

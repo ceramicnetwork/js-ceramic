@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@3.0.4...@ceramicnetwork/cli@3.1.0-rc.0) (2023-12-01)
+
+
+### Bug Fixes
+
+* Don't initialize Repository before Ceramic ([#3045](https://github.com/ceramicnetwork/js-ceramic/issues/3045)) ([c61623e](https://github.com/ceramicnetwork/js-ceramic/commit/c61623e9761872070fa86768137d9286ba54cf2b))
+* initialize s3 state store after setting up did ([#3043](https://github.com/ceramicnetwork/js-ceramic/issues/3043)) ([6dc8a64](https://github.com/ceramicnetwork/js-ceramic/commit/6dc8a6478f312a5f4d188b521997f4ac021b6434))
+
+
+
+
+
 ## [3.0.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@3.0.2...@ceramicnetwork/cli@3.0.4) (2023-11-16)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
