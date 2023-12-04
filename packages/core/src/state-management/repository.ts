@@ -997,6 +997,8 @@ export class Repository {
         })
         .catch((error) => {
           this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error}`)
+          // propogate the error to the subscriber
+          subscriber.error(error)
         })
     })
   }
