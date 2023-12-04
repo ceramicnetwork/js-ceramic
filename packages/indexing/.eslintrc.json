@@ -7,8 +7,7 @@
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "import/no-unresolved": "error",
-    "import/default": "off",
-    "no-console": "error" 
+    "import/default": "off"
   },
   "settings": {
     "import/parsers": {
