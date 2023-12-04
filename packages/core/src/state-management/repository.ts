@@ -531,9 +531,9 @@ export class Repository {
       this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
-        await this._updateStateIfPinned(state$)
         state$.next(next)
-        this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
+        await this._updateStateIfPinned(state$)
+        this.logger.imp(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
         return false
@@ -714,6 +714,7 @@ export class Repository {
     tip: CID,
     witnessCAR: CAR | undefined
   ): Promise<void> {
+    const streamId = StreamUtils.streamIdFromState(state$.state)
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
     for (
@@ -722,8 +723,10 @@ export class Repository {
       remainingRetries--
     ) {
       try {
+        this.logger.verbose(`Handling anchor commit for ${streamId}`)
         if (witnessCAR) {
           await this.dispatcher.importCAR(witnessCAR)
+          this.logger.verbose(`successfully imported CAR file for ${streamId}`)
         }
 
         const applied = await this._handleTip(state$, anchorCommitCID)
@@ -736,6 +739,10 @@ export class Repository {
             // If we failed to apply the commit at least once, then it's worth logging when
             // we are able to do so successfully on the retry.
             this.logger.imp(
+              `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
+            )
+          } else {
+            this.logger.verbose(
               `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
             )
           }
