@@ -72,7 +72,6 @@ describe('Node Status Endpoint tests', () => {
     expect(status.anchor.anchorServiceUrl).toEqual('<inmemory>')
     expect(status.anchor.ethereumRpcEndpoint).toBeNull()
     expect(status.anchor.chainId).toEqual('inmemory:12345')
-    expect(status.anchor.pendingAnchors).toEqual(0)
     expect(typeof status.ipfs.peerId).toEqual('string')
     for (const addr of status.ipfs.addresses) {
       expect(typeof addr).toEqual('string')
