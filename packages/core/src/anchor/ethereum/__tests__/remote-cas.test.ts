@@ -84,12 +84,22 @@ describe('RemoteCAS supportedChains', () => {
   })
 })
 describe('create', () => {
-  test('return pending, do no request', async () => {
-    const fetchFn = jest.fn() as unknown as typeof fetchJson
+  test('return pending, do request', async () => {
+    const fetchFn = jest.fn(() =>
+      Promise.resolve({
+        id: 'foo',
+        status: AnchorRequestStatusName.PENDING,
+        streamId: carFileReader.streamId.toString(),
+        cid: carFileReader.tip.toString(),
+        message: 'Sending anchoring request',
+        createdAt: dateAsUnix.encode(new Date()),
+        updatedAt: dateAsUnix.encode(new Date()),
+      })
+    ) as unknown as typeof fetchJson
     const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-    const result = await cas.create(carFileReader, false)
-    expect(fetchFn).not.toBeCalled()
+    const result = await cas.create(carFileReader)
+    expect(fetchFn).toBeCalled()
     expect(result).toEqual({
       status: AnchorRequestStatusName.PENDING,
       streamId: carFileReader.streamId,
@@ -98,61 +108,13 @@ describe('create', () => {
     })
   })
 
-  // Re-request on fetch error
-  test('waitForConfirmation on', async () => {
-    const maxAttempts = 10
+  test('return pending, throw error', async () => {
+    const fetchFn = jest.fn(async () => {
+      throw new Error(`Oops`)
+    }) as unknown as typeof fetchJson
+    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, LOGGER, POLL_INTERVAL, fetchFn)
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-
-    let n = 1
-    const fetchJsonFn = jest.fn().mockImplementation(async () => {
-      if (n < maxAttempts) {
-        n += 1
-        throw new Error(`No connection`)
-      } else {
-        return {
-          id: 'foo',
-          status: AnchorRequestStatusName.PENDING,
-          streamId: carFileReader.streamId.toString(),
-          cid: carFileReader.tip.toString(),
-          message: 'Sending anchoring request',
-          createdAt: dateAsUnix.encode(new Date()),
-          updatedAt: dateAsUnix.encode(new Date()),
-        }
-      }
-    })
-    const cas = new RemoteCAS(
-      ANCHOR_SERVICE_URL,
-      LOGGER,
-      POLL_INTERVAL,
-      fetchJsonFn as unknown as typeof fetchJson
-    )
-    const response = await cas.create(carFileReader, true)
-    expect(response).toEqual({
-      status: AnchorRequestStatusName.PENDING,
-      streamId: carFileReader.streamId,
-      cid: carFileReader.tip,
-      message: 'Sending anchoring request',
-    })
-    expect(fetchJsonFn).toBeCalledTimes(maxAttempts)
-  })
-  test('waitForConfirmation on, stop', async () => {
-    const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
-    let n = 0
-    const fetchJsonFn = jest.fn().mockImplementation(async () => {
-      n += 1
-      throw new Error(`No connection`)
-    })
-    const cas = new RemoteCAS(
-      ANCHOR_SERVICE_URL,
-      LOGGER,
-      POLL_INTERVAL,
-      fetchJsonFn as unknown as typeof fetchJson
-    )
-    const responseP = cas.create(carFileReader, true)
-    await TestUtils.delay(POLL_INTERVAL * 3)
-    await cas.close()
-    expect(fetchJsonFn).toBeCalledTimes(n)
-    await expect(responseP).rejects.toThrow()
+    await expect(cas.create(carFileReader)).rejects.toThrow()
   })
 })
 

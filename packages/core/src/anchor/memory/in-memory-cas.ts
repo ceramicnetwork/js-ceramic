@@ -72,10 +72,7 @@ export class InMemoryCAS implements CASClient {
     this.#queue = [] // reset
   }
 
-  async create(
-    carFileReader: AnchorRequestCarFileReader,
-    waitForConfirmation: boolean
-  ): Promise<AnchorEvent> {
+  async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
     const candidate = Candidate.fromCarFileReader(carFileReader)
     const streamId = candidate.streamId
     const tip = candidate.cid

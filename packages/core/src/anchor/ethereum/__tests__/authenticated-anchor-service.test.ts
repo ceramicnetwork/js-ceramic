@@ -98,8 +98,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     })
     await anchorService.init(FAUX_ANCHOR_STORE, FAUX_HANDLER)
 
-    const anchorEvent = await anchorService.requestAnchor(generateFakeCarFile(), true)
-    expect(anchorEvent.status).toEqual(AnchorRequestStatusName.FAILED) // because the response didn't match the expected format
+    await anchorService.requestAnchor(generateFakeCarFile())
 
     expect(signRequestSpy).toHaveBeenCalledTimes(2) // 1 to get supported chains + 1 to send request
     const signRequestResult = (await signRequestSpy.mock.results[1].value) as any

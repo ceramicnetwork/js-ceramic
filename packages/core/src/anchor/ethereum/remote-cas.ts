@@ -11,7 +11,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
-import { catchError, firstValueFrom, retry, Subject, takeUntil, timer, type Observable } from 'rxjs'
+import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 
 /**
  * Parse JSON that CAS returns.
@@ -95,24 +95,12 @@ export class RemoteCAS implements CASClient {
    * the method is a no-op, as it returns a stub Pending response. Here we assume that some other component
    * has already saved an anchor request to AnchorRequestStore.
    */
-  async create(
-    carFileReader: AnchorRequestCarFileReader,
-    waitForConfirmation: boolean
-  ): Promise<AnchorEvent> {
-    if (waitForConfirmation) {
-      const response = await firstValueFrom(this.create$(carFileReader, waitForConfirmation))
-      return parseResponse(carFileReader.streamId, carFileReader.tip, response)
-    } else {
-      return {
-        status: AnchorRequestStatusName.PENDING,
-        streamId: carFileReader.streamId,
-        cid: carFileReader.tip,
-        message: 'Sending anchoring request',
-      }
-    }
+  async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
+    const response = await firstValueFrom(this.create$(carFileReader))
+    return parseResponse(carFileReader.streamId, carFileReader.tip, response)
   }
 
-  create$(carFileReader: AnchorRequestCarFileReader, shouldRetry: boolean): Observable<unknown> {
+  create$(carFileReader: AnchorRequestCarFileReader): Observable<unknown> {
     const sendRequest$ = deferAbortable((signal) =>
       this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
@@ -124,31 +112,15 @@ export class RemoteCAS implements CASClient {
       })
     )
 
-    if (shouldRetry) {
-      return sendRequest$.pipe(
-        retry({
-          delay: (error) => {
-            this.#logger.warn(
-              new Error(
-                `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
-              )
-            )
-            return timer(this.#pollInterval)
-          },
-        }),
-        takeUntil(this.#stopSignal)
-      )
-    } else {
-      return sendRequest$.pipe(
-        catchError((error) => {
-          // clean up the error message to have more context
-          throw new Error(
-            `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
-          )
-        }),
-        takeUntil(this.#stopSignal)
-      )
-    }
+    return sendRequest$.pipe(
+      catchError((error) => {
+        // clean up the error message to have more context
+        throw new Error(
+          `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
+        )
+      }),
+      takeUntil(this.#stopSignal)
+    )
   }
 
   async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {

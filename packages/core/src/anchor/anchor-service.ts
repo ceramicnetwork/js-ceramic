@@ -36,10 +36,8 @@ export interface AnchorService {
   /**
    * Send request to the anchoring service
    * @param carFile - CAR file containing all necessary data for the CAS to anchor
-   * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
-   *   request before returning.
    */
-  requestAnchor(carFile: CAR, waitForConfirmation: boolean): Promise<AnchorEvent>
+  requestAnchor(carFile: CAR): Promise<AnchorEvent>
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
@@ -121,10 +119,7 @@ export interface CASClient {
    * Create an anchor request on CAS through `fetch`. If `waitForConfirmation` is `true`,
    * it only returns after getting a confirmation from CAS.
    */
-  create(
-    carFileReader: AnchorRequestCarFileReader,
-    waitForConfirmation: boolean
-  ): Promise<AnchorEvent>
+  create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent>
 
   /**
    * Get current status of an anchor request from CAS for `streamId` and its `tip`.

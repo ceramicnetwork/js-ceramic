@@ -97,10 +97,8 @@ export class InMemoryAnchorService implements AnchorService {
   /**
    * Send request to the anchoring service
    * @param carFile - CAR file containing all necessary data for the CAS to anchor
-   * @param waitForConfirmation - if true, waits until the CAS has acknowledged receipt of the anchor
-   *   request before returning.
    */
-  async requestAnchor(carFile: CAR, waitForConfirmation = false): Promise<AnchorEvent> {
+  async requestAnchor(carFile: CAR): Promise<AnchorEvent> {
     const carFileReader = new AnchorRequestCarFileReader(carFile)
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
@@ -111,16 +109,12 @@ export class InMemoryAnchorService implements AnchorService {
       timestamp: Date.now(),
     })
 
-    if (waitForConfirmation) {
-      return this.#cas.create(carFileReader, waitForConfirmation)
-    } else {
-      doNotWait(this.#cas.create(carFileReader, false))
-      return {
-        status: AnchorRequestStatusName.PENDING,
-        streamId: streamId,
-        cid: tip,
-        message: 'Sending anchoring request',
-      }
+    doNotWait(this.#cas.create(carFileReader), this.#logger)
+    return {
+      status: AnchorRequestStatusName.PENDING,
+      streamId: streamId,
+      cid: tip,
+      message: 'Sending anchoring request',
     }
   }
 

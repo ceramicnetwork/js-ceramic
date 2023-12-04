@@ -33,7 +33,7 @@ export class AnchorProcessingLoop {
               `No request present on CAS for ${entry.value.cid} of ${entry.key}: ${error}`
             )
             const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
-            return cas.create(new AnchorRequestCarFileReader(requestCAR), false)
+            return cas.create(new AnchorRequestCarFileReader(requestCAR))
           })
         const isTerminal = await eventHandler.handle(event)
         if (isTerminal) {
