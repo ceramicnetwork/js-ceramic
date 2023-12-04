@@ -95,6 +95,7 @@ export class ProcessingLoop<T> {
           isDone = next.done
           if (isDone) break
           const value = next.value
+          if (!value) continue
           await Promise.race([this.handleValue(value), rejectOnAbortSignal])
         } while (!isDone)
         this.#whenComplete.resolve()
