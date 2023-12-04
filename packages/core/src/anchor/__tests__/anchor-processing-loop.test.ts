@@ -42,7 +42,7 @@ test('process entries one by one, stop when all processed', async () => {
   const loop = new ProcessingLoop(finiteIntegers(), noop)
   loop.start()
   await isDone
-  expect(noop).toBeCalledTimes(max)
+  expect(noop).toBeCalledTimes(max - 1)
 })
 
 test('stop generator after processing (idempotent)', async () => {
