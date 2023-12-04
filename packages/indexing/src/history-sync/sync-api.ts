@@ -306,7 +306,7 @@ export class SyncApi implements ISyncApi {
     const job =
       type === HISTORY_SYNC_JOB ? createHistorySyncJob(data) : createContinuousSyncJob(data)
 
-    this.jobQueue.addJob(job)
+    await this.jobQueue.addJob(job)
   }
 
   /**

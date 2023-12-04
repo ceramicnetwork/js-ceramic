@@ -2,12 +2,17 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "import"],
+    // required for no-floating -promises lint rule
+    "parserOptions": {
+      "project": "tsconfig.linter.json" 
+    },
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "import/no-unresolved": "error",
-    "import/default": "off"
+    "import/default": "off",
+    "@typescript-eslint/no-floating-promises": "error"
   },
   "settings": {
     "import/parsers": {
