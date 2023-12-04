@@ -66,7 +66,7 @@ describe('Merkle tree proofs tests', () => {
       const hashedProof = uint8arrays.toString(hashProof(leaf, proof), 'hex')
       if (hashedProof !== root) {
         const lettersProof = lettersTree.getProof(i)
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console        
         console.log(
           'The resulting hash of your proof is wrong. \n' +
             `We were expecting: ${root} \n` +

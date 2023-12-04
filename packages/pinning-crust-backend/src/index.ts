@@ -9,9 +9,13 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { DispatchError } from '@polkadot/types/interfaces'
 import { ITuple } from '@polkadot/types/types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 // Encoder
 const textEncoder = new TextEncoder()
+
+// Logger
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 // Errors
 export class EmptySeedError extends Error {
@@ -177,7 +181,7 @@ export class CrustPinningBackend implements PinningBackend {
   async sendTx(tx: SubmittableExtrinsic, krp: KeyringPair): Promise<void> {
     return new Promise((resolve, reject) => {
       tx.signAndSend(krp, ({ events = [], status }) => {
-        console.log(`  ↪ 💸 [tx]: Transaction status: ${status.type}, nonce: ${tx.nonce}`)
+        logger.imp(`  ↪ 💸 [tx]: Transaction status: ${status.type}, nonce: ${tx.nonce}`)
 
         if (status.isInvalid || status.isDropped || status.isUsurped) {
           reject(new Error(`${status.type} transaction.`))
@@ -189,12 +193,12 @@ export class CrustPinningBackend implements PinningBackend {
           events.forEach(({ event: { data, method, section } }) => {
             if (section === 'system' && method === 'ExtrinsicFailed') {
               const [dispatchError] = data as unknown as ITuple<[DispatchError]>
-              console.log(
+              logger.err(
                 `  ↪ 💸 ❌ [tx]: Send transaction(${tx.type}) failed with ${dispatchError.type}.`
               )
               reject(new TxError(tx.type, dispatchError.type))
             } else if (method === 'ExtrinsicSuccess') {
-              console.log(`  ↪ 💸 ✅ [tx]: Send transaction(${tx.type}) success.`)
+              logger.imp(`  ↪ 💸 ✅ [tx]: Send transaction(${tx.type}) success.`)
               resolve()
             }
           })
