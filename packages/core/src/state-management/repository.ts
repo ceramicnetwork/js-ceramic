@@ -533,7 +533,7 @@ export class Repository {
       if (next) {
         state$.next(next)
         await this._updateStateIfPinned(state$)
-        this.logger.imp(`Stream ${state$.id} successfully updated to tip ${cid}`)
+        this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
         return false
