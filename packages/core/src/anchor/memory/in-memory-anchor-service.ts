@@ -10,6 +10,7 @@ import { InMemoryCAS } from './in-memory-cas.js'
 import { CID } from 'multiformats'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
+import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 
 const CHAIN_ID = 'inmemory:12345'
 const BATCH_SIZE = 10
@@ -27,6 +28,7 @@ export class InMemoryAnchorService implements AnchorService {
   readonly #cas: InMemoryCAS
   readonly #logger: DiagnosticsLogger
   readonly #enableLoop: boolean
+  readonly #queue: NamedTaskQueue
 
   #loop: AnchorProcessingLoop
   #store: AnchorRequestStore | undefined
@@ -40,6 +42,9 @@ export class InMemoryAnchorService implements AnchorService {
     this.validator = new InMemoryAnchorValidator(CHAIN_ID)
     this.#logger = logger
     this.#enableLoop = _config.enableLoop ?? true
+    this.#queue = new NamedTaskQueue((error) => {
+      logger.err(error)
+    })
   }
 
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
@@ -49,7 +54,8 @@ export class InMemoryAnchorService implements AnchorService {
       this.#cas,
       this.#store,
       this.#logger,
-      eventHandler
+      eventHandler,
+      this.#queue
     )
     if (this.#enableLoop) {
       this.#loop.start()
@@ -103,11 +109,13 @@ export class InMemoryAnchorService implements AnchorService {
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
 
-    await this.#store.save(streamId, {
-      cid: tip,
-      genesis: carFileReader.genesis,
-      timestamp: Date.now(),
-    })
+    await this.#queue.run(streamId.toString(), () =>
+      this.#store.save(streamId, {
+        cid: tip,
+        genesis: carFileReader.genesis,
+        timestamp: Date.now(),
+      })
+    )
 
     doNotWait(this.#cas.create(carFileReader), this.#logger)
     return {
@@ -116,10 +124,6 @@ export class InMemoryAnchorService implements AnchorService {
       cid: tip,
       message: 'Sending anchoring request',
     }
-  }
-
-  hasAccepted(tip: CID): Promise<void> {
-    return this.#cas.hasAccepted(tip)
   }
 
   async close(): Promise<void> {

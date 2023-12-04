@@ -197,13 +197,6 @@ export class InMemoryCAS implements CASClient {
     }
   }
 
-  async hasAccepted(tip: CID): Promise<void> {
-    const key = tip.toString()
-    const found = this.#anchors.get(key)
-    if (found) return
-    await firstValueFrom(this.#events.pipe(filter((event) => event.cid.equals(tip))))
-  }
-
   async close() {
     this.#events.complete()
   }

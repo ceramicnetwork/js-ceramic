@@ -7,6 +7,7 @@ import type {
 import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import type { AnchorLoopHandler } from './anchor-service.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
+import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -16,16 +17,20 @@ import type { DiagnosticsLogger } from '@ceramicnetwork/common'
  * We create a request on CAS then.
  */
 export class AnchorProcessingLoop {
-  #loop: ProcessingLoop<AnchorRequestStoreListResult>
+  readonly #loop: ProcessingLoop<AnchorRequestStoreListResult>
+  readonly #queue: NamedTaskQueue
+
   constructor(
     batchSize: number,
     cas: CASClient,
     store: AnchorRequestStore,
     logger: DiagnosticsLogger,
-    eventHandler: AnchorLoopHandler
+    eventHandler: AnchorLoopHandler,
+    queue: NamedTaskQueue
   ) {
-    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), async (entry) => {
-      try {
+    this.#queue = queue
+    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), (entry) =>
+      this.#queue.run(entry.key.toString(), async () => {
         const event = await cas
           .getStatusForRequest(entry.key, entry.value.cid)
           .catch(async (error) => {
@@ -37,16 +42,10 @@ export class AnchorProcessingLoop {
           })
         const isTerminal = await eventHandler.handle(event)
         if (isTerminal) {
-          // We might store a new entry during the processing, so we better check if the current entry is indeed terminal.
-          const current = await store.load(entry.key)
-          if (current.cid.equals(entry.value.cid)) {
-            await store.remove(entry.key)
-          }
+          await store.remove(entry.key)
         }
-      } catch (e) {
-        logger.err(e)
-      }
-    })
+      })
+    )
   }
 
   /**

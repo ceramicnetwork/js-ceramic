@@ -22,6 +22,7 @@ import { NotSingleChainError, type AnchorLoopHandler } from '../anchor-service.j
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { RemoteCAS } from './remote-cas.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
+import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 
 const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const BATCH_SIZE = 10
@@ -34,6 +35,7 @@ export class EthereumAnchorService implements AnchorService {
   #loop: AnchorProcessingLoop
   readonly #enableLoop: boolean
   readonly #events: Subject<AnchorEvent>
+  readonly #queue: NamedTaskQueue
 
   #chainId: string
   #store: AnchorRequestStore
@@ -58,6 +60,9 @@ export class EthereumAnchorService implements AnchorService {
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     this.#enableLoop = enableLoop
+    this.#queue = new NamedTaskQueue((error) => {
+      logger.err(error)
+    })
   }
 
   /**
@@ -83,7 +88,8 @@ export class EthereumAnchorService implements AnchorService {
       this.#cas,
       this.#store,
       this.#logger,
-      eventHandler
+      eventHandler,
+      this.#queue
     )
     if (this.#enableLoop) {
       this.#loop.start()
@@ -107,11 +113,13 @@ export class EthereumAnchorService implements AnchorService {
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
 
-    await this.#store.save(streamId, {
-      cid: tip,
-      genesis: carFileReader.genesis,
-      timestamp: Date.now(),
-    })
+    await this.#queue.run(streamId.toString(), () =>
+      this.#store.save(streamId, {
+        cid: tip,
+        genesis: carFileReader.genesis,
+        timestamp: Date.now(),
+      })
+    )
 
     doNotWait(this.#cas.create(carFileReader), this.#logger)
     return {
