@@ -717,13 +717,15 @@ export class Repository {
     const streamId = StreamUtils.streamIdFromState(state$.state)
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
+
+    this.logger.verbose(`Handling anchor commit for ${streamId} with CID ${anchorCommitCID}`)
+
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
       remainingRetries >= 0;
       remainingRetries--
     ) {
       try {
-        this.logger.verbose(`Handling anchor commit for ${streamId}`)
         if (witnessCAR) {
           await this.dispatcher.importCAR(witnessCAR)
           this.logger.verbose(`successfully imported CAR file for ${streamId}`)
