@@ -32,7 +32,7 @@ test('resume anchors from AnchorRequestStore', async () => {
 
   const ceramic = await createCeramic(ipfs, {
     stateStoreDirectory: stateStoreDirectoryName,
-    enableLoop: false,
+    enableAnchorPollingLoop: false,
   })
 
   const streamIds = await Promise.all(

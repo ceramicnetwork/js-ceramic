@@ -18,7 +18,7 @@ const BATCH_SIZE = 10
 type InMemoryAnchorConfig = {
   anchorDelay: number
   anchorOnRequest: boolean
-  enableLoop: boolean
+  enableAnchorPollingLoop: boolean
 }
 
 /**
@@ -27,7 +27,7 @@ type InMemoryAnchorConfig = {
 export class InMemoryAnchorService implements AnchorService {
   readonly #cas: InMemoryCAS
   readonly #logger: DiagnosticsLogger
-  readonly #enableLoop: boolean
+  readonly #enableAnchorPollingLoop: boolean
   readonly #queue: NamedTaskQueue
 
   #loop: AnchorProcessingLoop
@@ -41,7 +41,7 @@ export class InMemoryAnchorService implements AnchorService {
     this.#cas = new InMemoryCAS(CHAIN_ID, _config.anchorOnRequest ?? true)
     this.validator = new InMemoryAnchorValidator(CHAIN_ID)
     this.#logger = logger
-    this.#enableLoop = _config.enableLoop ?? true
+    this.#enableAnchorPollingLoop = _config.enableAnchorPollingLoop ?? true
     this.#queue = new NamedTaskQueue((error) => {
       logger.err(error)
     })
@@ -57,7 +57,7 @@ export class InMemoryAnchorService implements AnchorService {
       eventHandler,
       this.#queue
     )
-    if (this.#enableLoop) {
+    if (this.#enableAnchorPollingLoop) {
       this.#loop.start()
     }
   }

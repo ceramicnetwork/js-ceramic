@@ -33,7 +33,7 @@ const BATCH_SIZE = 10
 export class EthereumAnchorService implements AnchorService {
   readonly #logger: DiagnosticsLogger
   #loop: AnchorProcessingLoop
-  readonly #enableLoop: boolean
+  readonly #enableAnchorPollingLoop: boolean
   readonly #events: Subject<AnchorEvent>
   readonly #queue: NamedTaskQueue
 
@@ -51,7 +51,7 @@ export class EthereumAnchorService implements AnchorService {
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
     sendRequest: FetchRequest = fetchJson,
-    enableLoop = true
+    enableAnchorPollingLoop = true
   ) {
     this.#logger = logger
     this.#events = new Subject()
@@ -59,7 +59,7 @@ export class EthereumAnchorService implements AnchorService {
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
-    this.#enableLoop = enableLoop
+    this.#enableAnchorPollingLoop = enableAnchorPollingLoop
     this.#queue = new NamedTaskQueue((error) => {
       logger.err(error)
     })
@@ -91,7 +91,7 @@ export class EthereumAnchorService implements AnchorService {
       eventHandler,
       this.#queue
     )
-    if (this.#enableLoop) {
+    if (this.#enableAnchorPollingLoop) {
       this.#loop.start()
     }
   }
@@ -152,7 +152,7 @@ export class AuthenticatedEthereumAnchorService
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
     pollInterval: number = DEFAULT_POLL_INTERVAL,
-    enableLoop = true
+    enableAnchorPollingLoop = true
   ) {
     super(
       anchorServiceUrl,
@@ -160,7 +160,7 @@ export class AuthenticatedEthereumAnchorService
       logger,
       pollInterval,
       auth.sendAuthenticatedRequest.bind(auth),
-      enableLoop
+      enableAnchorPollingLoop
     )
     this.auth = auth
   }

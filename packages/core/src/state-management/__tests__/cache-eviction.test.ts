@@ -12,7 +12,7 @@ beforeAll(async () => {
   ceramic = await createCeramic(ipfs, {
     streamCacheLimit: 1,
     anchorOnRequest: false,
-    enableLoop: false,
+    enableAnchorPollingLoop: false,
   })
 })
 
