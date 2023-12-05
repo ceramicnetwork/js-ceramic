@@ -614,10 +614,16 @@ export class Repository {
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
-        if (anchorEvent.cid.equals(state$.tip)) {
+        const anchorCommitCID = anchorEvent.witnessCar.roots[0]
+        await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
+        if (state$.tip.equals(anchorCommitCID)) {
+          // TODO: This check is brittle.  If the anchor commit is rejected by conflict resolution
+          // or if the stream already has the anchor commit but has newer commits as well, then we
+          // won't ever clean up the entry in the AnchorRequestStore.  To do this well we need a
+          // transactional AnchorRequestStore where we can do a compare-and-swap based on the tip
+          // in the request.
           await this.anchorRequestStore.remove(state$.id)
         }
-        await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
         return true
       }
       case AnchorRequestStatusName.FAILED: {
