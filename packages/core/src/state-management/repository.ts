@@ -741,7 +741,9 @@ export class Repository {
             // If we failed to apply the commit at least once, then it's worth logging when
             // we are able to do so successfully on the retry.
             this.logger.imp(
-              `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
+              `Successfully applied anchor commit ${anchorCommitCID} for stream ${
+                state$.id
+              } after ${APPLY_ANCHOR_COMMIT_ATTEMPTS - remainingRetries} attempts`
             )
           } else {
             this.logger.verbose(
