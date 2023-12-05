@@ -678,6 +678,10 @@ export class Repository {
         takeUntil(stopSignal),
         concatMap(async (anchorEvent) => {
           const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
+          // Notify the callback, if available
+          if (this.callback) {
+            this.callback(state$)
+          }
           if (shouldStop) stopSignal.next()
         }),
         catchError((error) => {
