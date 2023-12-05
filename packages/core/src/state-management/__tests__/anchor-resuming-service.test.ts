@@ -199,5 +199,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     // There should be nothing left in the AnchorRequestStore at this point
     const remaining = await getPendingAnchorStreamIDs(ceramic.repository.anchorRequestStore)
     expect(remaining.length).toEqual(0)
+
+    await ceramic.close()
   })
 })
