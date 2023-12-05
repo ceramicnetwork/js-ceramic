@@ -949,7 +949,7 @@ export class CeramicDaemon {
    * List pinned streams
    */
   async listPinned(req: Request, res: Response): Promise<void> {
-    let streamId: StreamID
+    let streamId: StreamID | undefined = undefined
     if (req.params.streamid) {
       streamId = StreamID.fromString(req.params.streamid)
     }
