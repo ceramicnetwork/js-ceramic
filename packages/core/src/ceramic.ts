@@ -651,7 +651,7 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-
+    this.#feed.aggregation.streamStates.next(state$.value)
     return stream
   }
 
