@@ -42,6 +42,8 @@ import { LRUCache } from 'least-recent'
 import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
+import { SseFeed } from './daemon/sse-feed.js'
+import { Observable } from 'rxjs'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -856,26 +858,22 @@ export class CeramicDaemon {
     })
   }
 
-  documentsFeed(req: Request, res: Response): void {
-    res.writeHead(200, {
-      Connection: 'keep-alive',
-      'Cache-Control': 'no-cache',
-      'Content-Type': 'text/event-stream',
+  documentsFeed(_: Request, res: Response): void {
+    const source = new Observable<number>((subscriber) => {
+      let counter = 0
+      const interval = setInterval(() => {
+        if (counter >= 20) {
+          subscriber.error(`20 done`)
+          return
+        }
+        subscriber.next(counter++)
+      }, 300)
+      return () => {
+        clearInterval(interval)
+      }
     })
-
-    let counter = 0
-    const interval = setInterval(() => {
-      const chunk = JSON.stringify({ chunk: counter++ })
-      console.log('data', chunk, 'id', counter)
-      res.write(`data: ${chunk}\nid:${counter}\n\n`)
-    }, 100)
-
-    const tearDown = () => {
-      clearInterval(interval)
-      res.end()
-    }
-    res.on('close', tearDown)
-    res.on('abort', tearDown)
+    const feed = new SseFeed(this.diagnosticsLogger, source, String)
+    feed.send(res)
   }
 
   async shutdownServer(req: Request, res: Response): Promise<void> {
