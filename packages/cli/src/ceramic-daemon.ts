@@ -351,6 +351,7 @@ export class CeramicDaemon {
     const legacyPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminShutdownRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const feedRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -366,6 +367,7 @@ export class CeramicDaemon {
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
     baseRouter.use('/admin/pins', adminPinsRouter)
+    baseRouter.use('/feed', feedRouter)
 
     // Original pins paths not supported error, to be fuly removed/deprecated after
     // pin add returns empty 200 for now, to support 3id-connect, to be removed
@@ -394,6 +396,7 @@ export class CeramicDaemon {
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
     adminShutdownRouter.postAsync('/', this.shutdownServer.bind(this))
+    feedRouter.get('/aggregation/documents', this.documentsFeed.bind(this))
 
     if (!readOnly) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -851,6 +854,28 @@ export class CeramicDaemon {
       type: AdminApiSuccessCallbackType.modelData,
       method: (modelData) => this.ceramic.admin.stopIndexingModelData(modelData),
     })
+  }
+
+  documentsFeed(req: Request, res: Response): void {
+    res.writeHead(200, {
+      Connection: 'keep-alive',
+      'Cache-Control': 'no-cache',
+      'Content-Type': 'text/event-stream',
+    })
+
+    let counter = 0
+    const interval = setInterval(() => {
+      const chunk = JSON.stringify({ chunk: counter++ })
+      console.log('data', chunk, 'id', counter)
+      res.write(`data: ${chunk}\nid:${counter}\n\n`)
+    }, 100)
+
+    const tearDown = () => {
+      clearInterval(interval)
+      res.end()
+    }
+    res.on('close', tearDown)
+    res.on('abort', tearDown)
   }
 
   async shutdownServer(req: Request, res: Response): Promise<void> {
