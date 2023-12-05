@@ -228,6 +228,7 @@ export class Ceramic implements CeramicApi {
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.anchorResumingService = new AnchorResumingService(this._logger)
     this.repository = modules.repository
+    this.repository.setCallback(this.updateFeed.bind(this))
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
@@ -562,6 +563,13 @@ export class Ceramic implements CeramicApi {
     this._streamHandlers.add(streamHandler)
   }
 
+    /*
+    * Callback to update 'feed' when state is updated
+    */
+    private updateFeed(value: StreamState): void {
+      this.#feed.aggregation.streamStates.next(value)
+    }
+
   async nodeStatus(): Promise<NodeStatusResponse> {
     const anchor = {
       anchorServiceUrl: this.anchorService.url,
@@ -682,13 +690,16 @@ export class Ceramic implements CeramicApi {
 
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)
+      this.#feed.aggregation.streamStates.next(snapshot$.value)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.loadAtTime(streamRef, opts)
+      this.#feed.aggregation.streamStates.next(snapshot$.value)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       try {
         const base$ = await this.repository.load(streamRef.baseID, opts)
+        this.#feed.aggregation.streamStates.next(base$.value)
         return streamFromState<T>(
           this.context,
           this._streamHandlers,
@@ -707,6 +718,8 @@ export class Ceramic implements CeramicApi {
         // Retry with a full resync
         opts.sync = SyncOptions.SYNC_ALWAYS
         const base$ = await this.repository.load(streamRef.baseID, opts)
+
+        this.#feed.aggregation.streamStates.next(base$.value)
         return streamFromState<T>(
           this.context,
           this._streamHandlers,
