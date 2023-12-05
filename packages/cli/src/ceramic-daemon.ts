@@ -41,6 +41,7 @@ import { version } from './version.js'
 import { LRUCache } from 'least-recent'
 import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
+import { parseQueryObject } from './daemon/parse-query-object.js'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -118,50 +119,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   }
 
   return ceramicConfig
-}
-
-/**
- * Takes a query object and parses the values to give them proper types instead of having everything
- * as strings
- * @param opts
- */
-function parseQueryObject(opts: Record<string, any>): Record<string, string | boolean | number> {
-  const typedOpts = {}
-  for (const [key, value] of Object.entries(opts)) {
-    if (typeof value == 'string') {
-      if (value[0] == '{') {
-        // value is a sub-object
-        typedOpts[key] = parseQueryObject(JSON.parse(value))
-      } else if (value === 'true') {
-        typedOpts[key] = true
-      } else if (value === 'false') {
-        typedOpts[key] = false
-      } else if (!isNaN(parseInt(value))) {
-        typedOpts[key] = parseInt(value)
-      } else {
-        typedOpts[key] = value
-      }
-    } else {
-      typedOpts[key] = value
-    }
-  }
-  return typedOpts
-}
-
-/**
- * Converts 'sync' option sent as a bool by outdated http-clients to the current format of an enum.
- * The old behaviors don't map directly to the new behaviors, so we take the best approximation.
- * TODO remove this once we no longer need to support clients older than v1.0.0
- * @param opts
- */
-function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
-  if (typeof opts?.sync == 'boolean') {
-    if (opts.sync) {
-      opts.sync = SyncOptions.SYNC_ALWAYS
-    } else {
-      opts.sync = SyncOptions.PREFER_CACHE
-    }
-  }
 }
 
 /**
@@ -918,7 +875,6 @@ export class CeramicDaemon {
   async applyCommit(req: Request, res: Response): Promise<void> {
     const { commit } = req.body
     const opts = req.body.opts
-    upconvertLegacySyncOption(opts)
 
     const streamId = req.body.streamId
     if (!(streamId && commit)) {
