@@ -46,17 +46,12 @@ describe('IPFS caching', () => {
   })
 
   test('applyCommit', async () => {
-    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
-      console.log('received', s)
-    })
-
     const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
     const ipfsBlockGet = jest.spyOn(ipfs.block, 'get')
     const ipfsDagGet = jest.spyOn(ipfs.dag, 'get')
     await tile.update({ hello: `world-1-${Math.random()}` })
     expect(ipfsBlockGet).toBeCalledTimes(0)
     expect(ipfsDagGet).toBeCalledTimes(0)
-    s.unsubscribe()
   })
 })
 
@@ -75,7 +70,9 @@ describe('Ceramic integration', () => {
           anchor: false,
           publish: false,
         })
+
         const stream2 = await TileDocument.load(ceramic2, stream1.id)
+
         expect(stream1.content).toEqual(stream2.content)
         expectEqualStates(stream1.state, stream2.state)
         await ceramic1.close()
