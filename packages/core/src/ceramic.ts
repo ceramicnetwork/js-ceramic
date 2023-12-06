@@ -62,6 +62,7 @@ import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Observable, Subject } from 'rxjs'
+import { RunningState } from './state-management/running-state.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -228,6 +229,7 @@ export class Ceramic implements CeramicApi {
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.anchorResumingService = new AnchorResumingService(this._logger)
     this.repository = modules.repository
+    this.repository.setCallback(this.updateFeed.bind(this))
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
@@ -562,6 +564,13 @@ export class Ceramic implements CeramicApi {
     this._streamHandlers.add(streamHandler)
   }
 
+  /*
+  * Callback to update 'feed' when state is updated inside the repository
+  */
+  private updateFeed(value: RunningState): void {
+    this.#feed.aggregation.streamStates.next(value.state)
+  }
+
   async nodeStatus(): Promise<NodeStatusResponse> {
     const anchor = {
       anchorServiceUrl: this.anchorService.url,
@@ -682,13 +691,9 @@ export class Ceramic implements CeramicApi {
 
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)
-      console.log("About to write on load stream from ref")
-      this.#feed.aggregation.streamStates.next(snapshot$.value)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.loadAtTime(streamRef, opts)
-      console.log("About to write on attime")
-      this.#feed.aggregation.streamStates.next(snapshot$.value)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       try {

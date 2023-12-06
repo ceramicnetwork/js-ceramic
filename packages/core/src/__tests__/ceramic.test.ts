@@ -927,16 +927,17 @@ describe('Ceramic feed', () => {
     await ipfs.stop()
   })
 
-  test('add entry after create/update stream', async () => {
+  test('add entry after creating/updating stream', async () => {
     const feed: StreamState[] = []
     const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
       feed.push(s)
     })
 
-    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
+    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
 
     await tile.update({ hello: `world-1-${Math.random()}` })
     s.unsubscribe()
+    // One entry after create, and another after update
     expect(feed.length).toEqual(2)
   })
 
@@ -987,5 +988,22 @@ describe('Ceramic feed', () => {
       s.unsubscribe()
       expect(feed.length).toEqual(1)
     })
+  })
+
+  test('add entry after anchoring stream', async () => {
+    const feed: StreamState[] = []
+    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
+      feed.push(s)
+    })
+
+    const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
+    const stream$ = await ceramic.repository.load(stream.id, {})
+    // request anchor
+    await ceramic.repository.anchor(stream$, {})
+    // process anchor
+    await TestUtils.anchorUpdate(ceramic, stream)
+    s.unsubscribe()
+
+    expect(feed.length).toEqual(3)
   })
 })
