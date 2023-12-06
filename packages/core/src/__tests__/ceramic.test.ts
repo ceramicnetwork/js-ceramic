@@ -31,7 +31,7 @@ function createCeramic(
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
-/*
+
 describe('IPFS caching', () => {
   let ipfs: IpfsApi
   let ceramic: Ceramic
@@ -70,9 +70,7 @@ describe('Ceramic integration', () => {
           anchor: false,
           publish: false,
         })
-
         const stream2 = await TileDocument.load(ceramic2, stream1.id)
-
         expect(stream1.content).toEqual(stream2.content)
         expectEqualStates(stream1.state, stream2.state)
         await ceramic1.close()
@@ -912,7 +910,7 @@ describe('Resuming anchors', () => {
     await ceramic.close()
   })
 })
-*/
+
 describe('Ceramic feed', () => {
   let ipfs: IpfsApi
   let ceramic: Ceramic
