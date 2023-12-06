@@ -15,6 +15,7 @@ import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const MOCK_WAS_CALLED_DELAY = 3 * 1000
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
@@ -48,17 +49,12 @@ describe('IPFS caching', () => {
   })
 
   test('applyCommit', async () => {
-    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
-      console.log('received', s)
-    })
-
     const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
     const ipfsBlockGet = jest.spyOn(ipfs.block, 'get')
     const ipfsDagGet = jest.spyOn(ipfs.dag, 'get')
     await tile.update({ hello: `world-1-${Math.random()}` })
     expect(ipfsBlockGet).toBeCalledTimes(0)
     expect(ipfsDagGet).toBeCalledTimes(0)
-    s.unsubscribe()
   })
 })
 
@@ -77,7 +73,9 @@ describe('Ceramic integration', () => {
           anchor: false,
           publish: false,
         })
+
         const stream2 = await TileDocument.load(ceramic2, stream1.id)
+
         expect(stream1.content).toEqual(stream2.content)
         expectEqualStates(stream1.state, stream2.state)
         await ceramic1.close()
@@ -913,5 +911,81 @@ describe('Resuming anchors', () => {
     await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100) // TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(mockCompleted).toBeTruthy()
     await ceramic.close()
+  })
+})
+
+describe('Ceramic feed', () => {
+  let ipfs: IpfsApi
+  let ceramic: Ceramic
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
+    await ipfs.stop()
+  })
+
+  test('add entry after create/update stream', async () => {
+    const feed: StreamState[] = []
+    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
+      feed.push(s)
+    })
+
+    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` })
+
+    await tile.update({ hello: `world-1-${Math.random()}` })
+    s.unsubscribe()
+    expect(feed.length).toEqual(2)
+  })
+
+  test('add entry after loading pinned stream', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs2, ipfs1)
+
+      const ceramic1 = await createCeramic(ipfs1)
+      const ceramic2 = await createCeramic(ipfs2)
+      const feed: StreamState[] = []
+      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
+        feed.push(s)
+      })
+      const stream1 = await TileDocument.create(ceramic1, { test: 123 }, null, {
+        anchor: false,
+        publish: false,
+      })
+
+      const stream2 = await TileDocument.load(ceramic2, stream1.id)
+      s.unsubscribe()
+      expect(feed.length).toEqual(1)
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  test('add entry after loading indexed model', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs2, ipfs1)
+
+      const ceramic1 = await createCeramic(ipfs1)
+      const ceramic2 = await createCeramic(ipfs2)
+      const MODEL_DEFINITION: ModelDefinition = {
+        name: 'myModel',
+        version: '1.0',
+        schema: { type: 'object', additionalProperties: false },
+        accountRelation: { type: 'list' },
+      }
+      const feed: StreamState[] = []
+
+      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
+        feed.push(s)
+      })
+
+      const model = await Model.create(ceramic1, MODEL_DEFINITION)
+      // load model
+      const loaded = await Model.load(ceramic2, model.id)
+      s.unsubscribe()
+      expect(feed.length).toEqual(1)
+    })
   })
 })
