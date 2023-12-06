@@ -126,11 +126,6 @@ export class Repository {
 
   #numPendingAnchorSubscriptions = 0
 
-  /*
-  * Callback function to update the feed on Ceramic object
-  */
-  private callback: ((result: RunningState) => void) | null = null
-
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
@@ -182,13 +177,6 @@ export class Repository {
 
   private get streamUpdater(): StreamUpdater {
     return this.#deps.streamUpdater
-  }
-
-  /*
-  * Sets the callback function
-  */
-  setCallback(callback: (result: RunningState) => void): void {
-    this.callback = callback
   }
 
   /**
@@ -281,10 +269,6 @@ export class Repository {
       if (syncStatus == SyncStatus.DID_SYNC && state$.isPinned) {
         this.markPinnedAndSynced(state$.id)
       }
-    }
-    // Notify the callback, if available
-    if (this.callback) {
-      this.callback(state$)
     }
     return state$
   }
@@ -678,10 +662,6 @@ export class Repository {
         takeUntil(stopSignal),
         concatMap(async (anchorEvent) => {
           const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
-          // Notify the callback, if available
-          if (this.callback) {
-            this.callback(state$)
-          }
           if (shouldStop) stopSignal.next()
         }),
         catchError((error) => {
