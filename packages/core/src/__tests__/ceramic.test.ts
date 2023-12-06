@@ -868,3 +868,142 @@ describe('buildStreamFromState', () => {
     expect(created.content).toEqual(tile.content)
   })
 })
+<<<<<<< HEAD
+=======
+
+describe('Resuming anchors', () => {
+  jest.setTimeout(10000)
+
+  let ipfs: IpfsApi
+  let mockWasCalled: boolean
+  let mockCompleted: boolean
+
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+
+    mockWasCalled = false
+    mockCompleted = false
+
+    jest
+      .spyOn(AnchorResumingService.prototype, 'resumeRunningStatesFromAnchorRequestStore')
+      .mockImplementation(() => {
+        mockWasCalled = true
+        return new Promise<void>(() => {
+          setTimeout(() => {
+            mockCompleted = true
+          }, MOCK_WAS_CALLED_DELAY)
+        })
+      })
+  })
+
+  afterEach(async () => {
+    await ipfs.stop()
+  })
+
+  it('Resume method is called (but is not blocking) when ceramic core is created', async () => {
+    const ceramic = await createCeramic(ipfs)
+    // resumeRunningStatesFromAnchorRequestStore() is not blocking for CeramicDaemon.create(...)
+    expect(mockWasCalled).toBeTruthy()
+    expect(mockCompleted).toBeFalsy()
+
+    // resumeRunningStatesFromAnchorRequestStore() is triggered by CeramicDaemon.create(...)
+    await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100) // TODO(CDB-2090): use less brittle approach to waiting for this condition
+    expect(mockCompleted).toBeTruthy()
+    await ceramic.close()
+  })
+})
+
+describe('Ceramic feed', () => {
+  let ipfs: IpfsApi
+  let ceramic: Ceramic
+  beforeEach(async () => {
+    ipfs = await createIPFS()
+    ceramic = await createCeramic(ipfs)
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
+    await ipfs.stop()
+  })
+
+  test('add entry after creating/updating stream', async () => {
+    const feed: StreamState[] = []
+    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
+      feed.push(s)
+    })
+
+    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
+
+    await tile.update({ hello: `world-1-${Math.random()}` })
+    s.unsubscribe()
+    // One entry after create, and another after update
+    expect(feed.length).toEqual(2)
+  })
+
+  test('add entry after loading pinned stream', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs2, ipfs1)
+
+      const ceramic1 = await createCeramic(ipfs1)
+      const ceramic2 = await createCeramic(ipfs2)
+      const feed: StreamState[] = []
+      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
+        feed.push(s)
+      })
+      const stream1 = await TileDocument.create(ceramic1, { test: 123 }, null, {
+        anchor: false,
+        publish: false,
+      })
+
+      const stream2 = await TileDocument.load(ceramic2, stream1.id)
+      s.unsubscribe()
+      expect(feed.length).toEqual(1)
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  test('add entry after loading indexed model', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs2, ipfs1)
+
+      const ceramic1 = await createCeramic(ipfs1)
+      const ceramic2 = await createCeramic(ipfs2)
+      const MODEL_DEFINITION: ModelDefinition = {
+        name: 'myModel',
+        version: '1.0',
+        schema: { type: 'object', additionalProperties: false },
+        accountRelation: { type: 'list' },
+      }
+      const feed: StreamState[] = []
+
+      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
+        feed.push(s)
+      })
+
+      const model = await Model.create(ceramic1, MODEL_DEFINITION)
+      // load model
+      const loaded = await Model.load(ceramic2, model.id)
+      s.unsubscribe()
+      expect(feed.length).toEqual(1)
+    })
+  })
+
+  test('add entry after anchoring stream', async () => {
+    const feed: StreamState[] = []
+    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
+      feed.push(s)
+    })
+
+    const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
+    const stream$ = await ceramic.repository.load(stream.id, {})
+    // request anchor
+    await ceramic.repository.anchor(stream$, {})
+    // process anchor
+    await TestUtils.anchorUpdate(ceramic, stream)
+    s.unsubscribe()
+
+    expect(feed.length).toEqual(3)
+  })
+})
+>>>>>>> 526a8b45 (feat: add anchor test)
