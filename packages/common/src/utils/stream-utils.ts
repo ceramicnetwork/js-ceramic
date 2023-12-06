@@ -385,4 +385,11 @@ export class StreamUtils {
 
     return true
   }
+
+  /**
+   * Returns whether the given StreamState contains the given commit CID in its log
+   */
+  static stateContainsCommit(state: StreamState, commit: CID): boolean {
+    return state.log.find((logEntry) => logEntry.cid.equals(commit)) != null
+  }
 }

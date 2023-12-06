@@ -2,7 +2,14 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { Observable, Subject } from 'rxjs'
-import { AnchorEvent, AnchorStatus, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import {
+  AnchorEvent,
+  AnchorStatus,
+  GenesisCommit,
+  IpfsApi,
+  SyncOptions,
+  TestUtils,
+} from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -23,7 +30,7 @@ async function getPendingAnchorStreamIDs(
 }
 
 describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
-  jest.setTimeout(10000)
+  jest.setTimeout(30 * 1000)
 
   let ipfs: IpfsApi
   let stateStoreDirectoryName: string
@@ -155,7 +162,7 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     await newCeramic.close()
   })
 
-  test('Cleans up entries from store for already anchored tips', async () => {
+  test('Cleans up entries from store for current anchored tip', async () => {
     const ceramic = await createCeramic(ipfs, {
       stateStoreDirectory: stateStoreDirectoryName,
     })
@@ -199,6 +206,60 @@ describe('resumeRunningStatesFromAnchorRequestStore(...) method', () => {
     // There should be nothing left in the AnchorRequestStore at this point
     const remaining = await getPendingAnchorStreamIDs(ceramic.repository.anchorRequestStore)
     expect(remaining.length).toEqual(0)
+
+    await ceramic.close()
+  })
+
+  test('Cleans up entries from store for historical anchored tips', async () => {
+    const ceramic = await createCeramic(ipfs, {
+      stateStoreDirectory: stateStoreDirectoryName,
+    })
+
+    const stream = await TileDocument.create(ceramic, { step: 0 })
+    await TestUtils.anchorUpdate(ceramic, stream)
+    await stream.update({ step: 1 })
+    await TestUtils.anchorUpdate(ceramic, stream)
+    await stream.update({ step: 2 })
+    await TestUtils.anchorUpdate(ceramic, stream)
+    expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(stream.state.log).toHaveLength(6)
+
+    // Wait for AnchorRequestStore to be cleared out
+    await TestUtils.waitForConditionOrTimeout(async () => {
+      const remaining = await getPendingAnchorStreamIDs(ceramic.repository.anchorRequestStore)
+      return remaining.length == 0
+    })
+
+    // Now make it seem like there was a lingering entry in the AnchorRequestStore for a commit in
+    // the middle of the log
+    await ceramic.repository.anchorRequestStore.save(stream.id, {
+      cid: stream.state.log[2].cid,
+      timestamp: Date.now(),
+      genesis: {} as GenesisCommit,
+    })
+
+    await expect(
+      getPendingAnchorStreamIDs(ceramic.repository.anchorRequestStore)
+    ).resolves.toHaveLength(1)
+
+    // Resume polling for the entry we just added to the AnchorResumingService
+    const anchorResumingService = new AnchorResumingService(
+      ceramic.loggerProvider.getDiagnosticsLogger()
+    )
+    // Clear out the cache to ensure Ceramic needs to go to the StateStore to load the stream,
+    // which is what triggers the resume logic for pending anchors.
+    ceramic.repository.inmemory.delete(stream.id.toString())
+    await anchorResumingService.resumeRunningStatesFromAnchorRequestStore(ceramic.repository)
+
+    // The node should detect that the entry is already anchored and clean it up.
+    await TestUtils.waitForConditionOrTimeout(async () => {
+      const remaining = await getPendingAnchorStreamIDs(ceramic.repository.anchorRequestStore)
+      return remaining.length == 0
+    })
+
+    await expect(
+      getPendingAnchorStreamIDs(ceramic.repository.anchorRequestStore)
+    ).resolves.toHaveLength(0)
 
     await ceramic.close()
   })
