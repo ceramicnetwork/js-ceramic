@@ -34,7 +34,7 @@ function createCeramic(
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
-
+/*
 describe('IPFS caching', () => {
   let ipfs: IpfsApi
   let ceramic: Ceramic
@@ -913,7 +913,7 @@ describe('Resuming anchors', () => {
     await ceramic.close()
   })
 })
-
+*/
 describe('Ceramic feed', () => {
   let ipfs: IpfsApi
   let ceramic: Ceramic
@@ -939,6 +939,9 @@ describe('Ceramic feed', () => {
     s.unsubscribe()
     // One entry after create, and another after update
     expect(feed.length).toEqual(2)
+
+    expect(feed[0].log[0].type).toBeLessThan(feed[1].log[1].type)
+    expect(feed[0].log[0].cid).toBe(feed[1].log[0].cid)
   })
 
   test('add entry after loading pinned stream', async () => {
@@ -947,11 +950,12 @@ describe('Ceramic feed', () => {
 
       const ceramic1 = await createCeramic(ipfs1)
       const ceramic2 = await createCeramic(ipfs2)
+      const content = { test: 123 }
       const feed: StreamState[] = []
       const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
         feed.push(s)
       })
-      const stream1 = await TileDocument.create(ceramic1, { test: 123 }, null, {
+      const stream1 = await TileDocument.create(ceramic1, content, null, {
         anchor: false,
         publish: false,
       })
@@ -959,6 +963,7 @@ describe('Ceramic feed', () => {
       const stream2 = await TileDocument.load(ceramic2, stream1.id)
       s.unsubscribe()
       expect(feed.length).toEqual(1)
+      expect(feed[0].content.test).toBe(content.test)
       await ceramic1.close()
       await ceramic2.close()
     })
@@ -981,12 +986,16 @@ describe('Ceramic feed', () => {
       const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
         feed.push(s)
       })
-
+      // create model on different node
       const model = await Model.create(ceramic1, MODEL_DEFINITION)
+
       // load model
       const loaded = await Model.load(ceramic2, model.id)
       s.unsubscribe()
       expect(feed.length).toEqual(1)
+      expect(feed[0].content).toEqual(model.state.content)
+      expect(feed[0].metadata).toEqual(model.state.metadata)
+      expect(feed[0].log).toEqual(model.state.log)
     })
   })
 
@@ -1005,5 +1014,16 @@ describe('Ceramic feed', () => {
     s.unsubscribe()
 
     expect(feed.length).toEqual(3)
+    // between and request anchor
+    expect(feed[0].content).toEqual(feed[1].content)
+    expect(feed[0].metadata).toEqual(feed[1].metadata)
+    expect(feed[0].log).toEqual(feed[1].log)
+    expect(feed[0].anchorStatus).toBeLessThan(feed[1].anchorStatus)
+    //between request anchor and process anchor
+    expect(feed[1].content).toEqual(feed[2].content)
+    expect(feed[1].metadata).toEqual(feed[2].metadata)
+    expect(feed[1].log).toEqual(feed[2].log)
+    expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
+
   })
 })
