@@ -98,6 +98,7 @@ function handleIn<T extends number | string>(
       op = ` not${op}`
     }
     const raw = bldr.client.raw(`cast(${key} as ${cast})${op}(${arrValue})`)
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     bldr.whereRaw(raw)
   }
   if (first) {

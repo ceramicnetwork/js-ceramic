@@ -258,6 +258,7 @@ export class InsertionOrder {
     if (cursor.type === 'timestamp') {
       // Paginate using the `created_at` field when no custom field ordering is provided
       builder = builder.where((qb) => {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         qb.where('created_at', isReverseOrder ? '<' : '>', cursor.value) // strict next value
           .orWhere('created_at', '=', cursor.value) // or current value
           .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker
@@ -268,6 +269,7 @@ export class InsertionOrder {
         const field = contentKey(key)
         const sign = getComparisonSign(sorting[key], isReverseOrder)
         builder = builder.where((qb) => {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           qb.whereRaw(`${field} ${sign} ?`, [value]) // strict next value
             .orWhereRaw(`${field} = ?`, [value]) // or current value
             .andWhere('stream_id', '>', cursor.id) // with stream ID tie-breaker

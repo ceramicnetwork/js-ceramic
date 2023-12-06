@@ -48,7 +48,7 @@ class BinaryRunningIpfs implements RunningIpfs {
   async shutdown(logger?: DiagnosticsLogger): Promise<void> {
     try {
       this.proc.kill()
-      this.dir.cleanup()
+      await this.dir.cleanup()
     } catch (e) {
       if (logger) {
         logger.err(`Failed to shutdown binary Rust IPFS: ${e}`)
