@@ -126,8 +126,8 @@ export class Repository {
   #numPendingAnchorSubscriptions = 0
 
   /*
-  * Callback function to update the feed on Ceramic object
-  */
+   * Callback function to update the feed on Ceramic object
+   */
   private callback: ((result: RunningState) => void) | null = null
 
   /**
@@ -184,8 +184,8 @@ export class Repository {
   }
 
   /*
-  * Sets the callback function
-  */
+   * Sets the callback function
+   */
   setCallback(callback: (result: RunningState) => void): void {
     this.callback = callback
   }
