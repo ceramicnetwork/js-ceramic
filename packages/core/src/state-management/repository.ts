@@ -549,7 +549,14 @@ export class Repository {
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
         state$.next(next)
+<<<<<<< HEAD
         await this._updateStateIfPinned(state$)
+=======
+        // Notify the callback, if available
+        if (this.callback) {
+          this.callback(state$)
+        }
+>>>>>>> 1976e7cc (feature: add pubsub update message entry)
         this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {

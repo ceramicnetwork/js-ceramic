@@ -14,6 +14,10 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+<<<<<<< HEAD
+=======
+import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
+>>>>>>> 1976e7cc (feature: add pubsub update message entry)
 
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
 
@@ -910,6 +914,7 @@ describe('Resuming anchors', () => {
     await ceramic.close()
   })
 })
+<<<<<<< HEAD
 
 describe('Ceramic feed', () => {
   let ipfs: IpfsApi
@@ -1025,3 +1030,5 @@ describe('Ceramic feed', () => {
   })
 })
 >>>>>>> 526a8b45 (feat: add anchor test)
+=======
+>>>>>>> 1976e7cc (feature: add pubsub update message entry)
