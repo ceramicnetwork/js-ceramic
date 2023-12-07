@@ -21,7 +21,7 @@ One interface worth noting is the `CeramicAPI` interface which lets the develope
 
 The [[Stream]] interface extends the `EventEmitter` interface which means that the developer can subscribe to events emitted from the Ceramic node like the `change` event (*more events will be defined in the future*).
 
-The method `change` is more or less sugar coding for the developer since all the operations can be implemented using the [[CeramicApi]] interface. For example the [[TileDocument]] included in the Ceramic node out-of-the-box.
+The method `change` is more or less sugar coating for the developer since all the operations can be implemented using the [[CeramicApi]] interface. For example the [[TileDocument]] included in the Ceramic node out-of-the-box.
 
 
 # StreamHandler
