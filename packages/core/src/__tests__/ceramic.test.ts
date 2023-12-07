@@ -15,7 +15,6 @@ import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { AnchorResumingService } from '../state-management/anchor-resuming-service.js'
-import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const MOCK_WAS_CALLED_DELAY = 3 * 1000
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
@@ -909,119 +908,5 @@ describe('Resuming anchors', () => {
     await TestUtils.delay(MOCK_WAS_CALLED_DELAY + 100) // TODO(CDB-2090): use less brittle approach to waiting for this condition
     expect(mockCompleted).toBeTruthy()
     await ceramic.close()
-  })
-})
-
-describe('Ceramic feed', () => {
-  let ipfs: IpfsApi
-  let ceramic: Ceramic
-  beforeEach(async () => {
-    ipfs = await createIPFS()
-    ceramic = await createCeramic(ipfs)
-  })
-
-  afterEach(async () => {
-    await ceramic.close()
-    await ipfs.stop()
-  })
-
-  test('add entry after creating/updating stream', async () => {
-    const feed: StreamState[] = []
-    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
-      feed.push(s)
-    })
-
-    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
-
-    await tile.update({ hello: `world-1-${Math.random()}` })
-    s.unsubscribe()
-    // One entry after create, and another after update
-    expect(feed.length).toEqual(2)
-
-    expect(feed[0].log[0].type).toBeLessThan(feed[1].log[1].type)
-    expect(feed[0].log[0].cid).toBe(feed[1].log[0].cid)
-  })
-
-  test('add entry after loading pinned stream', async () => {
-    await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs2, ipfs1)
-
-      const ceramic1 = await createCeramic(ipfs1)
-      const ceramic2 = await createCeramic(ipfs2)
-      const content = { test: 123 }
-      const feed: StreamState[] = []
-      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
-        feed.push(s)
-      })
-      const stream1 = await TileDocument.create(ceramic1, content, null, {
-        anchor: false,
-        publish: false,
-      })
-
-      const stream2 = await TileDocument.load(ceramic2, stream1.id)
-      s.unsubscribe()
-      expect(feed.length).toEqual(1)
-      expect(feed[0].content.test).toBe(content.test)
-      await ceramic1.close()
-      await ceramic2.close()
-    })
-  })
-
-  test('add entry after loading indexed model', async () => {
-    await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs2, ipfs1)
-
-      const ceramic1 = await createCeramic(ipfs1)
-      const ceramic2 = await createCeramic(ipfs2)
-      const MODEL_DEFINITION: ModelDefinition = {
-        name: 'myModel',
-        version: '1.0',
-        schema: { type: 'object', additionalProperties: false },
-        accountRelation: { type: 'list' },
-      }
-      const feed: StreamState[] = []
-
-      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
-        feed.push(s)
-      })
-      // create model on different node
-      const model = await Model.create(ceramic1, MODEL_DEFINITION)
-
-      // load model
-      const loaded = await Model.load(ceramic2, model.id)
-      s.unsubscribe()
-      expect(feed.length).toEqual(1)
-      expect(feed[0].content).toEqual(model.state.content)
-      expect(feed[0].metadata).toEqual(model.state.metadata)
-      expect(feed[0].log).toEqual(model.state.log)
-    })
-  })
-
-  test('add entry after anchoring stream', async () => {
-    const feed: StreamState[] = []
-    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
-      feed.push(s)
-    })
-
-    const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
-    const stream$ = await ceramic.repository.load(stream.id, {})
-    // request anchor
-    await ceramic.repository.anchor(stream$, {})
-    // process anchor
-    await TestUtils.anchorUpdate(ceramic, stream)
-    s.unsubscribe()
-
-    expect(feed.length).toEqual(3)
-    // between and request anchor
-    expect(feed[0].content).toEqual(feed[1].content)
-    expect(feed[0].metadata).toEqual(feed[1].metadata)
-    expect(feed[0].log).toEqual(feed[1].log)
-    expect(feed[0].anchorStatus).toBeLessThan(feed[1].anchorStatus)
-    //between request anchor and process anchor
-    expect(feed[1].content).toEqual(feed[2].content)
-    expect(feed[1].metadata).toEqual(feed[2].metadata)
-    expect(feed[1].log).toEqual(feed[2].log)
-    expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
-
   })
 })

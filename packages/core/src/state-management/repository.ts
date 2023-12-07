@@ -544,6 +544,10 @@ export class Repository {
       if (next) {
         await this._updateStateIfPinned(state$)
         state$.next(next)
+        // Notify the callback, if available
+        if (this.callback) {
+          this.callback(state$)
+        }
         this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
@@ -673,8 +677,11 @@ export class Repository {
       .pipe(
         takeUntil(stopSignal),
         concatMap(async (anchorEvent) => {
+          const prevState = state$.state
           const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
-          if (this.callback) {
+          const current = state$.state
+          // Notify the callback, if available
+          if (this.callback && prevState.anchorStatus !== current.anchorStatus) {
             this.callback(state$)
           }
           if (shouldStop) stopSignal.next()
