@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
-import type { DID } from 'dids'
+import { createJWSUsing } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { TileDocumentHandler } from '../tile-document-handler.js'
@@ -22,9 +22,17 @@ import {
   CeramicSigner,
   CommitData,
   SignatureUtils,
-  ThreadedDid
+  ThreadedDid, RawCommit
 } from '@ceramicnetwork/common'
 import { parse as parseDidUrl } from 'did-resolver'
+
+// jest.mock('dids', () => {
+//   const original = jest.requireActual('dids')
+//   return {
+//     ...original,
+//     createJWSUsing: jest.fn()
+//   }
+// })
 
 jest.unstable_mockModule('did-jwt', () => {
   return {
@@ -192,8 +200,7 @@ const setDidToNotRotatedState = (did: ThreadedDid) => {
   did.did._client = {
     request: () => { return { jws: jwsForVersion0 } }
   }
-  did.verifyJWS = async () => {}
-  did.createJWS = async () => jwsForVersion0
+  did.verifyJWS = () => { return }
 }
 
 const rotateKey = (did: ThreadedDid, rotateDate: string) => {
@@ -239,8 +246,6 @@ const rotateKey = (did: ThreadedDid, rotateDate: string) => {
   did.did._client = {
     request: () => { return { jws: jwsForVersion1 } }
   }
-  did.verifyJWS = async () => {}
-  did.createJWS = async () => jwsForVersion1
 }
 
 describe('TileDocumentHandler', () => {
@@ -281,6 +286,10 @@ describe('TileDocumentHandler', () => {
     ;(ntDid as any)._id = DID_ID
     const verifierAndDid = await SignatureUtils.didContext(ntDid)
     did = verifierAndDid[1]
+    did.did._client = {
+      request: () => { return { jws: jwsForVersion0 } }
+    }
+    did.verifyJWS = () => { return }
     const api = {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
@@ -294,7 +303,7 @@ describe('TileDocumentHandler', () => {
     signerUsingNewKey.did.did._client = {
       request: () => { return { jws: jwsForVersion1 } }
     }
-    signerUsingNewKey.did.createJWS = async () => jwsForVersion1
+    signerUsingNewKey.did.verifyJWS = () => { return }
 
     const verifierAndDidOld = await SignatureUtils.didContext(new DID({}))
     signerUsingOldKey = { did: verifierAndDidOld[1], didVerifier: verifierAndDidOld[0] }
@@ -302,7 +311,7 @@ describe('TileDocumentHandler', () => {
     signerUsingOldKey.did.did._client = {
       request: () => { return { jws: jwsForVersion0 } }
     }
-    signerUsingOldKey.did.createJWS = async () => jwsForVersion0
+    signerUsingOldKey.did.verifyJWS = () => { return }
 
     context = {
       did,
@@ -479,7 +488,7 @@ describe('TileDocumentHandler', () => {
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    const payload: RawCommit = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
@@ -500,7 +509,7 @@ describe('TileDocumentHandler', () => {
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    const sPayload: RawCommit = dagCBOR.decode(signedCommit.linkedBlock)
     await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed

@@ -12,7 +12,7 @@ import {
   StreamConstructor,
   StreamHandler,
   StreamState,
-  StreamUtils,
+  StreamUtils
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'

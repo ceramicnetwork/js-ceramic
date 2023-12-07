@@ -51,7 +51,7 @@
     "@didtools/pkh-stacks": "^0.1.0",
     "@didtools/pkh-tezos": "^0.2.1",
     "@stablelib/random": "^1.0.1",
-    "dids-threads": "^1.1.11",
+    "dids-threads": "^1.1.12",
     "caip": "~1.1.0",
     "flat": "^5.0.2",
     "it-first": "^1.0.7",

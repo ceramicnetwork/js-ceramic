@@ -232,13 +232,14 @@ export class StreamUtils {
    */
   static assertCommitLinksToState(state: StreamState, commit: RawCommit | AnchorCommit) {
     const streamId = this.streamIdFromState(state)
+    const commitId = CID.asCID(commit.id)
 
     // Older versions of the CAS created AnchorCommits without an 'id' field, so only check
     // the commit's 'id' field if it is present.
-    if (commit.id && !commit.id.equals(state.log[0].cid)) {
+    if (commitId && !commitId.equals(state.log[0].cid)) {
       throw new Error(
         `Invalid genesis CID in commit for StreamID ${streamId.toString()}. Found: ${
-          commit.id
+          commitId
         }, expected ${state.log[0].cid}`
       )
     }

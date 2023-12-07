@@ -133,13 +133,14 @@ function headerFromMetadata(
  */
 async function getAuthenticatedDID(signer: CeramicSigner): Promise<ThreadedDid> {
   if (!signer.did) throw new Error(`No DID provided`)
-  if (!signer.did.authenticated) {
-    await signer.did.authenticate()
-    if (signer.loggerProvider) {
-      signer.loggerProvider
-        .getDiagnosticsLogger()
-        .imp(`Now authenticated as DID ${signer.did.did.id}`)
-    }
+  if (signer.did.authenticated) {
+    return signer.did
+  }
+  await signer.didVerifier.authenticate(signer.did)
+  if (signer.loggerProvider) {
+    signer.loggerProvider
+      .getDiagnosticsLogger()
+      .imp(`Now authenticated as DID ${signer.did.did.id}`)
   }
   return signer.did
 }
