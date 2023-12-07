@@ -52,7 +52,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
         throw new Error(
           `You are not authorized to use the anchoring service found at: ${
             this.#anchorServiceUrl
-          }. Are you using the correct anchoring service url? If so please ensure that you have access to 3Box Labs’ Ceramic Anchor Service by following the steps found here: https://composedb.js.org/docs/0.4.x/guides/composedb-server/access-mainnet`
+          }. Are you using the correct anchoring service url? If so please ensure that you have access to 3Box Labs’ Ceramic Anchor Service by following the steps found here: https://developers.ceramic.network/docs/composedb/guides/composedb-server/access-mainnet`
         )
       }
       throw err
