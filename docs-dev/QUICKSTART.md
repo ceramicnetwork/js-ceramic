@@ -25,7 +25,7 @@ The default configuration file is located at
 
 For more information about the configuration options see [Server Configurations](https://developers.ceramic.network/docs/composedb/guides/composedb-server/server-configurations)
 
-For an example how to run in the cloud using Digital Ocean and Kubernetes see [Running in the Cloud](https://developers.ceramic.network/docs/composedb/guides/composedb-server/running-in-the-cloud) or refer to the [SimpleDeploy](SimpleDeploy) example ansible scripts.
+For an example how to run in the cloud using Digital Ocean and Kubernetes see [Running in the Cloud](https://developers.ceramic.network/docs/composedb/guides/composedb-server/running-in-the-cloud) or refer to the [SimpleDeploy](https://github.com/ceramicstudio/simpledeploy) example ansible scripts.
 
 ## Develop on Ceramic using ComposeDB
 
