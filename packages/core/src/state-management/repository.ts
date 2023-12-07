@@ -301,7 +301,7 @@ export class Repository {
       this._registerRunningState(runningState)
       const storedRequest = await this.anchorRequestStore.load(streamId)
       if (storedRequest !== null && this.anchorService) {
-        this._confirmAnchorResponse(runningState, storedRequest.cid)
+        await this._confirmAnchorResponse(runningState, storedRequest.cid)
       }
       return runningState
     } else {
@@ -569,9 +569,44 @@ export class Repository {
   }
 
   /**
+   * If, when checking an entry in the AnchorRequestStore, we notice that the commit CID from the
+   * stored request has in fact already been anchored, we need to clean up the entry from the store
+   * so it doesn't stick around forever.  We need to do that from within the ExecutionQueue, however,
+   * or we risk deleting a valid entry for a newer request on the same Stream from the store.
+   */
+  private async _cleanUpStaleAnchorRequestStore(state$: RunningState, commit: CID): Promise<void> {
+    return this.executionQ.forStream(state$.id).run(async () => {
+      const request = await this.anchorRequestStore.load(state$.id)
+      if (!request.cid.equals(commit)) {
+        // We've already moved on to a newer request, don't accidentally delete the new request
+        return
+      }
+
+      // Even if we may have already checked this condition before calling into this function,
+      // we need to check it again under the execution queue as the state may have changed in the
+      // meantime otherwise.
+      if (
+        state$.state.anchorStatus == AnchorStatus.ANCHORED &&
+        StreamUtils.stateContainsCommit(state$.state, commit)
+      ) {
+        // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
+        await this.anchorRequestStore.remove(state$.id)
+      }
+    })
+  }
+
+  /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  private _confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
+  private async _confirmAnchorResponse(state$: RunningState, cid: CID): Promise<Subscription> {
+    if (
+      state$.state.anchorStatus == AnchorStatus.ANCHORED &&
+      StreamUtils.stateContainsCommit(state$.state, cid)
+    ) {
+      // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
+      await this._cleanUpStaleAnchorRequestStore(state$, cid)
+    }
+
     const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
     return this._processAnchorResponse(state$, anchorStatus$)
   }
