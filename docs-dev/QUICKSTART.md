@@ -23,9 +23,9 @@ The default configuration file is located at
 
 `$HOME/.ceramic/daemon.config.json`
 
-For more information about the configuration options see [Server Configurations](https://composedb.js.org/docs/0.5.x/guides/composedb-server/server-configurations)
+For more information about the configuration options see [Server Configurations](https://developers.ceramic.network/docs/composedb/guides/composedb-server/server-configurations)
 
-For an example how to run in the cloud using Digital Ocean and Kubernetes see [Running in the Cloud](https://composedb.js.org/docs/0.5.x/guides/composedb-server/running-in-the-cloud) or refer to the [SimpleDeploy](SimpleDeploy) example ansible scripts.
+For an example how to run in the cloud using Digital Ocean and Kubernetes see [Running in the Cloud](https://developers.ceramic.network/docs/composedb/guides/composedb-server/running-in-the-cloud) or refer to the [SimpleDeploy](SimpleDeploy) example ansible scripts.
 
 ## Develop on Ceramic using ComposeDB
 
