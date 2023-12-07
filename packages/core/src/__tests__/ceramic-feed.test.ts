@@ -73,7 +73,8 @@ describe('Ceramic feed', () => {
         anchor: false,
         publish: true,
       })
-      const stream2 = await TileDocument.load(ceramic2, stream1.id)
+      // load stream on ceramic node 2
+      await TileDocument.load(ceramic2, stream1.id)
 
       await stream1.update(updatedContent, null, { publish: true })
       await TestUtils.delay(500)
@@ -111,7 +112,7 @@ describe('Ceramic feed', () => {
       const model = await Model.create(ceramic1, MODEL_DEFINITION)
 
       // load model
-      const loaded = await Model.load(ceramic2, model.id)
+      await Model.load(ceramic2, model.id)
       s.unsubscribe()
       expect(feed.length).toEqual(1)
       expect(feed[0].content).toEqual(model.state.content)
