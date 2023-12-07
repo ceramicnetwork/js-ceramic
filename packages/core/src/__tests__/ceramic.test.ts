@@ -38,7 +38,7 @@ function expectEqualStates(a: StreamState, b: StreamState) {
 
 describe('IPFS caching', () => {
   let ipfs: IpfsApi
-  let ceramic: Ceramic
+  let ceramic: CeramicApi
   beforeEach(async () => {
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
