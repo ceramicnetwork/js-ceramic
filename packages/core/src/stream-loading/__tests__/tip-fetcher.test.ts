@@ -44,10 +44,7 @@ describe('TipFetcher test', () => {
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), tip)
         const response: PubsubMessage = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
-        ipfs2.pubsub.publish(TOPIC, serialize(response)).catch((error) => {
-          // we want the test to fail if an error occurs thus we are rethrowing the error
-          throw error
-        })
+        void ipfs2.pubsub.publish(TOPIC, serialize(response))
       }
     })
 
