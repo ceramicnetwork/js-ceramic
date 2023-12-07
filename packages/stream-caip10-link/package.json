@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link",
-  "version": "3.1.0",
+  "version": "3.2.0-rc.0",
   "description": "Ceramic AccountLink stream type",
   "keywords": [
     "ceramic",
@@ -39,14 +39,14 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^3.1.0",
-    "@ceramicnetwork/streamid": "^3.1.0",
+    "@ceramicnetwork/common": "^3.2.0-rc.0",
+    "@ceramicnetwork/streamid": "^3.2.0-rc.0",
     "caip": "~1.1.0",
     "did-resolver": "^4.0.1",
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^3.1.0",
+    "@ceramicnetwork/blockchain-utils-linking": "^3.2.0-rc.0",
     "dids": "^4.0.0"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@3.1.0...@ceramicnetwork/common@3.2.0-rc.0) (2023-12-07)
+
+
+### Bug Fixes
+
+* Clear out AnchorRequestStore for requests that were anchored several commits ago ([#3055](https://github.com/ceramicnetwork/js-ceramic/issues/3055)) ([85f8a79](https://github.com/ceramicnetwork/js-ceramic/commit/85f8a790df1916971e4bfafd9120132e64bf0899))
+
+
+
+
+
 # [3.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@3.1.0-rc.0...@ceramicnetwork/common@3.1.0) (2023-12-06)
 
 **Note:** Version bump only for package @ceramicnetwork/common
