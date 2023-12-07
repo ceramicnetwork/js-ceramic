@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.1.0...@ceramicnetwork/core@3.2.0-rc.0) (2023-12-07)
+
+
+### Bug Fixes
+
+* Clean up anchor request store even if stream is already anchored ([#3053](https://github.com/ceramicnetwork/js-ceramic/issues/3053)) ([c3dc51f](https://github.com/ceramicnetwork/js-ceramic/commit/c3dc51fd712b213687559e5ebdbd2c49ec527ca1))
+* Clear out AnchorRequestStore for requests that were anchored several commits ago ([#3055](https://github.com/ceramicnetwork/js-ceramic/issues/3055)) ([85f8a79](https://github.com/ceramicnetwork/js-ceramic/commit/85f8a790df1916971e4bfafd9120132e64bf0899))
+* Update state store after applying update ([#3052](https://github.com/ceramicnetwork/js-ceramic/issues/3052)) ([d2db904](https://github.com/ceramicnetwork/js-ceramic/commit/d2db9045403472b490a2a4ac268538532a19e759))
+
+
+
+
+
+# [3.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.1.0-rc.0...@ceramicnetwork/core@3.1.0) (2023-12-06)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
 # [3.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.0.4...@ceramicnetwork/core@3.1.0-rc.0) (2023-12-01)
 
 

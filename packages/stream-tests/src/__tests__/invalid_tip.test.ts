@@ -62,7 +62,10 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), nonExistentTip)
         const response = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
-        ipfs2.pubsub.publish(ceramic.pubsubTopic, serialize(response))
+        ipfs2.pubsub.publish(ceramic.pubsubTopic, serialize(response)).catch((error) => {
+          // we want the test to fail if an error occurs thus we are rethrowing the error
+          throw error
+        })
       }
     })
 
@@ -94,7 +97,10 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), garbageTip)
         const response = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
-        ipfs2.pubsub.publish(ceramic.pubsubTopic, serialize(response))
+        ipfs2.pubsub.publish(ceramic.pubsubTopic, serialize(response)).catch((error) => {
+          // we want the test to fail if an error occurs thus we are rethrowing the error
+          throw error
+        })
       }
     })
 
@@ -128,7 +134,10 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), otherStream.tip)
         const response = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
-        ipfs2.pubsub.publish(ceramic.pubsubTopic, serialize(response))
+        ipfs2.pubsub.publish(ceramic.pubsubTopic, serialize(response)).catch((error) => {
+          // we want the test to fail if an error occurs thus we are rethrowing the error
+          throw error
+        })
       }
     })
 

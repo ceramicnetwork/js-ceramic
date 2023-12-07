@@ -175,7 +175,7 @@ describe('Response to pubsub queries handling', () => {
         await receiveMessage(asIpfsMessage(response))
       }
     }
-    publishResponses() // don't await for publishing to complete, let the responses happen in the background
+    void publishResponses() // don't await for publishing to complete, let the responses happen in the background
 
     await syncCompletionPromise
     const timeAfterSync = new Date()

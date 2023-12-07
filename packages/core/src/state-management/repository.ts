@@ -312,7 +312,7 @@ export class Repository {
       this._registerRunningState(runningState)
       const storedRequest = await this.anchorRequestStore.load(streamId)
       if (storedRequest !== null && this.anchorService) {
-        this._confirmAnchorResponse(runningState, storedRequest.cid)
+        await this._confirmAnchorResponse(runningState, storedRequest.cid)
       }
       return runningState
     } else {
@@ -542,12 +542,12 @@ export class Repository {
       this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
-        await this._updateStateIfPinned(state$)
         state$.next(next)
         // Notify the callback, if available
         if (this.callback) {
           this.callback(state$)
         }
+        await this._updateStateIfPinned(state$)
         this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
@@ -584,9 +584,44 @@ export class Repository {
   }
 
   /**
+   * If, when checking an entry in the AnchorRequestStore, we notice that the commit CID from the
+   * stored request has in fact already been anchored, we need to clean up the entry from the store
+   * so it doesn't stick around forever.  We need to do that from within the ExecutionQueue, however,
+   * or we risk deleting a valid entry for a newer request on the same Stream from the store.
+   */
+  private async _cleanUpStaleAnchorRequestStore(state$: RunningState, commit: CID): Promise<void> {
+    return this.executionQ.forStream(state$.id).run(async () => {
+      const request = await this.anchorRequestStore.load(state$.id)
+      if (!request.cid.equals(commit)) {
+        // We've already moved on to a newer request, don't accidentally delete the new request
+        return
+      }
+
+      // Even if we may have already checked this condition before calling into this function,
+      // we need to check it again under the execution queue as the state may have changed in the
+      // meantime otherwise.
+      if (
+        state$.state.anchorStatus == AnchorStatus.ANCHORED &&
+        StreamUtils.stateContainsCommit(state$.state, commit)
+      ) {
+        // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
+        await this.anchorRequestStore.remove(state$.id)
+      }
+    })
+  }
+
+  /**
    * Restart polling and handle response for a previously submitted anchor request
    */
-  private _confirmAnchorResponse(state$: RunningState, cid: CID): Subscription {
+  private async _confirmAnchorResponse(state$: RunningState, cid: CID): Promise<Subscription> {
+    if (
+      state$.state.anchorStatus == AnchorStatus.ANCHORED &&
+      StreamUtils.stateContainsCommit(state$.state, cid)
+    ) {
+      // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
+      await this._cleanUpStaleAnchorRequestStore(state$, cid)
+    }
+
     const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
     return this._processAnchorResponse(state$, anchorStatus$)
   }
@@ -629,10 +664,16 @@ export class Repository {
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
-        if (anchorEvent.cid.equals(state$.tip)) {
+        const anchorCommitCID = anchorEvent.witnessCar.roots[0]
+        await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
+        if (state$.tip.equals(anchorCommitCID)) {
+          // TODO: This check is brittle.  If the anchor commit is rejected by conflict resolution
+          // or if the stream already has the anchor commit but has newer commits as well, then we
+          // won't ever clean up the entry in the AnchorRequestStore.  To do this well we need a
+          // transactional AnchorRequestStore where we can do a compare-and-swap based on the tip
+          // in the request.
           await this.anchorRequestStore.remove(state$.id)
         }
-        await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
         return true
       }
       case AnchorRequestStatusName.FAILED: {
@@ -735,8 +776,12 @@ export class Repository {
     tip: CID,
     witnessCAR: CAR | undefined
   ): Promise<void> {
+    const streamId = StreamUtils.streamIdFromState(state$.state)
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
+
+    this.logger.verbose(`Handling anchor commit for ${streamId} with CID ${anchorCommitCID}`)
+
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
       remainingRetries >= 0;
@@ -745,6 +790,7 @@ export class Repository {
       try {
         if (witnessCAR) {
           await this.dispatcher.importCAR(witnessCAR)
+          this.logger.verbose(`successfully imported CAR file for ${streamId}`)
         }
 
         const applied = await this._handleTip(state$, anchorCommitCID)
@@ -757,6 +803,12 @@ export class Repository {
             // If we failed to apply the commit at least once, then it's worth logging when
             // we are able to do so successfully on the retry.
             this.logger.imp(
+              `Successfully applied anchor commit ${anchorCommitCID} for stream ${
+                state$.id
+              } after ${APPLY_ANCHOR_COMMIT_ATTEMPTS - remainingRetries} attempts`
+            )
+          } else {
+            this.logger.verbose(
               `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
             )
           }
@@ -1007,15 +1059,21 @@ export class Repository {
   updates$(init: StreamState): Observable<StreamState> {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
-      this.fromMemoryOrStore(id).then((found) => {
-        const state$ = found || new RunningState(init, false)
-        this.inmemory.endure(id.toString(), state$)
-        state$.subscribe(subscriber).add(() => {
-          if (state$.observers.length === 0) {
-            this.inmemory.free(id.toString())
-          }
+      this.fromMemoryOrStore(id)
+        .then((found) => {
+          const state$ = found || new RunningState(init, false)
+          this.inmemory.endure(id.toString(), state$)
+          state$.subscribe(subscriber).add(() => {
+            if (state$.observers.length === 0) {
+              this.inmemory.free(id.toString())
+            }
+          })
         })
-      })
+        .catch((error) => {
+          this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error}`)
+          // propogate the error to the subscriber
+          subscriber.error(error)
+        })
     })
   }
 
