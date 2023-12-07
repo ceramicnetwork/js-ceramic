@@ -1,9 +1,5 @@
 import { expect, describe, test, beforeEach, afterEach } from '@jest/globals'
-import {
-  TestUtils,
-  type StreamState,
-  type IpfsApi,
-} from '@ceramicnetwork/common'
+import { TestUtils, type StreamState, type IpfsApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
@@ -37,11 +33,13 @@ describe('Ceramic feed', () => {
 
   test('add entry after creating/updating stream', async () => {
     const feed: StreamState[] = []
-    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
+    const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
       feed.push(s)
     })
 
-    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
+    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, {
+      anchor: false,
+    })
 
     await tile.update({ hello: `world-1-${Math.random()}` })
     s.unsubscribe()
@@ -62,11 +60,11 @@ describe('Ceramic feed', () => {
       const updatedContent = { test: 1335 }
       const feed1: StreamState[] = []
       const feed2: StreamState[] = []
-      const s1 = await ceramic1.feed.aggregation.streamStates.subscribe(s => {
+      const s1 = await ceramic1.feed.aggregation.streamStates.subscribe((s) => {
         feed1.push(s)
       })
 
-      const s2 = await ceramic2.feed.aggregation.streamStates.pipe(take(3)).subscribe(s => {
+      const s2 = await ceramic2.feed.aggregation.streamStates.pipe(take(3)).subscribe((s) => {
         feed2.push(s)
       })
       const stream1 = await TileDocument.create(ceramic1, content, null, {
@@ -105,7 +103,7 @@ describe('Ceramic feed', () => {
       }
       const feed: StreamState[] = []
 
-      const s = ceramic2.feed.aggregation.streamStates.subscribe(s => {
+      const s = ceramic2.feed.aggregation.streamStates.subscribe((s) => {
         feed.push(s)
       })
       // create model on different node
@@ -125,11 +123,13 @@ describe('Ceramic feed', () => {
 
   test('add entry after anchoring stream', async () => {
     const feed: StreamState[] = []
-    const s = ceramic.feed.aggregation.streamStates.subscribe(s => {
+    const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
       feed.push(s)
     })
 
-    const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, { anchor: false })
+    const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, {
+      anchor: false,
+    })
     const stream$ = await ceramic.repository.load(stream.id, {})
     // request anchor
     await ceramic.repository.anchor(stream$, {})
@@ -148,6 +148,5 @@ describe('Ceramic feed', () => {
     expect(feed[1].metadata).toEqual(feed[2].metadata)
     expect(feed[1].log).toEqual(feed[2].log)
     expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
-
   })
 })

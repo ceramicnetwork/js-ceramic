@@ -565,8 +565,8 @@ export class Ceramic implements CeramicApi {
   }
 
   /*
-  * Callback to update 'feed' when state is updated inside the repository
-  */
+   * Callback to update 'feed' when state is updated inside the repository
+   */
   private updateFeed(value: RunningState): void {
     this.#feed.aggregation.streamStates.next(value.state)
   }
