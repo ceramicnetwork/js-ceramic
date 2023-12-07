@@ -44,7 +44,7 @@ describe('TipFetcher test', () => {
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), tip)
         const response: PubsubMessage = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
-        ipfs2.pubsub.publish(TOPIC, serialize(response))
+        void ipfs2.pubsub.publish(TOPIC, serialize(response))
       }
     })
 
