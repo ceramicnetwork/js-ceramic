@@ -14,8 +14,14 @@ export type AnchorRequestStoreListResult = {
   value: AnchorRequestData
 }
 
-function generateKey(object: StreamID): string {
-  return object.toString()
+function generateKey(object: undefined): undefined
+function generateKey(object: StreamID): string
+function generateKey(object: StreamID | undefined): string | undefined {
+  if (object) {
+    return object.toString()
+  } else {
+    return undefined
+  }
 }
 
 export function serializeAnchorRequestData(value: AnchorRequestData): any {
@@ -59,7 +65,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       const batch = await this.store.find({
         limit: batchSize,
         useCaseName: this.useCaseName,
-        gt: gt ? generateKey(gt) : undefined,
+        gt: generateKey(gt),
       })
       if (batch.length > 0) {
         gt = StreamID.fromString(batch[batch.length - 1].key)
@@ -91,7 +97,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       const batch = await this.store.find({
         limit: batchSize,
         useCaseName: this.useCaseName,
-        gt: gt ? generateKey(gt) : undefined,
+        gt: generateKey(gt),
       })
       if (batch.length > 0) {
         gt = StreamID.fromString(batch[batch.length - 1].key)
