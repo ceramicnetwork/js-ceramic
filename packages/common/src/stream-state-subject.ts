@@ -3,7 +3,7 @@ import { StreamState } from './stream.js'
 import { StreamUtils } from './utils/stream-utils.js'
 
 /**
- * BehaviourSubject<StreamState> that emits only distinct values.
+ * BehaviorSubject<StreamState> that emits only distinct values.
  */
 export class StreamStateSubject extends BehaviorSubject<StreamState> {
   next(next: StreamState) {
