@@ -34,7 +34,10 @@ export class EthereumAnchorService implements AnchorService {
   #loop: AnchorProcessingLoop
   readonly #enableAnchorPollingLoop: boolean
   readonly #events: Subject<AnchorEvent>
-  readonly #queue: NamedTaskQueue
+  /**
+   * Linearizes requests to AnchorStoreQueue by stream id.
+   */
+  readonly #anchorStoreQueue: NamedTaskQueue
 
   #chainId: string
   #store: AnchorRequestStore
@@ -58,7 +61,7 @@ export class EthereumAnchorService implements AnchorService {
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     this.#enableAnchorPollingLoop = enableAnchorPollingLoop
-    this.#queue = new NamedTaskQueue((error) => {
+    this.#anchorStoreQueue = new NamedTaskQueue((error) => {
       logger.err(error)
     })
   }
@@ -87,7 +90,7 @@ export class EthereumAnchorService implements AnchorService {
       this.#store,
       this.#logger,
       eventHandler,
-      this.#queue
+      this.#anchorStoreQueue
     )
     if (this.#enableAnchorPollingLoop) {
       this.#loop.start()
@@ -111,7 +114,7 @@ export class EthereumAnchorService implements AnchorService {
     const streamId = carFileReader.streamId
     const tip = carFileReader.tip
 
-    await this.#queue.run(streamId.toString(), () =>
+    await this.#anchorStoreQueue.run(streamId.toString(), () =>
       this.#store.save(streamId, {
         cid: tip,
         genesis: carFileReader.genesis,
