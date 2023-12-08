@@ -158,7 +158,7 @@ function createExtraColumns(
     const columnName = addColumnPrefix(column.name)
     switch (column.type) {
       case ColumnType.STRING:
-        table.string(columnName, 1024).notNullable()
+        table.string(columnName, 1024).nullable()
         table.index([columnName], `idx_${indexName}_${columnName}`)
         break
       default:

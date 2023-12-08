@@ -257,14 +257,24 @@ export class PostgresTablesManager extends TablesManager {
       throw new Error(errStr)
     }
 
+    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     const exists = await this.dataSource.schema.hasTable(tableName)
     if (!exists) {
       this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-      const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
       await createPostgresModelTable(this.dataSource, tableName, relationColumns)
       if (modelIndexArgs.indices) {
         await createPostgresIndices(this.dataSource, tableName, modelIndexArgs.indices)
       }
+    } else if (relationColumns.length) {
+      // Make relations columns nullable
+      await this.dataSource.schema.alterTable(tableName, (table) => {
+        for (const column of relationColumns) {
+          if (column.type === ColumnType.STRING) {
+            const columnName = addColumnPrefix(column.name)
+            table.string(columnName, 1024).nullable().alter()
+          }
+        }
+      })
     }
   }
 
@@ -329,11 +339,23 @@ export class SqliteTablesManager extends TablesManager {
    */
   async initMidTable(modelIndexArgs: IndexModelArgs, existingTables: Array<string>) {
     const tableName = asTableName(modelIndexArgs.model)
+    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     if (existingTables.includes(tableName)) {
+      if (relationColumns.length) {
+        // Make relations columns nullable
+        await this.dataSource.schema.alterTable(tableName, (table) => {
+          for (const column of relationColumns) {
+            if (column.type === ColumnType.STRING) {
+              const columnName = addColumnPrefix(column.name)
+              table.string(columnName, 1024).nullable().alter()
+            }
+          }
+        })
+      }
       return
     }
+
     this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     await createSqliteModelTable(this.dataSource, tableName, relationColumns)
     if (modelIndexArgs.indices) {
       await createSqliteIndices(this.dataSource, tableName, modelIndexArgs.indices)
