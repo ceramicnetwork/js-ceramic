@@ -75,9 +75,16 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     } while (true)
   }
 
+  /**
+   * Continuously emit entries of AnchorRequestStore in an infinite loop.
+   *
+   * @param batchSize - The number of items per batch.
+   * @param restartDelay - The delay in milliseconds before restarting the loop when it reaches the end.
+   * @returns An async generator that yields entries.
+   */
   async *infiniteList(
     batchSize = 1,
-    batchDelay = 100
+    restartDelay = 100 // Milliseconds
   ): AsyncGenerator<AnchorRequestStoreListResult> {
     let gt: StreamID | undefined = undefined
     do {
@@ -95,7 +102,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           }
         }
       } else {
-        await new Promise((resolve) => setTimeout(resolve, batchDelay))
+        await new Promise((resolve) => setTimeout(resolve, restartDelay))
         gt = undefined
       }
     } while (!this.#shouldStop)
