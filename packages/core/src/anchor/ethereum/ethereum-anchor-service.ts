@@ -35,7 +35,7 @@ export class EthereumAnchorService implements AnchorService {
   readonly #enableAnchorPollingLoop: boolean
   readonly #events: Subject<AnchorEvent>
   /**
-   * Linearizes requests to AnchorStoreQueue by stream id.
+   * Linearizes requests to AnchorRequestStore by stream id.  Shared with the AnchorProcessingLoop.
    */
   readonly #anchorStoreQueue: NamedTaskQueue
 

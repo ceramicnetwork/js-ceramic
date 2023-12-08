@@ -16,7 +16,10 @@ import type { StreamID } from '@ceramicnetwork/streamid'
  */
 export class AnchorProcessingLoop {
   readonly #loop: ProcessingLoop<StreamID>
-  readonly #queue: NamedTaskQueue
+  /**
+   * Linearizes requests to AnchorRequestStore by stream id. Shared with the AnchorService.
+   */
+  readonly #anchorStoreQueue: NamedTaskQueue
 
   constructor(
     batchSize: number,
@@ -24,11 +27,11 @@ export class AnchorProcessingLoop {
     store: AnchorRequestStore,
     logger: DiagnosticsLogger,
     eventHandler: AnchorLoopHandler,
-    queue: NamedTaskQueue
+    anchorStoreQueue: NamedTaskQueue
   ) {
-    this.#queue = queue
+    this.#anchorStoreQueue = anchorStoreQueue
     this.#loop = new ProcessingLoop(store.infiniteList(batchSize), (streamId) =>
-      this.#queue.run(streamId.toString(), async () => {
+      this.#anchorStoreQueue.run(streamId.toString(), async () => {
         const entry = await store.load(streamId)
         const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
           logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
