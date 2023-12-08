@@ -91,7 +91,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   async *infiniteList(
     batchSize = 1,
     restartDelay = 100 // Milliseconds
-  ): AsyncGenerator<AnchorRequestStoreListResult> {
+  ): AsyncGenerator<StreamID> {
     let gt: StreamID | undefined = undefined
     do {
       const batch = await this.store.find({
@@ -102,10 +102,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       if (batch.length > 0) {
         gt = StreamID.fromString(batch[batch.length - 1].key)
         for (const item of batch) {
-          yield {
-            key: StreamID.fromString(item.key),
-            value: deserializeAnchorRequestData(item.value),
-          }
+          yield StreamID.fromString(item.key)
         }
       } else {
         await new Promise((resolve) => setTimeout(resolve, restartDelay))

@@ -1,13 +1,11 @@
 import { ProcessingLoop } from './processing-loop.js'
 import type { CASClient } from './anchor-service.js'
-import type {
-  AnchorRequestStore,
-  AnchorRequestStoreListResult,
-} from '../store/anchor-request-store.js'
+import type { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import type { AnchorLoopHandler } from './anchor-service.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
+import type { StreamID } from '@ceramicnetwork/streamid'
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -17,7 +15,7 @@ import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
  * We create a request on CAS then.
  */
 export class AnchorProcessingLoop {
-  readonly #loop: ProcessingLoop<AnchorRequestStoreListResult>
+  readonly #loop: ProcessingLoop<StreamID>
   readonly #queue: NamedTaskQueue
 
   constructor(
@@ -29,20 +27,17 @@ export class AnchorProcessingLoop {
     queue: NamedTaskQueue
   ) {
     this.#queue = queue
-    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), (entry) =>
-      this.#queue.run(entry.key.toString(), async () => {
-        const event = await cas
-          .getStatusForRequest(entry.key, entry.value.cid)
-          .catch(async (error) => {
-            logger.warn(
-              `No request present on CAS for ${entry.value.cid} of ${entry.key}: ${error}`
-            )
-            const requestCAR = await eventHandler.buildRequestCar(entry.key, entry.value.cid)
-            return cas.create(new AnchorRequestCarFileReader(requestCAR))
-          })
+    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), (streamId) =>
+      this.#queue.run(streamId.toString(), async () => {
+        const entry = await store.load(streamId)
+        const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
+          logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
+          const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
+          return cas.create(new AnchorRequestCarFileReader(requestCAR))
+        })
         const isTerminal = await eventHandler.handle(event)
         if (isTerminal) {
-          await store.remove(entry.key)
+          await store.remove(streamId)
         }
       })
     )
