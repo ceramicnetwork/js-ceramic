@@ -81,10 +81,7 @@ export class RemoteCAS implements CASClient {
   }
 
   /**
-   * Create an anchor request on CAS through `fetch`. If `waitForConfirmation` is `true`,
-   * it only returns after getting a confirmation from CAS. If `waitForConfirmation` is `false`,
-   * the method is a no-op, as it returns a stub Pending response. Here we assume that some other component
-   * has already saved an anchor request to AnchorRequestStore.
+   * Create an anchor request on CAS through `fetch`.
    */
   async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
     const response = await firstValueFrom(this.create$(carFileReader))

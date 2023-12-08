@@ -116,8 +116,7 @@ export interface CASClient {
   supportedChains(): Promise<Array<string>>
 
   /**
-   * Create an anchor request on CAS through `fetch`. If `waitForConfirmation` is `true`,
-   * it only returns after getting a confirmation from CAS.
+   * Create an anchor request on CAS through `fetch`.
    */
   create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent>
 
