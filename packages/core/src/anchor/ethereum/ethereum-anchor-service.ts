@@ -24,7 +24,6 @@ import { RemoteCAS } from './remote-cas.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 
-const DEFAULT_POLL_INTERVAL = 60_000 // 60 seconds
 const BATCH_SIZE = 10
 
 /**
@@ -49,13 +48,12 @@ export class EthereumAnchorService implements AnchorService {
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL,
     sendRequest: FetchRequest = fetchJson,
     enableAnchorPollingLoop = true
   ) {
     this.#logger = logger
     this.#events = new Subject()
-    this.#cas = new RemoteCAS(anchorServiceUrl, logger, pollInterval, sendRequest)
+    this.#cas = new RemoteCAS(anchorServiceUrl, sendRequest)
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
@@ -151,14 +149,12 @@ export class AuthenticatedEthereumAnchorService
     anchorServiceUrl: string,
     ethereumRpcUrl: string | undefined,
     logger: DiagnosticsLogger,
-    pollInterval: number = DEFAULT_POLL_INTERVAL,
     enableAnchorPollingLoop = true
   ) {
     super(
       anchorServiceUrl,
       ethereumRpcUrl,
       logger,
-      pollInterval,
       auth.sendAuthenticatedRequest.bind(auth),
       enableAnchorPollingLoop
     )

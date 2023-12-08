@@ -1,5 +1,5 @@
 import type { CASClient } from '../anchor-service.js'
-import type { AnchorEvent, DiagnosticsLogger, FetchRequest } from '@ceramicnetwork/common'
+import type { AnchorEvent, FetchRequest } from '@ceramicnetwork/common'
 import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import {
   AnchorRequestStatusName,
@@ -57,20 +57,11 @@ export class RemoteCAS implements CASClient {
   readonly #requestsApiEndpoint: string
   readonly #chainIdApiEndpoint: string
   readonly #sendRequest: FetchRequest
-  readonly #logger: DiagnosticsLogger
-  readonly #pollInterval: number
   readonly #stopSignal: Subject<void>
 
-  constructor(
-    anchorServiceUrl: string,
-    logger: DiagnosticsLogger,
-    pollInterval: number,
-    sendRequest: FetchRequest
-  ) {
+  constructor(anchorServiceUrl: string, sendRequest: FetchRequest) {
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
-    this.#logger = logger
-    this.#pollInterval = pollInterval
     this.#sendRequest = sendRequest
     this.#stopSignal = new Subject()
   }
@@ -126,7 +117,7 @@ export class RemoteCAS implements CASClient {
   async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
     const sendRequest$ = deferAbortable((signal) =>
-      this.#sendRequest(requestUrl, { timeout: this.#pollInterval, signal: signal })
+      this.#sendRequest(requestUrl, { signal: signal })
     )
     const response = await firstValueFrom(sendRequest$.pipe(takeUntil(this.#stopSignal)))
     return parseResponse(streamId, tip, response)
