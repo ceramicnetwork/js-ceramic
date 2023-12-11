@@ -1,5 +1,5 @@
 import type { CASClient } from '../anchor-service.js'
-import type { AnchorEvent, DiagnosticsLogger, FetchRequest } from '@ceramicnetwork/common'
+import type { AnchorEvent, FetchRequest } from '@ceramicnetwork/common'
 import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import {
   AnchorRequestStatusName,
@@ -11,7 +11,7 @@ import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
-import { catchError, firstValueFrom, retry, Subject, takeUntil, timer, type Observable } from 'rxjs'
+import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 
 /**
  * Parse JSON that CAS returns.
@@ -57,23 +57,11 @@ export class RemoteCAS implements CASClient {
   readonly #requestsApiEndpoint: string
   readonly #chainIdApiEndpoint: string
   readonly #sendRequest: FetchRequest
-  readonly #logger: DiagnosticsLogger
-  readonly #pollInterval: number
-  readonly #maxPollTime: number
   readonly #stopSignal: Subject<void>
 
-  constructor(
-    anchorServiceUrl: string,
-    logger: DiagnosticsLogger,
-    pollInterval: number,
-    maxPollTime: number,
-    sendRequest: FetchRequest
-  ) {
+  constructor(anchorServiceUrl: string, sendRequest: FetchRequest) {
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
-    this.#logger = logger
-    this.#pollInterval = pollInterval
-    this.#maxPollTime = maxPollTime
     this.#sendRequest = sendRequest
     this.#stopSignal = new Subject()
   }
@@ -92,15 +80,15 @@ export class RemoteCAS implements CASClient {
     }
   }
 
-  async create(
-    carFileReader: AnchorRequestCarFileReader,
-    waitForConfirmation: boolean
-  ): Promise<AnchorEvent> {
-    const response = await firstValueFrom(this.create$(carFileReader, waitForConfirmation))
+  /**
+   * Create an anchor request on CAS through `fetch`.
+   */
+  async create(carFileReader: AnchorRequestCarFileReader): Promise<AnchorEvent> {
+    const response = await firstValueFrom(this.create$(carFileReader))
     return parseResponse(carFileReader.streamId, carFileReader.tip, response)
   }
 
-  create$(carFileReader: AnchorRequestCarFileReader, shouldRetry: boolean): Observable<unknown> {
+  create$(carFileReader: AnchorRequestCarFileReader): Observable<unknown> {
     const sendRequest$ = deferAbortable((signal) =>
       this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
@@ -112,37 +100,21 @@ export class RemoteCAS implements CASClient {
       })
     )
 
-    if (shouldRetry) {
-      return sendRequest$.pipe(
-        retry({
-          delay: (error) => {
-            this.#logger.warn(
-              new Error(
-                `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
-              )
-            )
-            return timer(this.#pollInterval)
-          },
-        }),
-        takeUntil(this.#stopSignal)
-      )
-    } else {
-      return sendRequest$.pipe(
-        catchError((error) => {
-          // clean up the error message to have more context
-          throw new Error(
-            `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
-          )
-        }),
-        takeUntil(this.#stopSignal)
-      )
-    }
+    return sendRequest$.pipe(
+      catchError((error) => {
+        // clean up the error message to have more context
+        throw new Error(
+          `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
+        )
+      }),
+      takeUntil(this.#stopSignal)
+    )
   }
 
-  async get(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
+  async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
     const sendRequest$ = deferAbortable((signal) =>
-      this.#sendRequest(requestUrl, { timeout: this.#pollInterval, signal: signal })
+      this.#sendRequest(requestUrl, { signal: signal })
     )
     const response = await firstValueFrom(sendRequest$.pipe(takeUntil(this.#stopSignal)))
     return parseResponse(streamId, tip, response)

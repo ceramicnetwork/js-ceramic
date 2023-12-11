@@ -9,7 +9,11 @@ let ceramic: Ceramic
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-  ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: false })
+  ceramic = await createCeramic(ipfs, {
+    streamCacheLimit: 1,
+    anchorOnRequest: false,
+    enableAnchorPollingLoop: false,
+  })
 })
 
 afterAll(async () => {

@@ -1,5 +1,15 @@
-import { jest } from '@jest/globals'
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals'
+import {
+  AnchorEvent,
   AnchorStatus,
   CommitType,
   IpfsApi,
@@ -22,6 +32,8 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -642,5 +654,107 @@ describe('applyWriteOpts', () => {
       expect(publishSpy).toHaveBeenCalledTimes(1)
       expect(pinSpy).toHaveBeenCalledTimes(1)
     }
+  })
+})
+
+describe('handleAnchorEvent', () => {
+  describe('for tip', () => {
+    test('Anchor COMPLETED for tip should update the stream state and be removed from the anchorRequestStore', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.COMPLETED,
+        message: 'Last COMPLETED',
+        streamId: tile.id,
+        cid: tile.tip,
+        witnessCar: generateFakeCarFile(),
+      }
+      const handleAnchorCommitSpy = jest.spyOn(repository as any, '_handleAnchorCommit')
+      // Work around verification for a fake witness car
+      handleAnchorCommitSpy.mockImplementation(async (state$: RunningState) => {
+        state$.next({
+          ...state$.value,
+          anchorStatus: AnchorStatus.ANCHORED,
+        })
+      })
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(handleAnchorCommitSpy).toBeCalled()
+      expect(state$.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    })
+
+    test('Anchor FAILED for tip should update the stream state and be removed from the anchorRequestStore', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.FAILED,
+        message: 'Last FAILED',
+        streamId: tile.id,
+        cid: tile.tip,
+      }
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(state$.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+    })
+  })
+
+  describe('for non-tip', () => {
+    test('Anchor COMPLETED for non tip should remove the request from the store', async () => {
+      // The anchor commit gets applied anyway
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.COMPLETED,
+        message: 'First COMPLETED',
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+        witnessCar: generateFakeCarFile(),
+      }
+      const handleAnchorCommitSpy = jest.spyOn(repository as any, '_handleAnchorCommit')
+      handleAnchorCommitSpy.mockImplementation(async (state$: RunningState) => {
+        state$.next({
+          ...state$.value,
+          anchorStatus: AnchorStatus.ANCHORED,
+        })
+      })
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(handleAnchorCommitSpy).toBeCalled()
+    })
+
+    test('Anchor REPLACED for non tip should remove the request from the store', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.REPLACED,
+        message: 'First REPLACED',
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+      }
+      const nextSpy = jest.spyOn(state$, 'next')
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(nextSpy).not.toBeCalled()
+    })
+
+    test('Anchor FAILED for non tip should remove the request from the store', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.FAILED,
+        message: 'First FAILED',
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+      }
+      const nextSpy = jest.spyOn(state$, 'next')
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(nextSpy).not.toBeCalled()
+    })
   })
 })

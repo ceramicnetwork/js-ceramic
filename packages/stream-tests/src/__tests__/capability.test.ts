@@ -662,12 +662,16 @@ describe('CACAO Integration test', () => {
       await tile.update(CONTENT1, null, { ...opts, anchor: true })
 
       // Anchor the update but ensure the Ceramic node doesn't learn about the anchor commit
+      const dispatcher = ceramic.dispatcher
       const handleAnchorSpy = jest.spyOn(ceramic.repository, '_handleAnchorCommit')
       const anchorCommitPromise = new Promise<CID>((resolve) => {
-        handleAnchorSpy.mockImplementation((state, tip, witnessCar: CAR) => {
-          expect(tip).toEqual(tile.tip)
-          const anchorCommit = witnessCar.roots[0]
-          resolve(anchorCommit)
+        handleAnchorSpy.mockImplementation(async (_, tip, witnessCar: CAR) => {
+          // Import CAR but do not apply the commit
+          if (tile.tip.equals(tip)) {
+            await dispatcher.importCAR(witnessCar)
+            const anchorCommit = witnessCar.roots[0]
+            resolve(anchorCommit)
+          }
         })
       })
 
@@ -766,7 +770,6 @@ describe('CACAO Integration test', () => {
           },
           { ...opts, anchor: true }
         )
-
         await TestUtils.anchorUpdate(ceramic, doc)
 
         await doc.update(CONTENT1, null, opts)

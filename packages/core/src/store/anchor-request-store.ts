@@ -14,8 +14,14 @@ export type AnchorRequestStoreListResult = {
   value: AnchorRequestData
 }
 
-function generateKey(object: StreamID): string {
-  return object.toString()
+function generateKey(object: undefined): undefined
+function generateKey(object: StreamID): string
+function generateKey(object: StreamID | undefined): string | undefined {
+  if (object) {
+    return object.toString()
+  } else {
+    return undefined
+  }
 }
 
 export function serializeAnchorRequestData(value: AnchorRequestData): any {
@@ -42,6 +48,8 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
  * This store is used to save and retrieve this data so that it can be re-sent to CAS in case of networking issues.
  */
 export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
+  #shouldStop: boolean
+
   constructor() {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.useCaseName = 'anchor-requests'
@@ -57,7 +65,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       const batch = await this.store.find({
         limit: batchSize,
         useCaseName: this.useCaseName,
-        gt: gt ? generateKey(gt) : undefined,
+        gt: generateKey(gt),
       })
       if (batch.length > 0) {
         gt = StreamID.fromString(batch[batch.length - 1].key)
@@ -73,7 +81,38 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     } while (true)
   }
 
-  async close(): Promise<void> {
-    await this.store.close(this.useCaseName)
+  /**
+   * Continuously emit entries of AnchorRequestStore in an infinite loop.
+   *
+   * @param batchSize - The number of items per batch.
+   * @param restartDelay - The delay in milliseconds before restarting the loop when it reaches the end.
+   * @returns An async generator that yields entries.
+   */
+  async *infiniteList(
+    batchSize = 1,
+    restartDelay = 100 // Milliseconds
+  ): AsyncGenerator<StreamID> {
+    let gt: StreamID | undefined = undefined
+    do {
+      const batch = await this.store.find({
+        limit: batchSize,
+        useCaseName: this.useCaseName,
+        gt: generateKey(gt),
+      })
+      if (batch.length > 0) {
+        gt = StreamID.fromString(batch[batch.length - 1].key)
+        for (const item of batch) {
+          yield StreamID.fromString(item.key)
+        }
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, restartDelay))
+        gt = undefined
+      }
+    } while (!this.#shouldStop)
+  }
+
+  async close() {
+    this.#shouldStop = true
+    await super.close()
   }
 }

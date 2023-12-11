@@ -5,6 +5,7 @@ import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 const SEED = '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83'
 
@@ -285,6 +286,7 @@ describe('Ceramic anchoring', () => {
       await ceramic.close()
     })
 
+    // Prod CAS does not accept re-anchoring
     it('Can request new anchor after failed anchor', async () => {
       const ceramic = await createCeramic(ipfs1, true)
 
@@ -294,21 +296,13 @@ describe('Ceramic anchoring', () => {
 
       // fail anchor
       const anchorService = ceramic.anchorService as any as InMemoryAnchorService
-      await anchorService.failPendingAnchors()
-      await stream.sync()
-      expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+      anchorService.moveAnchors(AnchorRequestStatusName.PENDING, AnchorRequestStatusName.FAILED)
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
       expect(stream.state.log.length).toEqual(1)
 
-      // re-request anchor, should be successful
-      const anchorStatus = await stream.requestAnchor()
-      expect(anchorStatus).toEqual(AnchorStatus.PENDING)
-      await stream.sync()
-      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-
-      // fulfill anchor
-      await TestUtils.anchorUpdate(ceramic, stream)
-      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-      expect(stream.state.log.length).toEqual(2)
+      // re-request anchor, still FAILED as in production CAS
+      await stream.requestAnchor()
+      await TestUtils.expectAnchorStatus(stream, AnchorStatus.FAILED)
 
       await ceramic.close()
     })
