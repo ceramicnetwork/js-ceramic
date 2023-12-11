@@ -1,7 +1,7 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
-import { GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
 
 export type AnchorRequestData = {
   cid: CID
@@ -49,10 +49,12 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
  */
 export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
   #shouldStop: boolean
+  #logger: DiagnosticsLogger
 
-  constructor() {
+  constructor(logger: DiagnosticsLogger) {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.useCaseName = 'anchor-requests'
+    this.#logger = logger
   }
 
   exists(key: StreamID): Promise<boolean> {
@@ -93,6 +95,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     restartDelay = 100 // Milliseconds
   ): AsyncGenerator<StreamID> {
     let gt: StreamID | undefined = undefined
+    let numEntries = 0
     do {
       const batch = await this.store.find({
         limit: batchSize,
@@ -102,11 +105,16 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
       if (batch.length > 0) {
         gt = StreamID.fromString(batch[batch.length - 1].key)
         for (const item of batch) {
+          numEntries++
           yield StreamID.fromString(item.key)
         }
       } else {
+        this.#logger.debug(
+          `Anchor polling loop processed ${numEntries} from the AnchorRequestStore. Restarting loop`
+        )
         await new Promise((resolve) => setTimeout(resolve, restartDelay))
         gt = undefined
+        numEntries = 0
       }
     } while (!this.#shouldStop)
   }
