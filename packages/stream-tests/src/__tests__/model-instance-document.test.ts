@@ -68,13 +68,15 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      linkedDoc: {
-        type: 'string',
-      },
+      linkedDoc: { type: 'string' },
+      optionalLinkedDoc: { type: 'string' },
     },
     required: ['linkedDoc'],
   },
-  relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
+  relations: {
+    linkedDoc: { type: 'document', model: MODEL_STREAM_ID },
+    optionalLinkedDoc: { type: 'document', model: MODEL_STREAM_ID },
+  },
 }
 
 describe('ModelInstanceDocument API http-client tests', () => {
@@ -214,6 +216,34 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(
       ModelInstanceDocument.create(ceramic, relationContent, midRelationMetadata)
     ).rejects.toThrow(/must be to a Stream in the Model/)
+  })
+
+  test('Cannot create a document with a missing required relation', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(() => {
+      return ModelInstanceDocument.create(
+        ceramic,
+        { optionalLinkedDoc: doc.id.toString() },
+        midRelationMetadata
+      )
+    }).rejects.toThrow()
+  })
+
+  test('Can create, remove and add an optional relation', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    const docID = doc.id.toString()
+    // Create with optional relation
+    const docWithRelation = await ModelInstanceDocument.create<{
+      linkedDoc: string
+      optionalLinkedDoc?: string
+    }>(ceramic, { linkedDoc: docID, optionalLinkedDoc: docID }, midRelationMetadata)
+    expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
+    // Remove optional relation
+    await docWithRelation.replace({ linkedDoc: docID })
+    expect(docWithRelation.content.optionalLinkedDoc).toBeUndefined()
+    // Add optional relation
+    await docWithRelation.replace({ linkedDoc: docID, optionalLinkedDoc: docID })
+    expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
   })
 
   test('Anchor genesis', async () => {
