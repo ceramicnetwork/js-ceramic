@@ -55,8 +55,7 @@ import {
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
-import { Observable, Subject } from 'rxjs'
-import { RunningState } from './state-management/running-state.js'
+import { Feed, type PublicFeed } from './feed.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -138,6 +137,7 @@ export interface CeramicModules {
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
   anchorRequestCarBuilder: AnchorRequestCarBuilder
+  feed: Feed
 }
 
 /**
@@ -189,20 +189,11 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
+  public readonly feed: PublicFeed
   readonly repository: Repository
   readonly anchorService: AnchorService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
-
-  readonly #feed = {
-    aggregation: {
-      streamStates: new Subject<StreamState>(),
-    },
-  }
-
-  get feed(): { aggregation: { streamStates: Observable<StreamState> } } {
-    return this.#feed
-  }
 
   readonly _streamHandlers: HandlersMap
   private readonly _readOnly: boolean
@@ -221,7 +212,7 @@ export class Ceramic implements CeramicApi {
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this.repository.setCallback(this.updateFeed.bind(this))
+    this.feed = modules.feed
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
@@ -362,7 +353,8 @@ export class Ceramic implements CeramicApi {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const feed = new Feed()
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -407,6 +399,7 @@ export class Ceramic implements CeramicApi {
       shutdownSignal,
       providersCache,
       anchorRequestCarBuilder,
+      feed,
     }
 
     return [modules, params]
@@ -552,13 +545,6 @@ export class Ceramic implements CeramicApi {
     this._streamHandlers.add(streamHandler)
   }
 
-  /*
-   * Callback to update 'feed' when state is updated inside the repository
-   */
-  private updateFeed(value: RunningState): void {
-    this.#feed.aggregation.streamStates.next(value.state)
-  }
-
   async nodeStatus(): Promise<NodeStatusResponse> {
     const anchor = {
       anchorServiceUrl: this.anchorService.url,
@@ -607,8 +593,6 @@ export class Ceramic implements CeramicApi {
     this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     const state$ = await this.repository.applyCommit(id, commit, opts)
     this._logger.verbose(`Applied commit to stream ${id.toString()}`)
-
-    this.#feed.aggregation.streamStates.next(state$.value)
 
     return streamFromState<T>(
       this.context,
@@ -660,7 +644,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-    this.#feed.aggregation.streamStates.next(state$.value)
     return stream
   }
 
@@ -685,7 +668,6 @@ export class Ceramic implements CeramicApi {
     } else {
       try {
         const base$ = await this.repository.load(streamRef.baseID, opts)
-        this.#feed.aggregation.streamStates.next(base$.value)
         return streamFromState<T>(
           this.context,
           this._streamHandlers,
@@ -704,7 +686,6 @@ export class Ceramic implements CeramicApi {
         // Retry with a full resync
         opts.sync = SyncOptions.SYNC_ALWAYS
         const base$ = await this.repository.load(streamRef.baseID, opts)
-        this.#feed.aggregation.streamStates.next(base$.value)
         return streamFromState<T>(
           this.context,
           this._streamHandlers,

@@ -7,6 +7,7 @@ import { Repository, RepositoryDependencies } from '../state-management/reposito
 import { PinStore } from '../store/pin-store.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
+import { Feed } from '../feed.js'
 
 export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Promise<Dispatcher> {
   const loggerProvider = new LoggerProvider()
@@ -15,7 +16,8 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   const levelStore = new LevelDbStore(logger, levelPath, 'test')
   const stateStore = new StreamStateStore(logger)
   await stateStore.open(levelStore)
-  const repository = new Repository(100, 100, logger)
+  const feed = new Feed()
+  const repository = new Repository(100, 100, feed, logger)
   const pinStore = {
     stateStore,
   } as unknown as PinStore
