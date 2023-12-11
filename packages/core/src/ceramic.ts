@@ -250,7 +250,7 @@ export class Ceramic implements CeramicApi {
       dispatcher: this.dispatcher,
       pinStore: pinStore,
       keyValueStore: this._levelStore,
-      anchorRequestStore: new AnchorRequestStore(),
+      anchorRequestStore: new AnchorRequestStore(this._logger),
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
