@@ -50,7 +50,7 @@ export class AnchorProcessingLoop {
    * Start looping.
    */
   start(): void {
-    this.#loop.start()
+    // this.#loop.start()
   }
 
   /**

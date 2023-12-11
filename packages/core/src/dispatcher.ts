@@ -420,30 +420,30 @@ export class Dispatcher {
    * Handles one message from the pubsub topic.
    */
   async handleMessage(message: PubsubMessage): Promise<void> {
-    try {
-      switch (message.typ) {
-        case MsgType.UPDATE:
-          await this._handleUpdateMessage(message)
-          break
-        case MsgType.QUERY:
-          await this._handleQueryMessage(message)
-          break
-        case MsgType.RESPONSE:
-          await this._handleResponseMessage(message)
-          break
-        case MsgType.KEEPALIVE:
-          break
-        default:
-          throw new UnreachableCaseError(message, `Unsupported message type`)
-      }
-    } catch (e) {
-      // TODO: Combine these two log statements into one line so that they can't get split up in the
-      // log output.
-      this._logger.err(
-        `Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`
-      )
-      this._logger.err(e) // Log stack trace
-    }
+    // try {
+    //   switch (message.typ) {
+    //     case MsgType.UPDATE:
+    //       await this._handleUpdateMessage(message)
+    //       break
+    //     case MsgType.QUERY:
+    //       await this._handleQueryMessage(message)
+    //       break
+    //     case MsgType.RESPONSE:
+    //       await this._handleResponseMessage(message)
+    //       break
+    //     case MsgType.KEEPALIVE:
+    //       break
+    //     default:
+    //       throw new UnreachableCaseError(message, `Unsupported message type`)
+    //   }
+    // } catch (e) {
+    //   // TODO: Combine these two log statements into one line so that they can't get split up in the
+    //   // log output.
+    //   this._logger.err(
+    //     `Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`
+    //   )
+    //   this._logger.err(e) // Log stack trace
+    // }
   }
 
   /**
