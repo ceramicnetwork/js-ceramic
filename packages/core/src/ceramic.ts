@@ -43,11 +43,6 @@ import { AnchorRequestStore } from './store/anchor-request-store.js'
 import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
-import { TipFetcher } from './stream-loading/tip-fetcher.js'
-import { LogSyncer } from './stream-loading/log-syncer.js'
-import { StateManipulator } from './stream-loading/state-manipulator.js'
-import { StreamLoader } from './stream-loading/stream-loader.js'
 import {
   networkOptionsByName,
   type CeramicNetworkOptions,
@@ -57,12 +52,10 @@ import {
   makeAnchorService,
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
-import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
-import { Observable, Subject } from 'rxjs'
-import { RunningState } from './state-management/running-state.js'
+import { Feed, type PublicFeed } from './feed.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -144,6 +137,7 @@ export interface CeramicModules {
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
   anchorRequestCarBuilder: AnchorRequestCarBuilder
+  feed: Feed
 }
 
 /**
@@ -195,21 +189,12 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
+  public readonly feed: PublicFeed
   readonly repository: Repository
   readonly anchorService: AnchorService
   private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
-
-  readonly #feed = {
-    aggregation: {
-      streamStates: new Subject<StreamState>(),
-    },
-  }
-
-  get feed(): { aggregation: { streamStates: Observable<StreamState> } } {
-    return this.#feed
-  }
 
   readonly _streamHandlers: HandlersMap
   private readonly _readOnly: boolean
@@ -229,7 +214,7 @@ export class Ceramic implements CeramicApi {
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.anchorResumingService = new AnchorResumingService(this._logger)
     this.repository = modules.repository
-    this.repository.setCallback(this.updateFeed.bind(this))
+    this.feed = modules.feed
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
@@ -370,7 +355,8 @@ export class Ceramic implements CeramicApi {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const feed = new Feed()
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -415,6 +401,7 @@ export class Ceramic implements CeramicApi {
       shutdownSignal,
       providersCache,
       anchorRequestCarBuilder,
+      feed,
     }
 
     return [modules, params]
@@ -562,13 +549,6 @@ export class Ceramic implements CeramicApi {
    */
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
     this._streamHandlers.add(streamHandler)
-  }
-
-  /*
-   * Callback to update 'feed' when state is updated inside the repository
-   */
-  private updateFeed(value: StreamState): void {
-    this.#feed.aggregation.streamStates.next(value)
   }
 
   async nodeStatus(): Promise<NodeStatusResponse> {

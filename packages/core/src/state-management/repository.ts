@@ -36,6 +36,7 @@ import type { AnchorService } from '../anchor/anchor-service.js'
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
+import type { Feed } from '../feed.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -111,6 +112,8 @@ export class Repository {
    */
   readonly inmemory: StateCache<RunningState>
 
+  private readonly feed: Feed
+
   /**
    * Various dependencies.
    */
@@ -127,22 +130,20 @@ export class Repository {
   #numPendingAnchorSubscriptions = 0
 
   /**
-   * Callback function to update the feed on Ceramic object
-   */
-  private callback: ((result: StreamState) => void) | null = null
-
-  /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
+   * @param feed - Feed to push StreamStates to.
    */
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
+    feed: Feed,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
+    this.feed = feed
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -182,13 +183,6 @@ export class Repository {
 
   private get streamUpdater(): StreamUpdater {
     return this.#deps.streamUpdater
-  }
-
-  /*
-   * Sets the callback function
-   */
-  setCallback(callback: (result: StreamState) => void): void {
-    this.callback = callback
   }
 
   /**
@@ -929,12 +923,8 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    if (this.callback) {
-      const subscription = state$.subscribe((value) => {
-        this.callback(value)
-      })
-      state$.add(subscription)
-    }
+    const subscription = state$.subscribe(this.feed.aggregation.streamStates)
+    state$.add(subscription)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
