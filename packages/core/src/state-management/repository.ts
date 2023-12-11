@@ -902,8 +902,8 @@ export class Repository {
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
    */
-  async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    return await this._fromMemoryOrStore(streamId)
+  fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
+    return this._fromMemoryOrStore(streamId)
   }
 
   /**
@@ -923,8 +923,7 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    const subscription = state$.subscribe(this.feed.aggregation.streamStates)
-    state$.add(subscription)
+    state$.subscribe(this.feed.aggregation.streamStates)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
@@ -1049,15 +1048,17 @@ export class Repository {
         .then((found) => {
           const state$ = found || new RunningState(init, false)
           this.inmemory.endure(id.toString(), state$)
-          state$.subscribe(subscriber).add(() => {
-            if (state$.observers.length === 0) {
+          const subscription = state$.subscribe(subscriber)
+          state$.add(subscription)
+          subscription.add(() => {
+            if (state$.subscriptionSet.size === 0) {
               this.inmemory.free(id.toString())
             }
           })
         })
         .catch((error) => {
           this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error}`)
-          // propogate the error to the subscriber
+          // propagate the error to the subscriber
           subscriber.error(error)
         })
     })

@@ -148,7 +148,7 @@ test('StateLink receives updates', async () => {
 test('free if no one subscribed', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size
   const volatileStart = ceramic.repository.inmemory.volatile.size
-  const stream1 = await TileDocument.create(ceramic, INITIAL)
+  const stream1 = await TileDocument.create(ceramic, INITIAL, undefined, { anchor: false })
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   const subscription1 = stream1.subscribe()
