@@ -605,6 +605,42 @@ describe('postgres', () => {
       ])
     })
 
+    test('calling indexModels() with already indexed models works', async () => {
+      const modelsToIndex = [
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          indices: [{ fields: [{ path: ['address'] }] }],
+        },
+      ]
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
+      await indexApi.init()
+
+      await indexApi.indexModels(modelsToIndex)
+      await expect(
+        dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'is_indexed')
+      ).resolves.toEqual([
+        {
+          model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+          is_indexed: true,
+        },
+      ])
+
+      await indexApi.indexModels([
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          indices: [{ fields: [{ path: ['name'] }] }],
+        },
+      ])
+
+      // Check indexed model contains all indices
+      const indexedModel = indexApi._getIndexedModel(STREAM_ID_A)
+      expect(indexedModel?.indices).toEqual([
+        { fields: [{ path: ['address'] }] },
+        { fields: [{ path: ['name'] }] },
+      ])
+    })
+
     test('modelsToIndex is properly populated after init()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -910,7 +946,9 @@ and indexname in (${expectedIndices});
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
+      indexApi.indexedModelsRecord = {
+        [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
+      }
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
@@ -921,7 +959,9 @@ and indexname in (${expectedIndices});
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
+      indexApi.indexedModelsRecord = {
+        [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
+      }
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )
@@ -1428,6 +1468,42 @@ describe('sqlite', () => {
       ])
     })
 
+    test('calling indexModels() with already indexed models works', async () => {
+      const modelsToIndex = [
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          indices: [{ fields: [{ path: ['address'] }] }],
+        },
+      ]
+      const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+      indexApi.setSyncQueryApi(new CompleteQueryApi())
+      await indexApi.init()
+
+      await indexApi.indexModels(modelsToIndex)
+      await expect(
+        dbConnection(INDEXED_MODEL_CONFIG_TABLE_NAME).select('model', 'is_indexed')
+      ).resolves.toEqual([
+        {
+          model: 'kjzl6cwe1jw145m7jxh4jpa6iw1ps3jcjordpo81e0w04krcpz8knxvg5ygiabd',
+          is_indexed: 1,
+        },
+      ])
+
+      await indexApi.indexModels([
+        {
+          model: StreamID.fromString(STREAM_ID_A),
+          indices: [{ fields: [{ path: ['name'] }] }],
+        },
+      ])
+
+      // Check indexed model contains all indices
+      const indexedModel = indexApi._getIndexedModel(STREAM_ID_A)
+      expect(indexedModel?.indices).toEqual([
+        { fields: [{ path: ['address'] }] },
+        { fields: [{ path: ['name'] }] },
+      ])
+    })
+
     test('modelsToIndex is properly populated after init()', async () => {
       const modelsToIndex = [StreamID.fromString(STREAM_ID_A), Model.MODEL]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -1691,7 +1767,9 @@ and name in (${expectedIndices})
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
+      indexApi.indexedModelsRecord = {
+        [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
+      }
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
@@ -1702,7 +1780,9 @@ and name in (${expectedIndices})
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.indexedModels = [{ streamID: StreamID.fromString(STREAM_ID_A) }]
+      indexApi.indexedModelsRecord = {
+        [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
+      }
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
         IndexQueryNotAvailableError
       )
