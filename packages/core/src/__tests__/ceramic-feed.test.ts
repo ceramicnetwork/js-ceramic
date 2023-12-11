@@ -6,6 +6,7 @@ import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { take } from 'rxjs'
+import { Document } from '../feed.js'
 
 function createCeramic(
   ipfs: IpfsApi,
@@ -32,7 +33,7 @@ describe('Ceramic feed', () => {
   })
 
   test('add entry after creating/updating stream', async () => {
-    const feed: StreamState[] = []
+    const feed: Document[] = []
     const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
       feed.push(s)
     })
@@ -45,8 +46,8 @@ describe('Ceramic feed', () => {
     // One entry after create, and another after update
     expect(feed.length).toEqual(2)
 
-    expect(feed[0].log[0].type).toBeLessThan(feed[1].log[1].type)
-    expect(feed[0].log[0].cid).toBe(feed[1].log[0].cid)
+    expect(feed[0].id).not.toBe(feed[1].id)
+    expect(feed[0].metadata).toStrictEqual(feed[1].metadata)
   })
 
   test('add entry after loading pinned stream/pubsub ', async () => {
@@ -57,8 +58,8 @@ describe('Ceramic feed', () => {
       const ceramic2 = await createCeramic(ipfs2)
       const content = { test: 1223 }
       const updatedContent = { test: 1335 }
-      const feed1: StreamState[] = []
-      const feed2: StreamState[] = []
+      const feed1: Document[] = []
+      const feed2: Document[] = []
       const s1 = await ceramic1.feed.aggregation.streamStates.subscribe((s) => {
         feed1.push(s)
       })
@@ -79,8 +80,9 @@ describe('Ceramic feed', () => {
       expect(feed1.length).toEqual(3) // create + anchor + update
       expect(feed2.length).toEqual(2) //load + pubsub update
       expect(feed2[0].content.test).toBe(content.test)
+      expect(feed2[0].id).toStrictEqual(feed1[0].id)
       // test pubsub propagating the update from stream1 being inside the feed
-      expect(feed2[1].next).toStrictEqual(feed1[1].next)
+      expect(feed2[1].id).toStrictEqual(feed1[1].id)
       await ceramic1.close()
       await ceramic2.close()
       s1.unsubscribe()
@@ -100,7 +102,7 @@ describe('Ceramic feed', () => {
         schema: { type: 'object', additionalProperties: false },
         accountRelation: { type: 'list' },
       }
-      const feed: StreamState[] = []
+      const feed: Document[] = []
 
       const s = ceramic2.feed.aggregation.streamStates.subscribe((s) => {
         feed.push(s)
@@ -114,14 +116,14 @@ describe('Ceramic feed', () => {
       expect(feed.length).toEqual(1)
       expect(feed[0].content).toEqual(model.state.content)
       expect(feed[0].metadata).toEqual(model.state.metadata)
-      expect(feed[0].log).toEqual(model.state.log)
+      expect(feed[0].id).toStrictEqual(model.commitId)
       await ceramic1.close()
       await ceramic2.close()
     })
   })
 
   test('add entry after anchoring stream', async () => {
-    const feed: StreamState[] = []
+    const feed: Document[] = []
     const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
       feed.push(s)
     })
@@ -140,12 +142,10 @@ describe('Ceramic feed', () => {
     // between and request anchor
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
-    expect(feed[0].log).toEqual(feed[1].log)
-    expect(feed[0].anchorStatus).toBeLessThan(feed[1].anchorStatus)
+    expect(feed[0].id).toStrictEqual(feed[1].id)
     //between request anchor and process anchor
     expect(feed[1].content).toEqual(feed[2].content)
     expect(feed[1].metadata).toEqual(feed[2].metadata)
-    expect(feed[1].log).toEqual(feed[2].log)
-    expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
+    expect(feed[1].id).toStrictEqual(feed[2].id)
   })
 })
