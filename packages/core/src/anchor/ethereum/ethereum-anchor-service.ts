@@ -24,7 +24,9 @@ import { RemoteCAS } from './remote-cas.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 
-const BATCH_SIZE = 10
+// BATCH_SIZE controls the number of keys fetched from the AnchorRequestStore at once.
+// It does not affect the parallelism/concurrency of actually processing the entries in those batches.
+const BATCH_SIZE = 1000
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
