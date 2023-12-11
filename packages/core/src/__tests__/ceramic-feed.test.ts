@@ -40,8 +40,7 @@ describe('Ceramic feed', () => {
     const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, {
       anchor: false,
     })
-
-    await tile.update({ hello: `world-1-${Math.random()}` })
+    await tile.update({ hello: `world-1-${Math.random()}` }, undefined, { anchor: false })
     s.unsubscribe()
     // One entry after create, and another after update
     expect(feed.length).toEqual(2)

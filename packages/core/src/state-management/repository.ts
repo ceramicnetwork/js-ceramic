@@ -126,10 +126,10 @@ export class Repository {
 
   #numPendingAnchorSubscriptions = 0
 
-  /*
+  /**
    * Callback function to update the feed on Ceramic object
    */
-  private callback: ((result: RunningState) => void) | null = null
+  private callback: ((result: StreamState) => void) | null = null
 
   /**
    * @param cacheLimit - Maximum number of streams to store in memory cache.
@@ -187,7 +187,7 @@ export class Repository {
   /*
    * Sets the callback function
    */
-  setCallback(callback: (result: RunningState) => void): void {
+  setCallback(callback: (result: StreamState) => void): void {
     this.callback = callback
   }
 
@@ -543,10 +543,6 @@ export class Repository {
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
         state$.next(next)
-        // Notify the callback, if available
-        if (this.callback) {
-          this.callback(state$)
-        }
         await this._updateStateIfPinned(state$)
         this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
@@ -718,13 +714,7 @@ export class Repository {
       .pipe(
         takeUntil(stopSignal),
         concatMap(async (anchorEvent) => {
-          const prevState = state$.state
           const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
-          const current = state$.state
-          // Notify the callback, if available
-          if (this.callback && prevState.anchorStatus !== current.anchorStatus) {
-            this.callback(state$)
-          }
           if (shouldStop) stopSignal.next()
         }),
         catchError((error) => {
@@ -939,6 +929,12 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
+    if (this.callback) {
+      const subscription = state$.subscribe((value) => {
+        this.callback(value)
+      })
+      state$.add(subscription)
+    }
     this.inmemory.set(state$.id.toString(), state$)
   }
 

@@ -567,8 +567,8 @@ export class Ceramic implements CeramicApi {
   /*
    * Callback to update 'feed' when state is updated inside the repository
    */
-  private updateFeed(value: RunningState): void {
-    this.#feed.aggregation.streamStates.next(value.state)
+  private updateFeed(value: StreamState): void {
+    this.#feed.aggregation.streamStates.next(value)
   }
 
   async nodeStatus(): Promise<NodeStatusResponse> {
@@ -621,8 +621,6 @@ export class Ceramic implements CeramicApi {
     const state$ = await this.repository.applyCommit(id, commit, opts)
     this._logger.verbose(`Applied commit to stream ${id.toString()}`)
 
-    this.#feed.aggregation.streamStates.next(state$.value)
-
     return streamFromState<T>(
       this.context,
       this._streamHandlers,
@@ -673,7 +671,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-    this.#feed.aggregation.streamStates.next(state$.value)
     return stream
   }
 
@@ -698,7 +695,6 @@ export class Ceramic implements CeramicApi {
     } else {
       try {
         const base$ = await this.repository.load(streamRef.baseID, opts)
-        this.#feed.aggregation.streamStates.next(base$.value)
         return streamFromState<T>(
           this.context,
           this._streamHandlers,
@@ -717,7 +713,6 @@ export class Ceramic implements CeramicApi {
         // Retry with a full resync
         opts.sync = SyncOptions.SYNC_ALWAYS
         const base$ = await this.repository.load(streamRef.baseID, opts)
-        this.#feed.aggregation.streamStates.next(base$.value)
         return streamFromState<T>(
           this.context,
           this._streamHandlers,
