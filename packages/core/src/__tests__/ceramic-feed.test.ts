@@ -138,7 +138,7 @@ describe('Ceramic feed', () => {
     await TestUtils.anchorUpdate(ceramic, stream)
     s.unsubscribe()
 
-    expect(feed.length).toEqual(3)// create + anchor request + anchor update
+    expect(feed.length).toEqual(3) // create + anchor request + anchor update
     // between and request anchor
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
