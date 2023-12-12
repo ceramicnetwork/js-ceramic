@@ -7,7 +7,7 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { asTableName } from '../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { LoggerProvider, Networks, type CeramicCoreApi } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import {
   asTimestamp,
@@ -190,31 +190,6 @@ describe('postgres', () => {
           .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
           .columnInfo()
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
-      })
-
-      test('create new table with relations', async () => {
-        const indexModelsArgs: Array<IndexModelArgs> = [
-          {
-            model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
-          },
-        ]
-        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
-        indexApi.setSyncQueryApi(new CompleteQueryApi())
-        await indexApi.init()
-        await indexApi.indexModels(indexModelsArgs)
-        const created = await indexApi.tablesManager.listMidTables()
-        const tableNames = indexModelsArgs.map((args) => `${asTableName(args.model)}`)
-        expect(created.sort()).toEqual(tableNames.sort())
-
-        await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).resolves.not.toThrow()
-
-        // Also manually check table structure
-        const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
-        const expectedTableStructure = Object.assign({}, STRUCTURE.COMMON_TABLE, {
-          custom_fooRelation: STRUCTURE.RELATION_COLUMN,
-        })
-        expect(JSON.stringify(columns)).toEqual(JSON.stringify(expectedTableStructure))
       })
 
       test('table creation is idempotent', async () => {
@@ -417,50 +392,48 @@ describe('postgres', () => {
           indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
         ).rejects.toThrow(/Schema verification failed for index/)
       })
+    })
 
-      test('Fail table validation if relation column missing', async () => {
-        const modelToIndex = StreamID.fromString(STREAM_ID_A)
-        const tableName = asTableName(modelToIndex)
-        const indexModelsArgs: Array<IndexModelArgs> = [
-          {
-            model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
-          },
-        ]
+    test('Migrates and validates MID table with relation columns', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(modelToIndex)
+      const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
 
-        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
-        indexApi.setSyncQueryApi(new CompleteQueryApi())
-        await indexApi.init()
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(tableName, (table) => {
+        // create unique index name <64 chars that are still capable of being referenced to MID table
+        const indexName = tableName.substring(tableName.length - 10)
 
-        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
-        await dbConnection.schema.createTable(tableName, (table) => {
-          // create unique index name <64 chars that are still capable of being referenced to MID table
-          const indexName = tableName.substring(tableName.length - 10)
+        table
+          .string('stream_id')
+          .primary(`idx_${indexName}_pkey`)
+          .unique(`constr_${indexName}_unique`)
+        table.string('controller_did', 1024).notNullable()
+        table.jsonb('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.dateTime('last_anchored_at').nullable()
+        table.dateTime('first_anchored_at').nullable()
+        table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
+        table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
+        // Extra relation columns to be removed
+        table.string('custom_foo', 1024).notNullable()
+        table.string('custom_bar', 1024).notNullable()
 
-          table
-            .string('stream_id')
-            .primary(`idx_${indexName}_pkey`)
-            .unique(`constr_${indexName}_unique`)
-          table.string('controller_did', 1024).notNullable()
-          table.jsonb('stream_content').notNullable()
-          table.string('tip').notNullable()
-          table.dateTime('last_anchored_at').nullable()
-          table.dateTime('first_anchored_at').nullable()
-          table.dateTime('created_at').notNullable().defaultTo(dbConnection.fn.now())
-          table.dateTime('updated_at').notNullable().defaultTo(dbConnection.fn.now())
-
-          const tableIndices = defaultIndices(tableName)
-          for (const indexToCreate of tableIndices.indices) {
-            table.index(indexToCreate.keys, indexToCreate.name, {
-              storageEngineIndexType: indexToCreate.indexType,
-            })
-          }
-        })
-
-        await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).rejects.toThrow(
-          /Schema verification failed for index/
-        )
+        const tableIndices = defaultIndices(tableName)
+        for (const indexToCreate of tableIndices.indices) {
+          table.index(indexToCreate.keys, indexToCreate.name, {
+            storageEngineIndexType: indexToCreate.indexType,
+          })
+        }
       })
+
+      // Verification should fail with the extra columns
+      await expect(
+        indexApi.tablesManager._verifyMidTable(tableName, [{ model: modelToIndex }])
+      ).rejects.toThrow()
+      // On initialization, MID tables migration will run
+      await indexApi.init()
+      await indexApi.tablesManager._verifyMidTable(tableName, [{ model: modelToIndex }])
     })
   })
 
@@ -610,6 +583,7 @@ describe('postgres', () => {
         {
           model: StreamID.fromString(STREAM_ID_A),
           indices: [{ fields: [{ path: ['address'] }] }],
+          relations: { did: { type: 'account' } },
         },
       ]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -635,10 +609,9 @@ describe('postgres', () => {
 
       // Check indexed model contains all indices
       const indexedModel = indexApi._getIndexedModel(STREAM_ID_A)
-      expect(indexedModel?.indices).toEqual([
-        { fields: [{ path: ['address'] }] },
-        { fields: [{ path: ['name'] }] },
-      ])
+      const indexPaths = (indexedModel?.indices ?? []).map((idx) => idx.fields[0].path.join())
+      indexPaths.sort()
+      expect(indexPaths).toEqual(['address', 'did', 'name'])
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
@@ -892,8 +865,8 @@ describe('postgres', () => {
 
       const rememberedModels = indexApi.getIndexedModels()
       expect(rememberedModels.length).toEqual(2)
-      expect(rememberedModels[0].indices.length).toEqual(expectedIndices.length)
-      expect(rememberedModels[1].indices).toBeUndefined()
+      expect(rememberedModels[0].indices).toHaveLength(expectedIndices.length)
+      expect(rememberedModels[1].indices).toHaveLength(0)
 
       const foundModels = await indexApi.getIndexedModelsFromDatabase()
       if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
@@ -903,9 +876,9 @@ describe('postgres', () => {
         foundModels.reverse()
       }
       expect(foundModels).toEqual(rememberedModels)
-      expect(foundModels.length).toEqual(2)
-      expect(foundModels[0].indices.length).toEqual(expectedIndices.length)
-      expect(rememberedModels[1].indices).toBeUndefined()
+      expect(foundModels).toHaveLength(2)
+      expect(foundModels[0].indices).toHaveLength(expectedIndices.length)
+      expect(rememberedModels[1].indices).toHaveLength(0)
 
       const actualIndices = await dbConnection.raw(`
 select *
@@ -1095,31 +1068,6 @@ describe('sqlite', () => {
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
       })
 
-      test('create new table with relations', async () => {
-        const indexModelsArgs: Array<IndexModelArgs> = [
-          {
-            model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
-          },
-        ]
-        const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
-        indexApi.setSyncQueryApi(new CompleteQueryApi())
-        await indexApi.init()
-        await indexApi.indexModels(indexModelsArgs)
-        const created = await indexApi.tablesManager.listMidTables()
-        const tableNames = indexModelsArgs.map((args) => `${asTableName(args.model)}`)
-        expect(created.sort()).toEqual(tableNames.sort())
-
-        await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).resolves.not.toThrow()
-
-        // Also manually check table structure
-        const columns = await dbConnection.table(asTableName(indexModelsArgs[0].model)).columnInfo()
-        const expectedTableStructure = Object.assign({}, STRUCTURE.COMMON_TABLE, {
-          custom_fooRelation: STRUCTURE.RELATION_COLUMN,
-        })
-        expect(JSON.stringify(columns)).toEqual(JSON.stringify(expectedTableStructure))
-      })
-
       test('table creation is idempotent', async () => {
         const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
         const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -1300,47 +1248,42 @@ describe('sqlite', () => {
           indexApi.tablesManager.verifyTables(modelsToIndexArgs([modelToIndex]))
         ).rejects.toThrow(/Schema verification failed for index/)
       })
+    })
 
-      test('Fail table validation if relation column missing', async () => {
-        const modelToIndex = StreamID.fromString(STREAM_ID_A)
-        const indexModelsArgs: Array<IndexModelArgs> = [
-          {
-            model: StreamID.fromString(STREAM_ID_A),
-            relations: { fooRelation: { type: 'account' } },
-          },
-        ]
+    test('Migrates and validates MID table with relation columns', async () => {
+      const modelToIndex = StreamID.fromString(STREAM_ID_A)
+      const tableName = asTableName(modelToIndex)
+      const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
 
-        const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
-        indexApi.setSyncQueryApi(new CompleteQueryApi())
-        await indexApi.init()
+      // Create the table in the database with all expected fields but one (leaving off 'updated_at')
+      await dbConnection.schema.createTable(tableName, (table) => {
+        table.string('stream_id', 1024).primary().unique().notNullable()
+        table.string('controller_did', 1024).notNullable()
+        table.string('stream_content').notNullable()
+        table.string('tip').notNullable()
+        table.integer('last_anchored_at').nullable()
+        table.integer('first_anchored_at').nullable()
+        table.integer('created_at').notNullable()
+        table.integer('updated_at').notNullable()
+        // Extra relation columns to be removed
+        table.string('custom_foo', 1024).notNullable()
+        table.string('custom_bar', 1024).notNullable()
 
-        // Create the table in the database with all expected fields but one (leaving off 'updated_at')
-        const tableName = asTableName(modelToIndex)
-        await dbConnection.schema.createTable(tableName, (table) => {
-          table.string('stream_id', 1024).primary().unique().notNullable()
-          table.string('controller_did', 1024).notNullable()
-          table.string('stream_content').notNullable()
-          table.string('tip').notNullable()
-          table.integer('last_anchored_at').nullable()
-          table.integer('first_anchored_at').nullable()
-          table.integer('created_at').notNullable()
-          table.integer('updated_at').notNullable()
-
-          const tableIndices = defaultIndices(tableName)
-          for (const indexToCreate of tableIndices.indices) {
-            if (!indexToCreate.keys.includes('updated_at')) {
-              //updated_at not added as part of table
-              table.index(indexToCreate.keys, indexToCreate.name, {
-                storageEngineIndexType: indexToCreate.indexType,
-              })
-            }
-          }
-        })
-
-        await expect(indexApi.tablesManager.verifyTables(indexModelsArgs)).rejects.toThrow(
-          /Schema verification failed for index/
-        )
+        const tableIndices = defaultIndices(tableName)
+        for (const indexToCreate of tableIndices.indices) {
+          table.index(indexToCreate.keys, indexToCreate.name, {
+            storageEngineIndexType: indexToCreate.indexType,
+          })
+        }
       })
+
+      // Verification should fail with the extra columns
+      await expect(
+        indexApi.tablesManager._verifyMidTable(tableName, [{ model: modelToIndex }])
+      ).rejects.toThrow()
+      // On initialization, MID tables migration will run
+      await indexApi.init()
+      await indexApi.tablesManager._verifyMidTable(tableName, [{ model: modelToIndex }])
     })
   })
 
@@ -1473,6 +1416,7 @@ describe('sqlite', () => {
         {
           model: StreamID.fromString(STREAM_ID_A),
           indices: [{ fields: [{ path: ['address'] }] }],
+          relations: { did: { type: 'account' } },
         },
       ]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -1498,10 +1442,9 @@ describe('sqlite', () => {
 
       // Check indexed model contains all indices
       const indexedModel = indexApi._getIndexedModel(STREAM_ID_A)
-      expect(indexedModel?.indices).toEqual([
-        { fields: [{ path: ['address'] }] },
-        { fields: [{ path: ['name'] }] },
-      ])
+      const indexPaths = (indexedModel?.indices ?? []).map((idx) => idx.fields[0].path.join())
+      indexPaths.sort()
+      expect(indexPaths).toEqual(['address', 'did', 'name'])
     })
 
     test('modelsToIndex is properly populated after init()', async () => {
@@ -1734,8 +1677,8 @@ describe('sqlite', () => {
 
       const rememberedModels = indexApi.getIndexedModels()
       expect(rememberedModels.length).toEqual(2)
-      expect(rememberedModels[0].indices.length).toEqual(expectedIndices.length)
-      expect(rememberedModels[1].indices).toBeUndefined()
+      expect(rememberedModels[0].indices).toHaveLength(expectedIndices.length)
+      expect(rememberedModels[1].indices).toHaveLength(0)
 
       const foundModels = await indexApi.getIndexedModelsFromDatabase()
       if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
@@ -1745,9 +1688,9 @@ describe('sqlite', () => {
         foundModels.reverse()
       }
       expect(foundModels).toEqual(rememberedModels)
-      expect(foundModels.length).toEqual(2)
-      expect(foundModels[0].indices.length).toEqual(expectedIndices.length)
-      expect(rememberedModels[1].indices).toBeUndefined()
+      expect(foundModels).toHaveLength(2)
+      expect(foundModels[0].indices).toHaveLength(expectedIndices.length)
+      expect(rememberedModels[1].indices).toHaveLength(0)
 
       const actualIndices = await dbConnection.raw(`
 select name, tbl_name

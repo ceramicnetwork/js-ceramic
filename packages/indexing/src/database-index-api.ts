@@ -20,7 +20,6 @@ import {
   PostgresTablesManager,
   SqliteTablesManager,
 } from './tables-manager.js'
-import { addColumnPrefix } from './column-name.util.js'
 import { ISyncQueryApi } from './history-sync/interfaces.js'
 import cloneDeep from 'lodash.clonedeep'
 import { indexNameFromTableName } from './migrations/1-create-model-table.js'
@@ -75,7 +74,7 @@ export function getFieldIndexKey(index: FieldsIndex): string {
 export function toIndicesRecord(indices: Array<FieldsIndex> = []): IndicesRecord {
   const record: IndicesRecord = {}
   for (const index of indices) {
-    record[getFieldIndexKey(index)] = index
+    record[getFieldIndexKey(index)] = { fields: index.fields }
   }
   return record
 }
@@ -110,9 +109,6 @@ type IndexedData<DateType> = {
 export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
   private indexedModelsRecord: Record<string, ModelData> = {}
-  // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
-  // to
-  private readonly modelRelations = new Map<string, Array<string>>()
   #interfacesModels: Record<string, Set<string>> = {}
   tablesManager!: TablesManager
   syncApi!: ISyncQueryApi
@@ -161,18 +157,23 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       // Check model is not currently going through historical sync
       checkSyncPromises.push(this.assertNoOngoingSyncForModel(modelData.model))
 
+      const modelIndicesRecord = toIndicesRecord(modelData.indices)
+      // Add relations to indices record
+      for (const field of Object.keys(modelData.relations ?? {})) {
+        modelIndicesRecord[field] = { fields: [{ path: [field] }] }
+      }
+      const modelIndices = Object.values(modelIndicesRecord)
+
       const id = modelData.model.toString()
       if (indexedModels[id] == null) {
         // Update indexed models record
-        indexedModels[id] = { streamID: modelData.model, indices: modelData.indices }
-        // Update indices to add record only if there is any index
-        if (modelData.indices != null && modelData.indices.length !== 0) {
-          createIndices[id] = modelData.indices
-        }
+        indexedModels[id] = { streamID: modelData.model, indices: modelIndices }
+        // Add indices to create
+        createIndices[id] = modelIndices
       } else {
         const existingIndices = toIndicesRecord(indexedModels[id]?.indices)
         const addedIndices: IndicesRecord = {}
-        for (const [key, index] of Object.entries(toIndicesRecord(modelData.indices))) {
+        for (const [key, index] of Object.entries(modelIndicesRecord)) {
           if (existingIndices[key] == null) {
             addedIndices[key] = index
           }
@@ -181,10 +182,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         const allIndices = Object.values({ ...existingIndices, ...addedIndices })
         indexedModels[id] = { streamID: modelData.model, indices: allIndices }
         // Update indices to add record only if there is any missing index
-        const addedList = Object.values(addedIndices)
-        if (addedList.length !== 0) {
-          createIndices[id] = addedList
-        }
+        createIndices[id] = Object.values(addedIndices)
       }
 
       modelsToIndex.push({ ...modelData, indices: indexedModels[id]?.indices })
@@ -282,11 +280,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
-    const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
-    const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
-    for (const relation of relations) {
-      indexedData[addColumnPrefix(relation)] = indexingArgs.streamContent[relation]
-    }
+    const indexedData = this.getIndexedData(indexingArgs)
     const toMerge = cloneDeep(indexedData)
     delete toMerge['created_at']
     await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
@@ -465,7 +459,10 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Run ComposeDB config/startup operations
    */
   async init(): Promise<void> {
-    await this.tablesManager.initConfigTables(this.network)
+    await Promise.all([
+      this.tablesManager.initConfigTables(this.network),
+      this.tablesManager.migrateMidTables(),
+    ])
     const [indexedModels, interfacesModels] = await Promise.all([
       this.getIndexedModelsFromDatabase(),
       this._getInterfacesModelsFromDataBase(),
