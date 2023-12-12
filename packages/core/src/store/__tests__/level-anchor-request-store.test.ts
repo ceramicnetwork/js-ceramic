@@ -129,7 +129,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
-    anchorRequestStore = new AnchorRequestStore()
+    anchorRequestStore = new AnchorRequestStore(logger)
     await anchorRequestStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
