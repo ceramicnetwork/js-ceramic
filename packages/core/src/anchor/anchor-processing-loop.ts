@@ -30,17 +30,24 @@ export class AnchorProcessingLoop {
     anchorStoreQueue: NamedTaskQueue
   ) {
     this.#anchorStoreQueue = anchorStoreQueue
-    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), (streamId) =>
+    this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), (streamId) =>
       this.#anchorStoreQueue.run(streamId.toString(), async () => {
-        const entry = await store.load(streamId)
-        const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
-          logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
-          const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
-          return cas.create(new AnchorRequestCarFileReader(requestCAR))
-        })
-        const isTerminal = await eventHandler.handle(event)
-        if (isTerminal) {
-          await store.remove(streamId)
+        try {
+          const entry = await store.load(streamId)
+          const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
+            logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
+            const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
+            return cas.create(new AnchorRequestCarFileReader(requestCAR))
+          })
+          const isTerminal = await eventHandler.handle(event)
+          if (isTerminal) {
+            await store.remove(streamId)
+          }
+        } catch (err) {
+          logger.err(
+            `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
+          )
+          // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
         }
       })
     )

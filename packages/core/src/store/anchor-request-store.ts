@@ -92,34 +92,40 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
    */
   async *infiniteList(
     batchSize = 1,
-    restartDelay = 100 // Milliseconds
+    restartDelay = 1000 // Milliseconds
   ): AsyncGenerator<StreamID> {
     let gt: StreamID | undefined = undefined
     let numEntries = 0
     do {
-      const batch = await this.store.find({
-        limit: batchSize,
-        useCaseName: this.useCaseName,
-        gt: generateKey(gt),
-      })
-      if (batch.length > 0) {
-        gt = StreamID.fromString(batch[batch.length - 1].key)
-        for (const item of batch) {
-          numEntries++
-          yield StreamID.fromString(item.key)
+      try {
+        const batch = await this.store.find({
+          limit: batchSize,
+          useCaseName: this.useCaseName,
+          gt: generateKey(gt),
+        })
+        if (batch.length > 0) {
+          gt = StreamID.fromString(batch[batch.length - 1].key)
+          for (const item of batch) {
+            numEntries++
+            yield StreamID.fromString(item.key)
+          }
+        } else {
+          this.#logger.debug(
+            `Anchor polling loop processed ${numEntries} entries from the AnchorRequestStore. Restarting loop.`
+          )
+          await new Promise((resolve) => setTimeout(resolve, restartDelay))
+          gt = undefined
+          numEntries = 0
         }
-      } else {
-        this.#logger.debug(
-          `Anchor polling loop processed ${numEntries} from the AnchorRequestStore. Restarting loop`
-        )
-        await new Promise((resolve) => setTimeout(resolve, restartDelay))
-        gt = undefined
-        numEntries = 0
+      } catch (err) {
+        this.#logger.err(`Error querying the AnchorRequestStore: ${err}`)
       }
     } while (!this.#shouldStop)
+    this.#logger.debug(`AnchorRequestStore processing loop shutting down`)
   }
 
   async close() {
+    this.#logger.debug(`Closing AnchorRequestStore`)
     this.#shouldStop = true
     await super.close()
   }

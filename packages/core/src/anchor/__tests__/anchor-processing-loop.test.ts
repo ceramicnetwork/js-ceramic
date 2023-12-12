@@ -1,5 +1,6 @@
 import { test, jest, expect, describe } from '@jest/globals'
 import { ProcessingLoop, Deferred } from '../processing-loop.js'
+import { LoggerProvider } from '@ceramicnetwork/common'
 
 async function* infiniteIntegers() {
   let n = 0
@@ -7,6 +8,8 @@ async function* infiniteIntegers() {
     yield n++
   }
 }
+
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 describe('deferred', () => {
   test('resolve', async () => {
@@ -24,7 +27,7 @@ describe('deferred', () => {
 test('do not call next on construction', async () => {
   const generator = infiniteIntegers()
   const nextSpy = jest.spyOn(generator, 'next')
-  new ProcessingLoop(generator, () => Promise.resolve())
+  new ProcessingLoop(logger, generator, () => Promise.resolve())
   expect(nextSpy).not.toBeCalled()
 })
 
@@ -39,7 +42,7 @@ test('process entries one by one, stop when all processed', async () => {
     isDone.resolve()
   }
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(finiteIntegers(), noop)
+  const loop = new ProcessingLoop(logger, finiteIntegers(), noop)
   loop.start()
   await isDone
   expect(noop).toBeCalledTimes(max - 1)
@@ -58,7 +61,7 @@ test('stop generator after processing (idempotent)', async () => {
   const source = finiteIntegers()
   const returnSpy = jest.spyOn(source, 'return')
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(source, noop)
+  const loop = new ProcessingLoop(logger, source, noop)
   loop.start()
   await isDone
   expect(returnSpy).not.toBeCalled()
@@ -70,7 +73,7 @@ test('stop generator', async () => {
   const source = infiniteIntegers()
   const returnSpy = jest.spyOn(source, 'return')
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(source, noop)
+  const loop = new ProcessingLoop(logger, source, noop)
   loop.start()
   expect(returnSpy).not.toBeCalled()
   await loop.stop()
@@ -87,7 +90,7 @@ test('pass error to .stop', async () => {
       throw new Error(`Valhalla welcomes you`)
     }
   }
-  const loop = new ProcessingLoop(source, noop)
+  const loop = new ProcessingLoop(logger, source, noop)
   loop.start()
   await defer
   expect(returnSpy).not.toBeCalled()
