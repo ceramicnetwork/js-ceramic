@@ -13,6 +13,8 @@
  * promiseLike.reject(new Error("I am done"))
  * ```
  */
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
+
 export class Deferred<T = void> implements PromiseLike<T> {
   /**
    * Resolve the promise manually.
@@ -48,15 +50,20 @@ export class ProcessingLoop<T> {
    * Source of entries we process in a loop.
    */
   private readonly source: AsyncGenerator<T>
+
   /**
    * External action that processes an entry.
    */
   private readonly handleValue: (value: T) => Promise<void>
+
+  #logger: DiagnosticsLogger
+
   /**
    * `for await ()` loop wrapped in a function. It resolves, when `source` reports it has no entries.
    * If absent, i.e. `undefined`, it means, we have not started processing the entries.
    */
   #processing: Promise<void> | undefined
+
   /**
    * Used to intercept fulfillment inside `#processing`. Node.js forces you to handle Promise errors by
    * issuing a warning to console. Passing an error to an instance of `Deferred` solves that.
@@ -68,9 +75,14 @@ export class ProcessingLoop<T> {
    */
   #abortController: AbortController
 
-  constructor(source: ProcessingLoop<T>['source'], onValue: ProcessingLoop<T>['handleValue']) {
+  constructor(
+    logger: DiagnosticsLogger,
+    source: ProcessingLoop<T>['source'],
+    onValue: ProcessingLoop<T>['handleValue']
+  ) {
     this.source = source
     this.handleValue = onValue
+    this.#logger = logger
     this.#processing = undefined
     this.#whenComplete = new Deferred()
     this.#abortController = new AbortController()
@@ -99,7 +111,9 @@ export class ProcessingLoop<T> {
           await Promise.race([this.handleValue(value), rejectOnAbortSignal])
         } while (!isDone)
         this.#whenComplete.resolve()
+        this.#logger.verbose(`ProcessingLoop complete`)
       } catch (e) {
+        this.#logger.err(`Error in ProcessingLoop: ${e}`)
         this.#whenComplete.reject(e)
       }
     }
@@ -114,6 +128,7 @@ export class ProcessingLoop<T> {
    * 4. Clean up internal state.
    */
   async stop() {
+    this.#logger.debug(`Stopping ProcessingLoop`)
     if (!this.#processing) return
     this.#abortController.abort('STOP')
     await this.source.return(undefined)
