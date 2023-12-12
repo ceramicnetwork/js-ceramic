@@ -544,10 +544,6 @@ export class Repository {
       if (next) {
         state$.next(next)
         await this._updateStateIfPinned(state$)
-        // Notify the callback, if available
-        if (this.callback) {
-          this.callback(state$)
-        }
         this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
@@ -642,54 +638,6 @@ export class Repository {
       default:
         throw new UnreachableCaseError(status, 'Unknown anchoring state')
     }
-  }
-
-  private _processAnchorResponse(
-    state$: RunningState,
-    anchorStatus$: Observable<AnchorEvent>
-  ): Subscription {
-    const stopSignal = new Subject<void>()
-    this.#numPendingAnchorSubscriptions++
-    Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-    const subscription = anchorStatus$
-      .pipe(
-        takeUntil(stopSignal),
-        concatMap(async (anchorEvent) => {
-          const prevState = state$.state
-          const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
-          const current = state$.state
-          // Notify the callback, if available
-          if (this.callback && prevState.anchorStatus !== current.anchorStatus) {
-            this.callback(state$)
-          }
-          if (shouldStop) stopSignal.next()
-        }),
-        catchError((error) => {
-          // TODO: Combine these two log statements into one line so that they can't get split up in the
-          // log output.
-          this.logger.warn(`Error while anchoring stream ${state$.id}:${error}`)
-          this.logger.warn(error) // Log stack trace
-
-          // TODO: This can leave a stream with AnchorStatus PENDING or PROCESSING indefinitely.
-          // We should distinguish whether the error is transient or permanent, and either transition
-          // to AnchorStatus FAILED or keep retrying.
-          return EMPTY
-        })
-      )
-      .subscribe(
-        null,
-        (err) => {
-          this.#numPendingAnchorSubscriptions--
-          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-          throw err
-        },
-        () => {
-          this.#numPendingAnchorSubscriptions--
-          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-        }
-      )
-    state$.add(subscription)
-    return subscription
   }
 
   /**
