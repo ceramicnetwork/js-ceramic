@@ -131,14 +131,14 @@ describe('Ceramic feed', () => {
     const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, {
       anchor: false,
     })
-    const stream$ = await ceramic.repository.load(stream.id, {})
+    const state$ = await ceramic.repository.load(stream.id, {})
     // request anchor
-    await ceramic.repository.anchor(stream$, {})
+    await ceramic.repository.anchor(state$, {})
     // process anchor
     await TestUtils.anchorUpdate(ceramic, stream)
     s.unsubscribe()
 
-    expect(feed.length).toEqual(4)
+    expect(feed.length).toEqual(3)// create + anchor request + anchor update
     // between and request anchor
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
