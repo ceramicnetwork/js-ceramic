@@ -7,11 +7,10 @@ import {
   createSqliteIndices,
   createPostgresIndices,
   migrateConfigTable,
-  indexNameFromTableName,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
 import { Knex } from 'knex'
-import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
+import { Model } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger, FieldsIndex, Networks } from '@ceramicnetwork/common'
 import {
   INDEXED_MODEL_CONFIG_TABLE_NAME,
