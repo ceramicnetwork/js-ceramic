@@ -21,8 +21,8 @@ class DocumentsSubject extends Observable<Document> {
             const commitID = new CommitID(streamState.type, genesisCID, tipCID)
             return {
               id: commitID,
-              content: streamState.content,
-              metadata: streamState.metadata,
+              content: streamState.next ? streamState.next.content : streamState.content,
+              metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
             }
           })
         )

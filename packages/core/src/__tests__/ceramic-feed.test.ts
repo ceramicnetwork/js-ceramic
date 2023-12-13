@@ -37,17 +37,20 @@ describe('Ceramic feed', () => {
     const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
       feed.push(s)
     })
-
-    const tile = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, {
+    const original = `world-${Math.random()}`
+    const tile = await TileDocument.create(ceramic, { hello: original }, null, {
       anchor: false,
     })
-    await tile.update({ hello: `world-1-${Math.random()}` }, undefined, { anchor: false })
+    const updated = `world-1-${Math.random()}`
+    await tile.update({ hello: updated }, undefined, { anchor: false })
     s.unsubscribe()
     // One entry after create, and another after update
     expect(feed.length).toEqual(2)
 
     expect(feed[0].id).not.toBe(feed[1].id)
     expect(feed[0].metadata).toStrictEqual(feed[1].metadata)
+    expect(feed[0].content).toStrictEqual({ hello: original })
+    expect(feed[1].content).toStrictEqual({ hello: updated })
   })
 
   test('add entry after loading pinned stream/pubsub ', async () => {
@@ -83,6 +86,8 @@ describe('Ceramic feed', () => {
       expect(feed2[0].id).toStrictEqual(feed1[0].id)
       // test pubsub propagating the update from stream1 being inside the feed
       expect(feed2[1].id).toStrictEqual(feed1[1].id)
+      expect(feed2[1].metadata).toStrictEqual(feed1[1].metadata)
+      expect(feed2[1].content).toStrictEqual(updatedContent)
       await ceramic1.close()
       await ceramic2.close()
       s1.unsubscribe()
