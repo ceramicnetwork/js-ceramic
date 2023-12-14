@@ -34,7 +34,7 @@ describe('Ceramic feed', () => {
 
   test('add entry after creating/updating stream', async () => {
     const feed: Document[] = []
-    const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
+    const s = ceramic.feed.aggregation.documents.subscribe((s) => {
       feed.push(s)
     })
     const original = `world-${Math.random()}`
@@ -63,11 +63,11 @@ describe('Ceramic feed', () => {
       const updatedContent = { test: 1335 }
       const feed1: Document[] = []
       const feed2: Document[] = []
-      const s1 = await ceramic1.feed.aggregation.streamStates.subscribe((s) => {
+      const s1 = await ceramic1.feed.aggregation.documents.subscribe((s) => {
         feed1.push(s)
       })
 
-      const s2 = await ceramic2.feed.aggregation.streamStates.pipe(take(3)).subscribe((s) => {
+      const s2 = await ceramic2.feed.aggregation.documents.pipe(take(3)).subscribe((s) => {
         feed2.push(s)
       })
       const stream1 = await TileDocument.create(ceramic1, content, null, {
@@ -109,7 +109,7 @@ describe('Ceramic feed', () => {
       }
       const feed: Document[] = []
 
-      const s = ceramic2.feed.aggregation.streamStates.subscribe((s) => {
+      const s = ceramic2.feed.aggregation.documents.subscribe((s) => {
         feed.push(s)
       })
       // create model on different node
@@ -129,7 +129,7 @@ describe('Ceramic feed', () => {
 
   test('add entry after anchoring stream', async () => {
     const feed: Document[] = []
-    const s = ceramic.feed.aggregation.streamStates.subscribe((s) => {
+    const s = ceramic.feed.aggregation.documents.subscribe((s) => {
       feed.push(s)
     })
 

@@ -859,19 +859,7 @@ export class CeramicDaemon {
   }
 
   documentsFeed(_: Request, res: Response): void {
-    const source = new Observable<number>((subscriber) => {
-      let counter = 0
-      const interval = setInterval(() => {
-        if (counter >= 20) {
-          subscriber.error(`20 done`)
-          return
-        }
-        subscriber.next(counter++)
-      }, 300)
-      return () => {
-        clearInterval(interval)
-      }
-    })
+    const source = this.ceramic.feed.aggregation.documents
     const feed = new SseFeed(this.diagnosticsLogger, source, String)
     feed.send(res)
   }
