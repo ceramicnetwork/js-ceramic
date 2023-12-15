@@ -1,10 +1,12 @@
 import { Subject, Observable, map } from 'rxjs'
 import type { StreamMetadata, StreamState } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
+import { AnchorStatus } from '@ceramicnetwork/common'
 
 export type Document = {
   id: CommitID
   content: any
+  anchorStatus: AnchorStatus
   metadata: StreamMetadata
 }
 
@@ -22,6 +24,7 @@ class DocumentsSubject extends Observable<Document> {
             return {
               id: commitID,
               content: streamState.next ? streamState.next.content : streamState.content,
+              anchorStatus: streamState.anchorStatus,
               metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
             }
           })

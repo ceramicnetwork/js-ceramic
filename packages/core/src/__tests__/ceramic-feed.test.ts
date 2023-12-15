@@ -148,9 +148,11 @@ describe('Ceramic feed', () => {
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
     expect(feed[0].id).toStrictEqual(feed[1].id)
+    expect(feed[0].anchorStatus).toBeLessThan(feed[1].anchorStatus)
     //between request anchor and process anchor
     expect(feed[1].content).toEqual(feed[2].content)
     expect(feed[1].metadata).toEqual(feed[2].metadata)
     expect(feed[1].id).toStrictEqual(feed[2].id)
+    expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
   })
 })
