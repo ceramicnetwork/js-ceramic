@@ -824,7 +824,7 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    state$.subscribe(this.feed.aggregation.streamStates)
+    state$.subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
