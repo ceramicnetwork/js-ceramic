@@ -1,7 +1,7 @@
 import { Subject, Observable, map } from 'rxjs'
 import type { StreamMetadata, StreamState } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
-import { AnchorStatus } from '@ceramicnetwork/common'
+import type { AnchorStatus } from '@ceramicnetwork/common'
 
 export type Document = {
   id: CommitID
