@@ -41,6 +41,9 @@ import { version } from './version.js'
 import { LRUCache } from 'least-recent'
 import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
+import { parseQueryObject } from './daemon/parse-query-object.js'
+import { SseFeed } from './daemon/sse-feed.js'
+import { Observable } from 'rxjs'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -118,50 +121,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   }
 
   return ceramicConfig
-}
-
-/**
- * Takes a query object and parses the values to give them proper types instead of having everything
- * as strings
- * @param opts
- */
-function parseQueryObject(opts: Record<string, any>): Record<string, string | boolean | number> {
-  const typedOpts = {}
-  for (const [key, value] of Object.entries(opts)) {
-    if (typeof value == 'string') {
-      if (value[0] == '{') {
-        // value is a sub-object
-        typedOpts[key] = parseQueryObject(JSON.parse(value))
-      } else if (value === 'true') {
-        typedOpts[key] = true
-      } else if (value === 'false') {
-        typedOpts[key] = false
-      } else if (!isNaN(parseInt(value))) {
-        typedOpts[key] = parseInt(value)
-      } else {
-        typedOpts[key] = value
-      }
-    } else {
-      typedOpts[key] = value
-    }
-  }
-  return typedOpts
-}
-
-/**
- * Converts 'sync' option sent as a bool by outdated http-clients to the current format of an enum.
- * The old behaviors don't map directly to the new behaviors, so we take the best approximation.
- * TODO remove this once we no longer need to support clients older than v1.0.0
- * @param opts
- */
-function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
-  if (typeof opts?.sync == 'boolean') {
-    if (opts.sync) {
-      opts.sync = SyncOptions.SYNC_ALWAYS
-    } else {
-      opts.sync = SyncOptions.PREFER_CACHE
-    }
-  }
 }
 
 /**
@@ -394,6 +353,7 @@ export class CeramicDaemon {
     const legacyPinsRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminNodeStatusRouter = ErrorHandlingRouter(this.diagnosticsLogger)
     const adminShutdownRouter = ErrorHandlingRouter(this.diagnosticsLogger)
+    const feedRouter = ErrorHandlingRouter(this.diagnosticsLogger)
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -409,6 +369,7 @@ export class CeramicDaemon {
     // Admin Pins Validate JWS Middleware
     baseRouter.use('/admin/pins', this.validateAdminRequest.bind(this))
     baseRouter.use('/admin/pins', adminPinsRouter)
+    baseRouter.use('/feed', feedRouter)
 
     // Original pins paths not supported error, to be fuly removed/deprecated after
     // pin add returns empty 200 for now, to support 3id-connect, to be removed
@@ -437,6 +398,7 @@ export class CeramicDaemon {
     adminPinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     adminPinsRouter.getAsync('/', this.listPinned.bind(this))
     adminShutdownRouter.postAsync('/', this.shutdownServer.bind(this))
+    feedRouter.get('/aggregation/documents', this.documentsFeed.bind(this))
 
     if (!readOnly) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
@@ -896,6 +858,12 @@ export class CeramicDaemon {
     })
   }
 
+  documentsFeed(_: Request, res: Response): void {
+    const source = this.ceramic.feed.aggregation.documents
+    const feed = new SseFeed(this.diagnosticsLogger, source, String)
+    feed.send(res)
+  }
+
   async shutdownServer(req: Request, res: Response): Promise<void> {
     const closeClosure = this.close.bind(this)
     const successCallback = async function (force: boolean) {
@@ -918,7 +886,6 @@ export class CeramicDaemon {
   async applyCommit(req: Request, res: Response): Promise<void> {
     const { commit } = req.body
     const opts = req.body.opts
-    upconvertLegacySyncOption(opts)
 
     const streamId = req.body.streamId
     if (!(streamId && commit)) {
@@ -993,7 +960,7 @@ export class CeramicDaemon {
    * List pinned streams
    */
   async listPinned(req: Request, res: Response): Promise<void> {
-    let streamId: StreamID
+    let streamId: StreamID | undefined = undefined
     if (req.params.streamid) {
       streamId = StreamID.fromString(req.params.streamid)
     }

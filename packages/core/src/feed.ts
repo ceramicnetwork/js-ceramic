@@ -14,7 +14,7 @@ class DocumentsSubject extends Observable<Document> {
   readonly subject: Subject<StreamState>
   constructor() {
     super((subscriber) => {
-      this.subject
+      const subscription = this.subject
         .pipe(
           // transform each incoming StreamState to a Document
           map((streamState: StreamState) => {
@@ -30,6 +30,10 @@ class DocumentsSubject extends Observable<Document> {
           })
         )
         .subscribe(subscriber)
+
+      return () => {
+        subscription.unsubscribe()
+      }
     })
 
     this.subject = new Subject<StreamState>()
@@ -45,12 +49,12 @@ class DocumentsSubject extends Observable<Document> {
  */
 export interface PublicFeed {
   aggregation: {
-    streamStates: Observable<Document>
+    documents: Observable<Document>
   }
 }
 
 export class Feed implements PublicFeed {
   readonly aggregation = {
-    streamStates: new DocumentsSubject(),
+    documents: new DocumentsSubject(),
   }
 }
