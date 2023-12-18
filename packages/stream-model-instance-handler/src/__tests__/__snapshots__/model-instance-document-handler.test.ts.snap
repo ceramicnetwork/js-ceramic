@@ -104,6 +104,7 @@ exports[`ModelInstanceDocumentHandler applies deterministic genesis commit corre
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
       "_type": 2,
     },
+    "unique": undefined,
   },
   "signature": 2,
   "type": 3,
