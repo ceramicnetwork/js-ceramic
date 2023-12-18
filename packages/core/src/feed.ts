@@ -4,7 +4,7 @@ import { CommitID } from '@ceramicnetwork/streamid'
 import type { AnchorStatus } from '@ceramicnetwork/common'
 
 export type Document = {
-  id: CommitID
+  commitID: CommitID
   content: any
   anchorStatus: AnchorStatus
   metadata: StreamMetadata
@@ -22,7 +22,7 @@ class DocumentsSubject extends Observable<Document> {
             const genesisCID = streamState.log[0].cid
             const commitID = new CommitID(streamState.type, genesisCID, tipCID)
             return {
-              id: commitID,
+              commitID: commitID,
               content: streamState.next ? streamState.next.content : streamState.content,
               anchorStatus: streamState.anchorStatus,
               metadata: streamState.next ? streamState.next.metadata : streamState.metadata,

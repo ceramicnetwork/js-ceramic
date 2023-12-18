@@ -47,7 +47,7 @@ describe('Ceramic feed', () => {
     // One entry after create, and another after update
     expect(feed.length).toEqual(2)
 
-    expect(feed[0].id).not.toBe(feed[1].id)
+    expect(feed[0].commitID).not.toBe(feed[1].commitID)
     expect(feed[0].metadata).toStrictEqual(feed[1].metadata)
     expect(feed[0].content).toStrictEqual({ hello: original })
     expect(feed[1].content).toStrictEqual({ hello: updated })
@@ -83,9 +83,9 @@ describe('Ceramic feed', () => {
       expect(feed1.length).toEqual(3) // create + anchor + update
       expect(feed2.length).toEqual(2) //load + pubsub update
       expect(feed2[0].content.test).toBe(content.test)
-      expect(feed2[0].id).toStrictEqual(feed1[0].id)
+      expect(feed2[0].commitID).toStrictEqual(feed1[0].commitID)
       // test pubsub propagating the update from stream1 being inside the feed
-      expect(feed2[1].id).toStrictEqual(feed1[1].id)
+      expect(feed2[1].commitID).toStrictEqual(feed1[1].commitID)
       expect(feed2[1].metadata).toStrictEqual(feed1[1].metadata)
       expect(feed2[1].content).toStrictEqual(updatedContent)
       await ceramic1.close()
@@ -121,7 +121,7 @@ describe('Ceramic feed', () => {
       expect(feed.length).toEqual(1)
       expect(feed[0].content).toEqual(model.state.content)
       expect(feed[0].metadata).toEqual(model.state.metadata)
-      expect(feed[0].id).toStrictEqual(model.commitId)
+      expect(feed[0].commitID).toStrictEqual(model.commitId)
       await ceramic1.close()
       await ceramic2.close()
     })
@@ -147,12 +147,12 @@ describe('Ceramic feed', () => {
     // between and request anchor
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
-    expect(feed[0].id).toStrictEqual(feed[1].id)
+    expect(feed[0].commitID).toStrictEqual(feed[1].commitID)
     expect(feed[0].anchorStatus).toBeLessThan(feed[1].anchorStatus)
     //between request anchor and process anchor
     expect(feed[1].content).toEqual(feed[2].content)
     expect(feed[1].metadata).toEqual(feed[2].metadata)
-    expect(feed[1].id).toStrictEqual(feed[2].id)
+    expect(feed[1].commitID).toStrictEqual(feed[2].commitID)
     expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
   })
 })
