@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import cloneDeep from 'lodash.clonedeep'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
@@ -22,6 +21,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
+import { toString } from 'uint8arrays'
 
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
@@ -83,11 +83,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
-    const { controllers, model } = payload.header
+    const { controllers, model, unique } = payload.header
     const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
     const streamId = new StreamID(ModelInstanceDocument.STREAM_TYPE_ID, commitData.cid)
-    const metadata = { controllers: [controller], model: modelStreamID }
+    const metadata = { controllers: [controller], model: modelStreamID, unique }
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')
@@ -110,7 +110,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         modelStreamID,
         streamId
       )
-    } else if (payload.data || payload.header.unique) {
+    } else if (payload.data) {
       throw Error('ModelInstanceDocument genesis commit with content must be signed')
     }
 
@@ -164,6 +164,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.api.loadStream<Model>(metadata.model)
     await this._validateContent(context.api, modelStream, newContent, false)
+    await this._validateUnique(
+      modelStream,
+      metadata as unknown as ModelInstanceDocumentMetadata,
+      newContent
+    )
 
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
@@ -210,7 +215,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     content: any,
     genesis: boolean
   ): Promise<void> {
-    if (genesis && model.content.accountRelation.type === 'single') {
+    if (
+      genesis &&
+      (model.content.accountRelation.type === 'single' ||
+        model.content.accountRelation.type == 'set')
+    ) {
       if (content) {
         throw new Error(
           `Deterministic genesis commits for ModelInstanceDocuments must not have content`
@@ -305,6 +314,28 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         throw new Error(
           `Deterministic ModelInstanceDocuments are only allowed on models that have the SINGLE accountRelation`
         )
+      }
+    }
+  }
+
+  async _validateUnique(
+    model: Model,
+    metadata: ModelInstanceDocumentMetadata,
+    content: Record<string, unknown>
+  ): Promise<void> {
+    if (model.content.accountRelation.type === 'set') {
+      if (metadata.unique == null) {
+        throw new Error('Missing unique metadata value')
+      }
+
+      const unique = model.content.accountRelation.fields
+        .map((field) => {
+          const value = content[field]
+          return value ? value.toString() : ''
+        })
+        .join('|')
+      if (unique !== toString(metadata.unique)) {
+        throw new Error('Invalid unique content fields value')
       }
     }
   }

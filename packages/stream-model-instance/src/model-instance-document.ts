@@ -20,6 +20,7 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
+import { fromString } from 'uint8arrays'
 
 /**
  * Arguments used to generate the metadata for Model Instance Documents
@@ -40,6 +41,12 @@ export interface ModelInstanceDocumentMetadataArgs {
    * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
    */
   deterministic?: boolean
+
+  /**
+   * Custom values to use for the stream determinism, only used if `deterministic` is set to `true`.  Should only be used for
+   * ModelInstanceDocuments whose Model has an accountRelation of 'SET'.
+   */
+  unique?: Array<string>
 }
 
 /**
@@ -55,6 +62,11 @@ export interface ModelInstanceDocumentMetadata {
    * The StreamID of the Model that this ModelInstanceDocument belongs to.
    */
   model: StreamID
+
+  /**
+   * Unique bytes
+   */
+  unique?: Uint8Array
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -106,7 +118,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { controller: metadata.controllers[0], model: metadata.model }
+    return { controller: metadata.controllers[0], model: metadata.model, unique: metadata.unique }
   }
 
   /**
@@ -317,7 +329,14 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       model: metadata.model.bytes,
       sep: 'model', // See CIP-120 for more details on this field
     }
-    if (!metadata.deterministic) {
+    if (metadata.deterministic) {
+      // Convert and use unique values for the deterministic bytes if provided (SET account relation)
+      if (Array.isArray(metadata.unique)) {
+        header.unique = fromString(metadata.unique.join('|'), 'utf8')
+      }
+      // Don't set any unique byte otherwise (SINGLE account relation)
+    } else {
+      // Generate random bytes to ensure stream is unique (LIST account relation)
       header.unique = randomBytes(12)
     }
 

@@ -15,7 +15,7 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 
-const MODEL_DEFINITION: ModelDefinition = {
+const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   name: 'MyModel',
   version: '1.0',
   accountRelation: { type: 'single' },
@@ -31,6 +31,30 @@ const MODEL_DEFINITION: ModelDefinition = {
       },
     },
     required: ['myData'],
+  },
+}
+
+const MODEL_DEFINITION_SET: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
+  accountRelation: { type: 'set', fields: ['unique'] },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      unique: {
+        type: 'string',
+        minLength: 3,
+      },
+      other: {
+        type: 'string',
+        minLength: 3,
+      },
+    },
+    required: ['unique'],
   },
 }
 
@@ -64,7 +88,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ceramic = new CeramicClient(apiUrl)
     ceramic.did = core.did
 
-    model = await Model.create(ceramic, MODEL_DEFINITION)
+    model = await Model.create(ceramic, MODEL_DEFINITION_SINGLE)
     midMetadata = { model: model.id }
   }, 12000)
 
@@ -130,6 +154,60 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc2.id.toString()).toEqual(doc1.id.toString())
     expect(doc2.content).toEqual(doc1.content)
   })
+
+  describe('Using custom unique metadata values', () => {
+    test('Cannot replace unique content fields values', async () => {
+      const model = await Model.create(ceramic, MODEL_DEFINITION_SET)
+
+      const doc = await ModelInstanceDocument.single(ceramic, {
+        model: model.id,
+        unique: ['foo'],
+      })
+
+      await expect(() => doc.replace({ unique: 'test' })).rejects.toThrow(
+        /Invalid unique content fields value/
+      )
+
+      await doc.replace({ unique: 'foo', other: 'bar' })
+      expect(doc.content).toEqual({ unique: 'foo', other: 'bar' })
+    })
+
+    test('Cannot set content that does not pass validation', async () => {
+      const model = await Model.create(ceramic, MODEL_DEFINITION_SET)
+
+      const doc = await ModelInstanceDocument.single(ceramic, {
+        model: model.id,
+        unique: ['a'],
+      })
+      await expect(() => doc.replace({ unique: 'a', other: 'test' })).rejects.toThrow(
+        /Validation Error: data\/unique must NOT have fewer than 3 characters/
+      )
+    })
+
+    test('Can create, load and update unique documents', async () => {
+      const model = await Model.create(ceramic, MODEL_DEFINITION_SET)
+
+      const doc1 = await ModelInstanceDocument.single(ceramic, {
+        model: model.id,
+        unique: ['foo'],
+      })
+      await doc1.replace({ unique: 'foo', other: 'test' })
+
+      const doc2 = await ModelInstanceDocument.single(ceramic, {
+        model: model.id,
+        unique: ['foo'],
+      })
+      expect(doc2.id.toString()).toBe(doc1.id.toString())
+      expect(doc2.content).toEqual({ unique: 'foo', other: 'test' })
+
+      const doc3 = await ModelInstanceDocument.single(ceramic, {
+        model: model.id,
+        unique: ['bar'],
+      })
+      expect(doc3.id.toString()).not.toBe(doc1.id.toString())
+      expect(doc3.content).toEqual({})
+    })
+  })
 })
 
 describe('ModelInstanceDocument API multi-node tests', () => {
@@ -152,7 +230,7 @@ describe('ModelInstanceDocument API multi-node tests', () => {
     ceramic0 = await createCeramic(ipfs0)
     ceramic1 = await createCeramic(ipfs1)
 
-    model = await Model.create(ceramic0, MODEL_DEFINITION)
+    model = await Model.create(ceramic0, MODEL_DEFINITION_SINGLE)
     midMetadata = { model: model.id }
   }, 12000)
 
