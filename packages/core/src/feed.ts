@@ -10,7 +10,7 @@ export type Document = {
   metadata: StreamMetadata
 }
 
-class DocumentsSubject extends Observable<Document> {
+class DocumentsSubject extends Observable<Document> implements NextObserver<StreamState> {
   readonly subject: Subject<StreamState>
   constructor() {
     super((subscriber) => {
