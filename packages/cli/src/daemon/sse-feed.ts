@@ -2,6 +2,9 @@ import type { Observable } from 'rxjs'
 import type { Response } from 'express'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 
+/**
+ * Server-Sent Events (SSE) Feed.
+ */
 export class SseFeed<TInput> {
   constructor(
     private readonly logger: DiagnosticsLogger,

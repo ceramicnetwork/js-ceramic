@@ -4,20 +4,20 @@ import { CommitID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '../../common/lib/utils/stream-utils.js' //TODO: once commitIdFromStreamState is part of the package remove this line, and update the @ceramicnetwork/common import
 import type { AnchorStatus } from '@ceramicnetwork/common'
 
-export type Document = {
+export type FeedDocument = {
   commitId: CommitID
   content: any
   anchorStatus: AnchorStatus
   metadata: StreamMetadata
 }
 
-class DocumentsSubject extends Observable<Document> implements NextObserver<StreamState> {
+class DocumentsSubject extends Observable<FeedDocument> implements NextObserver<StreamState> {
   readonly subject: Subject<StreamState>
   constructor() {
     super((subscriber) => {
       const subscription = this.subject
         .pipe(
-          // transform each incoming StreamState to a Document
+          // transform each incoming StreamState to a FeedDocument
           map((streamState: StreamState) => {
             return {
               commitId: StreamUtils.commitIdFromStreamState(streamState),
@@ -47,7 +47,7 @@ class DocumentsSubject extends Observable<Document> implements NextObserver<Stre
  */
 export interface PublicFeed {
   aggregation: {
-    documents: Observable<Document>
+    documents: Observable<FeedDocument>
   }
 }
 

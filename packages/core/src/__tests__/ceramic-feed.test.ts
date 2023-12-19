@@ -1,44 +1,40 @@
 import { expect, describe, test, beforeEach, afterEach } from '@jest/globals'
-import { TestUtils, type StreamState, type IpfsApi } from '@ceramicnetwork/common'
+import { TestUtils, type IpfsApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
-import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { take } from 'rxjs'
-import { Document } from '../feed.js'
-
-function createCeramic(
-  ipfs: IpfsApi,
-  anchorOnRequest = false,
-  streamCacheLimit = 100
-): Promise<Ceramic> {
-  return vanillaCreateCeramic(ipfs, {
-    anchorOnRequest,
-    streamCacheLimit,
-  })
-}
+import { FeedDocument } from '../feed.js'
+import { createCeramic } from './create-ceramic.js'
 
 describe('Ceramic feed', () => {
-  let ipfs: IpfsApi
-  let ceramic: Ceramic
+  let ipfs1: IpfsApi
+  let ipfs2: IpfsApi
+  let ceramic1: Ceramic
+  let ceramic2: Ceramic
   beforeEach(async () => {
-    ipfs = await createIPFS()
-    ceramic = await createCeramic(ipfs)
+    ipfs1 = await createIPFS()
+    ipfs2 = await createIPFS()
+    ceramic1 = await createCeramic(ipfs1)
+    ceramic2 = await createCeramic(ipfs2)
+    await swarmConnect(ipfs2, ipfs1)
   })
 
   afterEach(async () => {
-    await ceramic.close()
-    await ipfs.stop()
+    await ceramic1.close()
+    await ceramic2.close()
+    await ipfs1.stop()
+    await ipfs2.stop()
   })
 
   test('add entry after creating/updating stream', async () => {
-    const feed: Document[] = []
-    const s = ceramic.feed.aggregation.documents.subscribe((s) => {
+    const feed: FeedDocument[] = []
+    const s = ceramic1.feed.aggregation.documents.subscribe((s) => {
       feed.push(s)
     })
     const original = `world-${Math.random()}`
-    const tile = await TileDocument.create(ceramic, { hello: original }, null, {
+    const tile = await TileDocument.create(ceramic1, { hello: original }, null, {
       anchor: false,
     })
     const updated = `world-1-${Math.random()}`
@@ -54,93 +50,86 @@ describe('Ceramic feed', () => {
   })
 
   test('add entry after loading pinned stream/pubsub ', async () => {
-    await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs2, ipfs1)
+    const content = { test: 1223 }
+    const updatedContent = { test: 1335 }
+    const feed1: FeedDocument[] = []
+    const feed2: FeedDocument[] = []
 
-      const ceramic1 = await createCeramic(ipfs1)
-      const ceramic2 = await createCeramic(ipfs2)
-      const content = { test: 1223 }
-      const updatedContent = { test: 1335 }
-      const feed1: Document[] = []
-      const feed2: Document[] = []
-      const s1 = await ceramic1.feed.aggregation.documents.subscribe((s) => {
-        feed1.push(s)
-      })
-
-      const s2 = await ceramic2.feed.aggregation.documents.pipe(take(3)).subscribe((s) => {
-        feed2.push(s)
-      })
-      const stream1 = await TileDocument.create(ceramic1, content, null, {
-        anchor: false,
-        publish: true,
-      })
-      // load stream on ceramic node 2
-      await TileDocument.load(ceramic2, stream1.id)
-
-      await stream1.update(updatedContent, null, { publish: true })
-      await TestUtils.delay(500)
-
-      expect(feed1.length).toEqual(3) // create + anchor + update
-      expect(feed2.length).toEqual(2) //load + pubsub update
-      expect(feed2[0].content.test).toBe(content.test)
-      expect(feed2[0].commitId).toStrictEqual(feed1[0].commitId)
-      // test pubsub propagating the update from stream1 being inside the feed
-      expect(feed2[1].commitId).toStrictEqual(feed1[1].commitId)
-      expect(feed2[1].metadata).toStrictEqual(feed1[1].metadata)
-      expect(feed2[1].content).toStrictEqual(updatedContent)
-      await ceramic1.close()
-      await ceramic2.close()
-      s1.unsubscribe()
-      s2.unsubscribe()
+    const s1 = await ceramic1.feed.aggregation.documents.subscribe((s) => {
+      feed1.push(s)
     })
+    const s2 = await ceramic2.feed.aggregation.documents.pipe(take(3)).subscribe((s) => {
+      feed2.push(s)
+    })
+    const stream1 = await TileDocument.create(ceramic1, content, null, {
+      anchor: false,
+      publish: true,
+    })
+
+    // load stream on ceramic node 2
+    await TileDocument.load(ceramic2, stream1.id)
+    await stream1.update(updatedContent, null, { publish: true })
+    await TestUtils.delay(500)
+
+    expect(feed1.length).toEqual(3) // create + anchor + update
+    expect(feed2.length).toEqual(2) //load + pubsub update
+    expect(feed2[0].content.test).toBe(content.test)
+    expect(feed2[0].commitId).toStrictEqual(feed1[0].commitId)
+    // test pubsub propagating the update from stream1 being inside the feed
+    expect(feed2[1].commitId).toStrictEqual(feed1[1].commitId)
+    expect(feed2[1].metadata).toStrictEqual(feed1[1].metadata)
+    expect(feed2[1].content).toStrictEqual(updatedContent)
+
+    s1.unsubscribe()
+    s2.unsubscribe()
   }, 20000)
 
-  test('add entry after loading indexed model', async () => {
-    await withFleet(2, async ([ipfs1, ipfs2]) => {
-      await swarmConnect(ipfs2, ipfs1)
+  test('add entry after creating/loading indexed model', async () => {
+    const MODEL_DEFINITION: ModelDefinition = {
+      name: 'myModel',
+      version: '1.0',
+      schema: { type: 'object', additionalProperties: false },
+      accountRelation: { type: 'list' },
+    }
+    const feed: FeedDocument[] = []
+    const feed2: FeedDocument[] = []
 
-      const ceramic1 = await createCeramic(ipfs1)
-      const ceramic2 = await createCeramic(ipfs2)
-      const MODEL_DEFINITION: ModelDefinition = {
-        name: 'myModel',
-        version: '1.0',
-        schema: { type: 'object', additionalProperties: false },
-        accountRelation: { type: 'list' },
-      }
-      const feed: Document[] = []
-
-      const s = ceramic2.feed.aggregation.documents.subscribe((s) => {
-        feed.push(s)
-      })
-      // create model on different node
-      const model = await Model.create(ceramic1, MODEL_DEFINITION)
-
-      // load model
-      await Model.load(ceramic2, model.id)
-      s.unsubscribe()
-      expect(feed.length).toEqual(1)
-      expect(feed[0].content).toEqual(model.state.content)
-      expect(feed[0].metadata).toEqual(model.state.metadata)
-      expect(feed[0].commitId).toEqual(model.commitId)
-      await ceramic1.close()
-      await ceramic2.close()
+    const s1 = ceramic1.feed.aggregation.documents.subscribe((s) => {
+      feed.push(s)
     })
+    const s2 = await ceramic2.feed.aggregation.documents.subscribe((s) => {
+      feed2.push(s)
+    })
+    // create model on different node
+    const model = await Model.create(ceramic2, MODEL_DEFINITION)
+
+    // load model
+    await Model.load(ceramic1, model.id)
+
+    expect(feed.length).toEqual(1)
+    expect(feed2.length).toEqual(2) // load + anchor status change
+    expect(feed[0].content).toEqual(model.state.content)
+    expect(feed[0].metadata).toEqual(model.state.metadata)
+    expect(feed[0].commitId).toEqual(model.commitId)
+    expect(feed2[0]).toEqual(feed[0])
+    s1.unsubscribe()
+    s2.unsubscribe()
   })
 
   test('add entry after anchoring stream', async () => {
-    const feed: Document[] = []
-    const s = ceramic.feed.aggregation.documents.subscribe((s) => {
+    const feed: FeedDocument[] = []
+    const s = ceramic1.feed.aggregation.documents.subscribe((s) => {
       feed.push(s)
     })
 
-    const stream = await TileDocument.create(ceramic, { hello: `world-${Math.random()}` }, null, {
+    const stream = await TileDocument.create(ceramic1, { hello: `world-${Math.random()}` }, null, {
       anchor: false,
     })
-    const state$ = await ceramic.repository.load(stream.id, {})
+    const state$ = await ceramic1.repository.load(stream.id, {})
     // request anchor
-    await ceramic.repository.anchor(state$, {})
+    await ceramic1.repository.anchor(state$, {})
     // process anchor
-    await TestUtils.anchorUpdate(ceramic, stream)
+    await TestUtils.anchorUpdate(ceramic1, stream)
     s.unsubscribe()
 
     expect(feed.length).toEqual(3) // create + anchor request + anchor update
