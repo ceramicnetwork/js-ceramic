@@ -1,5 +1,5 @@
 import { type Context, Type, type } from 'codeco'
-import { commitIdAsString } from './stream'
+import { commitIdAsString } from '../lib/stream'
 
 export const JsonAsString = new Type<unknown, string, string>(
   'JSON-as-string',
