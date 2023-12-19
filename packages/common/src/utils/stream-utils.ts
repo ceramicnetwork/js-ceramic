@@ -15,7 +15,7 @@ import {
   StreamState,
 } from '../stream.js'
 import type { DagJWS } from 'dids'
-import { StreamID, StreamType } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID, StreamType } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { base64urlToJSON } from './uint8array-utils.js'
 import { IpfsApi } from '../index.js'
@@ -391,5 +391,15 @@ export class StreamUtils {
    */
   static stateContainsCommit(state: StreamState, commit: CID): boolean {
     return state.log.find((logEntry) => logEntry.cid.equals(commit)) != null
+  }
+
+  /**
+  * Returns a commitId given a StreamState
+  * @param streamState
+  */
+  static commitIdFromStreamState(streamState: StreamState): CommitID {
+    const tipCID = streamState.log[streamState.log.length - 1].cid
+    const genesisCID = streamState.log[0].cid
+    return new CommitID(streamState.type, genesisCID, tipCID)
   }
 }

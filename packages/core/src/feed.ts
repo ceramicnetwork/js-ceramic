@@ -1,6 +1,7 @@
-import { Subject, Observable, map } from 'rxjs'
-import type { StreamMetadata, StreamState } from '@ceramicnetwork/common'
+import { Subject, Observable, map, NextObserver } from 'rxjs'
+import { type StreamMetadata, type StreamState } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
+import { StreamUtils } from '../../common/lib/utils/stream-utils.js' //TODO: once commitIdFromStreamState is part of the package remove this line, and update the @ceramicnetwork/common import
 import type { AnchorStatus } from '@ceramicnetwork/common'
 
 export type Document = {
@@ -10,7 +11,7 @@ export type Document = {
   metadata: StreamMetadata
 }
 
-class DocumentsSubject extends Observable<Document> {
+class DocumentsSubject extends Observable<Document> implements NextObserver<StreamState> {
   readonly subject: Subject<StreamState>
   constructor() {
     super((subscriber) => {
@@ -18,11 +19,8 @@ class DocumentsSubject extends Observable<Document> {
         .pipe(
           // transform each incoming StreamState to a Document
           map((streamState: StreamState) => {
-            const tipCID = streamState.log[streamState.log.length - 1].cid
-            const genesisCID = streamState.log[0].cid
-            const commitID = new CommitID(streamState.type, genesisCID, tipCID)
             return {
-              commitID: commitID,
+              commitID: StreamUtils.commitIdFromStreamState(streamState),
               content: streamState.next ? streamState.next.content : streamState.content,
               anchorStatus: streamState.anchorStatus,
               metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
