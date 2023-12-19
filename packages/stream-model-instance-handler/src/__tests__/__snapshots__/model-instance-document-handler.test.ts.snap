@@ -84,7 +84,7 @@ exports[`ModelInstanceDocumentHandler applies commit made using an old key if it
 exports[`ModelInstanceDocumentHandler applies deterministic genesis commit correctly 1`] = `
 {
   "anchorStatus": 0,
-  "content": {},
+  "content": null,
   "log": [
     {
       "cid": {

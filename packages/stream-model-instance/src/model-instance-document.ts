@@ -112,7 +112,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   private _isReadOnly = false
 
-  get content(): T {
+  get content(): T | null {
     return super.content
   }
 
@@ -269,7 +269,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param newContent
    */
   private _makeRawCommit(newContent: T | null): RawCommit {
-    const patch = jsonpatch.compare(this.content, newContent || {})
+    const patch = jsonpatch.compare(this.content ?? {}, newContent ?? {})
     return {
       data: patch,
       prev: this.tip,

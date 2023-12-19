@@ -165,7 +165,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
       })
 
       await expect(() => doc.replace({ unique: 'test' })).rejects.toThrow(
-        /Invalid unique content fields value/
+        /Unique content fields value does not match metadata/
       )
 
       await doc.replace({ unique: 'foo', other: 'bar' })
@@ -205,7 +205,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
         unique: ['bar'],
       })
       expect(doc3.id.toString()).not.toBe(doc1.id.toString())
-      expect(doc3.content).toEqual({})
+      expect(doc3.content).toBeNull()
     })
   })
 })

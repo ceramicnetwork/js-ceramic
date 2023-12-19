@@ -121,7 +121,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     return {
       type: ModelInstanceDocument.STREAM_TYPE_ID,
-      content: payload.data || {},
+      content: payload.data || null,
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
@@ -160,7 +160,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       )
     }
 
-    const oldContent = state.content
+    const oldContent = state.content ?? {}
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.api.loadStream<Model>(metadata.model)
     await this._validateContent(context.api, modelStream, newContent, false)
@@ -321,11 +321,14 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   async _validateUnique(
     model: Model,
     metadata: ModelInstanceDocumentMetadata,
-    content: Record<string, unknown>
+    content: Record<string, unknown> | null
   ): Promise<void> {
     if (model.content.accountRelation.type === 'set') {
       if (metadata.unique == null) {
         throw new Error('Missing unique metadata value')
+      }
+      if (content == null) {
+        throw new Error('Missing content')
       }
 
       const unique = model.content.accountRelation.fields
@@ -335,7 +338,9 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         })
         .join('|')
       if (unique !== toString(metadata.unique)) {
-        throw new Error('Invalid unique content fields value')
+        throw new Error(
+          'Unique content fields value does not match metadata. If you are trying to change the value of these fields, this is causing this error: these fields values are not mutable.'
+        )
       }
     }
   }
