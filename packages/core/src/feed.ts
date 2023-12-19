@@ -5,7 +5,7 @@ import { StreamUtils } from '../../common/lib/utils/stream-utils.js' //TODO: onc
 import type { AnchorStatus } from '@ceramicnetwork/common'
 
 export type Document = {
-  commitID: CommitID
+  commitId: CommitID
   content: any
   anchorStatus: AnchorStatus
   metadata: StreamMetadata
@@ -20,7 +20,7 @@ class DocumentsSubject extends Observable<Document> implements NextObserver<Stre
           // transform each incoming StreamState to a Document
           map((streamState: StreamState) => {
             return {
-              commitID: StreamUtils.commitIdFromStreamState(streamState),
+              commitId: StreamUtils.commitIdFromStreamState(streamState),
               content: streamState.next ? streamState.next.content : streamState.content,
               anchorStatus: streamState.anchorStatus,
               metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
