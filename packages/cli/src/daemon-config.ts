@@ -171,7 +171,11 @@ export class DaemonHTTPApiConfig {
   corsAllowedOrigins?: RegExp[]
 
   /**
-   * An array of DIDs with access to Admin API (represented as strings)
+   * An array of DIDs with access to Admin API (represented as strings).
+   * This contains the DID strings describing DIDs that be used to send requests to the Ceramic server
+   * to perform admin operations.  This should not be confused with the node DID set via the
+   * "node.private-seed-url" config.
+   * When specifying in a config file, use the name 'admin-dids'.
    */
   @jsonArrayMember(String, { name: 'admin-dids' })
   adminDids?: Array<string>
@@ -283,7 +287,8 @@ export class DaemonCeramicNodeConfig {
   }
 
   /**
-   * Setter for seed used to sign requests to CAS.
+   * Setter for seed used to generate the node's DID. This DID is used to identify the node on the
+   * network, and is used to sign requests to the Ceramic Anchor Service (CAS).
    * A seed is randomly generated if a config file is not found.
    * When specifying in a config file, use the name 'private-seed-url'.
    */
