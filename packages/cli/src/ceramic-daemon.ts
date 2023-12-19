@@ -43,7 +43,7 @@ import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
 import { SseFeed } from './daemon/sse-feed.js'
-import { Observable } from 'rxjs'
+import { JsonAsString, AggregationDocument } from '../../codecs/lib/feed.js'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -860,7 +860,7 @@ export class CeramicDaemon {
 
   documentsFeed(_: Request, res: Response): void {
     const source = this.ceramic.feed.aggregation.documents
-    const feed = new SseFeed(this.diagnosticsLogger, source, String)
+    const feed = new SseFeed(this.diagnosticsLogger, source, JsonAsString.pipe(AggregationDocument).encode)
     feed.send(res)
   }
 
