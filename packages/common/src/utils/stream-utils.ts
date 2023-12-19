@@ -394,9 +394,9 @@ export class StreamUtils {
   }
 
   /**
-  * Returns a commitId given a StreamState
-  * @param streamState
-  */
+   * Returns a commitId given a StreamState
+   * @param streamState
+   */
   static commitIdFromStreamState(streamState: StreamState): CommitID {
     const tipCID = streamState.log[streamState.log.length - 1].cid
     const genesisCID = streamState.log[0].cid

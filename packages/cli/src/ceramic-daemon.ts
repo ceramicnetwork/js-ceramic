@@ -860,7 +860,11 @@ export class CeramicDaemon {
 
   documentsFeed(_: Request, res: Response): void {
     const source = this.ceramic.feed.aggregation.documents
-    const feed = new SseFeed(this.diagnosticsLogger, source, JsonAsString.pipe(AggregationDocument).encode)
+    const feed = new SseFeed(
+      this.diagnosticsLogger,
+      source,
+      JsonAsString.pipe(AggregationDocument).encode
+    )
     feed.send(res)
   }
 
