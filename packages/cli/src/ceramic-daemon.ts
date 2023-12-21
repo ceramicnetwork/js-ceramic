@@ -1004,6 +1004,7 @@ export class CeramicDaemon {
   async close(): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       if (!this.server) resolve()
+      this.server.closeAllConnections()
       this.server.close((err) => {
         if (err) {
           reject(err)
