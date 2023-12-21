@@ -216,7 +216,7 @@ describe('Ceramic API', () => {
       // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
       void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
       const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
-      handleAnchorEventSpy.mockImplementation(() => {})
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
       const model = await Model.create(ceramic, MODEL_DEFINITION)
 
       expect(addIndexSpy).toBeCalledTimes(1)
@@ -241,7 +241,7 @@ describe('Ceramic API', () => {
       // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
       void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
       const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
-      handleAnchorEventSpy.mockImplementation(() => {})
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       expect(addIndexSpy).toBeCalledTimes(1)
@@ -261,7 +261,7 @@ describe('Ceramic API', () => {
       // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
       void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
       const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
-      handleAnchorEventSpy.mockImplementation(() => {})
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
@@ -289,7 +289,7 @@ describe('Ceramic API', () => {
       // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
       void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
       const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
-      handleAnchorEventSpy.mockImplementation(() => {})
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
