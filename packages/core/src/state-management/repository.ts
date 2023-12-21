@@ -729,7 +729,9 @@ export class Repository {
   }
 
   /**
-   * Apply options relating to authoring a new commit
+   * Apply options relating to authoring a new commit.
+   *
+   * Must be called within the ExecutionQueue to be safe.
    *
    * @param state$ - Running State
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
