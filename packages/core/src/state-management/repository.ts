@@ -305,27 +305,6 @@ export class Repository {
   }
 
   /**
-   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
-   * Adds the stream to cache.
-   */
-  private async _fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const fromMemory = this._fromMemory(streamId)
-    if (fromMemory) return fromMemory
-    return this._fromStreamStateStore(streamId)
-  }
-
-  /**
-   * Load a stream from memory or state store, guarded by a loading queue.
-   * Usual `_fromMemoryOrStore` might create a duplicate instance of RunningState for the same StreamId.
-   * "safe" version makes sure we still have one instance of RunningState in memory per StreamId.
-   */
-  private _fromMemoryOrStoreSafe(streamId: StreamID): Promise<RunningState | undefined> {
-    return this.loadingQ.forStream(streamId).run(() => {
-      return this._fromMemoryOrStore(streamId)
-    })
-  }
-
-  /**
    * Helper function for loading the state for a stream from either the in-memory cache
    * or the state store, while also returning information about whether or not the state needs
    * to be synced.
@@ -511,7 +490,16 @@ export class Repository {
    * @param model - Model Stream ID
    */
   async handleUpdateFromNetwork(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    let state$ = await this._fromMemoryOrStore(streamId)
+    // TODO: It isn't safe to load the RunningState from the state store outside of the LoadingQueue
+    // as we do here.  We risk a race condition where we can wind up with multiple RunnigStates
+    // coexisting for the same Stream.  Doing this simple fix of just using the LoadingQueue here
+    // risks introducing a big performance degradation. The right thing to do would be to do this
+    // load in two phases, first check the cache and state store for the streamid (but without
+    // creating or registering a RunningState), and then only if there actually is something in the
+    // state store, then load it again but from within the LoadingQueue.  Given that pubsub is about
+    // to be removed though, instead of doing that work now, we're leaving this as-is even though
+    // there's a race condition here, understanding that this code will be removed very soon anyway.
+    let state$ = await this.fromMemoryOrStore_UNSAFE(streamId)
     const shouldIndex = model && this.index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
       // stream isn't pinned or indexed, nothing to do
@@ -797,9 +785,25 @@ export class Repository {
   /**
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
+   * Must be called from within the LoadingQueue (or else there's a race condition where it can
+   * override the RunningState from the cache).
    */
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    return this._fromMemoryOrStore(streamId)
+    return this.loadingQ.forStream(streamId).run(() => {
+      return this.fromMemoryOrStore_UNSAFE(streamId)
+    })
+  }
+
+  /**
+   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
+   * Adds the stream to cache.
+   * "unsafe" because calling this outside of the LoadingQueue might create a duplicate instance of
+   * RunningState for the same StreamId. Must be called from inside the LoadingQueue to be used safely.
+   */
+  async fromMemoryOrStore_UNSAFE(streamId: StreamID): Promise<RunningState | undefined> {
+    const fromMemory = this._fromMemory(streamId)
+    if (fromMemory) return fromMemory
+    return this._fromStreamStateStore(streamId)
   }
 
   /**
@@ -959,7 +963,7 @@ export class Repository {
 
   anchorLoopHandler(): AnchorLoopHandler {
     const carBuilder = this.#deps.anchorRequestCarBuilder
-    const fromMemoryOrStoreSafe = this._fromMemoryOrStoreSafe.bind(this)
+    const fromMemoryOrStoreSafe = this.fromMemoryOrStore.bind(this)
     const handleAnchorEvent = this.handleAnchorEvent.bind(this)
     return {
       buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
