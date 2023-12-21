@@ -13,7 +13,7 @@ describe('Ceramic feed', () => {
   let ipfs2: IpfsApi
   let ceramic1: Ceramic
   let ceramic2: Ceramic
-  beforeEach(async () => {
+  beforeAll(async () => {
     ipfs1 = await createIPFS()
     ipfs2 = await createIPFS()
     ceramic1 = await createCeramic(ipfs1)
@@ -21,7 +21,7 @@ describe('Ceramic feed', () => {
     await swarmConnect(ipfs2, ipfs1)
   })
 
-  afterEach(async () => {
+  afterAll(async () => {
     await ceramic1.close()
     await ceramic2.close()
     await ipfs1.stop()
