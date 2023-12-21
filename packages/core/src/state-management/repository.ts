@@ -575,7 +575,8 @@ export class Repository {
 
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
-    await this.handleAnchorEvent(state$, anchorEvent)
+    // Don't wait on handling the anchor event, let that happen in the background.
+    void this.handleAnchorEvent(state$, anchorEvent)
   }
 
   /**
