@@ -2,12 +2,10 @@ import { Subject, Observable, map, NextObserver } from 'rxjs'
 import { type StreamMetadata, type StreamState } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '../../common/lib/utils/stream-utils.js' //TODO: once commitIdFromStreamState is part of the package remove this line, and update the @ceramicnetwork/common import
-import type { AnchorStatus } from '@ceramicnetwork/common'
 
 export type FeedDocument = {
   commitId: CommitID
   content: any
-  anchorStatus: AnchorStatus
   metadata: StreamMetadata
 }
 
@@ -22,7 +20,6 @@ class DocumentsSubject extends Observable<FeedDocument> implements NextObserver<
             return {
               commitId: StreamUtils.commitIdFromStreamState(streamState),
               content: streamState.next ? streamState.next.content : streamState.content,
-              anchorStatus: streamState.anchorStatus,
               metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
             }
           })

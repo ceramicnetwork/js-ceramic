@@ -49,7 +49,7 @@ describe('Ceramic feed', () => {
     expect(feed[1].content).toStrictEqual({ hello: updated })
   })
 
-  test('add entry after loading pinned stream/pubsub ', async () => {
+  test('add entry after loading pinned stream/pubsub', async () => {
     const content = { test: 1223 }
     const updatedContent = { test: 1335 }
     const feed1: FeedDocument[] = []
@@ -68,10 +68,10 @@ describe('Ceramic feed', () => {
 
     // load stream on ceramic node 2
     await TileDocument.load(ceramic2, stream1.id)
-    await stream1.update(updatedContent, null, { publish: true })
+    await stream1.update(updatedContent, null, { anchor: false, publish: true })
     await TestUtils.delay(500)
 
-    expect(feed1.length).toEqual(3) // create + anchor + update
+    expect(feed1.length).toEqual(2) // create + update
     expect(feed2.length).toEqual(2) //load + pubsub update
     expect(feed2[0].content.test).toBe(content.test)
     expect(feed2[0].commitId).toStrictEqual(feed1[0].commitId)
@@ -123,25 +123,23 @@ describe('Ceramic feed', () => {
     })
 
     const stream = await TileDocument.create(ceramic1, { hello: `world-${Math.random()}` }, null, {
-      anchor: false,
+      anchor: true,
     })
     const state$ = await ceramic1.repository.load(stream.id, {})
     // request anchor
     await ceramic1.repository.anchor(state$, {})
     // process anchor
     await TestUtils.anchorUpdate(ceramic1, stream)
-    s.unsubscribe()
 
     expect(feed.length).toEqual(3) // create + anchor request + anchor update
     // between and request anchor
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
     expect(feed[0].commitId).toStrictEqual(feed[1].commitId)
-    expect(feed[0].anchorStatus).toBeLessThan(feed[1].anchorStatus)
     //between request anchor and process anchor
     expect(feed[1].content).toEqual(feed[2].content)
     expect(feed[1].metadata).toEqual(feed[2].metadata)
     expect(feed[1].commitId).toStrictEqual(feed[2].commitId)
-    expect(feed[1].anchorStatus).toBeLessThan(feed[2].anchorStatus)
+    s.unsubscribe()
   })
 })
