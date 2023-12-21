@@ -97,11 +97,13 @@ enum SyncStatus {
 export class Repository {
   /**
    * Serialize loading operations per streamId.
+   * All writes to the 'inmemory' cache must happen within the context of this queue.
    */
   readonly loadingQ: ExecutionQueue
 
   /**
    * Serialize operations on state per streamId.
+   * All writes to the StateStore must happen within the context of this queue.
    */
   readonly executionQ: ExecutionQueue
 
@@ -264,7 +266,7 @@ export class Repository {
       // Only update the pinned state if we actually did anything that might change it. If we just
       // loaded from the cache and didn't even query the network, there's no reason to bother
       // writing to the state store and index, since nothing could have changed.
-      await this._updateStateIfPinned(state$)
+      await this._updateStateIfPinned_safe(state$)
       if (syncStatus == SyncStatus.DID_SYNC && state$.isPinned) {
         this.markPinnedAndSynced(state$.id)
       }
@@ -273,6 +275,19 @@ export class Repository {
     return state$
   }
 
+  /**
+   * Helper for updating the state from within the ExecutionQueue, which protects all updates
+   * to the state store.
+   */
+  private async _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
+    return this.executionQ.forStream(state$.id).run(() => {
+      return this._updateStateIfPinned(state$)
+    })
+  }
+
+  /**
+   * Must be called from within the ExecutionQueue to be safe.
+   */
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
@@ -595,14 +610,14 @@ export class Repository {
           anchorStatus: AnchorStatus.PENDING,
         }
         state$.next(next)
-        await this._updateStateIfPinned(state$)
+        await this._updateStateIfPinned_safe(state$)
         return false
       }
       case AnchorRequestStatusName.PROCESSING: {
         if (!anchorEvent.cid.equals(state$.tip)) return false
         if (state$.state.anchorStatus === AnchorStatus.PROCESSING) return false
         state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-        await this._updateStateIfPinned(state$)
+        await this._updateStateIfPinned_safe(state$)
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
@@ -773,7 +788,7 @@ export class Repository {
       (opts.pin === undefined && shouldIndex(state$, this.index)) ||
       (opts.pin === undefined && opType == OperationType.CREATE)
     ) {
-      await this.pin(state$)
+      await this._pin_UNSAFE(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
     }
@@ -787,11 +802,15 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
+
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
     const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
-    await this._applyWriteOpts(state, opts, opType)
-    return state
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      await this._applyWriteOpts(state, opts, opType)
+      return state
+    })
   }
 
   /**
@@ -823,7 +842,16 @@ export class Repository {
   }
 
   pin(state$: RunningState, force?: boolean): Promise<void> {
-    return this.#deps.pinStore.add(state$, force)
+    return this.executionQ.forStream(state$.id).run(async () => {
+      return this._pin_UNSAFE(state$, force)
+    })
+  }
+
+  /**
+   * Only safe to call from within the ExecutionQueue
+   */
+  private async _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
+    return this.pinStore.add(state$, force)
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
