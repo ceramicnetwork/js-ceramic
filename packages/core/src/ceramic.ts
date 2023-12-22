@@ -56,7 +56,7 @@ import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 
-const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
+const DEFAULT_CACHE_LIMIT = 1000 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const TESTING = process.env.NODE_ENV == 'test'
 
