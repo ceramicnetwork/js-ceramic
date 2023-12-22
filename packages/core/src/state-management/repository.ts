@@ -942,6 +942,9 @@ export class Repository {
       this.fromMemoryOrStore(id)
         .then((found) => {
           const state$ = found || new RunningState(init, false)
+          if (!found) {
+            this._registerRunningState(state$)
+          }
           this.inmemory.endure(id.toString(), state$)
           state$.subscribe(subscriber).add(() => {
             if (state$.observers.length === 0) {
