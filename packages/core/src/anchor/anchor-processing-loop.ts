@@ -6,7 +6,7 @@ import type { AnchorLoopHandler } from './anchor-service.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { AnchorRequestStatusName } from 'codecs/lib/anchor.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -22,14 +22,14 @@ export class AnchorProcessingLoop {
    */
   readonly #anchorStoreQueue: NamedTaskQueue
 
-  #successfulAnchors = 0;
-  #failedAnchors = 0;
-  #errAnchors = 0;
+  #successfulAnchors = 0
+  #failedAnchors = 0
+  #errAnchors = 0
 
-  #startTime = null;
-  #endTime = null;
+  #startTime = null
+  #endTime = null
 
-  private loggingInterval;
+  private loggingInterval
 
   constructor(
     batchSize: number,
@@ -40,16 +40,17 @@ export class AnchorProcessingLoop {
     anchorStoreQueue: NamedTaskQueue
   ) {
     this.loggingInterval = setInterval(() => {
-    console.log(`Test1 : Successful Anchors : ${this.#successfulAnchors}, Failed Anchors : ${this.#failedAnchors}, Error Anchors : ${this.#errAnchors}`);
-    }, 30000); // Log every 10 seconds
-    this.#startTime = Date.now();
+      console.log(
+        `Test1 : Successful Anchors : ${this.#successfulAnchors}, Failed Anchors : ${
+          this.#failedAnchors
+        }, Error Anchors : ${this.#errAnchors}`
+      )
+    }, 30000) // Log every 10 seconds
+    this.#startTime = Date.now()
     this.#anchorStoreQueue = anchorStoreQueue
     this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), (streamId) =>
       this.#anchorStoreQueue.run(streamId.toString(), async () => {
         try {
-          this.loggingInterval = setInterval(() => {
-            console.log(`Test1 : Successful Anchors : ${this.#successfulAnchors}, Failed Anchors : ${this.#failedAnchors}, Error Anchors : ${this.#errAnchors}`);
-          }, 30000); // Log every 10 seconds
           const entry = await store.load(streamId)
           const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
             logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
@@ -59,9 +60,9 @@ export class AnchorProcessingLoop {
           const isTerminal = await eventHandler.handle(event)
           if (isTerminal) {
             if (event.status === AnchorRequestStatusName.COMPLETED) {
-              this.#successfulAnchors++;
+              this.#successfulAnchors++
             } else if (event.status === AnchorRequestStatusName.FAILED) {
-              this.#failedAnchors++;
+              this.#failedAnchors++
             }
             await store.remove(streamId)
           }
@@ -70,11 +71,10 @@ export class AnchorProcessingLoop {
             `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
           )
           // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
-          this.#errAnchors++;
+          this.#errAnchors++
         }
       })
     )
-
   }
 
   /**
