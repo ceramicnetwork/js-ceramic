@@ -22,7 +22,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { catchError, EMPTY, Observable, Subject, Subscription, takeUntil, concatMap } from 'rxjs'
+import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -36,6 +36,7 @@ import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
+import type { Feed } from '../feed.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -110,6 +111,8 @@ export class Repository {
    */
   readonly inmemory: StateCache<RunningState>
 
+  private readonly feed: Feed
+
   /**
    * Various dependencies.
    */
@@ -129,14 +132,17 @@ export class Repository {
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
+   * @param feed - Feed to push StreamStates to.
    */
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
+    feed: Feed,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
+    this.feed = feed
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -269,7 +275,6 @@ export class Repository {
         this.markPinnedAndSynced(state$.id)
       }
     }
-
     return state$
   }
 
@@ -798,7 +803,7 @@ export class Repository {
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
    */
-  async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
+  fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
     return this._fromMemoryOrStore(streamId)
   }
 
@@ -819,6 +824,7 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
+    state$.subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
@@ -946,15 +952,17 @@ export class Repository {
             this._registerRunningState(state$)
           }
           this.inmemory.endure(id.toString(), state$)
-          state$.subscribe(subscriber).add(() => {
-            if (state$.observers.length === 0) {
+          const subscription = state$.subscribe(subscriber)
+          state$.add(subscription)
+          subscription.add(() => {
+            if (state$.subscriptionSet.size === 0) {
               this.inmemory.free(id.toString())
             }
           })
         })
         .catch((error) => {
           this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error}`)
-          // propogate the error to the subscriber
+          // propagate the error to the subscriber
           subscriber.error(error)
         })
     })
