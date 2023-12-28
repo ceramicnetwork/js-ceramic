@@ -3,10 +3,11 @@ import type { CASClient } from './anchor-service.js'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
 import { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
 import type { AnchorLoopHandler } from './anchor-service.js'
-import type { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import fs from 'fs';
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -39,13 +40,18 @@ export class AnchorProcessingLoop {
     eventHandler: AnchorLoopHandler,
     anchorStoreQueue: NamedTaskQueue
   ) {
+    const logFilePath = '/logs/metrics';
+      
     this.loggingInterval = setInterval(() => {
       console.log(
         `Test1 : Successful Anchors : ${this.#successfulAnchors}, Failed Anchors : ${
           this.#failedAnchors
         }, Error Anchors : ${this.#errAnchors}`
       )
-    }, 30000) // Log every 10 seconds
+      const logData = `${new Date().toISOString()},${this.#successfulAnchors},${this.#failedAnchors},${this.#errAnchors}\n`;
+      fs.appendFileSync(logFilePath, logData);
+    }, 30000) // Log every 30 seconds
+
     this.#startTime = Date.now()
     this.#anchorStoreQueue = anchorStoreQueue
     this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), (streamId) =>
