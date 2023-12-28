@@ -40,8 +40,8 @@ export class AnchorProcessingLoop {
     eventHandler: AnchorLoopHandler,
     anchorStoreQueue: NamedTaskQueue
   ) {
-    const logFilePath = '/logs/metrics';
-      
+
+    const logFilePath = 'logs/metrics/metrics.log';
     this.loggingInterval = setInterval(() => {
       console.log(
         `Test1 : Successful Anchors : ${this.#successfulAnchors}, Failed Anchors : ${
