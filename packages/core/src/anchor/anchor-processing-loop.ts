@@ -50,7 +50,7 @@ export class AnchorProcessingLoop {
       )
       const logData = `${new Date().toISOString()},${this.#successfulAnchors},${this.#failedAnchors},${this.#errAnchors}\n`;
       fs.appendFileSync(logFilePath, logData);
-    }, 30000) // Log every 30 seconds
+    }, 300000) // Log every 300 seconds
 
     this.#startTime = Date.now()
     this.#anchorStoreQueue = anchorStoreQueue
