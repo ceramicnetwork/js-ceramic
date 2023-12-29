@@ -320,6 +320,9 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     if (!metadata.deterministic) {
       header.unique = randomBytes(12)
     }
+    if (metadata.context) {
+      header.context = metadata.context
+    }
 
     return { data: content, header }
   }
