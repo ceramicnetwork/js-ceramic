@@ -99,6 +99,10 @@ export class EthereumAnchorService implements AnchorService {
     }
   }
 
+  assertCASAccessible(): void {
+    this.#cas.assertCASAccessible()
+  }
+
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
    * anchor service.

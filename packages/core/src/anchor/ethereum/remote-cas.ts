@@ -13,6 +13,9 @@ import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
 
+const MAX_FAILED_REQUESTS = 3
+const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
+
 /**
  * Parse JSON that CAS returns.
  */
@@ -59,11 +62,38 @@ export class RemoteCAS implements CASClient {
   readonly #sendRequest: FetchRequest
   readonly #stopSignal: Subject<void>
 
+  // Used to track when we fail to reach the CAS at all (e.g. from a network error)
+  // Note it does not care about if the status of the request *on* the CAS.  In other words,
+  // getting a definitive response from the CAS telling us that the request is in status FAILED,
+  // does not cause this counter to increment.
+  #numFailedRequests: number
+  #firstFailedRequestDate: Date | null
+
   constructor(anchorServiceUrl: string, sendRequest: FetchRequest) {
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#sendRequest = sendRequest
     this.#stopSignal = new Subject()
+    this.#numFailedRequests = 0
+    this.#firstFailedRequestDate = null
+  }
+
+  assertCASAccessible(): void {
+    if (this.#numFailedRequests < 3) {
+      return
+    }
+    // We've had 3 or more failures talking to the CAS in a row. Now figure out
+    // how long we've been in this state
+    const now = new Date()
+    const millisSinceFirstFailure = now.getTime() - this.#firstFailedRequestDate.getTime()
+    if (millisSinceFirstFailure > MAX_MILLIS_WITHOUT_SUCCESS) {
+      // TODO log
+      throw new Error(
+        `Ceramic Anchor Service appears to be inaccessible. We have failed to contact the CAS ${
+          this.#numFailedRequests
+        } times in a row, starting at ${this.#firstFailedRequestDate.toISOString()}. Note that failure to anchor may cause data loss.`
+      )
+    }
   }
 
   async supportedChains(): Promise<Array<string>> {
@@ -89,8 +119,8 @@ export class RemoteCAS implements CASClient {
   }
 
   create$(carFileReader: AnchorRequestCarFileReader): Observable<unknown> {
-    const sendRequest$ = deferAbortable((signal) =>
-      this.#sendRequest(this.#requestsApiEndpoint, {
+    const sendRequest$ = deferAbortable(async (signal) => {
+      const response = await this.#sendRequest(this.#requestsApiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/vnd.ipld.car',
@@ -98,13 +128,29 @@ export class RemoteCAS implements CASClient {
         body: carFileReader.carFile.bytes,
         signal: signal,
       })
-    )
+
+      // We successfully contacted the CAS
+      this.#numFailedRequests = 0
+      this.#firstFailedRequestDate = null
+
+      return response
+    })
 
     return sendRequest$.pipe(
       catchError((error) => {
+        // Record the fact that we failed to contact the CAS
+        if (this.#numFailedRequests === 0) {
+          this.#firstFailedRequestDate = new Date()
+        }
+        this.#numFailedRequests++
+
         // clean up the error message to have more context
         throw new Error(
-          `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${carFileReader.tip}: ${error.message}`
+          `Error connecting to CAS while attempting to anchor ${carFileReader.streamId} at commit ${
+            carFileReader.tip
+          }. This is failure #${this.#numFailedRequests} attempting to communicate to the CAS: ${
+            error.message
+          }`
         )
       }),
       takeUntil(this.#stopSignal)

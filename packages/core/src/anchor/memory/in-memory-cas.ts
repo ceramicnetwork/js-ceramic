@@ -7,7 +7,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { CID } from 'multiformats/cid'
-import { filter, firstValueFrom, Subject } from 'rxjs'
+import { Subject } from 'rxjs'
 
 class Candidate {
   static fromCarFileReader(reader: AnchorRequestCarFileReader): Candidate {
@@ -53,6 +53,10 @@ export class InMemoryCAS implements CASClient {
     this.#events.subscribe((event) => {
       this.#anchors.set(event.cid.toString(), event)
     })
+  }
+
+  assertCASAccessible(): void {
+    // no-op
   }
 
   async supportedChains(): Promise<Array<string>> {

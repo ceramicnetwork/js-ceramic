@@ -503,6 +503,8 @@ export class Repository {
   async applyCommit(streamId: StreamID, commit: any, opts: UpdateOpts): Promise<RunningState> {
     this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
 
+    this.anchorService.assertCASAccessible()
+
     const state$ = await this.load(streamId)
     this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
 
@@ -803,21 +805,33 @@ export class Repository {
   }
 
   /**
-   * Handles new stream creation by loading genesis commit into memory and then handling the given
-   * CreateOpts for the genesis commit.
-   * @param streamId
-   * @param opts
+   * Creates stream from genesis commit
+   * @param type - Stream type
+   * @param genesis - Genesis CID
+   * @param opts - Initialization options
    */
-  async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
-    const state = await this.load(streamId, opts)
+  async createStreamFromGenesis(
+    type: number,
+    genesis: any,
+    opts: CreateOpts = {}
+  ): Promise<RunningState> {
+    this.anchorService.assertCASAccessible()
+
+    const genesisCid = await this.dispatcher.storeCommit(genesis)
+    const streamId = new StreamID(type, genesisCid)
+    const state$ = await this.load(streamId, opts)
+
+    this.logger.verbose(
+      `Created stream from genesis, StreamID: ${streamId.toString()}, genesis CID: ${genesisCid.toString()}`
+    )
 
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
-    const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
+    const opType = state$.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
 
     return this.executionQ.forStream(streamId).run(async () => {
-      await this._applyWriteOpts(state, opts, opType)
-      return state
+      await this._applyWriteOpts(state$, opts, opType)
+      return state$
     })
   }
 
