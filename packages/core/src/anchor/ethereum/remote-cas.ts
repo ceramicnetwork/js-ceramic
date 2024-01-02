@@ -135,6 +135,9 @@ export class RemoteCAS implements CASClient {
       })
 
       // We successfully contacted the CAS
+      if (this.#numFailedRequests >= MAX_FAILED_REQUESTS) {
+        this.#logger.imp(`Successfully created a request against the CAS`)
+      }
       this.#numFailedRequests = 0
       this.#firstFailedRequestDate = null
 
@@ -164,10 +167,37 @@ export class RemoteCAS implements CASClient {
 
   async getStatusForRequest(streamId: StreamID, tip: CID): Promise<AnchorEvent> {
     const requestUrl = [this.#requestsApiEndpoint, tip.toString()].join('/')
-    const sendRequest$ = deferAbortable((signal) =>
-      this.#sendRequest(requestUrl, { signal: signal })
+    const sendRequest$ = deferAbortable(async (signal) => {
+      const response = await this.#sendRequest(requestUrl, { signal: signal })
+
+      // We successfully contacted the CAS
+      if (this.#numFailedRequests >= MAX_FAILED_REQUESTS) {
+        this.#logger.imp(`Successfully created a request against the CAS`)
+      }
+      this.#numFailedRequests = 0
+      this.#firstFailedRequestDate = null
+
+      return response
+    })
+    const response = await firstValueFrom(
+      sendRequest$.pipe(
+        catchError((error) => {
+          // Record the fact that we failed to contact the CAS
+          if (this.#numFailedRequests === 0) {
+            this.#firstFailedRequestDate = new Date()
+          }
+          this.#numFailedRequests++
+
+          // clean up the error message to have more context
+          throw new Error(
+            `Error connecting to CAS while attempting to poll the status of request for StreamID ${streamId} at commit ${tip}. This is failure #${
+              this.#numFailedRequests
+            } attempting to communicate to the CAS: ${error.message}`
+          )
+        }),
+        takeUntil(this.#stopSignal)
+      )
     )
-    const response = await firstValueFrom(sendRequest$.pipe(takeUntil(this.#stopSignal)))
     return parseResponse(streamId, tip, response)
   }
 
