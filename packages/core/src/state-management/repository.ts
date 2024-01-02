@@ -18,7 +18,7 @@ import {
 } from '@ceramicnetwork/common'
 import type { LocalIndexApi } from '@ceramicnetwork/indexing'
 import { PinStore } from '../store/pin-store.js'
-import { ExecutionQueue } from './execution-queue.js'
+import { ExecutionQueue, TaskGuard, GuardedTask } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
@@ -226,43 +226,51 @@ export class Repository {
   ): Promise<RunningState> {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
-    const [state$, syncStatus] = await this.loadingQ.forStream(streamId).run(async () => {
-      const [existingState$, alreadySynced] = await this._fromMemoryOrStoreWithSyncStatus(streamId)
+    const [state$, syncStatus] = await this.loadingQ
+      .forStream(streamId)
+      .run(async (_: TaskGuard) => {
+        const [existingState$, alreadySynced] = await this._fromMemoryOrStoreWithSyncStatus(
+          streamId
+        )
 
-      switch (opts.sync) {
-        case SyncOptions.PREFER_CACHE:
-        case SyncOptions.SYNC_ON_ERROR: {
-          if (!existingState$) {
+        switch (opts.sync) {
+          case SyncOptions.PREFER_CACHE:
+          case SyncOptions.SYNC_ON_ERROR: {
+            if (!existingState$) {
+              return [
+                await this._loadStreamFromNetwork(streamId, opts.syncTimeoutSeconds),
+                SyncStatus.DID_SYNC,
+              ]
+            }
+
+            if (alreadySynced == SyncStatus.ALREADY_SYNCED) {
+              return [existingState$, SyncStatus.ALREADY_SYNCED]
+            } else {
+              await this._sync(existingState$, opts.syncTimeoutSeconds)
+              return [existingState$, SyncStatus.DID_SYNC]
+            }
+          }
+          case SyncOptions.NEVER_SYNC: {
+            if (existingState$) {
+              return [existingState$, alreadySynced]
+            }
+            // TODO(CDB-2761): Throw an error if stream isn't found in cache or state store.
+            return [await this._genesisFromNetwork(streamId), SyncStatus.NOT_SYNCED]
+          }
+          case SyncOptions.SYNC_ALWAYS: {
             return [
-              await this._loadStreamFromNetwork(streamId, opts.syncTimeoutSeconds),
+              await this._resyncStreamFromNetwork(
+                streamId,
+                opts.syncTimeoutSeconds,
+                existingState$
+              ),
               SyncStatus.DID_SYNC,
             ]
           }
-
-          if (alreadySynced == SyncStatus.ALREADY_SYNCED) {
-            return [existingState$, SyncStatus.ALREADY_SYNCED]
-          } else {
-            await this._sync(existingState$, opts.syncTimeoutSeconds)
-            return [existingState$, SyncStatus.DID_SYNC]
-          }
+          default:
+            throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
         }
-        case SyncOptions.NEVER_SYNC: {
-          if (existingState$) {
-            return [existingState$, alreadySynced]
-          }
-          // TODO(CDB-2761): Throw an error if stream isn't found in cache or state store.
-          return [await this._genesisFromNetwork(streamId), SyncStatus.NOT_SYNCED]
-        }
-        case SyncOptions.SYNC_ALWAYS: {
-          return [
-            await this._resyncStreamFromNetwork(streamId, opts.syncTimeoutSeconds, existingState$),
-            SyncStatus.DID_SYNC,
-          ]
-        }
-        default:
-          throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
-      }
-    })
+      })
 
     if (checkCacaoExpiration) {
       StreamUtils.checkForCacaoExpiration(state$.state)
@@ -340,6 +348,8 @@ export class Repository {
    * "safe" version makes sure we still have one instance of RunningState in memory per StreamId.
    */
   private _fromMemoryOrStoreSafe(streamId: StreamID): Promise<RunningState | undefined> {
+    // TODO This should fail to compile because the task closure takes no arguments!
+    // We want the compiler to enforce that the first argument be a TaskGuard.
     return this.loadingQ.forStream(streamId).run(() => {
       return this._fromMemoryOrStore(streamId)
     })

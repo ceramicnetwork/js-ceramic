@@ -2,7 +2,15 @@ import { NamedTaskQueue } from './named-task-queue.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Semaphore } from 'await-semaphore'
-import { TaskQueueLike } from '../ancillary/task-queue.js'
+import { Task, TaskQueueLike } from '../ancillary/task-queue.js'
+
+export class TaskGuard {}
+
+export type GuardedTask<TaskResultType> = (guard: TaskGuard) => Promise<TaskResultType>
+interface TaskQueueLikeWithGuard {
+  add(task: GuardedTask<void>, onFinally?: () => void | Promise<void>): void
+  run<T>(task: GuardedTask<T>): Promise<T>
+}
 
 /**
  * Serialize tasks running on the same stream.
@@ -12,6 +20,8 @@ import { TaskQueueLike } from '../ancillary/task-queue.js'
 export class ExecutionQueue {
   private readonly tasks: NamedTaskQueue
   private readonly semaphore: Semaphore
+
+  static #TASK_GUARD_INSTANCE = new TaskGuard()
 
   constructor(
     private readonly name: string,
@@ -27,26 +37,26 @@ export class ExecutionQueue {
   /**
    * Return execution lane for a stream.
    */
-  forStream(streamId: StreamID | CommitID): TaskQueueLike {
+  forStream(streamId: StreamID | CommitID): TaskQueueLikeWithGuard {
     return {
-      add: (task) => {
+      add: (task: GuardedTask<any>) => {
         return this.tasks.add(streamId.toString(), () => {
           if (this.semaphore.count == 0) {
             this.logger.warn(
               `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
             )
           }
-          return this.semaphore.use(() => task())
+          return this.semaphore.use(() => task(ExecutionQueue.#TASK_GUARD_INSTANCE))
         })
       },
-      run: (task) => {
+      run: (task: GuardedTask<any>) => {
         return this.tasks.run(streamId.toString(), () => {
           if (this.semaphore.count == 0) {
             this.logger.warn(
               `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
             )
           }
-          return this.semaphore.use(() => task())
+          return this.semaphore.use(() => task(ExecutionQueue.#TASK_GUARD_INSTANCE))
         })
       },
     }
