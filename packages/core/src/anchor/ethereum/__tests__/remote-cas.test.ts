@@ -1,19 +1,20 @@
 import { describe, expect, jest, test } from '@jest/globals'
 import { RemoteCAS } from '../remote-cas.js'
-import { fetchJson, TestUtils } from '@ceramicnetwork/common'
+import { fetchJson, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
 import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
 
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const POLL_INTERVAL = 100
+const LOGGER = new LoggerProvider().getDiagnosticsLogger()
 
 describe('RemoteCAS supportedChains', () => {
   test('returns decoded supported chains on valid response', async () => {
     const fetchFn = jest.fn(async () => ({
       supportedChains: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
 
     const supportedChains = await cas.supportedChains()
     expect(supportedChains).toEqual(['eip155:42'])
@@ -26,7 +27,7 @@ describe('RemoteCAS supportedChains', () => {
       someOtherField: 'SomeOtherContent',
       supportedChains: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
     const supportedChains = await cas.supportedChains()
     expect(supportedChains).toEqual(['eip155:42'])
     expect(fetchFn).toBeCalledTimes(1)
@@ -37,7 +38,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       supportedChains: ['eip155:42', 'eip155:1'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
     await expect(cas.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         supportedChains: ['eip155:42', 'eip155:1'],
@@ -49,7 +50,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFn = jest.fn(async () => ({
       incorrectFieldName: ['eip155:42'],
     })) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
     await expect(cas.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
         incorrectFieldName: ['eip155:42'],
@@ -61,7 +62,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFnNull = jest.fn(async () => ({
       supportedChains: null,
     })) as unknown as typeof fetchJson
-    const casForNull = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFnNull)
+    const casForNull = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFnNull)
     const expectedErrorNull =
       'Error: Invalid value null supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)'
     await expect(casForNull.supportedChains()).rejects.toThrow(
@@ -73,7 +74,7 @@ describe('RemoteCAS supportedChains', () => {
     const fetchFnEmpty = jest.fn(async () => ({
       supportedChains: [],
     })) as unknown as typeof fetchJson
-    const casForEmpty = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFnEmpty)
+    const casForEmpty = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFnEmpty)
     const expectedErrorUndefined = `Error: Invalid value [] supplied to /(SupportedChainsResponse)/supportedChains(supportedChains)`
     await expect(casForEmpty.supportedChains()).rejects.toThrow(
       `SupportedChains response : ${JSON.stringify({
@@ -95,7 +96,7 @@ describe('create', () => {
         updatedAt: dateAsUnix.encode(new Date()),
       })
     ) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
     const result = await cas.create(carFileReader)
     expect(fetchFn).toBeCalled()
@@ -111,7 +112,7 @@ describe('create', () => {
     const fetchFn = jest.fn(async () => {
       throw new Error(`Oops`)
     }) as unknown as typeof fetchJson
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchFn)
+    const cas = new RemoteCAS(LOGGER, ANCHOR_SERVICE_URL, fetchFn)
     const carFileReader = new AnchorRequestCarFileReader(generateFakeCarFile())
     await expect(cas.create(carFileReader)).rejects.toThrow()
   })
@@ -131,7 +132,11 @@ describe('get', () => {
     const fetchJsonFn = jest.fn().mockImplementation(async () => {
       return casResponse
     })
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchJsonFn as unknown as typeof fetchJson)
+    const cas = new RemoteCAS(
+      LOGGER,
+      ANCHOR_SERVICE_URL,
+      fetchJsonFn as unknown as typeof fetchJson
+    )
     const response = await cas.getStatusForRequest(streamId, tip)
     expect(response).toEqual({
       status: casResponse.status,
@@ -150,7 +155,11 @@ describe('get', () => {
       .mockImplementation(async (_, options: { signal: AbortSignal }) => {
         return TestUtils.delay(POLL_INTERVAL * 10, options.signal)
       })
-    const cas = new RemoteCAS(ANCHOR_SERVICE_URL, fetchJsonFn as unknown as typeof fetchJson)
+    const cas = new RemoteCAS(
+      LOGGER,
+      ANCHOR_SERVICE_URL,
+      fetchJsonFn as unknown as typeof fetchJson
+    )
     const responseP = cas.getStatusForRequest(streamId, tip)
     await TestUtils.delay(POLL_INTERVAL)
     await cas.close()

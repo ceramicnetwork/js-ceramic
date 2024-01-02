@@ -12,6 +12,7 @@ import type { CID } from 'multiformats/cid'
 import { validate, isValid, decode } from 'codeco'
 import { deferAbortable } from '../../ancillary/defer-abortable.js'
 import { catchError, firstValueFrom, Subject, takeUntil, type Observable } from 'rxjs'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
 
 const MAX_FAILED_REQUESTS = 3
 const MAX_MILLIS_WITHOUT_SUCCESS = 1000 * 60 // 1 minute
@@ -57,6 +58,7 @@ function parseResponse(streamId: StreamID, tip: CID, json: unknown): AnchorEvent
 }
 
 export class RemoteCAS implements CASClient {
+  readonly #logger: DiagnosticsLogger
   readonly #requestsApiEndpoint: string
   readonly #chainIdApiEndpoint: string
   readonly #sendRequest: FetchRequest
@@ -69,7 +71,8 @@ export class RemoteCAS implements CASClient {
   #numFailedRequests: number
   #firstFailedRequestDate: Date | null
 
-  constructor(anchorServiceUrl: string, sendRequest: FetchRequest) {
+  constructor(logger: DiagnosticsLogger, anchorServiceUrl: string, sendRequest: FetchRequest) {
+    this.#logger = logger
     this.#requestsApiEndpoint = anchorServiceUrl + '/api/v0/requests'
     this.#chainIdApiEndpoint = anchorServiceUrl + '/api/v0/service-info/supported_chains'
     this.#sendRequest = sendRequest
@@ -79,20 +82,22 @@ export class RemoteCAS implements CASClient {
   }
 
   assertCASAccessible(): void {
-    if (this.#numFailedRequests < 3) {
+    if (this.#numFailedRequests < MAX_FAILED_REQUESTS) {
       return
     }
+
     // We've had 3 or more failures talking to the CAS in a row. Now figure out
     // how long we've been in this state
     const now = new Date()
     const millisSinceFirstFailure = now.getTime() - this.#firstFailedRequestDate.getTime()
     if (millisSinceFirstFailure > MAX_MILLIS_WITHOUT_SUCCESS) {
-      // TODO log
-      throw new Error(
+      const err = new Error(
         `Ceramic Anchor Service appears to be inaccessible. We have failed to contact the CAS ${
           this.#numFailedRequests
         } times in a row, starting at ${this.#firstFailedRequestDate.toISOString()}. Note that failure to anchor may cause data loss.`
       )
+      this.#logger.err(err)
+      throw err
     }
   }
 
