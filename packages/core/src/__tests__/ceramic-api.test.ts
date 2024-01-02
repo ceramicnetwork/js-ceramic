@@ -25,6 +25,7 @@ import { createCeramic } from './create-ceramic.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import type { AddOperation } from 'fast-json-patch'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
 /**
  * Generates string of particular size in bytes
@@ -113,6 +114,7 @@ describe('Ceramic API', () => {
     })
 
     afterEach(async () => {
+      jest.restoreAllMocks()
       await ceramic.close()
       await tmpFolder.cleanup().catch((error) => {
         logger.err('Error while cleaning up tmpFolder:' + error.message)
@@ -210,20 +212,24 @@ describe('Ceramic API', () => {
       const CONTENT1 = { myData: 1 }
       // TODO (NET-1614): Extend with targeted payload comparison
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
       const model = await Model.create(ceramic, MODEL_DEFINITION)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(2)
       await doc.replace(CONTENT1, { anchor: false })
       expect(doc.content).toEqual(CONTENT1)
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       addIndexSpy.mockRestore()
     })
 
@@ -231,10 +237,14 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)).rejects.toThrow(
         /which exceeds maximum size/
@@ -247,20 +257,26 @@ describe('Ceramic API', () => {
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(2)
       await doc.patch(CONTENT1, { anchor: false })
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       addIndexSpy.mockRestore()
     })
 
@@ -269,17 +285,23 @@ describe('Ceramic API', () => {
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(2)
       await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })

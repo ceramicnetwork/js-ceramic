@@ -22,7 +22,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { catchError, EMPTY, Observable, Subject, Subscription, takeUntil, concatMap } from 'rxjs'
+import { Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -36,6 +36,7 @@ import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
+import type { Feed } from '../feed.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -97,11 +98,13 @@ enum SyncStatus {
 export class Repository {
   /**
    * Serialize loading operations per streamId.
+   * All writes to the 'inmemory' cache must happen within the context of this queue.
    */
   readonly loadingQ: ExecutionQueue
 
   /**
    * Serialize operations on state per streamId.
+   * All writes to the StateStore must happen within the context of this queue.
    */
   readonly executionQ: ExecutionQueue
 
@@ -109,6 +112,8 @@ export class Repository {
    * In-memory cache of the currently running streams.
    */
   readonly inmemory: StateCache<RunningState>
+
+  private readonly feed: Feed
 
   /**
    * Various dependencies.
@@ -129,14 +134,17 @@ export class Repository {
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
+   * @param feed - Feed to push StreamStates to.
    */
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
+    feed: Feed,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
+    this.feed = feed
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -264,15 +272,27 @@ export class Repository {
       // Only update the pinned state if we actually did anything that might change it. If we just
       // loaded from the cache and didn't even query the network, there's no reason to bother
       // writing to the state store and index, since nothing could have changed.
-      await this._updateStateIfPinned(state$)
+      await this._updateStateIfPinned_safe(state$)
       if (syncStatus == SyncStatus.DID_SYNC && state$.isPinned) {
         this.markPinnedAndSynced(state$.id)
       }
     }
-
     return state$
   }
 
+  /**
+   * Helper for updating the state from within the ExecutionQueue, which protects all updates
+   * to the state store.
+   */
+  private async _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
+    return this.executionQ.forStream(state$.id).run(() => {
+      return this._updateStateIfPinned(state$)
+    })
+  }
+
+  /**
+   * Must be called from within the ExecutionQueue to be safe.
+   */
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
@@ -548,7 +568,8 @@ export class Repository {
 
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
-    await this.handleAnchorEvent(state$, anchorEvent)
+    // Don't wait on handling the anchor event, let that happen in the background.
+    void this.handleAnchorEvent(state$, anchorEvent)
   }
 
   /**
@@ -583,14 +604,14 @@ export class Repository {
           anchorStatus: AnchorStatus.PENDING,
         }
         state$.next(next)
-        await this._updateStateIfPinned(state$)
+        await this._updateStateIfPinned_safe(state$)
         return false
       }
       case AnchorRequestStatusName.PROCESSING: {
         if (!anchorEvent.cid.equals(state$.tip)) return false
         if (state$.state.anchorStatus === AnchorStatus.PROCESSING) return false
         state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-        await this._updateStateIfPinned(state$)
+        await this._updateStateIfPinned_safe(state$)
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
@@ -701,7 +722,9 @@ export class Repository {
   }
 
   /**
-   * Apply options relating to authoring a new commit
+   * Apply options relating to authoring a new commit.
+   *
+   * Must be called within the ExecutionQueue to be safe.
    *
    * @param state$ - Running State
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
@@ -761,7 +784,7 @@ export class Repository {
       (opts.pin === undefined && shouldIndex(state$, this.index)) ||
       (opts.pin === undefined && opType == OperationType.CREATE)
     ) {
-      await this.pin(state$)
+      await this._pin_UNSAFE(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
     }
@@ -775,11 +798,15 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
+
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
     const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
-    await this._applyWriteOpts(state, opts, opType)
-    return state
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      await this._applyWriteOpts(state, opts, opType)
+      return state
+    })
   }
 
   /**
@@ -823,11 +850,21 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
+    state$.subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
   pin(state$: RunningState, force?: boolean): Promise<void> {
-    return this.#deps.pinStore.add(state$, force)
+    return this.executionQ.forStream(state$.id).run(async () => {
+      return this._pin_UNSAFE(state$, force)
+    })
+  }
+
+  /**
+   * Only safe to call from within the ExecutionQueue
+   */
+  private async _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
+    return this.pinStore.add(state$, force)
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
@@ -946,16 +983,21 @@ export class Repository {
       this.fromMemoryOrStore(id)
         .then((found) => {
           const state$ = found || new RunningState(init, false)
+          if (!found) {
+            this._registerRunningState(state$)
+          }
           this.inmemory.endure(id.toString(), state$)
-          state$.subscribe(subscriber).add(() => {
-            if (state$.observers.length === 0) {
+          const subscription = state$.subscribe(subscriber)
+          state$.add(subscription)
+          subscription.add(() => {
+            if (state$.subscriptionSet.size === 0) {
               this.inmemory.free(id.toString())
             }
           })
         })
         .catch((error) => {
           this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error}`)
-          // propogate the error to the subscriber
+          // propagate the error to the subscriber
           subscriber.error(error)
         })
     })

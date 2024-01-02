@@ -55,6 +55,7 @@ import {
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
+import { Feed, type PublicFeed } from './feed.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -136,6 +137,7 @@ export interface CeramicModules {
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
   anchorRequestCarBuilder: AnchorRequestCarBuilder
+  feed: Feed
 }
 
 /**
@@ -170,6 +172,13 @@ const tryStreamId = (id: string): StreamID | null => {
 }
 
 /**
+ * Internal API for js-ceramic core, mimics the HTTP API outlined above
+ *
+ * - `ceramic.feed.aggregation.streamStates`
+ *     - all as Observable<T>
+ */
+
+/**
  * ### Ceramic core implementation.<br/>
  *
  * To install this library:<br/>
@@ -180,6 +189,7 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
+  public readonly feed: PublicFeed
   readonly repository: Repository
   readonly anchorService: AnchorService
   private readonly providersCache: ProvidersCache
@@ -202,6 +212,7 @@ export class Ceramic implements CeramicApi {
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
+    this.feed = modules.feed
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
@@ -342,7 +353,8 @@ export class Ceramic implements CeramicApi {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const feed = new Feed()
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -387,6 +399,7 @@ export class Ceramic implements CeramicApi {
       shutdownSignal,
       providersCache,
       anchorRequestCarBuilder,
+      feed,
     }
 
     return [modules, params]
@@ -631,7 +644,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-
     return stream
   }
 
