@@ -35,6 +35,7 @@ export interface CommitHeader {
 
 export interface GenesisHeader extends CommitHeader {
   unique?: Uint8Array | string // Model and ModelInstanceDocument use Uint8Array, Caip10Link and TileDocument use 'string'
+  context?: string // used in ModelInstanceDocument
   forbidControllerChange?: boolean // deprecated, only used by TileDocument
 }
 

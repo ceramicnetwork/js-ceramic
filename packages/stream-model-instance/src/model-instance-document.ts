@@ -36,6 +36,11 @@ export interface ModelInstanceDocumentMetadataArgs {
   model: StreamID
 
   /**
+  * An optional string used to identify the context of the ModelInstanceDocument.
+  */
+  context?: string
+
+  /**
    * Whether the stream should be created deterministically or not.  Should only be used for
    * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
    */
