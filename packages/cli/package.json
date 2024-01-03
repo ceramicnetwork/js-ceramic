@@ -75,7 +75,7 @@
     "s3leveldown": "^2.2.2",
     "stream-to-array": "^2.3.0",
     "typedjson": "^1.8.0",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/stream-model": "^2.2.0",

@@ -43,7 +43,7 @@
     "p-queue": "^7.4.0",
     "pg-boss": "^8.2.0",
     "rxjs": "^7.8.1",
-    "uint8arrays": "^4.0.6"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^3.2.0",

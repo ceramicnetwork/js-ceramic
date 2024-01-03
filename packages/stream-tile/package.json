@@ -45,7 +45,7 @@
     "dids": "^4.0.0",
     "fast-json-patch": "^3.1.0",
     "lodash.clonedeep": "^4.5.0",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

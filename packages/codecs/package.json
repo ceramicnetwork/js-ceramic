@@ -35,7 +35,7 @@
     "codeco": "^1.1.0",
     "dag-jose": "^4.0.0",
     "multiformats": "^13.0.0",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "ts-essentials": "^9.3.2"

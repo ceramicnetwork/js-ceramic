@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^3.2.0",

@@ -48,7 +48,7 @@
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
     "multiformats": "^13.0.0",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "json-schema-typed": "^8.0.1"

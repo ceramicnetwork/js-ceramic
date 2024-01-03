@@ -43,7 +43,7 @@
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.1.0",
     "near-api-js": "^0.44.2",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@glif/filecoin-address": "1.1.0",

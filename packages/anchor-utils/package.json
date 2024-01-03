@@ -33,7 +33,7 @@
     "@ceramicnetwork/common": "^3.2.0",
     "@ethersproject/abi": "^5.7.0",
     "multiformats": "^13.0.0",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/streamid": "^3.2.0",

@@ -91,7 +91,7 @@
     "pg": "^8.7.3",
     "rxjs": "^7.5.2",
     "sqlite3": "^5.0.8",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^3.2.0",

@@ -35,7 +35,7 @@
     "cborg": "^1.10.2",
     "mapmoize": "^1.2.1",
     "multiformats": "^13.0.0",
-    "uint8arrays": "^4.0.9",
+    "uint8arrays": "^5.0.1",
     "varint": "^6.0.0"
   },
   "publishConfig": {
