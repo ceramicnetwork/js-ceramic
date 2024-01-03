@@ -94,7 +94,7 @@ export class StreamUtils {
     }
 
     if (StreamUtils.isSignedCommit(cloned)) {
-      cloned.link = toCID(cloned.link)
+      cloned.link = toCID(cloned.link.toString())
     }
 
     if (StreamUtils.isAnchorCommit(cloned)) {
@@ -261,7 +261,7 @@ export class StreamUtils {
     ipfs: IpfsApi
   ): Promise<CeramicCommit> {
     if (StreamUtils.isSignedCommit(commit)) {
-      const block = await ipfs.block.get(toCID((commit as DagJWS).link))
+      const block = await ipfs.block.get(toCID((commit as DagJWS).link.toString()))
       return {
         jws: commit as DagJWS,
         linkedBlock: block,
