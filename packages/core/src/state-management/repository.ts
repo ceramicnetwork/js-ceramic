@@ -853,8 +853,8 @@ export class Repository {
     state$
       .pipe(
         distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
-          // Consider distinct if proposed log is longer
-          if (proposedLog.length > currentLog.length) return false
+          // Consider distinct if proposed log length differs
+          if (proposedLog.length !== currentLog.length) return false
           // Or let's see if the tip is different
           const currentTip = currentLog[currentLog.length - 1].cid
           const proposedTip = proposedLog[proposedLog.length - 1].cid
