@@ -25,6 +25,8 @@ import all from 'it-all'
 import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
 
+const BATCH_TIMEOUT = 100
+
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
   version: '1.0',
@@ -77,6 +79,8 @@ const MODEL_CONTENT_3: ModelDefinition = {
 }
 
 describe('LevelDB-backed AnchorRequestStore state store', () => {
+  jest.setTimeout(1000 * 30)
+
   let tmpFolder: any
   let levelStore: LevelDbStore
   let anchorRequestStore: AnchorRequestStore
@@ -122,13 +126,13 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
   afterAll(async () => {
     await ceramic.close()
-    await ipfs.stop
+    await ipfs.stop()
   })
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
-    anchorRequestStore = new AnchorRequestStore(logger)
+    anchorRequestStore = new AnchorRequestStore(logger, BATCH_TIMEOUT)
     await anchorRequestStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
@@ -136,6 +140,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   })
 
   afterEach(async () => {
+    jest.restoreAllMocks()
     await anchorRequestStore.close()
     await levelStore.close()
     await tmpFolder.cleanup()
@@ -242,6 +247,120 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     const retrievedWithLimit = await first(anchorRequestStore.list())
     expect(retrievedWithLimit).toEqual(sortedParams.slice(0, 1))
+  })
+
+  test('#infiniteList', async () => {
+    // Setup data in the AnchorRequestStore
+    const anchorRequestData1: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit1,
+    }
+    const anchorRequestData2: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit2,
+    }
+    const anchorRequestData3: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit3,
+    }
+    await anchorRequestStore.save(streamId1, anchorRequestData1)
+    await anchorRequestStore.save(streamId2, anchorRequestData2)
+    await anchorRequestStore.save(streamId3, anchorRequestData3)
+
+    // Get sorted list of StreamID keys in the AnchorRequestStore
+    const sortByKeyStreamId = (
+      a: AnchorRequestStoreListResult,
+      b: AnchorRequestStoreListResult
+    ) => {
+      return a.key.toString().localeCompare(b.key.toString())
+    }
+    const sortedParams = [
+      { key: streamId1, value: anchorRequestData1 },
+      { key: streamId2, value: anchorRequestData2 },
+      { key: streamId3, value: anchorRequestData3 },
+    ].sort(sortByKeyStreamId)
+    const sortedStreamIds = sortedParams.map((param) => param.key.toString())
+
+    // Create infinite iterator over the AnchorRequestStore
+    const generator = anchorRequestStore.infiniteList(1, 10)
+
+    // List should repeat indefinitely
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+
+    // Generator still not finished
+    expect((await generator.next()).done).toBeFalsy()
+
+    // Close the store
+    await anchorRequestStore.close()
+
+    // Now the generator is done.
+    expect((await generator.next()).done).toBeTruthy()
+  })
+
+  test('#infiniteList with timeout', async () => {
+    // Setup data in the AnchorRequestStore
+    const anchorRequestData1: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit1,
+    }
+    const anchorRequestData2: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit2,
+    }
+    const anchorRequestData3: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit3,
+    }
+    await anchorRequestStore.save(streamId1, anchorRequestData1)
+    await anchorRequestStore.save(streamId2, anchorRequestData2)
+    await anchorRequestStore.save(streamId3, anchorRequestData3)
+
+    // Get sorted list of StreamID keys in the AnchorRequestStore
+    const sortByKeyStreamId = (
+      a: AnchorRequestStoreListResult,
+      b: AnchorRequestStoreListResult
+    ) => {
+      return a.key.toString().localeCompare(b.key.toString())
+    }
+    const sortedParams = [
+      { key: streamId1, value: anchorRequestData1 },
+      { key: streamId2, value: anchorRequestData2 },
+      { key: streamId3, value: anchorRequestData3 },
+    ].sort(sortByKeyStreamId)
+    const sortedStreamIds = sortedParams.map((param) => param.key.toString())
+
+    // Make it so the first batch will timeout, but subsequent batches will succeed
+    const findOriginal = anchorRequestStore.store.find.bind(anchorRequestStore.store)
+    const findSpy = jest.spyOn(anchorRequestStore.store, 'find')
+    findSpy.mockImplementationOnce(async (params) => {
+      await TestUtils.delay(BATCH_TIMEOUT * 10)
+      return findOriginal(params)
+    })
+
+    // Create infinite iterator over the AnchorRequestStore
+    const generator = anchorRequestStore.infiniteList(1, 10)
+
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+
+    // It takes two tries to get the first batch
+    expect(findSpy).toHaveBeenCalledTimes(4)
+
+    // Close the store
+    await anchorRequestStore.close()
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {
