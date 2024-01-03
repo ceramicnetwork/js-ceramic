@@ -39,7 +39,7 @@
     "@ethersproject/providers": "^5.5.1",
     "knex": "^2.5.1",
     "lodash.clonedeep": "^4.5.0",
-    "multiformats": "^12.1.0",
+    "multiformats": "^13.0.0",
     "p-queue": "^7.4.0",
     "pg-boss": "^8.2.0",
     "rxjs": "^7.8.1",

@@ -86,7 +86,7 @@
     "level-ts": "^2.1.0",
     "lodash.clonedeep": "^4.5.0",
     "mapmoize": "^1.2.1",
-    "multiformats": "^11.0.1",
+    "multiformats": "^13.0.0",
     "p-queue": "7.3.0",
     "pg": "^8.7.3",
     "rxjs": "^7.5.2",

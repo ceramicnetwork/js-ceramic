@@ -47,7 +47,7 @@
     "codeco": "^1.1.0",
     "fast-json-patch": "^3.1.0",
     "json-schema-typed": "^8.0.1",
-    "multiformats": "^11.0.1",
+    "multiformats": "^13.0.0",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {

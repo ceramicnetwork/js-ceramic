@@ -42,7 +42,7 @@
   "devDependencies": {
     "@ceramicnetwork/common": "^3.2.0",
     "http-request-mock": "^1.8.17",
-    "multiformats": "^11.0.1"
+    "multiformats": "^13.0.0"
   },
   "publishConfig": {
     "access": "public"
