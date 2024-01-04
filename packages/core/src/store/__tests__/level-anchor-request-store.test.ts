@@ -24,7 +24,6 @@ import first from 'it-first'
 import all from 'it-all'
 import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
-import { Dispatcher } from '../../dispatcher.js'
 
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
@@ -93,16 +92,12 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
   // use Utils to load the genesis commit for a stream so it converts CIDs for us
   // and we avoid any issues with one having `Symbol(Symbol.toStringTag): "CID"` and one not
-  // because the getter function isn't copied by _.cloneDeep
+  // because the getter function isn't copied by _.cloneDeep. 
   async function loadGenesisCommit(
     ceramic: CeramicApi,
     streamId: StreamID
   ): Promise<GenesisCommit> {
-    const commits = await ceramic.loadStreamCommits(streamId)
-    expect(commits).toBeDefined()
-    const first = commits[0].cid
-    expect(first).toBeDefined()
-    const commit = await Utils.getCommitData(ceramic.dispatcher, first, streamId1)
+    const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
     expect(commit.type).toEqual(CommitType.GENESIS)
     return commit.commit as GenesisCommit
   }

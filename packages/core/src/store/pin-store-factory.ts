@@ -58,7 +58,7 @@ export class PinStoreFactory {
       return undefined
     }
     const resolve = async (path: string): Promise<CID> => {
-      return toCID((await ipfs.dag.resolve(path)).cid.toString()) // HACK around ipfs-core-types multiformats version
+      return toCID((await ipfs.dag.resolve(path)).cid.toString()) // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
     }
     const loadStream = this.repository.load.bind(this.repository)
     return new PinStore(this._stateStore, pinning, retrieve, resolve, loadStream)

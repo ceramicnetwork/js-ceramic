@@ -349,7 +349,7 @@ describe('CACAO Integration test', () => {
       })
 
       expect(doc.content).toEqual(CONTENT0)
-      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address}`)
+      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address.toLowerCase()}`)
       expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
     }, 30000)
 
@@ -453,7 +453,7 @@ describe('CACAO Integration test', () => {
       })
 
       expect(doc.content).toEqual(CONTENT0)
-      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address}`)
+      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address.toLowerCase()}`)
       expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
 
       await doc.replace(CONTENT1, {

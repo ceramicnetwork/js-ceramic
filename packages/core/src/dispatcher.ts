@@ -175,7 +175,8 @@ export class Dispatcher {
     return this._shutdownSignal
       .abortable((signal) => this._ipfs.dag.put(record, { signal: signal }))
       .then((cid) => {
-        const cidv13 = toCID(cid.toString()) // HACK  around ipfs-core-types multiformats version mismatch
+        // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
+        const cidv13 = toCID(cid.toString())
         this.ipldCache.setRecord(cidv13, record)
         return cidv13
       })
@@ -362,9 +363,7 @@ export class Dispatcher {
               signal: signal,
             })
           )
-          // HACK around ipfs-core-types multiformats version mismatch
-          // don't just as CID because we want to new version with the readonly field rather than getter
-          // that is dropped during a deepClone... assuming it actually matters...
+          // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
           blockCid = toCID(resolution.cid.toString())
         }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
