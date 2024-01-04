@@ -80,6 +80,7 @@ describe('CACAO Integration test', () => {
   let wallet2: Wallet
   let METADATA: ModelInstanceDocumentMetadata
   let MODEL_STREAM_ID_2: StreamID
+  let PARENT_WALLET_ADDRESS: string
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -91,6 +92,8 @@ describe('CACAO Integration test', () => {
     wallet2 = Wallet.fromMnemonic(
       'gap heavy cliff slab victory despair wage tiny physical tray situate primary'
     )
+    // eip55 allows mixed case addresses, but we expect lowercase for historical reasons
+    PARENT_WALLET_ADDRESS = `did:pkh:eip155:1:${wallet.address.toLowerCase()}`
     // Create did:key for the dApp
     const didKeyProvider = new Ed25519Provider(randomBytes(32))
     didKey = new DID({ provider: didKeyProvider, resolver: KeyDidResolver.getResolver() })
@@ -98,7 +101,7 @@ describe('CACAO Integration test', () => {
     didKeyWithParent = new DID({
       provider: didKeyProvider,
       resolver: KeyDidResolver.getResolver(),
-      parent: `did:pkh:eip155:1:${wallet.address}`,
+      parent: PARENT_WALLET_ADDRESS,
     })
     await didKeyWithParent.authenticate()
 
@@ -124,7 +127,7 @@ describe('CACAO Integration test', () => {
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testCapabilities1',
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        controllers: [PARENT_WALLET_ADDRESS],
       })
 
       await expect(
@@ -144,7 +147,7 @@ describe('CACAO Integration test', () => {
           { foo: 'bar' },
           {
             family: `${family}`,
-            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+            controllers: [PARENT_WALLET_ADDRESS],
           },
           {
             asDID: didKey,
@@ -162,7 +165,7 @@ describe('CACAO Integration test', () => {
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testCapabilities1',
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        controllers: [PARENT_WALLET_ADDRESS],
       })
       const streamId = deterministicDocument.id
       const didKeyWithCapability = await addCapToDid(
@@ -207,7 +210,7 @@ describe('CACAO Integration test', () => {
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testCapabilities3',
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        controllers: [PARENT_WALLET_ADDRESS],
       })
       const badDidKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://abcdef`)
 
@@ -236,7 +239,7 @@ describe('CACAO Integration test', () => {
       await expect(
         ModelInstanceDocument.create(ceramic, CONTENT0, {
           model: METADATA.model,
-          controller: `did:pkh:eip155:1:${wallet.address}`,
+          controller: PARENT_WALLET_ADDRESS,
         })
       ).rejects.toThrowError(
         'Capability does not have appropriate permissions to update this Stream'
@@ -254,7 +257,7 @@ describe('CACAO Integration test', () => {
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
         model: METADATA.model,
-        controller: `did:pkh:eip155:1:${wallet.address}`,
+        controller: PARENT_WALLET_ADDRESS,
       })
 
       const didKeyWithBadCapability = await addCapToDid(
@@ -283,7 +286,7 @@ describe('CACAO Integration test', () => {
       await expect(
         ModelInstanceDocument.create(ceramic, CONTENT0, {
           model: METADATA.model,
-          controller: `did:pkh:eip155:1:${wallet.address}`,
+          controller: PARENT_WALLET_ADDRESS,
         })
       ).rejects.toThrowError(
         'Capability does not have appropriate permissions to update this Stream'
@@ -317,7 +320,7 @@ describe('CACAO Integration test', () => {
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
         model: METADATA.model,
-        controller: `did:pkh:eip155:1:${wallet.address}`,
+        controller: PARENT_WALLET_ADDRESS,
       })
 
       const didKeyWithBadCapability = await addCapToDid(
@@ -345,11 +348,11 @@ describe('CACAO Integration test', () => {
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
         model: METADATA.model,
-        controller: `did:pkh:eip155:1:${wallet.address}`,
+        controller: PARENT_WALLET_ADDRESS,
       })
 
       expect(doc.content).toEqual(CONTENT0)
-      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address}`)
+      expect(doc.metadata.controller).toEqual(PARENT_WALLET_ADDRESS)
       expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
     }, 30000)
 
@@ -363,7 +366,7 @@ describe('CACAO Integration test', () => {
 
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
         model: METADATA.model,
-        controller: `did:pkh:eip155:1:${wallet.address}`,
+        controller: PARENT_WALLET_ADDRESS,
       })
 
       await doc.replace(CONTENT1, {
@@ -382,7 +385,7 @@ describe('CACAO Integration test', () => {
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
         deterministic: true,
         family: 'testfamily',
-        controllers: [`did:pkh:eip155:1:${wallet.address}`],
+        controllers: [PARENT_WALLET_ADDRESS],
       })
       const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
 
@@ -402,7 +405,7 @@ describe('CACAO Integration test', () => {
         ceramic,
         { foo: 'bar' },
         {
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          controllers: [PARENT_WALLET_ADDRESS],
         },
         {
           asDID: didKeyWithCapability,
@@ -412,7 +415,7 @@ describe('CACAO Integration test', () => {
       )
 
       expect(doc.content).toEqual({ foo: 'bar' })
-      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+      expect(doc.metadata.controllers).toEqual([PARENT_WALLET_ADDRESS])
     }, 30000)
   })
 
@@ -453,7 +456,7 @@ describe('CACAO Integration test', () => {
       })
 
       expect(doc.content).toEqual(CONTENT0)
-      expect(doc.metadata.controller).toEqual(`did:pkh:eip155:1:${wallet.address}`)
+      expect(doc.metadata.controller).toEqual(PARENT_WALLET_ADDRESS)
       expect(doc.metadata.model.toString()).toEqual(METADATA.model.toString())
 
       await doc.replace(CONTENT1, {
@@ -478,7 +481,7 @@ describe('CACAO Integration test', () => {
       )
 
       expect(doc.content).toEqual({ foo: 'bar' })
-      expect(doc.metadata.controllers).toEqual([`did:pkh:eip155:1:${wallet.address}`])
+      expect(doc.metadata.controllers).toEqual([PARENT_WALLET_ADDRESS])
     }, 30000)
   })
 
@@ -519,7 +522,7 @@ describe('CACAO Integration test', () => {
             ceramic,
             CONTENT0,
             {
-              controllers: [`did:pkh:eip155:1:${wallet.address}`],
+              controllers: [PARENT_WALLET_ADDRESS],
             },
             opts
           )
@@ -535,7 +538,7 @@ describe('CACAO Integration test', () => {
           ceramic,
           CONTENT0,
           {
-            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+            controllers: [PARENT_WALLET_ADDRESS],
           },
           opts
         )
@@ -553,7 +556,7 @@ describe('CACAO Integration test', () => {
       const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
       const tile = await TileDocument.deterministic(
         ceramic,
-        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-one' },
+        { controllers: [PARENT_WALLET_ADDRESS], family: 'loving-one' },
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
@@ -580,7 +583,7 @@ describe('CACAO Integration test', () => {
       const opts = { asDID: didKeyWithCapability, anchor: false, publish: false }
       const tile = await TileDocument.deterministic(
         ceramic,
-        { controllers: [`did:pkh:eip155:1:${wallet.address}`], family: 'loving-two' },
+        { controllers: [PARENT_WALLET_ADDRESS], family: 'loving-two' },
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
@@ -612,7 +615,7 @@ describe('CACAO Integration test', () => {
         const doc = await TileDocument.create(
           ceramic,
           content0,
-          { controllers: [`did:pkh:eip155:1:${wallet.address}`] },
+          { controllers: [PARENT_WALLET_ADDRESS] },
           opts
         )
         await doc.update(content1, null, { ...opts, anchor: true })
@@ -655,7 +658,7 @@ describe('CACAO Integration test', () => {
         ceramic,
         CONTENT0,
         {
-          controllers: [`did:pkh:eip155:1:${wallet.address}`],
+          controllers: [PARENT_WALLET_ADDRESS],
         },
         opts
       )
@@ -725,7 +728,7 @@ describe('CACAO Integration test', () => {
           ceramic,
           CONTENT0,
           {
-            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+            controllers: [PARENT_WALLET_ADDRESS],
           },
           opts
         )
@@ -766,7 +769,7 @@ describe('CACAO Integration test', () => {
           ceramic,
           CONTENT0,
           {
-            controllers: [`did:pkh:eip155:1:${wallet.address}`],
+            controllers: [PARENT_WALLET_ADDRESS],
           },
           { ...opts, anchor: true }
         )
