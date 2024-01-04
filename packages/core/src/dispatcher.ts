@@ -8,6 +8,7 @@ import {
   UnreachableCaseError,
   base64urlToJSON,
   IpfsNodeStatus,
+  toCID,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
@@ -174,8 +175,10 @@ export class Dispatcher {
     return this._shutdownSignal
       .abortable((signal) => this._ipfs.dag.put(record, { signal: signal }))
       .then((cid) => {
-        this.ipldCache.setRecord(cid, record)
-        return cid
+        // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
+        const cidv13 = toCID(cid.toString())
+        this.ipldCache.setRecord(cidv13, record)
+        return cidv13
       })
   }
 
@@ -360,7 +363,8 @@ export class Dispatcher {
               signal: signal,
             })
           )
-          blockCid = resolution.cid
+          // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
+          blockCid = toCID(resolution.cid.toString())
         }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
         const block = await this._shutdownSignal.abortable((signal) =>

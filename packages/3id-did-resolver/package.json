@@ -44,8 +44,8 @@
     "@ceramicnetwork/stream-tile": "^3.2.0",
     "@ceramicnetwork/streamid": "^3.2.0",
     "least-recent": "^1.0.3",
-    "multiformats": "^11.0.1",
-    "uint8arrays": "^4.0.3"
+    "multiformats": "^13.0.0",
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/http-client": "^3.2.0",
