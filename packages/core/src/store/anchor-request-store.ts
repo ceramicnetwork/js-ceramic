@@ -106,8 +106,9 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     let numEntries = 0
     do {
       try {
+        let timeout
         const timeoutPromise = new Promise<null>((resolve) => {
-          setTimeout(() => {
+          timeout = setTimeout(() => {
             this.#logger.warn(`Timed out while waiting for AnchorRequestStore to fetch a batch`)
             resolve(null)
           }, this.#infiniteListBatchTimeoutMs)
@@ -119,6 +120,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           gt: generateKey(gt),
         })
         const batch = await Promise.race([batchPromise, timeoutPromise])
+        clearTimeout(timeout)
         if (batch && batch.length > 0) {
           gt = StreamID.fromString(batch[batch.length - 1].key)
           for (const item of batch) {
