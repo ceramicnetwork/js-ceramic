@@ -110,7 +110,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Prepare the database to begin indexing the given models.  This generally involves creating
+   * Prepare the database to begin indexing the given models. This generally involves creating
    * the necessary database tables and indexes.
    * @param models
    */
