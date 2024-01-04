@@ -81,6 +81,12 @@ export class RemoteCAS implements CASClient {
     this.#firstFailedRequestDate = null
   }
 
+  /**
+   * Throws an exception if we have consistently been unable to reach the CAS for multiple requests
+   * in a row over an ongoing period of time. Used to fail writes when we reach this state so that
+   * the failure becomes obvious to the node operator and so that we don't continue to create data
+   * that risks becoming corrupted if it never gets anchored.
+   */
   assertCASAccessible(): void {
     if (this.#numFailedRequests < MAX_FAILED_REQUESTS) {
       return
@@ -99,6 +105,21 @@ export class RemoteCAS implements CASClient {
       this.#logger.err(err)
       throw err
     }
+  }
+
+  _recordCASContactFailure() {
+    if (this.#numFailedRequests === 0) {
+      this.#firstFailedRequestDate = new Date()
+    }
+    this.#numFailedRequests++
+  }
+
+  _recordCASContactSuccess(action: string) {
+    if (this.#numFailedRequests >= MAX_FAILED_REQUESTS) {
+      this.#logger.imp(`Successfully ${action} a request against the CAS`)
+    }
+    this.#numFailedRequests = 0
+    this.#firstFailedRequestDate = null
   }
 
   async supportedChains(): Promise<Array<string>> {
@@ -135,11 +156,7 @@ export class RemoteCAS implements CASClient {
       })
 
       // We successfully contacted the CAS
-      if (this.#numFailedRequests >= MAX_FAILED_REQUESTS) {
-        this.#logger.imp(`Successfully created a request against the CAS`)
-      }
-      this.#numFailedRequests = 0
-      this.#firstFailedRequestDate = null
+      this._recordCASContactSuccess('created')
 
       return response
     })
@@ -147,10 +164,7 @@ export class RemoteCAS implements CASClient {
     return sendRequest$.pipe(
       catchError((error) => {
         // Record the fact that we failed to contact the CAS
-        if (this.#numFailedRequests === 0) {
-          this.#firstFailedRequestDate = new Date()
-        }
-        this.#numFailedRequests++
+        this._recordCASContactFailure()
 
         // clean up the error message to have more context
         throw new Error(
@@ -171,11 +185,7 @@ export class RemoteCAS implements CASClient {
       const response = await this.#sendRequest(requestUrl, { signal: signal })
 
       // We successfully contacted the CAS
-      if (this.#numFailedRequests >= MAX_FAILED_REQUESTS) {
-        this.#logger.imp(`Successfully created a request against the CAS`)
-      }
-      this.#numFailedRequests = 0
-      this.#firstFailedRequestDate = null
+      this._recordCASContactSuccess('polled')
 
       return response
     })
@@ -183,10 +193,7 @@ export class RemoteCAS implements CASClient {
       sendRequest$.pipe(
         catchError((error) => {
           // Record the fact that we failed to contact the CAS
-          if (this.#numFailedRequests === 0) {
-            this.#firstFailedRequestDate = new Date()
-          }
-          this.#numFailedRequests++
+          this._recordCASContactFailure()
 
           // clean up the error message to have more context
           throw new Error(
