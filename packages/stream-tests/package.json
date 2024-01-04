@@ -30,23 +30,23 @@
     "@ceramicnetwork/stream-tile": "^3.2.0",
     "@ceramicnetwork/streamid": "^3.2.0",
     "@databases/pg-test": "^3.1.2",
-    "@didtools/cacao": "^2.1.0",
+    "@didtools/cacao": "^3.0.0",
     "@stablelib/random": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
     "@truffle/hdwallet-provider": "^2.0.0",
     "caip": "~1.1.0",
     "did-resolver": "^4.0.1",
-    "dids": "^4.0.0",
+    "dids": "^5.0.0",
     "ethers": "^5.5.4",
     "ganache-core": "^2.13.2",
     "get-port": "^6.0.0",
     "it-first": "^1.0.7",
-    "key-did-provider-ed25519": "^3.0.2",
-    "key-did-resolver": "^3.0.0",
+    "key-did-provider-ed25519": "^4.0.0",
+    "key-did-resolver": "^4.0.0",
     "merge-options": "^3.0.4",
     "pkh-did-resolver": "^1.2.0",
     "tmp-promise": "^3.0.3",
-    "uint8arrays": "^4.0.3"
+    "uint8arrays": "^5.0.1"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

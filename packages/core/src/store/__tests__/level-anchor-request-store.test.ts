@@ -2,6 +2,7 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { LevelDbStore } from '../level-db-store.js'
 import {
   CeramicApi,
+  CommitType,
   DiagnosticsLogger,
   GenesisCommit,
   IpfsApi,
@@ -22,6 +23,7 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import first from 'it-first'
 import all from 'it-all'
 import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
+import { Utils } from '../../utils.js'
 
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
@@ -88,6 +90,18 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   let streamId3: StreamID
   let genesisCommit3: GenesisCommit
 
+  // use Utils to load the genesis commit for a stream so it converts CIDs for us
+  // and we avoid any issues with one having `Symbol(Symbol.toStringTag): "CID"` and one not
+  // because the getter function isn't copied by _.cloneDeep. 
+  async function loadGenesisCommit(
+    ceramic: CeramicApi,
+    streamId: StreamID
+  ): Promise<GenesisCommit> {
+    const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
+    expect(commit.type).toEqual(CommitType.GENESIS)
+    return commit.commit as GenesisCommit
+  }
+
   beforeAll(async () => {
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
@@ -95,30 +109,15 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     const model1 = await Model.create(ceramic, MODEL_CONTENT_1)
     streamId1 = model1.id
-    genesisCommit1 = await ceramic.dispatcher.retrieveCommit(
-      (
-        await ceramic.loadStreamCommits(model1.id)
-      )[0].cid,
-      streamId1
-    )
+    genesisCommit1 = await loadGenesisCommit(ceramic, streamId1)
 
     const model2 = await Model.create(ceramic, MODEL_CONTENT_2)
     streamId2 = model2.id
-    genesisCommit2 = await ceramic.dispatcher.retrieveCommit(
-      (
-        await ceramic.loadStreamCommits(model2.id)
-      )[0].cid,
-      streamId2
-    )
+    genesisCommit2 = await loadGenesisCommit(ceramic, streamId2)
 
     const model3 = await Model.create(ceramic, MODEL_CONTENT_3)
     streamId3 = model3.id
-    genesisCommit3 = await ceramic.dispatcher.retrieveCommit(
-      (
-        await ceramic.loadStreamCommits(model3.id)
-      )[0].cid,
-      streamId3
-    )
+    genesisCommit3 = await loadGenesisCommit(ceramic, streamId3)
   })
 
   afterAll(async () => {
