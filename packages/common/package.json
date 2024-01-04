@@ -45,7 +45,7 @@
   "dependencies": {
     "@ceramicnetwork/codecs": "^2.2.0",
     "@ceramicnetwork/streamid": "^3.2.0",
-    "@didtools/cacao": "^2.1.0",
+    "@didtools/cacao": "^3.0.0",
     "@didtools/pkh-ethereum": "^0.1.0",
     "@didtools/pkh-solana": "^0.1.0",
     "@didtools/pkh-stacks": "^0.1.0",
@@ -65,7 +65,7 @@
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/logfmt": "^1.2.2",
     "@types/node": "^18.0.3",
-    "dids": "^4.0.0",
+    "dids": "^5.0.0",
     "express": "^4.18.2",
     "get-port": "^7.0.0",
     "ipfs-core-types": "^0.14.0",
