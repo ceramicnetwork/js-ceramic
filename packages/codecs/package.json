@@ -31,11 +31,11 @@
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
     "@ceramicnetwork/streamid": "^3.2.0",
-    "cartonne": "^2.1.1",
+    "cartonne": "^3.0.1",
     "codeco": "^1.1.0",
     "dag-jose": "^4.0.0",
-    "multiformats": "^11.0.1",
-    "uint8arrays": "^4.0.3"
+    "multiformats": "^13.0.0",
+    "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
     "ts-essentials": "^9.3.2"

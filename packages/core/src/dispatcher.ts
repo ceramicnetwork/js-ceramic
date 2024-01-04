@@ -8,6 +8,7 @@ import {
   UnreachableCaseError,
   base64urlToJSON,
   IpfsNodeStatus,
+  toCID
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
@@ -174,8 +175,9 @@ export class Dispatcher {
     return this._shutdownSignal
       .abortable((signal) => this._ipfs.dag.put(record, { signal: signal }))
       .then((cid) => {
-        this.ipldCache.setRecord(cid, record)
-        return cid
+        const cidv13 = toCID(cid.toString()) // HACK  around ipfs-core-types multiformats version mismatch
+        this.ipldCache.setRecord(cidv13, record)
+        return cidv13
       })
   }
 
@@ -360,7 +362,10 @@ export class Dispatcher {
               signal: signal,
             })
           )
-          blockCid = resolution.cid
+          // HACK around ipfs-core-types multiformats version mismatch
+          // don't just as CID because we want to new version with the readonly field rather than getter
+          // that is dropped during a deepClone... assuming it actually matters...
+          blockCid = toCID(resolution.cid.toString()) 
         }
         const codec = await this._ipfs.codecs.getCodec(blockCid.code)
         const block = await this._shutdownSignal.abortable((signal) =>
@@ -516,10 +521,10 @@ export class Dispatcher {
       if (!newTip) {
         throw new Error(
           "Response to query with ID '" +
-            queryId +
-            "' is missing expected new tip for StreamID '" +
-            expectedStreamID +
-            "'"
+          queryId +
+          "' is missing expected new tip for StreamID '" +
+          expectedStreamID +
+          "'"
         )
       }
 
