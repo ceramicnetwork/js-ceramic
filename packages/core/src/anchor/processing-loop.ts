@@ -107,11 +107,14 @@ export class ProcessingLoop<T> {
           isDone = next.done
           if (isDone) break
           const value = next.value
-          if (!value) continue
+          if (!value) {
+            this.#logger.debug(`No value received in ProcessingLoop, skipping this iteration`)
+            continue
+          }
           await Promise.race([this.handleValue(value), rejectOnAbortSignal])
         } while (!isDone)
         this.#whenComplete.resolve()
-        this.#logger.verbose(`ProcessingLoop complete`)
+        this.#logger.debug(`ProcessingLoop complete`)
       } catch (e) {
         this.#logger.err(`Error in ProcessingLoop: ${e}`)
         this.#whenComplete.reject(e)
