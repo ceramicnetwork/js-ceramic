@@ -62,6 +62,7 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
+    "@ceramicnetwork/base-test-utils": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/logfmt": "^1.2.2",
     "@types/node": "^18.0.3",

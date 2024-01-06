@@ -7,7 +7,6 @@ import {
   GenesisCommit,
   IpfsApi,
   Networks,
-  TestUtils,
 } from '@ceramicnetwork/common'
 import {
   AnchorRequestData,
@@ -24,6 +23,7 @@ import first from 'it-first'
 import all from 'it-all'
 import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const BATCH_TIMEOUT = 100
 
@@ -96,7 +96,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
   // use Utils to load the genesis commit for a stream so it converts CIDs for us
   // and we avoid any issues with one having `Symbol(Symbol.toStringTag): "CID"` and one not
-  // because the getter function isn't copied by _.cloneDeep. 
+  // because the getter function isn't copied by _.cloneDeep.
   async function loadGenesisCommit(
     ceramic: CeramicApi,
     streamId: StreamID

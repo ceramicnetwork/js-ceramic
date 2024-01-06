@@ -46,6 +46,7 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
     "@ceramicnetwork/3id-did-resolver": "^3.2.0",
     "@ceramicnetwork/ipfs-daemon": "^3.2.0",
     "@ceramicnetwork/stream-model-instance": "^2.2.0",

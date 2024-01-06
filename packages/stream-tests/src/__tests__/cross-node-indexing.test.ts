@@ -1,12 +1,6 @@
 import { jest } from '@jest/globals'
-import {
-  IpfsApi,
-  Page,
-  PaginationQuery,
-  StreamState,
-  StreamUtils,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { IpfsApi, Page, PaginationQuery, StreamState, StreamUtils } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,

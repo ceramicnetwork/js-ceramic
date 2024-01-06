@@ -3,9 +3,10 @@ import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { jest } from '@jest/globals'
 import { default as PgBoss } from 'pg-boss'
-import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { LoggerProvider } from '@ceramicnetwork/common'
 import { EventEmitter } from 'node:events'
 import { fromEvent, firstValueFrom } from 'rxjs'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 type MockJobData = Record<any, any>
 

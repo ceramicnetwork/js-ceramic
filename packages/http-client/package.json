@@ -51,6 +51,8 @@
     "rxjs": "^7.5.2"
   },
   "devDependencies": {
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
+    "@ceramicnetwork/did-test-utils": "^1.0.0",
     "dids": "^5.0.0",
     "key-did-resolver": "^4.0.0",
     "multiformats": "^13.0.0"

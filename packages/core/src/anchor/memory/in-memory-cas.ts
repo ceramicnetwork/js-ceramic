@@ -1,9 +1,9 @@
 import type { CASClient } from '../anchor-service.js'
-import { AnchorCommit, AnchorEvent, AnchorProof, TestUtils } from '@ceramicnetwork/common'
+import { AnchorCommit, AnchorEvent, AnchorProof } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { randomCID, StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { CID } from 'multiformats/cid'
@@ -144,7 +144,7 @@ export class InMemoryCAS implements CASClient {
     })
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
-    const txHashCid = TestUtils.randomCID()
+    const txHashCid = randomCID()
     const proofData: AnchorProof = {
       chainId: this.#chainId,
       txHash: txHashCid,
