@@ -32,7 +32,7 @@
   "dependencies": {
     "@ceramicnetwork/anchor-utils": "^2.2.0",
     "@ethersproject/providers": "^5.5.1",
-    "rxjs": "^7.5.2"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^3.2.0",
