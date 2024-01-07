@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@databases/pg-test": "^3.1.2",
-    "@jest/globals": "^29.6.4",
+    "@jest/globals": "^29.7.0",
     "@types/pg": "8.10.2"
   },
   "publishConfig": {
