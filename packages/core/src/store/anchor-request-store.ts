@@ -114,6 +114,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           }, this.#infiniteListBatchTimeoutMs)
         })
 
+        this.#logger.debug(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
         const batchPromise = this.store.find({
           limit: batchSize,
           useCaseName: this.useCaseName,
@@ -122,6 +123,9 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
         const batch = await Promise.race([batchPromise, timeoutPromise])
         clearTimeout(timeout)
         if (batch && batch.length > 0) {
+          this.#logger.debug(
+            `Batch of size ${batch.length} fetched successfully from AnchorRequestStore starting at key ${gt}`
+          )
           gt = StreamID.fromString(batch[batch.length - 1].key)
           for (const item of batch) {
             numEntries++
