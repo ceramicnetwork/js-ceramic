@@ -3,6 +3,9 @@ import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
 import { DiagnosticsLogger, GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
 
+// How long to wait for the store to return a batch from a find request.
+const DEFAULT_BATCH_TIMEOUT_MS = 60 * 1000 // 1 minute
+
 export type AnchorRequestData = {
   cid: CID
   timestamp: number
@@ -50,11 +53,15 @@ export function deserializeAnchorRequestData(serialized: any): AnchorRequestData
 export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData> {
   #shouldStop: boolean
   #logger: DiagnosticsLogger
+  // This timeout currently only applies to batches within the infiniteList() function
+  // TODO: Add a timeout to regular find() calls as well.
+  readonly #infiniteListBatchTimeoutMs: number
 
-  constructor(logger: DiagnosticsLogger) {
+  constructor(logger: DiagnosticsLogger, infiniteListBatchTimeoutMs = DEFAULT_BATCH_TIMEOUT_MS) {
     super(generateKey, serializeAnchorRequestData, deserializeAnchorRequestData)
     this.useCaseName = 'anchor-requests'
     this.#logger = logger
+    this.#infiniteListBatchTimeoutMs = infiniteListBatchTimeoutMs
   }
 
   exists(key: StreamID): Promise<boolean> {
@@ -64,6 +71,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   async *list(batchSize = 1): AsyncIterable<Array<AnchorRequestStoreListResult>> {
     let gt: StreamID | undefined = undefined
     do {
+      // TODO: Add timeout to the query
       const batch = await this.store.find({
         limit: batchSize,
         useCaseName: this.useCaseName,
@@ -98,12 +106,22 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
     let numEntries = 0
     do {
       try {
-        const batch = await this.store.find({
+        let timeout
+        const timeoutPromise = new Promise<null>((resolve) => {
+          timeout = setTimeout(() => {
+            this.#logger.warn(`Timed out while waiting for AnchorRequestStore to fetch a batch`)
+            resolve(null)
+          }, this.#infiniteListBatchTimeoutMs)
+        })
+
+        const batchPromise = this.store.find({
           limit: batchSize,
           useCaseName: this.useCaseName,
           gt: generateKey(gt),
         })
-        if (batch.length > 0) {
+        const batch = await Promise.race([batchPromise, timeoutPromise])
+        clearTimeout(timeout)
+        if (batch && batch.length > 0) {
           gt = StreamID.fromString(batch[batch.length - 1].key)
           for (const item of batch) {
             numEntries++
