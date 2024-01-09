@@ -2,6 +2,8 @@ import { jest, afterAll } from '@jest/globals'
 import HttpRequestMock from 'http-request-mock'
 import { Resolver } from 'did-resolver'
 import { readFileSync } from 'node:fs'
+import { CeramicClient } from '@ceramicnetwork/http-client'
+import * as ThreeIdResolver from '../index.js'
 
 const VECTORS_PATH = new URL('./vectors.json', import.meta.url)
 const vectors = JSON.parse(readFileSync(VECTORS_PATH, 'utf-8'))
@@ -51,19 +53,16 @@ describe('3ID DID Resolver', () => {
   let ceramic
 
   beforeAll(async () => {
-    const { CeramicClient } = await import('@ceramicnetwork/http-client')
     ceramic = new CeramicClient()
   })
 
   describe('3IDv1', () => {
     test('getResolver works correctly', async () => {
-      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       expect(Object.keys(threeIdResolver)).toEqual(['3'])
     })
 
     test.each(vectors[v1].queries)('resolves 3id documents correctly %#', async (query) => {
-      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v1].did + query.params[0]
@@ -78,7 +77,6 @@ describe('3ID DID Resolver', () => {
     test.each(vectors[v1unanchored].queries)(
       'resolves unanchored 3id documents correctly %#',
       async (query) => {
-        const ThreeIdResolver = await import('../index.js')
         const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
         const resolver = new Resolver(threeIdResolver)
         const did = vectors[v1unanchored].did + query.params[0]
@@ -90,7 +88,6 @@ describe('3ID DID Resolver', () => {
     )
 
     test('no commit found', async () => {
-      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did =
@@ -109,7 +106,6 @@ describe('3ID DID Resolver', () => {
 
   describe('3IDv0', () => {
     test('resolves 3id with no updates', async () => {
-      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const query = vectors[v0NoUpdates].query
@@ -118,7 +114,6 @@ describe('3ID DID Resolver', () => {
     })
 
     test.each(vectors[v0].queries)('resolves 3id documents correctly %#', async (query) => {
-      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v0].did + query.params[0]

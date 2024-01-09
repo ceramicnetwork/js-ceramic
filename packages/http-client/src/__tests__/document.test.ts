@@ -2,7 +2,11 @@ import { CommitType, StreamState } from '@ceramicnetwork/common'
 import { Document } from '../document.js'
 import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
-import { FAKE_CID_1, FAKE_CID_2 } from '@ceramicnetwork/did-test-utils'
+import { CID } from 'multiformats/cid'
+
+// These are duplicated to handle a circular dependency, since 3id-did-resolver depends on http client for testing
+const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 
 test('emit on distinct changes', async () => {
   const initial = {
