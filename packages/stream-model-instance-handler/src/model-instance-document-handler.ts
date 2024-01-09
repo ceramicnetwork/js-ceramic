@@ -218,7 +218,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (
       genesis &&
       (model.content.accountRelation.type === 'single' ||
-        model.content.accountRelation.type == 'set')
+        model.content.accountRelation.type === 'set')
     ) {
       if (content) {
         throw new Error(
@@ -318,6 +318,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
   }
 
+  /**
+   * Validates the ModelInstanceDocument unique constraints against the Model definition.
+   * @param model - model that this ModelInstanceDocument belongs to
+   * @param metadata - ModelInstanceDocument metadata to validate
+   * @param content - ModelInstanceDocument content to validate
+   */
   async _validateUnique(
     model: Model,
     metadata: ModelInstanceDocumentMetadata,

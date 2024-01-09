@@ -67,6 +67,9 @@ const FAKE_MODEL_ID2 = StreamID.fromString(
 const FAKE_MODEL_IDBLOB = StreamID.fromString(
   'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5b'
 )
+const FAKE_MODEL_SET_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist50'
+)
 const FAKE_MODEL_INTERFACE_ID = StreamID.fromString(
   'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5c'
 )
@@ -258,6 +261,29 @@ const MODEL_DEFINITION_SINGLE: ModelDefinition = {
   },
 }
 
+const MODEL_DEFINITION_SET: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
+  accountRelation: { type: 'set', fields: ['one', 'two'] },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      one: { type: 'string', minLength: 2 },
+      two: { type: 'string', minLength: 2 },
+      myData: {
+        type: 'integer',
+        maximum: 100,
+        minimum: 0,
+      },
+    },
+    required: ['myData'],
+  },
+}
+
 const MODEL_DEFINITION_BLOB: ModelDefinition = {
   name: 'MyBlobModel',
   version: '1.0',
@@ -384,6 +410,11 @@ const STREAMS = {
   [FAKE_MODEL_IDBLOB.toString()]: {
     content: MODEL_DEFINITION_BLOB,
     commitId: FAKE_MODEL_IDBLOB,
+  },
+  [FAKE_MODEL_SET_ID.toString()]: {
+    idd: FAKE_MODEL_SET_ID,
+    content: MODEL_DEFINITION_SET,
+    commitId: FAKE_MODEL_ID,
   },
   [FAKE_MODEL_INTERFACE_ID.toString()]: {
     id: FAKE_MODEL_INTERFACE_ID,
@@ -557,6 +588,33 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(StreamUtils.isSignedCommitContainer(commit1)).toBeFalsy()
   })
 
+  it('Can create deterministic genesis commits with a provided unique value', async () => {
+    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...METADATA,
+      deterministic: true,
+    })
+    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...METADATA,
+      deterministic: true,
+      unique: ['a'],
+    })
+    expect(commit2).not.toEqual(commit1)
+
+    const commit3 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...METADATA,
+      deterministic: true,
+      unique: ['a'],
+    })
+    expect(commit3).toEqual(commit2)
+
+    const commit4 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...METADATA,
+      deterministic: true,
+      unique: ['b'],
+    })
+    expect(commit4).not.toEqual(commit3)
+  })
+
   it('applies genesis commit correctly', async () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
@@ -632,6 +690,8 @@ describe('ModelInstanceDocumentHandler', () => {
       type: CommitType.GENESIS,
       commit,
     }
+    expect(commitData.commit.data).toBeNull()
+
     const streamState = await handler.applyCommit(commitData, context)
     expect(streamState).toMatchSnapshot()
   })
@@ -795,6 +855,107 @@ describe('ModelInstanceDocumentHandler', () => {
     state = await handler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
     expect(state).toMatchSnapshot()
+  })
+
+  it('MIDs with SET account relation validate signed commit fields', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...DETERMINISTIC_METADATA,
+      model: FAKE_MODEL_SET_ID,
+      unique: ['one', 'two'],
+    })) as GenesisCommit
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: genesisCommit,
+    }
+    let state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new ModelInstanceDocument(state$, context)
+
+    const signedCommitFail = (await doc._makeCommit(context.api, {
+      one: 'one',
+      two: 'three',
+      myData: 2,
+    })) as SignedCommitContainer
+    await context.ipfs.dag.put(signedCommitFail, FAKE_CID_2)
+
+    const payloadFail = dagCBOR.decode(signedCommitFail.linkedBlock)
+    await context.ipfs.dag.put(payloadFail, signedCommitFail.jws.link)
+
+    const signedCommitDataFail = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: payloadFail,
+      envelope: signedCommitFail.jws,
+    }
+    await expect(handler.applyCommit(signedCommitDataFail, context, state)).rejects.toThrow(
+      'Unique content fields value does not match metadata. If you are trying to change the value of these fields, this is causing this error: these fields values are not mutable.'
+    )
+
+    const signedCommitOK = (await doc._makeCommit(context.api, {
+      one: 'one',
+      two: 'two',
+      myData: 2,
+    })) as SignedCommitContainer
+    await context.ipfs.dag.put(signedCommitOK, FAKE_CID_3)
+
+    const payloadOK = dagCBOR.decode(signedCommitOK.linkedBlock)
+    await context.ipfs.dag.put(payloadOK, signedCommitOK.jws.link)
+
+    const signedCommitDataOK = {
+      cid: FAKE_CID_3,
+      type: CommitType.SIGNED,
+      commit: payloadOK,
+      envelope: signedCommitOK.jws,
+    }
+    state = await handler.applyCommit(signedCommitDataOK, context, state)
+    expect(state).toMatchSnapshot()
+  })
+
+  it('MIDs with SET account relation validate content schema on update', async () => {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, null, {
+      ...DETERMINISTIC_METADATA,
+      model: FAKE_MODEL_SET_ID,
+      unique: ['a', 'b'],
+    })) as GenesisCommit
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: genesisCommit,
+    }
+
+    // Genesis creation should always work independently of content validation
+    const state = await handler.applyCommit(genesisCommitData, context)
+    const state$ = TestUtils.runningState(state)
+    const doc = new ModelInstanceDocument(state$, context)
+
+    const signedCommit = (await doc._makeCommit(context.api, {
+      one: 'a',
+      two: 'b',
+      myData: 2,
+    })) as SignedCommitContainer
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const payload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, signedCommit.jws.link)
+
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: payload,
+      envelope: signedCommit.jws,
+    }
+    // MID can't be updated with content that does not pass schema validation
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+      'Validation Error: data/one must NOT have fewer than 2 characters, data/two must NOT have fewer than 2 characters'
+    )
   })
 
   it('multiple consecutive updates', async () => {

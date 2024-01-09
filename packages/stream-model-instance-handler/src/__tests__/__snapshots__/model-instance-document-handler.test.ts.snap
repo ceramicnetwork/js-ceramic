@@ -1,5 +1,53 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ModelInstanceDocumentHandler MIDs with SET account relation validate signed commit fields 1`] = `
+{
+  "anchorStatus": 0,
+  "content": {
+    "myData": 2,
+    "one": "one",
+    "two": "two",
+  },
+  "log": [
+    {
+      "cid": {
+        "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+      },
+      "type": 0,
+    },
+    {
+      "cid": {
+        "/": "bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu",
+      },
+      "type": 1,
+    },
+  ],
+  "metadata": {
+    "controllers": [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
+    "model": StreamID {
+      "_cid": {
+        "/": "bagcqceravogecfyp4jyciu7cqljixlpymtmisoxikuxyzikxkups6afcncca",
+      },
+      "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
+      "_type": 2,
+    },
+    "unique": Uint8Array [
+      111,
+      110,
+      101,
+      124,
+      116,
+      119,
+      111,
+    ],
+  },
+  "signature": 2,
+  "type": 3,
+}
+`;
+
 exports[`ModelInstanceDocumentHandler applies anchor commit correctly 1`] = `
 {
   "anchorProof": {
