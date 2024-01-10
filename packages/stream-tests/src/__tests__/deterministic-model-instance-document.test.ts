@@ -159,10 +159,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     test('Cannot replace unique content fields values', async () => {
       const model = await Model.create(ceramic, MODEL_DEFINITION_SET)
 
-      const doc = await ModelInstanceDocument.single(ceramic, {
-        model: model.id,
-        unique: ['foo'],
-      })
+      const doc = await ModelInstanceDocument.set(ceramic, { model: model.id }, ['foo'])
 
       await expect(() => doc.replace({ unique: 'test' })).rejects.toThrow(
         /Unique content fields value does not match metadata/
@@ -175,10 +172,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     test('Cannot set content that does not pass validation', async () => {
       const model = await Model.create(ceramic, MODEL_DEFINITION_SET)
 
-      const doc = await ModelInstanceDocument.single(ceramic, {
-        model: model.id,
-        unique: ['a'],
-      })
+      const doc = await ModelInstanceDocument.set(ceramic, { model: model.id }, ['a'])
       await expect(() => doc.replace({ unique: 'a', other: 'test' })).rejects.toThrow(
         /Validation Error: data\/unique must NOT have fewer than 3 characters/
       )
@@ -187,23 +181,14 @@ describe('ModelInstanceDocument API http-client tests', () => {
     test('Can create, load and update unique documents', async () => {
       const model = await Model.create(ceramic, MODEL_DEFINITION_SET)
 
-      const doc1 = await ModelInstanceDocument.single(ceramic, {
-        model: model.id,
-        unique: ['foo'],
-      })
+      const doc1 = await ModelInstanceDocument.set(ceramic, { model: model.id }, ['foo'])
       await doc1.replace({ unique: 'foo', other: 'test' })
 
-      const doc2 = await ModelInstanceDocument.single(ceramic, {
-        model: model.id,
-        unique: ['foo'],
-      })
+      const doc2 = await ModelInstanceDocument.set(ceramic, { model: model.id }, ['foo'])
       expect(doc2.id.toString()).toBe(doc1.id.toString())
       expect(doc2.content).toEqual({ unique: 'foo', other: 'test' })
 
-      const doc3 = await ModelInstanceDocument.single(ceramic, {
-        model: model.id,
-        unique: ['bar'],
-      })
+      const doc3 = await ModelInstanceDocument.set(ceramic, { model: model.id }, ['bar'])
       expect(doc3.id.toString()).not.toBe(doc1.id.toString())
       expect(doc3.content).toBeNull()
     })

@@ -41,12 +41,6 @@ export interface ModelInstanceDocumentMetadataArgs {
    * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
    */
   deterministic?: boolean
-
-  /**
-   * Custom values to use for the stream determinism, only used if `deterministic` is set to `true`.  Should only be used for
-   * ModelInstanceDocuments whose Model has an accountRelation of 'SET'.
-   */
-  unique?: Array<string>
 }
 
 /**
@@ -169,6 +163,31 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
+   * Creates a deterministic ModelInstanceDocument with a 'set' accountRelation.
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param metadata - Genesis metadata
+   * @param unique - Unique fields values
+   * @param opts - Additional options
+   */
+  static async set<T>(
+    ceramic: CeramicApi,
+    metadata: ModelInstanceDocumentMetadataArgs,
+    unique: Array<string>,
+    opts: CreateOpts = {}
+  ): Promise<ModelInstanceDocument<T>> {
+    opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
+    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    metadata = { ...metadata, deterministic: true }
+
+    const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata, unique)
+    return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
+      ModelInstanceDocument.STREAM_TYPE_ID,
+      commit,
+      opts
+    )
+  }
+
+  /**
    * Loads a Model Instance Document from a given StreamID
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param streamId - StreamID to load.  Must correspond to a ModelInstanceDocument
@@ -282,14 +301,15 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param signer - Object containing the DID making (and signing) the commit
    * @param content - genesis content
    * @param metadata - genesis metadata
-   * @param maxContentLength - maximum content length in bytes of content in genesis commit
+   * @param unique - optional array of strings to set the unique header value
    */
   private static async _makeGenesis<T>(
     signer: CeramicSigner,
     content: T,
-    metadata: ModelInstanceDocumentMetadataArgs
+    metadata: ModelInstanceDocumentMetadataArgs,
+    unique?: Array<string>
   ): Promise<SignedCommitContainer | GenesisCommit> {
-    const commit = await this._makeRawGenesis(signer, content, metadata)
+    const commit = await this._makeRawGenesis(signer, content, metadata, unique)
     if (metadata.deterministic) {
       // Check if we can encode it in cbor. Should throw an error when invalid payload.
       // See https://github.com/ceramicnetwork/ceramic/issues/205 for discussion on why we do this.
@@ -304,7 +324,8 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   private static async _makeRawGenesis<T>(
     signer: CeramicSigner,
     content: T,
-    metadata: ModelInstanceDocumentMetadataArgs
+    metadata: ModelInstanceDocumentMetadataArgs,
+    unique?: Array<string>
   ): Promise<GenesisCommit> {
     if (!metadata.model) {
       throw new Error(`Must specify a 'model' when creating a ModelInstanceDocument`)
@@ -331,8 +352,8 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     }
     if (metadata.deterministic) {
       // Convert and use unique values for the deterministic bytes if provided (SET account relation)
-      if (Array.isArray(metadata.unique)) {
-        header.unique = fromString(metadata.unique.join('|'), 'utf8')
+      if (Array.isArray(unique)) {
+        header.unique = fromString(unique.join('|'), 'utf8')
       }
       // Don't set any unique byte otherwise (SINGLE account relation)
     } else {

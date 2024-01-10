@@ -329,25 +329,27 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     metadata: ModelInstanceDocumentMetadata,
     content: Record<string, unknown> | null
   ): Promise<void> {
-    if (model.content.accountRelation.type === 'set') {
-      if (metadata.unique == null) {
-        throw new Error('Missing unique metadata value')
-      }
-      if (content == null) {
-        throw new Error('Missing content')
-      }
+    // Unique field validation only applies to the SET account relation
+    if (model.content.accountRelation.type !== 'set') {
+      return
+    }
+    if (metadata.unique == null) {
+      throw new Error('Missing unique metadata value')
+    }
+    if (content == null) {
+      throw new Error('Missing content')
+    }
 
-      const unique = model.content.accountRelation.fields
-        .map((field) => {
-          const value = content[field]
-          return value ? value.toString() : ''
-        })
-        .join('|')
-      if (unique !== toString(metadata.unique)) {
-        throw new Error(
-          'Unique content fields value does not match metadata. If you are trying to change the value of these fields, this is causing this error: these fields values are not mutable.'
-        )
-      }
+    const unique = model.content.accountRelation.fields
+      .map((field) => {
+        const value = content[field]
+        return value ? value.toString() : ''
+      })
+      .join('|')
+    if (unique !== toString(metadata.unique)) {
+      throw new Error(
+        'Unique content fields value does not match metadata. If you are trying to change the value of these fields, this is causing this error: these fields values are not mutable.'
+      )
     }
   }
 }

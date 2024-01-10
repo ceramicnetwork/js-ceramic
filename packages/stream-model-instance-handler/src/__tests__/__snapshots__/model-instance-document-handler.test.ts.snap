@@ -5,8 +5,8 @@ exports[`ModelInstanceDocumentHandler MIDs with SET account relation validate si
   "anchorStatus": 0,
   "content": {
     "myData": 2,
-    "one": "one",
-    "two": "two",
+    "one": "foo",
+    "two": "bar",
   },
   "log": [
     {
@@ -34,13 +34,13 @@ exports[`ModelInstanceDocumentHandler MIDs with SET account relation validate si
       "_type": 2,
     },
     "unique": Uint8Array [
+      102,
       111,
-      110,
-      101,
+      111,
       124,
-      116,
-      119,
-      111,
+      98,
+      97,
+      114,
     ],
   },
   "signature": 2,

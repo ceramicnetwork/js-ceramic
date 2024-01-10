@@ -589,29 +589,33 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Can create deterministic genesis commits with a provided unique value', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, null, {
-      ...METADATA,
-      deterministic: true,
-    })
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, null, {
-      ...METADATA,
-      deterministic: true,
-      unique: ['a'],
-    })
+    const commit1 = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      DETERMINISTIC_METADATA
+    )
+    const commit2 = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      DETERMINISTIC_METADATA,
+      ['a']
+    )
     expect(commit2).not.toEqual(commit1)
 
-    const commit3 = await ModelInstanceDocument._makeGenesis(context.api, null, {
-      ...METADATA,
-      deterministic: true,
-      unique: ['a'],
-    })
+    const commit3 = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      DETERMINISTIC_METADATA,
+      ['a']
+    )
     expect(commit3).toEqual(commit2)
 
-    const commit4 = await ModelInstanceDocument._makeGenesis(context.api, null, {
-      ...METADATA,
-      deterministic: true,
-      unique: ['b'],
-    })
+    const commit4 = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      DETERMINISTIC_METADATA,
+      ['b']
+    )
     expect(commit4).not.toEqual(commit3)
   })
 
@@ -858,11 +862,12 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs with SET account relation validate signed commit fields', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, null, {
-      ...DETERMINISTIC_METADATA,
-      model: FAKE_MODEL_SET_ID,
-      unique: ['one', 'two'],
-    })) as GenesisCommit
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      { ...DETERMINISTIC_METADATA, model: FAKE_MODEL_SET_ID },
+      ['foo', 'bar']
+    )) as GenesisCommit
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     // apply genesis
@@ -877,8 +882,8 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
 
     const signedCommitFail = (await doc._makeCommit(context.api, {
-      one: 'one',
-      two: 'three',
+      one: 'foo',
+      two: 'baz',
       myData: 2,
     })) as SignedCommitContainer
     await context.ipfs.dag.put(signedCommitFail, FAKE_CID_2)
@@ -897,8 +902,8 @@ describe('ModelInstanceDocumentHandler', () => {
     )
 
     const signedCommitOK = (await doc._makeCommit(context.api, {
-      one: 'one',
-      two: 'two',
+      one: 'foo',
+      two: 'bar',
       myData: 2,
     })) as SignedCommitContainer
     await context.ipfs.dag.put(signedCommitOK, FAKE_CID_3)
@@ -917,11 +922,12 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs with SET account relation validate content schema on update', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, null, {
-      ...DETERMINISTIC_METADATA,
-      model: FAKE_MODEL_SET_ID,
-      unique: ['a', 'b'],
-    })) as GenesisCommit
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      null,
+      { ...DETERMINISTIC_METADATA, model: FAKE_MODEL_SET_ID },
+      ['a', 'b']
+    )) as GenesisCommit
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     // apply genesis
