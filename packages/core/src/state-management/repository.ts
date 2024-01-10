@@ -541,13 +541,15 @@ export class Repository {
    * @returns boolean - whether or not the tip was actually applied
    */
   private async _handleTip(state$: RunningState, cid: CID): Promise<boolean> {
+    this.logger.debug(`About to enter execution queue to handle tip ${cid} for stream ${state$.id}`)
     return this.executionQ.forStream(state$.id).run(async () => {
-      this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
+      this.logger.debug(`Learned of new tip ${cid} for stream ${state$.id}`)
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
         state$.next(next)
+        this.logger.debug(`Going to update pinned state for stream ${state$.id}`)
         await this._updateStateIfPinned(state$)
-        this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
+        this.logger.debug(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
         return false
@@ -593,6 +595,7 @@ export class Repository {
     // is now anchored, in which case we still want to try to process the anchor commit
     // and let the stream's conflict resolution mechanism decide whether or not to update
     // the stream's state.
+    this.logger.debug(`in handleAnchorEvent for stream ${state$.id}`)
     const status = anchorEvent.status
     switch (status) {
       case AnchorRequestStatusName.READY:
@@ -669,7 +672,7 @@ export class Repository {
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
 
-    this.logger.verbose(`Handling anchor commit for ${streamId} with CID ${anchorCommitCID}`)
+    this.logger.debug(`Handling anchor commit for ${streamId} with CID ${anchorCommitCID}`)
 
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
@@ -678,8 +681,9 @@ export class Repository {
     ) {
       try {
         if (witnessCAR) {
+          this.logger.debug(`about to import CAR file for ${streamId}`)
           await this.dispatcher.importCAR(witnessCAR)
-          this.logger.verbose(`successfully imported CAR file for ${streamId}`)
+          this.logger.debug(`successfully imported CAR file for ${streamId}`)
         }
 
         const applied = await this._handleTip(state$, anchorCommitCID)
@@ -697,7 +701,7 @@ export class Repository {
               } after ${APPLY_ANCHOR_COMMIT_ATTEMPTS - remainingRetries} attempts`
             )
           } else {
-            this.logger.verbose(
+            this.logger.debug(
               `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
             )
           }
@@ -1003,7 +1007,7 @@ export class Repository {
     })
   }
 
-  anchorLoopHandler(): AnchorLoopHandler {
+  anchorLoopHandler(logger: DiagnosticsLogger): AnchorLoopHandler {
     const carBuilder = this.#deps.anchorRequestCarBuilder
     const fromMemoryOrStoreSafe = this.fromMemoryOrStore.bind(this)
     const handleAnchorEvent = this.handleAnchorEvent.bind(this)
@@ -1012,7 +1016,9 @@ export class Repository {
         return carBuilder.build(streamId, tip)
       },
       async handle(event: AnchorEvent): Promise<boolean> {
+        logger.debug(`Loading stream ${event.streamId} from the state store`)
         const state$ = await fromMemoryOrStoreSafe(event.streamId)
+        logger.debug(`State for stream ${event.streamId} loaded successfully from the state store`)
         if (!state$) return true
         return handleAnchorEvent(state$, event)
       },
