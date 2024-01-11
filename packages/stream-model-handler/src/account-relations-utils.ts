@@ -5,6 +5,11 @@ type FieldSchema = Exclude<JSONSchema, boolean>
 
 const SUPPORTED_FIELD_TYPES = ['boolean', 'integer', 'number', 'string']
 
+/**
+ * Validate model schema fields used by the SET account relation
+ * @param fields - Array of field names used by the SET account relation
+ * @param modelSchema - JSON schema of the model
+ */
 export function validateSetFields(fields: Array<string>, modelSchema: JSONSchema.Object): void {
   if (fields.length === 0) {
     throw new Error(`At least one field must be defined for the SET account relation`)
@@ -16,6 +21,7 @@ export function validateSetFields(fields: Array<string>, modelSchema: JSONSchema
   for (const field of fields) {
     let fieldSchema = modelSchema.properties[field] as FieldSchema | undefined
     if (fieldSchema?.$ref != null) {
+      // Resolve field schema if a reference is used
       const ref = new JsonReference(fieldSchema.$ref)
       fieldSchema = ref.resolve(modelSchema)
     }

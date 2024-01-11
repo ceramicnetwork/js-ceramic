@@ -937,7 +937,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: genesisCommit,
     }
 
-    // Genesis creation should always work independently of content validation
+    // The deterministic genesis creation works independently of content validation as determinitic commits have no content
     const state = await handler.applyCommit(genesisCommitData, context)
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
