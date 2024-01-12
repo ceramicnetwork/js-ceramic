@@ -37,8 +37,8 @@ export interface ModelInstanceDocumentMetadataArgs {
   model: StreamID
 
   /**
-  * An optional string used to identify the context of the ModelInstanceDocument.
-  */
+   * An optional string used to identify the context of the ModelInstanceDocument.
+   */
   context?: StreamID
 
   /**
