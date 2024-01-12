@@ -22,7 +22,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { distinct, map, Observable } from 'rxjs'
+import { distinctUntilKeyChanged, map, Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -856,7 +856,14 @@ export class Repository {
   private _registerRunningState(state$: RunningState): void {
     state$
       .pipe(
-        distinct((s) => s.log[s.log.length - 1].cid.toString()), // Distinct if the tip changes
+        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
+          // Consider distinct if proposed log length differs
+          if (proposedLog.length !== currentLog.length) return false
+          // Or let's see if the tip is different
+          const currentTip = currentLog[currentLog.length - 1].cid
+          const proposedTip = proposedLog[proposedLog.length - 1].cid
+          return currentTip.equals(proposedTip)
+        }),
         map(FeedDocument.fromStreamState)
       )
       .subscribe(this.feed.aggregation.documents)
