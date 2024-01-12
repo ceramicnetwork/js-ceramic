@@ -124,7 +124,7 @@ describe('Ceramic feed', () => {
     // process anchor
     await TestUtils.anchorUpdate(ceramic1, stream)
 
-    expect(feed.length).toEqual(2) // genesis + anchor commits
+    expect(feed.length).toEqual(2) // 2 commits = 1 genesis commit + 1 anchor commit
     // between and request anchor
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
