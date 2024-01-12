@@ -782,11 +782,14 @@ describe('_registerRunningState', () => {
     const subscription = ceramic.feed.aggregation.documents.subscribe((document) => {
       emittedDocuments.push(document)
     })
+    expect(emittedDocuments.length).toEqual(0)
     ;(ceramic.repository as any)._registerRunningState(state$)
+    expect(emittedDocuments.length).toEqual(1)
     state$.next({
       ...state$.value,
       anchorStatus: AnchorStatus.PROCESSING,
     })
+    expect(emittedDocuments.length).toEqual(1)
     state$.next({
       ...state$.value,
       anchorStatus: AnchorStatus.REPLACED,
