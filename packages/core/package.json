@@ -96,6 +96,7 @@
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^3.2.0",
     "@ceramicnetwork/ipfs-daemon": "^3.2.0",
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
     "@databases/pg-test": "^3.1.2",
     "@didtools/cacao": "^3.0.0",
     "@types/node": "^18.0.3",

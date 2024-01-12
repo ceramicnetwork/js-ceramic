@@ -16,10 +16,12 @@
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^3.2.0",
     "@ceramicnetwork/anchor-utils": "^2.2.0",
+    "@ceramicnetwork/base-test-utils": "^1.0.0",
     "@ceramicnetwork/blockchain-utils-linking": "^3.2.0",
     "@ceramicnetwork/blockchain-utils-validation": "^3.2.0",
     "@ceramicnetwork/cli": "^3.2.0",
     "@ceramicnetwork/common": "^3.2.0",
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
     "@ceramicnetwork/core": "^3.2.0",
     "@ceramicnetwork/http-client": "^3.2.0",
     "@ceramicnetwork/indexing": "^2.2.0",

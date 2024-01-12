@@ -1,17 +1,13 @@
 import { expect, jest } from '@jest/globals'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
-import {
-  AnchorStatus,
-  GenesisCommit,
-  IpfsApi,
-  SyncOptions,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, GenesisCommit, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import tmp from 'tmp-promise'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import all from 'it-all'
 import { AnchorRequestStore } from '../../store/anchor-request-store.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 /**
  * Returns a list of all StreamIDs stored in the AnchorRequestStore.
@@ -130,11 +126,11 @@ test('Cleans up entries from store for already anchored tips', async () => {
   })
 
   const stream = await TileDocument.create(ceramic, { step: 0 })
-  await TestUtils.anchorUpdate(ceramic, stream)
+  await CoreUtils.anchorUpdate(ceramic, stream)
   await stream.update({ step: 1 })
-  await TestUtils.anchorUpdate(ceramic, stream)
+  await CoreUtils.anchorUpdate(ceramic, stream)
   await stream.update({ step: 2 })
-  await TestUtils.anchorUpdate(ceramic, stream)
+  await CoreUtils.anchorUpdate(ceramic, stream)
   expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   expect(stream.state.log).toHaveLength(6)
 

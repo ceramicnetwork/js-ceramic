@@ -11,13 +11,8 @@ import {
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import {
-  AnchorStatus,
-  IpfsApi,
-  StreamUtils,
-  TestUtils,
-  LoggerProvider,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, IpfsApi, StreamUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -125,7 +120,7 @@ describe('Ceramic API', () => {
       const streamOg = await TileDocument.create<any>(ceramic, { test: 321 })
 
       // wait for anchor (new commit)
-      await TestUtils.anchorUpdate(ceramic, streamOg)
+      await CoreUtils.anchorUpdate(ceramic, streamOg)
 
       expect(streamOg.state.log.length).toEqual(2)
       expect(streamOg.content).toEqual({ test: 321 })
@@ -136,7 +131,7 @@ describe('Ceramic API', () => {
       await streamOg.update({ test: 'abcde' })
 
       // wait for anchor (new commit)
-      await TestUtils.anchorUpdate(ceramic, streamOg)
+      await CoreUtils.anchorUpdate(ceramic, streamOg)
 
       expect(streamOg.state.log.length).toEqual(4)
       expect(streamOg.content).toEqual({ test: 'abcde' })
@@ -180,7 +175,7 @@ describe('Ceramic API', () => {
 
       // Create an anchor commit that the original stream handle won't know about
       const streamCopy = await TileDocument.load(ceramic, streamOg.id)
-      await TestUtils.anchorUpdate(ceramic, streamCopy)
+      await CoreUtils.anchorUpdate(ceramic, streamCopy)
       expect(streamCopy.state.log.length).toEqual(2)
 
       // Do an update via the stale stream handle.  Its view of the log is out of date so its update
@@ -342,14 +337,14 @@ describe('Ceramic API', () => {
     it('can update schema and then assign to stream with now valid content', async () => {
       // Create stream with content that has type 'number'.
       const stream = await TileDocument.create(ceramic, { a: 1 })
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the stream created above.
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       // wait for anchor
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
+      await CoreUtils.anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Update the schema to expect a number, so now the original stream should conform to the new
@@ -358,12 +353,12 @@ describe('Ceramic API', () => {
       updatedSchema.additionalProperties.type = 'number'
       await schemaDoc.update(updatedSchema)
       // wait for anchor
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
+      await CoreUtils.anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the stream without error.
       await stream.update(stream.content, { schema: schemaDoc.commitId })
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.content).toEqual({ a: 1 })
 
       // Test that we can reload the stream without issue

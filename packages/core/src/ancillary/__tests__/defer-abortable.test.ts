@@ -1,7 +1,7 @@
 import { expect, jest, test } from '@jest/globals'
 import { firstValueFrom, lastValueFrom } from 'rxjs'
 import { deferAbortable } from '../defer-abortable.js'
-import { TestUtils } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 test('happy case', async () => {
   const call = jest.fn(() => Promise.resolve('value'))

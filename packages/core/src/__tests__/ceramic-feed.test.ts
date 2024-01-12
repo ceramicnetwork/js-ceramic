@@ -1,5 +1,6 @@
 import { expect, describe, test, beforeEach, afterEach } from '@jest/globals'
-import { TestUtils, type IpfsApi } from '@ceramicnetwork/common'
+import { type IpfsApi } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
@@ -7,6 +8,7 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { take } from 'rxjs'
 import { FeedDocument } from '../feed.js'
 import { createCeramic } from './create-ceramic.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 describe('Ceramic feed', () => {
   let ipfs1: IpfsApi
@@ -129,7 +131,7 @@ describe('Ceramic feed', () => {
     // request anchor
     await ceramic1.repository.anchor(state$, {})
     // process anchor
-    await TestUtils.anchorUpdate(ceramic1, stream)
+    await CoreUtils.anchorUpdate(ceramic1, stream)
 
     expect(feed.length).toEqual(3) // create + anchor request + anchor update
     // between and request anchor

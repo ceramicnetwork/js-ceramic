@@ -1,7 +1,6 @@
 import { jest, expect, describe, it, test, beforeEach, afterEach } from '@jest/globals'
 import {
   StreamUtils,
-  TestUtils,
   SyncOptions,
   type StreamState,
   type GenesisCommit,
@@ -9,11 +8,13 @@ import {
   type CeramicApi,
   type IpfsApi,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../index.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
 
@@ -89,7 +90,7 @@ describe('Ceramic integration', () => {
 
         const stream1 = await TileDocument.create(ceramic1, { test: 456 })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         // we can't load stream from id since nodes are not connected
         // so we won't find the genesis object from it's CID
@@ -161,7 +162,7 @@ describe('Ceramic integration', () => {
         const stream1 = await TileDocument.create(ceramic1, null, metadata)
         await stream1.update({ test: 321 })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         // Through a different ceramic instance create a new stream with the same contents that will
         // therefore resolve to the same genesis commit and thus the same streamId.  Make sure the new
@@ -173,7 +174,7 @@ describe('Ceramic integration', () => {
 
         await stream1.update({ test: 'abcde' })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         expect(stream1.content).toEqual({ test: 'abcde' })
         await TestUtils.waitForState(
@@ -203,11 +204,11 @@ describe('Ceramic integration', () => {
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         await stream1.update({ test: 'abcde' })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         const logCommits = await ceramic1.loadStreamCommits(stream1.id)
 
@@ -335,7 +336,7 @@ describe('Ceramic integration', () => {
         })
         expect(stream1).toBeDefined()
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         expect(addSpy1).toBeCalledTimes(1)
         expect(loadSpy1).toBeCalledTimes(1)
@@ -345,7 +346,7 @@ describe('Ceramic integration', () => {
 
         await stream1.update({ test: 'abcde' }, null, { publish: false })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
         expect(addSpy2).not.toBeCalled()
@@ -383,7 +384,7 @@ describe('Ceramic integration', () => {
         expect(addSpy1).toBeCalledTimes(1)
         expect(stream1).toBeDefined()
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         addSpy1.mockClear()
         loadSpy1.mockClear()
@@ -392,7 +393,7 @@ describe('Ceramic integration', () => {
         expect(loadSpy1).toBeCalledTimes(1)
         expect(addSpy1).toBeCalledTimes(0)
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
         expect(addSpy2).not.toBeCalled()

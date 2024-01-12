@@ -78,6 +78,7 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
     "@ceramicnetwork/stream-model": "^2.2.0",
     "@ceramicnetwork/stream-tile-handler": "^3.2.0",
     "@stablelib/sha256": "^1.0.1",

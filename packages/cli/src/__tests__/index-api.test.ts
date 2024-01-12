@@ -4,12 +4,13 @@ import tmp from 'tmp-promise'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { randomString } from '@stablelib/random'
-import { CommitType, IpfsApi, StreamState, TestUtils } from '@ceramicnetwork/common'
+import { CommitType, IpfsApi, StreamState } from '@ceramicnetwork/common'
 import { CeramicDaemon } from '../ceramic-daemon.js'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { makeDID } from './make-did.js'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const SEED = randomString(32)
 

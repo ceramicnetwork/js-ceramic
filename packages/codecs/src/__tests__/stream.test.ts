@@ -3,20 +3,19 @@ import { describe, test, expect } from '@jest/globals'
 import { validate, isRight, type Right } from 'codeco'
 
 import { commitIdAsString, isStreamIdString, streamIdAsString, streamIdString } from '../stream.js'
-
-import { randomCID, randomStreamID } from './test-utils.js'
+import { BaseTestUtils as TestUtils } from '@ceramicnetwork/base-test-utils'
 
 describe('isStreamIdString', () => {
   test('ok', () => {
-    expect(isStreamIdString(randomStreamID().toString())).toBe(true)
+    expect(isStreamIdString(TestUtils.randomStreamID().toString())).toBe(true)
   })
   test('not ok', () => {
-    expect(isStreamIdString(randomCID().toString())).toBe(false)
+    expect(isStreamIdString(TestUtils.randomCID().toString())).toBe(false)
   })
 })
 
 describe('streamIdString', () => {
-  const streamId = randomStreamID().toString()
+  const streamId = TestUtils.randomStreamID().toString()
   test('decode: ok', () => {
     const result = validate(streamIdString, streamId)
     expect(isRight(result)).toEqual(true)
@@ -33,7 +32,7 @@ describe('streamIdString', () => {
 })
 
 describe('streamIdAsString', () => {
-  const streamId = randomStreamID()
+  const streamId = TestUtils.randomStreamID()
   test('decode: ok', () => {
     const result = validate(streamIdAsString, streamId.toString())
     expect(isRight(result)).toEqual(true)
