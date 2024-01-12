@@ -787,6 +787,11 @@ describe('_registerRunningState', () => {
       ...state$.value,
       anchorStatus: AnchorStatus.PROCESSING,
     })
+    state$.next({
+      ...state$.value,
+      anchorStatus: AnchorStatus.REPLACED,
+    })
+    // Multiple updates that do not change a stream log, still single emission
     expect(emittedDocuments.length).toEqual(1)
     subscription.unsubscribe()
   })
