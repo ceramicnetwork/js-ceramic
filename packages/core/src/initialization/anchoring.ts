@@ -1,4 +1,4 @@
-import { type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import { CeramicSigner, type DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
 import type { CeramicConfig } from '../ceramic.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
@@ -95,11 +95,12 @@ export function makeAnchorServiceAuth(
   authMethod: string | undefined,
   anchorServiceUrl: string,
   network: Networks,
-  logger: DiagnosticsLogger
+  logger: DiagnosticsLogger,
+  signer: CeramicSigner
 ): DIDAnchorServiceAuth | null {
   if (authMethod) {
     try {
-      return new DIDAnchorServiceAuth(anchorServiceUrl, logger)
+      return new DIDAnchorServiceAuth(anchorServiceUrl, logger, signer)
     } catch (error) {
       throw new Error(`DID auth method for anchor service failed to instantiate`)
     }
@@ -117,7 +118,8 @@ export function makeAnchorService(
   config: CeramicConfig,
   ethereumRpcUrl: string | undefined,
   network: Networks,
-  logger: DiagnosticsLogger
+  logger: DiagnosticsLogger,
+  signer: CeramicSigner
 ): AnchorService {
   if (network === Networks.INMEMORY) {
     return new InMemoryAnchorService(config as any, logger)
@@ -128,7 +130,8 @@ export function makeAnchorService(
       config.anchorServiceAuthMethod,
       anchorServiceUrl,
       network,
-      logger
+      logger,
+      signer
     )
     if (anchorServiceAuth) {
       return new AuthenticatedEthereumAnchorService(

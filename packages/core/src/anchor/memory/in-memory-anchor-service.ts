@@ -1,4 +1,4 @@
-import type { AnchorEvent, CeramicApi } from '@ceramicnetwork/common'
+import type { AnchorEvent, CeramicSigner } from '@ceramicnetwork/common'
 import { type DiagnosticsLogger } from '@ceramicnetwork/common'
 import { type CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
@@ -7,6 +7,7 @@ import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../ancho
 import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import { InMemoryCAS } from './in-memory-cas.js'
+import { CID } from 'multiformats'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
@@ -32,6 +33,7 @@ type InMemoryAnchorConfig = {
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 export class InMemoryAnchorService implements AnchorService {
+  #signer?: CeramicSigner
   readonly #cas: InMemoryCAS
   readonly #logger: DiagnosticsLogger
   readonly #enableAnchorPollingLoop: boolean
@@ -105,12 +107,10 @@ export class InMemoryAnchorService implements AnchorService {
   }
 
   /**
-   * Set Ceramic API instance
-   *
-   * @param ceramic - Ceramic API used for various purposes
+   * @inheritDoc
    */
-  set ceramic(ceramic: CeramicApi) {
-    // Do Nothing
+  set signer(signer: CeramicSigner) {
+    this.#signer = signer
   }
 
   /**

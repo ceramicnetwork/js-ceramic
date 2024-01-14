@@ -3,11 +3,11 @@ import {
   AnchorStatus,
   CommitData,
   CommitType,
-  Context,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
   StreamHandler,
+  StreamReaderWriter,
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -69,12 +69,12 @@ export class ModelHandler implements StreamHandler<Model> {
   /**
    * Applies commit (genesis|signed|anchor)
    * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param context - Ceramic context
+   * @param context - Interface to read and write data to ceramic network
    * @param state - Document state
    */
   async applyCommit(
     commitData: CommitData,
-    context: Context,
+    context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
@@ -92,10 +92,10 @@ export class ModelHandler implements StreamHandler<Model> {
   /**
    * Applies genesis commit
    * @param commitData - Genesis commit
-   * @param context - Ceramic context
+   * @param context - Interface to read and write data from ceramic network
    * @private
    */
-  async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+  async _applyGenesis(commitData: CommitData, context: StreamReaderWriter): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (!isSigned) {
@@ -113,7 +113,7 @@ export class ModelHandler implements StreamHandler<Model> {
 
     await SignatureUtils.verifyCommitSignature(
       commitData,
-      context.did,
+      context.signer,
       controller,
       modelStreamID,
       streamId

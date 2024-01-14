@@ -121,7 +121,7 @@ describe('#load', () => {
 
   test('Sync pinned stream first time loaded from state store', async () => {
     const content = { foo: 'bar' }
-    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
+    const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamId = new StreamID('tile', genesisCid)
     const streamState = {
@@ -170,7 +170,7 @@ describe('#load', () => {
 
   test('Pinning a stream prevents it from needing to be synced', async () => {
     const content = { foo: 'bar' }
-    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
+    const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamId = new StreamID('tile', genesisCid)
     const syncSpy = jest.spyOn(repository, '_sync')
@@ -259,7 +259,7 @@ describe('#load', () => {
       expect(commit1).toEqual(stream.anchorCommitIds[0])
 
       const newContent = { abc: 321, def: 456, gh: 987 }
-      const updateRec = await stream.makeCommit(ceramic, newContent)
+      const updateRec = await stream.makeCommit(ceramic.signer, newContent)
       await ceramic.repository.applyCommit(streamState.id, updateRec, {
         anchor: true,
         publish: false,
@@ -284,7 +284,7 @@ describe('#load', () => {
 
       // Apply a final commit that does not get anchored
       const finalContent = { foo: 'bar' }
-      const updateRec2 = await stream.makeCommit(ceramic, finalContent)
+      const updateRec2 = await stream.makeCommit(ceramic.signer, finalContent)
       await ceramic.repository.applyCommit(streamState.id, updateRec2, {
         anchor: true,
         publish: false,
@@ -429,7 +429,7 @@ describe('#load', () => {
       const streamState = await ceramic.repository.load(stream.id, {})
       // Provide a new commit that the repository doesn't currently know about
       const newContent = { abc: 321, def: 456, gh: 987 }
-      const updateCommit = await stream.makeCommit(ceramic, newContent)
+      const updateCommit = await stream.makeCommit(ceramic.signer, newContent)
       const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
       const futureCommitID = CommitID.make(stream.id, futureCommitCID)
 
@@ -461,7 +461,7 @@ describe('#load', () => {
       const tipPreUpdate = stream1.tip
 
       const newContent = { abc: 321, def: 456, gh: 987 }
-      let updateRec = await stream1.makeCommit(ceramic, newContent)
+      let updateRec = await stream1.makeCommit(ceramic.signer, newContent)
       await ceramic.repository.applyCommit(streamState1.id, updateRec, {
         anchor: true,
         publish: false,
@@ -488,7 +488,7 @@ describe('#load', () => {
         ceramic.repository.updates$
       )
       stream2.subscribe()
-      updateRec = await stream2.makeCommit(ceramic, conflictingNewContent)
+      updateRec = await stream2.makeCommit(ceramic.signer, conflictingNewContent)
       await ceramic.repository.applyCommit(state$.id, updateRec, {
         anchor: true,
         publish: false,

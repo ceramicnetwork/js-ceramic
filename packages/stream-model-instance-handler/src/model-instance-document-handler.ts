@@ -7,14 +7,14 @@ import {
 } from '@ceramicnetwork/stream-model-instance'
 import {
   AnchorStatus,
-  CeramicApi,
   CommitData,
   CommitType,
-  Context,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
   StreamHandler,
+  StreamReader,
+  StreamReaderWriter,
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -55,12 +55,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   /**
    * Applies commit (genesis|signed|anchor)
    * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param context - Ceramic context
+   * @param context - Interface to read and write data to ceramic network
    * @param state - Document state
    */
   async applyCommit(
     commitData: CommitData,
-    context: Context,
+    context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
@@ -81,7 +81,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * @param context - Ceramic context
    * @private
    */
-  async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+  async _applyGenesis(commitData: CommitData, context: StreamReaderWriter): Promise<StreamState> {
     const payload = commitData.commit
     const { controllers, model } = payload.header
     const controller = controllers[0]
@@ -105,7 +105,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (isSigned) {
       await SignatureUtils.verifyCommitSignature(
         commitData,
-        context.did,
+        context.signer,
         controller,
         modelStreamID,
         streamId
@@ -114,9 +114,9 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       throw Error('ModelInstanceDocument genesis commit with content must be signed')
     }
 
-    const modelStream = await context.api.loadStream<Model>(metadata.model)
+    const modelStream = await context.loadStream<Model>(metadata.model)
     this._validateModel(modelStream)
-    await this._validateContent(context.api, modelStream, payload.data, true)
+    await this._validateContent(context, modelStream, payload.data, true)
     await this._validateHeader(modelStream, payload.header)
 
     return {
@@ -133,13 +133,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    * Applies signed commit
    * @param commitData - Signed commit
    * @param state - Document state
-   * @param context - Ceramic context
+   * @param context - Interface to read and write to ceramic network
    * @private
    */
   async _applySigned(
     commitData: CommitData,
     state: StreamState,
-    context: Context
+    context: StreamReaderWriter
   ): Promise<StreamState> {
     // Retrieve the payload
     const payload = commitData.commit
@@ -150,7 +150,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const controller = metadata.controllers[0]
     const model = metadata.model
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
+    await SignatureUtils.verifyCommitSignature(
+      commitData,
+      context.signer,
+      controller,
+      model,
+      streamId
+    )
 
     if (payload.header) {
       throw new Error(
@@ -162,8 +168,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     const oldContent = state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    const modelStream = await context.api.loadStream<Model>(metadata.model)
-    await this._validateContent(context.api, modelStream, newContent, false)
+    const modelStream = await context.loadStream<Model>(metadata.model)
+    await this._validateContent(context, modelStream, newContent, false)
 
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
@@ -198,14 +204,14 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
   /**
    * Validates content against the schema of the model stream with given stream id
-   * @param ceramic - Ceramic handle that can be used to load Streams
+   * @param ceramic - Interface for reading streams from ceramic network
    * @param model - The model that this ModelInstanceDocument belongs to
    * @param content - content to validate
    * @param genesis - whether the commit being applied is a genesis commit
    * @private
    */
   async _validateContent(
-    ceramic: CeramicApi,
+    ceramic: StreamReader,
     model: Model,
     content: any,
     genesis: boolean
@@ -231,7 +237,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     await this._validateRelationsContent(ceramic, model, content)
   }
 
-  async _validateRelationsContent(ceramic: CeramicApi, model: Model, content: any) {
+  async _validateRelationsContent(ceramic: StreamReader, model: Model, content: any) {
     if (!model.content.relations) {
       return
     }

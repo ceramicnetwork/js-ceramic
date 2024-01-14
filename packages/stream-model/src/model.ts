@@ -5,13 +5,13 @@ import {
   StreamConstructor,
   StreamStatic,
   SyncOptions,
-  CeramicCommit,
   GenesisCommit,
-  CeramicApi,
   SignedCommitContainer,
   CeramicSigner,
   GenesisHeader,
-  CeramicCoreApi,
+  StreamReader,
+  StreamWriter,
+  IntoSigner,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
@@ -23,22 +23,20 @@ import { decode } from 'codeco'
 
 import { ModelDefinition, type ModelMetadata, ModelRelationsDefinitionV2 } from './codecs.js'
 
-export type LoaderApi = CeramicApi | CeramicCoreApi
-
 export type LoadingInterfaceImplements = Record<string, Promise<Array<string>>>
 
 /**
  * Load a model and validate it is an interface, then return the interfaces it implements
  *
- * @param loader LoaderApi
+ * @param reader - Interface for reading streams from ceramic network
  * @param modelID string
  * @returns Promise<Array<string>>
  */
 export async function loadInterfaceImplements(
-  loader: LoaderApi,
+  reader: StreamReader,
   modelID: string
 ): Promise<Array<string>> {
-  const model = await Model.load(loader, modelID)
+  const model = await Model.load(reader, modelID)
   if (model.content.version === '1.0' || !model.content.interface) {
     throw new Error(`Model ${modelID} is not an interface`)
   }
@@ -49,21 +47,21 @@ export async function loadInterfaceImplements(
  * Recursively load all the interfaces implemented by the given interfaces input.
  * The output will contain duplicate entries if interfaces are implemented multiple times.
  *
- * @param loader LoaderApi
+ * @param reader - Interface for reading streams from ceramic network
  * @param interfaces Array<string>
  * @param loading LoadingInterfaceImplements
  * @returns Promise<Array<string>>
  */
 export async function loadAllModelInterfaces(
-  loader: LoaderApi,
+  reader: StreamReader,
   interfaces: Array<string>,
   loading: LoadingInterfaceImplements = {}
 ): Promise<Array<string>> {
   // The same interfaces could be implemented multiple times so we synchronously keep track of their loading
   const toLoad = interfaces.map((modelID) => {
     if (loading[modelID] == null) {
-      loading[modelID] = loadInterfaceImplements(loader, modelID).then((ownImplements) => {
-        return loadAllModelInterfaces(loader, ownImplements, loading).then((subImplements) => {
+      loading[modelID] = loadInterfaceImplements(reader, modelID).then((ownImplements) => {
+        return loadAllModelInterfaces(reader, ownImplements, loading).then((subImplements) => {
           return [...ownImplements, ...subImplements]
         })
       })
@@ -95,18 +93,6 @@ export interface ModelMetadataArgs {
 }
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
-
-async function _ensureAuthenticated(signer: CeramicSigner) {
-  if (signer.did == null) {
-    throw new Error('No DID provided')
-  }
-  if (!signer.did.authenticated) {
-    await signer.did.authenticate()
-    if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
-    }
-  }
-}
 
 async function throwReadOnlyError(): Promise<void> {
   throw new Error(
@@ -157,12 +143,12 @@ export class Model extends Stream {
 
   /**
    * Creates a Model.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface for writing models to ceramic network
    * @param content - contents of the model to create
    * @param metadata
    */
   static async create(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     content: ModelDefinition,
     metadata?: ModelMetadataArgs
   ): Promise<Model> {
@@ -174,7 +160,7 @@ export class Model extends Stream {
       anchor: true,
       sync: SyncOptions.NEVER_SYNC,
     }
-    const commit = await Model._makeGenesis(ceramic, content, metadata)
+    const commit = await Model._makeGenesis(ceramic.signer, content, metadata)
     const model = await ceramic.createStreamFromGenesis<Model>(Model.STREAM_TYPE_ID, commit, opts)
     return model
   }
@@ -225,12 +211,12 @@ export class Model extends Stream {
 
   /**
    * Loads a Model from a given StreamID
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface for reading streams from ceramic network
    * @param streamId - StreamID to load.  Must correspond to a Model
    * @param opts - Additional options
    */
   static async load(
-    ceramic: LoaderApi,
+    ceramic: StreamReader,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<Model> {
@@ -251,17 +237,17 @@ export class Model extends Stream {
 
   /**
    * Create genesis commit.
-   * @param signer - Object containing the DID making (and signing) the commit
+   * @param context - Object containing the DID making (and signing) the commit
    * @param content - genesis content
    * @param metadata - genesis metadata
    */
   private static async _makeGenesis(
-    signer: CeramicSigner,
+    context: IntoSigner,
     content: Partial<ModelDefinition>,
     metadata?: ModelMetadataArgs
   ): Promise<SignedCommitContainer> {
-    const commit: GenesisCommit = await this._makeRawGenesis(signer, content, metadata)
-    return Model._signDagJWS(signer, commit)
+    const commit: GenesisCommit = await this._makeRawGenesis(context.signer, content, metadata)
+    return context.signer.createDagJWS(commit)
   }
 
   /**
@@ -276,15 +262,10 @@ export class Model extends Stream {
       throw new Error(`Genesis content cannot be null`)
     }
 
-    if (!metadata || !metadata.controller) {
-      if (signer.did) {
-        await _ensureAuthenticated(signer)
-        // When did has a parent, it has a capability, and the did issuer (parent) of the capability
-        // is the stream controller
-        metadata = { controller: signer.did.hasParent ? signer.did.parent : signer.did.id }
-      } else {
-        throw new Error('No controller specified')
-      }
+    if (!metadata) {
+      metadata = { controller: await signer.asController() }
+    } else if (!metadata.controller) {
+      metadata.controller = await signer.asController()
     }
 
     const header: GenesisHeader = {
@@ -306,19 +287,5 @@ export class Model extends Stream {
 
   get isReadOnly(): boolean {
     return this._isReadOnly
-  }
-
-  /**
-   * Sign a Model commit with the currently authenticated DID.
-   * @param signer - Object containing the DID to use to sign the commit
-   * @param commit - Commit to be signed
-   * @private
-   */
-  private static async _signDagJWS(
-    signer: CeramicSigner,
-    commit: CeramicCommit
-  ): Promise<SignedCommitContainer> {
-    await _ensureAuthenticated(signer)
-    return signer.did.createDagJWS(commit)
   }
 }

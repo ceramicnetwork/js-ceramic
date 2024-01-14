@@ -29,7 +29,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
 
   test('No pubsub response', async () => {
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
@@ -49,7 +49,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
@@ -84,7 +84,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
@@ -119,7 +119,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
