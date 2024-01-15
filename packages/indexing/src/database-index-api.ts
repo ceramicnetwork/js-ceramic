@@ -36,6 +36,7 @@ export interface IndexStreamArgs {
   readonly tip: CID
   readonly lastAnchor: Date | null
   readonly firstAnchor: Date | null
+  readonly index?: boolean
 }
 
 export type IndicesRecord = Record<string, FieldsIndex>
@@ -276,18 +277,25 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * This method inserts the stream if it is not present in the index, or updates
-   * the 'content' if the stream already exists in the index.
+   * This method inserts the stream if it is not present in the index, updates
+   * the 'content' if the stream already exists in the index, or deletes the
+   * stream from the index if the 'index' arg is set to false.
    * @param indexingArgs
    */
   async indexStream(
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
-    const indexedData = this.getIndexedData(indexingArgs)
-    const toMerge = cloneDeep(indexedData)
-    delete toMerge['created_at']
-    await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
+    if (indexingArgs.index === false) {
+      await this.dbConnection(tableName)
+        .where('stream_id', indexingArgs.streamID.toString())
+        .delete()
+    } else {
+      const indexedData = this.getIndexedData(indexingArgs)
+      const toMerge = cloneDeep(indexedData)
+      delete toMerge['created_at']
+      await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
+    }
   }
 
   /**

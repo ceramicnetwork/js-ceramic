@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import cloneDeep from 'lodash.clonedeep'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
@@ -153,11 +152,18 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
 
     if (payload.header) {
-      throw new Error(
-        `Updating metadata for ModelInstanceDocument Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
-          state.metadata
-        )} to ${JSON.stringify(payload.header)}\``
-      )
+      const { index, ...others } = payload.header
+      const otherKeys = Object.keys(others)
+      if (otherKeys.length) {
+        throw new Error(
+          `Unsupported metadata changes for ModelInstanceDocument Stream ${streamId}: ${otherKeys.join(
+            ','
+          )}. Only the index argument can be changed.`
+        )
+      }
+      if (index != null) {
+        state.metadata.index = index
+      }
     }
 
     const oldContent = state.content
