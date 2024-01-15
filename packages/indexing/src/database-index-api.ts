@@ -182,7 +182,11 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         const allIndices = Object.values({ ...existingIndices, ...addedIndices })
         indexedModels[id] = { streamID: modelData.model, indices: allIndices }
         // Update indices to add record only if there is any missing index
-        createIndices[id] = Object.values(addedIndices)
+        const addedIndicesList = Object.values(addedIndices)
+        if (addedIndicesList.length) {
+          this.logger.warn(`Adding indices to already indexed model: ${id}`)
+          createIndices[id] = addedIndicesList
+        }
       }
 
       modelsToIndex.push({ ...modelData, indices: indexedModels[id]?.indices })

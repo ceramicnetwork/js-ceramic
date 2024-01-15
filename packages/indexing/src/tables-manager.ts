@@ -282,7 +282,9 @@ export class PostgresTablesManager extends TablesManager {
       await createPostgresModelTable(this.dataSource, tableName)
     }
 
-    await createPostgresIndices(this.dataSource, tableName, createIndices)
+    if (createIndices.length) {
+      await createPostgresIndices(this.dataSource, tableName, createIndices)
+    }
   }
 
   /**
@@ -363,7 +365,9 @@ export class SqliteTablesManager extends TablesManager {
       await createSqliteModelTable(this.dataSource, tableName)
     }
 
-    await createSqliteIndices(this.dataSource, tableName, createIndices)
+    if (createIndices.length) {
+      await createSqliteIndices(this.dataSource, tableName, createIndices)
+    }
   }
 
   /**
