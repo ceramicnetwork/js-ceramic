@@ -7,7 +7,6 @@ import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../ancho
 import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import { InMemoryCAS } from './in-memory-cas.js'
-import { CID } from 'multiformats'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
@@ -127,6 +126,10 @@ export class InMemoryAnchorService implements AnchorService {
       cid: tip,
       message: 'Sending anchoring request',
     }
+  }
+
+  async disableAnchorProcessingLoop() {
+    return this.#loop.stop()
   }
 
   async close(): Promise<void> {

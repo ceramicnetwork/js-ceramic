@@ -1,9 +1,6 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
-import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
-import * as KeyDidResolver from 'key-did-resolver'
-import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import type { DID } from 'dids'
 import {
   CeramicApi,
@@ -12,50 +9,26 @@ import {
   Context,
   IpfsApi,
   SignedCommitContainer,
-  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '../tile-document-handler.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import cloneDeep from 'lodash.clonedeep'
-import * as sha256 from '@stablelib/sha256'
-import * as uint8arrays from 'uint8arrays'
+import {
+  DidTestUtils,
+  FAKE_CID_1,
+  FAKE_CID_2,
+  FAKE_CID_3,
+  FAKE_CID_4,
+} from '@ceramicnetwork/did-test-utils'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
-jest.unstable_mockModule('did-jwt', () => {
-  return {
-    // TODO - We should test for when this function throws as well
-    // Mock: Blindly accept a signature
-    verifyJWS: (): void => {
-      return
-    },
-    // And these functions are required for the test to run ¯\_(ツ)_/¯
-    resolveX25519Encrypters: () => {
-      return []
-    },
-    createJWE: () => {
-      return {}
-    },
-  }
-})
-
-const hash = (data: string): CID =>
-  CID.create(
-    1,
-    0x12,
-    decodeMultiHash(
-      uint8arrays.fromString('1220' + sha256.hash(uint8arrays.fromString(data)), 'base16')
-    )
-  )
-
-const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
+const DID_ID = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
 
 const COMMITS = {
   genesis: {
     header: {
       tags: ['3id'],
-      controllers: ['did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'],
+      controllers: [DID_ID],
     },
     data: { publicKeys: { test: '0xabc' } },
   },
@@ -78,7 +51,7 @@ const COMMITS = {
         },
       },
       header: {
-        controllers: ['did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'],
+        controllers: [DID_ID],
         tags: ['3id'],
       },
     },
@@ -117,33 +90,13 @@ const COMMITS = {
   },
 }
 
-const serialize = (data: any): any => {
-  if (Array.isArray(data)) {
-    const serialized = []
-    for (const item of data) {
-      serialized.push(serialize(item))
-    }
-    return serialized
-  }
-  const cid = CID.asCID(data)
-  if (!cid && typeof data === 'object') {
-    const serialized: Record<string, any> = {}
-    for (const prop in data) {
-      serialized[prop] = serialize(data[prop])
-    }
-    return serialized
-  }
-  if (cid) {
-    return data.toString()
-  }
-  return data
-}
-
 let did: DID
 let tileDocumentHandler: TileDocumentHandler
 let context: Context
 
-beforeAll(async () => {
+beforeEach(async () => {
+  jest.resetAllMocks()
+
   const recs: Record<string, any> = {}
   const ipfs = {
     dag: {
@@ -154,7 +107,7 @@ beforeAll(async () => {
         }
         // stringify as a way of doing deep copy
         const clone = cloneDeep(rec)
-        const c = hash(JSON.stringify(clone))
+        const c = DidTestUtils.hash(JSON.stringify(clone))
         recs[c.toString()] = { value: clone }
         return c
       },
@@ -164,30 +117,7 @@ beforeAll(async () => {
     },
   } as IpfsApi
 
-  const threeIdResolver = {
-    '3': async (did) => ({
-      didResolutionMetadata: { contentType: 'application/did+json' },
-      didDocument: wrapDocument(
-        {
-          publicKeys: {
-            signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-            encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-          },
-        },
-        did
-      ),
-      didDocumentMetadata: {},
-    }),
-  }
-
-  const { DID } = await import('dids')
-  const keyDidResolver = KeyDidResolver.getResolver()
-  did = new DID({
-    resolver: {
-      ...threeIdResolver,
-      ...keyDidResolver,
-    },
-  })
+  did = DidTestUtils.generateDID(DID_ID)
   did.createJWS = jest.fn(async () => {
     // fake jws
     return {
@@ -201,13 +131,7 @@ beforeAll(async () => {
       ],
     }
   })
-  ;(did as any)._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
-  const api = {
-    getSupportedChains: jest.fn(async () => {
-      return ['fakechain:123']
-    }),
-    did,
-  }
+  const api = DidTestUtils.apiForDid(did)
 
   context = {
     did,
@@ -215,9 +139,7 @@ beforeAll(async () => {
     anchorService: null,
     api: api as unknown as CeramicApi,
   }
-})
 
-beforeEach(async () => {
   tileDocumentHandler = new TileDocumentHandler()
 })
 
@@ -232,7 +154,10 @@ it('makes genesis commit correctly', async () => {
   const { jws, linkedBlock } = commit
 
   const payload = dagCBOR.decode(linkedBlock)
-  const generated = { jws: serialize(jws), linkedBlock: serialize(payload) }
+  const generated = {
+    jws: DidTestUtils.serialize(jws),
+    linkedBlock: DidTestUtils.serialize(payload),
+  }
 
   // Add the 'unique' header field to the data used to generate the expected genesis commit
   const genesis = cloneDeep(COMMITS.genesis)
@@ -243,12 +168,16 @@ it('makes genesis commit correctly', async () => {
 
   const { jws: eJws, linkedBlock: eLinkedBlock } = expected
   const ePayload = dagCBOR.decode(eLinkedBlock)
-  const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
+  const signed = {
+    jws: DidTestUtils.serialize(eJws),
+    linkedBlock: DidTestUtils.serialize(ePayload),
+  }
 
-  expect(generated).toEqual(serialize(signed))
+  expect(generated).toEqual(DidTestUtils.serialize(signed))
 })
 
 it('applies genesis commit correctly', async () => {
+  DidTestUtils.disableJwsVerification(context.did)
   const commit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
@@ -270,6 +199,7 @@ it('applies genesis commit correctly', async () => {
 })
 
 it('makes signed commit correctly', async () => {
+  DidTestUtils.disableJwsVerification(context.did)
   await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
   await context.ipfs.dag.put(
     COMMITS.genesisGenerated.linkedBlock,
@@ -296,10 +226,13 @@ it('makes signed commit correctly', async () => {
   )) as SignedCommitContainer
   const { jws: rJws, linkedBlock: rLinkedBlock } = commit
   const rPayload = dagCBOR.decode(rLinkedBlock)
-  expect({ jws: serialize(rJws), payload: serialize(rPayload) }).toEqual(COMMITS.r1.commit)
+  expect({ jws: DidTestUtils.serialize(rJws), payload: DidTestUtils.serialize(rPayload) }).toEqual(
+    COMMITS.r1.commit
+  )
 })
 
 it('applies signed commit correctly', async () => {
+  DidTestUtils.disableJwsVerification(context.did)
   const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
@@ -343,7 +276,7 @@ it('applies signed commit correctly', async () => {
   expect(state).toMatchSnapshot()
 })
 
-it('throws error if commit signed by wrong DID', async () => {
+it('throws error if commit signed by DID not matching controller', async () => {
   const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: ['did:3:fake'],
     tags: ['3id'],
@@ -359,12 +292,18 @@ it('throws error if commit signed by wrong DID', async () => {
     commit: payload,
     envelope: genesisCommit.jws,
   }
+
+  context.did.verifyJWS = jest.fn(async () => {
+    return Promise.reject('/invalid_jws: not a valid verificationMethod for issuer/')
+  })
+
   await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
     /invalid_jws: not a valid verificationMethod for issuer/
   )
 })
 
 it('applies anchor commit correctly', async () => {
+  DidTestUtils.disableJwsVerification(context.did)
   const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],

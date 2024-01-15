@@ -134,6 +134,7 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   async close(): Promise<void> {
+    this.#logger.debug(`Closing EthereumAnchorService`)
     await this.#cas.close()
     await this.#store.close()
     await this.#loop.stop()

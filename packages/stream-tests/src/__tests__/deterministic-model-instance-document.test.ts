@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,

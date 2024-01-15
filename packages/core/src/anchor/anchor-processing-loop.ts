@@ -30,17 +30,48 @@ export class AnchorProcessingLoop {
     anchorStoreQueue: NamedTaskQueue
   ) {
     this.#anchorStoreQueue = anchorStoreQueue
-    this.#loop = new ProcessingLoop(store.infiniteList(batchSize), (streamId) =>
+    this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), (streamId) =>
       this.#anchorStoreQueue.run(streamId.toString(), async () => {
-        const entry = await store.load(streamId)
-        const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
-          logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
-          const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
-          return cas.create(new AnchorRequestCarFileReader(requestCAR))
-        })
-        const isTerminal = await eventHandler.handle(event)
-        if (isTerminal) {
-          await store.remove(streamId)
+        try {
+          logger.debug(
+            `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
+          )
+          const entry = await store.load(streamId)
+          logger.debug(`Pending anchor metadata for Stream ${streamId} loaded successfully`)
+          logger.debug(
+            `Polling CAS for anchor status for commit CID ${entry.cid} of Stream ${streamId}`
+          )
+          const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
+            logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
+            const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
+            const creationResult = await cas.create(new AnchorRequestCarFileReader(requestCAR))
+            logger.debug(
+              `Successfully created request on the CAS for commit CID ${entry.cid} of Stream ${streamId}`
+            )
+            return creationResult
+          })
+          logger.debug(
+            `Anchor status for commit CID ${entry.cid} of Stream ${streamId} polled successfully`
+          )
+          logger.debug(
+            `Handling anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId}`
+          )
+          const isTerminal = await eventHandler.handle(event)
+          logger.debug(
+            `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
+          )
+          if (isTerminal) {
+            logger.debug(`Removing entry from AnchorRequestStore for Stream ${streamId}`)
+            await store.remove(streamId)
+            logger.debug(
+              `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
+            )
+          }
+        } catch (err) {
+          logger.err(
+            `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
+          )
+          // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
         }
       })
     )

@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { IpfsApi, Page, StreamState, BaseQuery, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, Page, StreamState, BaseQuery } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,

@@ -4,10 +4,11 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { CeramicApi, CommitType, Context, TestUtils } from '@ceramicnetwork/common'
+import { CeramicApi, CommitType, Context } from '@ceramicnetwork/common'
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 import { AccountId } from 'caip'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const digest = (input: string) =>
   uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')

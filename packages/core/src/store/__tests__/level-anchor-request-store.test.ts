@@ -2,11 +2,11 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { LevelDbStore } from '../level-db-store.js'
 import {
   CeramicApi,
+  CommitType,
   DiagnosticsLogger,
   GenesisCommit,
   IpfsApi,
   Networks,
-  TestUtils,
 } from '@ceramicnetwork/common'
 import {
   AnchorRequestData,
@@ -22,6 +22,10 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import first from 'it-first'
 import all from 'it-all'
 import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
+import { Utils } from '../../utils.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+
+const BATCH_TIMEOUT = 100
 
 const MODEL_CONTENT_1: ModelDefinition = {
   name: 'MyModel 1',
@@ -75,6 +79,8 @@ const MODEL_CONTENT_3: ModelDefinition = {
 }
 
 describe('LevelDB-backed AnchorRequestStore state store', () => {
+  jest.setTimeout(1000 * 30)
+
   let tmpFolder: any
   let levelStore: LevelDbStore
   let anchorRequestStore: AnchorRequestStore
@@ -88,6 +94,18 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   let streamId3: StreamID
   let genesisCommit3: GenesisCommit
 
+  // use Utils to load the genesis commit for a stream so it converts CIDs for us
+  // and we avoid any issues with one having `Symbol(Symbol.toStringTag): "CID"` and one not
+  // because the getter function isn't copied by _.cloneDeep.
+  async function loadGenesisCommit(
+    ceramic: CeramicApi,
+    streamId: StreamID
+  ): Promise<GenesisCommit> {
+    const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
+    expect(commit.type).toEqual(CommitType.GENESIS)
+    return commit.commit as GenesisCommit
+  }
+
   beforeAll(async () => {
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
@@ -95,41 +113,26 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     const model1 = await Model.create(ceramic, MODEL_CONTENT_1)
     streamId1 = model1.id
-    genesisCommit1 = await ceramic.dispatcher.retrieveCommit(
-      (
-        await ceramic.loadStreamCommits(model1.id)
-      )[0].cid,
-      streamId1
-    )
+    genesisCommit1 = await loadGenesisCommit(ceramic, streamId1)
 
     const model2 = await Model.create(ceramic, MODEL_CONTENT_2)
     streamId2 = model2.id
-    genesisCommit2 = await ceramic.dispatcher.retrieveCommit(
-      (
-        await ceramic.loadStreamCommits(model2.id)
-      )[0].cid,
-      streamId2
-    )
+    genesisCommit2 = await loadGenesisCommit(ceramic, streamId2)
 
     const model3 = await Model.create(ceramic, MODEL_CONTENT_3)
     streamId3 = model3.id
-    genesisCommit3 = await ceramic.dispatcher.retrieveCommit(
-      (
-        await ceramic.loadStreamCommits(model3.id)
-      )[0].cid,
-      streamId3
-    )
+    genesisCommit3 = await loadGenesisCommit(ceramic, streamId3)
   })
 
   afterAll(async () => {
     await ceramic.close()
-    await ipfs.stop
+    await ipfs.stop()
   })
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     levelStore = new LevelDbStore(logger, tmpFolder.path, 'fakeNetwork')
-    anchorRequestStore = new AnchorRequestStore()
+    anchorRequestStore = new AnchorRequestStore(logger, BATCH_TIMEOUT)
     await anchorRequestStore.open(levelStore)
 
     // add a small delay after creating the leveldb instance before trying to use it.
@@ -137,6 +140,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   })
 
   afterEach(async () => {
+    jest.restoreAllMocks()
     await anchorRequestStore.close()
     await levelStore.close()
     await tmpFolder.cleanup()
@@ -243,6 +247,120 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     const retrievedWithLimit = await first(anchorRequestStore.list())
     expect(retrievedWithLimit).toEqual(sortedParams.slice(0, 1))
+  })
+
+  test('#infiniteList', async () => {
+    // Setup data in the AnchorRequestStore
+    const anchorRequestData1: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit1,
+    }
+    const anchorRequestData2: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit2,
+    }
+    const anchorRequestData3: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit3,
+    }
+    await anchorRequestStore.save(streamId1, anchorRequestData1)
+    await anchorRequestStore.save(streamId2, anchorRequestData2)
+    await anchorRequestStore.save(streamId3, anchorRequestData3)
+
+    // Get sorted list of StreamID keys in the AnchorRequestStore
+    const sortByKeyStreamId = (
+      a: AnchorRequestStoreListResult,
+      b: AnchorRequestStoreListResult
+    ) => {
+      return a.key.toString().localeCompare(b.key.toString())
+    }
+    const sortedParams = [
+      { key: streamId1, value: anchorRequestData1 },
+      { key: streamId2, value: anchorRequestData2 },
+      { key: streamId3, value: anchorRequestData3 },
+    ].sort(sortByKeyStreamId)
+    const sortedStreamIds = sortedParams.map((param) => param.key.toString())
+
+    // Create infinite iterator over the AnchorRequestStore
+    const generator = anchorRequestStore.infiniteList(1, 10)
+
+    // List should repeat indefinitely
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+
+    // Generator still not finished
+    expect((await generator.next()).done).toBeFalsy()
+
+    // Close the store
+    await anchorRequestStore.close()
+
+    // Now the generator is done.
+    expect((await generator.next()).done).toBeTruthy()
+  })
+
+  test('#infiniteList with timeout', async () => {
+    // Setup data in the AnchorRequestStore
+    const anchorRequestData1: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit1,
+    }
+    const anchorRequestData2: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit2,
+    }
+    const anchorRequestData3: AnchorRequestData = {
+      cid: TestUtils.randomCID(),
+      timestamp: Date.now(),
+      genesis: genesisCommit3,
+    }
+    await anchorRequestStore.save(streamId1, anchorRequestData1)
+    await anchorRequestStore.save(streamId2, anchorRequestData2)
+    await anchorRequestStore.save(streamId3, anchorRequestData3)
+
+    // Get sorted list of StreamID keys in the AnchorRequestStore
+    const sortByKeyStreamId = (
+      a: AnchorRequestStoreListResult,
+      b: AnchorRequestStoreListResult
+    ) => {
+      return a.key.toString().localeCompare(b.key.toString())
+    }
+    const sortedParams = [
+      { key: streamId1, value: anchorRequestData1 },
+      { key: streamId2, value: anchorRequestData2 },
+      { key: streamId3, value: anchorRequestData3 },
+    ].sort(sortByKeyStreamId)
+    const sortedStreamIds = sortedParams.map((param) => param.key.toString())
+
+    // Make it so the first batch will timeout, but subsequent batches will succeed
+    const findOriginal = anchorRequestStore.store.find.bind(anchorRequestStore.store)
+    const findSpy = jest.spyOn(anchorRequestStore.store, 'find')
+    findSpy.mockImplementationOnce(async (params) => {
+      await TestUtils.delay(BATCH_TIMEOUT * 10)
+      return findOriginal(params)
+    })
+
+    // Create infinite iterator over the AnchorRequestStore
+    const generator = anchorRequestStore.infiniteList(1, 10)
+
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
+    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+
+    // It takes two tries to get the first batch
+    expect(findSpy).toHaveBeenCalledTimes(4)
+
+    // Close the store
+    await anchorRequestStore.close()
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {

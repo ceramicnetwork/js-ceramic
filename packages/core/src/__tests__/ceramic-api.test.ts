@@ -11,13 +11,8 @@ import {
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import {
-  AnchorStatus,
-  IpfsApi,
-  StreamUtils,
-  TestUtils,
-  LoggerProvider,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, IpfsApi, StreamUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -25,6 +20,7 @@ import { createCeramic } from './create-ceramic.js'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import type { AddOperation } from 'fast-json-patch'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 
 /**
  * Generates string of particular size in bytes
@@ -113,6 +109,7 @@ describe('Ceramic API', () => {
     })
 
     afterEach(async () => {
+      jest.restoreAllMocks()
       await ceramic.close()
       await tmpFolder.cleanup().catch((error) => {
         logger.err('Error while cleaning up tmpFolder:' + error.message)
@@ -123,7 +120,7 @@ describe('Ceramic API', () => {
       const streamOg = await TileDocument.create<any>(ceramic, { test: 321 })
 
       // wait for anchor (new commit)
-      await TestUtils.anchorUpdate(ceramic, streamOg)
+      await CoreUtils.anchorUpdate(ceramic, streamOg)
 
       expect(streamOg.state.log.length).toEqual(2)
       expect(streamOg.content).toEqual({ test: 321 })
@@ -134,7 +131,7 @@ describe('Ceramic API', () => {
       await streamOg.update({ test: 'abcde' })
 
       // wait for anchor (new commit)
-      await TestUtils.anchorUpdate(ceramic, streamOg)
+      await CoreUtils.anchorUpdate(ceramic, streamOg)
 
       expect(streamOg.state.log.length).toEqual(4)
       expect(streamOg.content).toEqual({ test: 'abcde' })
@@ -178,7 +175,7 @@ describe('Ceramic API', () => {
 
       // Create an anchor commit that the original stream handle won't know about
       const streamCopy = await TileDocument.load(ceramic, streamOg.id)
-      await TestUtils.anchorUpdate(ceramic, streamCopy)
+      await CoreUtils.anchorUpdate(ceramic, streamCopy)
       expect(streamCopy.state.log.length).toEqual(2)
 
       // Do an update via the stale stream handle.  Its view of the log is out of date so its update
@@ -210,20 +207,24 @@ describe('Ceramic API', () => {
       const CONTENT1 = { myData: 1 }
       // TODO (NET-1614): Extend with targeted payload comparison
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
       const model = await Model.create(ceramic, MODEL_DEFINITION)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(2)
       await doc.replace(CONTENT1, { anchor: false })
       expect(doc.content).toEqual(CONTENT1)
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       addIndexSpy.mockRestore()
     })
 
@@ -231,10 +232,14 @@ describe('Ceramic API', () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)).rejects.toThrow(
         /which exceeds maximum size/
@@ -247,20 +252,26 @@ describe('Ceramic API', () => {
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(2)
       await doc.patch(CONTENT1, { anchor: false })
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      expect(addIndexSpy).toBeCalledTimes(4)
+      expect(addIndexSpy).toBeCalledTimes(3)
       addIndexSpy.mockRestore()
     })
 
@@ -269,17 +280,23 @@ describe('Ceramic API', () => {
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
       // there's an extra call to indexStreamIfNeeded every time the anchor state
       // is changed.
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(1)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(2)
       await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })
@@ -320,14 +337,14 @@ describe('Ceramic API', () => {
     it('can update schema and then assign to stream with now valid content', async () => {
       // Create stream with content that has type 'number'.
       const stream = await TileDocument.create(ceramic, { a: 1 })
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the stream created above.
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       // wait for anchor
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
+      await CoreUtils.anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Update the schema to expect a number, so now the original stream should conform to the new
@@ -336,12 +353,12 @@ describe('Ceramic API', () => {
       updatedSchema.additionalProperties.type = 'number'
       await schemaDoc.update(updatedSchema)
       // wait for anchor
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
+      await CoreUtils.anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the stream without error.
       await stream.update(stream.content, { schema: schemaDoc.commitId })
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.content).toEqual({ a: 1 })
 
       // Test that we can reload the stream without issue

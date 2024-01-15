@@ -1,13 +1,8 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
-import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
 import type { DID } from 'dids'
-import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
-import * as KeyDidResolver from 'key-did-resolver'
 import { ModelHandler } from '../model-handler.js'
-import * as uint8arrays from 'uint8arrays'
-import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
@@ -20,60 +15,14 @@ import {
   GenesisCommit,
   RawCommit,
 } from '@ceramicnetwork/common'
-import { parse as parseDidUrl } from 'did-resolver'
-
-jest.unstable_mockModule('did-jwt', () => {
-  return {
-    // TODO - We should test for when this function throws as well
-    // Mock: Blindly accept a signature
-    verifyJWS: (): void => {
-      return
-    },
-    // And these functions are required for the test to run ¯\_(ツ)_/¯
-    resolveX25519Encrypters: () => {
-      return []
-    },
-    createJWE: () => {
-      return {}
-    },
-  }
-})
-
-const hash = (data: string): CID => {
-  const body = uint8arrays.concat([
-    uint8arrays.fromString('1220', 'base16'),
-    sha256.hash(uint8arrays.fromString(data)),
-  ])
-  return CID.create(1, 0x12, decodeMultiHash(body))
-}
-
-const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
-const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
-
-const jwsForVersion0 = {
-  payload: 'bbbb',
-  signatures: [
-    {
-      protected:
-        'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9',
-      signature: 'cccc',
-    },
-  ],
-}
-
-const jwsForVersion1 = {
-  payload: 'bbbb',
-  signatures: [
-    {
-      protected:
-        'ewogICAgImtpZCI6ImRpZDozOmsydDZ3eWZzdTRwZzB0Mm40ajhtczNzMzN4c2dxamh0dG8wNG12cTh3NWEydjV4bzQ4aWR5ejM4bDd5ZGtpP3ZlcnNpb249MSNzaWduaW5nIgp9',
-      signature: 'cccc',
-    },
-  ],
-}
+import {
+  DidTestUtils,
+  FAKE_CID_1,
+  FAKE_CID_3,
+  FAKE_CID_4,
+  JWS_VERSION_0,
+  JWS_VERSION_1,
+} from '@ceramicnetwork/did-test-utils'
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
@@ -127,76 +76,6 @@ const CONTENT_WITH_INVALID_SCHEMA = {
   },
 }
 
-const ThreeIdResolver = {
-  '3': async (did) => ({
-    didResolutionMetadata: { contentType: 'application/did+json' },
-    didDocument: wrapDocument(
-      {
-        publicKeys: {
-          signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-          encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-        },
-      },
-      did
-    ),
-    didDocumentMetadata: {},
-  }),
-}
-
-const setDidToNotRotatedState = (did: DID) => {
-  const keyDidResolver = KeyDidResolver.getResolver()
-  did.setResolver({
-    ...keyDidResolver,
-    ...ThreeIdResolver,
-  })
-
-  did.createJWS = async () => jwsForVersion0
-}
-
-// TODO: De-dupe this with similar code from tile-document-handler.test.ts and model-instance-document.test.ts
-const rotateKey = (did: DID, rotateDate: string) => {
-  did.resolve = async (didUrl) => {
-    const { did } = parseDidUrl(didUrl)
-    const isVersion0 = /version=0/.exec(didUrl)
-
-    if (isVersion0) {
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {
-          nextUpdate: rotateDate,
-        },
-      }
-    }
-
-    return {
-      didResolutionMetadata: { contentType: 'application/did+json' },
-      didDocument: wrapDocument(
-        {
-          publicKeys: {
-            signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-            encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
-          },
-        },
-        did
-      ),
-      didDocumentMetadata: {
-        updated: rotateDate,
-      },
-    }
-  }
-
-  did.createJWS = async () => jwsForVersion1
-}
-
 async function checkSignedCommitMatchesExpectations(
   did: DID,
   commit: SignedCommitContainer,
@@ -226,10 +105,11 @@ describe('ModelHandler', () => {
   let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
+  let ipfs: IpfsApi
 
   beforeAll(async () => {
     const recs: Record<string, any> = {}
-    const ipfs = {
+    ipfs = {
       dag: {
         put(rec: any, cid?: CID): any {
           if (cid) {
@@ -238,7 +118,7 @@ describe('ModelHandler', () => {
           }
           // stringify as a way of doing deep copy
           const clone = cloneDeep(rec)
-          const c = hash(JSON.stringify(clone))
+          const c = DidTestUtils.hash(JSON.stringify(clone))
           recs[c.toString()] = { value: clone }
           return c
         },
@@ -247,29 +127,19 @@ describe('ModelHandler', () => {
         },
       },
     } as IpfsApi
+  })
 
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const { DID } = await import('dids')
-    did = new DID({
-      resolver: {
-        ...keyDidResolver,
-      },
-    })
-    ;(did as any)._id = DID_ID
-    const api = {
-      getSupportedChains: jest.fn(async () => {
-        return ['fakechain:123']
-      }),
-      did,
-    }
+  beforeEach(() => {
+    handler = new ModelHandler()
 
-    signerUsingNewKey = { did: new DID({}) }
-    ;(signerUsingNewKey.did as any)._id = DID_ID
-    signerUsingNewKey.did.createJWS = async () => jwsForVersion1
+    did = DidTestUtils.generateDID()
+    const api = DidTestUtils.apiForDid(did)
 
-    signerUsingOldKey = { did: new DID({}) }
-    ;(signerUsingOldKey.did as any)._id = DID_ID
-    signerUsingOldKey.did.createJWS = async () => jwsForVersion0
+    signerUsingNewKey = { did: DidTestUtils.generateDID() }
+    signerUsingNewKey.did.createJWS = async () => JWS_VERSION_1
+
+    signerUsingOldKey = { did: DidTestUtils.generateDID() }
+    signerUsingOldKey.did.createJWS = async () => JWS_VERSION_0
 
     context = {
       did,
@@ -277,12 +147,6 @@ describe('ModelHandler', () => {
       anchorService: null,
       api: api as unknown as CeramicApi,
     }
-  })
-
-  beforeEach(() => {
-    handler = new ModelHandler()
-
-    setDidToNotRotatedState(did)
   })
 
   it('is constructed correctly', async () => {
@@ -327,6 +191,7 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT)) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
@@ -344,6 +209,7 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commits with views properties correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(
       context.api,
       FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
@@ -364,6 +230,7 @@ describe('ModelHandler', () => {
   })
 
   it('fails to apply genesis commits with invalid schema', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(
       context.api,
       CONTENT_WITH_INVALID_SCHEMA
@@ -385,6 +252,7 @@ describe('ModelHandler', () => {
   })
 
   it(`fails to apply genesis commits if views validation fails`, async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(
       context.api,
       CONTENT_WITH_INVALID_VIEWS
@@ -412,6 +280,7 @@ describe('ModelHandler', () => {
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(context.api, {
       ...PLACEHOLDER_CONTENT,
       foo: 'bar',
@@ -432,7 +301,7 @@ describe('ModelHandler', () => {
     )
   })
 
-  it('throws error if commit signed by wrong DID', async () => {
+  it('throws error if commit signed by DID that is not controller', async () => {
     const genesisCommit = (await Model._makeGenesis(context.api, FINAL_CONTENT, {
       controller: 'did:3:fake',
     })) as SignedCommitContainer
@@ -454,6 +323,7 @@ describe('ModelHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await Model._makeGenesis(
       context.api,
       FINAL_CONTENT
@@ -510,7 +380,13 @@ describe('ModelHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    rotateKey(did, rotateDate.toISOString())
+    context.api = DidTestUtils.apiForDid(
+      DidTestUtils.generateDID({
+        ignoreValidation: false,
+      })
+    )
+
+    DidTestUtils.rotateKey(context.did, rotateDate.toISOString())
 
     await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
@@ -518,8 +394,9 @@ describe('ModelHandler', () => {
   })
 
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-    rotateKey(did, rotateDate.toISOString())
+    DidTestUtils.rotateKey(did, rotateDate.toISOString())
 
     // make genesis commit using old key
     const genesisCommit = (await Model._makeGenesis(

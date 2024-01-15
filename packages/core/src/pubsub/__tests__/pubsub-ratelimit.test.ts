@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import { empty, fromEvent, merge } from 'rxjs'
-import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
 import { Pubsub } from '../pubsub.js'

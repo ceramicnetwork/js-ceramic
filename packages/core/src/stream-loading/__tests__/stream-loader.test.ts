@@ -9,8 +9,8 @@ import {
   LoggerProvider,
   StreamState,
   StreamUtils,
-  TestUtils,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../../index.js'
 import { Ceramic } from '../../ceramic.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -30,6 +30,7 @@ import {
   ResponseMessage,
 } from '../../pubsub/pubsub-message.js'
 import { asIpfsMessage } from '../../pubsub/__tests__/as-ipfs-message.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const TOPIC = '/ceramic/test12345'
 const CONTENT0 = { step: 0 }
@@ -116,7 +117,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       const loadedState0 = await streamLoader.loadStream(doc.id, 3)
       expectStatesEqualWithPendingAnchor(doc.state, loadedState0)
 
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
       const loadedState1 = await streamLoader.loadStream(doc.id, 3)
       expect(StreamUtils.serializeState(loadedState1)).toEqual(
         StreamUtils.serializeState(doc.state)
@@ -130,7 +131,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       const loadedState3 = await streamLoader.loadStream(doc.id, 3)
       expectStatesEqualWithPendingAnchor(doc.state, loadedState3)
 
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
       const loadedState4 = await streamLoader.loadStream(doc.id, 3)
       expect(StreamUtils.serializeState(loadedState4)).toEqual(
         StreamUtils.serializeState(doc.state)
@@ -145,7 +146,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       const state0 = await streamLoader.loadStream(doc.id, 3)
       expectStatesEqualWithPendingAnchor(doc.state, state0)
 
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
       const state1 = await streamLoader.syncStream(state0, 3)
       expect(state1).not.toEqual(state0)
       expect(StreamUtils.serializeState(state1)).toEqual(StreamUtils.serializeState(doc.state))
@@ -158,7 +159,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       expect(state2A).toEqual(state2B)
 
       await doc.update(CONTENT2)
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
 
       const state3A = await streamLoader.syncStream(state0, 3)
       const state3B = await streamLoader.syncStream(state1, 3)
@@ -172,10 +173,10 @@ describe('StreamLoader querying against real Ceramic node', () => {
   describe('stateAtCommit', () => {
     test('basic ability to load stream at various CommitIDs', async () => {
       const doc = await TileDocument.create(ceramic, CONTENT0)
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
       await doc.update(CONTENT1)
       await doc.update(CONTENT2)
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
       const commits = doc.allCommitIds
       expect(commits.length).toEqual(5)
       for (const commit of commits) {
@@ -217,7 +218,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       const stream = await TileDocument.create(ceramic, CONTENT0)
       const initialState = cloneDeep(stream.state)
       await stream.update(CONTENT1)
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Now load the stream at a commitID ahead of what is currently in the state
       const updatedState1 = await streamLoader.stateAtCommit(initialState, stream.allCommitIds[1])
@@ -247,7 +248,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
       const stream = await TileDocument.create(ceramic, CONTENT0)
       const conflictingUpdate = await stream.makeCommit(ceramic, CONTENT2)
       await stream.update(CONTENT1)
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       const conflictingUpdateCID = await dispatcher.storeCommit(conflictingUpdate)
 
@@ -261,7 +262,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
     test('load at genesis commit', async () => {
       const doc = await TileDocument.create(ceramic, CONTENT0)
       await doc.update(CONTENT1)
-      await TestUtils.anchorUpdate(ceramic, doc)
+      await CoreUtils.anchorUpdate(ceramic, doc)
       expect(doc.state.log.length).toEqual(3)
 
       const genesisState = await streamLoader.loadGenesisState(doc.id)
@@ -355,13 +356,13 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
 
     stream = await TileDocument.create(ceramic, CONTENT0)
     states.push(stream.state)
-    await TestUtils.anchorUpdate(ceramic, stream)
+    await CoreUtils.anchorUpdate(ceramic, stream)
     states.push(stream.state)
     await stream.update(CONTENT1)
     states.push(stream.state)
     await stream.update(CONTENT2)
     states.push(stream.state)
-    await TestUtils.anchorUpdate(ceramic, stream)
+    await CoreUtils.anchorUpdate(ceramic, stream)
     states.push(stream.state)
     commitCids = stream.allCommitIds.map((commitId) => commitId.commit)
     expect(commitCids.length).toEqual(5)
