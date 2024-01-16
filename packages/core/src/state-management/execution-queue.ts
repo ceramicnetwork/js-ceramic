@@ -33,6 +33,7 @@ export class ExecutionQueue {
     return {
       add: (task) => {
         this.n += 1
+
         this.logger.debug(`EQ: Added an ADD ${this.name}-${this.n} task for ${streamId}`)
         return this.tasks.add(streamId.toString(), () => {
           this.logger.debug(`EQ: Running an ADD ${this.name}-${this.n} task for ${streamId}`)
