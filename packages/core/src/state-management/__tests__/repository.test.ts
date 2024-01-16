@@ -34,6 +34,7 @@ import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
+import type { FeedDocument } from '../../feed.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const STRING_MAP_SCHEMA = {
@@ -757,5 +758,45 @@ describe('handleAnchorEvent', () => {
       expect(shouldRemove).toBeTruthy()
       expect(nextSpy).not.toBeCalled()
     })
+  })
+})
+
+describe('_registerRunningState', () => {
+  test('deduplicate stream updates', async () => {
+    const state$ = new RunningState(
+      {
+        type: 1,
+        metadata: { controllers: ['did:3:foo'] },
+        content: { a: 1 },
+        anchorStatus: 0,
+        log: [
+          {
+            cid: TestUtils.randomCID(),
+            type: CommitType.GENESIS,
+          },
+        ],
+        signature: 3,
+      },
+      false
+    )
+    const emittedDocuments: Array<FeedDocument> = []
+    const subscription = ceramic.feed.aggregation.documents.subscribe((document) => {
+      emittedDocuments.push(document)
+    })
+    expect(emittedDocuments.length).toEqual(0)
+    ;(ceramic.repository as any)._registerRunningState(state$)
+    expect(emittedDocuments.length).toEqual(1)
+    state$.next({
+      ...state$.value,
+      anchorStatus: AnchorStatus.PROCESSING,
+    })
+    expect(emittedDocuments.length).toEqual(1)
+    state$.next({
+      ...state$.value,
+      anchorStatus: AnchorStatus.REPLACED,
+    })
+    // Multiple updates that do not change a stream log, still single emission
+    expect(emittedDocuments.length).toEqual(1)
+    subscription.unsubscribe()
   })
 })
