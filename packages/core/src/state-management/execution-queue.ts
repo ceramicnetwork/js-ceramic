@@ -12,6 +12,7 @@ import { TaskQueueLike } from '../ancillary/task-queue.js'
 export class ExecutionQueue {
   private readonly tasks: NamedTaskQueue
   private readonly semaphore: Semaphore
+  private n = 0
 
   constructor(
     private readonly name: string,
@@ -28,38 +29,40 @@ export class ExecutionQueue {
    * Return execution lane for a stream.
    */
   forStream(streamId: StreamID | CommitID): TaskQueueLike {
-    this.logger.debug(`EQ: Creating an execution queue for ${streamId}`)
+    this.logger.debug(`EQ: Creating a ${this.name} queue for ${streamId}`)
     return {
       add: (task) => {
-        this.logger.debug(`EQ: Added an ADD task for ${streamId}`)
+        this.n += 1
+        this.logger.debug(`EQ: Added an ADD ${this.name}-${this.n} task for ${streamId}`)
         return this.tasks.add(streamId.toString(), () => {
-          this.logger.debug(`EQ: Running an ADD task for ${streamId}`)
+          this.logger.debug(`EQ: Running an ADD ${this.name}-${this.n} task for ${streamId}`)
           if (this.semaphore.count == 0) {
             this.logger.warn(
               `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
             )
           }
           return this.semaphore.use(async () => {
-            this.logger.debug(`EQ: Starting an ADD task for ${streamId}`)
+            this.logger.debug(`EQ: Starting an ADD ${this.name}-${this.n} task for ${streamId}`)
             const result = await task()
-            this.logger.debug(`EQ: Finished an ADD task for ${streamId}`)
+            this.logger.debug(`EQ: Finished an ADD ${this.name}-${this.n} task for ${streamId}`)
             return result
           })
         })
       },
       run: (task) => {
-        this.logger.debug(`EQ: Adding a RUN task for ${streamId}`)
+        this.n += 1
+        this.logger.debug(`EQ: Adding a RUN ${this.name}-${this.n} task for ${streamId}`)
         return this.tasks.run(streamId.toString(), () => {
-          this.logger.debug(`EQ: Running a RUN task for ${streamId}`)
+          this.logger.debug(`EQ: Running a RUN ${this.name}-${this.n} task for ${streamId}`)
           if (this.semaphore.count == 0) {
             this.logger.warn(
               `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
             )
           }
           return this.semaphore.use(async () => {
-            this.logger.debug(`EQ: Starting a RUN task for ${streamId}`)
+            this.logger.debug(`EQ: Starting a RUN ${this.name}-${this.n} task for ${streamId}`)
             const result = await task()
-            this.logger.debug(`EQ: Finished a RUN task for ${streamId}`)
+            this.logger.debug(`EQ: Finished a RUN ${this.name}-${this.n} task for ${streamId}`)
             return result
           })
         })
