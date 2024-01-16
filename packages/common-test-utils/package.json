@@ -1,0 +1,43 @@
+{
+  "name": "@ceramicnetwork/common-test-utils",
+  "version": "1.0.0",
+  "description": "Ceramic Common Module Test Utils",
+  "keywords": [
+    "ceramic"
+  ],
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "files": [
+    "lib"
+  ],
+  "directories": {
+    "lib": "./lib"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "build": "npx tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
+  },
+  "author": "3Box Labs <support@3box.io>",
+  "license": "(Apache-2.0 OR MIT)",
+  "dependencies": {
+    "@ceramicnetwork/base-test-utils": "^1.0.0",
+    "@ceramicnetwork/common": "^3.2.0",
+    "@ceramicnetwork/streamid": "^3.2.0",
+    "it-first": "^1.0.7",
+    "multiformats": "^13.0.0",
+    "rxjs": "^7.5.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
+}

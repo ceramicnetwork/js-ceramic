@@ -6,10 +6,10 @@ import {
   StreamState,
   IpfsApi,
   SignatureStatus,
-  TestUtils,
   LoggerProvider,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
 import { PinStoreFactory } from '../pin-store-factory.js'
@@ -94,7 +94,7 @@ describe('Level data store', () => {
     const ceramic = await createCeramic(realIpfs)
 
     const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
-    await TestUtils.anchorUpdate(ceramic, stream)
+    await CoreUtils.anchorUpdate(ceramic, stream)
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add')
     await ceramic.admin.pin.add(stream.id)

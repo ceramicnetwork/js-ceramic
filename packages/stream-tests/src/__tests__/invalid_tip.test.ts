@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic, MsgType, deserialize, serialize } from '@ceramicnetwork/core'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 describe('Test loading a stream when pubsub replies with an invalid tip', () => {
   jest.setTimeout(1000 * 30)

@@ -40,12 +40,13 @@
     "knex": "^2.5.1",
     "lodash.clonedeep": "^4.5.0",
     "multiformats": "^13.0.0",
-    "p-queue": "^7.4.0",
+    "p-queue": "^8.0.1",
     "pg-boss": "^8.2.0",
     "rxjs": "^7.8.1",
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
     "@ceramicnetwork/3id-did-resolver": "^3.2.0",
     "@ceramicnetwork/ipfs-daemon": "^3.2.0",
     "@ceramicnetwork/stream-model-instance": "^2.2.0",

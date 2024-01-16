@@ -17,8 +17,8 @@ import {
   StreamState,
   StreamUtils,
   SyncOptions,
-  TestUtils,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../../utils.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -35,6 +35,7 @@ import { OperationType } from '../operation-type.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
 import type { FeedDocument } from '../../feed.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -249,7 +250,7 @@ describe('#load', () => {
       expect(stream.commitId).toEqual(commit0)
       expect(commit0.equals(CommitID.make(streamState.id, streamState.id.cid))).toBeTruthy()
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.allCommitIds.length).toEqual(2)
       expect(stream.anchorCommitIds.length).toEqual(1)
       const commit1 = stream.allCommitIds[1]
@@ -269,7 +270,7 @@ describe('#load', () => {
       expect(commit2.equals(commit1)).toBeFalsy()
       expect(commit2).toEqual(stream.commitId)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.allCommitIds.length).toEqual(4)
       expect(stream.anchorCommitIds.length).toEqual(2)
       const commit3 = stream.allCommitIds[3]
@@ -297,7 +298,7 @@ describe('#load', () => {
       expect(commit4.equals(stream.anchorCommitIds[1])).toBeFalsy()
       expect(stream.state.log.length).toEqual(5)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Correctly check out a specific commit
       const streamStateOriginal = cloneDeep(streamState.state)
@@ -366,7 +367,7 @@ describe('#load', () => {
         anchor: false,
       })
       await stream1.update({ abc: 321, def: 456, gh: 987 })
-      await TestUtils.anchorUpdate(ceramic, stream1)
+      await CoreUtils.anchorUpdate(ceramic, stream1)
 
       const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
       const streamState2 = await ceramic2.repository.load(stream1.id, {
@@ -449,7 +450,7 @@ describe('#load', () => {
       stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       const streamId = stream1.id
-      await TestUtils.anchorUpdate(ceramic, stream1)
+      await CoreUtils.anchorUpdate(ceramic, stream1)
       const tipPreUpdate = stream1.tip
 
       const newContent = { abc: 321, def: 456, gh: 987 }
@@ -459,7 +460,7 @@ describe('#load', () => {
         publish: false,
       })
 
-      await TestUtils.anchorUpdate(ceramic, stream1)
+      await CoreUtils.anchorUpdate(ceramic, stream1)
       expect(stream1.content).toEqual(newContent)
       const tipValidUpdate = stream1.tip
       // create invalid change that happened after main change
@@ -486,7 +487,7 @@ describe('#load', () => {
         publish: false,
       })
 
-      await TestUtils.anchorUpdate(ceramic, stream2)
+      await CoreUtils.anchorUpdate(ceramic, stream2)
       const tipInvalidUpdate = state$.tip
       expect(stream2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to stream with invalid
@@ -588,7 +589,7 @@ describe('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-    await TestUtils.anchorUpdate(ceramic, schema)
+    await CoreUtils.anchorUpdate(ceramic, schema)
     // Create invalid stream
     const ipfs2 = await createIPFS()
     await swarmConnect(ipfs, ipfs2)

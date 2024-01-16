@@ -1,12 +1,13 @@
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { fetchJson, TestUtils } from '@ceramicnetwork/common'
+import { fetchJson } from '@ceramicnetwork/common'
 import { RemoteAdminApi } from '../remote-admin-api.js'
 import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
 import { MissingDIDError } from '../utils.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
 const MODEL = new StreamID(1, TestUtils.randomCID())

@@ -1,4 +1,5 @@
-import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -560,7 +561,7 @@ describe('CACAO Integration test', () => {
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await TestUtils.anchorUpdate(ceramic, tile)
+      await CoreUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
       // 1. While CACAO is valid: Loading is ok
@@ -587,7 +588,7 @@ describe('CACAO Integration test', () => {
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await TestUtils.anchorUpdate(ceramic, tile)
+      await CoreUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
       // 1. While CACAO is valid: Loading is ok
@@ -619,7 +620,7 @@ describe('CACAO Integration test', () => {
           opts
         )
         await doc.update(content1, null, { ...opts, anchor: true })
-        await TestUtils.anchorUpdate(ceramic, doc)
+        await CoreUtils.anchorUpdate(ceramic, doc)
 
         expireCacao()
 
@@ -773,7 +774,7 @@ describe('CACAO Integration test', () => {
           },
           { ...opts, anchor: true }
         )
-        await TestUtils.anchorUpdate(ceramic, doc)
+        await CoreUtils.anchorUpdate(ceramic, doc)
 
         await doc.update(CONTENT1, null, opts)
 

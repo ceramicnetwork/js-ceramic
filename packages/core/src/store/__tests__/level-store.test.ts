@@ -1,6 +1,7 @@
 import tmp from 'tmp-promise'
 import { LevelDbStore } from '../level-db-store.js'
-import { LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 describe('LevelStore', () => {
   let tmpFolder: any

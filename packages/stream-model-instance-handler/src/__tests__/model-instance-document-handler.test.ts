@@ -1,13 +1,8 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
-import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
 import type { DID } from 'dids'
-import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
-import * as KeyDidResolver from 'key-did-resolver'
 import { ModelInstanceDocumentHandler } from '../model-instance-document-handler.js'
-import * as uint8arrays from 'uint8arrays'
-import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
@@ -18,46 +13,25 @@ import {
   Context,
   StreamUtils,
   SignedCommitContainer,
-  TestUtils,
   IpfsApi,
   CeramicSigner,
   GenesisCommit,
   RawCommit,
 } from '@ceramicnetwork/common'
-import { parse as parseDidUrl } from 'did-resolver'
 import { StreamID } from '@ceramicnetwork/streamid'
+import {
+  DID_ID,
+  DidTestUtils,
+  FAKE_CID_1,
+  FAKE_CID_2,
+  FAKE_CID_3,
+  FAKE_CID_4,
+  JWS_VERSION_0,
+  JWS_VERSION_1,
+} from '@ceramicnetwork/did-test-utils'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
-jest.unstable_mockModule('did-jwt', () => {
-  return {
-    // TODO - We should test for when this function throws as well
-    // Mock: Blindly accept a signature
-    verifyJWS: (): void => {
-      return
-    },
-    // And these functions are required for the test to run ¯\_(ツ)_/¯
-    resolveX25519Encrypters: () => {
-      return []
-    },
-    createJWE: () => {
-      return {}
-    },
-  }
-})
-
-const hash = (data: string): CID => {
-  const body = uint8arrays.concat([
-    uint8arrays.fromString('1220', 'base16'),
-    sha256.hash(uint8arrays.fromString(data)),
-  ])
-  return CID.create(1, 0x12, decodeMultiHash(body))
-}
-
-const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_BLOB = CID.parse('bafybeig6xv5nwphfmvcnektpnojts77jqcuam7bmye2pb54adnrtccjlsu')
-const DID_ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 const FAKE_MODEL_ID = StreamID.fromString(
   'kjzl6hvfrbw6cbclh3fplllid7yvf18w05xw41wvuf9b4lk6q9jkq7d1o01wg6v'
 )
@@ -98,98 +72,6 @@ const CONTENT2 = { myData: 2 }
 const METADATA = { controller: DID_ID, model: FAKE_MODEL_ID }
 const METADATA_BLOB = { controller: DID_ID, model: FAKE_MODEL_IDBLOB, deterministic: false }
 const DETERMINISTIC_METADATA = { controller: DID_ID, model: FAKE_MODEL_ID2, deterministic: true }
-
-const jwsForVersion0 = {
-  payload: 'bbbb',
-  signatures: [
-    {
-      protected:
-        'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9',
-      signature: 'cccc',
-    },
-  ],
-}
-
-const jwsForVersion1 = {
-  payload: 'bbbb',
-  signatures: [
-    {
-      protected:
-        'ewogICAgImtpZCI6ImRpZDozOmsydDZ3eWZzdTRwZzB0Mm40ajhtczNzMzN4c2dxamh0dG8wNG12cTh3NWEydjV4bzQ4aWR5ejM4bDd5ZGtpP3ZlcnNpb249MSNzaWduaW5nIgp9',
-      signature: 'cccc',
-    },
-  ],
-}
-
-const ThreeIdResolver = {
-  '3': async (did) => ({
-    didResolutionMetadata: { contentType: 'application/did+json' },
-    didDocument: wrapDocument(
-      {
-        publicKeys: {
-          signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-          encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-        },
-      },
-      did
-    ),
-    didDocumentMetadata: {},
-  }),
-}
-
-const setDidToNotRotatedState = (did: DID) => {
-  const keyDidResolver = KeyDidResolver.getResolver()
-  did.setResolver({
-    ...keyDidResolver,
-    ...ThreeIdResolver,
-  })
-
-  did.createJWS = async () => jwsForVersion0
-}
-
-// TODO: De-dupe this with similar code from tile-document-handler.test.ts and model.test.ts
-const rotateKey = (did: DID, rotateDate: string) => {
-  did.resolve = async (didUrl) => {
-    const { did } = parseDidUrl(didUrl)
-    const isVersion0 = /version=0/.exec(didUrl)
-
-    if (isVersion0) {
-      return {
-        didResolutionMetadata: { contentType: 'application/did+json' },
-        didDocument: wrapDocument(
-          {
-            publicKeys: {
-              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-            },
-          },
-          did
-        ),
-        didDocumentMetadata: {
-          nextUpdate: rotateDate,
-        },
-      }
-    }
-
-    return {
-      didResolutionMetadata: { contentType: 'application/did+json' },
-      didDocument: wrapDocument(
-        {
-          publicKeys: {
-            signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-            encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
-          },
-        },
-        did
-      ),
-      didDocumentMetadata: {
-        updated: rotateDate,
-      },
-    }
-  }
-
-  did.createJWS = async () => jwsForVersion1
-}
 
 async function checkSignedCommitMatchesExpectations(
   did: DID,
@@ -430,10 +312,11 @@ describe('ModelInstanceDocumentHandler', () => {
   let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
+  let ipfs: IpfsApi
 
   beforeAll(async () => {
     const recs: Record<string, any> = {}
-    const ipfs = {
+    ipfs = {
       dag: {
         put(rec: any, cid?: CID): any {
           if (cid) {
@@ -451,45 +334,6 @@ describe('ModelInstanceDocumentHandler', () => {
         },
       },
     } as IpfsApi
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const { DID } = await import('dids')
-    did = new DID({
-      resolver: {
-        ...keyDidResolver,
-      },
-    })
-    ;(did as any)._id = DID_ID
-    const api = {
-      getSupportedChains: jest.fn(async () => {
-        return ['fakechain:123']
-      }),
-      loadStream: jest.fn(async (streamId: StreamID) => {
-        const stream = STREAMS[streamId.toString()]
-        if (stream == null) {
-          throw new Error(
-            'Trying to load unexpected stream in model-instance-document-handler.test.ts'
-          )
-        }
-        return stream
-      }),
-      did,
-    }
-
-    signerUsingNewKey = { did: new DID({}) }
-    ;(signerUsingNewKey.did as any)._id = DID_ID
-    signerUsingNewKey.did.createJWS = async () => jwsForVersion1
-
-    signerUsingOldKey = { did: new DID({}) }
-    ;(signerUsingOldKey.did as any)._id = DID_ID
-    signerUsingOldKey.did.createJWS = async () => jwsForVersion0
-
-    context = {
-      did,
-      ipfs,
-      anchorService: null,
-      api: api as unknown as CeramicApi,
-    }
   })
 
   beforeEach(() => {
@@ -497,7 +341,31 @@ describe('ModelInstanceDocumentHandler', () => {
 
     handler = new ModelInstanceDocumentHandler()
 
-    setDidToNotRotatedState(did)
+    did = DidTestUtils.generateDID()
+    const api = DidTestUtils.apiForDid(did)
+    api.loadStream = jest.fn(async (streamId: StreamID) => {
+      const stream = STREAMS[streamId.toString()]
+      if (stream == null) {
+        throw new Error(
+          'Trying to load unexpected stream in model-instance-document-handler.test.ts'
+        )
+      }
+      return stream
+    })
+
+    signerUsingNewKey = { did: DidTestUtils.generateDID() }
+    signerUsingNewKey.did.createJWS = async () => JWS_VERSION_1
+
+    signerUsingOldKey = { did: DidTestUtils.generateDID() }
+    ;(signerUsingOldKey.did as any)._id = DID_ID
+    signerUsingOldKey.did.createJWS = async () => JWS_VERSION_0
+
+    context = {
+      did,
+      ipfs,
+      anchorService: null,
+      api: api as unknown as CeramicApi,
+    }
   })
 
   it('is constructed correctly', async () => {
@@ -558,6 +426,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -580,6 +449,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly with small allowable content length', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       { myData: 'abcdefghijk' },
@@ -637,6 +507,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('deterministic genesis commit cannot have content', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const rawCommit = await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -660,6 +531,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models with SINGLE accountRelations must be created deterministically', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
       ...DETERMINISTIC_METADATA,
       deterministic: false,
@@ -681,6 +553,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models without SINGLE accountRelations must be created uniquely', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const rawCommit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
       ...METADATA,
       deterministic: true,
@@ -703,6 +576,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('model must be a Model streamtype', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const nonModelStreamId = StreamID.fromString(
       'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
     )
@@ -728,6 +602,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes signed commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -757,6 +632,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -798,6 +674,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('multiple consecutive updates', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
 
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
@@ -856,6 +733,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       {},
@@ -879,6 +757,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid length', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
     await expect(
       ModelInstanceDocument._makeGenesis(context.api, { myData: 'abcdefghijk' }, METADATA)
@@ -886,6 +765,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -944,12 +824,18 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
     }
+
+    context.did.verifyJWS = jest.fn(async () => {
+      return Promise.reject('/invalid_jws: not a valid verificationMethod for issuer/')
+    })
+
     await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: not a valid verificationMethod for issuer/
     )
   })
 
   it('throws error if changes metadata', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -994,6 +880,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid prev link', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -1037,6 +924,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid id property', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -1080,6 +968,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
@@ -1135,6 +1024,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make and apply genesis with old key
@@ -1157,7 +1047,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state = await handler.applyCommit(genesisCommitData, context)
 
-    rotateKey(did, rotateDate.toISOString())
+    DidTestUtils.rotateKey(did, rotateDate.toISOString())
 
     // make update with old key
     const state$ = TestUtils.runningState(state)
@@ -1180,6 +1070,10 @@ describe('ModelInstanceDocumentHandler', () => {
       // 24 hours after rotation
       timestamp: rotateDate.valueOf() / 1000 + 24 * 60 * 60,
     }
+
+    context.did.verifyJWS = jest.fn(async () => {
+      return Promise.reject('/invalid_jws: signature authored with a revoked DID version/')
+    })
 
     // applying a commit made with the old key after rotation
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
@@ -1208,7 +1102,11 @@ describe('ModelInstanceDocumentHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    rotateKey(did, rotateDate.toISOString())
+    DidTestUtils.rotateKey(did, rotateDate.toISOString())
+
+    context.did.verifyJWS = jest.fn(async () => {
+      return Promise.reject('/invalid_jws: signature authored before creation of DID version/')
+    })
 
     await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
@@ -1216,8 +1114,9 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-    rotateKey(did, rotateDate.toISOString())
+    DidTestUtils.rotateKey(did, rotateDate.toISOString())
 
     // make genesis commit using old key
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
@@ -1243,6 +1142,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws when trying to create a MID with an interface model', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
       controller: METADATA.controller,
       model: FAKE_MODEL_INTERFACE_ID,
@@ -1264,6 +1164,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with required model - throws if invalid', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       signerUsingNewKey,
       { myData: 3, relationID: FAKE_MID_ID2.toString() },
@@ -1287,6 +1188,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with required model - model match', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       signerUsingNewKey,
       { myData: 3, relationID: FAKE_MID_ID.toString() },
@@ -1304,10 +1206,11 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 
   test('validates relations with optional model - linked MID not provided', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       signerUsingNewKey,
       { myData: 3 },
@@ -1325,10 +1228,11 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 
   test('validates relations with optional model - linked MID provided', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       signerUsingNewKey,
       { myData: 3, relationID: FAKE_MID_ID2.toString() },
@@ -1346,10 +1250,11 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 
   test('validates relations with interface model', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       signerUsingNewKey,
       { myData: 3, relationID: FAKE_MID_ID3.toString() },
@@ -1367,6 +1272,6 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    await expect(handler.applyCommit(genesisCommitData, context)).resolves
+    await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 })

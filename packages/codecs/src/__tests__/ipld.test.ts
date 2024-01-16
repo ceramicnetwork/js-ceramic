@@ -1,13 +1,12 @@
 import { describe, test, expect } from '@jest/globals'
 import { validate, isRight, type Right } from 'codeco'
 import type { CID } from 'multiformats/cid'
+import { BaseTestUtils as TestUtils } from '@ceramicnetwork/base-test-utils'
 
 import { cidAsString } from '../ipld.js'
 
-import { randomCID } from './test-utils.js'
-
 describe('cidAsString', () => {
-  const cid = randomCID()
+  const cid = TestUtils.randomCID()
   test('decode: ok', () => {
     const result = validate(cidAsString, cid.toString())
     expect(isRight(result)).toEqual(true)

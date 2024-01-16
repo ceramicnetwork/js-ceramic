@@ -1,9 +1,9 @@
 import { test, describe, expect, afterEach, jest } from '@jest/globals'
 import { fetchJson } from '../fetch-json.js'
 import { toString } from 'uint8arrays/to-string'
-import { TestUtils } from '../test-utils.js'
 import express, { Request, Response } from 'express'
 import getPort from 'get-port'
+import { BaseTestUtils as TestUtils } from '@ceramicnetwork/base-test-utils'
 
 const RESPONSE = {
   hello: `world-${Math.random()}`,

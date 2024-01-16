@@ -8,7 +8,6 @@ import {
   PinningBackend,
   StreamState,
   CommitType,
-  TestUtils,
   JSONToBase64Url,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -17,6 +16,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { IKVStore } from '../ikv-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 let stateStore: StreamStateStore
 let storeWrapperTemplate: IKVStore
