@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "3.2.0",
+  "version": "3.3.0-rc.0",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -43,8 +43,8 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/codecs": "^2.2.0",
-    "@ceramicnetwork/streamid": "^3.2.0",
+    "@ceramicnetwork/codecs": "^2.3.0-rc.0",
+    "@ceramicnetwork/streamid": "^3.3.0-rc.0",
     "@didtools/cacao": "^3.0.0",
     "@didtools/pkh-ethereum": "^0.2.0",
     "@didtools/pkh-solana": "^0.2.0",

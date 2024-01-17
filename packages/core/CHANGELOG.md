@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.2.0...@ceramicnetwork/core@3.3.0-rc.0) (2024-01-17)
+
+
+### Bug Fixes
+
+* register new running state ([#3074](https://github.com/ceramicnetwork/js-ceramic/issues/3074)) ([674cb25](https://github.com/ceramicnetwork/js-ceramic/commit/674cb25e2775df0e46b0287dc86153d3e2fd9e90))
+* Update state store if loading at a commit that is ahead of what we currently have ([#3097](https://github.com/ceramicnetwork/js-ceramic/issues/3097)) ([f094052](https://github.com/ceramicnetwork/js-ceramic/commit/f09405209a21571e206158d2eda69f7735fd7226))
+
+
+
+
+
 # [3.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.2.0-rc.0...@ceramicnetwork/core@3.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/core

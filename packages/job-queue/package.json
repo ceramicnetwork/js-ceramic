@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/job-queue",
-  "version": "2.2.0",
+  "version": "2.3.0-rc.0",
   "description": "Ceramic persistent job queue",
   "keywords": [
     "ceramic",
@@ -31,7 +31,7 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/common": "^3.2.0",
+    "@ceramicnetwork/common": "^3.3.0-rc.0",
     "pg": "^8.11.3",
     "pg-boss": "^8.2.0",
     "rxjs": "^7.8.1"
