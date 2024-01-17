@@ -451,10 +451,11 @@ export class Repository {
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
       StreamUtils.checkForCacaoExpiration(stateAtCommit)
 
-      // If the provided CommitID is ahead of what we have in the cache, then we should update
-      // the cache to include it.
+      // If the provided CommitID is ahead of what we have in the cache and state store, then we
+      // should update them to include it.
       if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
         existingState$.next(stateAtCommit)
+        await this._updateStateIfPinned(existingState$)
       }
       return new SnapshotState(stateAtCommit)
     }, 'Repository::_atCommit')
