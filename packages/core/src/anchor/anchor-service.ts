@@ -136,3 +136,17 @@ export class MultipleChainsError extends Error {
     )
   }
 }
+
+export class CasConnectionError extends Error {
+  constructor(streamId: StreamID, tip: CID, cause: string) {
+    super(
+      `Error connecting to CAS while attempting to anchor ${streamId} at commit ${tip}: ${cause}`
+    )
+  }
+}
+
+export class MaxAnchorPollingError extends Error {
+  constructor() {
+    super('Exceeded max anchor polling time limit')
+  }
+}

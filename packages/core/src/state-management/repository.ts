@@ -22,7 +22,17 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { Observable } from 'rxjs'
+import {
+  catchError,
+  distinctUntilKeyChanged,
+  EMPTY,
+  Observable,
+  Subject,
+  Subscription,
+  takeUntil,
+  concatMap,
+  map,
+} from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -36,7 +46,7 @@ import type { AnchorService } from '../anchor/anchor-service.js'
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
-import type { Feed } from '../feed.js'
+import { FeedDocument, type Feed } from '../feed.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -923,7 +933,19 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    state$.subscribe(this.feed.aggregation.documents)
+    state$
+      .pipe(
+        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
+          // Consider distinct if proposed log length differs
+          if (proposedLog.length !== currentLog.length) return false
+          // Or let's see if the tip is different
+          const currentTip = currentLog[currentLog.length - 1].cid
+          const proposedTip = proposedLog[proposedLog.length - 1].cid
+          return currentTip.equals(proposedTip)
+        }),
+        map(FeedDocument.fromStreamState)
+      )
+      .subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 

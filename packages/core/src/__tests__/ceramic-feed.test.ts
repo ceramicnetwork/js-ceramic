@@ -92,13 +92,9 @@ describe('Ceramic feed', () => {
       accountRelation: { type: 'list' },
     }
     const feed: FeedDocument[] = []
-    const feed2: FeedDocument[] = []
 
     const s1 = ceramic1.feed.aggregation.documents.subscribe((s) => {
       feed.push(s)
-    })
-    const s2 = await ceramic2.feed.aggregation.documents.subscribe((s) => {
-      feed2.push(s)
     })
     // create model on different node
     const model = await Model.create(ceramic2, MODEL_DEFINITION)
@@ -107,13 +103,10 @@ describe('Ceramic feed', () => {
     await Model.load(ceramic1, model.id)
 
     expect(feed.length).toEqual(1)
-    expect(feed2.length).toEqual(2) // load + anchor status change
     expect(feed[0].content).toEqual(model.state.content)
     expect(feed[0].metadata).toEqual(model.state.metadata)
     expect(feed[0].commitId).toEqual(model.commitId)
-    expect(feed2[0]).toEqual(feed[0])
     s1.unsubscribe()
-    s2.unsubscribe()
   })
 
   test('add entry after anchoring stream', async () => {
@@ -131,15 +124,10 @@ describe('Ceramic feed', () => {
     // process anchor
     await TestUtils.anchorUpdate(ceramic1, stream)
 
-    expect(feed.length).toEqual(3) // create + anchor request + anchor update
-    // between and request anchor
+    expect(feed.length).toEqual(2) // 2 commits = 1 genesis commit + 1 anchor commit
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
-    expect(feed[0].commitId).toStrictEqual(feed[1].commitId)
-    //between request anchor and process anchor
-    expect(feed[1].content).toEqual(feed[2].content)
-    expect(feed[1].metadata).toEqual(feed[2].metadata)
-    expect(feed[1].commitId).toStrictEqual(feed[2].commitId)
+    expect(feed[0].commitId.equals(feed[1].commitId)).toEqual(false)
     s.unsubscribe()
   })
 })
