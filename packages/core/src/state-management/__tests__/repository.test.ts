@@ -432,6 +432,13 @@ describe('#load', () => {
       expect(StreamUtils.serializeState(streamState.state)).toEqual(
         StreamUtils.serializeState(snapshot.value)
       )
+
+      // The state store should have been updated as well
+      const loadedState = await ceramic.repository.pinStore.stateStore.load(streamState.id)
+      expect(loadedState.log.length).toEqual(2)
+      expect(StreamUtils.serializeState(loadedState)).toEqual(
+        StreamUtils.serializeState(snapshot.value)
+      )
     })
 
     test('handles basic conflict', async () => {
