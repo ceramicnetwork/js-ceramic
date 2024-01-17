@@ -23,7 +23,7 @@ export interface TaskQueueLike {
    * The point of `run` (as opposed to `add`) is to pass an error to the caller if it is throw inside a task.
    * Note "fire-and-forget" comment for the `add` method.
    */
-  run<T>(task: Task<T>): Promise<T>
+  run<T>(task: Task<T>, label?: string): Promise<T>
 }
 
 /**
