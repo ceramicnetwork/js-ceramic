@@ -270,7 +270,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
+   * Helper function for makeUpdateCommit() to allow unit tests to update the commit before it is signed.
    */
   private static _makeRawCommit<T>(
     streamId: StreamID,
