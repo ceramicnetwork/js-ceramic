@@ -20,6 +20,7 @@ import {
   GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
+import type { CID } from 'multiformats/cid'
 
 /**
  * Arguments used to generate the metadata for Model Instance Documents
@@ -189,7 +190,13 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
-    const updateCommit = await this._makeCommit(signer, content)
+    const updateCommit = await ModelInstanceDocument.makeUpdateCommit(
+      signer,
+      this.id,
+      this.tip,
+      this.content,
+      content
+    )
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
   }
@@ -243,25 +250,39 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Make a commit to update the document
-   * @param signer - Object containing the DID making (and signing) the commit
-   * @param newContent
+   * Make a commit to update the document.  Can be applied using the applyCommit method on the
+   * Ceramic client.
+   * @param signer - Object containing the DID making (and signing) the commit.
+   * @param streamId - The StreamID of the Stream to update.
+   * @param prev - The current tip of the Stream that the update should be applied on top of.
+   * @param oldContent - The current content of the Stream.
+   * @param newContent - The new content to update the Stream with.
    */
-  private _makeCommit(signer: CeramicSigner, newContent: T | null): Promise<CeramicCommit> {
-    const commit = this._makeRawCommit(newContent)
+  static makeUpdateCommit<T>(
+    signer: CeramicSigner,
+    streamId: StreamID,
+    prev: CID,
+    oldContent: T,
+    newContent: T | null
+  ): Promise<CeramicCommit> {
+    const commit = ModelInstanceDocument._makeRawCommit(streamId, prev, oldContent, newContent)
     return ModelInstanceDocument._signDagJWS(signer, commit)
   }
 
   /**
    * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
    */
-  private _makeRawCommit(newContent: T | null): RawCommit {
-    const patch = jsonpatch.compare(this.content, newContent || {})
+  private static _makeRawCommit<T>(
+    streamId: StreamID,
+    prev: CID,
+    oldContent: T,
+    newContent: T | null
+  ): RawCommit {
+    const patch = jsonpatch.compare(oldContent, newContent || {})
     return {
       data: patch,
-      prev: this.tip,
-      id: this.state.log[0].cid,
+      prev,
+      id: streamId.cid,
     }
   }
 
