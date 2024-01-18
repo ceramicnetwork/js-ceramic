@@ -487,17 +487,23 @@ export class Repository {
     this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
 
     return this.executionQ.forStream(streamId).run(async () => {
+      this.logger.debug(`Repository::applyCommit: in the queue`)
       const originalState = state$.state
+      this.logger.debug(`Repository::applyCommit: applying commit from user`)
       const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
+      this.logger.debug(`Repository::applyCommit: did apply commit from user`)
       if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
+        this.logger.debug(`Repository::applyCommit: same state`)
         return state$ // nothing changed
       }
 
       state$.next(updatedState) // emit the new state
 
+      this.logger.debug(`Repository::applyCommit: about to update state if pinned`)
       await this._updateStateIfPinned(state$)
+      this.logger.debug(`Repository::applyCommit: about to write opts`)
       await this._applyWriteOpts(state$, opts, OperationType.UPDATE)
-      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
+      this.logger.debug(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
 
       return state$
     }, 'Repository::applyCommit')
