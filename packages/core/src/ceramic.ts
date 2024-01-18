@@ -590,9 +590,9 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
     const id = normalizeStreamID(streamId)
 
-    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
+    this._logger.debug(`Apply commit to stream ${id.toString()}`)
     const state$ = await this.repository.applyCommit(id, commit, opts)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+    this._logger.debug(`Applied commit to stream ${id.toString()}`)
 
     return streamFromState<T>(
       this.context,
