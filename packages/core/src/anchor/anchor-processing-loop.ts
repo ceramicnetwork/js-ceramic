@@ -61,7 +61,8 @@ export class AnchorProcessingLoop {
         )
         if (isTerminal) {
           logger.debug(`Removing entry from AnchorRequestStore for Stream ${streamId}`)
-          // Remove iff tip stored equals to the tip we processed. Sort of Compare-and-Swap.
+          // Remove iff tip stored equals to the tip we processed
+          // Sort of Compare-and-Swap.
           await this.#anchorStoreQueue.run(streamId.toString(), async () => {
             const loaded = await store.load(streamId)
             if (loaded.cid.equals(entry.cid)) {
