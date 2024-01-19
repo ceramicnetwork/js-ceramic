@@ -114,7 +114,7 @@ export class EventID {
    */
   static create(
     networkID: number | string,
-    networkIDOffset: number = 0,
+    networkIDOffset: number,
     separatorKey: string | Uint8Array,
     separatorValue: string | Uint8Array,
     controller: string,
