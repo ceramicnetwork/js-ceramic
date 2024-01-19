@@ -1,10 +1,11 @@
 import type { StreamMetadata, StreamState } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
-import { CommitID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '@ceramicnetwork/common'
 
 export class FeedDocument {
   constructor(
+    readonly streamId: StreamID,
     readonly commitId: CommitID,
     readonly content: any,
     readonly metadata: StreamMetadata
@@ -12,6 +13,7 @@ export class FeedDocument {
 
   static fromStreamState(streamState: StreamState): FeedDocument {
     return {
+      streamId: StreamUtils.streamIdFromState(streamState),
       commitId: StreamUtils.commitIdFromStreamState(streamState),
       content: streamState.next ? streamState.next.content : streamState.content,
       metadata: streamState.next ? streamState.next.metadata : streamState.metadata,

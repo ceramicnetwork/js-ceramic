@@ -1,5 +1,5 @@
 import { expect, describe, test, beforeEach, afterEach } from '@jest/globals'
-import { type IpfsApi } from '@ceramicnetwork/common'
+import { StreamUtils, type IpfsApi } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -45,6 +45,7 @@ describe('Ceramic feed', () => {
     // One entry after create, and another after update
     expect(feed.length).toEqual(2)
 
+    expect(feed[0].streamId).not.toBe(feed[1].streamId)
     expect(feed[0].commitId).not.toBe(feed[1].commitId)
     expect(feed[0].metadata).toStrictEqual(feed[1].metadata)
     expect(feed[0].content).toStrictEqual({ hello: original })
@@ -76,8 +77,10 @@ describe('Ceramic feed', () => {
     expect(feed1.length).toEqual(2) // create + update
     expect(feed2.length).toEqual(2) //load + pubsub update
     expect(feed2[0].content.test).toBe(content.test)
+    expect(feed2[0].streamId).toStrictEqual(feed1[0].streamId)
     expect(feed2[0].commitId).toStrictEqual(feed1[0].commitId)
     // test pubsub propagating the update from stream1 being inside the feed
+    expect(feed2[1].streamId).toStrictEqual(feed1[1].streamId)
     expect(feed2[1].commitId).toStrictEqual(feed1[1].commitId)
     expect(feed2[1].metadata).toStrictEqual(feed1[1].metadata)
     expect(feed2[1].content).toStrictEqual(updatedContent)
@@ -103,11 +106,12 @@ describe('Ceramic feed', () => {
 
     // load model
     await Model.load(ceramic1, model.id)
-
+    const streamId = StreamUtils.streamIdFromState(model.state)
     expect(feed.length).toEqual(1)
     expect(feed[0].content).toEqual(model.state.content)
     expect(feed[0].metadata).toEqual(model.state.metadata)
     expect(feed[0].commitId).toEqual(model.commitId)
+    expect(feed[0].streamId).toEqual(streamId)
     s1.unsubscribe()
   })
 
@@ -130,6 +134,7 @@ describe('Ceramic feed', () => {
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
     expect(feed[0].commitId.equals(feed[1].commitId)).toEqual(false)
+    expect(feed[0].streamId.equals(feed[1].streamId)).toEqual(true)
     s.unsubscribe()
   })
 })
