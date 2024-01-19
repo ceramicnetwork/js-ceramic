@@ -446,7 +446,7 @@ export class Ceramic implements CeramicApi {
       if (!this._readOnly) {
         await this.anchorService.init(
           this.repository.anchorRequestStore,
-          this.repository.anchorLoopHandler(this._logger)
+          this.repository.anchorLoopHandler()
         )
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
