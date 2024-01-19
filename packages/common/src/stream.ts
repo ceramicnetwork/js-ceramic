@@ -75,6 +75,7 @@ export type CeramicCommit =
 export interface StreamMetadata {
   controllers: Array<string>
   model?: StreamID
+  context?: StreamID
   family?: string // deprecated
   schema?: string // deprecated
   tags?: Array<string> // deprecated

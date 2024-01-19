@@ -326,7 +326,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       header.unique = randomBytes(12)
     }
     if (metadata.context) {
-      if (!metadata.context instanceof StreamID) {
+      if (!metadata.context?.bytes) {
         throw new Error('Context must be a StreamID')
       }
       header.context = metadata.context.bytes
