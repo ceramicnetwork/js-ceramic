@@ -113,7 +113,7 @@ export class CrustPinningBackend implements PinningBackend {
   }
 
   async ls(): Promise<CidList> {
-    // Check connnetion
+    // Check connection
     if (!this.api) {
       return {}
     }
