@@ -262,7 +262,7 @@ export class Repository {
         default:
           throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
       }
-    }, 'Repository::load')
+    })
 
     if (checkCacaoExpiration) {
       StreamUtils.checkForCacaoExpiration(state$.state)
@@ -287,7 +287,7 @@ export class Repository {
   private async _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
     return this.executionQ.forStream(state$.id).run(() => {
       return this._updateStateIfPinned(state$)
-    }, 'Repository::_updateStateIfPinned_safe')
+    })
   }
 
   /**
@@ -458,7 +458,7 @@ export class Repository {
         await this._updateStateIfPinned(existingState$)
       }
       return new SnapshotState(stateAtCommit)
-    }, 'Repository::_atCommit')
+    })
   }
 
   /**
@@ -500,7 +500,7 @@ export class Repository {
       this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
 
       return state$
-    }, 'Repository::applyCommit')
+    })
   }
 
   /**
@@ -555,7 +555,7 @@ export class Repository {
       } else {
         return false
       }
-    }, 'Repository::_handleTip')
+    })
   }
 
   /**
@@ -811,7 +811,7 @@ export class Repository {
     return this.executionQ.forStream(streamId).run(async () => {
       await this._applyWriteOpts(state, opts, opType)
       return state
-    }, 'Repository::applyCreateOpts')
+    })
   }
 
   /**
@@ -823,7 +823,7 @@ export class Repository {
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
     return this.loadingQ.forStream(streamId).run(() => {
       return this.fromMemoryOrStore_UNSAFE(streamId)
-    }, 'Repository::fromMemoryOrStore')
+    })
   }
 
   /**
@@ -874,7 +874,7 @@ export class Repository {
   pin(state$: RunningState, force?: boolean): Promise<void> {
     return this.executionQ.forStream(state$.id).run(async () => {
       return this._pin_UNSAFE(state$, force)
-    }, 'Repository::pin')
+    })
   }
 
   /**
