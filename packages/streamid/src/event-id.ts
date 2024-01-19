@@ -6,8 +6,15 @@ import * as cbor from 'cborg'
 import * as u8a from 'uint8arrays'
 import { STREAMID_CODEC } from './constants.js'
 import { Memoize } from 'mapmoize'
+import { randomCID } from './commit-id.js'
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/EventID')
+
+export type CreateRandomOptionalParams = {
+  separatorKey?: string | Uint8Array
+  separatorValue?: string | Uint8Array
+  controller?: string
+}
 
 // Stream Codecs and Event Codec https://github.com/ceramicnetwork/CIPs/blob/main/tables/streamtypes.csv
 const EVENT_ID_CODEC = 0x05
@@ -20,12 +27,22 @@ const NETWORK: Record<string, number> = {
   'testnet-clay': 0x01,
   'dev-unstable': 0x02,
   inmemory: 0xff,
+  local: 0x01_0000_0000,
 }
 
-function networkByName(net: string): number {
+// TODO: in memory may need offset as well
+function networkByName(net: string, offset: number): number {
+  if (!Number.isInteger(offset)) {
+    throw Error('Offset must be an integer')
+  }
+
+  if (offset > 0 && net !== 'local') {
+    throw Error(`Network ${net} does not support an offset`)
+  }
+
   const netId = NETWORK[net]
   if (!netId && netId !== 0) throw new Error('Not a valid network name')
-  return netId
+  return netId + offset
 }
 
 export class EventID {
@@ -65,19 +82,57 @@ export class EventID {
     this._event = event
   }
 
+  static createRandom(
+    networkID: number | string,
+    networkIDOffset: number,
+    optionalParams: CreateRandomOptionalParams = {}
+  ): EventID {
+    const {
+      separatorKey = 'model',
+      separatorValue = 'kh4q0ozorrgaq2mezktnrmdwleo1d',
+      controller = 'did:key:z6MkgSV3tAuw7gUWqKCUY7ae6uWNxqYgdwPhUJbJhF9EFXm9',
+    } = optionalParams
+
+    const init = randomCID()
+    const eventHeight = Math.floor(Math.random() * 1000000)
+    const event = randomCID()
+
+    return this.create(
+      networkID,
+      networkIDOffset,
+      separatorKey,
+      separatorValue,
+      controller,
+      init,
+      eventHeight,
+      event
+    )
+  }
+
   /**
    * Create a new EventID.
    */
   static create(
     networkID: number | string,
-    separator: string | Uint8Array,
+    networkIDOffset: number = 0,
+    separatorKey: string | Uint8Array,
+    separatorValue: string | Uint8Array,
     controller: string,
     init: CID | string,
     eventHeight: number,
     event: CID | string
   ): EventID {
-    const networkIDInt = typeof networkID === 'string' ? networkByName(networkID) : networkID
-    const separatorAllBytes = typeof separator === 'string' ? u8a.fromString(separator) : separator
+    const networkIDInt =
+      typeof networkID === 'string' ? networkByName(networkID, networkIDOffset) : networkID
+    const separatorKeyBytes =
+      typeof separatorKey === 'string' ? u8a.fromString(separatorKey) : separatorKey
+    const separatorValueBytes =
+      typeof separatorValue === 'string' ? u8a.fromString(separatorValue) : separatorValue
+    const separatorAllBytes = u8a.concat([
+      separatorKeyBytes,
+      u8a.fromString('|'),
+      separatorValueBytes,
+    ])
     const separatorBytes = sha256(separatorAllBytes).slice(-8)
     const controllerBytes = sha256(u8a.fromString(controller)).slice(-8)
     const initCid = typeof init === 'string' ? CID.parse(init) : init
