@@ -583,7 +583,7 @@ describe('postgres', () => {
         {
           model: StreamID.fromString(STREAM_ID_A),
           indices: [{ fields: [{ path: ['address'] }] }],
-          relations: { did: { type: 'account' } },
+          relationFields: new Set(['did']),
         },
       ]
       const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
@@ -1416,7 +1416,7 @@ describe('sqlite', () => {
         {
           model: StreamID.fromString(STREAM_ID_A),
           indices: [{ fields: [{ path: ['address'] }] }],
-          relations: { did: { type: 'account' } },
+          relationFields: new Set(['did']),
         },
       ]
       const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)

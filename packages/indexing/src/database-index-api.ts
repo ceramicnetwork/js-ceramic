@@ -10,7 +10,6 @@ import type {
 } from '@ceramicnetwork/common'
 import { Knex } from 'knex'
 import type { CID } from 'multiformats/cid'
-import { ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
@@ -87,7 +86,7 @@ export function toIndicesRecord(indices: Array<FieldsIndex> = []): IndicesRecord
  */
 export interface IndexModelArgs {
   readonly model: StreamID
-  relations?: ModelRelationsDefinition
+  relationFields?: Set<string>
   indices?: Array<FieldsIndex>
   implements?: Array<string>
 }
@@ -158,9 +157,11 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       checkSyncPromises.push(this.assertNoOngoingSyncForModel(modelData.model))
 
       const modelIndicesRecord = toIndicesRecord(modelData.indices)
-      // Add relations to indices record
-      for (const field of Object.keys(modelData.relations ?? {})) {
-        modelIndicesRecord[field] = { fields: [{ path: [field] }] }
+      if (modelData.relationFields) {
+        // Add relations to indices record
+        for (const field of modelData.relationFields) {
+          modelIndicesRecord[field] = { fields: [{ path: [field] }] }
+        }
       }
       const modelIndices = Object.values(modelIndicesRecord)
 

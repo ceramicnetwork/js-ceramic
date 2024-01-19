@@ -16,6 +16,7 @@ import { makeIndexApi } from './make-index-api.js'
 import { Networks } from '@ceramicnetwork/common'
 import {
   type LoadingInterfaceImplements,
+  type ModelDefinition,
   Model,
   loadAllModelInterfaces,
 } from '@ceramicnetwork/stream-model'
@@ -38,22 +39,34 @@ async function _getIndexModelArgs(
   const opts: IndexModelArgs = {
     model: modelStreamId,
   }
+  let relationFields = new Set<string>()
 
   if (modelStreamId.type == Model.STREAM_TYPE_ID) {
     const modelState = await core.loadStream(modelStreamId, {})
-    const content = modelState.state.next?.content ?? modelState.state.content
+    const content: ModelDefinition = modelState.state.next?.content ?? modelState.state.content
     Model.assertVersionValid(content, 'major')
-    if (content.interface) {
-      throw new Error(`Model ${modelStreamId.toString()} is an interface and cannot be indexed`)
-    }
+    // Relation fields need to be indexed
     if (content.relations) {
-      opts.relations = content.relations
+      relationFields = new Set(Object.keys(content.relations))
     }
-    if (content.implements) {
-      opts.implements = await loadAllModelInterfaces(core, content.implements, loading)
+    if (content.version !== '1.0') {
+      if (content.interface) {
+        throw new Error(`Model ${modelStreamId.toString()} is an interface and cannot be indexed`)
+      }
+      // Account relation fields need to be indexed when using the SET account relation
+      if (content.accountRelation.type === 'set') {
+        for (const field of content.accountRelation.fields) {
+          relationFields.add(field)
+        }
+      }
+      if (content.implements) {
+        opts.implements = await loadAllModelInterfaces(core, content.implements, loading)
+      }
     }
     opts.indices = req.indices
   }
+
+  opts.relationFields = relationFields
 
   return opts
 }

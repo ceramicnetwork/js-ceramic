@@ -181,7 +181,9 @@ describe('index models with interfaces', () => {
   const MODEL_ID_5 = 'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka005'
 
   test('throws when trying to index an interface model', async () => {
-    const loadStream = jest.fn(() => ({ state: { content: { version: '2.0', interface: true } } }))
+    const loadStream = jest.fn(() => ({
+      state: { content: { version: '2.0', accountRelation: { type: 'none' }, interface: true } },
+    }))
     const core = { loadStream } as unknown as CeramicCoreApi
     const noop = jest.fn()
     const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
@@ -213,6 +215,7 @@ describe('index models with interfaces', () => {
       const runningState = new StateLink({
         content: {
           version: '2.0',
+          accountRelation: { type: 'list' },
           interface: [MODEL_ID_1, MODEL_ID_2, MODEL_ID_3].includes(id),
           implements: found,
         },
@@ -233,6 +236,7 @@ describe('index models with interfaces', () => {
     expect(indexModels).toHaveBeenCalledWith([
       {
         model: model4streamID,
+        relationFields: expect.any(Set),
         implements: [
           'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001',
           'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka003',
@@ -242,9 +246,43 @@ describe('index models with interfaces', () => {
       },
       {
         model: model5streamID,
+        relationFields: expect.any(Set),
         implements: ['kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001'],
         indices: undefined,
       },
     ])
   })
+})
+
+test('automatically index relations', async () => {
+  const streamID = StreamID.fromString(
+    'kjzl6hvfrbw6c5ykyyjq0v80od0nhdimprq7j2pccg1l100ktiiqcc01ddka001'
+  )
+  const loadStream = jest.fn(() => ({
+    state: {
+      content: {
+        version: '2.0',
+        // content relation fields should be indexed
+        relations: {
+          one: { type: 'account' },
+          two: { type: 'account' },
+        },
+        // SET account relation fields should be indexed
+        accountRelation: { type: 'set', fields: ['two', 'three'] },
+      },
+    },
+  }))
+  const core = { loadStream } as unknown as CeramicCoreApi
+  const noop = jest.fn()
+  const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
+  const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
+  const indexModels = jest.fn()
+  ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [], indexModels }
+
+  const indices = [{ fields: [{ path: ['three'] }] }, { fields: [{ path: ['four'] }] }]
+  await indexApi.indexModels([{ streamID, indices }])
+
+  expect(indexModels).toHaveBeenCalledWith([
+    { model: streamID, indices, relationFields: new Set(['one', 'two', 'three']) },
+  ])
 })
