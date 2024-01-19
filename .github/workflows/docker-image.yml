@@ -3,6 +3,19 @@ name: Build custom Docker image
 on:
   workflow_dispatch: # manually triggered
 
+env:
+  # Dagger
+  DAGGER_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/ceramic.cue
+  STATUS_PLAN: cue.mod/pkg/github.com/3box/pipeline-tools/ci/plans/status.cue
+  DAGGER_LOG_FORMAT: "plain"
+  # Secrets
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
 jobs:
   build_and_push:
     name: Build image and push to repository
@@ -11,6 +24,21 @@ jobs:
       -
         name: Check out the repo
         uses: actions/checkout@v3
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+          version: "0.2.36"
+      -
+        name: Setup Dagger
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci"
+      -
+        name: Verify Docker image
+        run: dagger do verify -p ${{ env.DAGGER_PLAN }}
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -35,3 +63,17 @@ jobs:
         run: |
           docker buildx build -o type=docker . --file Dockerfile.daemon --tag $IMAGE_ID:${{ github.sha }}
           docker push --all-tags $IMAGE_ID
+      -
+        name: Verify Docker image
+        run: dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Get version
+        run: echo "VERSION=$(dagger do -l error --output-format json version -p ${{ env.DAGGER_PLAN }} | jq -r '.version')" >> $GITHUB_ENV
+      -
+        name: Set sha tag
+        run: |
+          SHA_TAG=$(echo ${{ github.sha }} | head -c 12)
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
+      -
+        name: Push Docker image
+        run: dagger do push -w "actions:push:\"${{ env.AWS_REGION }}\":tnet:release-candidate:\"${{ github.sha }}\":\"${{ env.SHA_TAG }}\":\"${{ env.VERSION }}\":_" -p ${{ env.DAGGER_PLAN }}
