@@ -24,7 +24,7 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
     RELATION_COLUMN: {
       type: 'character varying',
       maxLength: 1024,
-      nullable: false,
+      nullable: true,
       defaultValue: null,
     },
     /**
@@ -192,7 +192,7 @@ export const STRUCTURES: Record<DatabaseType, StructuresRecord> = {
     RELATION_COLUMN: {
       type: 'varchar',
       maxLength: '1024',
-      nullable: false,
+      nullable: true,
       defaultValue: null,
     },
     /**

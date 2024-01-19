@@ -1,5 +1,15 @@
-import { jest } from '@jest/globals'
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals'
+import {
+  AnchorEvent,
   AnchorStatus,
   CommitType,
   IpfsApi,
@@ -7,8 +17,8 @@ import {
   StreamState,
   StreamUtils,
   SyncOptions,
-  TestUtils,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../../utils.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -22,6 +32,10 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
+import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
+import type { FeedDocument } from '../../feed.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -236,7 +250,7 @@ describe('#load', () => {
       expect(stream.commitId).toEqual(commit0)
       expect(commit0.equals(CommitID.make(streamState.id, streamState.id.cid))).toBeTruthy()
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.allCommitIds.length).toEqual(2)
       expect(stream.anchorCommitIds.length).toEqual(1)
       const commit1 = stream.allCommitIds[1]
@@ -256,7 +270,7 @@ describe('#load', () => {
       expect(commit2.equals(commit1)).toBeFalsy()
       expect(commit2).toEqual(stream.commitId)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.allCommitIds.length).toEqual(4)
       expect(stream.anchorCommitIds.length).toEqual(2)
       const commit3 = stream.allCommitIds[3]
@@ -284,7 +298,7 @@ describe('#load', () => {
       expect(commit4.equals(stream.anchorCommitIds[1])).toBeFalsy()
       expect(stream.state.log.length).toEqual(5)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Correctly check out a specific commit
       const streamStateOriginal = cloneDeep(streamState.state)
@@ -353,7 +367,7 @@ describe('#load', () => {
         anchor: false,
       })
       await stream1.update({ abc: 321, def: 456, gh: 987 })
-      await TestUtils.anchorUpdate(ceramic, stream1)
+      await CoreUtils.anchorUpdate(ceramic, stream1)
 
       const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
       const streamState2 = await ceramic2.repository.load(stream1.id, {
@@ -429,6 +443,13 @@ describe('#load', () => {
       expect(StreamUtils.serializeState(streamState.state)).toEqual(
         StreamUtils.serializeState(snapshot.value)
       )
+
+      // The state store should have been updated as well
+      const loadedState = await ceramic.repository.pinStore.stateStore.load(streamState.id)
+      expect(loadedState.log.length).toEqual(2)
+      expect(StreamUtils.serializeState(loadedState)).toEqual(
+        StreamUtils.serializeState(snapshot.value)
+      )
     })
 
     test('handles basic conflict', async () => {
@@ -436,7 +457,7 @@ describe('#load', () => {
       stream1.subscribe()
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       const streamId = stream1.id
-      await TestUtils.anchorUpdate(ceramic, stream1)
+      await CoreUtils.anchorUpdate(ceramic, stream1)
       const tipPreUpdate = stream1.tip
 
       const newContent = { abc: 321, def: 456, gh: 987 }
@@ -446,7 +467,7 @@ describe('#load', () => {
         publish: false,
       })
 
-      await TestUtils.anchorUpdate(ceramic, stream1)
+      await CoreUtils.anchorUpdate(ceramic, stream1)
       expect(stream1.content).toEqual(newContent)
       const tipValidUpdate = stream1.tip
       // create invalid change that happened after main change
@@ -473,7 +494,7 @@ describe('#load', () => {
         publish: false,
       })
 
-      await TestUtils.anchorUpdate(ceramic, stream2)
+      await CoreUtils.anchorUpdate(ceramic, stream2)
       const tipInvalidUpdate = state$.tip
       expect(stream2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to stream with invalid
@@ -575,7 +596,7 @@ describe('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-    await TestUtils.anchorUpdate(ceramic, schema)
+    await CoreUtils.anchorUpdate(ceramic, schema)
     // Create invalid stream
     const ipfs2 = await createIPFS()
     await swarmConnect(ipfs, ipfs2)
@@ -642,5 +663,147 @@ describe('applyWriteOpts', () => {
       expect(publishSpy).toHaveBeenCalledTimes(1)
       expect(pinSpy).toHaveBeenCalledTimes(1)
     }
+  })
+})
+
+describe('handleAnchorEvent', () => {
+  describe('for tip', () => {
+    test('Anchor COMPLETED for tip should update the stream state and be removed from the anchorRequestStore', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.COMPLETED,
+        message: 'Last COMPLETED',
+        streamId: tile.id,
+        cid: tile.tip,
+        witnessCar: generateFakeCarFile(),
+      }
+      const handleAnchorCommitSpy = jest.spyOn(repository as any, '_handleAnchorCommit')
+      // Work around verification for a fake witness car
+      handleAnchorCommitSpy.mockImplementation(async (state$: RunningState) => {
+        state$.next({
+          ...state$.value,
+          anchorStatus: AnchorStatus.ANCHORED,
+        })
+      })
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(handleAnchorCommitSpy).toBeCalled()
+      expect(state$.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    })
+
+    test('Anchor FAILED for tip should update the stream state and be removed from the anchorRequestStore', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.FAILED,
+        message: 'Last FAILED',
+        streamId: tile.id,
+        cid: tile.tip,
+      }
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(state$.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+    })
+  })
+
+  describe('for non-tip', () => {
+    test('Anchor COMPLETED for non tip should remove the request from the store', async () => {
+      // The anchor commit gets applied anyway
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.COMPLETED,
+        message: 'First COMPLETED',
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+        witnessCar: generateFakeCarFile(),
+      }
+      const handleAnchorCommitSpy = jest.spyOn(repository as any, '_handleAnchorCommit')
+      handleAnchorCommitSpy.mockImplementation(async (state$: RunningState) => {
+        state$.next({
+          ...state$.value,
+          anchorStatus: AnchorStatus.ANCHORED,
+        })
+      })
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(handleAnchorCommitSpy).toBeCalled()
+    })
+
+    test('Anchor REPLACED for non tip should remove the request from the store', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.REPLACED,
+        message: 'First REPLACED',
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+      }
+      const nextSpy = jest.spyOn(state$, 'next')
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(nextSpy).not.toBeCalled()
+    })
+
+    test('Anchor FAILED for non tip should remove the request from the store', async () => {
+      const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })
+      await tile.update({ text: 2 }, undefined, { anchor: true })
+      const state$ = await repository.load(tile.id)
+      const event: AnchorEvent = {
+        status: AnchorRequestStatusName.FAILED,
+        message: 'First FAILED',
+        streamId: tile.id,
+        cid: tile.state.log[0].cid,
+      }
+      const nextSpy = jest.spyOn(state$, 'next')
+      const shouldRemove = await repository.handleAnchorEvent(state$, event)
+      expect(shouldRemove).toBeTruthy()
+      expect(nextSpy).not.toBeCalled()
+    })
+  })
+})
+
+describe('_registerRunningState', () => {
+  test('deduplicate stream updates', async () => {
+    const state$ = new RunningState(
+      {
+        type: 1,
+        metadata: { controllers: ['did:3:foo'] },
+        content: { a: 1 },
+        anchorStatus: 0,
+        log: [
+          {
+            cid: TestUtils.randomCID(),
+            type: CommitType.GENESIS,
+          },
+        ],
+        signature: 3,
+      },
+      false
+    )
+    const emittedDocuments: Array<FeedDocument> = []
+    const subscription = ceramic.feed.aggregation.documents.subscribe((document) => {
+      emittedDocuments.push(document)
+    })
+    expect(emittedDocuments.length).toEqual(0)
+    ;(ceramic.repository as any)._registerRunningState(state$)
+    expect(emittedDocuments.length).toEqual(1)
+    state$.next({
+      ...state$.value,
+      anchorStatus: AnchorStatus.PROCESSING,
+    })
+    expect(emittedDocuments.length).toEqual(1)
+    state$.next({
+      ...state$.value,
+      anchorStatus: AnchorStatus.REPLACED,
+    })
+    // Multiple updates that do not change a stream log, still single emission
+    expect(emittedDocuments.length).toEqual(1)
+    subscription.unsubscribe()
   })
 })

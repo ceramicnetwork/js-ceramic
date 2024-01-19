@@ -1,4 +1,5 @@
-import { StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -9,7 +10,11 @@ let ceramic: Ceramic
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-  ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: false })
+  ceramic = await createCeramic(ipfs, {
+    streamCacheLimit: 1,
+    anchorOnRequest: false,
+    enableAnchorPollingLoop: false,
+  })
 })
 
 afterAll(async () => {
@@ -148,7 +153,7 @@ test('StateLink receives updates', async () => {
 test('free if no one subscribed', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size
   const volatileStart = ceramic.repository.inmemory.volatile.size
-  const stream1 = await TileDocument.create(ceramic, INITIAL)
+  const stream1 = await TileDocument.create(ceramic, INITIAL, undefined, { anchor: false })
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   const subscription1 = stream1.subscribe()

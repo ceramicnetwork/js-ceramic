@@ -22,6 +22,7 @@ import {
   AdminApi,
   NodeStatusResponse,
   AnchorOpts,
+  AnchorEvent,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -40,14 +41,8 @@ import { type IndexingConfig, LocalIndexApi, SyncApi } from '@ceramicnetwork/ind
 import { ShutdownSignal } from './shutdown-signal.js'
 import { LevelDbStore } from './store/level-db-store.js'
 import { AnchorRequestStore } from './store/anchor-request-store.js'
-import { AnchorResumingService } from './state-management/anchor-resuming-service.js'
 import { ProvidersCache } from './providers-cache.js'
 import crypto from 'crypto'
-import { AnchorTimestampExtractor } from './stream-loading/anchor-timestamp-extractor.js'
-import { TipFetcher } from './stream-loading/tip-fetcher.js'
-import { LogSyncer } from './stream-loading/log-syncer.js'
-import { StateManipulator } from './stream-loading/state-manipulator.js'
-import { StreamLoader } from './stream-loading/stream-loader.js'
 import {
   networkOptionsByName,
   type CeramicNetworkOptions,
@@ -57,10 +52,10 @@ import {
   makeAnchorService,
   makeEthereumRpcUrl,
 } from './initialization/anchoring.js'
-import { StreamUpdater } from './stream-loading/stream-updater.js'
 import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
+import { Feed, type PublicFeed } from './feed.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -142,6 +137,7 @@ export interface CeramicModules {
   shutdownSignal: ShutdownSignal
   providersCache: ProvidersCache
   anchorRequestCarBuilder: AnchorRequestCarBuilder
+  feed: Feed
 }
 
 /**
@@ -176,6 +172,13 @@ const tryStreamId = (id: string): StreamID | null => {
 }
 
 /**
+ * Internal API for js-ceramic core, mimics the HTTP API outlined above
+ *
+ * - `ceramic.feed.aggregation.streamStates`
+ *     - all as Observable<T>
+ */
+
+/**
  * ### Ceramic core implementation.<br/>
  *
  * To install this library:<br/>
@@ -186,9 +189,9 @@ export class Ceramic implements CeramicApi {
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
+  public readonly feed: PublicFeed
   readonly repository: Repository
   readonly anchorService: AnchorService
-  private readonly anchorResumingService: AnchorResumingService
   private readonly providersCache: ProvidersCache
   private readonly syncApi: SyncApi
 
@@ -208,8 +211,8 @@ export class Ceramic implements CeramicApi {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
-    this.anchorResumingService = new AnchorResumingService(this._logger)
     this.repository = modules.repository
+    this.feed = modules.feed
     this._shutdownSignal = modules.shutdownSignal
     this.dispatcher = modules.dispatcher
     this.anchorService = modules.anchorService
@@ -258,7 +261,7 @@ export class Ceramic implements CeramicApi {
       dispatcher: this.dispatcher,
       pinStore: pinStore,
       keyValueStore: this._levelStore,
-      anchorRequestStore: new AnchorRequestStore(),
+      anchorRequestStore: new AnchorRequestStore(this._logger),
       context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
@@ -350,7 +353,8 @@ export class Ceramic implements CeramicApi {
       : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
-    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const feed = new Feed()
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
@@ -395,6 +399,7 @@ export class Ceramic implements CeramicApi {
       shutdownSignal,
       providersCache,
       anchorRequestCarBuilder,
+      feed,
     }
 
     return [modules, params]
@@ -439,7 +444,10 @@ export class Ceramic implements CeramicApi {
       }
 
       if (!this._readOnly) {
-        await this.anchorService.init()
+        await this.anchorService.init(
+          this.repository.anchorRequestStore,
+          this.repository.anchorLoopHandler(this._logger)
+        )
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
           this.anchorService,
@@ -455,13 +463,6 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._startupChecks()
-
-      // We're not awaiting here on purpose, it's not supposed to be blocking
-      this.anchorResumingService
-        .resumeRunningStatesFromAnchorRequestStore(this.repository)
-        .catch((error) => {
-          this._logger.err(`Error while resuming anchors: ${error}`)
-        })
     } catch (err) {
       await this.close()
       throw err
@@ -549,7 +550,6 @@ export class Ceramic implements CeramicApi {
       anchorServiceUrl: this.anchorService.url,
       ethereumRpcEndpoint: this.anchorService.validator.ethereumRpcEndpoint,
       chainId: this.anchorService.validator.chainId,
-      pendingAnchors: this.repository.numPendingAnchors,
     }
     const ipfsStatus = await this.dispatcher.ipfsNodeStatus()
 
@@ -590,9 +590,9 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
     const id = normalizeStreamID(streamId)
 
-    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
+    this._logger.debug(`Apply commit to stream ${id.toString()}`)
     const state$ = await this.repository.applyCommit(id, commit, opts)
-    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
+    this._logger.debug(`Applied commit to stream ${id.toString()}`)
 
     return streamFromState<T>(
       this.context,
@@ -644,7 +644,6 @@ export class Ceramic implements CeramicApi {
       this.repository.updates$
     )
     this._logger.verbose(`Created stream ${streamId.toString()} from state`)
-
     return stream
   }
 
@@ -864,7 +863,7 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
-    await this.anchorResumingService.close()
+    await this.anchorService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()
     await this.dispatcher.close()

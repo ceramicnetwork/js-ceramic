@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -11,6 +12,7 @@ import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -68,13 +70,15 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      linkedDoc: {
-        type: 'string',
-      },
+      linkedDoc: { type: 'string' },
+      optionalLinkedDoc: { type: 'string' },
     },
     required: ['linkedDoc'],
   },
-  relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
+  relations: {
+    linkedDoc: { type: 'document', model: MODEL_STREAM_ID },
+    optionalLinkedDoc: { type: 'document', model: MODEL_STREAM_ID },
+  },
 }
 
 describe('ModelInstanceDocument API http-client tests', () => {
@@ -216,11 +220,39 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).rejects.toThrow(/must be to a Stream in the Model/)
   })
 
+  test('Cannot create a document with a missing required relation', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(() => {
+      return ModelInstanceDocument.create(
+        ceramic,
+        { optionalLinkedDoc: doc.id.toString() },
+        midRelationMetadata
+      )
+    }).rejects.toThrow()
+  })
+
+  test('Can create, remove and add an optional relation', async () => {
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    const docID = doc.id.toString()
+    // Create with optional relation
+    const docWithRelation = await ModelInstanceDocument.create<{
+      linkedDoc: string
+      optionalLinkedDoc?: string
+    }>(ceramic, { linkedDoc: docID, optionalLinkedDoc: docID }, midRelationMetadata)
+    expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
+    // Remove optional relation
+    await docWithRelation.replace({ linkedDoc: docID })
+    expect(docWithRelation.content.optionalLinkedDoc).toBeUndefined()
+    // Add optional relation
+    await docWithRelation.replace({ linkedDoc: docID, optionalLinkedDoc: docID })
+    expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
+  })
+
   test('Anchor genesis', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await TestUtils.anchorUpdate(core, doc)
+    await CoreUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -236,7 +268,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await doc.replace(CONTENT1)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await TestUtils.anchorUpdate(core, doc)
+    await CoreUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -251,13 +283,13 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
-    await TestUtils.anchorUpdate(core, doc)
+    await CoreUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     await doc.replace(CONTENT2)
     await doc.replace(CONTENT3)
 
-    await TestUtils.anchorUpdate(core, doc)
+    await CoreUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -297,7 +329,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   test('Can load a stream', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
-    await TestUtils.anchorUpdate(core, doc)
+    await CoreUtils.anchorUpdate(core, doc)
     await doc.sync()
 
     const loaded = await ModelInstanceDocument.load(ceramic, doc.id)
@@ -419,8 +451,9 @@ describe('ModelInstanceDocument API multi-node tests', () => {
 
   test('load updated and anchored doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic0, CONTENT0, midMetadata)
+
     await doc.replace(CONTENT1)
-    await TestUtils.anchorUpdate(ceramic0, doc)
+    await CoreUtils.anchorUpdate(ceramic0, doc)
 
     const loaded = await ModelInstanceDocument.load(ceramic1, doc.id)
 

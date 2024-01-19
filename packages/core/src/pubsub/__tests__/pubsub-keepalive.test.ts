@@ -1,5 +1,6 @@
 import { expect, jest } from '@jest/globals'
-import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { Pubsub } from '../pubsub.js'
 import { deserialize, KeepaliveMessage, MsgType } from '../pubsub-message.js'
 import { PubsubKeepalive } from '../pubsub-keepalive.js'

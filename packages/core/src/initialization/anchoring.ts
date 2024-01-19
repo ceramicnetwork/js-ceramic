@@ -114,13 +114,13 @@ export function makeAnchorServiceAuth(
 }
 
 export function makeAnchorService(
-  config: CeramicConfig, // FIXME and partial inmemory options
+  config: CeramicConfig,
   ethereumRpcUrl: string | undefined,
   network: Networks,
   logger: DiagnosticsLogger
 ): AnchorService {
   if (network === Networks.INMEMORY) {
-    return new InMemoryAnchorService(config as any)
+    return new InMemoryAnchorService(config as any, logger)
   }
   const anchorServiceUrl = makeAnchorServiceUrl(config.anchorServiceUrl, network)
   if (!config.readOnly) {

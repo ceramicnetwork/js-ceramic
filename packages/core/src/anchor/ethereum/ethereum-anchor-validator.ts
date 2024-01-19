@@ -1,8 +1,8 @@
 import * as uint8arrays from 'uint8arrays'
 import * as providers from '@ethersproject/providers'
 import { LRUCache } from 'least-recent'
-import { AnchorProof, DiagnosticsLogger } from '@ceramicnetwork/common'
-import { Block, TransactionResponse } from '@ethersproject/providers'
+import type { AnchorProof, DiagnosticsLogger } from '@ceramicnetwork/common'
+import type { Block, TransactionResponse } from '@ethersproject/providers'
 import { Interface } from '@ethersproject/abi'
 import { create as createMultihash } from 'multiformats/hashes/digest'
 import { CID } from 'multiformats/cid'
@@ -214,7 +214,8 @@ export class EthereumAnchorValidator implements AnchorValidator {
       throw new Error(`The root CID ${anchorProof.root} is not in the transaction`)
     }
 
-    if (txResponse.blockNumber <= BLOCK_THRESHHOLDS[this._chainId]) {
+    // we use the anchor proof chain id instead of the this._chainId, as this._chainId is not set if the ceramic node is being used in readOnly mode
+    if (txResponse.blockNumber <= BLOCK_THRESHHOLDS[anchorProof.chainId]) {
       return block.timestamp
     }
 
@@ -222,7 +223,7 @@ export class EthereumAnchorValidator implements AnchorValidator {
     if (anchorProof.txType !== V1_PROOF_TYPE) {
       throw new Error(
         `Any anchor proofs created after block ${
-          BLOCK_THRESHHOLDS[this._chainId]
+          BLOCK_THRESHHOLDS[anchorProof.chainId]
         } must include the txType field. Anchor txn blockNumber: ${txResponse.blockNumber}`
       )
     }

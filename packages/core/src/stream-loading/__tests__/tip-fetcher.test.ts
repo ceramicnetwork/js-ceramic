@@ -2,7 +2,8 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../../dispatcher.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createDispatcher } from '../../__tests__/create-dispatcher.js'
-import { IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { deserialize, MsgType, PubsubMessage, serialize } from '../../pubsub/pubsub-message.js'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { TipFetcher } from '../tip-fetcher.js'
@@ -44,7 +45,7 @@ describe('TipFetcher test', () => {
       if (message.typ == MsgType.QUERY && message.stream.equals(streamID)) {
         const tipMap = new Map().set(streamID.toString(), tip)
         const response: PubsubMessage = { typ: MsgType.RESPONSE, id: message.id, tips: tipMap }
-        ipfs2.pubsub.publish(TOPIC, serialize(response))
+        void ipfs2.pubsub.publish(TOPIC, serialize(response))
       }
     })
 

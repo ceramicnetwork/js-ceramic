@@ -22,7 +22,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { catchError, EMPTY, Observable, Subject, Subscription, takeUntil, concatMap } from 'rxjs'
+import { distinctUntilKeyChanged, map, Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -32,10 +32,11 @@ import { StreamLoader } from '../stream-loading/stream-loader.js'
 import { OperationType } from './operation-type.js'
 import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
-import type { AnchorService } from '../anchor/anchor-service.js'
+import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.js'
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
+import { FeedDocument, type Feed } from '../feed.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -45,7 +46,6 @@ const CACHE_HIT_LOCAL = 'cache_hit_local'
 const CACHE_HIT_MEMORY = 'cache_hit_memory'
 const CACHE_HIT_REMOTE = 'cache_hit_remote'
 const STREAM_SYNC = 'stream_sync'
-const ANCHOR_POLL_COUNT = 'anchor_poll_count'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -98,11 +98,13 @@ enum SyncStatus {
 export class Repository {
   /**
    * Serialize loading operations per streamId.
+   * All writes to the 'inmemory' cache must happen within the context of this queue.
    */
   readonly loadingQ: ExecutionQueue
 
   /**
    * Serialize operations on state per streamId.
+   * All writes to the StateStore must happen within the context of this queue.
    */
   readonly executionQ: ExecutionQueue
 
@@ -110,6 +112,8 @@ export class Repository {
    * In-memory cache of the currently running streams.
    */
   readonly inmemory: StateCache<RunningState>
+
+  private readonly feed: Feed
 
   /**
    * Various dependencies.
@@ -130,14 +134,17 @@ export class Repository {
    * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
+   * @param feed - Feed to push StreamStates to.
    */
   constructor(
     cacheLimit: number,
     concurrencyLimit: number,
+    feed: Feed,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
     this.executionQ = new ExecutionQueue('execution', concurrencyLimit, logger)
+    this.feed = feed
     this.inmemory = new StateCache(cacheLimit, (state$) => {
       if (state$.subscriptionSet.size > 0) {
         logger.debug(`Stream ${state$.id} evicted from cache while having subscriptions`)
@@ -163,7 +170,7 @@ export class Repository {
   async init(): Promise<void> {
     await this.#deps.keyValueStore.init()
     await this.pinStore.open(this.#deps.keyValueStore)
-    await this.anchorRequestStore.open(this.#deps.keyValueStore)
+    await this.anchorRequestStore.open(this.#deps.keyValueStore) // Initialization hell
     await this.index.init()
   }
 
@@ -255,7 +262,7 @@ export class Repository {
         default:
           throw new UnreachableCaseError(opts.sync, 'Invalid sync option')
       }
-    })
+    }, 'Repository::load')
 
     if (checkCacaoExpiration) {
       StreamUtils.checkForCacaoExpiration(state$.state)
@@ -265,15 +272,27 @@ export class Repository {
       // Only update the pinned state if we actually did anything that might change it. If we just
       // loaded from the cache and didn't even query the network, there's no reason to bother
       // writing to the state store and index, since nothing could have changed.
-      await this._updateStateIfPinned(state$)
+      await this._updateStateIfPinned_safe(state$)
       if (syncStatus == SyncStatus.DID_SYNC && state$.isPinned) {
         this.markPinnedAndSynced(state$.id)
       }
     }
-
     return state$
   }
 
+  /**
+   * Helper for updating the state from within the ExecutionQueue, which protects all updates
+   * to the state store.
+   */
+  private async _updateStateIfPinned_safe(state$: RunningState): Promise<void> {
+    return this.executionQ.forStream(state$.id).run(() => {
+      return this._updateStateIfPinned(state$)
+    }, 'Repository::_updateStateIfPinned_safe')
+  }
+
+  /**
+   * Must be called from within the ExecutionQueue to be safe.
+   */
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     // TODO (NET-1687): unify shouldIndex check into indexStreamIfNeeded
@@ -299,24 +318,10 @@ export class Repository {
       Metrics.count(CACHE_HIT_LOCAL, 1)
       const runningState = new RunningState(streamState, true)
       this._registerRunningState(runningState)
-      const storedRequest = await this.anchorRequestStore.load(streamId)
-      if (storedRequest !== null && this.anchorService) {
-        await this._confirmAnchorResponse(runningState, storedRequest.cid)
-      }
       return runningState
     } else {
       return undefined
     }
-  }
-
-  /**
-   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
-   * Adds the stream to cache.
-   */
-  private async _fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const fromMemory = this._fromMemory(streamId)
-    if (fromMemory) return fromMemory
-    return this._fromStreamStateStore(streamId)
   }
 
   /**
@@ -446,13 +451,14 @@ export class Repository {
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
       StreamUtils.checkForCacaoExpiration(stateAtCommit)
 
-      // If the provided CommitID is ahead of what we have in the cache, then we should update
-      // the cache to include it.
+      // If the provided CommitID is ahead of what we have in the cache and state store, then we
+      // should update them to include it.
       if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
         existingState$.next(stateAtCommit)
+        await this._updateStateIfPinned(existingState$)
       }
       return new SnapshotState(stateAtCommit)
-    })
+    }, 'Repository::_atCommit')
   }
 
   /**
@@ -475,26 +481,32 @@ export class Repository {
    * @param opts - Stream initialization options (request anchor, wait, etc.)
    */
   async applyCommit(streamId: StreamID, commit: any, opts: UpdateOpts): Promise<RunningState> {
-    this.logger.verbose(`Repository apply commit to stream ${streamId.toString()}`)
+    this.logger.debug(`Repository apply commit to stream ${streamId.toString()}`)
 
     const state$ = await this.load(streamId)
-    this.logger.verbose(`Repository loaded state for stream ${streamId.toString()}`)
+    this.logger.debug(`Repository loaded state for stream ${streamId.toString()}`)
 
     return this.executionQ.forStream(streamId).run(async () => {
+      this.logger.debug(`Repository::applyCommit: in the queue`)
       const originalState = state$.state
+      this.logger.debug(`Repository::applyCommit: applying commit from user`)
       const updatedState = await this.streamUpdater.applyCommitFromUser(originalState, commit)
+      this.logger.debug(`Repository::applyCommit: did apply commit from user`)
       if (StreamUtils.tipFromState(updatedState).equals(StreamUtils.tipFromState(originalState))) {
+        this.logger.debug(`Repository::applyCommit: same state`)
         return state$ // nothing changed
       }
 
       state$.next(updatedState) // emit the new state
 
+      this.logger.debug(`Repository::applyCommit: about to update state if pinned`)
       await this._updateStateIfPinned(state$)
+      this.logger.debug(`Repository::applyCommit: about to write opts`)
       await this._applyWriteOpts(state$, opts, OperationType.UPDATE)
-      this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
+      this.logger.debug(`Stream ${state$.id} successfully updated to tip ${state$.tip}`)
 
       return state$
-    })
+    }, 'Repository::applyCommit')
   }
 
   /**
@@ -505,7 +517,16 @@ export class Repository {
    * @param model - Model Stream ID
    */
   async handleUpdateFromNetwork(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    let state$ = await this._fromMemoryOrStore(streamId)
+    // TODO: It isn't safe to load the RunningState from the state store outside of the LoadingQueue
+    // as we do here.  We risk a race condition where we can wind up with multiple RunnigStates
+    // coexisting for the same Stream.  Doing this simple fix of just using the LoadingQueue here
+    // risks introducing a big performance degradation. The right thing to do would be to do this
+    // load in two phases, first check the cache and state store for the streamid (but without
+    // creating or registering a RunningState), and then only if there actually is something in the
+    // state store, then load it again but from within the LoadingQueue.  Given that pubsub is about
+    // to be removed though, instead of doing that work now, we're leaving this as-is even though
+    // there's a race condition here, understanding that this code will be removed very soon anyway.
+    let state$ = await this.fromMemoryOrStore_UNSAFE(streamId)
     const shouldIndex = model && this.index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
       // stream isn't pinned or indexed, nothing to do
@@ -527,24 +548,26 @@ export class Repository {
    * @returns boolean - whether or not the tip was actually applied
    */
   private async _handleTip(state$: RunningState, cid: CID): Promise<boolean> {
+    this.logger.debug(`About to enter execution queue to handle tip ${cid} for stream ${state$.id}`)
     return this.executionQ.forStream(state$.id).run(async () => {
-      this.logger.verbose(`Learned of new tip ${cid} for stream ${state$.id}`)
+      this.logger.debug(`Learned of new tip ${cid} for stream ${state$.id}`)
       const next = await this.streamUpdater.applyTipFromNetwork(state$.state, cid)
       if (next) {
         state$.next(next)
+        this.logger.debug(`Going to update pinned state for stream ${state$.id}`)
         await this._updateStateIfPinned(state$)
-        this.logger.verbose(`Stream ${state$.id} successfully updated to tip ${cid}`)
+        this.logger.debug(`Stream ${state$.id} successfully updated to tip ${cid}`)
         return true
       } else {
         return false
       }
-    })
+    }, 'Repository::_handleTip')
   }
 
   /**
    * Request anchor for the latest stream state
    */
-  async anchor(state$: RunningState, opts: AnchorOpts): Promise<Subscription> {
+  async anchor(state$: RunningState, opts: AnchorOpts): Promise<void> {
     if (!this.anchorService) {
       throw new Error(`Anchor requested for stream ${state$.id} but anchoring is disabled`)
     }
@@ -553,75 +576,25 @@ export class Repository {
     }
 
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
-    const genesisCID = state$.value.log[0].cid
-    const genesisCommit = carFile.get(genesisCID)
-    await this.anchorRequestStore.save(state$.id, {
-      cid: state$.tip,
-      timestamp: Date.now(),
-      genesis: genesisCommit,
-    })
-
-    const anchorStatus$ = await this.anchorService.requestAnchor(
-      carFile,
-      opts.waitForAnchorConfirmation
-    )
-    return this._processAnchorResponse(state$, anchorStatus$)
-  }
-
-  /**
-   * If, when checking an entry in the AnchorRequestStore, we notice that the commit CID from the
-   * stored request has in fact already been anchored, we need to clean up the entry from the store
-   * so it doesn't stick around forever.  We need to do that from within the ExecutionQueue, however,
-   * or we risk deleting a valid entry for a newer request on the same Stream from the store.
-   */
-  private async _cleanUpStaleAnchorRequestStore(state$: RunningState, commit: CID): Promise<void> {
-    return this.executionQ.forStream(state$.id).run(async () => {
-      const request = await this.anchorRequestStore.load(state$.id)
-      if (!request.cid.equals(commit)) {
-        // We've already moved on to a newer request, don't accidentally delete the new request
-        return
-      }
-
-      // Even if we may have already checked this condition before calling into this function,
-      // we need to check it again under the execution queue as the state may have changed in the
-      // meantime otherwise.
-      if (
-        state$.state.anchorStatus == AnchorStatus.ANCHORED &&
-        StreamUtils.stateContainsCommit(state$.state, commit)
-      ) {
-        // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
-        await this.anchorRequestStore.remove(state$.id)
-      }
-    })
-  }
-
-  /**
-   * Restart polling and handle response for a previously submitted anchor request
-   */
-  private async _confirmAnchorResponse(state$: RunningState, cid: CID): Promise<Subscription> {
-    if (
-      state$.state.anchorStatus == AnchorStatus.ANCHORED &&
-      StreamUtils.stateContainsCommit(state$.state, cid)
-    ) {
-      // The commit was already anchored. Clean up the AnchorRequestStore entry for this CID.
-      await this._cleanUpStaleAnchorRequestStore(state$, cid)
-    }
-
-    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, cid)
-    return this._processAnchorResponse(state$, anchorStatus$)
+    const anchorEvent = await this.anchorService.requestAnchor(carFile)
+    // Don't wait on handling the anchor event, let that happen in the background.
+    void this.handleAnchorEvent(state$, anchorEvent)
   }
 
   /**
    * Handle AnchorEvent and update state$.
+   * Used in two places:
+   * 1. When handling the first AnchorEvent from CAS when requesting an anchor => anchorEvent is for tip
+   * 2. When handling a response from CAS => anchorEvent is for what is stored in AnchorRequestStore.
+   *
+   * It always stores just the most recently requested commit.
+   * We assume CAS issues a REPLACED status when getting a request for a previous commit.
    *
    * @param state$ - RunningState instance to update.
    * @param anchorEvent - response from CAS.
-   * @return boolean - `true` if polling should stop, `false` if polling continues
+   * @return boolean - `true` if polling should stop, i.e. we reached a terminal state, `false` if polling continues.
    */
-  private async _handleAnchorResponse(
-    state$: RunningState,
-    anchorEvent: AnchorEvent
-  ): Promise<boolean> {
+  async handleAnchorEvent(state$: RunningState, anchorEvent: AnchorEvent): Promise<boolean> {
     // We don't want to change a stream's state due to changes to the anchor
     // status of a commit that is no longer the tip of the stream, so we early return
     // in most cases when receiving a response to an old anchor request.
@@ -629,36 +602,30 @@ export class Repository {
     // is now anchored, in which case we still want to try to process the anchor commit
     // and let the stream's conflict resolution mechanism decide whether or not to update
     // the stream's state.
+    this.logger.debug(`in handleAnchorEvent for stream ${state$.id}`)
     const status = anchorEvent.status
     switch (status) {
       case AnchorRequestStatusName.READY:
       case AnchorRequestStatusName.PENDING: {
-        if (!anchorEvent.cid.equals(state$.tip)) return
+        if (!anchorEvent.cid.equals(state$.tip)) return false
+        if (state$.state.anchorStatus === AnchorStatus.PENDING) return false
         const next = {
           ...state$.value,
           anchorStatus: AnchorStatus.PENDING,
         }
         state$.next(next)
-        await this._updateStateIfPinned(state$)
+        await this._updateStateIfPinned_safe(state$)
         return false
       }
       case AnchorRequestStatusName.PROCESSING: {
-        if (!anchorEvent.cid.equals(state$.tip)) return
+        if (!anchorEvent.cid.equals(state$.tip)) return false
+        if (state$.state.anchorStatus === AnchorStatus.PROCESSING) return false
         state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING })
-        await this._updateStateIfPinned(state$)
+        await this._updateStateIfPinned_safe(state$)
         return false
       }
       case AnchorRequestStatusName.COMPLETED: {
-        const anchorCommitCID = anchorEvent.witnessCar.roots[0]
         await this._handleAnchorCommit(state$, anchorEvent.cid, anchorEvent.witnessCar)
-        if (state$.tip.equals(anchorCommitCID)) {
-          // TODO: This check is brittle.  If the anchor commit is rejected by conflict resolution
-          // or if the stream already has the anchor commit but has newer commits as well, then we
-          // won't ever clean up the entry in the AnchorRequestStore.  To do this well we need a
-          // transactional AnchorRequestStore where we can do a compare-and-swap based on the tip
-          // in the request.
-          await this.anchorRequestStore.remove(state$.id)
-        }
         return true
       }
       case AnchorRequestStatusName.FAILED: {
@@ -669,9 +636,8 @@ export class Repository {
         // if this is the anchor response for the tip update the state
         if (anchorEvent.cid.equals(state$.tip)) {
           state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED })
-          await this.anchorRequestStore.remove(state$.id)
+          return true
         }
-        // we stop the polling as this is a terminal state
         return true
       }
       case AnchorRequestStatusName.REPLACED: {
@@ -681,57 +647,11 @@ export class Repository {
 
         // If this is the tip and the node received a REPLACED response for it the node has gotten into a weird state.
         // Hopefully this should resolve through updates that will be received shortly or through syncing the stream.
-        if (anchorEvent.cid.equals(state$.tip)) {
-          await this.anchorRequestStore.remove(state$.id)
-        }
-
         return true
       }
       default:
         throw new UnreachableCaseError(status, 'Unknown anchoring state')
     }
-  }
-
-  private _processAnchorResponse(
-    state$: RunningState,
-    anchorStatus$: Observable<AnchorEvent>
-  ): Subscription {
-    const stopSignal = new Subject<void>()
-    this.#numPendingAnchorSubscriptions++
-    Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-    const subscription = anchorStatus$
-      .pipe(
-        takeUntil(stopSignal),
-        concatMap(async (anchorEvent) => {
-          const shouldStop = await this._handleAnchorResponse(state$, anchorEvent)
-          if (shouldStop) stopSignal.next()
-        }),
-        catchError((error) => {
-          // TODO: Combine these two log statements into one line so that they can't get split up in the
-          // log output.
-          this.logger.warn(`Error while anchoring stream ${state$.id}:${error}`)
-          this.logger.warn(error) // Log stack trace
-
-          // TODO: This can leave a stream with AnchorStatus PENDING or PROCESSING indefinitely.
-          // We should distinguish whether the error is transient or permanent, and either transition
-          // to AnchorStatus FAILED or keep retrying.
-          return EMPTY
-        })
-      )
-      .subscribe(
-        null,
-        (err) => {
-          this.#numPendingAnchorSubscriptions--
-          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-          throw err
-        },
-        () => {
-          this.#numPendingAnchorSubscriptions--
-          Metrics.observe(ANCHOR_POLL_COUNT, this.#numPendingAnchorSubscriptions)
-        }
-      )
-    state$.add(subscription)
-    return subscription
   }
 
   /**
@@ -759,7 +679,7 @@ export class Repository {
     const anchorCommitCID = witnessCAR.roots[0]
     if (!anchorCommitCID) throw new Error(`No anchor commit CID as root`)
 
-    this.logger.verbose(`Handling anchor commit for ${streamId} with CID ${anchorCommitCID}`)
+    this.logger.debug(`Handling anchor commit for ${streamId} with CID ${anchorCommitCID}`)
 
     for (
       let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1;
@@ -768,8 +688,9 @@ export class Repository {
     ) {
       try {
         if (witnessCAR) {
+          this.logger.debug(`about to import CAR file for ${streamId}`)
           await this.dispatcher.importCAR(witnessCAR)
-          this.logger.verbose(`successfully imported CAR file for ${streamId}`)
+          this.logger.debug(`successfully imported CAR file for ${streamId}`)
         }
 
         const applied = await this._handleTip(state$, anchorCommitCID)
@@ -787,7 +708,7 @@ export class Repository {
               } after ${APPLY_ANCHOR_COMMIT_ATTEMPTS - remainingRetries} attempts`
             )
           } else {
-            this.logger.verbose(
+            this.logger.debug(
               `Successfully applied anchor commit ${anchorCommitCID} for stream ${state$.id}`
             )
           }
@@ -812,7 +733,9 @@ export class Repository {
   }
 
   /**
-   * Apply options relating to authoring a new commit
+   * Apply options relating to authoring a new commit.
+   *
+   * Must be called within the ExecutionQueue to be safe.
    *
    * @param state$ - Running State
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
@@ -872,7 +795,7 @@ export class Repository {
       (opts.pin === undefined && shouldIndex(state$, this.index)) ||
       (opts.pin === undefined && opType == OperationType.CREATE)
     ) {
-      await this.pin(state$)
+      await this._pin_UNSAFE(state$)
     } else if (opts.pin === false) {
       await this.unpin(state$)
     }
@@ -886,19 +809,39 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
+
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
     const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
-    await this._applyWriteOpts(state, opts, opType)
-    return state
+
+    return this.executionQ.forStream(streamId).run(async () => {
+      await this._applyWriteOpts(state, opts, opType)
+      return state
+    }, 'Repository::applyCreateOpts')
   }
 
   /**
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
+   * Must be called from within the LoadingQueue (or else there's a race condition where it can
+   * override the RunningState from the cache).
    */
   async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    return await this._fromMemoryOrStore(streamId)
+    return this.loadingQ.forStream(streamId).run(() => {
+      return this.fromMemoryOrStore_UNSAFE(streamId)
+    }, 'Repository::fromMemoryOrStore')
+  }
+
+  /**
+   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
+   * Adds the stream to cache.
+   * "unsafe" because calling this outside of the LoadingQueue might create a duplicate instance of
+   * RunningState for the same StreamId. Must be called from inside the LoadingQueue to be used safely.
+   */
+  async fromMemoryOrStore_UNSAFE(streamId: StreamID): Promise<RunningState | undefined> {
+    const fromMemory = this._fromMemory(streamId)
+    if (fromMemory) return fromMemory
+    return this._fromStreamStateStore(streamId)
   }
 
   /**
@@ -918,11 +861,33 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
+    state$
+      .pipe(
+        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
+          // Consider distinct if proposed log length differs
+          if (proposedLog.length !== currentLog.length) return false
+          // Or let's see if the tip is different
+          const currentTip = currentLog[currentLog.length - 1].cid
+          const proposedTip = proposedLog[proposedLog.length - 1].cid
+          return currentTip.equals(proposedTip)
+        }),
+        map(FeedDocument.fromStreamState)
+      )
+      .subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
   pin(state$: RunningState, force?: boolean): Promise<void> {
-    return this.#deps.pinStore.add(state$, force)
+    return this.executionQ.forStream(state$.id).run(async () => {
+      return this._pin_UNSAFE(state$, force)
+    }, 'Repository::pin')
+  }
+
+  /**
+   * Only safe to call from within the ExecutionQueue
+   */
+  private async _pin_UNSAFE(state$: RunningState, force?: boolean): Promise<void> {
+    return this.pinStore.add(state$, force)
   }
 
   async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
@@ -1038,16 +1003,45 @@ export class Repository {
   updates$(init: StreamState): Observable<StreamState> {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
-      this.fromMemoryOrStore(id).then((found) => {
-        const state$ = found || new RunningState(init, false)
-        this.inmemory.endure(id.toString(), state$)
-        state$.subscribe(subscriber).add(() => {
-          if (state$.observers.length === 0) {
-            this.inmemory.free(id.toString())
+      this.fromMemoryOrStore(id)
+        .then((found) => {
+          const state$ = found || new RunningState(init, false)
+          if (!found) {
+            this._registerRunningState(state$)
           }
+          this.inmemory.endure(id.toString(), state$)
+          const subscription = state$.subscribe(subscriber)
+          state$.add(subscription)
+          subscription.add(() => {
+            if (state$.subscriptionSet.size === 0) {
+              this.inmemory.free(id.toString())
+            }
+          })
         })
-      })
+        .catch((error) => {
+          this.logger.err(`An error occurred in updates$ for StreamID ${id}: ${error}`)
+          // propagate the error to the subscriber
+          subscriber.error(error)
+        })
     })
+  }
+
+  anchorLoopHandler(logger: DiagnosticsLogger): AnchorLoopHandler {
+    const carBuilder = this.#deps.anchorRequestCarBuilder
+    const fromMemoryOrStoreSafe = this.fromMemoryOrStore.bind(this)
+    const handleAnchorEvent = this.handleAnchorEvent.bind(this)
+    return {
+      buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {
+        return carBuilder.build(streamId, tip)
+      },
+      async handle(event: AnchorEvent): Promise<boolean> {
+        logger.debug(`Loading stream ${event.streamId} from the state store`)
+        const state$ = await fromMemoryOrStoreSafe(event.streamId)
+        logger.debug(`State for stream ${event.streamId} loaded successfully from the state store`)
+        if (!state$) return true
+        return handleAnchorEvent(state$, event)
+      },
+    }
   }
 
   async close(): Promise<void> {

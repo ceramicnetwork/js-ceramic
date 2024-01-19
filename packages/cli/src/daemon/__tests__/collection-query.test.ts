@@ -1,6 +1,6 @@
 import { collectionQuery, InvalidPaginationError, parsePagination } from '../collection-queries.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { TestUtils } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 describe('parsePagination', () => {
   test('parse forward pagination', () => {

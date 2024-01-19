@@ -54,6 +54,7 @@ beforeAll(async () => {
   })
 
   const ceramicConfig = makeCeramicConfig(daemonConfig)
+  ceramicConfig.enableAnchorPollingLoop = false
   core = await Ceramic.create(ipfs, ceramicConfig)
   daemon = new CeramicDaemon(core, daemonConfig)
   await daemon.listen()

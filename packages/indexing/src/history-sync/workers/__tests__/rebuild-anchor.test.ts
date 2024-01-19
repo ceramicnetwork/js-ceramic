@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
-import { TestUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { LoggerProvider } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { RebuildAnchorWorker } from '../rebuild-anchor.js'
 import { IpfsService, RebuildAnchorJobData } from '../../interfaces.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { default as PgBoss } from 'pg-boss'
 import { convertEthHashToCid } from '@ceramicnetwork/anchor-utils'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const ROOT_CID = 'bafyreie44gklj64ldakdfwfytho74sarfagfpccdf3wgkuf6dgjugrmlde'
 const ANCHOR_PROOF = {

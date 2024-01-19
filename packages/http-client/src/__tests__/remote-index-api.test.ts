@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals'
 import { RemoteIndexApi } from '../remote-index-api.js'
-import { CommitType, fetchJson, Page, StreamState, TestUtils } from '@ceramicnetwork/common'
+import { CommitType, fetchJson, Page, StreamState } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const FAUX_ENDPOINT = new URL('https://example.com')
 const MODEL = new StreamID(1, TestUtils.randomCID())

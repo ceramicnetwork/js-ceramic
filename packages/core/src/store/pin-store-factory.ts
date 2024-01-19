@@ -1,5 +1,5 @@
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { DiagnosticsLogger, IpfsApi, PinningBackendStatic } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, IpfsApi, PinningBackendStatic, toCID } from '@ceramicnetwork/common'
 import { PinningAggregation } from '@ceramicnetwork/pinning-aggregation'
 import { PinStore } from './pin-store.js'
 import type { CID } from 'multiformats/cid'
@@ -58,7 +58,7 @@ export class PinStoreFactory {
       return undefined
     }
     const resolve = async (path: string): Promise<CID> => {
-      return (await ipfs.dag.resolve(path)).cid
+      return toCID((await ipfs.dag.resolve(path)).cid.toString()) // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
     }
     const loadStream = this.repository.load.bind(this.repository)
     return new PinStore(this._stateStore, pinning, retrieve, resolve, loadStream)

@@ -48,12 +48,13 @@
     "@ceramicnetwork/streamid": "^3.2.0",
     "@scarf/scarf": "^1.1.1",
     "query-string": "^7.1.0",
-    "rxjs": "^7.5.2"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "dids": "^4.0.0",
-    "key-did-resolver": "^3.0.0",
-    "multiformats": "^11.0.1"
+    "@ceramicnetwork/common-test-utils": "^1.0.0",
+    "dids": "^5.0.0",
+    "key-did-resolver": "^4.0.0",
+    "multiformats": "^13.0.0"
   },
   "gitHead": "56e646e82ee6e9cdb0b762bbbf77b8432edce367"
 }

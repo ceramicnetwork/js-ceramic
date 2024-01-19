@@ -1,13 +1,14 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { from, firstValueFrom, lastValueFrom } from 'rxjs'
 import { delay } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-channel.js'
-import { asIpfsMessage } from './as-ipfs-message.js'
 import { MsgType } from '../pubsub-message.js'
 import { TaskQueue } from '../../ancillary/task-queue.js'
+import { asIpfsMessage } from './as-ipfs-message.js'
 
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'

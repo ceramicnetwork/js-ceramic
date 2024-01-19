@@ -2,7 +2,8 @@ import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { IpfsApi, CeramicApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, CeramicApi, SyncOptions } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import * as u8a from 'uint8arrays'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -299,12 +300,12 @@ describe('Ceramic stream pinning', () => {
 
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     // pin:true flag will be ignored
-    TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
+    await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.admin.pin.add(stream.id)
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     // pin:false flag will be ignored
-    TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
+    await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
     await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
 
     await ceramic.close()

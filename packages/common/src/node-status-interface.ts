@@ -63,11 +63,6 @@ export interface AnchorNodeStatus {
    * The ethereum chainId used for anchors.
    */
   chainId: string
-
-  /**
-   * The number of writes waiting on the Ceramic Anchoring Service to anchor them.
-   */
-  pendingAnchors: number
 }
 
 /**
