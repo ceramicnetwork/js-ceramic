@@ -557,7 +557,8 @@ export class Repository {
   }
 
   /**
-   * Request anchor for the latest stream state
+   * Request anchor for the latest stream state.
+   * BEWARE: It acquires an anchorStoreQueue per-streamId mutex inside.
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<void> {
     if (!this.anchorService) {
