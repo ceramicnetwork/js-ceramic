@@ -391,7 +391,12 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const expectedGenesis = {
       data: CONTENT0,
-      header: { controllers: [METADATA1.controller], model: METADATA1.model.bytes, sep: 'model', context: METADATA1.context.bytes },
+      header: {
+        controllers: [METADATA1.controller],
+        model: METADATA1.model.bytes,
+        sep: 'model',
+        context: METADATA1.context.bytes,
+      },
     }
 
     await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
