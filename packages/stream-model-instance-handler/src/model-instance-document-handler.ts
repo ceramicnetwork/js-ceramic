@@ -90,7 +90,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const streamId = new StreamID(ModelInstanceDocument.STREAM_TYPE_ID, commitData.cid)
     const metadata = { controllers: [controller], model: modelStreamID } as StreamMetadata
     if (ctx) {
-      metadata.context = ctx
+      metadata.context = StreamID.fromBytes(ctx)
     }
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
