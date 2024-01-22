@@ -851,7 +851,25 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: genesisCommit.jws,
     }
 
-    await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(`Immutable field "myData" cannot be updated`)
+    let state = await handler.applyCommit(genesisCommitData, context)
+
+    const state$ = TestUtils.runningState(state)
+    const doc = new ModelInstanceDocument(state$, context)
+    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+    // apply signed
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(`Immutable field "myData" cannot be updated`)
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {
