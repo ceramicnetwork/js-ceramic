@@ -32,6 +32,9 @@ export class AnchorProcessingLoop {
     this.#anchorStoreQueue = anchorStoreQueue
     this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), async (streamId) => {
       try {
+        logger.verbose(
+          `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
+        )
         const entry = await store.load(streamId)
         const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
           logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
@@ -39,6 +42,9 @@ export class AnchorProcessingLoop {
           return cas.create(new AnchorRequestCarFileReader(requestCAR))
         })
         const isTerminal = await eventHandler.handle(event)
+        logger.verbose(
+          `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
+        )
         if (isTerminal) {
           // Remove iff tip stored equals to the tip we processed
           // Sort of Compare-and-Swap.
@@ -48,6 +54,9 @@ export class AnchorProcessingLoop {
               await store.remove(streamId)
             }
           })
+          logger.verbose(
+            `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
+          )
         }
       } catch (err) {
         logger.err(
