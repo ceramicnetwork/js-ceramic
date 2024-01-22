@@ -253,36 +253,29 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * Make a commit to update the document.  Can be applied using the applyCommit method on the
    * Ceramic client.
    * @param signer - Object containing the DID making (and signing) the commit.
-   * @param streamId - The StreamID of the Stream to update.
-   * @param prev - The current tip of the Stream that the update should be applied on top of.
+   * @param prev - The CommitID of the current tip of the Stream that the update should be applied on top of.
    * @param oldContent - The current content of the Stream.
    * @param newContent - The new content to update the Stream with.
    */
   static makeUpdateCommit<T>(
     signer: CeramicSigner,
-    streamId: StreamID,
-    prev: CID,
+    prev: CommitID,
     oldContent: T,
     newContent: T | null
   ): Promise<CeramicCommit> {
-    const commit = ModelInstanceDocument._makeRawCommit(streamId, prev, oldContent, newContent)
+    const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent)
     return ModelInstanceDocument._signDagJWS(signer, commit)
   }
 
   /**
    * Helper function for makeUpdateCommit() to allow unit tests to update the commit before it is signed.
    */
-  private static _makeRawCommit<T>(
-    streamId: StreamID,
-    prev: CID,
-    oldContent: T,
-    newContent: T | null
-  ): RawCommit {
+  private static _makeRawCommit<T>(prev: CommitID, oldContent: T, newContent: T | null): RawCommit {
     const patch = jsonpatch.compare(oldContent, newContent || {})
     return {
       data: patch,
-      prev,
-      id: streamId.cid,
+      prev: prev.commit,
+      id: prev.baseID.cid,
     }
   }
 
