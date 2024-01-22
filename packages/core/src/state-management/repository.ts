@@ -37,6 +37,7 @@ import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-build
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
 import { FeedDocument, type Feed } from '../feed.js'
+import { doNotWait } from '../ancillary/do-not-wait.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -578,7 +579,7 @@ export class Repository {
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
     // Don't wait on handling the anchor event, let that happen in the background.
-    void this.handleAnchorEvent(state$, anchorEvent)
+    doNotWait(this.handleAnchorEvent(state$, anchorEvent), this.logger)
   }
 
   /**

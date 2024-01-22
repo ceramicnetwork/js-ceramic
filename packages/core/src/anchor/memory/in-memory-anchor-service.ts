@@ -10,9 +10,17 @@ import { InMemoryCAS } from './in-memory-cas.js'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
+import { LRUCache } from 'least-recent'
 
 const CHAIN_ID = 'inmemory:12345'
 const BATCH_SIZE = 10
+
+// Caches recent anchor txn hashes and the timestamp when they were anchored
+// This is intentionally global and not a member of InMemoryAnchorService. This is so that when
+// multiple InMemoryAnchorServices are being used simultaneously in the same process (usually by
+// tests that use multiple Ceramic nodes), they can share the set of recent transactions and thus
+// can successfully validate each others transactions.
+export const TRANSACTION_CACHE = new LRUCache<string, number>(100)
 
 type InMemoryAnchorConfig = {
   anchorDelay: number
@@ -32,6 +40,8 @@ export class InMemoryAnchorService implements AnchorService {
    */
   readonly #anchorStoreQueue: NamedTaskQueue
 
+  private readonly transactionCache: LRUCache<string, number>
+
   #loop: AnchorProcessingLoop
   #store: AnchorRequestStore | undefined
 
@@ -40,8 +50,9 @@ export class InMemoryAnchorService implements AnchorService {
 
   constructor(_config: Partial<InMemoryAnchorConfig> = {}, logger: DiagnosticsLogger) {
     this.#store = undefined
-    this.#cas = new InMemoryCAS(CHAIN_ID, _config.anchorOnRequest ?? true)
-    this.validator = new InMemoryAnchorValidator(CHAIN_ID)
+    this.transactionCache = TRANSACTION_CACHE
+    this.validator = new InMemoryAnchorValidator(CHAIN_ID, this.transactionCache)
+    this.#cas = new InMemoryCAS(CHAIN_ID, this.transactionCache, _config.anchorOnRequest ?? true)
     this.#logger = logger
     this.#enableAnchorPollingLoop = _config.enableAnchorPollingLoop ?? true
     this.#anchorStoreQueue = new NamedTaskQueue((error) => {
