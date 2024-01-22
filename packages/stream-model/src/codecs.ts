@@ -274,6 +274,7 @@ export const ModelDefinitionV2 = sparse(
     interface: boolean,
     implements: array(streamIdString),
     schema: ObjectSchema,
+    immutableFields: array(string),
     accountRelation: ModelAccountRelationV2,
     relations: optional(ModelRelationsDefinitionV2),
     views: optional(ModelViewsDefinitionV2),

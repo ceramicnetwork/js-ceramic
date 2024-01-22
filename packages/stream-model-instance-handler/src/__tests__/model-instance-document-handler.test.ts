@@ -65,6 +65,9 @@ const FAKE_MID_ID2 = StreamID.fromString(
 const FAKE_MID_ID3 = StreamID.fromString(
   'k2t6wzhkh1dbrv7qx7oii5uwjngvzgatek9lzvqnv2wq87jvfhafvi1lxbx203'
 )
+const FAKE_MODEL_IMMUTABLE_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5f'
+)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -255,6 +258,28 @@ const MODEL_DEFINITION_IMPLEMENTS_RELATION: ModelDefinition = {
   },
 }
 
+const MODEL_DEFINITION_IMMUTABLE: ModelDefinition = {
+  name: 'MyModel',
+  version: '2.0',
+  interface: false,
+  implements: [],
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: { type: 'integer', maximum: 100, minimum: 0 },
+      relationID: { type: 'string' },
+    },
+    required: ['myData'],
+  },
+  relations: {
+    relationID: { type: 'document', model: FAKE_MODEL_INTERFACE_ID.toString() },
+  },
+  immutableFields: ['myData'],
+}
+
 const STREAMS = {
   [FAKE_MODEL_ID.toString()]: {
     content: MODEL_DEFINITION,
@@ -304,6 +329,11 @@ const STREAMS = {
   [FAKE_MID_ID3.toString()]: {
     content: {},
     metadata: { model: FAKE_MODEL_IMPLEMENTS_RELATION_ID },
+  },
+  [FAKE_MODEL_IMMUTABLE_ID.toString()]: {
+    id: FAKE_MODEL_IMMUTABLE_ID,
+    content: MODEL_DEFINITION_IMMUTABLE,
+    commitId: FAKE_MODEL_ID,
   },
 }
 
@@ -798,6 +828,30 @@ describe('ModelInstanceDocumentHandler', () => {
     const state2 = await handler.applyCommit(signedCommitData_2, context, deepCopy(state1))
     delete state2.metadata.unique
     expect(state2).toMatchSnapshot()
+  })
+
+  it('Rejects commit if field is immutable', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
+
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      { controller: DID_ID, model: FAKE_MODEL_IMMUTABLE_ID }
+    )) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+
+    // apply genesis
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+
+    await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(`Immutable field "myData" cannot be updated`)
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {

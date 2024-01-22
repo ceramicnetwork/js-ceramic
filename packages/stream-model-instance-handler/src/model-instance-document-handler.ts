@@ -158,7 +158,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     if (payload.header) {
       throw new Error(
-        `Updating metadata for ModelInstanceDocument Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
+        `Updating metadata for ModelInstanceDocument Streams is not allowed. Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
           state.metadata
         )} to ${JSON.stringify(payload.header)}\``
       )
@@ -168,6 +168,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.api.loadStream<Model>(metadata.model)
     await this._validateContent(context.api, modelStream, newContent, false)
+    await this._validateLockedFieldsUpdate(modelStream, payload)
 
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
@@ -309,6 +310,23 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         throw new Error(
           `Deterministic ModelInstanceDocuments are only allowed on models that have the SINGLE accountRelation`
         )
+      }
+    }
+  }
+
+  /**
+   *  Helper function to validate if locked fields are being mutated
+   */
+  async _validateLockedFieldsUpdate(model: Model, payload: any): Promise<void> {
+    if ('immutableFields' in model.content) {
+      // No locked fields
+      if(model.content.immutableFields.length == 0) return
+
+      for (const lockedField of model.content.immutableFields) {
+        const mutated = payload.data.some(entry => entry.op === 'replace' && entry.path.split('/').pop() === lockedField)
+        if(mutated) {
+          throw new Error(`Immutable field "${lockedField}" cannot be updated`)
+        }
       }
     }
   }
