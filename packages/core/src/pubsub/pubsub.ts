@@ -120,7 +120,7 @@ export class Pubsub extends Observable<PubsubMessage> {
               topic: this.topic,
               message: logMessage,
             })
-            this.logger.err(error)
+            this.logger.err(`Error received while publishing message to pubsub: ${error}`)
           }
         })
       )
