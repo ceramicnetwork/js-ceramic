@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { expect, jest, test } from '@jest/globals'
 import { StreamID } from '@ceramicnetwork/streamid'
 import knex, { Knex } from 'knex'
 import tmp from 'tmp-promise'
@@ -73,13 +73,13 @@ function modelsToIndexArgs(models: Array<StreamID>): Array<IndexModelArgs> {
 }
 
 class CompleteQueryApi implements ISyncQueryApi {
-  syncComplete(model: string): boolean {
+  syncComplete(): boolean {
     return true
   }
 }
 
 class IncompleteQueryApi implements ISyncQueryApi {
-  syncComplete(model: string): boolean {
+  syncComplete(): boolean {
     return false
   }
 }
@@ -579,7 +579,7 @@ describe('postgres', () => {
     })
 
     test('calling indexModels() with already indexed models works', async () => {
-      const modelsToIndex = [
+      const modelsToIndex: Array<IndexModelArgs> = [
         {
           model: StreamID.fromString(STREAM_ID_A),
           indices: [{ fields: [{ path: ['address'] }] }],
@@ -868,7 +868,7 @@ describe('postgres', () => {
       expect(rememberedModels[0].indices).toHaveLength(expectedIndices.length)
       expect(rememberedModels[1].indices).toHaveLength(0)
 
-      const foundModels = await indexApi.getIndexedModelsFromDatabase()
+      const foundModels = await (indexApi as any).getIndexedModelsFromDatabase()
       if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
         // the order that we get back from the database might not be the same order that we used
         // when we called indexModels() during test setup, so we do this to make sure we are
@@ -911,6 +911,21 @@ and indexname in (${expectedIndices});
       expect(raw.dark_mode).toEqual(STREAM_TEST_DATA_PROFILE_A.settings.dark_mode)
       expect(raw.id).toEqual(STREAM_TEST_DATA_PROFILE_A.id)
     })
+
+    test('unindex', async () => {
+      await indexApi.indexStream(STREAM_CONTENT_A)
+      const count = () =>
+        dbConnection
+          .from(`${MODELS_TO_INDEX[0]}`)
+          .select('*')
+          .then((r) => r.length)
+      await expect(count()).resolves.toEqual(1)
+      const shouldUnindex = { ...STREAM_CONTENT_A, shouldIndex: false }
+      await indexApi.indexStream(shouldUnindex)
+      await expect(count()).resolves.toEqual(0)
+      await indexApi.indexStream(shouldUnindex)
+      await expect(count()).resolves.toEqual(0)
+    })
   })
 
   describe('page', () => {
@@ -919,20 +934,20 @@ and indexname in (${expectedIndices});
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.indexedModelsRecord = {
+      ;(indexApi as any).indexedModelsRecord = {
         [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
       }
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
-      indexApi.insertionOrder.page = mockPage
+      ;(indexApi as any).insertionOrder.page = mockPage
       await indexApi.page({ model: STREAM_ID_A, first: 100 })
       expect(mockPage).toBeCalled()
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new PostgresIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.indexedModelsRecord = {
+      ;(indexApi as any).indexedModelsRecord = {
         [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
       }
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
@@ -1412,7 +1427,7 @@ describe('sqlite', () => {
     })
 
     test('calling indexModels() with already indexed models works', async () => {
-      const modelsToIndex = [
+      const modelsToIndex: Array<IndexModelArgs> = [
         {
           model: StreamID.fromString(STREAM_ID_A),
           indices: [{ fields: [{ path: ['address'] }] }],
@@ -1680,7 +1695,7 @@ describe('sqlite', () => {
       expect(rememberedModels[0].indices).toHaveLength(expectedIndices.length)
       expect(rememberedModels[1].indices).toHaveLength(0)
 
-      const foundModels = await indexApi.getIndexedModelsFromDatabase()
+      const foundModels = await (indexApi as any).getIndexedModelsFromDatabase()
       if (!foundModels[0].streamID.equals(rememberedModels[0].streamID)) {
         // the order that we get back from the database might not be the same order that we used
         // when we called indexModels() during test setup, so we do this to make sure we are
@@ -1710,20 +1725,20 @@ and name in (${expectedIndices})
     test('call the order if historical sync is allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, true, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new CompleteQueryApi())
-      indexApi.indexedModelsRecord = {
+      ;(indexApi as any).indexedModelsRecord = {
         [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
       }
       const mockPage = jest.fn(async () => {
         return { edges: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
       })
-      indexApi.insertionOrder.page = mockPage
+      ;(indexApi as any).insertionOrder.page = mockPage
       await indexApi.page({ model: STREAM_ID_A, first: 100 })
       expect(mockPage).toBeCalled()
     })
     test('throw if historical sync is not allowed', async () => {
       const indexApi = new SqliteIndexApi(FAUX_DB_CONNECTION, false, logger, Networks.INMEMORY)
       indexApi.setSyncQueryApi(new IncompleteQueryApi())
-      indexApi.indexedModelsRecord = {
+      ;(indexApi as any).indexedModelsRecord = {
         [STREAM_ID_A]: [{ streamID: StreamID.fromString(STREAM_ID_A) }],
       }
       await expect(indexApi.page({ model: STREAM_ID_A, first: 100 })).rejects.toThrow(
