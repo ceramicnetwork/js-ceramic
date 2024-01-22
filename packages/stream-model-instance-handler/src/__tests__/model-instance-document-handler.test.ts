@@ -624,19 +624,12 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
 
     await expect(
-      ModelInstanceDocument.makeUpdateCommit(
-        {} as CeramicApi,
-        doc.id,
-        doc.tip,
-        doc.content,
-        CONTENT1
-      )
+      ModelInstanceDocument.makeUpdateCommit({} as CeramicApi, doc.commitId, doc.content, CONTENT1)
     ).rejects.toThrow(/No DID/)
 
     const commit = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
@@ -670,8 +663,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
@@ -719,8 +711,7 @@ describe('ModelInstanceDocumentHandler', () => {
     let doc = new ModelInstanceDocument(state$, context)
     const signedCommit1 = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
@@ -742,8 +733,7 @@ describe('ModelInstanceDocumentHandler', () => {
     doc = new ModelInstanceDocument(state1$, context)
     const signedCommit2 = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       CONTENT2
     )) as SignedCommitContainer
@@ -821,8 +811,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       {}
     )) as SignedCommitContainer
@@ -895,7 +884,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.id, doc.tip, doc.content, CONTENT1)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
     rawCommit.header = { controllers: [newDid] }
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
@@ -940,7 +929,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.id, doc.tip, doc.content, CONTENT1)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     rawCommit.prev = FAKE_CID_3
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
@@ -984,7 +973,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.id, doc.tip, doc.content, CONTENT1)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     rawCommit.id = FAKE_CID_3
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
@@ -1030,8 +1019,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
@@ -1098,8 +1086,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       signerUsingOldKey,
-      doc.id,
-      doc.tip,
+      doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer

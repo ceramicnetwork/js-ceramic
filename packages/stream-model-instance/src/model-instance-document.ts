@@ -192,8 +192,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
     const updateCommit = await ModelInstanceDocument.makeUpdateCommit(
       signer,
-      this.id,
-      this.tip,
+      this.commitId,
       this.content,
       content
     )
