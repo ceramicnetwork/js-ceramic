@@ -623,9 +623,16 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
 
-    await expect(doc._makeCommit({} as CeramicApi, CONTENT1)).rejects.toThrow(/No DID/)
+    await expect(
+      ModelInstanceDocument.makeUpdateCommit({} as CeramicApi, doc.commitId, doc.content, CONTENT1)
+    ).rejects.toThrow(/No DID/)
 
-    const commit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const commit = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      CONTENT1
+    )) as SignedCommitContainer
     const patch = jsonpatch.compare(CONTENT0, CONTENT1)
     const expectedCommit = { data: patch, prev: FAKE_CID_1, id: FAKE_CID_1 }
     await checkSignedCommitMatchesExpectations(did, commit, expectedCommit)
@@ -654,7 +661,12 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -697,7 +709,12 @@ describe('ModelInstanceDocumentHandler', () => {
     // make a first update
     const state$ = TestUtils.runningState(genesisState)
     let doc = new ModelInstanceDocument(state$, context)
-    const signedCommit1 = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const signedCommit1 = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit1, FAKE_CID_2)
     const sPayload1 = dagCBOR.decode(signedCommit1.linkedBlock)
@@ -714,7 +731,12 @@ describe('ModelInstanceDocumentHandler', () => {
     // make a second update on top of the first
     const state1$ = TestUtils.runningState(state1)
     doc = new ModelInstanceDocument(state1$, context)
-    const signedCommit2 = (await doc._makeCommit(context.api, CONTENT2)) as SignedCommitContainer
+    const signedCommit2 = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      CONTENT2
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit2, FAKE_CID_3)
     const sPayload2 = dagCBOR.decode(signedCommit2.linkedBlock)
@@ -787,7 +809,12 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, {})) as SignedCommitContainer
+    const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      {}
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -857,7 +884,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = doc._makeRawCommit(CONTENT1)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
     rawCommit.header = { controllers: [newDid] }
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
@@ -902,7 +929,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = doc._makeRawCommit(CONTENT1)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     rawCommit.prev = FAKE_CID_3
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
@@ -946,7 +973,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const rawCommit = doc._makeRawCommit(CONTENT1)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     rawCommit.id = FAKE_CID_3
     const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
 
@@ -990,7 +1017,12 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+    const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
@@ -1052,8 +1084,10 @@ describe('ModelInstanceDocumentHandler', () => {
     // make update with old key
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(
+    const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       signerUsingOldKey,
+      doc.commitId,
+      doc.content,
       CONTENT1
     )) as SignedCommitContainer
 
