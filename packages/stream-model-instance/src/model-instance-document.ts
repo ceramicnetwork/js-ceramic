@@ -50,7 +50,7 @@ export interface ModelInstanceDocumentMetadataArgs {
    * Whether the stream should be stored by indexers or not. When undefined, indexers could
    * index the stream if wanted.
    */
-  index?: boolean
+  shouldIndex?: boolean
 }
 
 /**
@@ -70,7 +70,7 @@ export interface ModelInstanceDocumentMetadata {
   /**
    * Whether the stream should be indexed or not.
    */
-  index?: boolean
+  shouldIndex?: boolean
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -122,7 +122,11 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { controller: metadata.controllers[0], model: metadata.model, index: metadata.index }
+    return {
+      controller: metadata.controllers[0],
+      model: metadata.model,
+      shouldIndex: metadata.shouldIndex,
+    }
   }
 
   /**
@@ -249,17 +253,17 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Set the index metadata field for the stream
-   * @param index - Whether the stream should be indexed or not
+   * @param shouldIndex - Whether the stream should be indexed or not
    * @param opts - Additional options
    */
-  async setIndex(index: boolean, opts: CommonUpdateOpts = {}): Promise<void> {
+  async shouldIndex(shouldIndex: boolean, opts: CommonUpdateOpts = {}): Promise<void> {
     // No-op if the wanted value is the current one
-    if (this.metadata.index === index) {
+    if (this.metadata.shouldIndex === shouldIndex) {
       return
     }
 
     const rawCommit: RawCommit = {
-      header: { index }, // Only the index parameter can be provided, others are immutable
+      header: { shouldIndex: shouldIndex }, // Only the index parameter can be provided, others are immutable
       data: [], // No data change
       prev: this.tip,
       id: this.id.cid,

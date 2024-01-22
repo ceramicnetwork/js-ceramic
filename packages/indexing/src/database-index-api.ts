@@ -36,7 +36,7 @@ export interface IndexStreamArgs {
   readonly tip: CID
   readonly lastAnchor: Date | null
   readonly firstAnchor: Date | null
-  readonly index?: boolean
+  readonly shouldIndex?: boolean
 }
 
 export type IndicesRecord = Record<string, FieldsIndex>
@@ -286,7 +286,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
-    if (indexingArgs.index === false) {
+    if (indexingArgs.shouldIndex === false) {
       await this.dbConnection(tableName)
         .where('stream_id', indexingArgs.streamID.toString())
         .delete()

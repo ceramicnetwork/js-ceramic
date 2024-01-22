@@ -152,7 +152,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     await SignatureUtils.verifyCommitSignature(commitData, context.did, controller, model, streamId)
 
     if (payload.header) {
-      const { index, ...others } = payload.header
+      const { shouldIndex, ...others } = payload.header
       const otherKeys = Object.keys(others)
       if (otherKeys.length) {
         throw new Error(
@@ -161,8 +161,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
           )}. Only the index argument can be changed.`
         )
       }
-      if (index != null) {
-        state.metadata.index = index
+      if (shouldIndex != null) {
+        state.metadata.shouldIndex = shouldIndex
       }
     }
 
@@ -227,11 +227,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     validateContentLength(content)
 
-    await this._schemaValidator.validateSchema(
-      content,
-      model.content.schema,
-      model.commitId.toString()
-    )
+    this._schemaValidator.validateSchema(content, model.content.schema, model.commitId.toString())
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)

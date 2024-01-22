@@ -972,7 +972,7 @@ export class Repository {
       tip: state$.tip,
       lastAnchor: lastAnchor,
       firstAnchor: firstAnchor,
-      index: state$.value.metadata.index,
+      shouldIndex: state$.value.metadata.shouldIndex,
     }
 
     await this.index.indexStream(streamContent)
