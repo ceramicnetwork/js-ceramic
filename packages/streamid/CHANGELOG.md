@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.3.0-rc.1](/compare/@ceramicnetwork/streamid@3.3.0-rc.0...@ceramicnetwork/streamid@3.3.0-rc.1) (2024-01-23)
+
+
+### Features
+
+* **streamid:** update event id and add create random event id (#3107) 31637eb, closes #3107
+
+
+
+
+
 # [3.3.0-rc.0](/compare/@ceramicnetwork/streamid@3.2.0...@ceramicnetwork/streamid@3.3.0-rc.0) (2024-01-17)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid

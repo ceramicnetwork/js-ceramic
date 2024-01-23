@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0-rc.1](/compare/@ceramicnetwork/indexing@2.3.0-rc.0...@ceramicnetwork/indexing@2.3.0-rc.1) (2024-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/indexing
+
+
+
+
+
 # [2.3.0-rc.0](/compare/@ceramicnetwork/indexing@2.2.0...@ceramicnetwork/indexing@2.3.0-rc.0) (2024-01-17)
 
 
