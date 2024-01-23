@@ -37,6 +37,11 @@ export interface ModelInstanceDocumentMetadataArgs {
   model: StreamID
 
   /**
+  * An optional string used to identify the context of the ModelInstanceDocument.
+  */
+  context?: StreamID
+
+  /**
    * Whether the stream should be created deterministically or not.  Should only be used for
    * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
    */
@@ -332,6 +337,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     }
     if (!metadata.deterministic) {
       header.unique = randomBytes(12)
+    }
+    if (metadata.context) {
+      if (!metadata.context?.bytes) {
+        throw new Error('Context must be a StreamID')
+      }
+      header.context = metadata.context.bytes
     }
 
     return { data: content, header }

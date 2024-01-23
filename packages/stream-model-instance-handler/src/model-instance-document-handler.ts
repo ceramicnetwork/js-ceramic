@@ -16,6 +16,7 @@ import {
   StreamConstructor,
   StreamHandler,
   StreamState,
+  StreamMetadata,
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -83,11 +84,14 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
     const payload = commitData.commit
-    const { controllers, model } = payload.header
+    const { controllers, model, context: ctx } = payload.header
     const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
     const streamId = new StreamID(ModelInstanceDocument.STREAM_TYPE_ID, commitData.cid)
-    const metadata = { controllers: [controller], model: modelStreamID }
+    const metadata = { controllers: [controller], model: modelStreamID } as StreamMetadata
+    if (ctx) {
+      metadata.context = StreamID.fromBytes(ctx)
+    }
 
     if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
       throw new Error('Exactly one controller must be specified')

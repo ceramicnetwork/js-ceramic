@@ -141,6 +141,44 @@ exports[`ModelInstanceDocumentHandler applies genesis commit correctly 1`] = `
 }
 `;
 
+exports[`ModelInstanceDocumentHandler applies genesis commit correctly with context 1`] = `
+{
+  "anchorStatus": 0,
+  "content": {
+    "myData": 0,
+  },
+  "log": [
+    {
+      "cid": {
+        "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+      },
+      "type": 0,
+    },
+  ],
+  "metadata": {
+    "context": StreamID {
+      "_cid": {
+        "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjhma",
+      },
+      "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
+      "_type": 3,
+    },
+    "controllers": [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
+    "model": StreamID {
+      "_cid": {
+        "/": "bagcqcera7y53g6hy35jak6zwdgniw7a6qzgbcdvnsfaay5fw5wxbkgxbpl3q",
+      },
+      "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
+      "_type": 2,
+    },
+  },
+  "signature": 2,
+  "type": 3,
+}
+`;
+
 exports[`ModelInstanceDocumentHandler applies genesis commit correctly with small allowable content length 1`] = `
 {
   "anchorStatus": 0,

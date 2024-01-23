@@ -35,6 +35,7 @@ export interface CommitHeader {
 
 export interface GenesisHeader extends CommitHeader {
   unique?: Uint8Array | string // Model and ModelInstanceDocument use Uint8Array, Caip10Link and TileDocument use 'string'
+  context?: Uint8Array // used in ModelInstanceDocument
   forbidControllerChange?: boolean // deprecated, only used by TileDocument
 }
 
@@ -74,6 +75,7 @@ export type CeramicCommit =
 export interface StreamMetadata {
   controllers: Array<string>
   model?: StreamID
+  context?: StreamID
   family?: string // deprecated
   schema?: string // deprecated
   tags?: Array<string> // deprecated
