@@ -186,6 +186,9 @@ const tryStreamId = (id: string): StreamID | null => {
  * `$ npm install --save @ceramicnetwork/core`
  */
 export class Ceramic implements StreamReaderWriter, StreamStateLoader {
+  // Primarily for backwards compatibility around the get did call, any usages for signing
+  // or verification should be done using `_signer`. See `get did` and `get signer` for more
+  // information
   private _did?: DID
   private _ipfs?: IpfsApi
   private _signer: CeramicSigner
