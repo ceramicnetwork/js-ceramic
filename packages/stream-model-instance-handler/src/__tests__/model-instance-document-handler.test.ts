@@ -70,7 +70,7 @@ const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
 const CONTENT2 = { myData: 2 }
 const METADATA = { controller: DID_ID, model: FAKE_MODEL_ID }
-const METADATA1 = { controller: DID_ID, model: FAKE_MODEL_ID, context: FAKE_MID_ID }
+const METADATA_WITH_CTX = { controller: DID_ID, model: FAKE_MODEL_ID, context: FAKE_MID_ID }
 const METADATA_BLOB = { controller: DID_ID, model: FAKE_MODEL_IDBLOB, deterministic: false }
 const DETERMINISTIC_METADATA = { controller: DID_ID, model: FAKE_MODEL_ID2, deterministic: true }
 
@@ -386,16 +386,16 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly with context', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA1)
+    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA_WITH_CTX)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
       data: CONTENT0,
       header: {
-        controllers: [METADATA1.controller],
-        model: METADATA1.model.bytes,
+        controllers: [METADATA_WITH_CTX.controller],
+        model: METADATA_WITH_CTX.model.bytes,
         sep: 'model',
-        context: METADATA1.context.bytes,
+        context: METADATA_WITH_CTX.context.bytes,
       },
     }
 
@@ -553,7 +553,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.api,
       CONTENT0,
-      METADATA1
+      METADATA_WITH_CTX
     )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
