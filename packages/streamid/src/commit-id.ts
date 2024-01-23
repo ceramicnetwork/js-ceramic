@@ -9,6 +9,8 @@ import { StreamID } from './stream-id.js'
 import type { StreamRef } from './stream-ref.js'
 import { tryCatch } from './try-catch.util.js'
 import * as parsing from './stream-ref-parsing.js'
+import { create } from 'multiformats/hashes/digest'
+import * as random from '@stablelib/random'
 
 export class InvalidCommitIDBytesError extends Error {
   constructor(bytes: Uint8Array) {
@@ -231,4 +233,10 @@ export class CommitID implements StreamRef {
   [Symbol.toPrimitive](): string | Uint8Array {
     return this.toString()
   }
+}
+
+export function randomCID(version: 0 | 1 = 1, codec = 0x71, hasher = 0x12): CID {
+  // 0x71 is DAG-CBOR codec identifier
+  // 0x12 is SHA-256 hashing algorithm
+  return CID.create(version, codec, create(hasher, random.randomBytes(32)))
 }
