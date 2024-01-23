@@ -386,7 +386,11 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly with context', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA_WITH_CTX)
+    const commit = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA_WITH_CTX
+    )
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
