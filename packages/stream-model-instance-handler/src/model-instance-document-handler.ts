@@ -1,5 +1,4 @@
 import jsonpatch from 'fast-json-patch'
-import cloneDeep from 'lodash.clonedeep'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
@@ -320,11 +319,13 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   async _validateLockedFieldsUpdate(model: Model, payload: any): Promise<void> {
     if ('immutableFields' in model.content) {
       // No locked fields
-      if(model.content.immutableFields.length == 0) return
+      if (model.content.immutableFields.length == 0) return
 
       for (const lockedField of model.content.immutableFields) {
-        const mutated = payload.data.some(entry => entry.op === 'replace' && entry.path.split('/').pop() === lockedField)
-        if(mutated) {
+        const mutated = payload.data.some(
+          (entry) => entry.op === 'replace' && entry.path.split('/').pop() === lockedField
+        )
+        if (mutated) {
           throw new Error(`Immutable field "${lockedField}" cannot be updated`)
         }
       }
