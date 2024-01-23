@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.3.0-rc.2](/compare/@ceramicnetwork/streamid@3.3.0-rc.1...@ceramicnetwork/streamid@3.3.0-rc.2) (2024-01-23)
+
+
+### Bug Fixes
+
+* export randomCID b0eb9dd
+
+
+
+
+
 # [3.3.0-rc.1](/compare/@ceramicnetwork/streamid@3.3.0-rc.0...@ceramicnetwork/streamid@3.3.0-rc.1) (2024-01-23)
 
 

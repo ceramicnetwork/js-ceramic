@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.3.0-rc.2](/compare/@ceramicnetwork/pinning-crust-backend@3.3.0-rc.1...@ceramicnetwork/pinning-crust-backend@3.3.0-rc.2) (2024-01-23)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-crust-backend
+
+
+
+
+
 # [3.3.0-rc.1](/compare/@ceramicnetwork/pinning-crust-backend@3.3.0-rc.0...@ceramicnetwork/pinning-crust-backend@3.3.0-rc.1) (2024-01-23)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-crust-backend
