@@ -854,7 +854,12 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-    const signedCommit = (await doc._makeCommit(context.api, CONTENT1)) as SignedCommitContainer
+        const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+      context.api,
+      doc.commitId,
+      doc.content,
+      CONTENT1
+    )) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
