@@ -31,15 +31,6 @@ type ConfigTable = {
   readonly validSchema: object
 }
 
-type IndexRow = {
-  readonly tablename: string
-  readonly indexname: string
-}
-
-type IndexResult = {
-  readonly rows: Array<IndexRow>
-}
-
 const CUSTOM_COLUMN_PREFIX = 'custom_'
 
 export class TablesManager {
@@ -249,6 +240,15 @@ export class TablesManager {
   }
 }
 
+type PgIndexRow = {
+  readonly tablename: string
+  readonly indexname: string
+}
+
+type PgIndexResult = {
+  readonly rows: Array<PgIndexRow>
+}
+
 export class PostgresTablesManager extends TablesManager {
   constructor(dataSource: Knex, logger: DiagnosticsLogger) {
     super(DatabaseType.POSTGRES, dataSource, logger)
@@ -316,7 +316,7 @@ export class PostgresTablesManager extends TablesManager {
       }
     }
     const allIndices = (
-      await this.dataSource.raw<IndexResult>(`
+      await this.dataSource.raw<PgIndexResult>(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
@@ -329,6 +329,13 @@ where tablename like '${tableName}'
     return true
   }
 }
+
+type SqliteIndexRow = {
+  readonly name: string
+  readonly tbl_name: string
+}
+
+type SqliteIndexResult = Array<SqliteIndexRow>
 
 export class SqliteTablesManager extends TablesManager {
   constructor(dataSource: Knex, logger: DiagnosticsLogger) {
@@ -398,13 +405,13 @@ export class SqliteTablesManager extends TablesManager {
         expectedIndices.push(fieldsIndexName(index, tableName))
       }
     }
-    const actualIndices = await this.dataSource.raw(`
+    const actualIndices = (await this.dataSource.raw<SqliteIndexResult>(`
 select name, tbl_name
 FROM sqlite_master
 WHERE type='index'
 and tbl_name like '${tableName}'
 ;
-  `)
+  `)).map((row) => row.name)
     this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
