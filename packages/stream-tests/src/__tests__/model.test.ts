@@ -326,7 +326,7 @@ describe('Model API http-client tests', () => {
             ],
           },
         ])
-      ).rejects.toThrow(/Schema verification failed/)
+      ).resolves.not.toThrow()
     })
 
     test('Create, index, load and index valid model with less custom indices on load', async () => {
@@ -459,7 +459,7 @@ describe('Model API http-client tests', () => {
             ],
           },
         ])
-      ).rejects.toThrow(/Schema verification failed/)
+      ).resolves.not.toThrow()
     })
 
     test('Create and index valid single model', async () => {

@@ -230,12 +230,13 @@ export class TablesManager {
 
   validateIndices(tableName: string, expect: Array<string>, actual: Array<string>) {
     const missingIndices = expect.filter((indexName) => {
-      return !actual.includes(indexName.toLowerCase())
+      return !actual.includes(indexName)
     })
     if (missingIndices.length > 0) {
-      throw new Error(`Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied. Missing Indices=${JSON.stringify(
-        missingIndices
-      )}`)
+      throw new Error(`Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.
+          Missing Indices=${JSON.stringify(missingIndices)}
+          Actual=${JSON.stringify(actual)}`
+      )
     }
   }
 }
@@ -315,14 +316,15 @@ export class PostgresTablesManager extends TablesManager {
         expectedIndices.push(fieldsIndexName(index, tableName).toLowerCase())
       }
     }
-    const allIndices = (
+    const indicesResult = (
       await this.dataSource.raw<PgIndexResult>(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
     `)
-    ).rows.map((row) => row.indexname)
-    this.validateIndices(tableName, expectedIndices, allIndices)
+    )
+    const actualIndices = indicesResult ? indicesResult.rows.map((row) => row.indexname) : []
+    this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
   override hasJsonBSupport(): boolean {
@@ -405,13 +407,14 @@ export class SqliteTablesManager extends TablesManager {
         expectedIndices.push(fieldsIndexName(index, tableName))
       }
     }
-    const actualIndices = (await this.dataSource.raw<SqliteIndexResult>(`
+    const indicesResult = await this.dataSource.raw<SqliteIndexResult>(`
 select name, tbl_name
 FROM sqlite_master
 WHERE type='index'
 and tbl_name like '${tableName}'
 ;
-  `)).map((row) => row.name)
+  `)
+    const actualIndices = indicesResult ? indicesResult.map((row) => row.name) : []
     this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
