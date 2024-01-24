@@ -1,14 +1,12 @@
-import type { CeramicApi, DiagnosticsLogger } from '@ceramicnetwork/common'
+import type { CeramicSigner, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { DIDAnchorServiceAuth } from '../anchor/auth/did-anchor-service-auth.js'
 import type { fetchJson } from '@ceramicnetwork/common'
 
 export function createDidAnchorServiceAuth(
   anchorServiceUrl: string,
-  ceramic: CeramicApi,
+  signer: CeramicSigner,
   logger: DiagnosticsLogger,
   fetchFn: typeof fetchJson
 ): DIDAnchorServiceAuth {
-  const auth = new DIDAnchorServiceAuth(anchorServiceUrl, logger, fetchFn)
-  auth.ceramic = ceramic
-  return auth
+  return new DIDAnchorServiceAuth(anchorServiceUrl, logger, signer, fetchFn)
 }

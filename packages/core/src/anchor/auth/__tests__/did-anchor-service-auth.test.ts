@@ -1,10 +1,11 @@
 import { expect, jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { fetchJson, LoggerProvider } from '@ceramicnetwork/common'
+import { fetchJson, IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
 import { createCeramic } from '../../../__tests__/create-ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import type { DIDAnchorServiceAuth } from '../did-anchor-service-auth.js'
+import { Ceramic } from '../../../ceramic.js'
 
 const MOCKED_URLS = {
   OFFLINE: 'http://offline.test.ts',
@@ -24,8 +25,8 @@ const fauxFetchJson = jest.fn().mockImplementation(async (url: string) => {
   throw Error('Offline')
 })
 
-let ipfs: any
-let ceramic: any
+let ipfs: IpfsApi
+let ceramic: Ceramic
 let auth: DIDAnchorServiceAuth
 let tmpFolder: any
 
@@ -48,7 +49,7 @@ describe('sendAuthenticatedRequest', () => {
     const logger = new LoggerProvider().getDiagnosticsLogger()
     auth = createDidAnchorServiceAuth(
       MOCKED_URLS.ONLINE,
-      ceramic,
+      ceramic.signer,
       logger,
       fauxFetchJson as unknown as typeof fetchJson
     )

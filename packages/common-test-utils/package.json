@@ -32,9 +32,9 @@
     "@ceramicnetwork/base-test-utils": "^1.0.0",
     "@ceramicnetwork/common": "^3.2.0",
     "@ceramicnetwork/streamid": "^3.2.0",
-    "it-first": "^1.0.7",
+    "it-first": "^3.0.4",
     "multiformats": "^13.0.0",
-    "rxjs": "^7.5.2"
+    "rxjs": "^7.8.1"
   },
   "publishConfig": {
     "access": "public"

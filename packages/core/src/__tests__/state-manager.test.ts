@@ -146,7 +146,9 @@ describe('anchor', () => {
       const stream = await TileDocument.create(ceramic, { stuff: 1 })
       const streamState = await ceramic.repository.load(stream.id, {})
       await CoreUtils.anchorUpdate(ceramic, stream)
-      const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId })
+      const updateRec = await stream.makeCommit(ceramic.signer, null, {
+        schema: schemaDoc.commitId,
+      })
 
       await expect(
         ceramic.repository.applyCommit(streamState.id, updateRec, {
@@ -168,7 +170,7 @@ describe('anchor', () => {
       const streamState = await ceramic.repository.load(stream.id, {})
       await CoreUtils.anchorUpdate(ceramic, stream)
 
-      const updateRec = await stream.makeCommit(ceramic, nonConformingContent)
+      const updateRec = await stream.makeCommit(ceramic.signer, nonConformingContent)
       await expect(
         ceramic.repository.applyCommit(streamState.id, updateRec, {
           anchor: false,
@@ -187,7 +189,7 @@ describe('anchor', () => {
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
       publishTip.mockClear()
-      const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
+      const updateRec = await stream1.makeCommit(ceramic.signer, { foo: 34 })
       await ceramic.repository.applyCommit(streamState1.id, updateRec, {
         anchor: false,
         publish: true,
