@@ -318,7 +318,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   /**
    *  Helper function to validate if immutable fields are being mutated
    */
-  async _validateLockedFieldsUpdate(model: Model, data: any): Promise<void> {
+  async _validateLockedFieldsUpdate(model: Model, data: any[]): Promise<void> {
     // No locked fields
     if (!('immutableFields' in model.content) || model.content.immutableFields.length == 0) return
 
