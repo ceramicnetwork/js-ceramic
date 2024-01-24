@@ -108,6 +108,12 @@ export class Dispatcher {
   private readonly carFactory: CARFactory
   private readonly _ipfsTimeout: number
 
+  /**
+   * Controls whether we should try to load CIDs from other peers.
+   * @private
+   */
+  readonly enableSync: boolean
+
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -117,32 +123,36 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     private readonly _shutdownSignal: ShutdownSignal,
-    readonly enableSync: boolean,
+    enableSync: boolean,
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
-    const pubsub = new Pubsub(
-      _ipfs,
-      topic,
-      IPFS_RESUBSCRIBE_INTERVAL_DELAY,
-      IPFS_NO_MESSAGE_INTERVAL,
-      _pubsubLogger,
-      _logger,
-      tasks
-    )
-    this.messageBus = new MessageBus(
-      new PubsubRateLimit(
-        new PubsubKeepalive(
-          pubsub,
-          _ipfs,
-          MAX_PUBSUB_PUBLISH_INTERVAL,
-          MAX_INTERVAL_WITHOUT_KEEPALIVE
-        ),
+    this.enableSync = process.env.CERAMIC_ENABLE_V4_MODE ? false : enableSync
+
+    if (!process.env.CERAMIC_ENABLE_V4_MODE) {
+      const pubsub = new Pubsub(
+        _ipfs,
+        topic,
+        IPFS_RESUBSCRIBE_INTERVAL_DELAY,
+        IPFS_NO_MESSAGE_INTERVAL,
+        _pubsubLogger,
         _logger,
-        maxQueriesPerSecond
-      ),
-      !this.enableSync
-    )
+        tasks
+      )
+      this.messageBus = new MessageBus(
+        new PubsubRateLimit(
+          new PubsubKeepalive(
+            pubsub,
+            _ipfs,
+            MAX_PUBSUB_PUBLISH_INTERVAL,
+            MAX_INTERVAL_WITHOUT_KEEPALIVE
+          ),
+          _logger,
+          maxQueriesPerSecond
+        ),
+        !this.enableSync
+      )
+    }
     this.ipldCache = new IPLDRecordsCache(IPFS_CACHE_SIZE)
     this.carFactory = new CARFactory()
     for (const codec of this._ipfs.codecs.listCodecs()) {
@@ -157,6 +167,9 @@ export class Dispatcher {
   }
 
   async init() {
+    if (process.env.CERAMIC_ENABLE_V4_MODE) {
+      return
+    }
     this.messageBus.subscribe(this.handleMessage.bind(this))
   }
 
@@ -413,7 +426,10 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true') {
+    if (
+      process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' ||
+      process.env.CERAMIC_ENABLE_V4_MODE
+    ) {
       return empty().subscribe()
     }
 
@@ -536,7 +552,9 @@ export class Dispatcher {
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    this.messageBus.unsubscribe()
+    if (!process.env.CERAMIC_ENABLE_V4_MODE) {
+      this.messageBus.unsubscribe()
+    }
     await this.tasks.onIdle()
   }
 

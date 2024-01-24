@@ -33,7 +33,9 @@ function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
 
-describe('IPFS caching', () => {
+const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3('IPFS caching', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicApi
   beforeEach(async () => {
@@ -56,7 +58,7 @@ describe('IPFS caching', () => {
   })
 })
 
-describe('Ceramic integration', () => {
+describeIfV3('Ceramic integration', () => {
   jest.setTimeout(TEST_TIMEOUT)
 
   it(
@@ -846,7 +848,7 @@ describe('Ceramic integration', () => {
   )
 })
 
-describe('buildStreamFromState', () => {
+describeIfV3('buildStreamFromState', () => {
   let ipfs: IpfsApi
   let ceramic: Ceramic
   beforeEach(async () => {

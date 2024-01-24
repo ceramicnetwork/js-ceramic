@@ -405,7 +405,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 })
 
-describe('ModelInstanceDocument API multi-node tests', () => {
+const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3('ModelInstanceDocument API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs0: IpfsApi
