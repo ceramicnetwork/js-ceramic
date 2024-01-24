@@ -324,9 +324,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     if (!('immutableFields' in model.content) || model.content.immutableFields.length == 0) return
 
     for (const lockedField of model.content.immutableFields) {
-      const mutated = payload.data.some(
-        (entry) => entry.op === 'replace' && entry.path.split('/').pop() === lockedField
-      )
+      const mutated = payload.data.some((entry) => entry.path.split('/').pop() === lockedField)
       if (mutated) {
         throw new Error(`Immutable field "${lockedField}" cannot be updated`)
       }
