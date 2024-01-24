@@ -166,7 +166,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.api.loadStream<Model>(metadata.model)
-    await this._validateContent(context.api, modelStream, newContent, false)
+    await this._validateContent(context.api, modelStream, newContent, false, payload)
 
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
@@ -211,7 +211,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     ceramic: CeramicApi,
     model: Model,
     content: any,
-    genesis: boolean
+    genesis: boolean,
+    payload?: any
   ): Promise<void> {
     if (genesis && model.content.accountRelation.type === 'single') {
       if (content) {
@@ -233,7 +234,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
     if (!genesis) {
-      await this._validateLockedFieldsUpdate(model, content)
+      await this._validateLockedFieldsUpdate(model, payload)
     }
   }
 
@@ -318,12 +319,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   /**
    *  Helper function to validate if immutable fields are being mutated
    */
-  async _validateLockedFieldsUpdate(model: Model, data: any[]): Promise<void> {
+  async _validateLockedFieldsUpdate(model: Model, payload: any): Promise<void> {
     // No locked fields
     if (!('immutableFields' in model.content) || model.content.immutableFields.length == 0) return
 
     for (const lockedField of model.content.immutableFields) {
-      const mutated = data.some(
+      const mutated = payload.data.some(
         (entry) => entry.op === 'replace' && entry.path.split('/').pop() === lockedField
       )
       if (mutated) {
