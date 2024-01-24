@@ -38,6 +38,10 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
+    if (process.env.CERAMIC_ENABLE_V4_MODE) {
+      throw new Error(`Caip10Link is not supported in Ceramic v4 mode`)
+    }
+
     if (state == null) {
       return this._applyGenesis(commitData)
     }

@@ -62,6 +62,10 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
+    if (process.env['CERAMIC_ENABLE_V4_MODE']) {
+      throw new Error(`TileDocument is not supported in Ceramic v4 mode`)
+    }
+
     if (state == null) {
       // apply genesis
       return this._applyGenesis(commitData, context)
