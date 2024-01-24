@@ -171,8 +171,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     const oldContent = state.content
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
-    const modelStream = await context.api.loadStream<Model>(metadata.model)
-    await this._validateContent(context.api, modelStream, newContent, false, payload)
+    const modelStream = await context.loadStream<Model>(metadata.model)
+    await this._validateContent(context, modelStream, newContent, false, payload)
 
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
