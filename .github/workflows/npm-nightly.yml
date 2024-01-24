@@ -1,0 +1,19 @@
+name: Publish npm packages nightly
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Nightly branch'
+        required: false
+        default: 'develop'
+
+jobs:
+  publish:
+    uses: ./.github/workflows/reusable-release.yml
+    with:
+      release_type: nightly
+      branch: ${{ github.event.inputs.branch || 'develop' }}
+    secrets: inherit
