@@ -854,7 +854,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
-        const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+    const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       context.api,
       doc.commitId,
       doc.content,
