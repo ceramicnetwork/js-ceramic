@@ -6,13 +6,7 @@ import * as fs from 'fs/promises'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import {
-  AnchorServiceAuthMethods,
-  CeramicApi,
-  LogLevel,
-  Networks,
-  StreamUtils,
-} from '@ceramicnetwork/common'
+import { AnchorServiceAuthMethods, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon.js'
@@ -313,7 +307,7 @@ export class CeramicCliUtils {
    * @param streamRef - Stream ID
    */
   static async show(streamRef: string): Promise<void> {
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const stream = await TileDocument.load(ceramic, streamRef)
       console.log(JSON.stringify(stream.content, null, 2))
     })
@@ -324,7 +318,7 @@ export class CeramicCliUtils {
    * @param streamRef - Stream ID or Commit ID
    */
   static async state(streamRef: string): Promise<void> {
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const stream = await ceramic.loadStream(streamRef)
       console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
     })
@@ -337,7 +331,7 @@ export class CeramicCliUtils {
   static async watch(streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const doc = await TileDocument.load(ceramic, id)
       console.log(JSON.stringify(doc.content, null, 2))
       deprecationNotice()
@@ -355,7 +349,7 @@ export class CeramicCliUtils {
   static async commits(streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const stream = await ceramic.loadStream(id)
       const commits = stream.allCommitIds.map((v) => v.toString())
       console.log(JSON.stringify(commits, null, 2))
@@ -494,7 +488,7 @@ export class CeramicCliUtils {
   }
 
   static async status(): Promise<void> {
-    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       console.log(JSON.stringify(await ceramic.admin.nodeStatus()))
     })
   }
@@ -527,7 +521,7 @@ export class CeramicCliUtils {
     const pk = u8a.fromString(privateKey, 'base16')
     const did = CeramicCliUtils._makeDID(pk, ceramic)
     await did.authenticate()
-    await ceramic.setDID(did)
+    ceramic.did = did
   }
 
   /**
@@ -555,7 +549,7 @@ export class CeramicCliUtils {
     const seed = u8a.fromString(cliConfig.seed, 'base16')
     const did = CeramicCliUtils._makeDID(seed, ceramic)
     await did.authenticate()
-    await ceramic.setDID(did)
+    ceramic.did = did
 
     try {
       await fn(ceramic)

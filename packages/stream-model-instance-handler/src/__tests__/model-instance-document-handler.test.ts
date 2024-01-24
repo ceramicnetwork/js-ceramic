@@ -1,22 +1,21 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import * as dagCBOR from '@ipld/dag-cbor'
-import type { DID } from 'dids'
 import { ModelInstanceDocumentHandler } from '../model-instance-document-handler.js'
 import cloneDeep from 'lodash.clonedeep'
 import jsonpatch from 'fast-json-patch'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import type { ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
-  CeramicApi,
   CommitType,
-  Context,
   StreamUtils,
   SignedCommitContainer,
   IpfsApi,
   CeramicSigner,
   GenesisCommit,
   RawCommit,
+  StreamReaderWriter,
+  IntoSigner,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import {
@@ -26,10 +25,40 @@ import {
   FAKE_CID_2,
   FAKE_CID_3,
   FAKE_CID_4,
-  JWS_VERSION_0,
   JWS_VERSION_1,
+  NO_DID_SIGNER,
+  RotatingSigner,
 } from '@ceramicnetwork/did-test-utils'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { VerificationMethod } from 'did-resolver'
+
+// because we're doing mocking weirdly, by mocking a function two libraries deep, to test a function
+// one library deep that is unrelated to TileDocumentHandler, we need to specifically duplicate
+// this mock here. This is due to import resolution, and not being able to use the mock specification
+// in did-test-utils
+jest.unstable_mockModule('did-jwt', () => {
+  return {
+    // TODO - We should test for when this function throws as well
+    // Mock: Blindly accept a signature
+    verifyJWS: (
+      _jws: string,
+      _keys: VerificationMethod | VerificationMethod[]
+    ): VerificationMethod => {
+      return {
+        id: '',
+        controller: '',
+        type: '',
+      }
+    },
+    // And these functions are required for the test to run ¯\_(ツ)_/¯
+    resolveX25519Encrypters: () => {
+      return []
+    },
+    createJWE: () => {
+      return {}
+    },
+  }
+})
 
 const FAKE_CID_BLOB = CID.parse('bafybeig6xv5nwphfmvcnektpnojts77jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_MODEL_ID = StreamID.fromString(
@@ -75,7 +104,7 @@ const METADATA_BLOB = { controller: DID_ID, model: FAKE_MODEL_IDBLOB, determinis
 const DETERMINISTIC_METADATA = { controller: DID_ID, model: FAKE_MODEL_ID2, deterministic: true }
 
 async function checkSignedCommitMatchesExpectations(
-  did: DID,
+  signer: IntoSigner,
   commit: SignedCommitContainer,
   expectedCommit: GenesisCommit | RawCommit
 ) {
@@ -92,7 +121,7 @@ async function checkSignedCommitMatchesExpectations(
     expectedCommit.header['unique'] = unpacked.linkedBlock.header.unique
   }
 
-  const expected = await did.createDagJWS(expectedCommit)
+  const expected = await signer.signer.createDagJWS(expectedCommit)
   expect(expected).toBeDefined()
 
   const { jws: eJws, linkedBlock: eLinkedBlock } = expected
@@ -308,9 +337,9 @@ const STREAMS = {
 }
 
 describe('ModelInstanceDocumentHandler', () => {
-  let did: DID
   let handler: ModelInstanceDocumentHandler
-  let context: Context
+  let context: StreamReaderWriter
+  let defaultSigner: RotatingSigner
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
   let ipfs: IpfsApi
@@ -337,14 +366,14 @@ describe('ModelInstanceDocumentHandler', () => {
     } as IpfsApi
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     ModelInstanceDocument.MAX_DOCUMENT_SIZE = 16_000_000
 
     handler = new ModelInstanceDocumentHandler()
 
-    did = DidTestUtils.generateDID()
-    const api = DidTestUtils.apiForDid(did)
-    api.loadStream = jest.fn(async (streamId: StreamID) => {
+    defaultSigner = await DidTestUtils.rotatingSigner({})
+    context = DidTestUtils.api(defaultSigner)
+    context.loadStream = jest.fn(async (streamId: StreamID) => {
       const stream = STREAMS[streamId.toString()]
       if (stream == null) {
         throw new Error(
@@ -354,19 +383,11 @@ describe('ModelInstanceDocumentHandler', () => {
       return stream
     })
 
-    signerUsingNewKey = { did: DidTestUtils.generateDID() }
-    signerUsingNewKey.did.createJWS = async () => JWS_VERSION_1
+    signerUsingNewKey = CeramicSigner.fromDID(
+      await DidTestUtils.generateDID({ jws: JWS_VERSION_1 })
+    )
 
-    signerUsingOldKey = { did: DidTestUtils.generateDID() }
-    ;(signerUsingOldKey.did as any)._id = DID_ID
-    signerUsingOldKey.did.createJWS = async () => JWS_VERSION_0
-
-    context = {
-      did,
-      ipfs,
-      anchorService: null,
-      api: api as unknown as CeramicApi,
-    }
+    signerUsingOldKey = CeramicSigner.fromDID(await DidTestUtils.generateDID({}))
   })
 
   it('is constructed correctly', async () => {
@@ -374,7 +395,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
+    const commit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, METADATA)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -382,7 +403,7 @@ describe('ModelInstanceDocumentHandler', () => {
       header: { controllers: [METADATA.controller], model: METADATA.model.bytes, sep: 'model' },
     }
 
-    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
+    await checkSignedCommitMatchesExpectations(context, commit, expectedGenesis)
   })
 
   it('makes genesis commits correctly with context', async () => {
@@ -407,7 +428,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const commit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
       model: FAKE_MODEL_ID,
     })
     expect(commit).toBeDefined()
@@ -417,29 +438,29 @@ describe('ModelInstanceDocumentHandler', () => {
       header: { controllers: [METADATA.controller], model: METADATA.model.bytes, sep: 'model' },
     }
 
-    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
+    await checkSignedCommitMatchesExpectations(context, commit, expectedGenesis)
   })
 
   it('model is required', async () => {
-    await expect(ModelInstanceDocument._makeGenesis(context.api, null, {})).rejects.toThrow(
+    await expect(ModelInstanceDocument._makeGenesis(context.signer, null, {})).rejects.toThrow(
       /Must specify a 'model' when creating a ModelInstanceDocument/
     )
   })
 
   it('creates genesis commits uniquely', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, METADATA)
+    const commit1 = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, METADATA)
+    const commit2 = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, METADATA)
 
     expect(commit1).not.toEqual(commit2)
     expect(StreamUtils.isSignedCommitContainer(commit1)).toBeTruthy()
   })
 
   it('Can create deterministic genesis commit', async () => {
-    const commit1 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit1 = await ModelInstanceDocument._makeGenesis(context.signer, null, {
       ...METADATA,
       deterministic: true,
     })
-    const commit2 = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit2 = await ModelInstanceDocument._makeGenesis(context.signer, null, {
       ...METADATA,
       deterministic: true,
     })
@@ -448,16 +469,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -471,16 +491,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly with small allowable content length', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       { myData: 'abcdefghijk' },
       METADATA_BLOB
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_BLOB)
+    await ipfs.dag.put(commit, FAKE_CID_BLOB)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_BLOB,
@@ -495,11 +514,11 @@ describe('ModelInstanceDocumentHandler', () => {
 
   it('genesis commit with content must be signed', async () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       DETERMINISTIC_METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -513,11 +532,11 @@ describe('ModelInstanceDocumentHandler', () => {
 
   it('applies deterministic genesis commit correctly', async () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       null,
       DETERMINISTIC_METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -529,17 +548,16 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('deterministic genesis commit cannot have content', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const rawCommit = await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context,
       CONTENT0,
       DETERMINISTIC_METADATA
     )
 
-    await context.ipfs.dag.put(rawCommit, FAKE_CID_1)
-    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    await ipfs.dag.put(rawCommit, FAKE_CID_1)
+    const commit = await context.signer.createDagJWS(rawCommit)
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -577,15 +595,14 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models with SINGLE accountRelations must be created deterministically', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, null, {
+    const commit = await ModelInstanceDocument._makeGenesis(context.signer, null, {
       ...DETERMINISTIC_METADATA,
       deterministic: false,
     })
 
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -599,16 +616,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('MIDs for Models without SINGLE accountRelations must be created uniquely', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
-    const rawCommit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const rawCommit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
       ...METADATA,
       deterministic: true,
     })
 
-    await context.ipfs.dag.put(rawCommit, FAKE_CID_1)
-    const commit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    await ipfs.dag.put(rawCommit, FAKE_CID_1)
+    const commit = await context.signer.createDagJWS(rawCommit)
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -622,19 +638,18 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('model must be a Model streamtype', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const nonModelStreamId = StreamID.fromString(
       'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
     )
 
-    const commit = await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const commit = await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
       model: nonModelStreamId,
     })
 
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -648,16 +663,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes signed commit correctly', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
@@ -670,31 +684,30 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
 
     await expect(
-      ModelInstanceDocument.makeUpdateCommit({} as CeramicApi, doc.commitId, doc.content, CONTENT1)
+      ModelInstanceDocument.makeUpdateCommit(NO_DID_SIGNER, doc.commitId, doc.content, CONTENT1)
     ).rejects.toThrow(/No DID/)
 
     const commit = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
     const patch = jsonpatch.compare(CONTENT0, CONTENT1)
     const expectedCommit = { data: patch, prev: FAKE_CID_1, id: FAKE_CID_1 }
-    await checkSignedCommitMatchesExpectations(did, commit, expectedCommit)
+    await checkSignedCommitMatchesExpectations(context, commit, expectedCommit)
   })
 
   it('applies signed commit correctly', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -708,16 +721,16 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
@@ -732,17 +745,16 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('multiple consecutive updates', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const deepCopy = (o) => StreamUtils.deserializeState(StreamUtils.serializeState(o))
 
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
@@ -756,15 +768,15 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(genesisState)
     let doc = new ModelInstanceDocument(state$, context)
     const signedCommit1 = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit1, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit1, FAKE_CID_2)
     const sPayload1 = dagCBOR.decode(signedCommit1.linkedBlock)
-    await context.ipfs.dag.put(sPayload1, signedCommit1.jws.link)
+    await ipfs.dag.put(sPayload1, signedCommit1.jws.link)
     // apply signed
     const signedCommitData_1 = {
       cid: FAKE_CID_2,
@@ -778,15 +790,15 @@ describe('ModelInstanceDocumentHandler', () => {
     const state1$ = TestUtils.runningState(state1)
     doc = new ModelInstanceDocument(state1$, context)
     const signedCommit2 = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       CONTENT2
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit2, FAKE_CID_3)
+    await ipfs.dag.put(signedCommit2, FAKE_CID_3)
     const sPayload2 = dagCBOR.decode(signedCommit2.linkedBlock)
-    await context.ipfs.dag.put(sPayload2, signedCommit2.jws.link)
+    await ipfs.dag.put(sPayload2, signedCommit2.jws.link)
 
     // apply signed
     const signedCommitData_2 = {
@@ -801,16 +813,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid schema', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       {},
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -825,24 +836,22 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws error when applying genesis commit with invalid length', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
     await expect(
-      ModelInstanceDocument._makeGenesis(context.api, { myData: 'abcdefghijk' }, METADATA)
+      ModelInstanceDocument._makeGenesis(context.signer, { myData: 'abcdefghijk' }, METADATA)
     ).rejects.toThrow(/which exceeds maximum size/)
   })
 
   test('throws error when applying signed commit with invalid schema', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -856,16 +865,16 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       {}
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
@@ -881,14 +890,14 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('throws error if commit signed by wrong DID', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
       controller: 'did:3:fake',
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
@@ -898,26 +907,21 @@ describe('ModelInstanceDocumentHandler', () => {
       timestamp: Date.now(),
     }
 
-    context.did.verifyJWS = jest.fn(async () => {
-      return Promise.reject('/invalid_jws: not a valid verificationMethod for issuer/')
-    })
-
     await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: not a valid verificationMethod for issuer/
     )
   })
 
   it('throws error if changes metadata', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -933,12 +937,12 @@ describe('ModelInstanceDocumentHandler', () => {
     const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     const newDid = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7zzzz'
     rawCommit.header = { controllers: [newDid] }
-    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const signedCommit = await context.signer.createDagJWS(rawCommit)
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
@@ -953,16 +957,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid prev link', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -977,12 +980,12 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
     const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     rawCommit.prev = FAKE_CID_3
-    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const signedCommit = await context.signer.createDagJWS(rawCommit)
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
@@ -997,16 +1000,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit with invalid id property', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -1021,12 +1023,12 @@ describe('ModelInstanceDocumentHandler', () => {
     const doc = new ModelInstanceDocument(state$, context)
     const rawCommit = ModelInstanceDocument._makeRawCommit(doc.commitId, doc.content, CONTENT1)
     rawCommit.id = FAKE_CID_3
-    const signedCommit = await ModelInstanceDocument._signDagJWS(context.api, rawCommit)
+    const signedCommit = await context.signer.createDagJWS(rawCommit)
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
@@ -1041,16 +1043,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      context.api,
+      context.signer,
       CONTENT0,
       METADATA
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -1064,16 +1065,16 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
@@ -1088,7 +1089,7 @@ describe('ModelInstanceDocumentHandler', () => {
     const anchorProof = {
       chainId: 'fakechain:123',
     }
-    await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
+    await ipfs.dag.put(anchorProof, FAKE_CID_3)
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
@@ -1102,17 +1103,16 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('fails to apply commit if old key is used to make the commit and keys have been rotated', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
 
     // make and apply genesis with old key
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // genesis commit applied one hour before rotation
     const genesisCommitData = {
@@ -1125,8 +1125,6 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const state = await handler.applyCommit(genesisCommitData, context)
 
-    DidTestUtils.rotateKey(did, rotateDate.toISOString())
-
     // make update with old key
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
@@ -1137,10 +1135,10 @@ describe('ModelInstanceDocumentHandler', () => {
       CONTENT1
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     const signedCommitData = {
       cid: FAKE_CID_2,
@@ -1151,11 +1149,8 @@ describe('ModelInstanceDocumentHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 + 24 * 60 * 60,
     }
 
-    context.did.verifyJWS = jest.fn(async () => {
-      return Promise.reject('/invalid_jws: signature authored with a revoked DID version/')
-    })
-
     // applying a commit made with the old key after rotation
+    DidTestUtils.withRotationDate(defaultSigner, rotateDate.toISOString())
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /invalid_jws: signature authored with a revoked DID version/
     )
@@ -1168,10 +1163,10 @@ describe('ModelInstanceDocumentHandler', () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // commit is applied 1 hour before rotation
     const genesisCommitData = {
@@ -1182,30 +1177,24 @@ describe('ModelInstanceDocumentHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    DidTestUtils.rotateKey(did, rotateDate.toISOString())
-
-    context.did.verifyJWS = jest.fn(async () => {
-      return Promise.reject('/invalid_jws: signature authored before creation of DID version/')
-    })
-
+    // applying a commit made with the old key after rotation
+    DidTestUtils.withRotationDate(defaultSigner, rotateDate.toISOString())
     await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
     )
   })
 
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-    DidTestUtils.rotateKey(did, rotateDate.toISOString())
 
     // make genesis commit using old key
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(signerUsingOldKey, CONTENT0, {
       model: FAKE_MODEL_ID,
     })) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // commit is applied 1 hour after the rotation
     const genesisCommitData = {
@@ -1215,6 +1204,8 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: genesisCommit.jws,
       timestamp: Math.floor(rotateDate.valueOf() / 1000) + 60 * 60,
     }
+    // applying a commit made with the old key after rotation
+    DidTestUtils.withRotationDate(defaultSigner, rotateDate.toISOString())
     const state = await handler.applyCommit(genesisCommitData, context)
     delete state.metadata.unique
 
@@ -1222,15 +1213,14 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('throws when trying to create a MID with an interface model', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
-    const commit = (await ModelInstanceDocument._makeGenesis(signerUsingNewKey, CONTENT0, {
+    const commit = (await ModelInstanceDocument._makeGenesis(defaultSigner, CONTENT0, {
       controller: METADATA.controller,
       model: FAKE_MODEL_INTERFACE_ID,
     })) as SignedCommitContainer
-    await context.ipfs.dag.put(commit, FAKE_CID_1)
+    await ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await context.ipfs.dag.put(payload, commit.jws.link)
+    await ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -1244,16 +1234,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with required model - throws if invalid', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      signerUsingNewKey,
+      defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID2.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_REQUIRED_RELATION_ID }
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -1268,16 +1257,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with required model - model match', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      signerUsingNewKey,
+      defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_REQUIRED_RELATION_ID }
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -1290,16 +1278,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with optional model - linked MID not provided', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      signerUsingNewKey,
+      defaultSigner,
       { myData: 3 },
       { controller: METADATA.controller, model: FAKE_MODEL_OPTIONAL_RELATION_ID }
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -1312,16 +1299,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with optional model - linked MID provided', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      signerUsingNewKey,
+      defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID2.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_OPTIONAL_RELATION_ID }
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -1334,16 +1320,15 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   test('validates relations with interface model', async () => {
-    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
-      signerUsingNewKey,
+      defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID3.toString() },
       { controller: METADATA.controller, model: FAKE_MODEL_INTERFACE_RELATION_ID }
     )) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {

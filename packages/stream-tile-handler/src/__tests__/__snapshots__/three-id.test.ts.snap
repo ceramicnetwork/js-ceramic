@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`applies anchor commit correctly 1`] = `
+exports[`TileDocument with 3ID applies anchor commit correctly 1`] = `
 {
   "anchorProof": {
     "chainId": "fakechain:123",
@@ -48,7 +48,7 @@ exports[`applies anchor commit correctly 1`] = `
 }
 `;
 
-exports[`applies genesis commit correctly 1`] = `
+exports[`TileDocument with 3ID applies genesis commit correctly 1`] = `
 {
   "anchorStatus": 0,
   "content": {
@@ -77,7 +77,7 @@ exports[`applies genesis commit correctly 1`] = `
 }
 `;
 
-exports[`applies signed commit correctly 1`] = `
+exports[`TileDocument with 3ID applies signed commit correctly 1`] = `
 {
   "anchorStatus": 0,
   "content": {
