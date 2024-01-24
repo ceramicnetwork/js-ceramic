@@ -7,7 +7,6 @@ import {
   AppliableStreamLog,
   CommitData,
   CommitType,
-  Context,
   IpfsApi,
   LogEntry,
   LoggerProvider,
@@ -58,12 +57,7 @@ describe('StateManipulator test', () => {
     const logger = new LoggerProvider().getDiagnosticsLogger()
     logSyncer = new LogSyncer(dispatcher)
     const handlers = new HandlersMap(logger)
-    stateManipulator = new StateManipulator(
-      logger,
-      handlers,
-      { did: ceramic.did, api: ceramic } as Context,
-      logSyncer
-    )
+    stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
 
     await swarmConnect(dispatcherIpfs, ceramicIpfs)
 

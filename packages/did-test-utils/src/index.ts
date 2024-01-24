@@ -1,16 +1,54 @@
 /**
- * Testing utilites for did, did resolvers, and signing functionality
+ * Testing utilities for did, did resolvers, and signing functionality
  */
 import { CID } from 'multiformats/cid'
-import { DID, DIDResolutionResult, VerifyJWSResult } from 'dids'
+import type { DagJWS, DID, DIDResolutionResult, VerifyJWSResult } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
-import { parse as parseDidUrl } from 'did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import * as sha256 from '@stablelib/sha256'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as uint8arrays from 'uint8arrays'
-import { CeramicApi } from '@ceramicnetwork/common'
+import {
+  AnchorOpts,
+  AnchorStatus,
+  CeramicCommit,
+  CeramicSigner,
+  CreateOpts,
+  IntoSigner,
+  LoadOpts,
+  MultiQuery,
+  Stream,
+  StreamReaderWriter,
+  UpdateOpts,
+} from '@ceramicnetwork/common'
 import { jest } from '@jest/globals'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { parse as parseDidUrl } from 'did-resolver'
+import { VerificationMethod } from 'did-resolver'
+
+jest.unstable_mockModule('did-jwt', () => {
+  return {
+    // TODO - We should test for when this function throws as well
+    // Mock: Blindly accept a signature
+    verifyJWS: (
+      _jws: string,
+      _keys: VerificationMethod | VerificationMethod[]
+    ): VerificationMethod => {
+      return {
+        id: '',
+        controller: '',
+        type: '',
+      }
+    },
+    // And these functions are required for the test to run ¯\_(ツ)_/¯
+    resolveX25519Encrypters: () => {
+      return []
+    },
+    createJWE: () => {
+      return {}
+    },
+  }
+})
 
 export const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 export const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
@@ -103,12 +141,55 @@ export const COMMITS = {
   },
 }
 
-function resolutionResult(didUrl: string, optRotateDate?: string): DIDResolutionResult {
-  const rotateDate = optRotateDate || new Date('2022-03-11T21:28:07.383Z').toISOString()
-  const { did } = parseDidUrl(didUrl)!
-  const isVersion0 = /version=0/.exec(didUrl)
+export const NO_DID_SIGNER = new CeramicSigner({
+  createDagJWS: () => {
+    throw new Error('No DID')
+  },
+  createJWS: () => {
+    throw new Error('No DID')
+  },
+  verifyJWS: () => {
+    throw new Error('No DID')
+  },
+  async ensureAuthenticated(): Promise<void> {
+    throw new Error('No DID')
+  },
+  async asController(): Promise<string> {
+    throw new Error('No DID')
+  },
+})
 
-  if (isVersion0) {
+export class RotatingSigner implements IntoSigner {
+  readonly _did: DID
+  readonly _signer: CeramicSigner
+  _rotateDate?: string
+
+  constructor(did: DID, signer: CeramicSigner) {
+    this._did = did
+    this._signer = signer
+  }
+
+  get signer(): CeramicSigner {
+    return this._signer
+  }
+}
+
+export interface GenerateDidOpts {
+  id?: string
+  jws?: DagJWS
+}
+
+export class DidTestUtils {
+  static readonly verifyJWS = jest.fn(() => {
+    return Promise.resolve({} as any as VerifyJWSResult)
+  })
+  static readonly threeIdResolver = {
+    '3': async (did: string) => {
+      return DidTestUtils.resolutionResultV0(did)
+    },
+  }
+
+  static async resolutionResultV1(did: string, date?: string): Promise<DIDResolutionResult> {
     return {
       didResolutionMetadata: { contentType: 'application/did+json' },
       didDocument: wrapDocument(
@@ -121,78 +202,67 @@ function resolutionResult(didUrl: string, optRotateDate?: string): DIDResolution
         did
       ),
       didDocumentMetadata: {
-        nextUpdate: rotateDate,
+        nextUpdate: date,
       },
     }
   }
 
-  return {
-    didResolutionMetadata: { contentType: 'application/did+json' },
-    didDocument: wrapDocument(
-      {
-        publicKeys: {
-          signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-          encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
+  static async resolutionResultV0(did: string, date?: string): Promise<DIDResolutionResult> {
+    return {
+      didResolutionMetadata: { contentType: 'application/did+json' },
+      didDocument: wrapDocument(
+        {
+          publicKeys: {
+            signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+            encryption: 'z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X',
+          },
         },
+        did
+      ),
+      didDocumentMetadata: {
+        updated: date,
       },
-      did
-    ),
-    didDocumentMetadata: {
-      updated: rotateDate,
-    },
-  }
-}
-
-export class DidTestUtils {
-  static readonly verifyJWS = jest.fn(() => {
-    return Promise.resolve({} as any as VerifyJWSResult)
-  })
-  static readonly threeIdResolver = {
-    '3': async (did: string) => {
-      return resolutionResult(did)
-    },
+    }
   }
 
-  static generateDID(id: string = DID_ID): DID {
+  static async generateDID(opts: GenerateDidOpts): Promise<DID> {
+    const { DID } = await import('dids')
     const did = new DID({})
     //@ts-ignore
-    did._id = id
-    return DidTestUtils.setDidToNotRotatedState(did)
-  }
+    did._id = opts.id || DID_ID
 
-  static setDidToNotRotatedState(did: DID): DID {
     const keyDidResolver = KeyDidResolver.getResolver()
     did.setResolver({
       ...keyDidResolver,
       ...DidTestUtils.threeIdResolver,
     })
 
-    const createJWS = jest.fn(async () => JWS_VERSION_0)
+    const createJWS = jest.fn(async () => opts.jws || JWS_VERSION_0)
     did.createJWS = createJWS.bind(did)
     return did
   }
 
-  static disableJwsVerification(did: DID): void {
-    did.verifyJWS = DidTestUtils.verifyJWS.bind(did)
-  }
-
-  static apiForDid(did: DID): CeramicApi {
-    return {
-      getSupportedChains: jest.fn(async () => {
-        return ['fakechain:123']
-      }),
-      did,
-    } as unknown as CeramicApi
-  }
-
-  static rotateKey(did: DID, rotateDate: string) {
+  static async rotatingSigner(opts: GenerateDidOpts): Promise<RotatingSigner> {
+    const generatedDid = await this.generateDID(opts)
+    const signer = CeramicSigner.fromDID(generatedDid)
+    const testSigner = new RotatingSigner(generatedDid, signer)
     const resolve = jest.fn(async (didUrl) => {
-      return resolutionResult(didUrl, rotateDate)
+      const { did } = parseDidUrl(didUrl)!
+      const isVersion0 = /version=0/.exec(didUrl)
+      if (isVersion0) {
+        return DidTestUtils.resolutionResultV1(did, testSigner._rotateDate)
+      } else {
+        return DidTestUtils.resolutionResultV0(did, testSigner._rotateDate)
+      }
     })
-    did.resolve = resolve.bind(did)
+    generatedDid.resolve = resolve.bind(generatedDid)
+    return testSigner
+  }
 
+  static withRotationDate(signer: RotatingSigner, rotateDate: string) {
+    signer._rotateDate = rotateDate
     const createJWS = jest.fn(async () => JWS_VERSION_1)
-    did.createJWS = createJWS.bind(did)
+    signer._did.createJWS = createJWS.bind(signer._did)
   }
 
   static hash(data: string): CID {
@@ -223,5 +293,48 @@ export class DidTestUtils {
       return data.toString()
     }
     return data
+  }
+
+  public static api(signer: IntoSigner): StreamReaderWriter {
+    return new TestReaderWriter(signer)
+  }
+}
+
+export class TestReaderWriter implements StreamReaderWriter {
+  constructor(private readonly _signer: IntoSigner) {}
+
+  multiQuery(_queries: Array<MultiQuery>, _timeout?: number): Promise<Record<string, Stream>> {
+    return Promise.reject(`Can't multiquery`)
+  }
+
+  loadStream<T extends Stream>(_streamId: StreamID, _opts?: LoadOpts): Promise<T> {
+    return Promise.reject(`Can't load stream`)
+  }
+
+  get signer(): CeramicSigner {
+    return this._signer.signer
+  }
+
+  public createStreamFromGenesis<T extends Stream>(
+    _type: number,
+    _genesis: any,
+    _opts?: CreateOpts
+  ): Promise<T> {
+    return Promise.reject(`Can't create stream`)
+  }
+
+  public applyCommit<T extends Stream>(
+    _streamId: StreamID | string,
+    _commit: CeramicCommit,
+    _opts?: UpdateOpts
+  ): Promise<T> {
+    return Promise.reject(`Can't apply commit`)
+  }
+
+  requestAnchor(
+    _streamId: StreamID | string,
+    _opts?: LoadOpts & AnchorOpts
+  ): Promise<AnchorStatus> {
+    return Promise.reject(`Can't request anchor`)
   }
 }

@@ -53,8 +53,8 @@ describe('Ceramic interop: core <> http-client', () => {
     })
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-    await core.setDID(makeDID(core, seed))
-    await client.setDID(makeDID(client, seed))
+    core.did = makeDID(core, seed)
+    client.did = makeDID(client, seed)
   })
 
   afterEach(async () => {

@@ -33,7 +33,8 @@
     "@ceramicnetwork/common": "^3.2.0",
     "@ceramicnetwork/streamid": "^3.2.0",
     "dids": "^5.0.0",
-    "key-did-resolver": "^3.0.0",
+    "did-jwt": "^7.4.7",
+    "key-did-resolver": "^4.0.0",
     "multiformats": "^13.0.0"
   },
   "publishConfig": {

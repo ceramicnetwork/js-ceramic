@@ -112,7 +112,7 @@ describe('Ceramic stream pinning', () => {
   it('Stream pinned will retain data on restart', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test', true)
-    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream1.id)).resolves.toBeTruthy()
     const content = { some: 'data' }
     await stream1.update(content)
     expect(stream1.content).toEqual(content)
@@ -196,7 +196,7 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })
@@ -208,7 +208,7 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -216,7 +216,7 @@ describe('Ceramic stream pinning', () => {
   it('Deterministic stream can be created without pinning', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream1 = await createDeterministicStream(ceramic, ceramic.did.id, 'test123', false)
-    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream1.id)).resolves.toBeFalsy()
 
     // 'createDeterministicStream uses TileDocument.create API, we should also test the
     // TileDocument.deterministic API
@@ -225,7 +225,7 @@ describe('Ceramic stream pinning', () => {
       { family: 'test321' },
       { anchor: false, publish: false, pin: false }
     )
-    await expect(TestUtils.isPinned(ceramic, stream2.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream2.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -238,7 +238,7 @@ describe('Ceramic stream pinning', () => {
       pin: false,
     })
     await stream.update({ foo: 'baz' })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -249,13 +249,13 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
     await ceramic.admin.pin.rm(stream.id, { publish: false })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'foobarbaz' })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
 
@@ -266,10 +266,10 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     await stream.sync()
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
 
@@ -279,13 +279,13 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
     await TileDocument.load(ceramic, stream.id)
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
     await ceramic.admin.pin.rm(stream.id, { publish: false })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
 
     await ceramic.close()
   })
@@ -298,15 +298,15 @@ describe('Ceramic stream pinning', () => {
       pin: false,
     })
 
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     // pin:true flag will be ignored
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: true })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
     await ceramic.admin.pin.add(stream.id)
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
     // pin:false flag will be ignored
     await TileDocument.load(ceramic, stream.id, { sync: SyncOptions.NEVER_SYNC, pin: false })
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })
@@ -324,13 +324,13 @@ describe('Ceramic stream pinning', () => {
     )
     await stream.update({ foo: 'bar' }, null, { anchor: false, publish: false })
 
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeFalsy()
 
     await ceramic.admin.pin.add(stream.id)
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
 
-    await expect(TestUtils.isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })
@@ -346,7 +346,7 @@ describe('Ceramic stream pinning', () => {
         pin: false,
       }
     )
-    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream1.id)).resolves.toBeFalsy()
 
     const stream2 = await TileDocument.deterministic(
       ceramic,
@@ -359,7 +359,7 @@ describe('Ceramic stream pinning', () => {
     )
 
     expect(stream2.id).toEqual(stream1.id)
-    await expect(TestUtils.isPinned(ceramic, stream1.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, stream1.id)).resolves.toBeTruthy()
 
     await ceramic.close()
   })

@@ -16,14 +16,14 @@ import {
   CommitHeader,
   GenesisCommit,
   RawCommit,
-  CeramicApi,
-  SignedCommitContainer,
   StreamMetadata,
   CeramicSigner,
   GenesisHeader,
+  StreamWriter,
+  StreamReader,
+  IntoSigner,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import type { DID } from 'dids'
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -128,20 +128,6 @@ function headerFromMetadata(
   return header
 }
 
-/**
- * Get signer.did. Authenticate if not authenticated previously.
- */
-async function getAuthenticatedDID(signer: CeramicSigner): Promise<DID> {
-  if (!signer.did) throw new Error(`No DID provided`)
-  if (!signer.did.authenticated) {
-    await signer.did.authenticate()
-    if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
-    }
-  }
-  return signer.did
-}
-
 async function throwReadOnlyError(): Promise<void> {
   throw new Error(
     'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
@@ -175,13 +161,13 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Creates a Tile document.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface to write to ceramic network
    * @param content - Genesis contents. If 'null', then no signature is required to make the genesis commit
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
   static override async create<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     content: T | null | undefined,
     metadata?: TileMetadataArgs,
     opts: CreateOpts = {}
@@ -192,7 +178,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || ceramic.signer
     const commit = await TileDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
@@ -203,24 +191,25 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Create Tile document from genesis commit
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface to write to ceramic network
    * @param genesisCommit - Genesis commit (first commit in document log)
    * @param opts - Additional options
    */
   static async createFromGenesis<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     genesisCommit: GenesisCommit,
     opts: CreateOpts = {}
   ): Promise<TileDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || ceramic.signer
     if (genesisCommit.header?.unique && opts.syncTimeoutSeconds == undefined) {
       // By default you don't want to wait to sync doc state from pubsub when creating a unique
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const commit = genesisCommit.data
-      ? await TileDocument._signDagJWS(ceramic, genesisCommit)
-      : genesisCommit
+    const commit = genesisCommit.data ? await signer.createDagJWS(genesisCommit) : genesisCommit
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
@@ -230,22 +219,25 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Creates a deterministic Tile document.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface to write to ceramic network
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
   static async deterministic<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     metadata: TileMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<TileDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     metadata = { ...metadata, deterministic: true }
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || ceramic.signer
 
     if (metadata.family == null && metadata.tags == null) {
       throw new Error('Family and/or tags are required when creating a deterministic tile document')
     }
-    const commit = await TileDocument.makeGenesis(ceramic, null, metadata)
+    const commit = await TileDocument.makeGenesis(signer, null, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
@@ -255,12 +247,12 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Loads a Tile document from a given StreamID
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface for reading streams from ceramic network
    * @param streamId - StreamID to load.  Must correspond to a TileDocument
    * @param opts - Additional options
    */
   static async load<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamReader,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<TileDocument<T>> {
@@ -289,7 +281,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || this.api.signer
     const updateCommit = await this.makeCommit(signer, content, metadata)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
@@ -303,6 +297,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
    */
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || this.api.signer
     const header = headerFromMetadata(this.metadata, false)
     const rawCommit: RawCommit = {
       header,
@@ -310,7 +307,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.id.cid,
     }
-    const commit = await TileDocument._signDagJWS(this.api, rawCommit)
+    const commit = await signer.createDagJWS(rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
   }
@@ -332,17 +329,17 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Make a commit to update the document
-   * @param signer - Object containing the DID making (and signing) the commit
+   * @param context - Object containing the DID making (and signing) the commit
    * @param newContent
    * @param newMetadata
    */
   async makeCommit(
-    signer: CeramicSigner,
+    context: IntoSigner,
     newContent: T | null | undefined,
     newMetadata?: TileMetadataArgs
   ): Promise<CeramicCommit> {
     const commit = await this._makeRawCommit(newContent, newMetadata)
-    return TileDocument._signDagJWS(signer, commit)
+    return context.signer.createDagJWS(commit)
   }
 
   /**
@@ -383,24 +380,18 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Create genesis commit.
-   * @param signer - Object containing the DID making (and signing) the commit
+   * @param context - Object containing the DID making (and signing) the commit
    * @param content - genesis content
    * @param metadata - genesis metadata
    */
   static async makeGenesis<T>(
-    signer: CeramicSigner,
+    context: IntoSigner,
     content: T | null | undefined,
     metadata: TileMetadataArgs | undefined | null
   ): Promise<CeramicCommit> {
     metadata ||= {}
     if (!metadata.controllers || metadata.controllers.length === 0) {
-      if (signer.did) {
-        const did = await getAuthenticatedDID(signer)
-        // When did has parent, it has a capability, the did issuer (parent) of the capability is the stream controller
-        metadata.controllers = [did.hasParent ? did.parent : did.id]
-      } else {
-        throw new Error('No controllers specified')
-      }
+      metadata.controllers = [await context.signer.asController()]
     }
     if (metadata.controllers?.length !== 1) {
       throw new Error('Exactly one controller must be specified')
@@ -419,20 +410,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       return result
     }
     const commit: GenesisCommit = { data: content, header }
-    return TileDocument._signDagJWS(signer, commit)
-  }
-
-  /**
-   * Sign a Tile commit with the currently authenticated DID.
-   * @param signer - Object containing the DID to use to sign the commit
-   * @param commit - Commit to be signed
-   * @private
-   */
-  private static async _signDagJWS(
-    signer: CeramicSigner,
-    commit: CeramicCommit
-  ): Promise<SignedCommitContainer> {
-    const did = await getAuthenticatedDID(signer)
-    return did.createDagJWS(commit)
+    return context.signer.createDagJWS(commit)
   }
 }

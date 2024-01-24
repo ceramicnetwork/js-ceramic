@@ -62,7 +62,7 @@ export class TablesManager {
    * @param tableName
    * @param args
    */
-  async hasMidIndices(_tableName: string, _args: IndexModelArgs): Promise<boolean> {
+  async assertHasMidIndices(_tableName: string, _args: IndexModelArgs): Promise<void> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -218,11 +218,7 @@ export class TablesManager {
       )
     }
 
-    if (!(await this.hasMidIndices(tableName, modelIndexArgs))) {
-      throw new Error(
-        `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
-      )
-    }
+    await this.assertHasMidIndices(tableName, modelIndexArgs)
   }
 
   /**
@@ -231,6 +227,27 @@ export class TablesManager {
   async verifyTables(modelsToIndex: Array<IndexModelArgs>) {
     await Promise.all([this._verifyConfigTables(), this._verifyMidTables(modelsToIndex)])
   }
+
+  validateIndices(tableName: string, expect: Array<string>, actual: Array<string>) {
+    const missingIndices = expect.filter((indexName) => {
+      return !actual.includes(indexName)
+    })
+    if (missingIndices.length > 0) {
+      throw new Error(`Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.
+          Missing Indices=${JSON.stringify(missingIndices)}
+          Actual=${JSON.stringify(actual)}`
+      )
+    }
+  }
+}
+
+type PgIndexRow = {
+  readonly tablename: string
+  readonly indexname: string
+}
+
+type PgIndexResult = {
+  readonly rows: Array<PgIndexRow>
 }
 
 export class PostgresTablesManager extends TablesManager {
@@ -292,27 +309,35 @@ export class PostgresTablesManager extends TablesManager {
    * @param tableName
    * @param args
    */
-  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async assertHasMidIndices(tableName: string, args: IndexModelArgs): Promise<void> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
-        expectedIndices.push(fieldsIndexName(index, tableName))
+        expectedIndices.push(fieldsIndexName(index, tableName).toLowerCase())
       }
     }
-    const sqlIndices = expectedIndices.map((s) => `'${s}'`)
-    const actualIndices = await this.dataSource.raw(`
+    const indicesResult = (
+      await this.dataSource.raw<PgIndexResult>(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
-and indexname in (${sqlIndices});
-  `)
-    return expectedIndices.length == actualIndices.rowCount
+    `)
+    )
+    const actualIndices = indicesResult ? indicesResult.rows.map((row) => row.indexname) : []
+    this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
   override hasJsonBSupport(): boolean {
     return true
   }
 }
+
+type SqliteIndexRow = {
+  readonly name: string
+  readonly tbl_name: string
+}
+
+type SqliteIndexResult = Array<SqliteIndexRow>
 
 export class SqliteTablesManager extends TablesManager {
   constructor(dataSource: Knex, logger: DiagnosticsLogger) {
@@ -375,23 +400,22 @@ export class SqliteTablesManager extends TablesManager {
    * @param tableName
    * @param args IndexModelArgs for checking indices
    */
-  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async assertHasMidIndices(tableName: string, args: IndexModelArgs): Promise<void> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
         expectedIndices.push(fieldsIndexName(index, tableName))
       }
     }
-    const sqlIndices = expectedIndices.map((s) => `'${s}'`)
-    const actualIndices = await this.dataSource.raw(`
+    const indicesResult = await this.dataSource.raw<SqliteIndexResult>(`
 select name, tbl_name
 FROM sqlite_master
 WHERE type='index'
 and tbl_name like '${tableName}'
-and name in (${sqlIndices})
 ;
   `)
-    return expectedIndices.length == actualIndices.length
+    const actualIndices = indicesResult ? indicesResult.map((row) => row.name) : []
+    this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
   override hasJsonBSupport(): boolean {
