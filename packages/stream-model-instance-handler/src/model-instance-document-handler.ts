@@ -26,6 +26,17 @@ import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
 
+type Payload = {
+  data: JsonPatchOperation[]
+}
+
+type JsonPatchOperation = {
+  op: string
+  path: string
+  value?: any
+  from?: string
+}
+
 interface ModelInstanceDocumentHeader extends ModelInstanceDocumentMetadata {
   unique?: Uint8Array
 }
@@ -218,7 +229,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     model: Model,
     content: any,
     genesis: boolean,
-    payload?: any
+    payload?: Payload
   ): Promise<void> {
     if (genesis && model.content.accountRelation.type === 'single') {
       if (content) {
@@ -325,7 +336,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   /**
    *  Helper function to validate if immutable fields are being mutated
    */
-  async _validateLockedFieldsUpdate(model: Model, payload: any): Promise<void> {
+  async _validateLockedFieldsUpdate(model: Model, payload: Payload): Promise<void> {
     // No locked fields
     if (!('immutableFields' in model.content) || model.content.immutableFields.length == 0) return
 
