@@ -842,10 +842,10 @@ describe('ModelInstanceDocumentHandler', () => {
       controller: DID_ID,
       model: FAKE_MODEL_IMMUTABLE_ID,
     })) as SignedCommitContainer
-    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
+    await ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -860,16 +860,16 @@ describe('ModelInstanceDocumentHandler', () => {
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
-      context.api,
+      context.signer,
       doc.commitId,
       doc.content,
       CONTENT1
     )) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
+    await ipfs.dag.put(signedCommit, FAKE_CID_2)
 
     const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
+    await ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
     const signedCommitData = {
