@@ -33,12 +33,12 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
         name: Checkout main branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.GH_TOKEN }}
@@ -114,12 +114,12 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
         name: Checkout rc branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: release-candidate
           token: ${{ secrets.GH_TOKEN }}
@@ -194,7 +194,7 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
@@ -205,7 +205,7 @@ jobs:
           exit 1
       -
         name: Checkout hotfix branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ secrets.GH_TOKEN }}
@@ -273,19 +273,17 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
         name: Checkout nightly branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch || 'develop' }}
           token: ${{ secrets.GH_TOKEN }}
           # Ref: https://github.com/lerna/lerna/issues/2532
           fetch-depth: 0
-          # We do not want to push these changes upstream
-          detach: true
       -
         name: Configure git
         run: |
@@ -308,10 +306,13 @@ jobs:
         name: Initialize and build code
         run: npm ci && npm run build
       -
+        # This step explicitly does not push the release commit so the specified nightly branch will not be impacted.
         name: Publish packages to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:nightly -- --yes
+          # This step can fail if nothing changed that warranted a new release. This is a nightly release and best
+          # effort, so this is ok.
+          npm run publish:nightly -- --yes || true
