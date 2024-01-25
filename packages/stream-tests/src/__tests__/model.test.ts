@@ -326,7 +326,7 @@ describe('Model API http-client tests', () => {
             ],
           },
         ])
-      ).resolves.not.toThrow()
+      ).rejects.toThrow(/Schema verification failed/) //adding indices
     })
 
     test('Create, index, load and index valid model with less custom indices on load', async () => {
@@ -359,7 +359,6 @@ describe('Model API http-client tests', () => {
 
       const loadedModel = await Model.load(ceramic, model.id)
 
-      //TODO: this should throw
       await expect(
         ceramic.admin.startIndexingModelData([
           {
@@ -371,7 +370,7 @@ describe('Model API http-client tests', () => {
             ],
           },
         ])
-      ).resolves.not.toThrow()
+      ).resolves.not.toThrow() //doesn't throw because we're not adding indices
     })
 
     test('Create, index, load and index valid model with different custom indices on load', async () => {
@@ -459,7 +458,7 @@ describe('Model API http-client tests', () => {
             ],
           },
         ])
-      ).resolves.not.toThrow()
+      ).rejects.toThrow(/Schema verification failed/) //changing indices
     })
 
     test('Create and index valid single model', async () => {
