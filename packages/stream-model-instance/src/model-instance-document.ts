@@ -23,7 +23,7 @@ import {
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 
 export interface UpdateOpts extends CommonUpdateOpts {
-  header?: Partial<CommitHeader>
+  shouldIndex?: boolean
 }
 
 /**
@@ -206,9 +206,15 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param opts - Additional options
    */
   async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
-    const { header, ...options } = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    const { shouldIndex, ...options } = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
     const signer: CeramicSigner = options.asDID ? { did: options.asDID } : this.api
+    let header: Partial<CommitHeader> | undefined = undefined
+    if (shouldIndex != null) {
+      header = {
+        shouldIndex: shouldIndex,
+      }
+    }
     const updateCommit = await this._makeCommit(signer, content, header)
     const updated = await this.api.applyCommit(this.id, updateCommit, options)
     this.state$.next(updated.state)
@@ -221,7 +227,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param opts - Additional options
    */
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
-    const { header, ...options } = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    const { shouldIndex, ...options } = { ...DEFAULT_UPDATE_OPTS, ...opts }
     jsonPatch.forEach((patch) => {
       switch (patch.op) {
         case 'add': {
@@ -243,8 +249,10 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       id: this.id.cid,
     }
     // Null check is necessary to avoid `undefined` value that can't be encoded with IPLD
-    if (header != null) {
-      rawCommit.header = header
+    if (shouldIndex != null) {
+      rawCommit.header = {
+        shouldIndex: shouldIndex,
+      }
     }
     const commit = await ModelInstanceDocument._signDagJWS(this.api, rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, options)
