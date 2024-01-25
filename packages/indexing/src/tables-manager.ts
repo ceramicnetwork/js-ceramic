@@ -235,8 +235,7 @@ export class TablesManager {
     if (missingIndices.length > 0) {
       throw new Error(`Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.
           Missing Indices=${JSON.stringify(missingIndices)}
-          Actual=${JSON.stringify(actual)}`
-      )
+          Actual=${JSON.stringify(actual)}`)
     }
   }
 }
@@ -316,13 +315,11 @@ export class PostgresTablesManager extends TablesManager {
         expectedIndices.push(fieldsIndexName(index, tableName).toLowerCase())
       }
     }
-    const indicesResult = (
-      await this.dataSource.raw<PgIndexResult>(`
+    const indicesResult = await this.dataSource.raw<PgIndexResult>(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
     `)
-    )
     const actualIndices = indicesResult ? indicesResult.rows.map((row) => row.indexname) : []
     this.validateIndices(tableName, expectedIndices, actualIndices)
   }
