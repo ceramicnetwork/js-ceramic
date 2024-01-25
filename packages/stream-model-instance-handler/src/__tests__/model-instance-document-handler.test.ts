@@ -838,7 +838,7 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Rejects commit if field is immutable', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.api, CONTENT0, {
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
       controller: DID_ID,
       model: FAKE_MODEL_IMMUTABLE_ID,
     })) as SignedCommitContainer
