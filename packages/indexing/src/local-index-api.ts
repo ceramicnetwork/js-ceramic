@@ -6,7 +6,8 @@ import type {
   PaginationQuery,
   StreamState,
   DiagnosticsLogger,
-  CeramicCoreApi,
+  StreamStateLoader,
+  StreamReader,
 } from '@ceramicnetwork/common'
 import type { DatabaseIndexApi, IndexModelArgs } from './database-index-api.js'
 import { IndexStreamArgs } from './database-index-api.js'
@@ -27,8 +28,8 @@ import { ISyncQueryApi } from './history-sync/interfaces.js'
  * database for indexing that model.
  */
 async function _getIndexModelArgs(
+  reader: StreamReader,
   req: ModelData,
-  core: CeramicCoreApi,
   loading: LoadingInterfaceImplements = {}
 ): Promise<IndexModelArgs> {
   const modelStreamId = req.streamID
@@ -42,7 +43,7 @@ async function _getIndexModelArgs(
   let relationFields = new Set<string>()
 
   if (modelStreamId.type == Model.STREAM_TYPE_ID) {
-    const modelState = await core.loadStream(modelStreamId, {})
+    const modelState = await reader.loadStream(modelStreamId, {})
     const content: ModelDefinition = modelState.state.next?.content ?? modelState.state.content
     Model.assertVersionValid(content, 'major')
     // Relation fields need to be indexed
@@ -60,7 +61,7 @@ async function _getIndexModelArgs(
         }
       }
       if (content.implements) {
-        opts.implements = await loadAllModelInterfaces(core, content.implements, loading)
+        opts.implements = await loadAllModelInterfaces(reader, content.implements, loading)
       }
     }
     opts.indices = req.indices
@@ -80,7 +81,8 @@ export class LocalIndexApi implements IndexApi {
 
   constructor(
     indexingConfig: IndexingConfig | undefined,
-    private readonly core: CeramicCoreApi,
+    private readonly reader: StreamReader,
+    private readonly loader: StreamStateLoader,
     private readonly logger: DiagnosticsLogger,
     networkName: Networks
   ) {
@@ -142,7 +144,7 @@ export class LocalIndexApi implements IndexApi {
     const edges = await Promise.all(
       // For database queries we bypass the stream cache and repository loading queue
       page.edges.map(async (edge) => {
-        const node = (await this.core.loadStreamState(edge.node)) ?? null
+        const node = (await this.loader.loadStreamState(edge.node)) ?? null
         if (!node) {
           this.logger.warn(`
             Did not find stream state for streamid ${
@@ -188,7 +190,7 @@ export class LocalIndexApi implements IndexApi {
       )
     }
 
-    return await _getIndexModelArgs(modelData, this.core, loading)
+    return await _getIndexModelArgs(this.reader, modelData, loading)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {

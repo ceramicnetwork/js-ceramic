@@ -5,11 +5,9 @@ import {
   CreateOpts,
   Stream,
   StreamHandler,
-  Context,
   DiagnosticsLogger,
   StreamUtils,
   LoadOpts,
-  CeramicApi,
   CeramicCommit,
   IpfsApi,
   MultiQuery,
@@ -22,7 +20,9 @@ import {
   AdminApi,
   NodeStatusResponse,
   AnchorOpts,
-  AnchorEvent,
+  CeramicSigner,
+  StreamStateLoader,
+  StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
@@ -138,6 +138,7 @@ export interface CeramicModules {
   providersCache: ProvidersCache
   anchorRequestCarBuilder: AnchorRequestCarBuilder
   feed: Feed
+  signer: CeramicSigner
 }
 
 /**
@@ -184,8 +185,13 @@ const tryStreamId = (id: string): StreamID | null => {
  * To install this library:<br/>
  * `$ npm install --save @ceramicnetwork/core`
  */
-export class Ceramic implements CeramicApi {
-  public readonly context: Context
+export class Ceramic implements StreamReaderWriter, StreamStateLoader {
+  // Primarily for backwards compatibility around the get did call, any usages for signing
+  // or verification should be done using `_signer`. See `get did` and `get signer` for more
+  // information
+  private _did?: DID
+  private _ipfs?: IpfsApi
+  private _signer: CeramicSigner
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
   public readonly admin: AdminApi
@@ -208,6 +214,7 @@ export class Ceramic implements CeramicApi {
   private readonly _startTime: Date
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
+    this._signer = modules.signer
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
@@ -230,14 +237,7 @@ export class Ceramic implements CeramicApi {
       this._networkOptions.name
     )
 
-    this.context = {
-      api: this,
-      ipfs: modules.ipfs,
-      loggerProvider: modules.loggerProvider,
-    }
-    if (!this._readOnly) {
-      this.anchorService.ceramic = this
-    }
+    this._ipfs = modules.ipfs
 
     this._streamHandlers = new HandlersMap(this._logger)
 
@@ -247,13 +247,14 @@ export class Ceramic implements CeramicApi {
       this._logger,
       this.dispatcher,
       modules.anchorService.validator,
-      this._streamHandlers,
-      this.context
+      this,
+      this._streamHandlers
     )
     const pinStore = modules.pinStoreFactory.createPinStore()
     const localIndex = new LocalIndexApi(
       params.indexingConfig,
-      this, // Circular dependency while core provided indexing
+      this,
+      this,
       this._logger,
       params.networkOptions.name
     )
@@ -262,7 +263,6 @@ export class Ceramic implements CeramicApi {
       pinStore: pinStore,
       keyValueStore: this._levelStore,
       anchorRequestStore: new AnchorRequestStore(this._logger),
-      context: this.context,
       handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       indexing: localIndex,
@@ -302,17 +302,28 @@ export class Ceramic implements CeramicApi {
   }
 
   /**
-   * Get IPFS instance
+   * Get the signer for this ceramic, used in creating and verifying signatures. This should be used
+   * for all of those instances rather than `did`, since the signer has any additional logic
+   * related to creating and verifying signatures.
    */
-  get ipfs(): IpfsApi {
-    return this.context.ipfs
+  get signer(): CeramicSigner {
+    return this._signer
   }
 
   /**
-   * Get DID
+   * Get IPFS instance
+   */
+  get ipfs(): IpfsApi {
+    return this._ipfs
+  }
+
+  /**
+   * Get DID. This should only be used if you need to interrogate the DID that was set for this
+   * ceramic. For most instances, prefer `signer`, as it has the necessary information for creating
+   * and verifying signatures.
    */
   get did(): DID | undefined {
-    return this.context.did
+    return this._did
   }
 
   /**
@@ -321,7 +332,8 @@ export class Ceramic implements CeramicApi {
    * @param did
    */
   set did(did: DID) {
-    this.context.did = did
+    this._did = did
+    this._signer.withDid(did)
   }
 
   /**
@@ -337,7 +349,14 @@ export class Ceramic implements CeramicApi {
     const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
 
     const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
-    const anchorService = makeAnchorService(config, ethereumRpcUrl, networkOptions.name, logger)
+    const signer = CeramicSigner.invalid()
+    const anchorService = makeAnchorService(
+      config,
+      ethereumRpcUrl,
+      networkOptions.name,
+      logger,
+      signer
+    )
     const providersCache = new ProvidersCache(ethereumRpcUrl)
 
     const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}
@@ -400,6 +419,7 @@ export class Ceramic implements CeramicApi {
       providersCache,
       anchorRequestCarBuilder,
       feed,
+      signer,
     }
 
     return [modules, params]
@@ -443,10 +463,11 @@ export class Ceramic implements CeramicApi {
         await this._ipfsTopology.start()
       }
 
+      this.anchorService.signer = this._signer
       if (!this._readOnly) {
         await this.anchorService.init(
           this.repository.anchorRequestStore,
-          this.repository.anchorLoopHandler(this._logger)
+          this.repository.anchorLoopHandler()
         )
         this._supportedChains = await usableAnchorChains(
           this._networkOptions.name,
@@ -531,13 +552,6 @@ export class Ceramic implements CeramicApi {
   }
 
   /**
-   * @deprecated - use the Ceramic.did setter instead
-   */
-  async setDID(did: DID): Promise<void> {
-    this.context.did = did
-  }
-
-  /**
    * Register new stream handler
    * @param streamHandler - Stream type handler
    */
@@ -590,16 +604,11 @@ export class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
     const id = normalizeStreamID(streamId)
 
-    this._logger.debug(`Apply commit to stream ${id.toString()}`)
+    this._logger.verbose(`Apply commit to stream ${id.toString()}`)
     const state$ = await this.repository.applyCommit(id, commit, opts)
-    this._logger.debug(`Applied commit to stream ${id.toString()}`)
+    this._logger.verbose(`Applied commit to stream ${id.toString()}`)
 
-    return streamFromState<T>(
-      this.context,
-      this._streamHandlers,
-      state$.value,
-      this.repository.updates$
-    )
+    return streamFromState<T>(this, this._streamHandlers, state$.value, this.repository.updates$)
   }
 
   /**
@@ -638,7 +647,7 @@ export class Ceramic implements CeramicApi {
     )
     const state$ = await this.repository.applyCreateOpts(streamId, opts)
     const stream = streamFromState<T>(
-      this.context,
+      this,
       this._streamHandlers,
       state$.value,
       this.repository.updates$
@@ -661,19 +670,14 @@ export class Ceramic implements CeramicApi {
 
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)
-      return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
+      return streamFromState<T>(this, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.loadAtTime(streamRef, opts)
-      return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
+      return streamFromState<T>(this, this._streamHandlers, snapshot$.value)
     } else {
       try {
         const base$ = await this.repository.load(streamRef.baseID, opts)
-        return streamFromState<T>(
-          this.context,
-          this._streamHandlers,
-          base$.value,
-          this.repository.updates$
-        )
+        return streamFromState<T>(this, this._streamHandlers, base$.value, this.repository.updates$)
       } catch (err) {
         if (opts.sync != SyncOptions.SYNC_ON_ERROR) {
           throw err
@@ -686,12 +690,7 @@ export class Ceramic implements CeramicApi {
         // Retry with a full resync
         opts.sync = SyncOptions.SYNC_ALWAYS
         const base$ = await this.repository.load(streamRef.baseID, opts)
-        return streamFromState<T>(
-          this.context,
-          this._streamHandlers,
-          base$.value,
-          this.repository.updates$
-        )
+        return streamFromState<T>(this, this._streamHandlers, base$.value, this.repository.updates$)
       }
     }
   }
@@ -855,7 +854,7 @@ export class Ceramic implements CeramicApi {
    * @param state StreamState for a stream.
    */
   buildStreamFromState<T extends Stream = Stream>(state: StreamState): T {
-    return streamFromState<T>(this.context, this._streamHandlers, state, this.repository.updates$)
+    return streamFromState<T>(this, this._streamHandlers, state, this.repository.updates$)
   }
 
   /**

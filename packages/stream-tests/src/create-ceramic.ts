@@ -35,7 +35,7 @@ export async function createCeramic(
   await ceramic._init(false)
 
   const did = createDid(ceramic, appliedConfig.seed || 'SEED')
-  await ceramic.setDID(did)
+  ceramic.did = did
   await did.authenticate()
 
   return ceramic

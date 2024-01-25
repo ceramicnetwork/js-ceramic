@@ -3,7 +3,7 @@ import type {
   AnchorEvent,
   FetchRequest,
   DiagnosticsLogger,
-  CeramicApi,
+  CeramicSigner,
 } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
 import type { CAR } from 'cartonne'
@@ -69,11 +69,9 @@ export class EthereumAnchorService implements AnchorService {
   }
 
   /**
-   * Set Ceramic API instance
-   *
-   * @param ceramic - Ceramic API used for various purposes
+   * @inheritDoc
    */
-  set ceramic(ceramic: CeramicApi) {
+  set signer(signer: CeramicSigner) {
     // Do Nothing
   }
 
@@ -137,7 +135,7 @@ export class EthereumAnchorService implements AnchorService {
     this.#logger.debug(`Closing EthereumAnchorService`)
     await this.#cas.close()
     await this.#store.close()
-    await this.#loop.stop()
+    await this.#loop?.stop()
   }
 }
 
@@ -168,12 +166,10 @@ export class AuthenticatedEthereumAnchorService
   }
 
   /**
-   * Set Ceramic API instance
-   *
-   * @param ceramic - Ceramic API used for various purposes
+   * @inheritDoc
    */
-  set ceramic(ceramic: CeramicApi) {
-    this.auth.ceramic = ceramic
+  set ceramic(signer: CeramicSigner) {
+    this.auth.signer = signer
   }
 
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {

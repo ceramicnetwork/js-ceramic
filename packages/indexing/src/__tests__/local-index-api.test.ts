@@ -1,12 +1,13 @@
 import { jest } from '@jest/globals'
 import type { DatabaseIndexApi } from '../database-index-api.js'
 import type {
-  CeramicCoreApi,
-  Context,
   DiagnosticsLogger,
   Page,
   RunningStateLike,
+  StreamReader,
+  StreamReaderWriter,
   StreamState,
+  StreamStateLoader,
 } from '@ceramicnetwork/common'
 import { randomString } from '@stablelib/random'
 import { LocalIndexApi } from '../local-index-api.js'
@@ -71,11 +72,18 @@ describe('with database backend', () => {
       }
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
-    const fauxCore = { loadStreamState: streamStateFn } as unknown as CeramicCoreApi
+    const fauxReader = {} as unknown as StreamReader
+    const fauxStreamStateLoader = { loadStreamState: streamStateFn } as unknown as StreamStateLoader
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
 
-    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
+    const indexApi = new LocalIndexApi(
+      undefined,
+      fauxReader,
+      fauxStreamStateLoader,
+      fauxLogger,
+      Networks.INMEMORY
+    )
     ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -112,13 +120,20 @@ describe('with database backend', () => {
       return undefined
     })
     const fauxBackend = { page: pageFn } as unknown as DatabaseIndexApi
-    const fauxCore = { loadStreamState: streamStateFn } as unknown as CeramicCoreApi
+    const fauxReader = {} as unknown as StreamReader
+    const fauxStreamStateLoader = { loadStreamState: streamStateFn } as unknown as StreamStateLoader
     const fauxLogger = {
       warn: jest.fn((content: string | Record<string, unknown> | Error) => {
         console.log(content)
       }),
     } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
+    const indexApi = new LocalIndexApi(
+      undefined,
+      fauxReader,
+      fauxStreamStateLoader,
+      fauxLogger,
+      Networks.INMEMORY
+    )
     ;(indexApi as any).databaseIndexApi = fauxBackend
     const response = await indexApi.query(query)
     // Call databaseIndexApi::page function
@@ -139,10 +154,17 @@ describe('with database backend', () => {
 
 describe('without database backend', () => {
   test('return an empty response', async () => {
-    const fauxCore = {} as unknown as CeramicCoreApi
+    const fauxReader = {} as unknown as StreamReader
+    const fauxStreamStateLoader = {} as unknown as StreamStateLoader
     const warnFn = jest.fn()
     const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
+    const indexApi = new LocalIndexApi(
+      undefined,
+      fauxReader,
+      fauxStreamStateLoader,
+      fauxLogger,
+      Networks.INMEMORY
+    )
 
     const response = await indexApi.query({ model: 'foo', first: 5 })
     // Return an empty response
@@ -159,10 +181,17 @@ describe('without database backend', () => {
 })
 
 test('count', async () => {
-  const fauxCore = {} as unknown as CeramicCoreApi
+  const fauxReader = {} as unknown as StreamReader
+  const fauxStreamStateLoader = {} as unknown as StreamStateLoader
   const warnFn = jest.fn()
   const fauxLogger = { warn: warnFn } as unknown as DiagnosticsLogger
-  const indexApi = new LocalIndexApi(undefined, fauxCore, fauxLogger, Networks.INMEMORY)
+  const indexApi = new LocalIndexApi(
+    undefined,
+    fauxReader,
+    fauxStreamStateLoader,
+    fauxLogger,
+    Networks.INMEMORY
+  )
   const expected = Math.random()
   const countFn = jest.fn(() => expected)
   const fauxBackend = { count: countFn } as unknown as DatabaseIndexApi
@@ -184,10 +213,17 @@ describe('index models with interfaces', () => {
     const loadStream = jest.fn(() => ({
       state: { content: { version: '2.0', accountRelation: { type: 'none' }, interface: true } },
     }))
-    const core = { loadStream } as unknown as CeramicCoreApi
+    const fauxReader = { loadStream } as unknown as StreamReader
+    const fauxStreamStateLoader = {} as unknown as StreamStateLoader
     const noop = jest.fn()
     const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
+    const indexApi = new LocalIndexApi(
+      undefined,
+      fauxReader,
+      fauxStreamStateLoader,
+      logger,
+      Networks.INMEMORY
+    )
     ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [] }
 
     await expect(
@@ -220,12 +256,22 @@ describe('index models with interfaces', () => {
           implements: found,
         },
       } as unknown as StreamState)
-      return new Model(runningState as unknown as RunningStateLike, {} as unknown as Context)
+      return new Model(
+        runningState as unknown as RunningStateLike,
+        {} as unknown as StreamReaderWriter
+      )
     })
-    const core = { loadStream } as unknown as CeramicCoreApi
+    const fauxReader = { loadStream } as unknown as StreamReader
+    const fauxStreamStateLoader = {} as unknown as StreamStateLoader
     const noop = jest.fn()
     const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
-    const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
+    const indexApi = new LocalIndexApi(
+      undefined,
+      fauxReader,
+      fauxStreamStateLoader,
+      logger,
+      Networks.INMEMORY
+    )
     const indexModels = jest.fn()
     ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [], indexModels }
 
@@ -272,10 +318,17 @@ test('automatically index relations', async () => {
       },
     },
   }))
-  const core = { loadStream } as unknown as CeramicCoreApi
+  const fauxReader = { loadStream } as unknown as StreamReader
+  const fauxStreamStateLoader = {} as unknown as StreamStateLoader
   const noop = jest.fn()
   const logger = { warn: noop, imp: noop } as unknown as DiagnosticsLogger
-  const indexApi = new LocalIndexApi(undefined, core, logger, Networks.INMEMORY)
+  const indexApi = new LocalIndexApi(
+    undefined,
+    fauxReader,
+    fauxStreamStateLoader,
+    logger,
+    Networks.INMEMORY
+  )
   const indexModels = jest.fn()
   ;(indexApi as any).databaseIndexApi = { getModelsNoLongerIndexed: () => [], indexModels }
 

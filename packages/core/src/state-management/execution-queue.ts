@@ -12,7 +12,6 @@ import { TaskQueueLike } from '../ancillary/task-queue.js'
 export class ExecutionQueue {
   private readonly tasks: NamedTaskQueue
   private readonly semaphore: Semaphore
-  private n = 0
 
   constructor(
     private readonly name: string,
@@ -29,44 +28,25 @@ export class ExecutionQueue {
    * Return execution lane for a stream.
    */
   forStream(streamId: StreamID | CommitID): TaskQueueLike {
-    this.logger.debug(`EQ: Creating a ${this.name} queue for ${streamId}`)
     return {
       add: (task) => {
-        this.n += 1
-        const n = this.n
-        this.logger.debug(`EQ: Added an ADD ${this.name}-${n} task for ${streamId}`)
         return this.tasks.add(streamId.toString(), () => {
-          this.logger.debug(`EQ: Running an ADD ${this.name}-${n} task for ${streamId}`)
           if (this.semaphore.count == 0) {
             this.logger.warn(
               `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
             )
           }
-          return this.semaphore.use(async () => {
-            this.logger.debug(`EQ: Starting an ADD ${this.name}-${n} task for ${streamId}`)
-            const result = await task()
-            this.logger.debug(`EQ: Finished an ADD ${this.name}-${n} task for ${streamId}`)
-            return result
-          })
+          return this.semaphore.use(() => task())
         })
       },
-      run: (task, label = '') => {
-        this.n += 1
-        const n = this.n
-        this.logger.debug(`EQ: Adding a RUN ${this.name}-${n} task: ${label} : ${streamId}`)
+      run: (task) => {
         return this.tasks.run(streamId.toString(), () => {
-          this.logger.debug(`EQ: Running a RUN ${this.name}-${n} task: ${label} : ${streamId}`)
           if (this.semaphore.count == 0) {
             this.logger.warn(
               `${this.name} queue is full, over ${this.concurrencyLimit} pending requests found`
             )
           }
-          return this.semaphore.use(async () => {
-            this.logger.debug(`EQ: Starting a RUN ${this.name}-${n} task: ${label} : ${streamId}`)
-            const result = await task()
-            this.logger.debug(`EQ: Finished a RUN ${this.name}-${n} task: ${label} : ${streamId}`)
-            return result
-          })
+          return this.semaphore.use(() => task())
         })
       },
     }

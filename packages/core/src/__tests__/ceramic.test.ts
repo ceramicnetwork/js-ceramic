@@ -273,7 +273,7 @@ describe('Ceramic integration', () => {
         // knows about an existing tip, if we hear about a conflicting tip via pubsub, we need to consider it. The node
         // that created it may not have known about the existing tip when it did, and so now we need to use our conflict
         // resolution rules to decide between the two equally valid tips.
-        const commit = await streamOg.makeCommit(ceramic1, content2)
+        const commit = await streamOg.makeCommit(ceramic1.signer, content2)
         const content2Cid = await ceramic2.dispatcher.storeCommit(commit)
         await ceramic2.dispatcher.publishTip(streamOg.id, content2Cid)
 
@@ -637,7 +637,7 @@ describe('Ceramic integration', () => {
         await stream1.update(content)
 
         // Create (off-chain) the deterministic TileDocument genesis commit
-        const genesisCommit = (await TileDocument.makeGenesis(ceramic1, null, {
+        const genesisCommit = (await TileDocument.makeGenesis(ceramic1.signer, null, {
           ...metadata,
           deterministic: true,
         })) as GenesisCommit
@@ -677,7 +677,7 @@ describe('Ceramic integration', () => {
         }
 
         // Create (off-chain) the deterministic TileDocument genesis commit
-        const genesisCommit = (await TileDocument.makeGenesis(ceramic1, content, {
+        const genesisCommit = (await TileDocument.makeGenesis(ceramic1.signer, content, {
           ...metadata,
           deterministic: true,
         })) as GenesisCommit
@@ -696,7 +696,7 @@ describe('Ceramic integration', () => {
         const resolvedStream = res[streamID.toString()]
         expect(resolvedStream.content).toEqual({})
         expect(resolvedStream.metadata).toEqual(metadata)
-        const pinned = await TestUtils.isPinned(ceramic2, streamID)
+        const pinned = await TestUtils.isPinned(ceramic2.admin, streamID)
         expect(pinned).toBeTruthy()
 
         await ceramic1.close()
@@ -738,7 +738,7 @@ describe('Ceramic integration', () => {
 
         // Create (off-chain) deterministic TileDocument genesis commit with contentB
         const genesisCommit = (await TileDocument.makeGenesis(
-          ceramic2,
+          ceramic2.signer,
           contentA,
           metadata2
         )) as GenesisCommit
@@ -786,7 +786,7 @@ describe('Ceramic integration', () => {
 
         // Create (off-chain) non-deterministic TileDocument genesis commit with content
         const genesisCommit = (await TileDocument.makeGenesis(
-          ceramic2,
+          ceramic2.signer,
           content,
           metadata
         )) as GenesisCommit
@@ -848,7 +848,7 @@ describe('Ceramic integration', () => {
 
 describe('buildStreamFromState', () => {
   let ipfs: IpfsApi
-  let ceramic: CeramicApi
+  let ceramic: Ceramic
   beforeEach(async () => {
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)
