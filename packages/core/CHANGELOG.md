@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.2.0...@ceramicnetwork/core@3.3.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* Always update the StateStore from within the ExecutionQueue ([#3073](https://github.com/ceramicnetwork/js-ceramic/issues/3073)) ([17d77ca](https://github.com/ceramicnetwork/js-ceramic/commit/17d77ca29b8c52e24750b5906107ccb9375438e7))
+* await stop ([#3106](https://github.com/ceramicnetwork/js-ceramic/issues/3106)) ([2d7d354](https://github.com/ceramicnetwork/js-ceramic/commit/2d7d354cf9a3147ab9e2432653e03a69610cdc51))
+* **core:** Use the anchor proof chain id to verify the anchor proof ([#3098](https://github.com/ceramicnetwork/js-ceramic/issues/3098)) ([55b8dff](https://github.com/ceramicnetwork/js-ceramic/commit/55b8dffe52cd475799b37da9fc439b2823a591ca))
+* Limit scope of what's in a queue ([#3102](https://github.com/ceramicnetwork/js-ceramic/issues/3102)) ([83320f8](https://github.com/ceramicnetwork/js-ceramic/commit/83320f8911a1697bec6733017af7ff9f07469a51))
+* Make AnchorRequestStore processing loop more robust ([#3066](https://github.com/ceramicnetwork/js-ceramic/issues/3066)) ([a864739](https://github.com/ceramicnetwork/js-ceramic/commit/a8647395579eb9ca57e0239999191b21f5a1a9fc))
+* make Repository.fromMemoryOrStore safe by default ([#3072](https://github.com/ceramicnetwork/js-ceramic/issues/3072)) ([a444125](https://github.com/ceramicnetwork/js-ceramic/commit/a4441253d6dd874f92b4eed8c19a672cc5e16990))
+* register new running state ([#3074](https://github.com/ceramicnetwork/js-ceramic/issues/3074)) ([e4fe604](https://github.com/ceramicnetwork/js-ceramic/commit/e4fe6048c2875a9809488217c113e4823c294df8))
+* Update state store if loading at a commit that is ahead of what we currently have ([#3097](https://github.com/ceramicnetwork/js-ceramic/issues/3097)) ([8804c99](https://github.com/ceramicnetwork/js-ceramic/commit/8804c99c02e9872cfcd5d5a24507f39b43868c3f))
+
+
+### Features
+
+* Timeout fetching batches from the AnchorRequestStore ([#3083](https://github.com/ceramicnetwork/js-ceramic/issues/3083)) ([e7706df](https://github.com/ceramicnetwork/js-ceramic/commit/e7706df2a57e8bc5f1fbdd3b17a898edd7b93d63))
+
+
+
+
+
 # [3.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.2.0-rc.0...@ceramicnetwork/core@3.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/core

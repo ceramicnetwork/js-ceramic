@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@2.2.0...@ceramicnetwork/stream-model-instance@2.3.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* load model should work under postgres ([#3091](https://github.com/ceramicnetwork/js-ceramic/issues/3091)) ([9c55078](https://github.com/ceramicnetwork/js-ceramic/commit/9c55078d37404c1d5400e57397ee788223890e92))
+
+
+### Features
+
+* Add static method for updating a MID without access to the StreamState ([#3101](https://github.com/ceramicnetwork/js-ceramic/issues/3101)) ([6fbf4dc](https://github.com/ceramicnetwork/js-ceramic/commit/6fbf4dcc07140575c44b3ce408dd4a67bdd7be94))
+* Respect context when creating MIDs ([#3077](https://github.com/ceramicnetwork/js-ceramic/issues/3077)) ([8b7c742](https://github.com/ceramicnetwork/js-ceramic/commit/8b7c7428bd40bb06f260af1d707e60a6ffccab54))
+
+
+
+
+
 # [2.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance@2.2.0-rc.0...@ceramicnetwork/stream-model-instance@2.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance
