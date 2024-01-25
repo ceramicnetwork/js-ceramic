@@ -14,12 +14,8 @@ import { ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { InsertionOrder } from './insertion-order.js'
 import { asTableName } from './as-table-name.util.js'
 import { IndexQueryNotAvailableError } from './index-query-not-available.error.js'
-import {
-  type CreateIndicesRecord,
-  TablesManager,
-  PostgresTablesManager,
-  SqliteTablesManager,
-} from './tables-manager.js'
+import { TablesManager, PostgresTablesManager, SqliteTablesManager } from './tables-manager.js'
+import { addColumnPrefix } from './column-name.util.js'
 import { ISyncQueryApi } from './history-sync/interfaces.js'
 import cloneDeep from 'lodash.clonedeep'
 import { indexNameFromTableName } from './migrations/1-create-model-table.js'
@@ -38,8 +34,6 @@ export interface IndexStreamArgs {
   readonly firstAnchor: Date | null
 }
 
-export type IndicesRecord = Record<string, FieldsIndex>
-
 /**
  * Create a valid name for a fields index. The index name cannot exceed 64 characters
  * @param idx Index to create a name for
@@ -51,32 +45,6 @@ export function fieldsIndexName(idx: FieldsIndex, table: string): string {
     .map((p) => p.slice(0, 5))
     .join('_')
   return `${indexNameFromTableName(table)}_${fieldPath}`.slice(0, 64)
-}
-
-/**
- * Get a deterministic key for a FieldsIndex
- * @param index FieldsIndex
- * @returns string
- */
-export function getFieldIndexKey(index: FieldsIndex): string {
-  // Join and sort fields paths for deterministic ordering
-  const fields = index.fields.map((field) => field.path.join('/'))
-  fields.sort()
-  // Join fields
-  return fields.join('+')
-}
-
-/**
- * Create an IndicesRecord from a list of FieldsIndex
- * @param indices Array<FieldsIndex>
- * @returns IndicesRecord
- */
-export function toIndicesRecord(indices: Array<FieldsIndex> = []): IndicesRecord {
-  const record: IndicesRecord = {}
-  for (const index of indices) {
-    record[getFieldIndexKey(index)] = { fields: index.fields }
-  }
-  return record
 }
 
 /**
@@ -108,7 +76,10 @@ type IndexedData<DateType> = {
  */
 export abstract class DatabaseIndexApi<DateType = Date | number> {
   private readonly insertionOrder: InsertionOrder
-  private indexedModelsRecord: Record<string, ModelData> = {}
+  private indexedModels: Array<ModelData> = []
+  // Maps Model streamIDs to the list of fields in the content of MIDs that the model has a relation
+  // to
+  private readonly modelRelations = new Map<string, Array<string>>()
   #interfacesModels: Record<string, Set<string>> = {}
   tablesManager!: TablesManager
   syncApi!: ISyncQueryApi
@@ -144,85 +115,49 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * @param models
    */
   async indexModels(models: Array<IndexModelArgs>): Promise<void> {
-    // Updated indexed models record
-    const indexedModels: Record<string, ModelData> = cloneDeep(this.indexedModelsRecord)
-    // Models to index with merged indices
-    const modelsToIndex: Array<IndexModelArgs> = []
-    // Record of indices to create
-    const createIndices: CreateIndicesRecord = {}
-    // Checks for models in sync
-    const checkSyncPromises: Array<Promise<void>> = []
-
-    for (const modelData of models) {
-      // Check model is not currently going through historical sync
-      checkSyncPromises.push(this.assertNoOngoingSyncForModel(modelData.model))
-
-      const modelIndicesRecord = toIndicesRecord(modelData.indices)
-      // Add relations to indices record
-      for (const field of Object.keys(modelData.relations ?? {})) {
-        modelIndicesRecord[field] = { fields: [{ path: [field] }] }
+    await this.indexModelsInDatabase(models)
+    for (const modelArgs of models) {
+      await this.assertNoOngoingSyncForModel(modelArgs.model)
+      const foundModelToIndex = this.indexedModels.find((indexedModel) =>
+        indexedModel.streamID.equals(modelArgs.model)
+      )
+      if (!foundModelToIndex) {
+        this.indexedModels.push({
+          streamID: modelArgs.model,
+          indices: modelArgs.indices,
+        })
       }
-      const modelIndices = Object.values(modelIndicesRecord)
-
-      const id = modelData.model.toString()
-      if (indexedModels[id] == null) {
-        // Update indexed models record
-        indexedModels[id] = { streamID: modelData.model, indices: modelIndices }
-        // Add indices to create
-        createIndices[id] = modelIndices
-      } else {
-        const existingIndices = toIndicesRecord(indexedModels[id]?.indices)
-        const addedIndices: IndicesRecord = {}
-        for (const [key, index] of Object.entries(modelIndicesRecord)) {
-          if (existingIndices[key] == null) {
-            addedIndices[key] = index
-          }
-        }
-        // Update indexed models record
-        const allIndices = Object.values({ ...existingIndices, ...addedIndices })
-        indexedModels[id] = { streamID: modelData.model, indices: allIndices }
-        // Update indices to add record only if there is any missing index
-        const addedIndicesList = Object.values(addedIndices)
-        if (addedIndicesList.length) {
-          this.logger.warn(`Adding indices to already indexed model: ${id}`)
-          createIndices[id] = addedIndicesList
-        }
+      if (modelArgs.relations) {
+        this.modelRelations.set(modelArgs.model.toString(), Object.keys(modelArgs.relations))
       }
-
-      modelsToIndex.push({ ...modelData, indices: indexedModels[id]?.indices })
     }
-
-    // Ensure all sync checks are done before updating DB
-    await Promise.all(checkSyncPromises)
-    // Index models with possibly new indices to create
-    await this.indexModelsInDatabase(modelsToIndex, createIndices)
-    // Set updated indexed models record once DB has been updated
-    this.indexedModelsRecord = indexedModels
   }
 
-  private async indexModelsInDatabase(
-    models: Array<IndexModelArgs>,
-    createIndices: CreateIndicesRecord
-  ): Promise<void> {
+  private async indexModelsInDatabase(models: Array<IndexModelArgs>): Promise<void> {
     if (models.length === 0) return
-    await this.tablesManager.initMidTables(models, createIndices)
+    await this.tablesManager.initMidTables(models)
+    await this.tablesManager.verifyTables(models)
 
     await this.dbConnection.transaction(async (trx) => {
       // : CDB-1866 - populate the updated_by field properly when auth is implemented
-      const toInsert = models.map(async (indexModelArgs) => {
-        const data = {
-          model: indexModelArgs.model.toString(),
-          ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
+      await trx(INDEXED_MODEL_CONFIG_TABLE_NAME)
+        .insert(
+          models.map((indexModelArgs) => {
+            return {
+              model: indexModelArgs.model.toString(),
+              ...(indexModelArgs.indices && { indices: JSON.stringify(indexModelArgs.indices) }),
+              is_indexed: true,
+              updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
+              updated_at: this.now(),
+            }
+          })
+        )
+        .onConflict('model')
+        .merge({
+          updated_at: this.now(),
           is_indexed: true,
           updated_by: '0', // TODO: FIXME: CDB-1866 - <FIXME: PUT ADMIN DID WHEN AUTH IS IMPLEMENTED>',
-          updated_at: this.now(),
-        }
-        return await trx(INDEXED_MODEL_CONFIG_TABLE_NAME)
-          .insert(data)
-          .onConflict('model')
-          .merge(data)
-      })
-      await Promise.all(toInsert)
+        })
 
       const modelImplements = models.flatMap((args) => {
         const modelID = args.model.toString()
@@ -235,9 +170,6 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
         await trx(MODEL_IMPLEMENTS_TABLE_NAME).insert(modelImplements).onConflict().ignore()
       }
     })
-
-    // Run verification after indices have been created and the models table updated
-    await this.tablesManager.verifyTables(models)
   }
 
   /**
@@ -247,10 +179,9 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    */
   async stopIndexingModels(models: Array<ModelData>): Promise<void> {
     await this.stopIndexingModelsInDatabase(models)
-    for (const model of models) {
-      const id = model.streamID.toString()
-      delete this.indexedModelsRecord[id]
-    }
+    this.indexedModels = this.indexedModels.filter(
+      (idx) => !models.some((data) => data.streamID.equals(idx.streamID))
+    )
   }
 
   private async stopIndexingModelsInDatabase(models: Array<ModelData>): Promise<void> {
@@ -284,7 +215,11 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
-    const indexedData = this.getIndexedData(indexingArgs)
+    const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
+    const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
+    for (const relation of relations) {
+      indexedData[addColumnPrefix(relation)] = indexingArgs.streamContent[relation]
+    }
     const toMerge = cloneDeep(indexedData)
     delete toMerge['created_at']
     await this.dbConnection(tableName).insert(indexedData).onConflict('stream_id').merge(toMerge)
@@ -299,7 +234,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
      * This variable is automatically populated during node startup & updated with Admin API
      * add & delete operations.
      */
-    return Object.values(this.indexedModelsRecord)
+    return this.indexedModels
   }
 
   private async getIndexedModelsFromDatabase(): Promise<Array<ModelData>> {
@@ -352,8 +287,8 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     await this.assertNoOngoingSyncForModel(modelStreamId)
   }
 
-  _getIndexedModel(id: StreamID | string): ModelData | undefined {
-    return this.indexedModelsRecord[id.toString()]
+  _getIndexedModel(id: StreamID): ModelData | undefined {
+    return this.indexedModels.find((indexedModel) => id.equals(indexedModel.streamID))
   }
 
   /**
@@ -410,7 +345,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
       } else {
         // Add all indexed models implementing the interface
         for (const model of interfaceModels) {
-          if (this._getIndexedModel(model) != null) {
+          if (this._getIndexedModel(StreamID.fromString(model)) != null) {
             models.add(model)
           }
         }
@@ -463,17 +398,12 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
    * Run ComposeDB config/startup operations
    */
   async init(): Promise<void> {
-    await Promise.all([
-      this.tablesManager.initConfigTables(this.network),
-      this.tablesManager.migrateMidTables(),
-    ])
+    await this.tablesManager.initConfigTables(this.network)
     const [indexedModels, interfacesModels] = await Promise.all([
       this.getIndexedModelsFromDatabase(),
       this._getInterfacesModelsFromDataBase(),
     ])
-    for (const model of indexedModels) {
-      this.indexedModelsRecord[model.streamID.toString()] = model
-    }
+    this.indexedModels = indexedModels
     this.#interfacesModels = interfacesModels
   }
 

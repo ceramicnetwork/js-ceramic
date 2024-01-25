@@ -1,14 +1,7 @@
 import { type Knex } from 'knex'
 import * as uint8arrays from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
-import type {
-  BaseQuery,
-  Page,
-  Pagination,
-  QueryFilters,
-  SortOrder,
-  Sorting,
-} from '@ceramicnetwork/common'
+import type { BaseQuery, Page, Pagination, SortOrder, Sorting } from '@ceramicnetwork/common'
 import {
   BackwardPaginationQuery,
   ForwardPaginationQuery,
@@ -17,6 +10,7 @@ import {
 } from './parse-pagination.js'
 import { asTableName } from './as-table-name.util.js'
 import { UnsupportedOrderingError } from './unsupported-ordering-error.js'
+import { addColumnPrefix } from './column-name.util.js'
 import { contentKey, convertQueryFilter, DATA_FIELD } from './query-filter-converter.js'
 import { parseQueryFilters } from './query-filter-parser.js'
 
@@ -237,21 +231,18 @@ export class InsertionOrder {
       builder = builder.where({ controller_did: query.account })
     }
 
-    let queryFilters: QueryFilters | undefined
-    if (query.queryFilters != null) {
-      queryFilters = query.queryFilters
-    } else if (query.filter != null) {
-      // Handle legacy `filter` object used for relations, convert to queryFilters format
-      queryFilters = { where: {} }
-      for (const [key, value] of Object.entries(query.filter)) {
-        queryFilters.where[key] = { equalTo: value }
-      }
-    }
-    if (queryFilters) {
-      const parsed = parseQueryFilters(queryFilters)
+    if (query.queryFilters) {
+      const parsed = parseQueryFilters(query.queryFilters)
       const converted = convertQueryFilter(parsed)
       if (converted) {
         builder = builder.where(converted.where)
+      }
+    } else if (query.filter) {
+      // Handle legacy `filter` object used for relations
+      for (const [key, value] of Object.entries(query.filter)) {
+        const filterObj: Record<string, string> = {}
+        filterObj[addColumnPrefix(key)] = value
+        builder = builder.andWhere(filterObj)
       }
     }
 
