@@ -1,11 +1,12 @@
 import type { Knex } from 'knex'
-import { FieldsIndex, Networks } from '@ceramicnetwork/common'
+import { UnreachableCaseError, FieldsIndex, Networks } from '@ceramicnetwork/common'
 import {
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   MODEL_IMPLEMENTS_TABLE_NAME,
   fieldsIndexName,
 } from '../database-index-api.js'
 import { CONFIG_TABLE_NAME } from '../config.js'
+import { addColumnPrefix } from '../column-name.util.js'
 
 export enum DatabaseType {
   POSTGRES = 'postgres',
@@ -148,7 +149,29 @@ export function getDefaultCDBDatabaseConfig(networkName: string): { [key: string
   }
 }
 
-export async function createPostgresModelTable(dataSource: Knex, tableName: string): Promise<void> {
+function createExtraColumns(
+  table: Knex.CreateTableBuilder,
+  indexName: string,
+  extraColumns: Array<ColumnInfo>
+): void {
+  for (const column of extraColumns) {
+    const columnName = addColumnPrefix(column.name)
+    switch (column.type) {
+      case ColumnType.STRING:
+        table.string(columnName, 1024).nullable()
+        table.index([columnName], `idx_${indexName}_${columnName}`)
+        break
+      default:
+        throw new UnreachableCaseError(column.type, `Invalid column type`)
+    }
+  }
+}
+
+export async function createPostgresModelTable(
+  dataSource: Knex,
+  tableName: string,
+  extraColumns: Array<ColumnInfo>
+): Promise<void> {
   await dataSource.schema.createTable(tableName, function (table) {
     const idx = defaultIndices(tableName)
 
@@ -164,6 +187,8 @@ export async function createPostgresModelTable(dataSource: Knex, tableName: stri
     table.dateTime('created_at').notNullable().defaultTo(dataSource.fn.now())
     table.dateTime('updated_at').notNullable().defaultTo(dataSource.fn.now())
 
+    createExtraColumns(table, idx.indexName, extraColumns)
+
     for (const indexToCreate of idx.indices) {
       table.index(indexToCreate.keys, indexToCreate.name, {
         storageEngineIndexType: indexToCreate.indexType,
@@ -172,7 +197,11 @@ export async function createPostgresModelTable(dataSource: Knex, tableName: stri
   })
 }
 
-export async function createSqliteModelTable(dataSource: Knex, tableName: string): Promise<void> {
+export async function createSqliteModelTable(
+  dataSource: Knex,
+  tableName: string,
+  extraColumns: Array<ColumnInfo>
+): Promise<void> {
   await dataSource.schema.createTable(tableName, (table) => {
     const idx = defaultIndices(tableName)
 
@@ -184,6 +213,8 @@ export async function createSqliteModelTable(dataSource: Knex, tableName: string
     table.integer('first_anchored_at').nullable()
     table.integer('created_at').notNullable()
     table.integer('updated_at').notNullable()
+
+    createExtraColumns(table, tableName, extraColumns)
 
     for (const indexToCreate of idx.indices) {
       table.index(indexToCreate.keys, indexToCreate.name, {
