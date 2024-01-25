@@ -1,4 +1,4 @@
-import { CeramicApi } from '@ceramicnetwork/common'
+import { StreamReaderWriter } from '@ceramicnetwork/common'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
@@ -8,7 +8,7 @@ import * as PkhDidResolver from 'pkh-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
-export function createDid(ceramic: CeramicApi, seed = 'SEED'): DID {
+export function createDid(ceramic: StreamReaderWriter, seed = 'SEED'): DID {
   const seedHash = sha256.hash(uint8arrays.fromString(seed))
   const provider = new Ed25519Provider(seedHash)
   const keyDidResolver = KeyDidResolver.getResolver()

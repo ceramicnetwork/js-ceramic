@@ -38,6 +38,7 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
+    "@ceramicnetwork/base-test-utils": "^1.0.0",
     "ts-essentials": "^9.3.2"
   },
   "publishConfig": {

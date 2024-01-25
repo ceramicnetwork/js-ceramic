@@ -1,12 +1,6 @@
 import { jest } from '@jest/globals'
-import {
-  IpfsApi,
-  Page,
-  PaginationQuery,
-  StreamState,
-  StreamUtils,
-  TestUtils,
-} from '@ceramicnetwork/common'
+import { IpfsApi, Page, PaginationQuery, StreamState, StreamUtils } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -239,7 +233,7 @@ describe.each(envs)(
       const doc2 = await ModelInstanceDocument.load(ceramic2, doc1.id)
       expect(doc1.content).toEqual(doc2.content)
       // Indexed streams should always get pinned, regardless of the 'pin' flag
-      await expect(TestUtils.isPinned(ceramic2, doc1.id)).toBeTruthy()
+      await expect(TestUtils.isPinned(ceramic2.admin, doc1.id)).toBeTruthy()
 
       resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
       results = extractDocuments(ceramic2, resultObj)

@@ -2,7 +2,8 @@ import { expect, jest, describe, test, it, beforeEach, afterEach } from '@jest/g
 import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import type { IpfsApi } from '@ceramicnetwork/common'
-import { Networks, TestUtils } from '@ceramicnetwork/common'
+import { Networks } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 

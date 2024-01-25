@@ -3,12 +3,12 @@ import tmp from 'tmp-promise'
 import {
   Stream,
   StreamUtils,
-  TestUtils,
   StreamState,
   LoggerProvider,
   Networks,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { LevelDbStore, OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
 

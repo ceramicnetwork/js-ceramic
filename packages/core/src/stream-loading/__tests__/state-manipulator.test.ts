@@ -7,12 +7,11 @@ import {
   AppliableStreamLog,
   CommitData,
   CommitType,
-  Context,
   IpfsApi,
   LogEntry,
   LoggerProvider,
-  TestUtils,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../../utils.js'
 import { Ceramic } from '../../ceramic.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -21,6 +20,7 @@ import { StateManipulator } from '../state-manipulator.js'
 import { HandlersMap } from '../../handlers-map.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const TOPIC = '/ceramic/test12345'
 const CONTENT0 = { step: 0 }
@@ -57,21 +57,16 @@ describe('StateManipulator test', () => {
     const logger = new LoggerProvider().getDiagnosticsLogger()
     logSyncer = new LogSyncer(dispatcher)
     const handlers = new HandlersMap(logger)
-    stateManipulator = new StateManipulator(
-      logger,
-      handlers,
-      { did: ceramic.did, api: ceramic } as Context,
-      logSyncer
-    )
+    stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
 
     await swarmConnect(dispatcherIpfs, ceramicIpfs)
 
     // Create a standard stream and log to use throughout tests.
     doc = await TileDocument.create(ceramic, CONTENT0)
-    await TestUtils.anchorUpdate(ceramic, doc)
+    await CoreUtils.anchorUpdate(ceramic, doc)
     await doc.update(CONTENT1)
     await doc.update(CONTENT2)
-    await TestUtils.anchorUpdate(ceramic, doc)
+    await CoreUtils.anchorUpdate(ceramic, doc)
 
     commits = (await logSyncer.syncFullLog(doc.id, doc.tip)).commits
   })

@@ -43,7 +43,7 @@ import { S3Store } from './s3-store.js'
 import { commitHash } from './commitHash.js'
 import { parseQueryObject } from './daemon/parse-query-object.js'
 import { SseFeed } from './daemon/sse-feed.js'
-import { JsonAsString, AggregationDocument } from '../../codecs/lib/feed.js'
+import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007

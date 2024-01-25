@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -113,8 +114,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
-    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
-    await expect(TestUtils.isPinned(ceramic, doc.metadata.model)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
   })
 
   test(`Create doc and set content`, async () => {

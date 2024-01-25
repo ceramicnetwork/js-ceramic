@@ -14,10 +14,12 @@ import {
   CeramicCommit,
   GenesisCommit,
   RawCommit,
-  CeramicApi,
   SignedCommitContainer,
   CeramicSigner,
   GenesisHeader,
+  StreamWriter,
+  StreamReader,
+  IntoSigner,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { fromString } from 'uint8arrays'
@@ -35,6 +37,11 @@ export interface ModelInstanceDocumentMetadataArgs {
    * The StreamID of the Model that this ModelInstanceDocument belongs to.
    */
   model: StreamID
+
+  /**
+   * An optional string used to identify the context of the ModelInstanceDocument.
+   */
+  context?: StreamID
 
   /**
    * Whether the stream should be created deterministically or not.  Should only be used for
@@ -77,18 +84,6 @@ const DEFAULT_DETERMINISTIC_OPTS = {
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
-async function _ensureAuthenticated(signer: CeramicSigner) {
-  if (signer.did == null) {
-    throw new Error('No DID provided')
-  }
-  if (!signer.did.authenticated) {
-    await signer.did.authenticate()
-    if (signer.loggerProvider) {
-      signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
-    }
-  }
-}
-
 async function throwReadOnlyError(): Promise<void> {
   throw new Error(
     'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
@@ -117,19 +112,21 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Creates a Model Instance Document.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface to write to ceramic network
    * @param content - Genesis contents. If 'null', then no signature is required to make the genesis commit
    * @param metadata - Genesis metadata, including the model that this document belongs to
    * @param opts - Additional options
    */
   static async create<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     content: T | null,
     metadata: ModelInstanceDocumentMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || ceramic.signer
     const commit = await ModelInstanceDocument._makeGenesis(signer, content, metadata)
 
     return ceramic.createStreamFromGenesis<ModelInstanceDocument<T>>(
@@ -141,17 +138,19 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Creates a deterministic ModelInstanceDocument with a 'single' accountRelation.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface to write to ceramic network
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
   static async single<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     metadata: ModelInstanceDocumentMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || ceramic.signer
     metadata = { ...metadata, deterministic: true }
 
     const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata)
@@ -164,19 +163,21 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Creates a deterministic ModelInstanceDocument with a 'set' accountRelation.
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param ceramic - Interface to write to ceramic network
    * @param metadata - Genesis metadata
    * @param unique - Unique fields values
    * @param opts - Additional options
    */
   static async set<T>(
-    ceramic: CeramicApi,
+    ceramic: StreamWriter,
     metadata: ModelInstanceDocumentMetadataArgs,
     unique: Array<string>,
     opts: CreateOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : ceramic
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || ceramic.signer
     metadata = { ...metadata, deterministic: true }
 
     const commit = await ModelInstanceDocument._makeGenesis(signer, null, metadata, unique)
@@ -189,12 +190,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   /**
    * Loads a Model Instance Document from a given StreamID
-   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param reader - Interface for reading streams from ceramic network
    * @param streamId - StreamID to load.  Must correspond to a ModelInstanceDocument
    * @param opts - Additional options
    */
   static async load<T>(
-    ceramic: CeramicApi,
+    reader: StreamReader,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<ModelInstanceDocument<T>> {
@@ -208,7 +209,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       )
     }
 
-    return ceramic.loadStream<ModelInstanceDocument<T>>(streamRef, opts)
+    return reader.loadStream<ModelInstanceDocument<T>>(streamRef, opts)
   }
 
   /**
@@ -219,8 +220,15 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
-    const signer: CeramicSigner = opts.asDID ? { did: opts.asDID } : this.api
-    const updateCommit = await this._makeCommit(signer, content)
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || this.api.signer
+    const updateCommit = await ModelInstanceDocument.makeUpdateCommit(
+      signer,
+      this.commitId,
+      this.content,
+      content
+    )
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
   }
@@ -233,6 +241,9 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    */
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    const signer: CeramicSigner = opts.asDID
+      ? CeramicSigner.fromDID(opts.asDID)
+      : opts.signer || this.api.signer
     jsonPatch.forEach((patch) => {
       switch (patch.op) {
         case 'add': {
@@ -253,7 +264,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.id.cid,
     }
-    const commit = await ModelInstanceDocument._signDagJWS(this.api, rawCommit)
+    const commit = await signer.createDagJWS(rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
   }
@@ -274,42 +285,53 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   }
 
   /**
-   * Make a commit to update the document
-   * @param signer - Object containing the DID making (and signing) the commit
-   * @param newContent
+   * Make a commit to update the document.  Can be applied using the applyCommit method on the
+   * Ceramic client.
+   * @param signer - Interface to create signatures
+   * @param prev - The CommitID of the current tip of the Stream that the update should be applied on top of.
+   * @param oldContent - The current content of the Stream.
+   * @param newContent - The new content to update the Stream with.
    */
-  private _makeCommit(signer: CeramicSigner, newContent: T | null): Promise<CeramicCommit> {
-    const commit = this._makeRawCommit(newContent)
-    return ModelInstanceDocument._signDagJWS(signer, commit)
+  static makeUpdateCommit<T>(
+    signer: CeramicSigner,
+    prev: CommitID,
+    oldContent: T | null,
+    newContent: T | null
+  ): Promise<CeramicCommit> {
+    const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent)
+    return signer.createDagJWS(commit)
   }
 
   /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
+   * Helper function for makeUpdateCommit() to allow unit tests to update the commit before it is signed.
    */
-  private _makeRawCommit(newContent: T | null): RawCommit {
-    const patch = jsonpatch.compare(this.content ?? {}, newContent ?? {})
+  private static _makeRawCommit<T>(
+    prev: CommitID,
+    oldContent: T | null,
+    newContent: T | null
+  ): RawCommit {
+    const patch = jsonpatch.compare(oldContent ?? {}, newContent ?? {})
     return {
       data: patch,
-      prev: this.tip,
-      id: this.state.log[0].cid,
+      prev: prev.commit,
+      id: prev.baseID.cid,
     }
   }
 
   /**
    * Create genesis commit.
-   * @param signer - Object containing the DID making (and signing) the commit
+   * @param context - Object containing the DID making (and signing) the commit
    * @param content - genesis content
    * @param metadata - genesis metadata
    * @param unique - optional array of strings to set the unique header value
    */
   private static async _makeGenesis<T>(
-    signer: CeramicSigner,
-    content: T,
+    context: IntoSigner,
+    content: T | null,
     metadata: ModelInstanceDocumentMetadataArgs,
     unique?: Array<string>
   ): Promise<SignedCommitContainer | GenesisCommit> {
-    const commit = await this._makeRawGenesis(signer, content, metadata, unique)
+    const commit = await this._makeRawGenesis(context.signer, content, metadata, unique)
     if (metadata.deterministic) {
       // Check if we can encode it in cbor. Should throw an error when invalid payload.
       // See https://github.com/ceramicnetwork/ceramic/issues/205 for discussion on why we do this.
@@ -317,7 +339,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       // No signature needed for deterministic genesis commits (which cannot have content)
       return commit
     } else {
-      return ModelInstanceDocument._signDagJWS(signer, commit)
+      return context.signer.createDagJWS(commit)
     }
   }
 
@@ -335,14 +357,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
     let controller = metadata.controller
     if (!controller) {
-      if (signer.did) {
-        await _ensureAuthenticated(signer)
-        // When did has a parent, it has a capability, and the did issuer (parent) of the capability
-        // is the stream controller
-        controller = signer.did.hasParent ? signer.did.parent : signer.did.id
-      } else {
-        throw new Error('No controller specified')
-      }
+      controller = await signer.asController()
     }
 
     const header: GenesisHeader = {
@@ -360,22 +375,14 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       // Generate random bytes to ensure stream is unique (LIST account relation)
       header.unique = randomBytes(12)
     }
+    if (metadata.context) {
+      if (!metadata.context?.bytes) {
+        throw new Error('Context must be a StreamID')
+      }
+      header.context = metadata.context.bytes
+    }
 
     return { data: content, header }
-  }
-
-  /**
-   * Sign a ModelInstanceDocument commit with the currently authenticated DID.
-   * @param signer - Object containing the DID to use to sign the commit
-   * @param commit - Commit to be signed
-   * @private
-   */
-  private static async _signDagJWS(
-    signer: CeramicSigner,
-    commit: CeramicCommit
-  ): Promise<SignedCommitContainer> {
-    await _ensureAuthenticated(signer)
-    return signer.did.createDagJWS(commit)
   }
 }
 

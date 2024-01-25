@@ -1,7 +1,7 @@
 import type { CID } from 'multiformats/cid'
 import { MerkleTreeLoader } from '../utils.js'
-import { TestUtils } from '@ceramicnetwork/common'
 import type { IpfsService } from '../interfaces.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const NUM_ENTRIES = 9
 const MOCK_MERKLE_TREE = [

@@ -4,7 +4,6 @@ import {
   AnchorOpts,
   AnchorStatus,
   CommitType,
-  Context,
   CreateOpts,
   DiagnosticsLogger,
   LoadOpts,
@@ -22,7 +21,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { Observable } from 'rxjs'
+import { distinctUntilKeyChanged, map, Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -36,7 +35,8 @@ import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
 import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CAR } from 'cartonne'
-import type { Feed } from '../feed.js'
+import { FeedDocument, type Feed } from '../feed.js'
+import { doNotWait } from '../ancillary/do-not-wait.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -52,7 +52,6 @@ export type RepositoryDependencies = {
   pinStore: PinStore
   keyValueStore: IKVStore
   anchorRequestStore: AnchorRequestStore
-  context: Context
   handlers: HandlersMap
   anchorService: AnchorService
   indexing: LocalIndexApi
@@ -451,10 +450,11 @@ export class Repository {
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
       StreamUtils.checkForCacaoExpiration(stateAtCommit)
 
-      // If the provided CommitID is ahead of what we have in the cache, then we should update
-      // the cache to include it.
+      // If the provided CommitID is ahead of what we have in the cache and state store, then we
+      // should update them to include it.
       if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
         existingState$.next(stateAtCommit)
+        await this._updateStateIfPinned(existingState$)
       }
       return new SnapshotState(stateAtCommit)
     })
@@ -556,7 +556,8 @@ export class Repository {
   }
 
   /**
-   * Request anchor for the latest stream state
+   * Request anchor for the latest stream state.
+   * BEWARE: It acquires an anchorStoreQueue per-streamId mutex inside.
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<void> {
     if (!this.anchorService) {
@@ -569,7 +570,7 @@ export class Repository {
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
     // Don't wait on handling the anchor event, let that happen in the background.
-    void this.handleAnchorEvent(state$, anchorEvent)
+    doNotWait(this.handleAnchorEvent(state$, anchorEvent), this.logger)
   }
 
   /**
@@ -850,7 +851,19 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    state$.subscribe(this.feed.aggregation.documents)
+    state$
+      .pipe(
+        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
+          // Consider distinct if proposed log length differs
+          if (proposedLog.length !== currentLog.length) return false
+          // Or let's see if the tip is different
+          const currentTip = currentLog[currentLog.length - 1].cid
+          const proposedTip = proposedLog[proposedLog.length - 1].cid
+          return currentTip.equals(proposedTip)
+        }),
+        map(FeedDocument.fromStreamState)
+      )
+      .subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 

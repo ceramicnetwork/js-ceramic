@@ -1,7 +1,5 @@
 import {
   DatabaseType,
-  ColumnInfo,
-  ColumnType,
   createConfigTable,
   createPostgresModelTable,
   createSqliteModelTable,
@@ -12,8 +10,8 @@ import {
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
 import { Knex } from 'knex'
-import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
-import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
+import { Model } from '@ceramicnetwork/stream-model'
+import { DiagnosticsLogger, FieldsIndex, Networks } from '@ceramicnetwork/common'
 import {
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
@@ -22,7 +20,8 @@ import {
 } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
-import { addColumnPrefix } from './column-name.util.js'
+
+export type CreateIndicesRecord = Record<string, Array<FieldsIndex>>
 
 /**
  * ComposeDB Config Table Type
@@ -32,17 +31,7 @@ type ConfigTable = {
   readonly validSchema: object
 }
 
-/**
- * Create a list of db column info for relations in a given model
- */
-function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition): Array<ColumnInfo> {
-  if (!relations) {
-    return []
-  }
-  return Object.keys(relations).map((keyName) => {
-    return { name: addColumnPrefix(keyName), type: ColumnType.STRING }
-  })
-}
+const CUSTOM_COLUMN_PREFIX = 'custom_'
 
 export class TablesManager {
   constructor(
@@ -61,7 +50,10 @@ export class TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  async initMidTables(_modelsToIndex: Array<IndexModelArgs>): Promise<void> {
+  async initMidTables(
+    _modelsToIndex: Array<IndexModelArgs>,
+    _createIndices: CreateIndicesRecord
+  ): Promise<void> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -70,7 +62,7 @@ export class TablesManager {
    * @param tableName
    * @param args
    */
-  async hasMidIndices(_tableName: string, _args: IndexModelArgs): Promise<boolean> {
+  async assertHasMidIndices(_tableName: string, _args: IndexModelArgs): Promise<void> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -163,6 +155,35 @@ export class TablesManager {
   }
 
   /**
+   * List and migrate all MID tables
+   */
+  async migrateMidTables(): Promise<void> {
+    const tableNames = await this.listMidTables()
+    await Promise.all(
+      tableNames.map(async (table) => {
+        return await this._migrateMidTable(table)
+      })
+    )
+  }
+
+  /**
+   * Migrate a MID table
+   * @param tableName
+   */
+  async _migrateMidTable(tableName: string): Promise<void> {
+    const columns = await this.dataSource.table(tableName).columnInfo()
+    const relationColumns = Object.keys(columns).filter((name) => {
+      return name.startsWith(CUSTOM_COLUMN_PREFIX)
+    })
+    if (relationColumns.length) {
+      // Remove relations columns that are no longer necessary
+      await this.dataSource.schema.alterTable(tableName, (table) => {
+        table.dropColumns(...relationColumns)
+      })
+    }
+  }
+
+  /**
    * ComposeDB Model Instance Document table schema verification
    */
   async _verifyMidTables(modelsToIndex: Array<IndexModelArgs>) {
@@ -187,11 +208,6 @@ export class TablesManager {
     // Clone the COMMON_TABLE_STRUCTURE object that has the fields expected for all tables so we can
     // extend it with the model-specific fields expected
     const expectedTableStructure = Object.assign({}, STRUCTURES[this.dbType].COMMON_TABLE)
-    if (modelIndexArgs.relations) {
-      for (const relation of Object.keys(modelIndexArgs.relations)) {
-        expectedTableStructure[addColumnPrefix(relation)] = STRUCTURES[this.dbType].RELATION_COLUMN
-      }
-    }
     const validSchema = JSON.stringify(expectedTableStructure)
 
     const columns = await this.dataSource.table(tableName).columnInfo()
@@ -202,11 +218,7 @@ export class TablesManager {
       )
     }
 
-    if (!(await this.hasMidIndices(tableName, modelIndexArgs))) {
-      throw new Error(
-        `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
-      )
-    }
+    await this.assertHasMidIndices(tableName, modelIndexArgs)
   }
 
   /**
@@ -215,6 +227,27 @@ export class TablesManager {
   async verifyTables(modelsToIndex: Array<IndexModelArgs>) {
     await Promise.all([this._verifyConfigTables(), this._verifyMidTables(modelsToIndex)])
   }
+
+  validateIndices(tableName: string, expect: Array<string>, actual: Array<string>) {
+    const missingIndices = expect.filter((indexName) => {
+      return !actual.includes(indexName)
+    })
+    if (missingIndices.length > 0) {
+      throw new Error(`Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.
+          Missing Indices=${JSON.stringify(missingIndices)}
+          Actual=${JSON.stringify(actual)}`
+      )
+    }
+  }
+}
+
+type PgIndexRow = {
+  readonly tablename: string
+  readonly indexname: string
+}
+
+type PgIndexResult = {
+  readonly rows: Array<PgIndexRow>
 }
 
 export class PostgresTablesManager extends TablesManager {
@@ -238,10 +271,13 @@ export class PostgresTablesManager extends TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  override async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
+  override async initMidTables(
+    modelsToIndex: Array<IndexModelArgs>,
+    createIndices: CreateIndicesRecord
+  ) {
     await Promise.all(
       modelsToIndex.map(async (modelIndexArgs) => {
-        await this.initMidTable(modelIndexArgs)
+        await this.initMidTable(modelIndexArgs, createIndices[modelIndexArgs.model.toString()])
       })
     )
   }
@@ -249,7 +285,7 @@ export class PostgresTablesManager extends TablesManager {
   /**
    * Create a single mid table for a given model
    */
-  async initMidTable(modelIndexArgs: IndexModelArgs) {
+  async initMidTable(modelIndexArgs: IndexModelArgs, createIndices: Array<FieldsIndex> = []) {
     const tableName = asTableName(modelIndexArgs.model)
     if (tableName.length > 63) {
       const errStr = `Cannot index model ${modelIndexArgs.model.toString()}.  Table name is too long: ${tableName}`
@@ -257,24 +293,14 @@ export class PostgresTablesManager extends TablesManager {
       throw new Error(errStr)
     }
 
-    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     const exists = await this.dataSource.schema.hasTable(tableName)
     if (!exists) {
       this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-      await createPostgresModelTable(this.dataSource, tableName, relationColumns)
-      if (modelIndexArgs.indices) {
-        await createPostgresIndices(this.dataSource, tableName, modelIndexArgs.indices)
-      }
-    } else if (relationColumns.length) {
-      // Make relations columns nullable
-      await this.dataSource.schema.alterTable(tableName, (table) => {
-        for (const column of relationColumns) {
-          if (column.type === ColumnType.STRING) {
-            const columnName = addColumnPrefix(column.name)
-            table.string(columnName, 1024).nullable().alter()
-          }
-        }
-      })
+      await createPostgresModelTable(this.dataSource, tableName)
+    }
+
+    if (createIndices.length) {
+      await createPostgresIndices(this.dataSource, tableName, createIndices)
     }
   }
 
@@ -283,27 +309,35 @@ export class PostgresTablesManager extends TablesManager {
    * @param tableName
    * @param args
    */
-  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async assertHasMidIndices(tableName: string, args: IndexModelArgs): Promise<void> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
-        expectedIndices.push(fieldsIndexName(index, tableName))
+        expectedIndices.push(fieldsIndexName(index, tableName).toLowerCase())
       }
     }
-    const sqlIndices = expectedIndices.map((s) => `'${s}'`)
-    const actualIndices = await this.dataSource.raw(`
+    const indicesResult = (
+      await this.dataSource.raw<PgIndexResult>(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
-and indexname in (${sqlIndices});
-  `)
-    return expectedIndices.length == actualIndices.rowCount
+    `)
+    )
+    const actualIndices = indicesResult ? indicesResult.rows.map((row) => row.indexname) : []
+    this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
   override hasJsonBSupport(): boolean {
     return true
   }
 }
+
+type SqliteIndexRow = {
+  readonly name: string
+  readonly tbl_name: string
+}
+
+type SqliteIndexResult = Array<SqliteIndexRow>
 
 export class SqliteTablesManager extends TablesManager {
   constructor(dataSource: Knex, logger: DiagnosticsLogger) {
@@ -325,11 +359,18 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  override async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
+  override async initMidTables(
+    modelsToIndex: Array<IndexModelArgs>,
+    createIndices: CreateIndicesRecord
+  ) {
     const existingTables = await this.listMidTables()
     await Promise.all(
       modelsToIndex.map(async (modelIndexArgs) => {
-        await this.initMidTable(modelIndexArgs, existingTables)
+        await this.initMidTable(
+          modelIndexArgs,
+          existingTables,
+          createIndices[modelIndexArgs.model.toString()]
+        )
       })
     )
   }
@@ -337,28 +378,20 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * Create a single mid table for a given model
    */
-  async initMidTable(modelIndexArgs: IndexModelArgs, existingTables: Array<string>) {
+  async initMidTable(
+    modelIndexArgs: IndexModelArgs,
+    existingTables: Array<string>,
+    createIndices: Array<FieldsIndex> = []
+  ) {
     const tableName = asTableName(modelIndexArgs.model)
-    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
-    if (existingTables.includes(tableName)) {
-      if (relationColumns.length) {
-        // Make relations columns nullable
-        await this.dataSource.schema.alterTable(tableName, (table) => {
-          for (const column of relationColumns) {
-            if (column.type === ColumnType.STRING) {
-              const columnName = addColumnPrefix(column.name)
-              table.string(columnName, 1024).nullable().alter()
-            }
-          }
-        })
-      }
-      return
+
+    if (!existingTables.includes(tableName)) {
+      this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
+      await createSqliteModelTable(this.dataSource, tableName)
     }
 
-    this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-    await createSqliteModelTable(this.dataSource, tableName, relationColumns)
-    if (modelIndexArgs.indices) {
-      await createSqliteIndices(this.dataSource, tableName, modelIndexArgs.indices)
+    if (createIndices.length) {
+      await createSqliteIndices(this.dataSource, tableName, createIndices)
     }
   }
 
@@ -367,23 +400,22 @@ export class SqliteTablesManager extends TablesManager {
    * @param tableName
    * @param args IndexModelArgs for checking indices
    */
-  override async hasMidIndices(tableName: string, args: IndexModelArgs): Promise<boolean> {
+  override async assertHasMidIndices(tableName: string, args: IndexModelArgs): Promise<void> {
     const expectedIndices = defaultIndices(tableName).indices.flatMap((index) => index.name)
     if (args && args.indices) {
       for (const index of args.indices) {
         expectedIndices.push(fieldsIndexName(index, tableName))
       }
     }
-    const sqlIndices = expectedIndices.map((s) => `'${s}'`)
-    const actualIndices = await this.dataSource.raw(`
+    const indicesResult = await this.dataSource.raw<SqliteIndexResult>(`
 select name, tbl_name
 FROM sqlite_master
 WHERE type='index'
 and tbl_name like '${tableName}'
-and name in (${sqlIndices})
 ;
   `)
-    return expectedIndices.length == actualIndices.length
+    const actualIndices = indicesResult ? indicesResult.map((row) => row.name) : []
+    this.validateIndices(tableName, expectedIndices, actualIndices)
   }
 
   override hasJsonBSupport(): boolean {

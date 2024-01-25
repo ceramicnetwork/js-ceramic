@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
@@ -13,6 +14,54 @@ const MODEL_DEFINITION: ModelDefinition = {
   version: '1.0',
   schema: { type: 'object', additionalProperties: false },
   accountRelation: { type: 'list' },
+}
+
+const INDEXED_MODEL_DEFINITION: ModelDefinition = {
+  name: 'myIndexedModel',
+  version: '1.0',
+  accountRelation: { type: 'list' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'integer',
+        maximum: 10000,
+        minimum: 0,
+      },
+      myStringData: {
+        type: 'string',
+        maximum: 100,
+        minimum: 0,
+      },
+    },
+    required: ['myData'],
+  },
+}
+
+const SINGLE_INDEXED_MODEL_DEFINITION: ModelDefinition = {
+  name: 'myIndexedModel',
+  version: '1.0',
+  accountRelation: { type: 'single' },
+  schema: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      myData: {
+        type: 'integer',
+        maximum: 10000,
+        minimum: 0,
+      },
+      myStringData: {
+        type: 'string',
+        maximum: 100,
+        minimum: 0,
+      },
+    },
+    required: ['myData'],
+  },
 }
 
 // The model above will always result in this StreamID when created with the fixed did:key
@@ -37,20 +86,35 @@ describe('Model API http-client tests', () => {
 
   beforeAll(async () => {
     ipfs = await createIPFS()
+  })
+
+  beforeEach(async () => {
     core = await createCeramic(ipfs)
 
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port }, node: {} }))
+    daemon = new CeramicDaemon(
+      core,
+      DaemonConfig.fromObject({
+        'http-api': {
+          port,
+          'admin-dids': [core.did.id.toString()],
+        },
+        node: {},
+      })
+    )
     await daemon.listen()
     ceramic = new CeramicClient(apiUrl)
     ceramic.did = core.did
   }, 12000)
 
-  afterAll(async () => {
+  afterEach(async () => {
     await ceramic.close()
     await daemon.close()
     await core.close()
+  })
+
+  afterAll(async () => {
     await ipfs.stop()
   })
 
@@ -70,6 +134,413 @@ describe('Model API http-client tests', () => {
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
   })
 
+  describe('model indexing', () => {
+    test('Create and index valid model', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, and load valid model', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      await expect(Model.load(ceramic, model.id)).resolves.not.toThrow()
+    })
+
+    test('Create and index a model with custom indices', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create and index a model with custom indices that is not pinned', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, and load valid model with custom indices', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      await expect(Model.load(ceramic, model.id)).resolves.not.toThrow()
+    })
+
+    test('Create, index, load and index valid model with custom indices on create', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: loadedModel.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, load and not index valid model with custom indices on load', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: loadedModel.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, load and index valid model with less custom indices on load', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+              {
+                fields: [{ path: ['myString'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      //TODO: this should throw
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: loadedModel.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, load and index valid model with different custom indices on load', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+              {
+                fields: [{ path: ['myString'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: loadedModel.id,
+            indices: [
+              {
+                fields: [{ path: ['myString'] }],
+              },
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, load and index valid model with different custom indices on load', async () => {
+      const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: loadedModel.id,
+            indices: [
+              {
+                fields: [{ path: ['myString'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create and index valid single model', async () => {
+      const model = await Model.create(ceramic, SINGLE_INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create and index valid single model with indices', async () => {
+      const model = await Model.create(ceramic, SINGLE_INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+            indices: [
+              {
+                fields: [{ path: ['myData'] }],
+              },
+            ],
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+
+    test('Create, index, and load valid single model', async () => {
+      const model = await Model.create(ceramic, SINGLE_INDEXED_MODEL_DEFINITION)
+
+      expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
+      expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
+      expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
+      expect(model.state.log.length).toEqual(1)
+      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: model.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+
+      const loadedModel = await Model.load(ceramic, model.id)
+
+      await expect(
+        ceramic.admin.startIndexingModelData([
+          {
+            streamID: loadedModel.id,
+          },
+        ])
+      ).resolves.not.toThrow()
+    })
+  })
+
   test('Create valid model with relation', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION_WITH_RELATION)
 
@@ -85,7 +556,7 @@ describe('Model API http-client tests', () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await TestUtils.anchorUpdate(core, model)
+    await CoreUtils.anchorUpdate(core, model)
     await model.sync()
 
     expect(model.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -166,7 +637,7 @@ describe('Model API http-client tests', () => {
 
   test('Can load a complete stream', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
-    await TestUtils.anchorUpdate(core, model)
+    await CoreUtils.anchorUpdate(core, model)
     await model.sync()
 
     const loaded = await Model.load(ceramic, model.id)
@@ -303,7 +774,7 @@ describe('Model API multi-node tests', () => {
 
   test('load anchored model', async () => {
     const model = await Model.create(ceramic0, MODEL_DEFINITION)
-    await TestUtils.anchorUpdate(ceramic0, model)
+    await CoreUtils.anchorUpdate(ceramic0, model)
 
     const loaded = await Model.load(ceramic1, model.id)
 
