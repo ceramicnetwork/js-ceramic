@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@3.2.0...@ceramicnetwork/streamid@3.4.0-rc.0) (2024-01-25)
+
+
+### Features
+
+* **streamid:** update event id and add create random event id ([#3107](https://github.com/ceramicnetwork/js-ceramic/issues/3107)) ([4123c4f](https://github.com/ceramicnetwork/js-ceramic/commit/4123c4f5b063593896ba3edb704ca5955464c943))
+
+
+
+
+
 # [3.3.0](/compare/@ceramicnetwork/streamid@3.2.0...@ceramicnetwork/streamid@3.3.0) (2024-01-25)
 
 

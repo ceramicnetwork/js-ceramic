@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@2.2.0...@ceramicnetwork/codecs@2.4.0-rc.0) (2024-01-25)
+
+**Note:** Version bump only for package @ceramicnetwork/codecs
+
+
+
+
+
 # [2.3.0](/compare/@ceramicnetwork/codecs@2.2.0...@ceramicnetwork/codecs@2.3.0) (2024-01-25)
 
 **Note:** Version bump only for package @ceramicnetwork/codecs

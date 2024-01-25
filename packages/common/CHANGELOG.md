@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@3.2.0...@ceramicnetwork/common@3.4.0-rc.0) (2024-01-25)
+
+
+### Features
+
+* Respect context when creating MIDs ([#3077](https://github.com/ceramicnetwork/js-ceramic/issues/3077)) ([8b7c742](https://github.com/ceramicnetwork/js-ceramic/commit/8b7c7428bd40bb06f260af1d707e60a6ffccab54))
+* **stream-model-instance,stream-model-instance-handler:** Allow custom values for deterministic MIDs ([#3070](https://github.com/ceramicnetwork/js-ceramic/issues/3070)) ([2eed110](https://github.com/ceramicnetwork/js-ceramic/commit/2eed1104c262f7d80f84fccc50dae65e0b51781b))
+
+
+
+
+
 # [3.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@3.2.0...@ceramicnetwork/common@3.3.0) (2024-01-25)
 
 
