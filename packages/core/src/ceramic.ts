@@ -486,6 +486,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       await this._startupChecks()
     } catch (err) {
       this._logger.err(err)
+      await this.close()
       throw err
     }
   }
