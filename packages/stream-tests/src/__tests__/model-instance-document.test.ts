@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { jest, test, expect, beforeAll, afterAll, describe } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
@@ -321,6 +321,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(
       ModelInstanceDocument.single(ceramic, {
         ...midSingleMetadata,
+        // @ts-expect-error
         controller: { invalid: 'object' },
       })
     ).rejects.toThrow(/Attempting to create a ModelInstanceDocument with an invalid DID string/)
@@ -386,6 +387,21 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic.admin, model.id)).resolves.toBeTruthy()
+  })
+
+  test('unindex and reindex', async () => {
+    const indexApi = core.index
+    const count = () => indexApi.count({ models: [model.id] })
+    const start = await count()
+    // Index as usual
+    const document = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(count()).resolves.toEqual(start + 1)
+    // Unindex
+    await document.shouldIndex(false)
+    await expect(count()).resolves.toEqual(start)
+    // Reindex
+    await document.shouldIndex(true)
+    await expect(count()).resolves.toEqual(start + 1)
   })
 })
 

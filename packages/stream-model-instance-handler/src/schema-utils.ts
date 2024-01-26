@@ -27,7 +27,11 @@ export class SchemaValidation {
     this.validators = new LRUCache(AJV_CACHE_SIZE)
   }
 
-  public validateSchema(content: Record<string, any>, schema: SchemaObject, schemaId: string) {
+  public validateSchema(
+    content: Record<string, any>,
+    schema: SchemaObject,
+    schemaId: string
+  ): void {
     let validator = this.validators.get(schemaId)
     if (!validator) {
       validator = buildAjv()
