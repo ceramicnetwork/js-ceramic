@@ -1,13 +1,13 @@
 import {
-  DatabaseType,
   ColumnInfo,
   ColumnType,
   createConfigTable,
-  createPostgresModelTable,
-  createSqliteModelTable,
-  defaultIndices,
-  createSqliteIndices,
   createPostgresIndices,
+  createPostgresModelTable,
+  createSqliteIndices,
+  createSqliteModelTable,
+  DatabaseType,
+  defaultIndices,
   migrateConfigTable,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
@@ -15,10 +15,10 @@ import { Knex } from 'knex'
 import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
 import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import {
+  fieldsIndexName,
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
   MODEL_IMPLEMENTS_TABLE_NAME,
-  fieldsIndexName,
 } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
@@ -219,8 +219,7 @@ export class TablesManager {
     if (missingIndices.length > 0) {
       throw new Error(`Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.
           Missing Indices=${JSON.stringify(missingIndices)}
-          Actual=${JSON.stringify(actual)}`
-      )
+          Actual=${JSON.stringify(actual)}`)
     }
   }
 }
@@ -283,13 +282,18 @@ export class PostgresTablesManager extends TablesManager {
         await createPostgresIndices(this.dataSource, tableName, modelIndexArgs.indices)
       }
     } else if (relationColumns.length) {
+      const columnNamesToChange: Array<string> = []
+      for (const column of relationColumns) {
+        if (column.type === ColumnType.STRING) {
+          const columnName = addColumnPrefix(column.name)
+          const isColumnPresent = await this.dataSource.schema.hasColumn(tableName, columnName)
+          if (isColumnPresent) columnNamesToChange.push(columnName)
+        }
+      }
       // Make relations columns nullable
       await this.dataSource.schema.alterTable(tableName, (table) => {
-        for (const column of relationColumns) {
-          if (column.type === ColumnType.STRING) {
-            const columnName = addColumnPrefix(column.name)
-            table.string(columnName, 1024).nullable().alter()
-          }
+        for (const columnName of columnNamesToChange) {
+          table.string(columnName, 1024).nullable().alter()
         }
       })
     }
@@ -307,13 +311,11 @@ export class PostgresTablesManager extends TablesManager {
         expectedIndices.push(fieldsIndexName(index, tableName).toLowerCase())
       }
     }
-    const indicesResult = (
-      await this.dataSource.raw<PgIndexResult>(`
+    const indicesResult = await this.dataSource.raw<PgIndexResult>(`
 select *
 from pg_indexes
 where tablename like '${tableName}'
     `)
-    )
     const actualIndices = indicesResult ? indicesResult.rows.map((row) => row.indexname) : []
     this.validateIndices(tableName, expectedIndices, actualIndices)
   }
@@ -367,13 +369,18 @@ export class SqliteTablesManager extends TablesManager {
     const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     if (existingTables.includes(tableName)) {
       if (relationColumns.length) {
+        const columnNamesToChange: Array<string> = []
+        for (const column of relationColumns) {
+          if (column.type === ColumnType.STRING) {
+            const columnName = addColumnPrefix(column.name)
+            const isColumnPresent = await this.dataSource.schema.hasColumn(tableName, columnName)
+            if (isColumnPresent) columnNamesToChange.push(columnName)
+          }
+        }
         // Make relations columns nullable
         await this.dataSource.schema.alterTable(tableName, (table) => {
-          for (const column of relationColumns) {
-            if (column.type === ColumnType.STRING) {
-              const columnName = addColumnPrefix(column.name)
-              table.string(columnName, 1024).nullable().alter()
-            }
+          for (const columnName of columnNamesToChange) {
+            table.string(columnName, 1024).nullable().alter()
           }
         })
       }
