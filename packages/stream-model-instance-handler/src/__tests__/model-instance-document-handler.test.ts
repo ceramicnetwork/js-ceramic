@@ -288,25 +288,38 @@ const MODEL_DEFINITION_IMPLEMENTS_RELATION: ModelDefinition = {
 }
 
 const MODEL_DEFINITION_IMMUTABLE: ModelDefinition = {
-  name: 'MyModel',
+  name: 'Person',
+  views: {},
+  schema: {
+    type: 'object',
+    $defs: {
+      Address: {
+        type: 'object',
+        title: 'Address',
+        required: ['street', 'city', 'zipCode'],
+        properties: {
+          city: { type: 'string', maxLength: 100, minLength: 5 },
+          street: { type: 'string', maxLength: 100, minLength: 5 },
+          zipCode: { type: 'string', maxLength: 100, minLength: 5 },
+        },
+        additionalProperties: false,
+      },
+    },
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    required: ['name', 'address'],
+    properties: {
+      name: { type: 'string', maxLength: 100, minLength: 10 },
+      address: { $ref: '#/$defs/Address' },
+    },
+    additionalProperties: false,
+  },
   version: '2.0',
   interface: false,
+  relations: {},
   implements: [],
+  description: 'Simple person with immutable field',
   accountRelation: { type: 'list' },
-  schema: {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      myData: { type: 'integer', maximum: 100, minimum: 0 },
-      relationID: { type: 'string' },
-    },
-    required: ['myData'],
-  },
-  relations: {
-    relationID: { type: 'document', model: FAKE_MODEL_INTERFACE_ID.toString() },
-  },
-  immutableFields: ['myData'],
+  immutableFields: ['address'],
 }
 
 const STREAMS = {
@@ -838,7 +851,11 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('Rejects commit if field is immutable', async () => {
-    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.signer, CONTENT0, {
+    const customContent = {
+      name: 'Foo Bar FooBar',
+      address: { city: 'FooVille', street: 'Bar St', zipCode: '10111' },
+    }
+    const genesisCommit = (await ModelInstanceDocument._makeGenesis(context.signer, customContent, {
       controller: DID_ID,
       model: FAKE_MODEL_IMMUTABLE_ID,
     })) as SignedCommitContainer
@@ -856,14 +873,17 @@ describe('ModelInstanceDocumentHandler', () => {
     }
 
     const state = await handler.applyCommit(genesisCommitData, context)
-
+    const customNewContent = {
+      name: 'Foo Bar FooBar',
+      address: { city: 'BarVille', street: 'Bar St', zipCode: '10111' },
+    }
     const state$ = TestUtils.runningState(state)
     const doc = new ModelInstanceDocument(state$, context)
     const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
       context.signer,
       doc.commitId,
       doc.content,
-      CONTENT1
+      customNewContent
     )) as SignedCommitContainer
 
     await ipfs.dag.put(signedCommit, FAKE_CID_2)
@@ -878,8 +898,9 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: sPayload,
       envelope: signedCommit.jws,
     }
+
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      `Immutable field "myData" cannot be updated`
+      `Immutable field "address" cannot be updated`
     )
   })
 
