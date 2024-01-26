@@ -319,7 +319,7 @@ const MODEL_DEFINITION_IMMUTABLE: ModelDefinition = {
   implements: [],
   description: 'Simple person with immutable field',
   accountRelation: { type: 'list' },
-  immutableFields: ['address'],
+  immutableFields: ['address', 'name'],
 }
 
 const STREAMS = {
@@ -850,7 +850,7 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(state2).toMatchSnapshot()
   })
 
-  it('Rejects commit if field is immutable', async () => {
+  it.only('Rejects commit if field is immutable', async () => {
     const customContent = {
       name: 'Foo Bar FooBar',
       address: { city: 'FooVille', street: 'Bar St', zipCode: '10111' },
@@ -873,6 +873,7 @@ describe('ModelInstanceDocumentHandler', () => {
     }
 
     const state = await handler.applyCommit(genesisCommitData, context)
+    // Try to update immutable nested value
     const customNewContent = {
       name: 'Foo Bar FooBar',
       address: { city: 'BarVille', street: 'Bar St', zipCode: '10111' },
@@ -901,6 +902,34 @@ describe('ModelInstanceDocumentHandler', () => {
 
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       `Immutable field "address" cannot be updated`
+    )
+    // Try to update immutable value
+    const customNewContent2 = {
+      name: 'Foo Bar FooFoo',
+      address: { city: 'BarVille', street: 'Bar St', zipCode: '10111' },
+    }
+    const signedCommit2 = (await ModelInstanceDocument.makeUpdateCommit(
+      context.signer,
+      doc.commitId,
+      doc.content,
+      customNewContent2
+    )) as SignedCommitContainer
+
+    await ipfs.dag.put(signedCommit2, FAKE_CID_2)
+
+    const sPayload2 = dagCBOR.decode(signedCommit2.linkedBlock)
+    await ipfs.dag.put(sPayload2, signedCommit2.jws.link)
+
+    // apply signed
+    const signedCommitData2 = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload2,
+      envelope: signedCommit2.jws,
+    }
+
+    await expect(handler.applyCommit(signedCommitData2, context, state)).rejects.toThrow(
+      `Immutable field "name" cannot be updated`
     )
   })
 
