@@ -45,101 +45,114 @@ afterEach(async () => {
   await ceramic.close()
 })
 
-describe('throw if controller is different from signer', () => {
-  test('create', async () => {
-    ceramic.did = alice
-    await expect(
-      TileDocument.create(ceramic, { foo: 'blah' }, { controllers: [bob.id] })
-    ).rejects.toThrow(/invalid_jws/)
+// These tests are never expected to be run in v4 mode
+const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3('TileDocument controllers', () => {
+  describe('throw if controller is different from signer', () => {
+    test('create', async () => {
+      ceramic.did = alice
+      await expect(
+        TileDocument.create(ceramic, { foo: 'blah' }, { controllers: [bob.id] })
+      ).rejects.toThrow(/invalid_jws/)
+    })
+    test('update', async () => {
+      ceramic.did = alice
+      const tile = await TileDocument.create(ceramic, { foo: 'blah' })
+      expect(tile.controllers.length).toEqual(1)
+      expect(tile.controllers[0]).toEqual(alice.id)
+      ceramic.did = bob
+      await expect(tile.update({ foo: 'bar' })).rejects.toThrow(/invalid_jws/)
+    })
   })
-  test('update', async () => {
+
+  test('change after controller changed', async () => {
     ceramic.did = alice
     const tile = await TileDocument.create(ceramic, { foo: 'blah' })
-    expect(tile.controllers.length).toEqual(1)
-    expect(tile.controllers[0]).toEqual(alice.id)
+    await tile.update(tile.content, { controllers: [bob.id] })
     ceramic.did = bob
-    await expect(tile.update({ foo: 'bar' })).rejects.toThrow(/invalid_jws/)
+    await tile.update({ foo: 'bar' }) // works all right
+    ceramic.did = alice
+    await expect(tile.update({ foo: 'baz' })).rejects.toThrow(/invalid_jws/)
   })
-})
 
-test('change after controller changed', async () => {
-  ceramic.did = alice
-  const tile = await TileDocument.create(ceramic, { foo: 'blah' })
-  await tile.update(tile.content, { controllers: [bob.id] })
-  ceramic.did = bob
-  await tile.update({ foo: 'bar' }) // works all right
-  ceramic.did = alice
-  await expect(tile.update({ foo: 'baz' })).rejects.toThrow(/invalid_jws/)
-})
+  test('prohibit controllers updated to invalid values', async () => {
+    ceramic.did = alice
+    const tile = await TileDocument.create(ceramic, { foo: 'blah' })
+    await tile.update(tile.content, { controllers: [bob.id] })
+    await expect(tile.update({ foo: 'bar' }, { controllers: [null] })).rejects.toThrow(
+      /Controller cannot be updated to an undefined value./
+    )
+    await expect(tile.update({ foo: 'bar' }, { controllers: [undefined] })).rejects.toThrow(
+      /Controller cannot be updated to an undefined value./
+    )
+    await expect(tile.update({ foo: 'bar' }, { controllers: [''] })).rejects.toThrow(
+      /Controller cannot be updated to an undefined value./
+    )
+  })
 
-test('prohibit controllers updated to invalid values', async () => {
-  ceramic.did = alice
-  const tile = await TileDocument.create(ceramic, { foo: 'blah' })
-  await tile.update(tile.content, { controllers: [bob.id] })
-  await expect(tile.update({ foo: 'bar' }, { controllers: [null] })).rejects.toThrow(
-    /Controller cannot be updated to an undefined value./
-  )
-  await expect(tile.update({ foo: 'bar' }, { controllers: [undefined] })).rejects.toThrow(
-    /Controller cannot be updated to an undefined value./
-  )
-  await expect(tile.update({ foo: 'bar' }, { controllers: [''] })).rejects.toThrow(
-    /Controller cannot be updated to an undefined value./
-  )
-})
+  test("cannot change controller if 'forbidControllerChange' is set", async () => {
+    ceramic.did = alice
+    const tile = await TileDocument.create(
+      ceramic,
+      { foo: 'blah' },
+      { forbidControllerChange: true }
+    )
+    await expect(tile.update(tile.content, { controllers: [bob.id] })).rejects.toThrow(
+      /Cannot change controllers since 'forbidControllerChange' is set/
+    )
+  })
 
-test("cannot change controller if 'forbidControllerChange' is set", async () => {
-  ceramic.did = alice
-  const tile = await TileDocument.create(ceramic, { foo: 'blah' }, { forbidControllerChange: true })
-  await expect(tile.update(tile.content, { controllers: [bob.id] })).rejects.toThrow(
-    /Cannot change controllers since 'forbidControllerChange' is set/
-  )
-})
-
-test("Explicitly setting 'forbidControllerChange' to false doesn't change genesis commit", async () => {
-  const tile1 = await TileDocument.create(
-    ceramic,
-    null,
-    { deterministic: true, family: 'test123' },
-    { sync: SyncOptions.NEVER_SYNC }
-  )
-  const tile2 = await TileDocument.create(
-    ceramic,
-    null,
-    {
-      deterministic: true,
-      family: 'test123',
-      forbidControllerChange: false,
-    },
-    { sync: SyncOptions.NEVER_SYNC }
-  )
-  const tile3 = await TileDocument.create(
-    ceramic,
-    null,
-    {
-      deterministic: true,
-      family: 'test123',
-      forbidControllerChange: true,
-    },
-    { sync: SyncOptions.NEVER_SYNC }
-  )
-  expect(tile2.id.toString()).toEqual(tile1.id.toString())
-  expect(tile3.id.toString()).not.toEqual(tile2.id.toString())
-})
-
-test("cannot update 'forbidControllerChange' metadata property", async () => {
-  const tile = await TileDocument.create(ceramic, { foo: 'blah' }, { forbidControllerChange: true })
-  await expect(tile.update(tile.content, { forbidControllerChange: false })).rejects.toThrow(
-    /Cannot change 'forbidControllerChange' property on existing Streams/
-  )
-})
-
-test('Controller must be valid DID even for unsigned genesis commits (ie deterministic tiles)', async () => {
-  await expect(
-    TileDocument.create(
+  test("Explicitly setting 'forbidControllerChange' to false doesn't change genesis commit", async () => {
+    const tile1 = await TileDocument.create(
       ceramic,
       null,
-      { deterministic: true, family: 'test123', controllers: [{ invalid: 'object' }] },
+      { deterministic: true, family: 'test123' },
       { sync: SyncOptions.NEVER_SYNC }
     )
-  ).rejects.toThrow(/Attempting to create a TileDocument with an invalid DID string/)
+    const tile2 = await TileDocument.create(
+      ceramic,
+      null,
+      {
+        deterministic: true,
+        family: 'test123',
+        forbidControllerChange: false,
+      },
+      { sync: SyncOptions.NEVER_SYNC }
+    )
+    const tile3 = await TileDocument.create(
+      ceramic,
+      null,
+      {
+        deterministic: true,
+        family: 'test123',
+        forbidControllerChange: true,
+      },
+      { sync: SyncOptions.NEVER_SYNC }
+    )
+    expect(tile2.id.toString()).toEqual(tile1.id.toString())
+    expect(tile3.id.toString()).not.toEqual(tile2.id.toString())
+  })
+
+  test("cannot update 'forbidControllerChange' metadata property", async () => {
+    const tile = await TileDocument.create(
+      ceramic,
+      { foo: 'blah' },
+      { forbidControllerChange: true }
+    )
+    await expect(tile.update(tile.content, { forbidControllerChange: false })).rejects.toThrow(
+      /Cannot change 'forbidControllerChange' property on existing Streams/
+    )
+  })
+
+  test('Controller must be valid DID even for unsigned genesis commits (ie deterministic tiles)', async () => {
+    await expect(
+      TileDocument.create(
+        ceramic,
+        null,
+        { deterministic: true, family: 'test123', controllers: [{ invalid: 'object' }] },
+        { sync: SyncOptions.NEVER_SYNC }
+      )
+    ).rejects.toThrow(/Attempting to create a TileDocument with an invalid DID string/)
+  })
 })

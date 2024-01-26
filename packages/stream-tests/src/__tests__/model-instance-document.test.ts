@@ -405,6 +405,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 })
 
+// These tests are expected to pass when v4 recon is integrated
 const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
 
 describeIfV3('ModelInstanceDocument API multi-node tests', () => {

@@ -13,6 +13,9 @@ const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
 
+// A different scenario will likely apply in V4 based on changes to loading flow
+const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 30)
 
@@ -48,7 +51,7 @@ describe('Dispatcher with real ipfs over http', () => {
     expect(data.foo).toEqual('bar')
   })
 
-  it('retries on timeout', async () => {
+  testIfV3('retries on timeout', async () => {
     const ipfsBlockSpy = jest.spyOn(ipfsClient.block, 'get')
 
     // try to load a CID that ipfs doesn't know about.  It will timeout.

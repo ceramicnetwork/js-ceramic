@@ -259,6 +259,9 @@ const mockProvidersCache = {
   },
 }
 
+// should pass when updated from tile document
+const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+
 describe('Sync tests', () => {
   jest.setTimeout(150000)
   const logger = new LoggerProvider().getDiagnosticsLogger()
@@ -357,7 +360,7 @@ describe('Sync tests', () => {
     }
   })
 
-  test('Can perform an ongoing sync', async () => {
+  testIfV3('Can perform an ongoing sync', async () => {
     await dbConnection.schema.dropTableIfExists(STATE_TABLE_NAME)
 
     syncingCeramic = await createSyncingCeramic()

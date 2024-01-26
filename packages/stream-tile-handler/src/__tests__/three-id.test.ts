@@ -125,7 +125,10 @@ let ipfs: IpfsApi
 let defaultSigner: CeramicSigner
 let context: StreamReaderWriter
 
-describe('TileDocument with 3ID', () => {
+// These tests are never expected to be run in v4 mode
+const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3('TileDocument with 3ID', () => {
   beforeEach(async () => {
     jest.resetAllMocks()
 
