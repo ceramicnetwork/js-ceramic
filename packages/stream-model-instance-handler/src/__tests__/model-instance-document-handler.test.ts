@@ -1675,7 +1675,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
-    console.log(payload)
+
     await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 })
