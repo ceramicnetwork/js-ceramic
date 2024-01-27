@@ -184,16 +184,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content ?? {}
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
-<<<<<<< HEAD
     await this._validateContent(context, modelStream, newContent, false, payload)
-=======
-    await this._validateContent(context, modelStream, newContent, false)
     await this._validateUnique(
       modelStream,
       metadata as unknown as ModelInstanceDocumentMetadata,
       newContent
     )
->>>>>>> develop
 
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED

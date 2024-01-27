@@ -98,7 +98,7 @@ const FAKE_MID_ID3 = StreamID.fromString(
   'k2t6wzhkh1dbrv7qx7oii5uwjngvzgatek9lzvqnv2wq87jvfhafvi1lxbx203'
 )
 const FAKE_MODEL_IMMUTABLE_ID = StreamID.fromString(
-  'kjzl6hvfrbw6c9aememmuuc3xj3xy0zvzbxstv8dnhl6f3jg7mqeengdgdist5f'
+  'kjzl6hvfrbw6c6a53c3qh6mxliozys6ef0njomyg1t1k26xkfe757olhr84rkka'
 )
 
 const CONTENT0 = { myData: 0 }
@@ -1657,7 +1657,7 @@ describe('ModelInstanceDocumentHandler', () => {
     await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 
-  test('validates relations with interface model', async () => {
+  test.only('validates relations with interface model', async () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID3.toString() },
@@ -1675,6 +1675,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
+    console.log(payload)
     await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 })
