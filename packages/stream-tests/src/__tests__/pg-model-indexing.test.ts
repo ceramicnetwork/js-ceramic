@@ -275,7 +275,7 @@ describe('Postgres Model indexing tests', () => {
           ],
         },
       ])
-    ).resolves.not.toThrow()
+    ).rejects.toThrow(/Schema verification failed/) //adding additional indices
   })
 
   test('Create, index, load and index valid model with less custom indices on load', async () => {
@@ -408,7 +408,7 @@ describe('Postgres Model indexing tests', () => {
           ],
         },
       ])
-    ).resolves.not.toThrow()
+    ).rejects.toThrow(/Schema verification failed/) //changing indices
   })
 
   test('Create and index valid single model', async () => {

@@ -16,6 +16,7 @@ import { SchemaValidation } from './schema-utils.js'
 import { ViewsValidation } from './views-utils.js'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { validateInterface, validateImplementedInterfaces } from './interfaces-utils.js'
+import { validateSetFields } from './account-relations-utils.js'
 
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
@@ -143,6 +144,9 @@ export class ModelHandler implements StreamHandler<Model> {
     }
 
     await this._schemaValidator.validateSchema(state.content.schema)
+    if (state.content.accountRelation.type === 'set') {
+      validateSetFields(state.content.accountRelation.fields, state.content.schema)
+    }
     if (state.content.views) {
       this._viewsValidator.validateViews(state.content.views, state.content.schema)
     }

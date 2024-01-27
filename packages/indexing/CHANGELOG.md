@@ -3,6 +3,43 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.2.0...@ceramicnetwork/indexing@2.4.0-rc.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* load model should work under postgres ([#3091](https://github.com/ceramicnetwork/js-ceramic/issues/3091)) ([9c55078](https://github.com/ceramicnetwork/js-ceramic/commit/9c55078d37404c1d5400e57397ee788223890e92))
+
+
+### Features
+
+* **indexing:** Support optional relations in MIDs ([#3061](https://github.com/ceramicnetwork/js-ceramic/issues/3061)) ([7f334b1](https://github.com/ceramicnetwork/js-ceramic/commit/7f334b119e267483aa04324f17c2620e363bcd6f))
+
+
+### Reverts
+
+* Revert "fix(indexing): support adding indices to existing models (#3067)" ([848f0b6](https://github.com/ceramicnetwork/js-ceramic/commit/848f0b69b48b2070245e9a3734454411d24c4382)), closes [#3067](https://github.com/ceramicnetwork/js-ceramic/issues/3067)
+
+
+
+
+
+# [2.3.0](/compare/@ceramicnetwork/indexing@2.2.0...@ceramicnetwork/indexing@2.3.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* load model should work under postgres (#3091) 9c55078, closes #3091
+
+
+### Features
+
+* **indexing:** Support optional relations in MIDs (#3061) 7f334b1, closes #3061
+
+
+
+
+
 # [2.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.2.0-rc.0...@ceramicnetwork/indexing@2.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing

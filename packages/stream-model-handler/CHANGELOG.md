@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@2.2.0...@ceramicnetwork/stream-model-handler@2.4.0-rc.0) (2024-01-25)
+
+
+### Features
+
+* **stream-model-instance,stream-model-instance-handler:** Allow custom values for deterministic MIDs ([#3070](https://github.com/ceramicnetwork/js-ceramic/issues/3070)) ([2eed110](https://github.com/ceramicnetwork/js-ceramic/commit/2eed1104c262f7d80f84fccc50dae65e0b51781b))
+
+
+
+
+
+# [2.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@2.2.0...@ceramicnetwork/stream-model-handler@2.3.0) (2024-01-25)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-handler
+
+
+
+
+
 # [2.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-handler@2.2.0-rc.0...@ceramicnetwork/stream-model-handler@2.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-handler

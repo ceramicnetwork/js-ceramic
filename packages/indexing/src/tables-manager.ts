@@ -1,27 +1,28 @@
 import {
-  DatabaseType,
+  ColumnInfo,
+  ColumnType,
   createConfigTable,
-  createPostgresModelTable,
-  createSqliteModelTable,
-  defaultIndices,
-  createSqliteIndices,
   createPostgresIndices,
+  createPostgresModelTable,
+  createSqliteIndices,
+  createSqliteModelTable,
+  DatabaseType,
+  defaultIndices,
   migrateConfigTable,
 } from './migrations/1-create-model-table.js'
 import { asTableName } from './as-table-name.util.js'
 import { Knex } from 'knex'
-import { Model } from '@ceramicnetwork/stream-model'
-import { DiagnosticsLogger, FieldsIndex, Networks } from '@ceramicnetwork/common'
+import { Model, ModelRelationsDefinition } from '@ceramicnetwork/stream-model'
+import { DiagnosticsLogger, Networks } from '@ceramicnetwork/common'
 import {
+  fieldsIndexName,
   INDEXED_MODEL_CONFIG_TABLE_NAME,
   IndexModelArgs,
   MODEL_IMPLEMENTS_TABLE_NAME,
-  fieldsIndexName,
 } from './database-index-api.js'
 import { STRUCTURES } from './migrations/cdb-schema-verification.js'
 import { CONFIG_TABLE_NAME } from './config.js'
-
-export type CreateIndicesRecord = Record<string, Array<FieldsIndex>>
+import { addColumnPrefix } from './column-name.util.js'
 
 /**
  * ComposeDB Config Table Type
@@ -31,7 +32,17 @@ type ConfigTable = {
   readonly validSchema: object
 }
 
-const CUSTOM_COLUMN_PREFIX = 'custom_'
+/**
+ * Create a list of db column info for relations in a given model
+ */
+function relationsDefinitionsToColumnInfo(relations?: ModelRelationsDefinition): Array<ColumnInfo> {
+  if (!relations) {
+    return []
+  }
+  return Object.keys(relations).map((keyName) => {
+    return { name: addColumnPrefix(keyName), type: ColumnType.STRING }
+  })
+}
 
 export class TablesManager {
   constructor(
@@ -50,10 +61,7 @@ export class TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  async initMidTables(
-    _modelsToIndex: Array<IndexModelArgs>,
-    _createIndices: CreateIndicesRecord
-  ): Promise<void> {
+  async initMidTables(_modelsToIndex: Array<IndexModelArgs>): Promise<void> {
     throw new Error('Must be implemented in extending class')
   }
 
@@ -155,35 +163,6 @@ export class TablesManager {
   }
 
   /**
-   * List and migrate all MID tables
-   */
-  async migrateMidTables(): Promise<void> {
-    const tableNames = await this.listMidTables()
-    await Promise.all(
-      tableNames.map(async (table) => {
-        return await this._migrateMidTable(table)
-      })
-    )
-  }
-
-  /**
-   * Migrate a MID table
-   * @param tableName
-   */
-  async _migrateMidTable(tableName: string): Promise<void> {
-    const columns = await this.dataSource.table(tableName).columnInfo()
-    const relationColumns = Object.keys(columns).filter((name) => {
-      return name.startsWith(CUSTOM_COLUMN_PREFIX)
-    })
-    if (relationColumns.length) {
-      // Remove relations columns that are no longer necessary
-      await this.dataSource.schema.alterTable(tableName, (table) => {
-        table.dropColumns(...relationColumns)
-      })
-    }
-  }
-
-  /**
    * ComposeDB Model Instance Document table schema verification
    */
   async _verifyMidTables(modelsToIndex: Array<IndexModelArgs>) {
@@ -208,6 +187,11 @@ export class TablesManager {
     // Clone the COMMON_TABLE_STRUCTURE object that has the fields expected for all tables so we can
     // extend it with the model-specific fields expected
     const expectedTableStructure = Object.assign({}, STRUCTURES[this.dbType].COMMON_TABLE)
+    if (modelIndexArgs.relations) {
+      for (const relation of Object.keys(modelIndexArgs.relations)) {
+        expectedTableStructure[addColumnPrefix(relation)] = STRUCTURES[this.dbType].RELATION_COLUMN
+      }
+    }
     const validSchema = JSON.stringify(expectedTableStructure)
 
     const columns = await this.dataSource.table(tableName).columnInfo()
@@ -270,13 +254,10 @@ export class PostgresTablesManager extends TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  override async initMidTables(
-    modelsToIndex: Array<IndexModelArgs>,
-    createIndices: CreateIndicesRecord
-  ) {
+  override async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
     await Promise.all(
       modelsToIndex.map(async (modelIndexArgs) => {
-        await this.initMidTable(modelIndexArgs, createIndices[modelIndexArgs.model.toString()])
+        await this.initMidTable(modelIndexArgs)
       })
     )
   }
@@ -284,7 +265,7 @@ export class PostgresTablesManager extends TablesManager {
   /**
    * Create a single mid table for a given model
    */
-  async initMidTable(modelIndexArgs: IndexModelArgs, createIndices: Array<FieldsIndex> = []) {
+  async initMidTable(modelIndexArgs: IndexModelArgs) {
     const tableName = asTableName(modelIndexArgs.model)
     if (tableName.length > 63) {
       const errStr = `Cannot index model ${modelIndexArgs.model.toString()}.  Table name is too long: ${tableName}`
@@ -292,14 +273,29 @@ export class PostgresTablesManager extends TablesManager {
       throw new Error(errStr)
     }
 
+    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
     const exists = await this.dataSource.schema.hasTable(tableName)
     if (!exists) {
       this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-      await createPostgresModelTable(this.dataSource, tableName)
-    }
-
-    if (createIndices.length) {
-      await createPostgresIndices(this.dataSource, tableName, createIndices)
+      await createPostgresModelTable(this.dataSource, tableName, relationColumns)
+      if (modelIndexArgs.indices) {
+        await createPostgresIndices(this.dataSource, tableName, modelIndexArgs.indices)
+      }
+    } else if (relationColumns.length) {
+      const columnNamesToChange: Array<string> = []
+      for (const column of relationColumns) {
+        if (column.type === ColumnType.STRING) {
+          const columnName = addColumnPrefix(column.name)
+          const isColumnPresent = await this.dataSource.schema.hasColumn(tableName, columnName)
+          if (isColumnPresent) columnNamesToChange.push(columnName)
+        }
+      }
+      // Make relations columns nullable
+      await this.dataSource.schema.alterTable(tableName, (table) => {
+        for (const columnName of columnNamesToChange) {
+          table.string(columnName, 1024).nullable().alter()
+        }
+      })
     }
   }
 
@@ -356,18 +352,11 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * Create mid tables and corresponding indexes
    */
-  override async initMidTables(
-    modelsToIndex: Array<IndexModelArgs>,
-    createIndices: CreateIndicesRecord
-  ) {
+  override async initMidTables(modelsToIndex: Array<IndexModelArgs>) {
     const existingTables = await this.listMidTables()
     await Promise.all(
       modelsToIndex.map(async (modelIndexArgs) => {
-        await this.initMidTable(
-          modelIndexArgs,
-          existingTables,
-          createIndices[modelIndexArgs.model.toString()]
-        )
+        await this.initMidTable(modelIndexArgs, existingTables)
       })
     )
   }
@@ -375,20 +364,33 @@ export class SqliteTablesManager extends TablesManager {
   /**
    * Create a single mid table for a given model
    */
-  async initMidTable(
-    modelIndexArgs: IndexModelArgs,
-    existingTables: Array<string>,
-    createIndices: Array<FieldsIndex> = []
-  ) {
+  async initMidTable(modelIndexArgs: IndexModelArgs, existingTables: Array<string>) {
     const tableName = asTableName(modelIndexArgs.model)
-
-    if (!existingTables.includes(tableName)) {
-      this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
-      await createSqliteModelTable(this.dataSource, tableName)
+    const relationColumns = relationsDefinitionsToColumnInfo(modelIndexArgs.relations)
+    if (existingTables.includes(tableName)) {
+      if (relationColumns.length) {
+        const columnNamesToChange: Array<string> = []
+        for (const column of relationColumns) {
+          if (column.type === ColumnType.STRING) {
+            const columnName = addColumnPrefix(column.name)
+            const isColumnPresent = await this.dataSource.schema.hasColumn(tableName, columnName)
+            if (isColumnPresent) columnNamesToChange.push(columnName)
+          }
+        }
+        // Make relations columns nullable
+        await this.dataSource.schema.alterTable(tableName, (table) => {
+          for (const columnName of columnNamesToChange) {
+            table.string(columnName, 1024).nullable().alter()
+          }
+        })
+      }
+      return
     }
 
-    if (createIndices.length) {
-      await createSqliteIndices(this.dataSource, tableName, createIndices)
+    this.logger.imp(`Creating ComposeDB Indexing table for model: ${tableName}`)
+    await createSqliteModelTable(this.dataSource, tableName, relationColumns)
+    if (modelIndexArgs.indices) {
+      await createSqliteIndices(this.dataSource, tableName, modelIndexArgs.indices)
     }
   }
 

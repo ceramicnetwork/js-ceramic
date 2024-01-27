@@ -3,6 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@3.2.0...@ceramicnetwork/stream-tests@3.4.0-rc.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* load model should work under postgres ([#3091](https://github.com/ceramicnetwork/js-ceramic/issues/3091)) ([9c55078](https://github.com/ceramicnetwork/js-ceramic/commit/9c55078d37404c1d5400e57397ee788223890e92))
+* tests should fail if changing indices ([c5eedcb](https://github.com/ceramicnetwork/js-ceramic/commit/c5eedcbd3d628efe03bb8a0da06129ae1c2571cd))
+
+
+### Features
+
+* **indexing:** Support optional relations in MIDs ([#3061](https://github.com/ceramicnetwork/js-ceramic/issues/3061)) ([7f334b1](https://github.com/ceramicnetwork/js-ceramic/commit/7f334b119e267483aa04324f17c2620e363bcd6f))
+* **stream-model-instance,stream-model-instance-handler:** Allow custom values for deterministic MIDs ([#3070](https://github.com/ceramicnetwork/js-ceramic/issues/3070)) ([2eed110](https://github.com/ceramicnetwork/js-ceramic/commit/2eed1104c262f7d80f84fccc50dae65e0b51781b))
+
+
+
+
+
+# [3.3.0](/compare/@ceramicnetwork/stream-tests@3.2.0...@ceramicnetwork/stream-tests@3.3.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* load model should work under postgres (#3091) 9c55078, closes #3091
+
+
+### Features
+
+* **indexing:** Support optional relations in MIDs (#3061) 7f334b1, closes #3061
+
+
+
+
+
 # [3.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@3.2.0-rc.0...@ceramicnetwork/stream-tests@3.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

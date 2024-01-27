@@ -157,10 +157,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
-    expect(doc.metadata).toEqual({
-      controller: ceramic.did.id.toString(),
-      model: midMetadata.model,
-    })
+    expect(doc.metadata.controller).toBe(ceramic.did.id.toString())
+    expect(doc.metadata.model.equals(midMetadata.model)).toBe(true)
+    expect(doc.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
@@ -176,10 +175,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
     )
     expect(docWithRelation.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(docWithRelation.content).toEqual(relationContent)
-    expect(docWithRelation.metadata).toEqual({
-      controller: ceramic.did.id.toString(),
-      model: midRelationMetadata.model,
-    })
+    expect(docWithRelation.metadata.controller).toBe(ceramic.did.id.toString())
+    expect(docWithRelation.metadata.model.equals(midRelationMetadata.model)).toBe(true)
+    expect(docWithRelation.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(docWithRelation.state.log.length).toEqual(1)
     expect(docWithRelation.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)

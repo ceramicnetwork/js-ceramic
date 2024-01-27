@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@2.2.0...@ceramicnetwork/stream-model-instance-handler@2.4.0-rc.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* fix handler test post merge ([#3113](https://github.com/ceramicnetwork/js-ceramic/issues/3113)) ([f2384c6](https://github.com/ceramicnetwork/js-ceramic/commit/f2384c6b2403a581cae529ea005c86e6a59ea488))
+
+
+### Features
+
+* Add static method for updating a MID without access to the StreamState ([#3101](https://github.com/ceramicnetwork/js-ceramic/issues/3101)) ([6fbf4dc](https://github.com/ceramicnetwork/js-ceramic/commit/6fbf4dcc07140575c44b3ce408dd4a67bdd7be94))
+* Respect context when creating MIDs ([#3077](https://github.com/ceramicnetwork/js-ceramic/issues/3077)) ([8b7c742](https://github.com/ceramicnetwork/js-ceramic/commit/8b7c7428bd40bb06f260af1d707e60a6ffccab54))
+* **stream-model-instance,stream-model-instance-handler:** Allow custom values for deterministic MIDs ([#3070](https://github.com/ceramicnetwork/js-ceramic/issues/3070)) ([2eed110](https://github.com/ceramicnetwork/js-ceramic/commit/2eed1104c262f7d80f84fccc50dae65e0b51781b))
+
+
+
+
+
+# [2.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@2.2.0...@ceramicnetwork/stream-model-instance-handler@2.3.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* fix handler test post merge ([#3113](https://github.com/ceramicnetwork/js-ceramic/issues/3113)) ([f2384c6](https://github.com/ceramicnetwork/js-ceramic/commit/f2384c6b2403a581cae529ea005c86e6a59ea488))
+
+
+### Features
+
+* Add static method for updating a MID without access to the StreamState ([#3101](https://github.com/ceramicnetwork/js-ceramic/issues/3101)) ([6fbf4dc](https://github.com/ceramicnetwork/js-ceramic/commit/6fbf4dcc07140575c44b3ce408dd4a67bdd7be94))
+* Respect context when creating MIDs ([#3077](https://github.com/ceramicnetwork/js-ceramic/issues/3077)) ([8b7c742](https://github.com/ceramicnetwork/js-ceramic/commit/8b7c7428bd40bb06f260af1d707e60a6ffccab54))
+
+
+
+
+
 # [2.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@2.2.0-rc.0...@ceramicnetwork/stream-model-instance-handler@2.2.0) (2023-12-11)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

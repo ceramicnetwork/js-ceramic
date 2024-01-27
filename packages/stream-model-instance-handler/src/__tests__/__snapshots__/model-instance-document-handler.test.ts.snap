@@ -1,5 +1,53 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ModelInstanceDocumentHandler MIDs with SET account relation validate signed commit fields 1`] = `
+{
+  "anchorStatus": 0,
+  "content": {
+    "myData": 2,
+    "one": "foo",
+    "two": "bar",
+  },
+  "log": [
+    {
+      "cid": {
+        "/": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+      },
+      "type": 0,
+    },
+    {
+      "cid": {
+        "/": "bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu",
+      },
+      "type": 1,
+    },
+  ],
+  "metadata": {
+    "controllers": [
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
+    ],
+    "model": StreamID {
+      "_cid": {
+        "/": "bagcqceravogecfyp4jyciu7cqljixlpymtmisoxikuxyzikxkups6afcncca",
+      },
+      "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
+      "_type": 2,
+    },
+    "unique": Uint8Array [
+      102,
+      111,
+      111,
+      124,
+      98,
+      97,
+      114,
+    ],
+  },
+  "signature": 2,
+  "type": 3,
+}
+`;
+
 exports[`ModelInstanceDocumentHandler applies anchor commit correctly 1`] = `
 {
   "anchorProof": {
@@ -84,7 +132,7 @@ exports[`ModelInstanceDocumentHandler applies commit made using an old key if it
 exports[`ModelInstanceDocumentHandler applies deterministic genesis commit correctly 1`] = `
 {
   "anchorStatus": 0,
-  "content": {},
+  "content": null,
   "log": [
     {
       "cid": {
@@ -104,6 +152,7 @@ exports[`ModelInstanceDocumentHandler applies deterministic genesis commit corre
       "_tag": Symbol(@ceramicnetwork/streamid/StreamID),
       "_type": 2,
     },
+    "unique": undefined,
   },
   "signature": 2,
   "type": 3,
