@@ -1657,7 +1657,7 @@ describe('ModelInstanceDocumentHandler', () => {
     await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 
-  test.only('validates relations with interface model', async () => {
+  test('validates relations with interface model', async () => {
     const genesisCommit = (await ModelInstanceDocument._makeGenesis(
       defaultSigner,
       { myData: 3, relationID: FAKE_MID_ID3.toString() },
