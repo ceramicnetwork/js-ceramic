@@ -210,7 +210,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   /**
    * This method inserts the stream if it is not present in the index, updates
    * the 'content' if the stream already exists in the index, or deletes the
-   * stream from the index if the 'index' arg is set to false.
+   * stream from the index if the 'shouldIndex' arg is set to false.
    * @param indexingArgs
    */
   async indexStream(
