@@ -1,17 +1,18 @@
 import { jest } from '@jest/globals'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
+import { IpfsApi } from '@ceramicnetwork/common'
 import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
 import HttpRequestMock from 'http-request-mock'
+import type { Ceramic } from '@ceramicnetwork/core'
 
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
 
 let provider: TezosProvider
 let publicKey: string
 
-let ceramic: CeramicApi
+let ceramic: Ceramic
 let ipfs: IpfsApi
 
 const mocker = HttpRequestMock.setupForUnitTest('fetch')

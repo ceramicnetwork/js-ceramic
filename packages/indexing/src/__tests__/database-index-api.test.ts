@@ -1,4 +1,4 @@
-import { expect, jest, test } from '@jest/globals'
+import { jest, expect, test, beforeEach, afterEach, afterAll, beforeAll } from '@jest/globals'
 import { StreamID } from '@ceramicnetwork/streamid'
 import knex, { Knex } from 'knex'
 import tmp from 'tmp-promise'
@@ -7,7 +7,7 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { asTableName } from '../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { LoggerProvider, Networks, type CeramicCoreApi } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import {
   asTimestamp,
@@ -73,13 +73,13 @@ function modelsToIndexArgs(models: Array<StreamID>): Array<IndexModelArgs> {
 }
 
 class CompleteQueryApi implements ISyncQueryApi {
-  syncComplete(model: string): boolean {
+  syncComplete(): boolean {
     return true
   }
 }
 
 class IncompleteQueryApi implements ISyncQueryApi {
-  syncComplete(model: string): boolean {
+  syncComplete(): boolean {
     return false
   }
 }
@@ -914,6 +914,21 @@ and indexname in (${expectedIndices});
       const raw = result[0]
       expect(raw.dark_mode).toEqual(STREAM_TEST_DATA_PROFILE_A.settings.dark_mode)
       expect(raw.id).toEqual(STREAM_TEST_DATA_PROFILE_A.id)
+    })
+
+    test('unindex', async () => {
+      await indexApi.indexStream(STREAM_CONTENT_A)
+      const count = () =>
+        dbConnection
+          .from(`${MODELS_TO_INDEX[0]}`)
+          .select('*')
+          .then((r) => r.length)
+      await expect(count()).resolves.toEqual(1)
+      const shouldUnindex = { ...STREAM_CONTENT_A, shouldIndex: false }
+      await indexApi.indexStream(shouldUnindex)
+      await expect(count()).resolves.toEqual(0)
+      await indexApi.indexStream(shouldUnindex)
+      await expect(count()).resolves.toEqual(0)
     })
   })
 
