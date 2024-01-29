@@ -169,7 +169,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
         throw new Error(
           `Unsupported metadata changes for ModelInstanceDocument Stream ${streamId}: ${otherKeys.join(
             ','
-          )}. Only the index argument can be changed.`
+          )}. Only the shouldIndex argument can be changed.`
         )
       }
       if (shouldIndex !== null) {
