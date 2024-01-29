@@ -68,6 +68,7 @@ jobs:
     environment:
       IPFS_FLAVOR: rust
       CERAMIC_ONE_PATH: /usr/local/bin/ceramic-one
+      CERAMIC_ENABLE_V4_MODE: 'true'
     steps:
       - build-and-test
       - run:

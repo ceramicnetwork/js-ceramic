@@ -10,7 +10,7 @@
   "homepage": "https://github.com/ceramicnetwork/js-ceramic#readme",
   "scripts": {
     "postinstall": "npx lerna bootstrap --hoist --ci",
-    "test": "CERAMIC_ENABLE_V4_MODE=true npx lerna exec npm t",
+    "test": "npx lerna exec npm t",
     "build": "npx lerna run build",
     "docs": "NODE_OPTIONS=--max-old-space-size=8192 npx typedoc",
     "publish:release-candidate": "npx lerna publish --dist-tag next --preid rc --no-verify-access --conventional-prerelease bump preminor",
