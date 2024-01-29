@@ -1,5 +1,5 @@
 import { type Context, Type, type } from 'codeco'
-import { commitIdAsString } from './stream.js'
+import { commitIdAsString, StreamMetadata } from './stream.js'
 
 export const JsonAsString = new Type<unknown, string, string>(
   'JSON-as-string',
@@ -11,9 +11,11 @@ export const JsonAsString = new Type<unknown, string, string>(
       return context.failure()
     }
   },
-  (commitID) => JSON.stringify(commitID)
+  (data) => JSON.stringify(data)
 )
 
 export const AggregationDocument = type({
   commitId: commitIdAsString,
+  content: JsonAsString,
+  metadata: StreamMetadata,
 })
