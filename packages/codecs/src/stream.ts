@@ -71,7 +71,7 @@ export const commitIdAsString = new Type<CommitID, string, string>(
 /**
  * codeco for StreamMetadata
  */
-export const StreamMetadata = type({
+export const StreamMetadata = sparse({
   controllers: array(string),
   model: optional(streamIdAsString),
   context: optional(streamIdAsString),
