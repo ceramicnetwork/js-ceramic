@@ -310,7 +310,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param opts - Additional options
    */
   shouldIndex(shouldIndex: boolean, opts: CommonUpdateOpts = {}): Promise<void> {
-    return this.replace(this.content, { ...opts, shouldIndex: shouldIndex })
+    return this.patch([], { ...opts, shouldIndex: shouldIndex })
   }
 
   /**
