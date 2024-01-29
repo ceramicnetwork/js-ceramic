@@ -23,9 +23,9 @@ import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { DID } from 'dids'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { EventSource  } from 'cross-eventsource'
+import { EventSource } from 'cross-eventsource'
 import { AggregationDocument, JsonAsString } from '@ceramicnetwork/codecs'
-import { decode } from "codeco"
+import { decode } from 'codeco'
 
 const seed = 'SEED'
 
@@ -499,7 +499,9 @@ describe('Ceramic interop: core <> http-client', () => {
   it.only('feed works via http api', async () => {
     let messageEvent: any
     const Codec = JsonAsString.pipe(AggregationDocument)
-    const source = new EventSource(`http://localhost:${daemon.port}/api/v0/feed/aggregation/documents`)
+    const source = new EventSource(
+      `http://localhost:${daemon.port}/api/v0/feed/aggregation/documents`
+    )
     source.addEventListener('message', (event) => {
       messageEvent = decode(Codec, event.data)
     })
@@ -510,7 +512,6 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(messageEvent).toBeDefined()
     expect(messageEvent.content).toMatchObject(content)
     expect(messageEvent.commitId).toMatchObject(doc.commitId)
-
   }, 30000)
 
   describe('multiqueries', () => {
