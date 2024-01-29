@@ -38,8 +38,9 @@ const generateStringOfSize = (size): string => {
 }
 // Should  pass on v4 if updated from TileDocument
 const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const skipIfV4ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? it.skip : it
 
-describeIfV3('Ceramic API', () => {
+describe('Ceramic API', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
@@ -302,33 +303,36 @@ describeIfV3('Ceramic API', () => {
       })
     })
 
-    it('can create and update stream with valid model to trigger indexing', async () => {
-      const CONTENT0 = { myData: 0 }
-      const CONTENT1 = { myData: 1 }
-      // TODO (NET-1614): Extend with targeted payload comparison
-      const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
-      // Disable anything that handles anchor events from the CAS, because otherwise we get
-      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
-      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
-      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
-      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
-      const model = await Model.create(ceramic, MODEL_DEFINITION)
+    skipIfV4ShouldPass(
+      'can create and update stream with valid model to trigger indexing',
+      async () => {
+        const CONTENT0 = { myData: 0 }
+        const CONTENT1 = { myData: 1 }
+        // TODO (NET-1614): Extend with targeted payload comparison
+        const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+        // Disable anything that handles anchor events from the CAS, because otherwise we get
+        // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+        void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+        const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+        handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+        const model = await Model.create(ceramic, MODEL_DEFINITION)
 
-      expect(addIndexSpy).toBeCalledTimes(1)
-      const midMetadata = { model: model.id }
-      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
-        anchor: false,
-        pin: false,
-      })
-      expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
-      await doc.replace(CONTENT1, { anchor: false })
-      expect(doc.content).toEqual(CONTENT1)
-      expect(addIndexSpy).toBeCalledTimes(3)
-      addIndexSpy.mockRestore()
-    })
+        expect(addIndexSpy).toBeCalledTimes(1)
+        const midMetadata = { model: model.id }
+        const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+          anchor: false,
+          pin: false,
+        })
+        expect(doc.content).toEqual(CONTENT0)
+        expect(addIndexSpy).toBeCalledTimes(2)
+        await doc.replace(CONTENT1, { anchor: false })
+        expect(doc.content).toEqual(CONTENT1)
+        expect(addIndexSpy).toBeCalledTimes(3)
+        addIndexSpy.mockRestore()
+      }
+    )
 
-    it('will fail to create stream over size limits', async () => {
+    skipIfV4ShouldPass('will fail to create stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
@@ -347,7 +351,7 @@ describeIfV3('Ceramic API', () => {
       addIndexSpy.mockRestore()
     })
 
-    it('will update stream if under size limits', async () => {
+    skipIfV4ShouldPass('will update stream if under size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
@@ -375,7 +379,7 @@ describeIfV3('Ceramic API', () => {
       addIndexSpy.mockRestore()
     })
 
-    it('will fail to update stream over size limits', async () => {
+    skipIfV4ShouldPass('will fail to update stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20

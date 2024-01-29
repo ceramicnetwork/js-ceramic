@@ -12,6 +12,7 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 // should pass on v4 once syncing/block store is supported
 const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const skipIfV4ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
 
 describe('Ceramic feed', () => {
   let ipfs1: IpfsApi
@@ -118,7 +119,7 @@ describe('Ceramic feed', () => {
     })
   })
 
-  test('add entry after creating/loading indexed model', async () => {
+  skipIfV4ShouldPass('add entry after creating/loading indexed model', async () => {
     const MODEL_DEFINITION: ModelDefinition = {
       name: 'myModel',
       version: '1.0',
