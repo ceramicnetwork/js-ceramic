@@ -85,7 +85,7 @@ etherum.ts/createLink(did) -> sign
 * `store` - pinning and level state store; snapshot of a stream state
 * `state-management` - stream is mutable; check on state progression. Some streams are better kept in memory vs. some street could be offloaded to storage
 * `pubsub` - node to node communication - push based messaging; Mostly implemented as Observable
-* `anchor` - anchoring or validating it inside the ceramic node (
+* `anchor` - anchoring or validating it inside the ceramic node
 
 `http-client` - with any remote node - http endpoint -> connect to a node
 
