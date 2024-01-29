@@ -173,7 +173,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       streamId
     )
 
-    if (payload.header) {ß
+    if (payload.header) {
       const { shouldIndex, ...others } = payload.header
       const otherKeys = Object.keys(others)
       if (otherKeys.length) {
