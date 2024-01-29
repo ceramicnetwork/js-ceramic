@@ -172,8 +172,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
           )}. Only the index argument can be changed.`
         )
       }
-      if (shouldIndex != null) {
-        state.metadata.shouldIndex = shouldIndex
+      if (shouldIndex !== null) {
+        state.metadata.shouldIndex = shouldIndex ?? false
       }
     }
 
