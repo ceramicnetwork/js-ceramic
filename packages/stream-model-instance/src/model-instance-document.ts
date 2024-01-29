@@ -250,7 +250,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
         shouldIndex: shouldIndex,
       }
     }
-    const rawCommit = this._makeRawCommitA(content, header)
+    const rawCommit = ModelInstanceDocument._makeRawCommit(
+      this.commitId,
+      this.content,
+      content,
+      header
+    )
     const updateCommit = await signer.createDagJWS(rawCommit)
     const updated = await this.api.applyCommit(this.id, updateCommit, options)
     this.state$.next(updated.state)
@@ -339,15 +344,6 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   ): Promise<CeramicCommit> {
     const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent)
     return signer.createDagJWS(commit)
-  }
-
-  /**
-   * Helper function for _makeCommit() to allow unit tests to update the commit before it is signed.
-   * @param newContent
-   * @param header - Optional header
-   */
-  private _makeRawCommitA(newContent: T | null, header?: Partial<CommitHeader>): RawCommit {
-    return ModelInstanceDocument._makeRawCommit(this.commitId, this.content, newContent, header)
   }
 
   /**
