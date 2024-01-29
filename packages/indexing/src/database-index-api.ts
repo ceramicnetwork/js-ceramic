@@ -32,6 +32,7 @@ export interface IndexStreamArgs {
   readonly tip: CID
   readonly lastAnchor: Date | null
   readonly firstAnchor: Date | null
+  readonly shouldIndex?: boolean
 }
 
 /**
@@ -207,14 +208,21 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * This method inserts the stream if it is not present in the index, or updates
-   * the 'content' if the stream already exists in the index.
+   * This method inserts the stream if it is not present in the index, updates
+   * the 'content' if the stream already exists in the index, or deletes the
+   * stream from the index if the 'shouldIndex' arg is set to false.
    * @param indexingArgs
    */
   async indexStream(
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
     const tableName = asTableName(indexingArgs.model)
+    if (indexingArgs.shouldIndex === false) {
+      await this.dbConnection(tableName)
+        .where('stream_id', indexingArgs.streamID.toString())
+        .delete()
+      return
+    }
     const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
     const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
     for (const relation of relations) {
