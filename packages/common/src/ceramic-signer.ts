@@ -28,6 +28,7 @@ export interface UnderlyingCeramicSigner {
   createDagJWS(payload: Record<string, any>, options?: CreateJWSOptions): Promise<DagJWSResult>
   verifyJWS(jws: string | DagJWS, options?: VerifyJWSOptions): Promise<VerifyJWSResult>
   asController(): Promise<string>
+  did: DID
 }
 
 export interface IntoSigner {
@@ -41,6 +42,10 @@ export class CeramicSigner implements IntoSigner {
   constructor(reqs?: UnderlyingCeramicSigner) {
     this.isAuthenticated = false
     this.reqs = reqs
+  }
+
+  get did(): DID | undefined {
+    return this.reqs?.did
   }
 
   get signer(): CeramicSigner {
@@ -70,6 +75,7 @@ export class CeramicSigner implements IntoSigner {
       async asController(): Promise<string> {
         return did.hasParent ? did.parent : did.id
       },
+      get did(): DID { return did }
     }
   }
 

@@ -323,7 +323,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * and verifying signatures.
    */
   get did(): DID | undefined {
-    return this._did
+    return this._signer.did
   }
 
   /**
@@ -332,7 +332,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * @param did
    */
   set did(did: DID) {
-    this._did = did
     this._signer.withDid(did)
   }
 
