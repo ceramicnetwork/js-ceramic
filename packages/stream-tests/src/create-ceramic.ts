@@ -1,13 +1,12 @@
 import mergeOpts from 'merge-options'
-import { Ceramic, type CeramicConfig } from '@ceramicnetwork/core'
-import type { IpfsApi } from '@ceramicnetwork/common'
+import { CeramicConfig, Ceramic } from '@ceramicnetwork/core'
+import { IpfsApi } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { createDid } from './create_did.js'
-import type { DeepPartial } from 'ts-essentials'
 
 export async function createCeramic(
   ipfs: IpfsApi,
-  config: DeepPartial<CeramicConfig & { seed?: string }> = {},
+  config: CeramicConfig & { seed?: string } = {},
   providersCache?
 ): Promise<Ceramic> {
   const stateStoreDirectory = await tmp.tmpName()
