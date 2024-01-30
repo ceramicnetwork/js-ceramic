@@ -59,7 +59,10 @@ const MODEL_DEFINITION_SET: ModelDefinition = {
   },
 }
 
-describe('ModelInstanceDocument API http-client tests', () => {
+// should pass on v4 as soon as we actually store/retrieve blocks
+const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3ShouldPass('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
@@ -196,7 +199,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
   })
 })
 
-describe('ModelInstanceDocument API multi-node tests', () => {
+describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs0: IpfsApi

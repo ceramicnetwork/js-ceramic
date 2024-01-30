@@ -30,7 +30,9 @@ function modelIDsAsRequestBody(modelIDs: Array<string>): Record<string, Array<st
   return modelIDs ? { models: modelIDs } : undefined
 }
 
-describe('admin api', () => {
+const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3ShouldPass('admin api', () => {
   let daemon: CeramicDaemon
   let adminDid: DID
   let nonAdminDid: DID

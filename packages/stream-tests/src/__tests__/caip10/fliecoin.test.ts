@@ -19,6 +19,8 @@ const blsMainnetProvider = new LocalManagedProvider(blsPrivateKey, Network.MAIN)
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
+const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
@@ -29,35 +31,47 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 120000)
 
-test('happy path', async () => {
-  const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
-  await Promise.all(
-    providers.map(async (provider) => {
-      const addresses = await provider.getAccounts()
-      const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
-      await happyPath(ceramic, authProvider)
-    })
-  )
-}, 120000)
+testIfV3(
+  'happy path',
+  async () => {
+    const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
+    await Promise.all(
+      providers.map(async (provider) => {
+        const addresses = await provider.getAccounts()
+        const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
+        await happyPath(ceramic, authProvider)
+      })
+    )
+  },
+  120000
+)
 
-test('wrong proof', async () => {
-  const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
-  await Promise.all(
-    providers.map(async (provider) => {
-      const addresses = await provider.getAccounts()
-      const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
-      await wrongProof(ceramic, authProvider)
-    })
-  )
-}, 120000)
+testIfV3(
+  'wrong proof',
+  async () => {
+    const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
+    await Promise.all(
+      providers.map(async (provider) => {
+        const addresses = await provider.getAccounts()
+        const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
+        await wrongProof(ceramic, authProvider)
+      })
+    )
+  },
+  120000
+)
 
-test('clear Did', async () => {
-  const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
-  await Promise.all(
-    providers.map(async (provider) => {
-      const addresses = await provider.getAccounts()
-      const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
-      await clearDid(ceramic, authProvider)
-    })
-  )
-}, 120000)
+testIfV3(
+  'clear Did',
+  async () => {
+    const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
+    await Promise.all(
+      providers.map(async (provider) => {
+        const addresses = await provider.getAccounts()
+        const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
+        await clearDid(ceramic, authProvider)
+      })
+    )
+  },
+  120000
+)

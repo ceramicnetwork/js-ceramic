@@ -44,7 +44,7 @@ describe('Dispatcher with real ipfs over http', () => {
     jest.restoreAllMocks()
   })
 
-  it('basic ipfs http client functionality', async () => {
+  testIfV3('basic ipfs http client functionality', async () => {
     const cid = await dispatcher.storeCommit({ foo: 'bar' })
 
     const data = await dispatcher.retrieveCommit(cid, FAKE_STREAM_ID)

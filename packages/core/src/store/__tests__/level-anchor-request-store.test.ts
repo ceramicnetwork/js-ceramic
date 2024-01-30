@@ -78,7 +78,9 @@ const MODEL_CONTENT_3: ModelDefinition = {
   },
 }
 
-describe('LevelDB-backed AnchorRequestStore state store', () => {
+const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
   jest.setTimeout(1000 * 30)
 
   let tmpFolder: any
@@ -107,21 +109,26 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
   }
 
   beforeAll(async () => {
-    ipfs = await createIPFS()
-    ceramic = await createCeramic(ipfs)
-    logger = ceramic.loggerProvider.getDiagnosticsLogger()
+    try {
+      ipfs = await createIPFS()
+      ceramic = await createCeramic(ipfs)
+      logger = ceramic.loggerProvider.getDiagnosticsLogger()
 
-    const model1 = await Model.create(ceramic, MODEL_CONTENT_1)
-    streamId1 = model1.id
-    genesisCommit1 = await loadGenesisCommit(ceramic, streamId1)
+      const model1 = await Model.create(ceramic, MODEL_CONTENT_1)
+      streamId1 = model1.id
+      genesisCommit1 = await loadGenesisCommit(ceramic, streamId1)
 
-    const model2 = await Model.create(ceramic, MODEL_CONTENT_2)
-    streamId2 = model2.id
-    genesisCommit2 = await loadGenesisCommit(ceramic, streamId2)
+      const model2 = await Model.create(ceramic, MODEL_CONTENT_2)
+      streamId2 = model2.id
+      genesisCommit2 = await loadGenesisCommit(ceramic, streamId2)
 
-    const model3 = await Model.create(ceramic, MODEL_CONTENT_3)
-    streamId3 = model3.id
-    genesisCommit3 = await loadGenesisCommit(ceramic, streamId3)
+      const model3 = await Model.create(ceramic, MODEL_CONTENT_3)
+      streamId3 = model3.id
+      genesisCommit3 = await loadGenesisCommit(ceramic, streamId3)
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
   })
 
   afterAll(async () => {
@@ -358,9 +365,6 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
 
     // It takes two tries to get the first batch
     expect(findSpy).toHaveBeenCalledTimes(4)
-
-    // Close the store
-    await anchorRequestStore.close()
   })
 
   test('switch from ELP to Mainnet preserves data', async () => {

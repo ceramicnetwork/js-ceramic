@@ -11,6 +11,9 @@ const mnemonic = 'test salon husband push melody usage fine ensure blade deal mi
 const localProvider = tendermint.createWalletFromMnemonic(mnemonic)
 const chainRef = 'cosmoshub-3'
 
+// no caip10 support in v4
+const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+
 class CosmosMockSigner {
   constructor(readonly provider: tendermint.Wallet) {}
 
@@ -32,32 +35,44 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 120000)
 
-test('happy path', async () => {
-  const provider = new CosmosMockSigner(localProvider)
-  const authProvider = new linking.cosmos.CosmosAuthProvider(
-    provider,
-    localProvider.address,
-    chainRef
-  )
-  await happyPath(ceramic, authProvider)
-}, 120000)
+testIfV3(
+  'happy path',
+  async () => {
+    const provider = new CosmosMockSigner(localProvider)
+    const authProvider = new linking.cosmos.CosmosAuthProvider(
+      provider,
+      localProvider.address,
+      chainRef
+    )
+    await happyPath(ceramic, authProvider)
+  },
+  120000
+)
 
-test('wrong proof', async () => {
-  const provider = new CosmosMockSigner(localProvider)
-  const authProvider = new linking.cosmos.CosmosAuthProvider(
-    provider,
-    localProvider.address,
-    chainRef
-  )
-  await wrongProof(ceramic, authProvider)
-}, 120000)
+testIfV3(
+  'wrong proof',
+  async () => {
+    const provider = new CosmosMockSigner(localProvider)
+    const authProvider = new linking.cosmos.CosmosAuthProvider(
+      provider,
+      localProvider.address,
+      chainRef
+    )
+    await wrongProof(ceramic, authProvider)
+  },
+  120000
+)
 
-test('clear did', async () => {
-  const provider = new CosmosMockSigner(localProvider)
-  const authProvider = new linking.cosmos.CosmosAuthProvider(
-    provider,
-    localProvider.address,
-    chainRef
-  )
-  await clearDid(ceramic, authProvider)
-}, 120000)
+testIfV3(
+  'clear did',
+  async () => {
+    const provider = new CosmosMockSigner(localProvider)
+    const authProvider = new linking.cosmos.CosmosAuthProvider(
+      provider,
+      localProvider.address,
+      chainRef
+    )
+    await clearDid(ceramic, authProvider)
+  },
+  120000
+)

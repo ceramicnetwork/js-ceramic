@@ -35,7 +35,9 @@ const MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
-describe('Admin API tests', () => {
+const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+
+describeIfV3ShouldPass('Admin API tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
