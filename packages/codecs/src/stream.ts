@@ -1,5 +1,5 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import { type Context, Type, refinement, string, type, array, optional, boolean } from 'codeco'
+import { type Context, Type, refinement, string, sparse, array, optional, boolean } from 'codeco'
 
 /**
  * Verify if `input` is a StreamID string.
