@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "3.4.0-rc.0",
+  "version": "4.0.0-rc.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "engines": {
     "node": ">=20.8"
@@ -47,7 +47,7 @@
     "@ceramicnetwork/anchor-listener": "^2.4.0-rc.0",
     "@ceramicnetwork/anchor-utils": "^2.4.0-rc.0",
     "@ceramicnetwork/codecs": "^2.4.0-rc.0",
-    "@ceramicnetwork/common": "^3.4.0-rc.0",
+    "@ceramicnetwork/common": "^4.0.0-rc.0",
     "@ceramicnetwork/indexing": "^2.4.0-rc.0",
     "@ceramicnetwork/ipfs-topology": "^3.4.0-rc.0",
     "@ceramicnetwork/job-queue": "^2.4.0-rc.0",
