@@ -37,7 +37,7 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^3.4.0-rc.0",
+    "@ceramicnetwork/common": "^4.0.0-rc.0",
     "multiformats": "^13.0.0"
   },
   "publishConfig": {

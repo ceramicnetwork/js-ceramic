@@ -37,7 +37,7 @@
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^3.4.0-rc.0"
+    "@ceramicnetwork/common": "^4.0.0-rc.0"
   },
   "devDependencies": {
     "@multiformats/multiaddr": "^11.4.0"
