@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.4.0-rc.0...@ceramicnetwork/indexing@2.4.0-rc.1) (2024-01-30)
+
+
+### Bug Fixes
+
+* Supposed to alter only existing columns ([#3120](https://github.com/ceramicnetwork/js-ceramic/issues/3120)) ([b5ee70e](https://github.com/ceramicnetwork/js-ceramic/commit/b5ee70ee59f9472eee87dc8377a6897155f0347b))
+
+
+
+
+
 # [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.2.0...@ceramicnetwork/indexing@2.4.0-rc.0) (2024-01-25)
 
 
