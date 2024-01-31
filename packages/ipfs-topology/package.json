@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "3.4.0-rc.0",
+  "version": "3.4.0-rc.1",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",
@@ -37,7 +37,7 @@
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^3.4.0-rc.0"
+    "@ceramicnetwork/common": "^4.0.0-rc.1"
   },
   "devDependencies": {
     "@multiformats/multiaddr": "^11.4.0"

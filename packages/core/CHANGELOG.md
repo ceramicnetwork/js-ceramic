@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.4.0-rc.0...@ceramicnetwork/core@4.0.0-rc.1) (2024-01-30)
+
+
+### Bug Fixes
+
+* Don't attempt to close Ceramic if it never finished initializing ([#3118](https://github.com/ceramicnetwork/js-ceramic/issues/3118)) ([6147879](https://github.com/ceramicnetwork/js-ceramic/commit/61478793d2291f85f9ec7c4c4dc222b99e77cab4))
+
+
+
+
+
 # [3.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@3.2.0...@ceramicnetwork/core@3.4.0-rc.0) (2024-01-25)
 
 

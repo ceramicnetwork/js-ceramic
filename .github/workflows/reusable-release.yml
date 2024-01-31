@@ -306,13 +306,25 @@ jobs:
         name: Initialize and build code
         run: npm ci && npm run build
       -
-        # This step explicitly does not push the release commit so the specified nightly branch will not be impacted.
-        name: Publish packages to NPM
+        # These step explicitly do not push the release commit so the specified nightly branch will not be impacted
+        name: Publish all packages to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          # This step can fail if nothing changed that warranted a new release. This is a nightly release and best
-          # effort, so this is ok.
+          # First try to publish all the packages. Once a release or RC is made, all the package versions get bumped
+          # and we want to publish nightly packages for the new versions. If this fails, presumably because some
+          # packages have not changed since the last release, we'll try to publish only the packages that did change.
+          npm run publish:nightly -- --force-publish --yes
+        continue-on-error: true
+      -
+        # Now reset the branch and try to publish only the packages that have changed since the last release
+        name: Publish updated packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          git reset --hard HEAD^
           npm run publish:nightly -- --yes || true

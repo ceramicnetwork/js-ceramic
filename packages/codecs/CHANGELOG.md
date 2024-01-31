@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@2.4.0-rc.0...@ceramicnetwork/codecs@2.4.0-rc.1) (2024-01-30)
+
+
+### Features
+
+* make the feed codecs more robust ([#3124](https://github.com/ceramicnetwork/js-ceramic/issues/3124)) ([f485e3b](https://github.com/ceramicnetwork/js-ceramic/commit/f485e3b84cc75edbea422cf1b0781d0713e1ef5c))
+
+
+
+
+
 # [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/codecs@2.2.0...@ceramicnetwork/codecs@2.4.0-rc.0) (2024-01-25)
 
 **Note:** Version bump only for package @ceramicnetwork/codecs
