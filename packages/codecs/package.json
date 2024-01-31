@@ -30,7 +30,8 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/streamid": "^3.4.0",
+    "@ceramicnetwork/common": "^4.0.0",
+    "@ceramicnetwork/streamid": "^3.4.0-rc.0",
     "cartonne": "^3.0.1",
     "codeco": "^1.1.0",
     "dag-jose": "^4.0.0",

@@ -1,5 +1,7 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { CommitType } from '@ceramicnetwork/common'
 import { type Context, Type, refinement, string, sparse, array, optional, boolean } from 'codeco'
+import { enumCodec } from './enum.js'
 
 /**
  * Verify if `input` is a StreamID string.
@@ -80,3 +82,5 @@ export const StreamMetadata = sparse({
   tags: optional(array(string)),
   forbidControllerChange: optional(boolean),
 })
+
+export const CommitTypeAsNumber = enumCodec<CommitType>('CommitType', CommitType)
