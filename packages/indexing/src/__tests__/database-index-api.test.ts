@@ -790,6 +790,14 @@ describe('postgres', () => {
       expect(closeDates(updatedAt, now)).toBeTruthy()
     })
 
+    test('new stream with null content', async () => {
+      await indexApi.indexStream({ ...STREAM_CONTENT_A, streamContent: null })
+      const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
+      expect(result.length).toEqual(1)
+      const raw = result[0]
+      expect(raw.stream_content).toEqual({})
+    })
+
     test('override stream', async () => {
       const createTime = new Date()
       await indexApi.indexStream(STREAM_CONTENT_A)
@@ -1625,6 +1633,14 @@ describe('sqlite', () => {
       const updatedAt = new Date(raw.updated_at)
       expect(closeDates(createdAt, now)).toBeTruthy()
       expect(closeDates(updatedAt, now)).toBeTruthy()
+    })
+
+    test('new stream with null content', async () => {
+      await indexApi.indexStream({ ...STREAM_CONTENT, streamContent: null })
+      const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
+      expect(result.length).toEqual(1)
+      const raw = result[0]
+      expect(raw.stream_content).toEqual('{}')
     })
 
     test('override stream', async () => {
