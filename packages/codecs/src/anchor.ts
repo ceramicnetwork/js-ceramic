@@ -27,7 +27,7 @@ export const AnchorCommitPresentation = sparse(
 )
 export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
 
-export const NotCompleteStatusName = union([
+const NotCompleteStatusName = union([
   literal(AnchorRequestStatusName.PENDING),
   literal(AnchorRequestStatusName.PROCESSING),
   literal(AnchorRequestStatusName.FAILED),
