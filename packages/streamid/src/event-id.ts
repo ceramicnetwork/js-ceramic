@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { base36 } from 'multiformats/bases/base36'
+import { base16 } from 'multiformats/bases/base16'
 import { hash as sha256 } from '@stablelib/sha256'
 import varint from 'varint'
 import * as cbor from 'cborg'
@@ -9,6 +10,7 @@ import { Memoize } from 'mapmoize'
 import { randomCID } from './commit-id.js'
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/EventID')
+const decoder = base16.decoder.or(base36)
 
 export type CreateRandomOptionalParams = {
   separatorKey?: string | Uint8Array
@@ -185,8 +187,8 @@ export class EventID {
       const ehOffset = initOffest + 4
       const init = bytes.slice(initOffest, ehOffset)
       const remaining = bytes.slice(ehOffset)
-      const eventHeight = cbor.decode(bytes.slice(ehOffset, ehOffset + remaining.length - 36))
-      const event = CID.decode(remaining.slice(remaining.length - 36))
+      const [eventHeight, cidBytes] = cbor.decodeFirst(remaining)
+      const event = CID.decode(cidBytes)
       return new EventID(networkID, seperator, controller, init, eventHeight, event)
     } catch (e) {
       throw new Error(`Invalid EventID: ${(e as Error).message}`)
@@ -197,7 +199,7 @@ export class EventID {
    * EventID instance from base36 string
    */
   static fromString(str: string): EventID {
-    const bytes = base36.decode(str)
+    const bytes = decoder.decode(str)
     return this.fromBytes(bytes)
   }
 

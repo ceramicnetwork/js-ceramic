@@ -103,10 +103,19 @@ describe('Event Id: ', () => {
     })
   })
 
-  test('create from string', () => {
+  test('create from string base36', () => {
     const eventid = EventID.fromString(eventID)
     const hexstring = base16.encode(eventid.bytes)
     expect(hexstring).toEqual(eventIDHex)
+  })
+
+  test('create from string base16', () => {
+    const eventid = EventID.fromString(
+      'fce0105808080801030ad4f6bd83602fedeb6cb4af0e69eeb846a17bb000185011220dcf202d667ea626adf6c875cac16413b7b5b99bc2541ef2e555a21df846a17bb'
+    )
+    expect(eventid.toString()).toEqual(
+      'k1a0mdi2ck1hmrcz3nbz5ev4g6110umvg1tostfmi6xfiijkm60tnji8taxrvn7269hw5274u0m506q82qhexm3j0hazrejuaf6jyx8b'
+    )
   })
 
   test('create from bytes', () => {
