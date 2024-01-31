@@ -463,7 +463,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         await this._ipfsTopology.start()
       }
 
-      this.anchorService.signer = this._signer
       if (!this._readOnly) {
         await this.anchorService.init(
           this.repository.anchorRequestStore,
