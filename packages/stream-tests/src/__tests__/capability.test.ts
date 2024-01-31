@@ -232,7 +232,7 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describeIfV3ShouldPass('Model instance stream with resources using model', () => {
+  describe('Model instance stream with resources using model', () => {
     test('fails to create using capability with wrong model resource', async () => {
       const didKeyWithCapability = await addCapToDid(
         wallet,
@@ -425,7 +425,7 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describeIfV3ShouldPass('Ceramic dids instance with capability/parent', () => {
+  describe('Ceramic dids instance with capability/parent', () => {
     testIfV3(
       'can update tile stream with streamId in capability',
       async () => {

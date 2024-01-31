@@ -180,10 +180,7 @@ const envs: Array<BasicIndexingTestEnv> = [
   { dbEngine: DBEngine.postgres },
 ]
 
-// should pass without changes other than working recon
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) => {
+describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) => {
   jest.setTimeout(1000 * 30)
 
   let stateStoreURL: string

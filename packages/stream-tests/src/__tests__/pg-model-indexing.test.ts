@@ -55,10 +55,7 @@ const SINGLE_INDEXED_MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
-// should pass without changes other than working recon
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass('Postgres Model indexing tests', () => {
+describe('Postgres Model indexing tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
