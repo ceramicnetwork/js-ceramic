@@ -14,15 +14,7 @@ import { carAsUint8Array, cidAsString } from './ipld.js'
 import { streamIdAsString } from './stream.js'
 import { uint8ArrayAsBase64 } from './binary.js'
 import { dateAsUnix } from './date.js'
-
-export enum AnchorRequestStatusName {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  READY = 'READY',
-  REPLACED = 'REPLACED',
-}
+import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 
 /**
  * Part of CAS response that sends AnchorCommit content. Effectively a historical artefact.
@@ -35,14 +27,13 @@ export const AnchorCommitPresentation = sparse(
 )
 export type AnchorCommitPresentation = TypeOf<typeof AnchorCommitPresentation>
 
-export const NotCompleteStatusName = union([
+const NotCompleteStatusName = union([
   literal(AnchorRequestStatusName.PENDING),
   literal(AnchorRequestStatusName.PROCESSING),
   literal(AnchorRequestStatusName.FAILED),
   literal(AnchorRequestStatusName.READY),
   literal(AnchorRequestStatusName.REPLACED),
 ])
-export type NotCompleteStatusName = TypeOf<typeof NotCompleteStatusName>
 
 export const NotCompleteCASResponse = sparse(
   {
