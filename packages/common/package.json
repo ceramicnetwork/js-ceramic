@@ -43,7 +43,6 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/codecs": "^2.4.0",
     "@ceramicnetwork/streamid": "^3.4.0",
     "@didtools/cacao": "^3.0.0",
     "@didtools/pkh-ethereum": "^0.2.0",

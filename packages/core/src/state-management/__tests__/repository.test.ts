@@ -17,7 +17,7 @@ import {
   StreamState,
   StreamUtils,
   SyncOptions,
-  AnchorRequestStatusName
+  AnchorRequestStatusName,
 } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '../../utils.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
