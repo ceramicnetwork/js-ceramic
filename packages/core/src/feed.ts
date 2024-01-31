@@ -16,7 +16,7 @@ export class FeedDocument {
       commitId: StreamUtils.commitIdFromStreamState(streamState),
       content: streamState.next ? streamState.next.content : streamState.content,
       metadata: streamState.next ? streamState.next.metadata : streamState.metadata,
-      eventType: streamState.log[length - 1].type,
+      eventType: streamState.log[streamState.log.length - 1].type,
     }
   }
 }
