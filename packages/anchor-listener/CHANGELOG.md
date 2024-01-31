@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@2.4.0-rc.1...@ceramicnetwork/anchor-listener@2.4.0) (2024-01-31)
+
+**Note:** Version bump only for package @ceramicnetwork/anchor-listener
+
+
+
+
+
 # [2.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/anchor-listener@2.4.0-rc.0...@ceramicnetwork/anchor-listener@2.4.0-rc.1) (2024-01-30)
 
 **Note:** Version bump only for package @ceramicnetwork/anchor-listener
