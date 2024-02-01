@@ -161,7 +161,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.metadata.model.equals(midMetadata.model)).toBe(true)
     expect(doc.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(doc.state.log.length).toEqual(1)
-    expect(doc.state.log[0].type).toEqual(eventType.INIT)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
@@ -179,7 +179,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.metadata.model.equals(midRelationMetadata.model)).toBe(true)
     expect(docWithRelation.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(docWithRelation.state.log.length).toEqual(1)
-    expect(docWithRelation.state.log[0].type).toEqual(eventType.INIT)
+    expect(docWithRelation.state.log[0].type).toEqual(EventType.INIT)
     expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(docWithRelation.metadata.model.toString()).toEqual(modelWithRelation.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, docWithRelation.id)).resolves.toBeTruthy()
@@ -196,7 +196,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     expect(doc.content).toEqual(CONTENT1)
     expect(doc.state.log.length).toEqual(2)
-    expect(doc.state.log[0].type).toEqual(eventType.INIT)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
   })
 
@@ -257,7 +257,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(doc.state.log.length).toEqual(2)
-    expect(doc.state.log[0].type).toEqual(eventType.INIT)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.TIME)
     expect(doc.content).toEqual(CONTENT0)
   })
@@ -273,7 +273,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(doc.state.log.length).toEqual(3)
-    expect(doc.state.log[0].type).toEqual(eventType.INIT)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
     expect(doc.state.log[2].type).toEqual(EventType.TIME)
     expect(doc.content).toEqual(CONTENT1)
@@ -294,7 +294,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(doc.state.log.length).toEqual(6)
-    expect(doc.state.log[0].type).toEqual(eventType.INIT)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
     expect(doc.state.log[2].type).toEqual(EventType.TIME)
     expect(doc.state.log[3].type).toEqual(EventType.DATA)

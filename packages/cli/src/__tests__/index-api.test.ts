@@ -133,7 +133,7 @@ test('serialize StreamState', async () => {
     type: 0,
     log: [
       {
-        type: eventType.INIT,
+        type: EventType.INIT,
         cid: TestUtils.randomCID(),
       },
     ],

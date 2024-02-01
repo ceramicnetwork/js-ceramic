@@ -215,7 +215,7 @@ describe('Dispatcher with mock ipfs', () => {
       log: [
         {
           cid: FAKE_STREAM_ID.cid,
-          type: eventType.INIT,
+          type: EventType.INIT,
         },
       ],
     } as unknown as StreamState
@@ -280,7 +280,7 @@ describe('Dispatcher with mock ipfs', () => {
       log: [
         {
           cid: FAKE_STREAM_ID.cid,
-          type: eventType.INIT,
+          type: EventType.INIT,
         },
       ],
     } as unknown as StreamState

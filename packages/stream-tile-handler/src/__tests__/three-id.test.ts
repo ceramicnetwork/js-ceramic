@@ -213,7 +213,7 @@ describe('TileDocument with 3ID', () => {
 
     const signedCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -228,7 +228,7 @@ describe('TileDocument with 3ID', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: COMMITS.genesisGenerated.linkedBlock,
       envelope: COMMITS.genesisGenerated.jws,
     }
@@ -263,7 +263,7 @@ describe('TileDocument with 3ID', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -306,7 +306,7 @@ describe('TileDocument with 3ID', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -329,7 +329,7 @@ describe('TileDocument with 3ID', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }

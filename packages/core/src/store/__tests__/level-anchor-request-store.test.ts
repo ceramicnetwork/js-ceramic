@@ -102,7 +102,7 @@ describe('LevelDB-backed AnchorRequestStore state store', () => {
     streamId: StreamID
   ): Promise<GenesisCommit> {
     const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
-    expect(commit.type).toEqual(eventType.INIT)
+    expect(commit.type).toEqual(EventType.INIT)
     return commit.commit as GenesisCommit
   }
 

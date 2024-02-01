@@ -119,7 +119,7 @@ describe('Caip10LinkHandler', () => {
 
   it('throws an error if genesis commit has data', async () => {
     const commitWithData = { ...COMMITS.genesis, data: {} }
-    const genesisWithData = { cid: FAKE_CID_1, type: eventType.INIT, commit: commitWithData }
+    const genesisWithData = { cid: FAKE_CID_1, type: EventType.INIT, commit: commitWithData }
     await expect(handler.applyCommit(genesisWithData, context)).rejects.toThrow(/cannot have data/)
   })
 
@@ -128,7 +128,7 @@ describe('Caip10LinkHandler', () => {
     delete commitWithoutControllers.header.controllers
     const genesisWithoutControllers = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: commitWithoutControllers,
     }
     await expect(handler.applyCommit(genesisWithoutControllers, context)).rejects.toThrow(
@@ -143,7 +143,7 @@ describe('Caip10LinkHandler', () => {
     )
     const genesisWithMultipleControllers = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: commitWithMultipleControllers,
     }
     await expect(handler.applyCommit(genesisWithMultipleControllers, context)).rejects.toThrow(
@@ -152,13 +152,13 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     expect(state).toMatchSnapshot()
   })
 
   it('makes update commit correctly', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const state$ = TestUtils.runningState(state)
     const stream = new Caip10Link(state$, context)
@@ -171,7 +171,7 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     let state = await handler.applyCommit(genesisCommitData, context)
     const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit: COMMITS.r1.commit }
     state = await handler.applyCommit(signedCommitData, context, state)
@@ -179,7 +179,7 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('throws an error of the proof is invalid', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const badRecord = cloneDeep(COMMITS.r1.commit)
     badRecord.data.signature =
@@ -195,7 +195,7 @@ describe('Caip10LinkHandler', () => {
     badAddressGenesis.header.controllers = ['0xffffffffffffffffffffffffffffffffffffffff@eip155:1']
     const badAddressGenesisData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: badAddressGenesis,
     }
     const state = await handler.applyCommit(badAddressGenesisData, context)
@@ -206,7 +206,7 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('fails to apply commit with invalid prev link', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const commit = { ...COMMITS.r1.commit }
     commit.prev = FAKE_CID_3
@@ -217,7 +217,7 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('fails to apply commit with invalid id property', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const commit = { ...COMMITS.r1.commit }
     commit.id = FAKE_CID_3
@@ -236,7 +236,7 @@ describe('Caip10LinkHandler', () => {
     await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
 
     // Apply genesis
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     let state = await handler.applyCommit(genesisCommitData, context)
     // Apply signed record
     const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit: COMMITS.r1.commit }
@@ -311,7 +311,7 @@ describe('Caip10LinkHandler', () => {
     await context.ipfs.dag.put(commits.r2proof, FAKE_CID_4)
     await context.ipfs.dag.put(commits.r4proof, FAKE_CID_7)
 
-    const genesisCommitData = { cid: FAKE_CID_1, type: eventType.INIT, commit: commits.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: commits.genesis }
     let state = await handler.applyCommit(genesisCommitData, context)
     const signedCommitData_1 = { cid: FAKE_CID_2, type: EventType.DATA, commit: commits.r1 }
     state = await handler.applyCommit(signedCommitData_1, context, state)

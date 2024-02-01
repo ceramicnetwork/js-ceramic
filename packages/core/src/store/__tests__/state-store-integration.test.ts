@@ -48,7 +48,7 @@ describe('Level data store', () => {
     metadata: { controllers: ['foo'] },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [{ cid: FAKE_CID, type: eventType.INIT }],
+    log: [{ cid: FAKE_CID, type: EventType.INIT }],
   }
 
   beforeEach(async () => {
@@ -79,7 +79,7 @@ describe('Level data store', () => {
   it('pins not anchored stream correctly with IPFS pinning', async () => {
     const state: StreamState = {
       ...streamState,
-      log: [{ cid: FAKE_CID, type: eventType.INIT }],
+      log: [{ cid: FAKE_CID, type: EventType.INIT }],
     }
     await expect(store.stateStore.load(streamId)).resolves.toBeNull()
     const pinSpy = jest.spyOn(store.pinning, 'pin')

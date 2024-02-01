@@ -231,7 +231,7 @@ describe('TileDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -249,7 +249,7 @@ describe('TileDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: COMMITS.genesisGenerated.linkedBlock,
       envelope: COMMITS.genesisGenerated.jws,
     }
@@ -286,7 +286,7 @@ describe('TileDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -330,7 +330,7 @@ describe('TileDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -400,7 +400,7 @@ describe('TileDocumentHandler', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
@@ -423,7 +423,7 @@ describe('TileDocumentHandler', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -448,7 +448,7 @@ describe('TileDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -496,7 +496,7 @@ describe('TileDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -544,7 +544,7 @@ describe('TileDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -594,7 +594,7 @@ describe('TileDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -653,7 +653,7 @@ describe('TileDocumentHandler', () => {
     // genesis commit applied one hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
@@ -709,7 +709,7 @@ describe('TileDocumentHandler', () => {
     // commit is applied 1 hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
@@ -741,7 +741,7 @@ describe('TileDocumentHandler', () => {
     // commit is applied 1 hour after the rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: Math.floor(rotateDate.valueOf() / 1000) + 60 * 60,

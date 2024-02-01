@@ -18,7 +18,7 @@ const FAUX_STREAM_STATE = {
   type: 0,
   log: [
     {
-      type: eventType.INIT,
+      type: EventType.INIT,
       cid: TestUtils.randomCID(),
     },
   ],

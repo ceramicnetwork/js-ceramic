@@ -10,7 +10,7 @@ test('emit on distinct changes', async () => {
     type: 0,
     log: [
       {
-        type: eventType.INIT,
+        type: EventType.INIT,
         cid: FAKE_CID_1,
       },
     ],

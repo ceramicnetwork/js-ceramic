@@ -65,9 +65,7 @@ const state: StreamState = {
   },
   signature: SignatureStatus.GENESIS,
   anchorStatus: AnchorStatus.NOT_REQUESTED,
-  log: [
-    { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: eventType.INIT },
-  ],
+  log: [{ cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: EventType.INIT }],
 }
 
 class FakeType extends Stream {

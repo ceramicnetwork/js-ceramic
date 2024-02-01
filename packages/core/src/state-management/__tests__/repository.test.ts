@@ -128,7 +128,7 @@ describe('#load', () => {
       type: TileDocument.STREAM_TYPE_ID,
       log: [
         {
-          type: eventType.INIT,
+          type: EventType.INIT,
           cid: genesisCid,
         },
       ],
@@ -779,7 +779,7 @@ describe('_registerRunningState', () => {
         log: [
           {
             cid: TestUtils.randomCID(),
-            type: eventType.INIT,
+            type: EventType.INIT,
           },
         ],
         signature: 3,

@@ -14,7 +14,7 @@ const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnr
 
 const streamState = {
   type: 0,
-  log: [{ cid: FAKE_CID, type: eventType.INIT }],
+  log: [{ cid: FAKE_CID, type: EventType.INIT }],
 } as unknown as StreamState
 const state$ = new RunningState(streamState, true)
 const repository = {

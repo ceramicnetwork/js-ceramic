@@ -16,7 +16,7 @@ test('StreamState serialization round trip', async () => {
     metadata: { controllers: [FAKE_DID], model: FAKE_STREAM_ID },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [{ cid: FAKE_CID, type: eventType.INIT }],
+    log: [{ cid: FAKE_CID, type: EventType.INIT }],
   }
 
   const serialized = StreamUtils.serializeState(state)

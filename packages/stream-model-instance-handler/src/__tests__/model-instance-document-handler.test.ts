@@ -539,7 +539,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -561,7 +561,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_BLOB,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -580,7 +580,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit,
     }
     await expect(handler.applyCommit(commitData, context)).rejects.toThrow(
@@ -598,7 +598,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit,
     }
     expect(commitData.commit.data).toBeNull()
@@ -621,7 +621,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -643,7 +643,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -665,7 +665,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -687,7 +687,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -712,7 +712,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -734,7 +734,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -771,7 +771,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -815,7 +815,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: genesisCommit,
     }
     let state = await handler.applyCommit(genesisCommitData, context)
@@ -877,7 +877,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: genesisCommit,
     }
 
@@ -923,7 +923,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -990,7 +990,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -1021,7 +1021,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1066,7 +1066,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
@@ -1091,7 +1091,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1135,7 +1135,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1178,7 +1178,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1221,7 +1221,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1282,7 +1282,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // genesis commit applied one hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
@@ -1336,7 +1336,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // commit is applied 1 hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
@@ -1364,7 +1364,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // commit is applied 1 hour after the rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: Math.floor(rotateDate.valueOf() / 1000) + 60 * 60,
@@ -1389,7 +1389,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -1412,7 +1412,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1435,7 +1435,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1456,7 +1456,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1477,7 +1477,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -1498,7 +1498,7 @@ describe('ModelInstanceDocumentHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: eventType.INIT,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }

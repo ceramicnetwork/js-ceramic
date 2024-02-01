@@ -9,7 +9,7 @@ const initial = {
   type: 0,
   log: [
     {
-      type: eventType.INIT,
+      type: EventType.INIT,
       cid: FAKE_CID1,
     },
   ],

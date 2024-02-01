@@ -49,7 +49,7 @@ describe('Ceramic feed', () => {
     expect(feed[0].metadata).toStrictEqual(feed[1].metadata)
     expect(feed[0].content).toStrictEqual({ hello: original })
     expect(feed[1].content).toStrictEqual({ hello: updated })
-    expect(feed[0].eventType).toBe(eventType.INIT)
+    expect(feed[0].eventType).toBe(EventType.INIT)
     expect(feed[1].eventType).toBe(EventType.DATA)
   })
 
@@ -76,10 +76,10 @@ describe('Ceramic feed', () => {
     await TestUtils.delay(500)
 
     expect(feed1.length).toEqual(2) // create + update
-    expect(feed1[0].eventType).toBe(eventType.INIT)
+    expect(feed1[0].eventType).toBe(EventType.INIT)
     expect(feed1[1].eventType).toBe(EventType.DATA)
     expect(feed2.length).toEqual(2) //load + pubsub update
-    expect(feed2[0].eventType).toBe(eventType.INIT)
+    expect(feed2[0].eventType).toBe(EventType.INIT)
     expect(feed2[1].eventType).toBe(EventType.DATA)
     expect(feed2[0].content.test).toBe(content.test)
     expect(feed2[0].commitId).toStrictEqual(feed1[0].commitId)
@@ -114,7 +114,7 @@ describe('Ceramic feed', () => {
     expect(feed[0].content).toEqual(model.state.content)
     expect(feed[0].metadata).toEqual(model.state.metadata)
     expect(feed[0].commitId).toEqual(model.commitId)
-    expect(feed[0].eventType).toBe(eventType.INIT)
+    expect(feed[0].eventType).toBe(EventType.INIT)
     s1.unsubscribe()
   })
 
@@ -137,7 +137,7 @@ describe('Ceramic feed', () => {
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
     expect(feed[0].commitId.equals(feed[1].commitId)).toEqual(false)
-    expect(feed[0].eventType).toBe(eventType.INIT)
+    expect(feed[0].eventType).toBe(EventType.INIT)
     expect(feed[1].eventType).toBe(EventType.TIME)
     s.unsubscribe()
   })
