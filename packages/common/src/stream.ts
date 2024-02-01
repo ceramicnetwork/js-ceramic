@@ -90,6 +90,9 @@ export interface StreamNext {
   metadata?: StreamMetadata
 }
 
+/**
+ * These were called genesis, signed, and anchor, and may still be referred to this way by other code and comments.
+ */
 export enum EventType {
   INIT,
   DATA,
@@ -103,7 +106,7 @@ export interface LogEntry {
   // CID of the stream commit
   cid: CID
 
-  // Type of the commit (e.g. genesis, signed, anchor)
+  // Type of the commit (e.g. init, data, time)
   type: EventType
 
   // Timestamp (in seconds) of when this commit was anchored (if available)
@@ -320,7 +323,7 @@ export interface StreamHandler<T extends Stream> {
   stream_constructor: StreamConstructor<T>
 
   /**
-   * Applies commit to the stream (genesis|signed|anchored) and returns the new StreamState.
+   * Applies commit to the stream (init|data|time) and returns the new StreamState.
    * StreamHandler implementations of applyCommit are allowed to modify the input state, it is up to
    * callers to clone the input state before calling into applyCommit if they don't want the input
    * state modified.
