@@ -31,7 +31,7 @@ export interface CommitHeader {
 
   [index: string]: any // allow support for future changes
 }
-
+// TODO use latest naming convention genesis -> init
 export interface GenesisHeader extends CommitHeader {
   unique?: Uint8Array | string // Model and ModelInstanceDocument use Uint8Array, Caip10Link and TileDocument use 'string'
   context?: Uint8Array // used in ModelInstanceDocument
