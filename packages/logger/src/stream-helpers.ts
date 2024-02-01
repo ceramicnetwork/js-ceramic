@@ -3,7 +3,7 @@ import { createStream as createRfsStream, Options as RfsOptions } from 'rotating
 
 /**
  * A handler for writable streams that only writes if the stream has finished
- * processing or draining
+ * processing or draining.
  */
 export class SafeStreamHandler {
   public ready = true

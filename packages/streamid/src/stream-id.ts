@@ -28,7 +28,7 @@ export class InvalidStreamIDStringError extends Error {
  * Parse StreamID from bytes representation.
  *
  * @param bytes - bytes representation of StreamID.
- * @throws error on invalid input
+ * @throws error on invalid input.
  * @see StreamID#bytes
  */
 function fromBytes(bytes: Uint8Array): StreamID {

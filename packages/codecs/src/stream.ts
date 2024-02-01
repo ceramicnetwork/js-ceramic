@@ -2,7 +2,7 @@ import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { type Context, Type, refinement, string } from 'codeco'
 
 /**
- * Verify if `input` is a StreamID string.
+ * Verify if `input` is a StreamID string
  */
 export function isStreamIdString(input: string): input is string {
   try {
