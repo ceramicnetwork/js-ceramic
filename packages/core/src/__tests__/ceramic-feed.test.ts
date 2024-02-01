@@ -1,5 +1,5 @@
 import { expect, describe, test, beforeAll, afterAll } from '@jest/globals'
-import { CommitType, type IpfsApi } from '@ceramicnetwork/common'
+import { EventType, type IpfsApi } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -49,8 +49,8 @@ describe('Ceramic feed', () => {
     expect(feed[0].metadata).toStrictEqual(feed[1].metadata)
     expect(feed[0].content).toStrictEqual({ hello: original })
     expect(feed[1].content).toStrictEqual({ hello: updated })
-    expect(feed[0].eventType).toBe(CommitType.GENESIS)
-    expect(feed[1].eventType).toBe(CommitType.SIGNED)
+    expect(feed[0].eventType).toBe(EventType.INIT)
+    expect(feed[1].eventType).toBe(EventType.DATA)
   })
 
   test('add entry after loading pinned stream/pubsub', async () => {
@@ -76,11 +76,11 @@ describe('Ceramic feed', () => {
     await TestUtils.delay(500)
 
     expect(feed1.length).toEqual(2) // create + update
-    expect(feed1[0].eventType).toBe(CommitType.GENESIS)
-    expect(feed1[1].eventType).toBe(CommitType.SIGNED)
+    expect(feed1[0].eventType).toBe(EventType.INIT)
+    expect(feed1[1].eventType).toBe(EventType.DATA)
     expect(feed2.length).toEqual(2) //load + pubsub update
-    expect(feed2[0].eventType).toBe(CommitType.GENESIS)
-    expect(feed2[1].eventType).toBe(CommitType.SIGNED)
+    expect(feed2[0].eventType).toBe(EventType.INIT)
+    expect(feed2[1].eventType).toBe(EventType.DATA)
     expect(feed2[0].content.test).toBe(content.test)
     expect(feed2[0].commitId).toStrictEqual(feed1[0].commitId)
     // test pubsub propagating the update from stream1 being inside the feed
@@ -114,7 +114,7 @@ describe('Ceramic feed', () => {
     expect(feed[0].content).toEqual(model.state.content)
     expect(feed[0].metadata).toEqual(model.state.metadata)
     expect(feed[0].commitId).toEqual(model.commitId)
-    expect(feed[0].eventType).toBe(CommitType.GENESIS)
+    expect(feed[0].eventType).toBe(EventType.INIT)
     s1.unsubscribe()
   })
 
@@ -137,8 +137,8 @@ describe('Ceramic feed', () => {
     expect(feed[0].content).toEqual(feed[1].content)
     expect(feed[0].metadata).toEqual(feed[1].metadata)
     expect(feed[0].commitId.equals(feed[1].commitId)).toEqual(false)
-    expect(feed[0].eventType).toBe(CommitType.GENESIS)
-    expect(feed[1].eventType).toBe(CommitType.ANCHOR)
+    expect(feed[0].eventType).toBe(EventType.INIT)
+    expect(feed[1].eventType).toBe(EventType.TIME)
     s.unsubscribe()
   })
 })

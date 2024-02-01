@@ -7,7 +7,7 @@ import {
   AnchorStatus,
   CeramicCommit,
   CommitData,
-  CommitType,
+  EventType,
   LogEntry,
   RawCommit,
   SignedCommit,
@@ -329,10 +329,10 @@ export class StreamUtils {
     return commitData && commitData.proof !== undefined
   }
 
-  static commitDataToLogEntry(commitData: CommitData, commitType: CommitType): LogEntry {
+  static commitDataToLogEntry(commitData: CommitData, eventType: EventType): LogEntry {
     const logEntry: LogEntry = {
       cid: commitData.cid,
-      type: commitType,
+      type: eventType,
     }
     if (commitData?.capability?.p?.exp) {
       logEntry.expirationTime = Math.floor(Date.parse(commitData.capability.p.exp) / 1000)

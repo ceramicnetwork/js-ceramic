@@ -1,4 +1,4 @@
-import { CommitType, StreamMetadata, StreamState } from '@ceramicnetwork/common'
+import { EventType, StreamMetadata, StreamState } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
 import { CommitID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '@ceramicnetwork/common'
@@ -8,7 +8,7 @@ export class FeedDocument {
     readonly commitId: CommitID,
     readonly content: any,
     readonly metadata: StreamMetadata,
-    readonly eventType: CommitType
+    readonly eventType: EventType
   ) {}
 
   static fromStreamState(streamState: StreamState): FeedDocument {

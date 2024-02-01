@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition, parseModelVersion } from '@ceramicnetwork/stream-model'
@@ -129,7 +129,7 @@ describe('Model API http-client tests', () => {
     expect(model.content).toEqual(MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(EventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
   })
@@ -142,7 +142,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -163,7 +163,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -186,7 +186,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -212,7 +212,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(
@@ -236,7 +236,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -264,7 +264,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -300,7 +300,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -336,7 +336,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -380,7 +380,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -427,7 +427,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -468,7 +468,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -489,7 +489,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -515,7 +515,7 @@ describe('Model API http-client tests', () => {
       expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
       expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
       expect(model.state.log.length).toEqual(1)
-      expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+      expect(model.state.log[0].type).toEqual(EventType.INIT)
       expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -547,7 +547,7 @@ describe('Model API http-client tests', () => {
     expect(model.content).toEqual(MODEL_DEFINITION_WITH_RELATION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(EventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
@@ -560,8 +560,8 @@ describe('Model API http-client tests', () => {
 
     expect(model.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(model.state.log.length).toEqual(2)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
-    expect(model.state.log[1].type).toEqual(CommitType.ANCHOR)
+    expect(model.state.log[0].type).toEqual(EventType.INIT)
+    expect(model.state.log[1].type).toEqual(EventType.TIME)
     expect(model.content).toEqual(MODEL_DEFINITION)
   })
 
