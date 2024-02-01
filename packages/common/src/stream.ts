@@ -90,10 +90,10 @@ export interface StreamNext {
   metadata?: StreamMetadata
 }
 
-export enum CommitType {
-  GENESIS,
-  SIGNED,
-  ANCHOR,
+export enum EventType {
+  INIT,
+  DATA,
+  TIME,
 }
 
 /**
@@ -104,7 +104,7 @@ export interface LogEntry {
   cid: CID
 
   // Type of the commit (e.g. genesis, signed, anchor)
-  type: CommitType
+  type: EventType
 
   // Timestamp (in seconds) of when this commit was anchored (if available)
   timestamp?: number
@@ -248,7 +248,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
    */
   get anchorCommitIds(): Array<CommitID> {
     return this.state$.value.log
-      .filter(({ type }) => type === CommitType.ANCHOR)
+      .filter(({ type }) => type === EventType.TIME)
       .map(({ cid }) => CommitID.make(this.id, cid))
   }
 

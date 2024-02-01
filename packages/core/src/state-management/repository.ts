@@ -3,7 +3,7 @@ import {
   AnchorEvent,
   AnchorOpts,
   AnchorStatus,
-  CommitType,
+  EventType,
   CreateOpts,
   DiagnosticsLogger,
   LoadOpts,
@@ -72,7 +72,7 @@ function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
 function commitAtTime(state: StreamState, timestamp: number): CommitID {
   let commitCid: CID = state.log[0].cid
   for (const entry of state.log) {
-    if (entry.type === CommitType.ANCHOR) {
+    if (entry.type === EventType.TIME) {
       if (entry.timestamp <= timestamp) {
         commitCid = entry.cid
       } else {
@@ -961,7 +961,7 @@ export class Repository {
     // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
     const lastAnchor = asDate(StreamUtils.anchorTimestampFromState(state$.value))
     const firstAnchor = asDate(
-      state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
+      state$.value.log.find((log) => log.type == EventType.TIME)?.timestamp
     )
     const streamContent = {
       model: state$.value.metadata.model,

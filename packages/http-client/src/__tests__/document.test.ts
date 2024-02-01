@@ -1,4 +1,4 @@
-import { CommitType, StreamState } from '@ceramicnetwork/common'
+import { EventType, StreamState } from '@ceramicnetwork/common'
 import { Document } from '../document.js'
 import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { filter } from 'rxjs/operators'
@@ -13,7 +13,7 @@ test('emit on distinct changes', async () => {
     type: 0,
     log: [
       {
-        type: CommitType.GENESIS,
+        type: eventType.INIT,
         cid: FAKE_CID_1,
       },
     ],
@@ -23,7 +23,7 @@ test('emit on distinct changes', async () => {
     log: [
       ...initial.log,
       {
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
         cid: FAKE_CID_2,
       },
     ],
@@ -83,7 +83,7 @@ describe('periodic subscription', () => {
       type: 0,
       log: [
         {
-          type: CommitType.GENESIS,
+          type: eventType.INIT,
           cid: FAKE_CID_1,
         },
       ],
@@ -114,7 +114,7 @@ describe('periodic subscription', () => {
       type: 0,
       log: [
         {
-          type: CommitType.GENESIS,
+          type: eventType.INIT,
           cid: FAKE_CID_1,
         },
       ],

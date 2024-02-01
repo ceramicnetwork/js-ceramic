@@ -7,7 +7,7 @@ import {
 import {
   AnchorStatus,
   CommitData,
-  CommitType,
+  EventType,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
@@ -129,7 +129,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
+      log: [StreamUtils.commitDataToLogEntry(commitData, EventType.INIT)],
     }
   }
 
@@ -183,7 +183,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
     state.content = newContent
-    state.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
+    state.log.push(StreamUtils.commitDataToLogEntry(commitData, EventType.DATA))
 
     return state
   }

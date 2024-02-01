@@ -4,7 +4,7 @@ import tmp from 'tmp-promise'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { randomString } from '@stablelib/random'
-import { CommitType, IpfsApi, StreamState } from '@ceramicnetwork/common'
+import { EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
 import { CeramicDaemon } from '../ceramic-daemon.js'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
@@ -133,7 +133,7 @@ test('serialize StreamState', async () => {
     type: 0,
     log: [
       {
-        type: CommitType.GENESIS,
+        type: eventType.INIT,
         cid: TestUtils.randomCID(),
       },
     ],

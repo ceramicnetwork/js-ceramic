@@ -11,7 +11,7 @@ import {
 import {
   AnchorEvent,
   AnchorStatus,
-  CommitType,
+  EventType,
   IpfsApi,
   SignatureStatus,
   StreamState,
@@ -128,7 +128,7 @@ describe('#load', () => {
       type: TileDocument.STREAM_TYPE_ID,
       log: [
         {
-          type: CommitType.GENESIS,
+          type: eventType.INIT,
           cid: genesisCid,
         },
       ],
@@ -779,7 +779,7 @@ describe('_registerRunningState', () => {
         log: [
           {
             cid: TestUtils.randomCID(),
-            type: CommitType.GENESIS,
+            type: eventType.INIT,
           },
         ],
         signature: 3,

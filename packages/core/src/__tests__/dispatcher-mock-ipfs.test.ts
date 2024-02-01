@@ -2,7 +2,7 @@ import { expect, jest, it, test, describe, beforeEach, afterEach } from '@jest/g
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, IpfsApi } from '@ceramicnetwork/common'
+import { EventType, StreamState, IpfsApi } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository } from '../state-management/repository.js'
@@ -215,7 +215,7 @@ describe('Dispatcher with mock ipfs', () => {
       log: [
         {
           cid: FAKE_STREAM_ID.cid,
-          type: CommitType.GENESIS,
+          type: eventType.INIT,
         },
       ],
     } as unknown as StreamState
@@ -243,7 +243,7 @@ describe('Dispatcher with mock ipfs', () => {
       ...initialState,
       log: initialState.log.concat({
         cid: FAKE_CID,
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
       }),
     } as unknown as StreamState
     const stream2 = await register(continuationState)
@@ -280,7 +280,7 @@ describe('Dispatcher with mock ipfs', () => {
       log: [
         {
           cid: FAKE_STREAM_ID.cid,
-          type: CommitType.GENESIS,
+          type: eventType.INIT,
         },
       ],
     } as unknown as StreamState

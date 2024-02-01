@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { LocalPinApi } from '../local-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
-import { CommitType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
+import { EventType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
 import { Repository } from '../state-management/repository.js'
 import { CID } from 'multiformats/cid'
 import { RunningState } from '../state-management/running-state.js'
@@ -14,7 +14,7 @@ const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnr
 
 const streamState = {
   type: 0,
-  log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+  log: [{ cid: FAKE_CID, type: eventType.INIT }],
 } as unknown as StreamState
 const state$ = new RunningState(streamState, true)
 const repository = {

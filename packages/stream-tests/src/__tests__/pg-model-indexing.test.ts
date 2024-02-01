@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { createCeramic } from '../create-ceramic.js'
@@ -91,7 +91,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -112,7 +112,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -135,7 +135,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -161,7 +161,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(
@@ -185,7 +185,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -213,7 +213,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -249,7 +249,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -285,7 +285,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -330,7 +330,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -377,7 +377,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -418,7 +418,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -439,7 +439,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()
@@ -465,7 +465,7 @@ describe('Postgres Model indexing tests', () => {
     expect(model.content).toEqual(SINGLE_INDEXED_MODEL_DEFINITION)
     expect(model.metadata).toEqual({ controller: ceramic.did.id.toString(), model: Model.MODEL })
     expect(model.state.log.length).toEqual(1)
-    expect(model.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(model.state.log[0].type).toEqual(eventType.INIT)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
     await expect(ceramic.admin.pin.add(model.id)).resolves.not.toThrow()

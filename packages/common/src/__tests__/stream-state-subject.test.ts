@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { StreamStateSubject } from '../stream-state-subject.js'
-import { CommitType, StreamState } from '../stream.js'
+import { EventType, StreamState } from '../stream.js'
 
 const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
@@ -10,7 +10,7 @@ test('emit on distinct changes', async () => {
     type: 0,
     log: [
       {
-        type: CommitType.GENESIS,
+        type: eventType.INIT,
         cid: FAKE_CID_1,
       },
     ],
@@ -20,7 +20,7 @@ test('emit on distinct changes', async () => {
     log: [
       ...initial.log,
       {
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
         cid: FAKE_CID2,
       },
     ],
