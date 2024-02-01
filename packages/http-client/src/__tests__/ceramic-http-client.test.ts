@@ -54,7 +54,7 @@ describe('URL constructor', () => {
       const getDidFn = () => {
         return did
       }
-      client.did = getDidFn()
+      await client.setDID(getDidFn())
       expect(client.did).toEqual(getDidFn())
     }
   })

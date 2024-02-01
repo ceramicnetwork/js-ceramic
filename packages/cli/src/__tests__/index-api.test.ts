@@ -55,8 +55,8 @@ beforeEach(async () => {
   const apiUrl = `http://localhost:${daemon.port}`
   client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
-  core.did = makeDID(core, SEED)
-  client.did = makeDID(client, SEED)
+  await core.setDID(makeDID(core, SEED))
+  await client.setDID(makeDID(client, SEED))
 
   const model = await Model.create(core, MODEL_DEFINITION)
   modelStreamId = model.id

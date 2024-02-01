@@ -1,10 +1,9 @@
 import { AuthProvider } from '@ceramicnetwork/blockchain-utils-linking'
-import { toLegacyAccountId } from '@ceramicnetwork/common'
+import { CeramicApi, toLegacyAccountId } from '@ceramicnetwork/common'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { AccountId } from 'caip'
-import { Ceramic } from '@ceramicnetwork/core'
 
-export async function happyPath(ceramic: Ceramic, authProvider: AuthProvider) {
+export async function happyPath(ceramic: CeramicApi, authProvider: AuthProvider) {
   const accountId = await authProvider.accountId()
   const caip = await Caip10Link.fromAccount(ceramic, accountId)
   await caip.setDid(ceramic.did, authProvider)
@@ -13,7 +12,7 @@ export async function happyPath(ceramic: Ceramic, authProvider: AuthProvider) {
 }
 
 export async function wrongProof(
-  ceramic: Ceramic,
+  ceramic: CeramicApi,
   authProvider: AuthProvider,
   wrongAccountId?: AccountId
 ) {
@@ -32,7 +31,7 @@ export async function wrongProof(
   )
 }
 
-export async function clearDid(ceramic: Ceramic, authProvider: AuthProvider) {
+export async function clearDid(ceramic: CeramicApi, authProvider: AuthProvider) {
   const accountId = await authProvider.accountId()
   const caip = await Caip10Link.fromAccount(ceramic, accountId)
 

@@ -165,8 +165,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
-    await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
-    await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.metadata.model)).resolves.toBeTruthy()
 
     const relationContent = { linkedDoc: doc.id.toString() }
     const docWithRelation = await ModelInstanceDocument.create(
@@ -184,10 +184,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.state.log[0].type).toEqual(CommitType.GENESIS)
     expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     expect(docWithRelation.metadata.model.toString()).toEqual(modelWithRelation.id.toString())
-    await expect(TestUtils.isPinned(ceramic.admin, docWithRelation.id)).resolves.toBeTruthy()
-    await expect(
-      TestUtils.isPinned(ceramic.admin, docWithRelation.metadata.model)
-    ).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, docWithRelation.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, docWithRelation.metadata.model)).resolves.toBeTruthy()
   })
 
   test('Create and update doc', async () => {
@@ -356,7 +354,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 
   test('unpinning indexed stream fails', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-    await expect(TestUtils.isPinned(ceramic.admin, doc.id)).toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).toBeTruthy()
     await expect(ceramic.admin.pin.rm(doc.id)).rejects.toThrow(
       /Cannot unpin actively indexed stream/
     )
@@ -376,18 +374,18 @@ describe('ModelInstanceDocument API http-client tests', () => {
       Object.assign({}, MODEL_DEFINITION, { name: 'non-indexed' })
     )
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, { model: nonIndexedModel.id })
-    await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
-    await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
   })
 
   test(`Pinning a ModelInstanceDocument pins its Model`, async () => {
     // Unpin Model streams so we can test that pinning the MID causes the Model to become pinned
     await ceramic.admin.pin.rm(model.id)
-    await expect(TestUtils.isPinned(ceramic.admin, model.id)).resolves.toBeFalsy()
+    await expect(TestUtils.isPinned(ceramic, model.id)).resolves.toBeFalsy()
 
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
-    await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
-    await expect(TestUtils.isPinned(ceramic.admin, model.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
+    await expect(TestUtils.isPinned(ceramic, model.id)).resolves.toBeTruthy()
   })
 })
 

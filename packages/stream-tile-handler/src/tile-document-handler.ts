@@ -6,11 +6,11 @@ import {
   AnchorStatus,
   CommitData,
   CommitType,
+  Context,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
   StreamHandler,
-  StreamReaderWriter,
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -54,12 +54,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   /**
    * Applies commit (genesis|signed|anchor)
    * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param context - Interface to read or write to ceramic network
+   * @param context - Ceramic context
    * @param state - Document state
    */
   async applyCommit(
     commitData: CommitData,
-    context: StreamReaderWriter,
+    context: Context,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
@@ -77,22 +77,18 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   /**
    * Applies genesis commit
    * @param commitData - Genesis commit
-   * @param context - Interface to read or write to ceramic network
+   * @param context - Ceramic context
    * @private
    */
-  async _applyGenesis(commitData: CommitData, context: StreamReaderWriter): Promise<StreamState> {
+  async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+    const did = context.did
+    if (!did) throw new Error(`DID is not set`)
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       const streamId = new StreamID(TileDocument.STREAM_TYPE_ID, commitData.cid)
       const { controllers } = payload.header
-      await SignatureUtils.verifyCommitSignature(
-        commitData,
-        context.signer,
-        controllers[0],
-        null,
-        streamId
-      )
+      await SignatureUtils.verifyCommitSignature(commitData, did, controllers[0], null, streamId)
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -116,7 +112,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     }
 
     if (state.metadata.schema) {
-      await this._schemaValidator.validateSchema(context, state.content, state.metadata.schema)
+      await this._schemaValidator.validateSchema(context.api, state.content, state.metadata.schema)
     }
 
     return state
@@ -126,14 +122,16 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * Applies signed commit
    * @param commitData - Signed commit
    * @param state - Document state
-   * @param context - Interface to read or write to ceramic network
+   * @param context - Ceramic context
    * @private
    */
   async _applySigned(
     commitData: CommitData,
     state: StreamState,
-    context: StreamReaderWriter
+    context: Context
   ): Promise<StreamState> {
+    const did = context.did
+    if (!did) throw new Error(`DID is not set`)
     // Retrieve the payload
     const payload = commitData.commit
     StreamUtils.assertCommitLinksToState(state, payload)
@@ -142,13 +140,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
     if (!controller) throw new Error(`Controller is not set`)
     const streamId = StreamUtils.streamIdFromState(state)
-    await SignatureUtils.verifyCommitSignature(
-      commitData,
-      context.signer,
-      controller,
-      null,
-      streamId
-    )
+    await SignatureUtils.verifyCommitSignature(commitData, did, controller, null, streamId)
 
     if (payload.header.controllers) {
       if (payload.header.controllers.length !== 1) {
@@ -195,7 +187,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       // TODO: SchemaValidation.validateSchema does i/o to load a Stream.  We should pre-load
       // the schema into the CommitData so that commit application can be a simple state
       // transformation with no i/o.
-      await this._schemaValidator.validateSchema(context, newContent, newMetadata.schema)
+      await this._schemaValidator.validateSchema(context.api, newContent, newMetadata.schema)
     }
 
     state.next = {

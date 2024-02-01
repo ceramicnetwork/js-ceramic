@@ -93,12 +93,12 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     client1Admin = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
     client2Admin = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
 
-    core1.did = makeDID(core1, seed)
-    client1.did = makeDID(client1, seed)
-    core2.did = makeDID(core2, seed)
-    client2.did = makeDID(client2, seed)
-    client1Admin.did = adminDID
-    client2Admin.did = adminDID
+    await core1.setDID(makeDID(core1, seed))
+    await client1.setDID(makeDID(client1, seed))
+    await core2.setDID(makeDID(core2, seed))
+    await client2.setDID(makeDID(client2, seed))
+    await client1Admin.setDID(adminDID)
+    await client2Admin.setDID(adminDID)
   })
 
   afterEach(async () => {

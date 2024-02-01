@@ -1,6 +1,7 @@
 import {
   AppliableStreamLog,
   CommitType,
+  Context,
   DiagnosticsLogger,
   LogEntry,
   Stream,
@@ -8,7 +9,6 @@ import {
   StreamState,
   StreamUtils,
   UnappliableStreamLog,
-  StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { HandlersMap } from '../handlers-map.js'
@@ -49,8 +49,8 @@ export class StateManipulator {
   constructor(
     private readonly logger: DiagnosticsLogger,
     private readonly streamTypeHandlers: HandlersMap,
-    private readonly logSyncer: LogSyncer,
-    private readonly context: StreamReaderWriter
+    private readonly context: Context,
+    private readonly logSyncer: LogSyncer
   ) {}
 
   /**

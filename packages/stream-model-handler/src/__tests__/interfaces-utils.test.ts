@@ -1,4 +1,4 @@
-import type { StreamReaderWriter } from '@ceramicnetwork/common'
+import type { Context } from '@ceramicnetwork/common'
 import type { ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
 import { jest } from '@jest/globals'
 import type { JSONSchema } from 'json-schema-typed'
@@ -765,7 +765,7 @@ describe('interfaces validation', () => {
     }
 
     const loadStream = jest.fn(() => ({ content: interfaceModel }))
-    const context = { loadStream } as unknown as StreamReaderWriter
+    const context = { api: { loadStream } } as unknown as Context
 
     try {
       await validateImplementedInterfaces(

@@ -1,4 +1,4 @@
-import type { StreamReader } from '@ceramicnetwork/common'
+import type { Context } from '@ceramicnetwork/common'
 import {
   Model,
   type ModelDefinition,
@@ -669,13 +669,13 @@ export function validateInterfaceImplementation(
 
 export async function validateImplementedInterfaces(
   model: ModelDefinition,
-  context: StreamReader
+  context: Context
 ): Promise<void> {
   const errors: Array<Error> = []
 
   const toValidate = ((model as ModelDefinitionV2).implements ?? []).map(async (interfaceID) => {
     try {
-      const interfaceModel = await Model.load(context, interfaceID)
+      const interfaceModel = await Model.load(context.api, interfaceID)
       validateInterfaceImplementation(interfaceID, interfaceModel.content, model)
     } catch (error) {
       errors.push(error)

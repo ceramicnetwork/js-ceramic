@@ -1,9 +1,9 @@
 import {
+  CeramicApi,
   DiagnosticsLogger,
   FetchOpts,
   fetchJson,
   FetchRequestParams,
-  CeramicSigner,
 } from '@ceramicnetwork/common'
 import * as sha256 from '@stablelib/sha256'
 import * as uuid from '@stablelib/uuid'
@@ -15,23 +15,27 @@ import type { AnchorServiceAuth } from '../anchor-service.js'
 export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   readonly #anchorServiceUrl: string
   readonly #logger: DiagnosticsLogger
-  readonly #signer: CeramicSigner
   readonly #fetchFn: typeof fetchJson
+
+  #ceramic: CeramicApi
 
   constructor(
     anchorServiceUrl: string,
     logger: DiagnosticsLogger,
-    signer: CeramicSigner,
     fetchFn: typeof fetchJson = fetchJson
   ) {
     this.#anchorServiceUrl = anchorServiceUrl
     this.#logger = logger
-    this.#signer = signer
     this.#fetchFn = fetchFn
   }
 
-  get signer(): CeramicSigner {
-    return this.#signer
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  set ceramic(ceramic: CeramicApi) {
+    this.#ceramic = ceramic
   }
 
   async init(): Promise<void> {
@@ -39,6 +43,9 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
   }
 
   async sendAuthenticatedRequest(url: URL | string, opts?: FetchOpts): Promise<any> {
+    if (!this.#ceramic) {
+      throw new Error('Missing Ceramic instance required by this auth method')
+    }
     const { request } = await this.signRequest({ url, opts })
     return this._sendRequest(request).catch((err) => {
       if (err.message.includes("status 'Unauthorized'")) {
@@ -61,7 +68,7 @@ export class DIDAnchorServiceAuth implements AnchorServiceAuth {
       payload.digest = payloadDigest
     }
 
-    const jws = await this.#signer.createJWS(payload)
+    const jws = await this.#ceramic.did.createJWS(payload)
     const Authorization = `Bearer ${jws.signatures[0].protected}.${jws.payload}.${jws.signatures[0].signature}`
     let requestOpts: any = { headers: { Authorization } }
     if (request.opts) {

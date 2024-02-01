@@ -1,10 +1,9 @@
-import type { AnchorEvent, AnchorProof, FetchRequest } from '@ceramicnetwork/common'
+import type { AnchorEvent, AnchorProof, CeramicApi, FetchRequest } from '@ceramicnetwork/common'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import type { CAR } from 'cartonne'
 import type { AnchorRequestStore } from '../store/anchor-request-store.js'
 import type { AnchorRequestCarFileReader } from './anchor-request-car-file-reader.js'
-import { CeramicSigner } from '@ceramicnetwork/common'
 
 export type AnchorLoopHandler = {
   buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR>
@@ -23,11 +22,11 @@ export interface AnchorService {
   init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void>
 
   /**
-   * Set Ceramic signer instance
+   * Set Ceramic API instance
    *
-   * @param signer - Ceramic signer
+   * @param ceramic - Ceramic API used for various purposes
    */
-  signer: CeramicSigner
+  ceramic: CeramicApi
 
   /**
    * URL of the connected anchor service
@@ -65,11 +64,11 @@ export interface AnchorServiceAuth {
   init(): Promise<void>
 
   /**
-   * Get or Set Ceramic Signer
+   * Set Ceramic API instance
    *
-   * @param signer - Ceramic signer
+   * @param ceramic - Ceramic API used for various purposes
    */
-  signer: CeramicSigner
+  ceramic: CeramicApi
 
   /**
    *

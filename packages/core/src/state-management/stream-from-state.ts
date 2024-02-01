@@ -1,4 +1,4 @@
-import { StreamState, Stream, StreamReaderWriter } from '@ceramicnetwork/common'
+import { Context, StreamState, Stream } from '@ceramicnetwork/common'
 import { Observable } from 'rxjs'
 import { HandlersMap } from '../handlers-map.js'
 import { StateLink } from './state-link.js'
@@ -6,14 +6,14 @@ import { StateLink } from './state-link.js'
 /**
  * Build Stream from the current state and update feed.
  *
- * @param context - Interface for reading and writing to ceramic network
+ * @param context - Ceramic context
  * @param handlersMap - available stream handlers
  * @param state - current state of the stream
  * @param update$ - On-demand feed of updates for the stream. If not provided then the returned
  *   Stream object is marked read-only and cannot be used to update the stream.
  */
 export function streamFromState<T extends Stream>(
-  context: StreamReaderWriter,
+  context: Context,
   handlersMap: HandlersMap,
   state: StreamState,
   update$?: (init: StreamState) => Observable<StreamState>

@@ -1,15 +1,16 @@
 import type { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
+import type { Context } from './context.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CommitID } from '@ceramicnetwork/streamid'
 import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
 import type { RunningStateLike } from './running-state-like.js'
+import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
 import type { Cacao } from '@didtools/cacao'
 import { NonEmptyArray } from './non-empty-array.js'
 import type { AnchorProof, AnchorStatus } from './anchor-service.js'
-import { StreamReaderWriter } from './ceramic-api.js'
 
 export { AnchorStatus } from './anchor-service.js'
 
@@ -204,21 +205,18 @@ export interface StreamStateHolder {
  * Describes common stream attributes
  */
 export abstract class Stream extends Observable<StreamState> implements StreamStateHolder {
-  private readonly _api: StreamReaderWriter
-
-  constructor(protected readonly state$: RunningStateLike, api: StreamReaderWriter) {
+  constructor(protected readonly state$: RunningStateLike, private _context: Context) {
     super((subscriber) => {
       state$.subscribe(subscriber)
     })
-    this._api = api
   }
 
   get id(): StreamID {
     return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
-  get api(): StreamReaderWriter {
-    return this._api
+  get api(): CeramicApi {
+    return this._context.api
   }
 
   abstract get metadata(): Record<string, any>
@@ -295,9 +293,9 @@ export interface StreamConstructor<T extends Stream> {
   /**
    * Constructor signature
    * @param state$ - Stream state
-   * @param api - Interface for reading from and writing streams to ceramic network
+   * @param context - Ceramic context
    */
-  new (state$: RunningStateLike, api: StreamReaderWriter): T
+  new (state$: RunningStateLike, context: Context): T
 }
 
 /**
@@ -325,12 +323,8 @@ export interface StreamHandler<T extends Stream> {
    * callers to clone the input state before calling into applyCommit if they don't want the input
    * state modified.
    * @param commitData - Commit data
-   * @param api - Interface for reading from and writing streams to ceramic network
+   * @param context - Ceramic context
    * @param state - The existing state to apply the commit to.
    */
-  applyCommit(
-    commitData: CommitData,
-    api: StreamReaderWriter,
-    state?: StreamState
-  ): Promise<StreamState>
+  applyCommit(commitData: CommitData, context: Context, state?: StreamState): Promise<StreamState>
 }

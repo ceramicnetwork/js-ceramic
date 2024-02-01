@@ -4,6 +4,7 @@ import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createDispatcher } from '../../__tests__/create-dispatcher.js'
 import {
   AnchorStatus,
+  Context,
   IpfsApi,
   LoggerProvider,
   StreamState,
@@ -79,7 +80,12 @@ describe('StreamLoader querying against real Ceramic node', () => {
       ceramic.anchorService.validator
     )
     const handlers = new HandlersMap(logger)
-    const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
+    const stateManipulator = new StateManipulator(
+      logger,
+      handlers,
+      { did: ceramic.did, api: ceramic } as Context,
+      logSyncer
+    )
     streamLoader = new StreamLoader(
       logger,
       tipFetcher,
@@ -240,7 +246,7 @@ describe('StreamLoader querying against real Ceramic node', () => {
 
     test('throw if commit rejected by conflict resolution', async () => {
       const stream = await TileDocument.create(ceramic, CONTENT0)
-      const conflictingUpdate = await stream.makeCommit(ceramic.signer, CONTENT2)
+      const conflictingUpdate = await stream.makeCommit(ceramic, CONTENT2)
       await stream.update(CONTENT1)
       await CoreUtils.anchorUpdate(ceramic, stream)
 
@@ -334,7 +340,12 @@ describe('StreamLoader querying against mocked pubsub responses', () => {
       ceramic.anchorService.validator
     )
     const handlers = new HandlersMap(logger)
-    const stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
+    const stateManipulator = new StateManipulator(
+      logger,
+      handlers,
+      { did: ceramic.did, api: ceramic } as Context,
+      logSyncer
+    )
     streamLoader = new StreamLoader(
       logger,
       tipFetcher,

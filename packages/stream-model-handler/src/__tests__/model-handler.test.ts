@@ -1,56 +1,28 @@
 import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import * as dagCBOR from '@ipld/dag-cbor'
+import type { DID } from 'dids'
 import { ModelHandler } from '../model-handler.js'
 import cloneDeep from 'lodash.clonedeep'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
+  CeramicApi,
   CommitType,
+  Context,
   SignedCommitContainer,
   IpfsApi,
   CeramicSigner,
   GenesisCommit,
   RawCommit,
-  StreamReaderWriter,
-  IntoSigner,
 } from '@ceramicnetwork/common'
 import {
   DidTestUtils,
   FAKE_CID_1,
   FAKE_CID_3,
   FAKE_CID_4,
+  JWS_VERSION_0,
   JWS_VERSION_1,
-  RotatingSigner,
 } from '@ceramicnetwork/did-test-utils'
-import { VerificationMethod } from 'did-resolver'
-
-// because we're doing mocking weirdly, by mocking a function two libraries deep, to test a function
-// one library deep that is unrelated to TileDocumentHandler, we need to specifically duplicate
-// this mock here. This is due to import resolution, and not being able to use the mock specification
-// in did-test-utils
-jest.unstable_mockModule('did-jwt', () => {
-  return {
-    // TODO - We should test for when this function throws as well
-    // Mock: Blindly accept a signature
-    verifyJWS: (
-      _jws: string,
-      _keys: VerificationMethod | VerificationMethod[]
-    ): VerificationMethod => {
-      return {
-        id: '',
-        controller: '',
-        type: '',
-      }
-    },
-    // And these functions are required for the test to run ¯\_(ツ)_/¯
-    resolveX25519Encrypters: () => {
-      return []
-    },
-    createJWE: () => {
-      return {}
-    },
-  }
-})
 
 const PLACEHOLDER_CONTENT = { name: 'myModel' }
 
@@ -105,7 +77,7 @@ const CONTENT_WITH_INVALID_SCHEMA = {
 }
 
 async function checkSignedCommitMatchesExpectations(
-  context: IntoSigner,
+  did: DID,
   commit: SignedCommitContainer,
   expectedCommit: GenesisCommit | RawCommit
 ) {
@@ -117,7 +89,7 @@ async function checkSignedCommitMatchesExpectations(
 
   const unpacked = { jws, linkedBlock: payload }
 
-  const expected = await context.signer.createDagJWS(expectedCommit)
+  const expected = await did.createDagJWS(expectedCommit)
   expect(expected).toBeDefined()
 
   const { jws: eJws, linkedBlock: eLinkedBlock } = expected
@@ -128,9 +100,9 @@ async function checkSignedCommitMatchesExpectations(
 }
 
 describe('ModelHandler', () => {
+  let did: DID
   let handler: ModelHandler
-  let context: StreamReaderWriter
-  let defaultSigner: RotatingSigner
+  let context: Context
   let signerUsingNewKey: CeramicSigner
   let signerUsingOldKey: CeramicSigner
   let ipfs: IpfsApi
@@ -157,17 +129,24 @@ describe('ModelHandler', () => {
     } as IpfsApi
   })
 
-  beforeEach(async () => {
+  beforeEach(() => {
     handler = new ModelHandler()
 
-    defaultSigner = await DidTestUtils.rotatingSigner({})
-    context = DidTestUtils.api(defaultSigner)
+    did = DidTestUtils.generateDID()
+    const api = DidTestUtils.apiForDid(did)
 
-    signerUsingNewKey = CeramicSigner.fromDID(
-      await DidTestUtils.generateDID({ jws: JWS_VERSION_1 })
-    )
+    signerUsingNewKey = { did: DidTestUtils.generateDID() }
+    signerUsingNewKey.did.createJWS = async () => JWS_VERSION_1
 
-    signerUsingOldKey = CeramicSigner.fromDID(await DidTestUtils.generateDID({}))
+    signerUsingOldKey = { did: DidTestUtils.generateDID() }
+    signerUsingOldKey.did.createJWS = async () => JWS_VERSION_0
+
+    context = {
+      did,
+      ipfs,
+      anchorService: null,
+      api: api as unknown as CeramicApi,
+    }
   })
 
   it('is constructed correctly', async () => {
@@ -175,62 +154,49 @@ describe('ModelHandler', () => {
   })
 
   it('makes genesis commits correctly', async () => {
-    const commit = await Model._makeGenesis(context.signer, FINAL_CONTENT)
+    const commit = await Model._makeGenesis(context.api, FINAL_CONTENT)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
       data: FINAL_CONTENT,
-      header: {
-        controllers: [await context.signer.asController()],
-        model: Model.MODEL.bytes,
-        sep: 'model',
-      },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
-    await checkSignedCommitMatchesExpectations(defaultSigner, commit, expectedGenesis)
+    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
   it('supports view properties in genesis commit', async () => {
-    const commit = await Model._makeGenesis(
-      context.signer,
-      FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
-    )
+    const commit = await Model._makeGenesis(context.api, FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW)
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
       data: FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW,
-      header: {
-        controllers: [await context.signer.asController()],
-        model: Model.MODEL.bytes,
-        sep: 'model',
-      },
+      header: { controllers: [context.api.did.id], model: Model.MODEL.bytes, sep: 'model' },
     }
 
-    await checkSignedCommitMatchesExpectations(defaultSigner, commit, expectedGenesis)
+    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
   it('Content is required', async () => {
-    await expect(Model._makeGenesis(context.signer, null)).rejects.toThrow(
+    await expect(Model._makeGenesis(context.api, null)).rejects.toThrow(
       /Genesis content cannot be null/
     )
   })
 
   it('creates genesis commits deterministically', async () => {
-    const commit1 = await Model._makeGenesis(context.signer, FINAL_CONTENT)
-    const commit2 = await Model._makeGenesis(context.signer, FINAL_CONTENT)
+    const commit1 = await Model._makeGenesis(context.api, FINAL_CONTENT)
+    const commit2 = await Model._makeGenesis(context.api, FINAL_CONTENT)
 
     expect(commit1).toEqual(commit2)
   })
 
   it('applies genesis commit correctly', async () => {
-    const commit = (await Model._makeGenesis(
-      context.signer,
-      FINAL_CONTENT
-    )) as SignedCommitContainer
-    await ipfs.dag.put(commit, FAKE_CID_1)
+    DidTestUtils.disableJwsVerification(context.did)
+    const commit = (await Model._makeGenesis(context.api, FINAL_CONTENT)) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await ipfs.dag.put(payload, commit.jws.link)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -243,14 +209,15 @@ describe('ModelHandler', () => {
   })
 
   it('applies genesis commits with views properties correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(
-      context.signer,
+      context.api,
       FINAL_CONTENT_WITH_ACCOUNT_DOCUMENT_VIEW
     )) as SignedCommitContainer
-    await ipfs.dag.put(commit, FAKE_CID_1)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await ipfs.dag.put(payload, commit.jws.link)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -263,14 +230,15 @@ describe('ModelHandler', () => {
   })
 
   it('fails to apply genesis commits with invalid schema', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(
-      context.signer,
+      context.api,
       CONTENT_WITH_INVALID_SCHEMA
     )) as SignedCommitContainer
-    await ipfs.dag.put(commit, FAKE_CID_1)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await ipfs.dag.put(payload, commit.jws.link)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -284,14 +252,15 @@ describe('ModelHandler', () => {
   })
 
   it(`fails to apply genesis commits if views validation fails`, async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await Model._makeGenesis(
-      context.signer,
+      context.api,
       CONTENT_WITH_INVALID_VIEWS
     )) as SignedCommitContainer
-    await ipfs.dag.put(commit, FAKE_CID_1)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await ipfs.dag.put(payload, commit.jws.link)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -311,14 +280,15 @@ describe('ModelHandler', () => {
   })
 
   it('fails to apply genesis commits with extra fields', async () => {
-    const commit = (await Model._makeGenesis(context.signer, {
+    DidTestUtils.disableJwsVerification(context.did)
+    const commit = (await Model._makeGenesis(context.api, {
       ...PLACEHOLDER_CONTENT,
       foo: 'bar',
     })) as SignedCommitContainer
-    await ipfs.dag.put(commit, FAKE_CID_1)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await ipfs.dag.put(payload, commit.jws.link)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
@@ -332,13 +302,13 @@ describe('ModelHandler', () => {
   })
 
   it('throws error if commit signed by DID that is not controller', async () => {
-    const genesisCommit = (await Model._makeGenesis(context.signer, FINAL_CONTENT, {
+    const genesisCommit = (await Model._makeGenesis(context.api, FINAL_CONTENT, {
       controller: 'did:3:fake',
     })) as SignedCommitContainer
-    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await ipfs.dag.put(payload, genesisCommit.jws.link)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
@@ -353,14 +323,15 @@ describe('ModelHandler', () => {
   })
 
   it('applies anchor commit correctly', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const genesisCommit = (await Model._makeGenesis(
-      context.signer,
+      context.api,
       FINAL_CONTENT
     )) as SignedCommitContainer
-    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await ipfs.dag.put(payload, genesisCommit.jws.link)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
     const genesisCommitData = {
@@ -375,7 +346,7 @@ describe('ModelHandler', () => {
     const anchorProof = {
       chainId: 'fakechain:123',
     }
-    await ipfs.dag.put(anchorProof, FAKE_CID_3)
+    await context.ipfs.dag.put(anchorProof, FAKE_CID_3)
     const anchorCommitData = {
       cid: FAKE_CID_4,
       type: CommitType.ANCHOR,
@@ -395,10 +366,10 @@ describe('ModelHandler', () => {
       signerUsingNewKey,
       FINAL_CONTENT
     )) as SignedCommitContainer
-    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await ipfs.dag.put(payload, genesisCommit.jws.link)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // commit is applied 1 hour before rotation
     const genesisCommitData = {
@@ -409,7 +380,13 @@ describe('ModelHandler', () => {
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
     }
 
-    DidTestUtils.withRotationDate(defaultSigner, rotateDate.toISOString())
+    context.api = DidTestUtils.apiForDid(
+      DidTestUtils.generateDID({
+        ignoreValidation: false,
+      })
+    )
+
+    DidTestUtils.rotateKey(context.did, rotateDate.toISOString())
 
     await expect(handler.applyCommit(genesisCommitData, context)).rejects.toThrow(
       /invalid_jws: signature authored before creation of DID version/
@@ -417,18 +394,19 @@ describe('ModelHandler', () => {
   })
 
   it('applies commit made using an old key if it is applied within the revocation period', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const rotateDate = new Date('2022-03-11T21:28:07.383Z')
-    DidTestUtils.withRotationDate(defaultSigner, rotateDate.toISOString())
+    DidTestUtils.rotateKey(did, rotateDate.toISOString())
 
     // make genesis commit using old key
     const genesisCommit = (await Model._makeGenesis(
       signerUsingOldKey,
       FINAL_CONTENT
     )) as SignedCommitContainer
-    await ipfs.dag.put(genesisCommit, FAKE_CID_1)
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(genesisCommit.linkedBlock)
-    await ipfs.dag.put(payload, genesisCommit.jws.link)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // commit is applied 1 hour after the rotation
     const genesisCommitData = {

@@ -4,10 +4,10 @@ import {
   AnchorStatus,
   CommitData,
   CommitType,
+  Context,
   SignatureStatus,
   StreamConstructor,
   StreamHandler,
-  StreamReaderWriter,
   StreamState,
   StreamUtils,
   toLegacyAccountId,
@@ -30,12 +30,12 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   /**
    * Applies commit (genesis|signed|anchor)
    * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param context - Interface to read and write to ceramic network
+   * @param context - Ceramic context
    * @param state - Stream state
    */
   async applyCommit(
     commitData: CommitData,
-    context: StreamReaderWriter,
+    context: Context,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {

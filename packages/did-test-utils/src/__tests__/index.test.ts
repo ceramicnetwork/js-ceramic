@@ -1,7 +1,7 @@
-import { DidTestUtils } from '../index.js'
+import { DidTestUtils } from '../index.ts'
 
 describe('DidTestUtils', () => {
-  it('should create a did', async () => {
-    expect(await DidTestUtils.generateDID({})).toMatchSnapshot
+  it('should create a did', () => {
+    expect(DidTestUtils.generateDID()).toMatchSnapshot
   })
 })

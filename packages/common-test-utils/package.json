@@ -34,7 +34,7 @@
     "@ceramicnetwork/streamid": "^3.4.0",
     "it-first": "^3.0.4",
     "multiformats": "^13.0.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.5.2"
   },
   "publishConfig": {
     "access": "public"

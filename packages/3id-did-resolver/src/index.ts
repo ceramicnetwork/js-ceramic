@@ -11,10 +11,9 @@ import type {
 import type {
   StreamState,
   MultiQuery,
+  CeramicApi,
   LogEntry,
   NonEmptyArray,
-  StreamReader,
-  StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LegacyResolver } from './legacyResolver.js'
@@ -157,7 +156,7 @@ function getVersionInfo(query = ''): VersionInfo {
 }
 
 async function legacyResolve(
-  ceramic: StreamReaderWriter,
+  ceramic: CeramicApi,
   didId: string,
   verNfo: VersionInfo
 ): Promise<DIDResolutionResult> {
@@ -179,7 +178,7 @@ async function legacyResolve(
 }
 
 async function resolve(
-  ceramic: StreamReader,
+  ceramic: CeramicApi,
   didId: string,
   verNfo: VersionInfo,
   v03ID?: string
@@ -229,7 +228,7 @@ async function resolve(
   }
 }
 
-export function getResolver(ceramic: StreamReaderWriter): ResolverRegistry {
+export function getResolver(ceramic: CeramicApi): ResolverRegistry {
   return {
     '3': (
       _did: string,

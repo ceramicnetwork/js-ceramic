@@ -291,7 +291,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     test('basic query', async () => {
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
       // Indexed streams should always get pinned, regardless of the 'pin' flag
-      await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
+      await expect(TestUtils.isPinned(ceramic, doc.id)).resolves.toBeTruthy()
 
       const resultObj = await ceramic.index.query({ model: model.id, first: 100 })
       const results = extractDocuments(ceramic, resultObj)

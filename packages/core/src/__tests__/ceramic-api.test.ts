@@ -154,7 +154,7 @@ describe('Ceramic API', () => {
       }
 
       await expect(async () => {
-        const updateCommit = await streamV1.makeCommit(ceramic.signer, { test: 'fghj' })
+        const updateCommit = await streamV1.makeCommit(ceramic, { test: 'fghj' })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await ceramic.applyCommit(streamV1Id, updateCommit, { anchor: false, publish: false })

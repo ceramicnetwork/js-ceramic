@@ -3,8 +3,8 @@ import { BehaviorSubject } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { StreamState, Stream } from '@ceramicnetwork/common'
 import {
-  AdminApi,
   AnchorStatus,
+  CeramicApi,
   CommitType,
   RunningStateLike,
   SignatureStatus,
@@ -99,8 +99,8 @@ export class CommonTestUtils {
     return new FakeRunningState(state)
   }
 
-  static async isPinned(adminApi: AdminApi, streamId: StreamID): Promise<boolean> {
-    const iterator = await adminApi.pin.ls(streamId)
+  static async isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
+    const iterator = await ceramic.admin.pin.ls(streamId)
     return (await first(iterator)) == streamId.toString()
   }
 

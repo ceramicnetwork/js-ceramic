@@ -1,5 +1,5 @@
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { StreamReader } from '@ceramicnetwork/common'
+import { CeramicApi } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
 import Ajv from 'ajv'
 import type { Schema } from 'ajv'
@@ -26,7 +26,7 @@ export class SchemaValidation {
   }
 
   public async validateSchema(
-    ceramic: StreamReader,
+    ceramic: CeramicApi,
     content: Record<string, any>,
     schemaStreamId: string
   ): Promise<void> {
@@ -35,7 +35,7 @@ export class SchemaValidation {
   }
 
   private async _loadSchemaById<T = unknown>(
-    ceramic: StreamReader,
+    ceramic: CeramicApi,
     schemaStreamId: string
   ): Promise<T | null> {
     let commitId: CommitID

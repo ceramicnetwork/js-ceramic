@@ -1,4 +1,5 @@
 import {
+  CeramicApi,
   CreateOpts,
   Stream,
   StreamConstructor,
@@ -9,8 +10,6 @@ import {
   RawCommit,
   GenesisCommit,
   StreamMetadata,
-  StreamWriter,
-  StreamReader,
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
@@ -65,12 +64,12 @@ export class Caip10Link extends Stream {
   /**
    * Creates a Caip10Link for the given CAIP10 address. Initially created without a link to any DID,
    *   use 'setDid' to create the public link between the given CAIP10 account and a DID.
-   * @param ceramic - Interface to write to ceramic network
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param accountId - Blockchain account id in CAIP10 format.
    * @param opts - Additional options.
    */
   static async fromAccount(
-    ceramic: StreamWriter,
+    ceramic: CeramicApi,
     accountId: string | AccountId,
     opts: CreateOpts | LoadOpts = {}
   ): Promise<Caip10Link> {
@@ -83,12 +82,12 @@ export class Caip10Link extends Stream {
 
   /**
    * Create Caip10Link from the genesis commit
-   * @param ceramic - Interface to write to ceramic network
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param genesisCommit - Genesis commit (first commit in stream log)
    * @param opts - Additional options
    */
   static async fromGenesis(
-    ceramic: StreamWriter,
+    ceramic: CeramicApi,
     genesisCommit: GenesisCommit,
     opts: CreateOpts | LoadOpts = {}
   ): Promise<Caip10Link> {
@@ -157,12 +156,12 @@ export class Caip10Link extends Stream {
 
   /**
    * Loads a Caip10Link from a given StreamID
-   * @param ceramic - Interface for reading streams from ceramic network
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param streamId - StreamID to load.  Must correspond to a Caip10Link
    * @param opts - Additional options
    */
   static async load(
-    ceramic: StreamReader,
+    ceramic: CeramicApi,
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<Caip10Link> {

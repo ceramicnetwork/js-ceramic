@@ -4,7 +4,9 @@ import { Document } from './document.js'
 import type { DID } from 'dids'
 import {
   CreateOpts,
+  CeramicApi,
   CeramicCommit,
+  Context,
   fetchJson,
   Stream,
   StreamConstructor,
@@ -20,14 +22,6 @@ import {
   StreamState,
   AdminApi,
   AnchorOpts,
-  CeramicSigner,
-  CreateJWSOptions,
-  DagJWS,
-  DagJWSResult,
-  VerifyJWSOptions,
-  VerifyJWSResult,
-  UnderlyingCeramicSigner,
-  StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -69,7 +63,7 @@ export interface CeramicClientConfig {
 /**
  * Ceramic client implementation
  */
-export class CeramicClient implements StreamReaderWriter {
+export class CeramicClient implements CeramicApi {
   // Stored as a member to make it easier to inject a mock in unit tests
   private readonly _fetchJson: typeof fetchJson = fetchJson
   private readonly _apiUrl: URL
@@ -78,18 +72,17 @@ export class CeramicClient implements StreamReaderWriter {
   public readonly pin: PinApi
   public readonly admin: AdminApi
   public readonly index: IndexApi
-  private _signer: CeramicSigner
-  private _did?: DID
+  public readonly context: Context
 
   private readonly _config: CeramicClientConfig
   public readonly _streamConstructors: Record<number, StreamConstructor<Stream>>
 
   constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
-    this._signer = CeramicSigner.invalid()
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     // API_PATH contains leading dot-slash, so preserves the full path
     this._apiUrl = new URL(API_PATH, apiHost)
+    this.context = { api: this }
 
     this.pin = new DummyPinApi()
     this.index = new RemoteIndexApi(this._apiUrl)
@@ -106,12 +99,8 @@ export class CeramicClient implements StreamReaderWriter {
     }
   }
 
-  get signer(): CeramicSigner {
-    return this._signer
-  }
-
   get did(): DID | undefined {
-    return this._did
+    return this.context.did
   }
 
   /**
@@ -119,15 +108,7 @@ export class CeramicClient implements StreamReaderWriter {
    * @param did
    */
   set did(did: DID) {
-    this._did = did
-    this._signer = CeramicSigner.fromDID(did)
-  }
-
-  /**
-   * @deprecated
-   */
-  async setDID(did: DID): Promise<void> {
-    this.did = did
+    this.context.did = did
   }
 
   async createStreamFromGenesis<T extends Stream>(
@@ -242,7 +223,11 @@ export class CeramicClient implements StreamReaderWriter {
     const type = stream.state.type
     const streamConstructor = this._streamConstructors[type]
     if (!streamConstructor) throw new Error(`Failed to find constructor for stream ${type}`)
-    return new streamConstructor(stream, this) as T
+    return new streamConstructor(stream, this.context) as T
+  }
+
+  async setDID(did: DID): Promise<void> {
+    this.context.did = did
   }
 
   async getSupportedChains(): Promise<Array<string>> {

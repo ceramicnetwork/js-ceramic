@@ -4,6 +4,7 @@ import {
   AnchorOpts,
   AnchorStatus,
   CommitType,
+  Context,
   CreateOpts,
   DiagnosticsLogger,
   LoadOpts,
@@ -52,6 +53,7 @@ export type RepositoryDependencies = {
   pinStore: PinStore
   keyValueStore: IKVStore
   anchorRequestStore: AnchorRequestStore
+  context: Context
   handlers: HandlersMap
   anchorService: AnchorService
   indexing: LocalIndexApi
