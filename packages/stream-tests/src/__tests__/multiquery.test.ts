@@ -10,10 +10,9 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../create-ceramic.js'
 import MockDate from 'mockdate'
 
-// should pass on v4 as soon as recon is integrated and we actually store/retrieve blocks
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
 
-describeIfV3ShouldPass('multiquery API http-client tests', () => {
+describeIfV3('multiquery API http-client tests', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicClient
   let core: Ceramic
