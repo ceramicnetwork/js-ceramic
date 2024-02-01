@@ -38,7 +38,6 @@ const generateStringOfSize = (size): string => {
 }
 // Should  pass on v4 if updated from TileDocument
 const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-const skipIfV4ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? it.skip : it
 
 describe('Ceramic API', () => {
   jest.setTimeout(1000 * 30)
@@ -303,36 +302,39 @@ describe('Ceramic API', () => {
       })
     })
 
-    skipIfV4ShouldPass(
-      'can create and update stream with valid model to trigger indexing',
-      async () => {
-        const CONTENT0 = { myData: 0 }
-        const CONTENT1 = { myData: 1 }
-        // TODO (NET-1614): Extend with targeted payload comparison
-        const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
-        // Disable anything that handles anchor events from the CAS, because otherwise we get
-        // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
-        void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
-        const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
-        handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
-        const model = await Model.create(ceramic, MODEL_DEFINITION)
+    test('can create and update stream with valid model to trigger indexing', async () => {
+      const CONTENT0 = { myData: 0 }
+      const CONTENT1 = { myData: 1 }
+      // TODO (NET-1614): Extend with targeted payload comparison
+      const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
+      // Disable anything that handles anchor events from the CAS, because otherwise we get
+      // extra spurious calls to _indexStreamIfNeeded every time the anchor state is changed.
+      void (ceramic.anchorService as InMemoryAnchorService).disableAnchorProcessingLoop()
+      const handleAnchorEventSpy = jest.spyOn(ceramic.repository, 'handleAnchorEvent')
+      handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
+      const model = await Model.create(ceramic, MODEL_DEFINITION)
 
-        expect(addIndexSpy).toBeCalledTimes(1)
-        const midMetadata = { model: model.id }
-        const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
-          anchor: false,
-          pin: false,
-        })
-        expect(doc.content).toEqual(CONTENT0)
-        expect(addIndexSpy).toBeCalledTimes(2)
-        await doc.replace(CONTENT1, { anchor: false })
-        expect(doc.content).toEqual(CONTENT1)
-        expect(addIndexSpy).toBeCalledTimes(3)
-        addIndexSpy.mockRestore()
-      }
-    )
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
 
-    skipIfV4ShouldPass('will fail to create stream over size limits', async () => {
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
+      const midMetadata = { model: model.id }
+      const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
+        anchor: false,
+        pin: false,
+      })
+      expect(doc.content).toEqual(CONTENT0)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
+      await doc.replace(CONTENT1, { anchor: false })
+      expect(doc.content).toEqual(CONTENT1)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2 + 1)
+      addIndexSpy.mockRestore()
+    })
+
+    test('will fail to create stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
@@ -343,7 +345,14 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      expect(addIndexSpy).toBeCalledTimes(1)
+
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)).rejects.toThrow(
         /which exceeds maximum size/
@@ -351,7 +360,7 @@ describe('Ceramic API', () => {
       addIndexSpy.mockRestore()
     })
 
-    skipIfV4ShouldPass('will update stream if under size limits', async () => {
+    test('will update stream if under size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
@@ -363,23 +372,28 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(1)
+
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
       await doc.patch(CONTENT1, { anchor: false })
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2 + 1)
       addIndexSpy.mockRestore()
     })
 
-    skipIfV4ShouldPass('will fail to update stream over size limits', async () => {
+    test('will fail to update stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
@@ -391,16 +405,21 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(1)
+
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
       await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })
