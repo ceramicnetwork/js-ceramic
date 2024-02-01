@@ -74,10 +74,6 @@ export class StreamUtils {
       cloned.header.model = uint8arrays.toString(commit.header.model, 'base64')
     }
 
-    if (commit.header?.unique) {
-      cloned.header.unique = uint8arrays.toString(commit.header.unique, 'base64')
-    }
-
     return cloned
   }
 
@@ -115,10 +111,6 @@ export class StreamUtils {
 
     if (cloned.header?.model) {
       cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
-    }
-
-    if (cloned.header?.unique) {
-      cloned.header.unique = uint8arrays.fromString(cloned.header.unique, 'base64')
     }
 
     return cloned
