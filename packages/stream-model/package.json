@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/codecs": "^2.4.0",
-    "@ceramicnetwork/common": "^4.0.0",
+    "@ceramicnetwork/common": "^3.4.0",
     "@ceramicnetwork/streamid": "^3.4.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",

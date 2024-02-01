@@ -39,7 +39,7 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^4.0.0",
+    "@ceramicnetwork/common": "^3.4.0",
     "@ceramicnetwork/streamid": "^3.4.0",
     "caip": "~1.1.0",
     "did-resolver": "^4.0.1",
