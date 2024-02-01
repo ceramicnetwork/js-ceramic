@@ -481,8 +481,8 @@ export class CeramicDaemon {
   }
 
   /**
-   * Create stream from genesis commit
-   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   * Create stream from init commit
+   * @dev Useful when the streamId is unknown, but you have the init contents
    */
   async createStreamFromGenesis(req: Request, res: Response): Promise<void> {
     const { type, genesis, opts } = req.body
