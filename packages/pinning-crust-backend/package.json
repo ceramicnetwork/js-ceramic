@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-crust-backend",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "description": "Crust Pinning backend",
   "keywords": [
     "ceramic",

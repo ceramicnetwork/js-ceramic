@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -41,8 +41,8 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^4.0.0",
-    "@ceramicnetwork/stream-tile": "^3.4.0",
-    "@ceramicnetwork/streamid": "^3.4.0",
+    "@ceramicnetwork/stream-tile": "^4.0.0",
+    "@ceramicnetwork/streamid": "^4.0.0",
     "least-recent": "^1.0.3",
     "multiformats": "^13.0.0",
     "uint8arrays": "^5.0.1"
