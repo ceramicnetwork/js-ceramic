@@ -407,7 +407,11 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('makes genesis commits correctly with context', async () => {
-    const commit = await ModelInstanceDocument._makeGenesis(context, CONTENT0, METADATA_WITH_CTX)
+    const commit = await ModelInstanceDocument._makeGenesis(
+      context.api,
+      CONTENT0,
+      METADATA_WITH_CTX
+    )
     expect(commit).toBeDefined()
 
     const expectedGenesis = {
@@ -420,7 +424,7 @@ describe('ModelInstanceDocumentHandler', () => {
       },
     }
 
-    await checkSignedCommitMatchesExpectations(context, commit, expectedGenesis)
+    await checkSignedCommitMatchesExpectations(did, commit, expectedGenesis)
   })
 
   it('Takes controller from authenticated DID if controller not specified', async () => {
@@ -567,15 +571,16 @@ describe('ModelInstanceDocumentHandler', () => {
   })
 
   it('applies genesis commit correctly with context', async () => {
+    DidTestUtils.disableJwsVerification(context.did)
     const commit = (await ModelInstanceDocument._makeGenesis(
-      context,
+      context.api,
       CONTENT0,
       METADATA_WITH_CTX
     )) as SignedCommitContainer
-    await ipfs.dag.put(commit, FAKE_CID_1)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
     const payload = dagCBOR.decode(commit.linkedBlock)
-    await ipfs.dag.put(payload, commit.jws.link)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
     const commitData = {
       cid: FAKE_CID_1,
