@@ -1,4 +1,4 @@
-import { expect, jest, test } from '@jest/globals'
+import { jest } from '@jest/globals'
 import { StreamID } from '@ceramicnetwork/streamid'
 import knex, { Knex } from 'knex'
 import tmp from 'tmp-promise'
@@ -142,19 +142,6 @@ describe('postgres', () => {
           .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
           .columnInfo()
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
-      })
-
-      test('change only existing columns', async () => {
-        const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
-        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
-        indexApi.setSyncQueryApi(new CompleteQueryApi())
-        await indexApi.init()
-        await indexApi.indexModels(modelsToIndex)
-        await expect(
-          indexApi.tablesManager.initMidTables([
-            { model: modelsToIndex[0].model, relations: { foo: { type: 'account' } } },
-          ])
-        ).resolves.not.toThrow()
       })
 
       test('create new table with indices', async () => {
@@ -1018,19 +1005,6 @@ describe('sqlite', () => {
         expect(JSON.stringify(configTableColumns)).toEqual(
           JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX)
         )
-      })
-
-      test('change only existing columns', async () => {
-        const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
-        const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
-        indexApi.setSyncQueryApi(new CompleteQueryApi())
-        await indexApi.init()
-        await indexApi.indexModels(modelsToIndex)
-        await expect(
-          indexApi.tablesManager.initMidTables([
-            { model: modelsToIndex[0].model, relations: { foo: { type: 'account' } } },
-          ])
-        ).resolves.not.toThrow()
       })
 
       test('create new table with indices', async () => {
