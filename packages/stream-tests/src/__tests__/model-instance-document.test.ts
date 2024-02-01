@@ -81,9 +81,6 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   },
 }
 
-// should pass on v4 as soon as recon is integrated and we actually store/retrieve blocks
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -407,6 +404,9 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(count()).resolves.toEqual(start + 1)
   })
 })
+
+// should pass on v4 as soon as recon is integrated and cross-node syncing works.
+const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
 
 describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
