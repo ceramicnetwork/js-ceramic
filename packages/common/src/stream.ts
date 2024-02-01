@@ -136,7 +136,7 @@ export interface CommitData extends LogEntry {
 
   /**
    * If this is an anchor commit and this may get set after validating the anchor commit if the
-   * validation fails for any reason.  This is so that the error can be thrown later when applying
+   * validation fails for any reason. This is so that the error can be thrown later when applying
    * the anchor commit (which happens at a different time than when the anchor is validated).
    */
   anchorValidationError?: Error
