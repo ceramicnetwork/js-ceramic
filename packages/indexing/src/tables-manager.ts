@@ -157,10 +157,7 @@ export class TablesManager {
 
     if (validSchema != actualSchema) {
       throw new Error(
-        `Schema verification failed for config table: ${table.tableName}. Please make sure node has been setup correctly.
-    Expected=${JSON.stringify(validSchema)}
-    Actual=${JSON.stringify(actualSchema)}
-        `
+        `Schema verification failed for config table: ${table.tableName}. Please make sure node has been setup correctly.`
       )
     }
   }
@@ -201,10 +198,7 @@ export class TablesManager {
     const actualSchema = JSON.stringify(columns)
     if (validSchema != actualSchema) {
       throw new Error(
-        `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.
-    Expected=${JSON.stringify(validSchema)}
-    Actual=${JSON.stringify(actualSchema)}
-        `
+        `Schema verification failed for index: ${tableName}. Please make sure latest migrations have been applied.`
       )
     }
 
