@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/base-test-utils",
-  "version": "2.0.0",
+  "version": "2.1.0-rc.0",
   "description": "Ceramic Test Utils",
   "keywords": [
     "ceramic"
@@ -29,7 +29,7 @@
   "author": "3Box Labs <support@3box.io>",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/streamid": "^4.0.0",
+    "@ceramicnetwork/streamid": "^4.1.0-rc.0",
     "multiformats": "^13.0.0"
   },
   "publishConfig": {
