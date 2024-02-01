@@ -28,6 +28,7 @@ export interface CommitHeader {
   model?: Uint8Array // StreamID encoded as byte array
   schema?: string // deprecated
   tags?: Array<string> // deprecated
+  shouldIndex?: boolean // ModelInstanceDocument indexing
 
   [index: string]: any // allow support for future changes
 }
@@ -45,7 +46,7 @@ export type GenesisCommit = {
 
 export interface RawCommit {
   id: CID
-  header?: CommitHeader
+  header?: Partial<CommitHeader>
   data: any
   prev: CID
 }
@@ -79,6 +80,7 @@ export interface StreamMetadata {
   schema?: string // deprecated
   tags?: Array<string> // deprecated
   forbidControllerChange?: boolean // deprecated, only used by TileDocument
+  shouldIndex?: boolean // ModelInstanceDocument indexing
   [index: string]: any // allow arbitrary properties
 }
 

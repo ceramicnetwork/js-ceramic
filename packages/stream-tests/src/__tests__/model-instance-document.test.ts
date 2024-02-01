@@ -387,6 +387,21 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic.admin, model.id)).resolves.toBeTruthy()
   })
+
+  test('unindex and reindex', async () => {
+    const indexApi = core.index
+    const count = () => indexApi.count({ models: [model.id] })
+    const start = await count()
+    // Index as usual
+    const document = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(count()).resolves.toEqual(start + 1)
+    // Unindex
+    await document.shouldIndex(false)
+    await expect(count()).resolves.toEqual(start)
+    // Reindex
+    await document.shouldIndex(true)
+    await expect(count()).resolves.toEqual(start + 1)
+  })
 })
 
 describe('ModelInstanceDocument API multi-node tests', () => {
