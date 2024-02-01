@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@3.4.0...@ceramicnetwork/stream-tile@4.0.0) (2024-02-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 # [3.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@3.4.0-rc.1...@ceramicnetwork/stream-tile@3.4.0) (2024-01-31)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

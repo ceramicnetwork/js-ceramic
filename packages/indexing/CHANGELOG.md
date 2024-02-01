@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](/compare/@ceramicnetwork/indexing@2.4.0...@ceramicnetwork/indexing@3.0.0) (2024-02-01)
+
+
+### Bug Fixes
+
+* **indexing:** Handle `null` stream content value in indexing logic (#3130) 42af0bc, closes #3130
+
+
+
+
+
 # [2.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.4.0-rc.1...@ceramicnetwork/indexing@2.4.0) (2024-01-31)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing
