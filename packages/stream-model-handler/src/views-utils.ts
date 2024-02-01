@@ -7,6 +7,7 @@ const SUPPORTED_VIEW_TYPES = [
   'relationDocument',
   'relationFrom',
   'relationCountFrom',
+  'relationSetFrom',
 ]
 
 export class ViewsValidation {
