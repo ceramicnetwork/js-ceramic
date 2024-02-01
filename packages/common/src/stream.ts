@@ -56,7 +56,7 @@ export interface AnchorCommit {
   proof: CID
   path: string
 }
-
+// TODO use latest naming convention genesis -> init, signed -> data, anchor -> time
 export type SignedCommit = DagJWS
 
 export type SignedCommitContainer = DagJWSResult
@@ -123,6 +123,7 @@ export interface LogEntry {
  * to load anything else from ipfs or the p2p Ceramic network.
  */
 export interface CommitData extends LogEntry {
+  // TODO use latest naming convention genesis -> init, signed -> data, anchor -> time
   /**
    * The underlying payload of the commit
    */
