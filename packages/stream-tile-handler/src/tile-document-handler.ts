@@ -5,7 +5,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
   CommitData,
-  CommitType,
+  EventType,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
@@ -112,7 +112,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
+      log: [StreamUtils.commitDataToLogEntry(commitData, EventType.INIT)],
     }
 
     if (state.metadata.schema) {
@@ -183,7 +183,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     state.signature = SignatureStatus.SIGNED
     state.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-    state.log.push(StreamUtils.commitDataToLogEntry(commitData, CommitType.SIGNED))
+    state.log.push(StreamUtils.commitDataToLogEntry(commitData, EventType.DATA))
 
     const oldContent = state.next?.content ?? cloneDeep(state.content)
     const oldMetadata = state.next?.metadata ?? state.metadata

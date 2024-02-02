@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/indexing",
-  "version": "2.4.0-rc.0",
+  "version": "3.1.0-rc.0",
   "description": "Ceramic indexing and querying logic",
   "keywords": [
     "ceramic",
@@ -30,12 +30,12 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/anchor-listener": "^2.4.0-rc.0",
-    "@ceramicnetwork/anchor-utils": "^2.4.0-rc.0",
-    "@ceramicnetwork/common": "^3.4.0-rc.0",
-    "@ceramicnetwork/job-queue": "^2.4.0-rc.0",
-    "@ceramicnetwork/stream-model": "^2.4.0-rc.0",
-    "@ceramicnetwork/streamid": "^3.4.0-rc.0",
+    "@ceramicnetwork/anchor-listener": "^3.1.0-rc.0",
+    "@ceramicnetwork/anchor-utils": "^3.1.0-rc.0",
+    "@ceramicnetwork/common": "^4.1.0-rc.0",
+    "@ceramicnetwork/job-queue": "^3.1.0-rc.0",
+    "@ceramicnetwork/stream-model": "^3.1.0-rc.0",
+    "@ceramicnetwork/streamid": "^4.1.0-rc.0",
     "@ethersproject/providers": "^5.5.1",
     "knex": "^2.5.1",
     "lodash.clonedeep": "^4.5.0",
@@ -46,11 +46,11 @@
     "uint8arrays": "^5.0.1"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^3.4.0-rc.0",
-    "@ceramicnetwork/common-test-utils": "^1.2.0-rc.0",
-    "@ceramicnetwork/ipfs-daemon": "^3.4.0-rc.0",
-    "@ceramicnetwork/stream-model-instance": "^2.4.0-rc.0",
-    "@ceramicnetwork/stream-tile": "^3.4.0-rc.0",
+    "@ceramicnetwork/3id-did-resolver": "^4.1.0-rc.0",
+    "@ceramicnetwork/common-test-utils": "^2.1.0-rc.0",
+    "@ceramicnetwork/ipfs-daemon": "^4.1.0-rc.0",
+    "@ceramicnetwork/stream-model-instance": "^3.1.0-rc.0",
+    "@ceramicnetwork/stream-tile": "^4.1.0-rc.0",
     "@stablelib/sha256": "^1.0.1",
     "did-resolver": "^4.0.1",
     "dids": "^5.0.0",

@@ -28,11 +28,10 @@ export interface CommitHeader {
   model?: Uint8Array // StreamID encoded as byte array
   schema?: string // deprecated
   tags?: Array<string> // deprecated
-  shouldIndex?: boolean // ModelInstanceDocument indexing
 
   [index: string]: any // allow support for future changes
 }
-
+// TODO use latest naming convention genesis -> init
 export interface GenesisHeader extends CommitHeader {
   unique?: Uint8Array | string // Model and ModelInstanceDocument use Uint8Array, Caip10Link and TileDocument use 'string'
   context?: Uint8Array // used in ModelInstanceDocument
@@ -46,7 +45,7 @@ export type GenesisCommit = {
 
 export interface RawCommit {
   id: CID
-  header?: Partial<CommitHeader>
+  header?: CommitHeader
   data: any
   prev: CID
 }
@@ -57,7 +56,7 @@ export interface AnchorCommit {
   proof: CID
   path: string
 }
-
+// TODO use latest naming convention genesis -> init, signed -> data, anchor -> time
 export type SignedCommit = DagJWS
 
 export type SignedCommitContainer = DagJWSResult
@@ -80,7 +79,6 @@ export interface StreamMetadata {
   schema?: string // deprecated
   tags?: Array<string> // deprecated
   forbidControllerChange?: boolean // deprecated, only used by TileDocument
-  shouldIndex?: boolean // ModelInstanceDocument indexing
   [index: string]: any // allow arbitrary properties
 }
 
@@ -92,10 +90,13 @@ export interface StreamNext {
   metadata?: StreamMetadata
 }
 
-export enum CommitType {
-  GENESIS,
-  SIGNED,
-  ANCHOR,
+/**
+ * These were called genesis, signed, and anchor, and may still be referred to this way by other code and comments.
+ */
+export enum EventType {
+  INIT,
+  DATA,
+  TIME,
 }
 
 /**
@@ -105,8 +106,8 @@ export interface LogEntry {
   // CID of the stream commit
   cid: CID
 
-  // Type of the commit (e.g. genesis, signed, anchor)
-  type: CommitType
+  // Type of the commit (e.g. init, data, time)
+  type: EventType
 
   // Timestamp (in seconds) of when this commit was anchored (if available)
   timestamp?: number
@@ -122,6 +123,7 @@ export interface LogEntry {
  * to load anything else from ipfs or the p2p Ceramic network.
  */
 export interface CommitData extends LogEntry {
+  // TODO use latest naming convention genesis -> init, signed -> data, anchor -> time
   /**
    * The underlying payload of the commit
    */
@@ -250,7 +252,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
    */
   get anchorCommitIds(): Array<CommitID> {
     return this.state$.value.log
-      .filter(({ type }) => type === CommitType.ANCHOR)
+      .filter(({ type }) => type === EventType.TIME)
       .map(({ cid }) => CommitID.make(this.id, cid))
   }
 
@@ -322,7 +324,7 @@ export interface StreamHandler<T extends Stream> {
   stream_constructor: StreamConstructor<T>
 
   /**
-   * Applies commit to the stream (genesis|signed|anchored) and returns the new StreamState.
+   * Applies commit to the stream (init|data|time) and returns the new StreamState.
    * StreamHandler implementations of applyCommit are allowed to modify the input state, it is up to
    * callers to clone the input state before calling into applyCommit if they don't want the input
    * state modified.

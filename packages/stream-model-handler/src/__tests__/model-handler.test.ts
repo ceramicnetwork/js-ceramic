@@ -5,7 +5,7 @@ import { ModelHandler } from '../model-handler.js'
 import cloneDeep from 'lodash.clonedeep'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import {
-  CommitType,
+  EventType,
   SignedCommitContainer,
   IpfsApi,
   CeramicSigner,
@@ -234,7 +234,7 @@ describe('ModelHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -254,7 +254,7 @@ describe('ModelHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -274,7 +274,7 @@ describe('ModelHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -295,7 +295,7 @@ describe('ModelHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -322,7 +322,7 @@ describe('ModelHandler', () => {
 
     const commitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -342,7 +342,7 @@ describe('ModelHandler', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: Date.now(),
@@ -365,7 +365,7 @@ describe('ModelHandler', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -378,7 +378,7 @@ describe('ModelHandler', () => {
     await ipfs.dag.put(anchorProof, FAKE_CID_3)
     const anchorCommitData = {
       cid: FAKE_CID_4,
-      type: CommitType.ANCHOR,
+      type: EventType.TIME,
       commit: { proof: FAKE_CID_3, id: FAKE_CID_1, prev: FAKE_CID_1 },
       proof: anchorProof,
       timestamp: 1615799679,
@@ -403,7 +403,7 @@ describe('ModelHandler', () => {
     // commit is applied 1 hour before rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: rotateDate.valueOf() / 1000 - 60 * 60,
@@ -433,7 +433,7 @@ describe('ModelHandler', () => {
     // commit is applied 1 hour after the rotation
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
       timestamp: Math.floor(rotateDate.valueOf() / 1000) + 60 * 60,

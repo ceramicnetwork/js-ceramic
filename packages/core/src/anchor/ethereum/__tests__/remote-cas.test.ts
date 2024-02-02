@@ -1,10 +1,10 @@
 import { describe, expect, jest, test } from '@jest/globals'
 import { RemoteCAS } from '../remote-cas.js'
-import { fetchJson } from '@ceramicnetwork/common'
+import { fetchJson, AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
-import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
+import { dateAsUnix } from '@ceramicnetwork/codecs'
 
 const ANCHOR_SERVICE_URL = 'http://example.com'
 const POLL_INTERVAL = 100
