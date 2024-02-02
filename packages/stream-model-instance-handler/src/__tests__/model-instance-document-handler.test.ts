@@ -337,6 +337,7 @@ const MODEL_DEFINITION_IMMUTABLE: ModelDefinition = {
       name: { type: 'string', maxLength: 100, minLength: 10 },
       address: { $ref: '#/$defs/Address' },
       myArray: { type: 'array', maxItems: 3, items: { type: 'integer' } },
+      myMultipleType: { oneOf: [{ type: 'integer' }, { type: 'string' }] },
     },
     additionalProperties: false,
   },
@@ -346,7 +347,7 @@ const MODEL_DEFINITION_IMMUTABLE: ModelDefinition = {
   implements: [],
   description: 'Simple person with immutable field',
   accountRelation: { type: 'list' },
-  immutableFields: ['address', 'name', 'myArray'],
+  immutableFields: ['address', 'name', 'myArray', 'myMultipleType'],
 }
 
 const STREAMS = {
@@ -1028,6 +1029,7 @@ describe('ModelInstanceDocumentHandler', () => {
         name: 'Foo Bar FooBar',
         address: { city: 'FooVille', street: 'Bar St', zipCode: '10111' },
         myArray: [1, 2],
+        myMultipleType: 1,
       }
       const genesisCommit = (await ModelInstanceDocument._makeGenesis(
         context.signer,
@@ -1151,7 +1153,7 @@ describe('ModelInstanceDocumentHandler', () => {
       const doc = new ModelInstanceDocument(state$, context)
 
       const customNewContent = doc.content
-      customNewContent.name = 'Foo Bar FooFoo'
+      customNewContent.myMultipleType = '1'
       const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
         context.signer,
         doc.commitId,
@@ -1173,7 +1175,7 @@ describe('ModelInstanceDocumentHandler', () => {
       }
 
       await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-        `Immutable field "name" cannot be updated`
+        `Immutable field "myMultipleType" cannot be updated`
       )
     })
   })
