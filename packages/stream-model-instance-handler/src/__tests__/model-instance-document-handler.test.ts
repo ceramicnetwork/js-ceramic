@@ -1045,21 +1045,20 @@ describe('ModelInstanceDocumentHandler', () => {
       // apply genesis
       const genesisCommitData = {
         cid: FAKE_CID_1,
-        type: CommitType.GENESIS,
+        type: EventType.INIT,
         commit: payload,
         envelope: genesisCommit.jws,
       }
 
       state = await handler.applyCommit(genesisCommitData, context)
     })
+    
     it('Rejects commit if scalar field is immutable', async () => {
       const state$ = TestUtils.runningState(state)
       const doc = new ModelInstanceDocument(state$, context)
-      const customNewContent = {
-        name: 'Foo Bar FooFoo',
-        address: { city: 'FooVille', street: 'Bar St', zipCode: '10111' },
-        myArray: [1, 2],
-      }
+
+      const customNewContent = doc.content
+      customNewContent.name = 'Foo Bar FooFoo'
       const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
         context.signer,
         doc.commitId,
@@ -1075,7 +1074,7 @@ describe('ModelInstanceDocumentHandler', () => {
       // apply signed
       const signedCommitData = {
         cid: FAKE_CID_2,
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
         commit: sPayload,
         envelope: signedCommit.jws,
       }
@@ -1084,14 +1083,13 @@ describe('ModelInstanceDocumentHandler', () => {
         `Immutable field "name" cannot be updated`
       )
     })
+    
     it('Rejects commit if nested field is immutable', async () => {
-      const customNewContent = {
-        name: 'Foo Bar FooBar',
-        address: { city: 'BarVille', street: 'Bar St', zipCode: '10111' },
-        myArray: [1, 2],
-      }
       const state$ = TestUtils.runningState(state)
       const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.address = { city: 'BarVille', street: 'Bar St', zipCode: '10111' }
       const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
         context.signer,
         doc.commitId,
@@ -1107,7 +1105,7 @@ describe('ModelInstanceDocumentHandler', () => {
       // apply signed
       const signedCommitData = {
         cid: FAKE_CID_2,
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
         commit: sPayload,
         envelope: signedCommit.jws,
       }
@@ -1116,14 +1114,13 @@ describe('ModelInstanceDocumentHandler', () => {
         `Immutable field "address" cannot be updated`
       )
     })
+
     it('Rejects commit if array field is immutable', async () => {
-      const customNewContent = {
-        name: 'Foo Bar FooBar',
-        address: { city: 'FooVille', street: 'Bar St', zipCode: '10111' },
-        myArray: [1, 2, 3],
-      }
       const state$ = TestUtils.runningState(state)
       const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.myArray = [1, 2, 3]
       const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
         context.signer,
         doc.commitId,
@@ -1139,13 +1136,44 @@ describe('ModelInstanceDocumentHandler', () => {
       // apply signed
       const signedCommitData = {
         cid: FAKE_CID_2,
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
         commit: sPayload,
         envelope: signedCommit.jws,
       }
 
       await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
         `Immutable field "myArray" cannot be updated`
+      )
+    })
+
+    it('Rejects commit on schema that allows multiple types', async () => {
+      const state$ = TestUtils.runningState(state)
+      const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.name = 'Foo Bar FooFoo'
+      const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+        context.signer,
+        doc.commitId,
+        doc.content,
+        customNewContent
+      )) as SignedCommitContainer
+
+      await ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+      // apply signed
+      const signedCommitData = {
+        cid: FAKE_CID_2,
+        type: EventType.DATA,
+        commit: sPayload,
+        envelope: signedCommit.jws,
+      }
+
+      await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+        `Immutable field "name" cannot be updated`
       )
     })
   })
