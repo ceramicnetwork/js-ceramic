@@ -59,6 +59,7 @@
     "aws-sdk": "^2.1049.0",
     "commander": "^9.4.1",
     "cors": "^2.8.5",
+    "cross-eventsource": "^1.0.0",
     "did-resolver": "^4.0.1",
     "dids": "^5.0.0",
     "express": "^4.18.2",

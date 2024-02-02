@@ -23,6 +23,10 @@ import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { DID } from 'dids'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { EventSource } from 'cross-eventsource'
+import { AggregationDocument, JsonAsString } from '@ceramicnetwork/codecs'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { decode } from 'codeco'
 
 const seed = 'SEED'
 
@@ -495,6 +499,32 @@ describeIfV3('Ceramic interop: core <> http-client', () => {
     await anchorDoc(doc)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
+
+  it.only('feed works via http api', async () => {
+    let messageEvent: any
+    const Codec = JsonAsString.pipe(AggregationDocument)
+    const source = new EventSource(
+      `http://localhost:${daemon.port}/api/v0/feed/aggregation/documents`
+    )
+    source.addEventListener('message', (event) => {
+      messageEvent = decode(Codec, event.data)
+    })
+    //this will trigger a feed event
+    const MODEL_DEFINITION: ModelDefinition = {
+      name: 'myModel',
+      version: '1.0',
+      schema: { type: 'object', additionalProperties: false },
+      accountRelation: { type: 'list' },
+    }
+
+    const model = await Model.create(client, MODEL_DEFINITION)
+
+    expect(messageEvent).toBeDefined()
+    expect(messageEvent.content).toMatchObject(model.content)
+    expect(messageEvent.commitId).toMatchObject(model.commitId)
+    expect(messageEvent.commitId instanceof CommitID).toBeTruthy()
+    expect(messageEvent.metadata.model instanceof StreamID).toBeTruthy()
+  }, 30000)
 
   describe('multiqueries', () => {
     let docA, docB, docC, docD
