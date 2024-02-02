@@ -14,8 +14,6 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const SEED = randomString(32)
 
-const testIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
-
 const MODEL_DEFINITION: ModelDefinition = {
   name: 'MyModel',
   version: '1.0',
@@ -73,7 +71,7 @@ afterEach(async () => {
   await tmpFolder.cleanup()
 })
 
-testIfV3ShouldPass('count', async () => {
+test('count', async () => {
   const indexSpy = jest.spyOn(daemon.ceramic.index, 'count')
   const returnCount = Math.random()
   indexSpy.mockReturnValueOnce(Promise.resolve(returnCount))
@@ -85,7 +83,7 @@ testIfV3ShouldPass('count', async () => {
   expect(indexSpy).toBeCalled()
 })
 
-testIfV3ShouldPass('model in query', async () => {
+test('model in query', async () => {
   const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
   await client.index.query({
     model: modelStreamId,
@@ -96,7 +94,7 @@ testIfV3ShouldPass('model in query', async () => {
     model: modelStreamId.toString(),
   })
 })
-testIfV3ShouldPass('too much entries requested: forward pagination', async () => {
+test('too much entries requested: forward pagination', async () => {
   await expect(
     client.index.query({
       model: modelStreamId,
@@ -104,7 +102,7 @@ testIfV3ShouldPass('too much entries requested: forward pagination', async () =>
     })
   ).rejects.toThrow(/Requested too many entries: 20000/)
 })
-testIfV3ShouldPass('too much entries requested: forward pagination', async () => {
+test('too much entries requested: forward pagination', async () => {
   await expect(
     client.index.query({
       model: modelStreamId,
@@ -112,7 +110,7 @@ testIfV3ShouldPass('too much entries requested: forward pagination', async () =>
     })
   ).rejects.toThrow(/Requested too many entries: 20000/)
 })
-testIfV3ShouldPass('model, account in query', async () => {
+test('model, account in query', async () => {
   const account = `did:key:${randomString(10)}`
   const indexSpy = jest.spyOn(daemon.ceramic.index, 'query')
   await client.index.query({
@@ -126,7 +124,7 @@ testIfV3ShouldPass('model, account in query', async () => {
     account: account,
   })
 })
-testIfV3ShouldPass('serialize StreamState', async () => {
+test('serialize StreamState', async () => {
   const query = new URL(`http://localhost:${daemon.port}/api/v0/collection`)
   query.searchParams.set('model', modelStreamId.toString())
   query.searchParams.set('first', '100')

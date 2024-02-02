@@ -814,15 +814,16 @@ export class Repository {
    * @param opts
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
-    const state = await this.load(streamId, opts)
+    const state$ = await this.load(streamId, opts)
 
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
-    const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
+    const opType = state$.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
 
     return this.executionQ.forStream(streamId).run(async () => {
-      await this._applyWriteOpts(state, opts, opType)
-      return state
+      await this._updateStateIfPinned(state$)
+      await this._applyWriteOpts(state$, opts, opType)
+      return state$
     })
   }
 

@@ -74,7 +74,6 @@ async function addCapToDid(wallet: Wallet, didKey: DID, resource: string, expira
 // should pass on v4 if updated from TileDocument
 const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
 const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-const describeIfV3ShouldPass = describeIfV3 // should pass without changes other than working recon
 
 describe('CACAO Integration test', () => {
   let ipfs: IpfsApi
@@ -232,7 +231,7 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describeIfV3ShouldPass('Model instance stream with resources using model', () => {
+  describe('Model instance stream with resources using model', () => {
     test('fails to create using capability with wrong model resource', async () => {
       const didKeyWithCapability = await addCapToDid(
         wallet,
@@ -425,7 +424,7 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describeIfV3ShouldPass('Ceramic dids instance with capability/parent', () => {
+  describe('Ceramic dids instance with capability/parent', () => {
     testIfV3(
       'can update tile stream with streamId in capability',
       async () => {

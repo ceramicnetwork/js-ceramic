@@ -76,10 +76,7 @@ const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
 }
 
-// should pass when blocks are stored/retrieved
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass('Model API http-client tests', () => {
+describe('Model API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
@@ -729,6 +726,9 @@ describeIfV3ShouldPass('Model API http-client tests', () => {
     ).resolves.toBeInstanceOf(Model)
   })
 })
+
+// should pass on v4 as soon as recon is integrated and cross-node syncing works.
+const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
 
 describeIfV3ShouldPass('Model API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
