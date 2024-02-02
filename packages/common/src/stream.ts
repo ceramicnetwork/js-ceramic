@@ -339,4 +339,14 @@ export interface StreamHandler<T extends Stream> {
     api: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState>
+
+  /**
+   * Do initialization associated with this StreamConstructor
+   */
+  init(): Promise<void>
+
+  /**
+   * Shutdown resources associated with this StreamConstructor
+   */
+  shutdown(): Promise<void>
 }

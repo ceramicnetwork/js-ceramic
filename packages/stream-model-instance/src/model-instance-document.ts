@@ -175,7 +175,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? ceramic.signerFromDID(opts.asDID)
       : opts.signer || ceramic.signer
     const commit = await ModelInstanceDocument.makeGenesis(signer, content, metadata)
 
@@ -199,7 +199,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? await ceramic.signerFromDID(opts.asDID)
       : opts.signer || ceramic.signer
     metadata = { ...metadata, deterministic: true }
 
@@ -226,7 +226,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   ): Promise<ModelInstanceDocument<T>> {
     opts = { ...DEFAULT_DETERMINISTIC_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? await ceramic.signerFromDID(opts.asDID)
       : opts.signer || ceramic.signer
     metadata = { ...metadata, deterministic: true }
 
@@ -276,7 +276,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? this.api.signerFromDID(opts.asDID)
       : opts.signer || this.api.signer
     let header: Partial<CommitHeader> | undefined = undefined
     if (metadata && metadata.shouldIndex != null) {
@@ -309,7 +309,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? await this.api.signerFromDID(opts.asDID)
       : opts.signer || this.api.signer
     jsonPatch.forEach((patch) => {
       switch (patch.op) {

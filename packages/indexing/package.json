@@ -53,7 +53,7 @@
     "@ceramicnetwork/stream-tile": "^5.1.0",
     "@stablelib/sha256": "^1.0.1",
     "did-resolver": "^4.0.1",
-    "dids": "^5.0.0",
+    "dids": "5.1.0-next.0",
     "key-did-provider-ed25519": "^4.0.0",
     "key-did-resolver": "^4.0.0",
     "tmp-promise": "^3.0.3"

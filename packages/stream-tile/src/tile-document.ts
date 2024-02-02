@@ -179,7 +179,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       opts.syncTimeoutSeconds = 0
     }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? ceramic.signerFromDID(opts.asDID)
       : opts.signer || ceramic.signer
     const commit = await TileDocument.makeGenesis(signer, content, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
@@ -202,7 +202,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   ): Promise<TileDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? ceramic.signerFromDID(opts.asDID)
       : opts.signer || ceramic.signer
     if (genesisCommit.header?.unique && opts.syncTimeoutSeconds == undefined) {
       // By default you don't want to wait to sync doc state from pubsub when creating a unique
@@ -231,7 +231,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
     metadata = { ...metadata, deterministic: true }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? ceramic.signerFromDID(opts.asDID)
       : opts.signer || ceramic.signer
 
     if (metadata.family == null && metadata.tags == null) {
@@ -282,7 +282,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? this.api.signerFromDID(opts.asDID)
       : opts.signer || this.api.signer
     const updateCommit = await this.makeCommit(signer, content, metadata)
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
@@ -298,7 +298,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
-      ? CeramicSigner.fromDID(opts.asDID)
+      ? this.api.signerFromDID(opts.asDID)
       : opts.signer || this.api.signer
     const header = headerFromMetadata(this.metadata, false)
     const rawCommit: RawCommit = {

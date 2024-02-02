@@ -281,7 +281,7 @@ export class CeramicDaemon {
       opts.ipfs?.host
     )
 
-    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
+    const [modules, params] = await Ceramic._processConfig(ipfs, ceramicConfig)
     const diagnosticsLogger = modules.loggerProvider.getDiagnosticsLogger()
     diagnosticsLogger.imp(
       `Starting Ceramic Daemon with @ceramicnetwork/cli package version ${version}, with js-ceramic repo git hash ${commitHash}, and with config: \n${JSON.stringify(

@@ -1,4 +1,4 @@
-import { SchemaValidation } from '../schema-utils.js'
+import { SchemaValidation } from 'ajv-threads'
 import { ModelDefinition } from '@ceramicnetwork/stream-model'
 
 const SCHEMA_COMMIT_ID = 'k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws'
@@ -94,57 +94,62 @@ describe('SchemaValidation', () => {
 
   beforeAll(async () => {
     schemaValidator = new SchemaValidation()
+    await schemaValidator.init()
   })
 
-  it('validates content that conforms to schema', () => {
-    expect(() => {
+  afterAll(async () => {
+    await schemaValidator.shutdown()
+  })
+
+  it('validates content that conforms to schema', async () => {
+    await expect(
       schemaValidator.validateSchema(CONTENT_VALID, MODEL_DEFINITION.schema, SCHEMA_COMMIT_ID)
-    }).not.toThrow()
+    ).resolves
   })
 
-  it('throws when required properties are missing', () => {
-    expect(() => {
+  it('throws when required properties are missing', async () => {
+    await expect(
       schemaValidator.validateSchema(
         CONTENT_NO_REQ_PROPS,
         MODEL_DEFINITION.schema,
         SCHEMA_COMMIT_ID
       )
-    }).toThrow(
+    ).rejects.toMatch(
       /data must have required property 'arrayProperty', data must have required property 'stringArrayProperty', data must have required property 'stringProperty', data must have required property 'intProperty', data must have required property 'floatProperty'/
     )
   })
 
-  it('throws when min values requirements are not respected', () => {
-    expect(() => {
+  it('throws when min values requirements are not respected', async () => {
+    await expect(
       schemaValidator.validateSchema(
         CONTENT_MINS_NOT_RESPECTED,
         MODEL_DEFINITION.schema,
         SCHEMA_COMMIT_ID
       )
-    }).toThrow(
+    ).rejects.toMatch(
       /data\/arrayProperty must NOT have fewer than 2 items, data\/stringArrayProperty\/0 must NOT have fewer than 2 characters, data\/stringProperty must NOT have fewer than 3 characters, data\/intProperty must be >= 2, data\/floatProperty must be >= 3/
     )
   })
 
-  it('throws when max values requirements are not respected', () => {
-    expect(() => {
+  it('throws when max values requirements are not respected', async () => {
+    await expect(
       schemaValidator.validateSchema(
         CONTENT_MAXS_NOT_RESPECTED,
         MODEL_DEFINITION.schema,
         SCHEMA_COMMIT_ID
       )
-    }).toThrow(
+    ).rejects.toMatch(
       /data\/arrayProperty must NOT have more than 4 items, data\/stringArrayProperty\/0 must NOT have more than 6 characters, data\/stringProperty must NOT have more than 8 characters, data\/intProperty must be <= 100, data\/floatProperty must be <= 110/
     )
   })
 
-  it('throws when additional values are given', () => {
-    expect(() => {
+  it('throws when additional values are given', async () => {
+    await expect(
       schemaValidator.validateSchema(
         CONTENT_WITH_ADDITIONAL_PROPERTY,
         MODEL_DEFINITION.schema,
         SCHEMA_COMMIT_ID
       )
-    }).toThrow(/data must NOT have additional properties/)
+    ).rejects.toMatch(/data must NOT have additional properties/)
   })
 })
