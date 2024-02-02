@@ -25,6 +25,7 @@ import { DID } from 'dids'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
 import { AggregationDocument, JsonAsString } from '@ceramicnetwork/codecs'
+import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { decode } from 'codeco'
 
 const seed = 'SEED'
@@ -505,13 +506,21 @@ describe('Ceramic interop: core <> http-client', () => {
     source.addEventListener('message', (event) => {
       messageEvent = decode(Codec, event.data)
     })
-    const content = { test: 123 }
     //this will trigger a feed event
-    const doc = await TileDocument.create(client, content, null, { anchor: false })
+    const MODEL_DEFINITION: ModelDefinition = {
+      name: 'myModel',
+      version: '1.0',
+      schema: { type: 'object', additionalProperties: false },
+      accountRelation: { type: 'list' },
+    }
+    // create model on different node
+    const model = await Model.create(client, MODEL_DEFINITION)
 
     expect(messageEvent).toBeDefined()
-    expect(messageEvent.content).toMatchObject(content)
-    expect(messageEvent.commitId).toMatchObject(doc.commitId)
+    expect(messageEvent.content).toMatchObject(model.content)
+    expect(messageEvent.commitId).toMatchObject(model.commitId)
+    expect(messageEvent.commitId instanceof CommitID).toBeTruthy()
+    expect(messageEvent.metadata.model instanceof StreamID).toBeTruthy()
   }, 30000)
 
   describe('multiqueries', () => {
