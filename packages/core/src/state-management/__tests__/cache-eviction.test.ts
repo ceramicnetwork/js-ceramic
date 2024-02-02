@@ -9,8 +9,8 @@ let ipfs: IpfsApi
 let ceramic: Ceramic
 
 // Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
-const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 beforeAll(async () => {
   ipfs = await createIPFS()

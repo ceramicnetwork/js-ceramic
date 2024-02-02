@@ -38,7 +38,7 @@ const repository = {
 } as unknown as Repository
 
 // should pass when updated from tile document
-const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describe('Level data store', () => {
   let store: PinStore

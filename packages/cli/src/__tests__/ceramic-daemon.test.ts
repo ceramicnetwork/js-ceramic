@@ -27,7 +27,7 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 const seed = 'SEED'
 
 // Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)

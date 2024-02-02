@@ -22,7 +22,7 @@ const PEER_ID = 'PEER_ID'
 const LATE_MESSAGE_AFTER = 1000
 
 // v4 doesn't support the full ipfs api
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('connection', () => {
   let ipfs: IpfsApi

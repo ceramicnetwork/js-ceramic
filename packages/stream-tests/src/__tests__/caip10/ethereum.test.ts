@@ -74,7 +74,7 @@ let contractAddress: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 beforeEach(async () => {
   addresses = await send(provider, encodeRpcMessage('eth_accounts'))

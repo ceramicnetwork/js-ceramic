@@ -37,7 +37,7 @@ const generateStringOfSize = (size): string => {
   return random_data.join('')
 }
 // Should  pass on v4 if updated from TileDocument
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('Ceramic API', () => {
   jest.setTimeout(1000 * 30)
@@ -318,7 +318,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -350,7 +350,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -377,7 +377,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
@@ -410,7 +410,7 @@ describe('Ceramic API', () => {
       // Stream. Once from loading the genesis commit, a second from applying the handling the
       // create. In v4 mode and going forward, there is only 1 call into the index since we don't
       // update persisted state on stream loads.
-      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_ENABLE_V4_MODE ? 1 : 2
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
 
       expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }

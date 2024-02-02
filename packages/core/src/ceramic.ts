@@ -504,7 +504,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       )
     }
 
-    if (process.env.CERAMIC_ENABLE_V4_MODE) {
+    if (process.env.CERAMIC_RECON_MODE) {
       this._logger.warn(`Running Ceramic in v4 mode. This mode is still experimental.`)
     } else {
       if (!this.dispatcher.enableSync) {

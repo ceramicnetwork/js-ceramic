@@ -10,7 +10,7 @@ import { FeedDocument } from '../feed.js'
 import { createCeramic } from './create-ceramic.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('Ceramic feed', () => {
   let ipfs1: IpfsApi
@@ -126,7 +126,7 @@ describe('Ceramic feed', () => {
   })
 
   // Should pass once Recon is integrated and cross node-syncing is enabled
-  const testIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+  const testIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
   testIfV3ShouldPass('add entry after creating/loading indexed model', async () => {
     const MODEL_DEFINITION: ModelDefinition = {

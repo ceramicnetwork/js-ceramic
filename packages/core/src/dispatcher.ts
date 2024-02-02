@@ -127,9 +127,9 @@ export class Dispatcher {
     maxQueriesPerSecond: number,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
-    this.enableSync = process.env.CERAMIC_ENABLE_V4_MODE ? false : enableSync
+    this.enableSync = process.env.CERAMIC_RECON_MODE ? false : enableSync
 
-    if (!process.env.CERAMIC_ENABLE_V4_MODE) {
+    if (!process.env.CERAMIC_RECON_MODE) {
       const pubsub = new Pubsub(
         _ipfs,
         topic,
@@ -167,7 +167,7 @@ export class Dispatcher {
   }
 
   async init() {
-    if (process.env.CERAMIC_ENABLE_V4_MODE) {
+    if (process.env.CERAMIC_RECON_MODE) {
       return
     }
     this.messageBus.subscribe(this.handleMessage.bind(this))
@@ -428,7 +428,7 @@ export class Dispatcher {
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
     if (
       process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' ||
-      process.env.CERAMIC_ENABLE_V4_MODE
+      process.env.CERAMIC_RECON_MODE
     ) {
       return empty().subscribe()
     }
@@ -552,7 +552,7 @@ export class Dispatcher {
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    if (!process.env.CERAMIC_ENABLE_V4_MODE) {
+    if (!process.env.CERAMIC_RECON_MODE) {
       this.messageBus.unsubscribe()
     }
     await this.tasks.onIdle()

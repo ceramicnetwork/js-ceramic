@@ -226,7 +226,7 @@ export class Repository {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
     const [state$, syncStatus] = await this.loadingQ.forStream(streamId).run(async () => {
-      if (process.env.CERAMIC_ENABLE_V4_MODE) {
+      if (process.env.CERAMIC_RECON_MODE) {
         // When in v4 mode we are never syncing the stream but acting as if it
         // was already synced previously. This is safe because we know Recon will always be syncing
         // the stream in the background (or the stream isn't part of an indexed model in which case

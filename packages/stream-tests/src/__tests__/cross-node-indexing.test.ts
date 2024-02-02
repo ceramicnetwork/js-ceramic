@@ -69,7 +69,7 @@ async function countResults(ceramic: Ceramic, query: PaginationQuery): Promise<n
 }
 
 // should pass on v4 as soon as we actually store/retrieve blocks
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3ShouldPass.each(envs)(
   'Cross-node indexing and query test with ceramic$ceramicInstanceWithPostgres running postgres',

@@ -34,7 +34,7 @@ function expectEqualStates(a: StreamState, b: StreamState) {
 }
 
 // These tests are expected to pass when running in V4 mode when recon is integrated if updated from tile documents
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('IPFS caching', () => {
   let ipfs: IpfsApi

@@ -69,7 +69,7 @@ const COMMITS = {
 }
 
 // These tests are never expected to be run in v4 mode
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Caip10LinkHandler', () => {
   let context: Context

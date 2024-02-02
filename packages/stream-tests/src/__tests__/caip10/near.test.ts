@@ -37,7 +37,7 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 10000)
 
-const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 testIfV3(
   'happy path',

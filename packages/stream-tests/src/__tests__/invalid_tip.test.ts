@@ -8,7 +8,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Test loading a stream when pubsub replies with an invalid tip', () => {
   jest.setTimeout(1000 * 30)

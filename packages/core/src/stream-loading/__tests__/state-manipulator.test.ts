@@ -32,7 +32,7 @@ function makeAppliable(log: Array<CommitData>): AppliableStreamLog {
 }
 
 // Should pass in v4 when test updated from tile document
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('StateManipulator test', () => {
   jest.setTimeout(1000 * 30)

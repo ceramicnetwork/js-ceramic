@@ -14,7 +14,7 @@ const FAKE_STREAM_ID = StreamID.fromString(
 )
 
 // A different scenario will likely apply in V4 based on changes to loading flow
-const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 30)

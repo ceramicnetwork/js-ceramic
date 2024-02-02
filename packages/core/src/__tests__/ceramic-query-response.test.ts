@@ -42,7 +42,7 @@ function getQueryPublishedPromise(
 }
 
 // These tests will likely pass in a way on v4, but there is no pubsub
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Response to pubsub queries handling', () => {
   jest.setTimeout(30 * 1000)

@@ -62,7 +62,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
-    if (process.env['CERAMIC_ENABLE_V4_MODE']) {
+    if (process.env['CERAMIC_RECON_MODE']) {
       throw new Error(`TileDocument is not supported in Ceramic v4 mode`)
     }
 

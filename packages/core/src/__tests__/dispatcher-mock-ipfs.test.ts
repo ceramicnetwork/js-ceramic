@@ -56,7 +56,7 @@ const mock_ipfs = {
 
 const carFactory = new CARFactory()
 
-const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? it.skip : it
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? it.skip : it
 
 describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher

@@ -197,7 +197,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
 })
 
 // should pass on v4 as soon as recon is integrated and cross-node syncing works.
-const describeIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3ShouldPass('ModelInstanceDocument API multi-node tests', () => {
   jest.setTimeout(1000 * 30)

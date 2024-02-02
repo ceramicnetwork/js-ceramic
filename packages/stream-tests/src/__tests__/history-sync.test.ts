@@ -261,7 +261,7 @@ const mockProvidersCache = {
 
 // should pass when blocks are stored (one needs update from tile document)
 // config issue with sync disabled and HDS enabled
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('Sync tests', () => {
   jest.setTimeout(150000)

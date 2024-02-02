@@ -12,7 +12,7 @@ import { lastValueFrom } from 'rxjs'
 const TOPIC = '/ceramic/test12345'
 
 // No pubsub in V4
-const describeIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? describe.skip : describe
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describeIfV3('TipFetcher test', () => {
   jest.setTimeout(1000 * 30)

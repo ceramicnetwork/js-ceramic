@@ -12,7 +12,7 @@ const localProvider = tendermint.createWalletFromMnemonic(mnemonic)
 const chainRef = 'cosmoshub-3'
 
 // no caip10 support in v4
-const testIfV3 = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 class CosmosMockSigner {
   constructor(readonly provider: tendermint.Wallet) {}
