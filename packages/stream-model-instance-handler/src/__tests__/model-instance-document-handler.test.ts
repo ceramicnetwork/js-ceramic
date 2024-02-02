@@ -1052,7 +1052,7 @@ describe('ModelInstanceDocumentHandler', () => {
 
       state = await handler.applyCommit(genesisCommitData, context)
     })
-    
+
     it('Rejects commit if scalar field is immutable', async () => {
       const state$ = TestUtils.runningState(state)
       const doc = new ModelInstanceDocument(state$, context)
@@ -1083,7 +1083,7 @@ describe('ModelInstanceDocumentHandler', () => {
         `Immutable field "name" cannot be updated`
       )
     })
-    
+
     it('Rejects commit if nested field is immutable', async () => {
       const state$ = TestUtils.runningState(state)
       const doc = new ModelInstanceDocument(state$, context)
