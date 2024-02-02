@@ -146,7 +146,10 @@ export class StreamUtils {
       cloned.next.metadata.model = state.next.metadata.model.toString()
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
-      cloned.metadata.unique = uint8arrays.toString(Uint8Array.from(state.metadata.unique), 'base64')
+      cloned.metadata.unique = uint8arrays.toString(
+        Uint8Array.from(state.metadata.unique),
+        'base64'
+      )
     }
 
     cloned.doctype = StreamType.nameByCode(cloned.type)
