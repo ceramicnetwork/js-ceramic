@@ -5,7 +5,7 @@ import type { StreamState, Stream } from '@ceramicnetwork/common'
 import {
   AdminApi,
   AnchorStatus,
-  CommitType,
+  EventType,
   RunningStateLike,
   SignatureStatus,
   StreamUtils,
@@ -120,7 +120,7 @@ export class CommonTestUtils {
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [
         {
-          type: CommitType.GENESIS,
+          type: EventType.INIT,
           cid,
         },
       ],

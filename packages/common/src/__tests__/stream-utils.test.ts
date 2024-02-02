@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AnchorStatus, CommitType, RawCommit, SignatureStatus, StreamState } from '../stream.js'
+import { AnchorStatus, EventType, RawCommit, SignatureStatus, StreamState } from '../stream.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { StreamUtils } from '../utils/stream-utils.js'
 
@@ -16,7 +16,7 @@ test('StreamState serialization round trip', async () => {
     metadata: { controllers: [FAKE_DID], model: FAKE_STREAM_ID },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+    log: [{ cid: FAKE_CID, type: EventType.INIT }],
   }
 
   const serialized = StreamUtils.serializeState(state)

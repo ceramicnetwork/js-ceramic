@@ -1,13 +1,15 @@
 import type { AnchorEvent, CeramicSigner } from '@ceramicnetwork/common'
-import { type DiagnosticsLogger } from '@ceramicnetwork/common'
+import {
+  AnchorRequestStatusName,
+  type NotCompleteStatusName,
+  type DiagnosticsLogger,
+} from '@ceramicnetwork/common'
 import { type CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
 import type { AnchorLoopHandler, AnchorService, AnchorValidator } from '../anchor-service.js'
 import { InMemoryAnchorValidator } from './in-memory-anchor-validator.js'
 import type { AnchorRequestStore } from '../../store/anchor-request-store.js'
 import { InMemoryCAS } from './in-memory-cas.js'
-import { CID } from 'multiformats'
 import { AnchorProcessingLoop } from '../anchor-processing-loop.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'

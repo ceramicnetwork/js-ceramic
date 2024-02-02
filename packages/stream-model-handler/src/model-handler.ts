@@ -2,7 +2,7 @@ import { Model } from '@ceramicnetwork/stream-model'
 import {
   AnchorStatus,
   CommitData,
-  CommitType,
+  EventType,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
@@ -140,7 +140,7 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
+      log: [StreamUtils.commitDataToLogEntry(commitData, EventType.INIT)],
     }
 
     await this._schemaValidator.validateSchema(state.content.schema)

@@ -1,6 +1,11 @@
 import type { CASClient } from '../anchor-service.js'
-import { AnchorCommit, AnchorEvent, AnchorProof } from '@ceramicnetwork/common'
-import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/common'
+import type {
+  AnchorCommit,
+  AnchorEvent,
+  NotCompleteStatusName,
+  AnchorProof,
+} from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
 import { randomCID, StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'

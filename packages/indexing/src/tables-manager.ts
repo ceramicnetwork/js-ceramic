@@ -157,7 +157,9 @@ export class TablesManager {
 
     if (validSchema != actualSchema) {
       throw new Error(
-        `Schema verification failed for config table: ${table.tableName}. Please make sure node has been setup correctly.
+        `Schema verification failed for config table: ${
+          table.tableName
+        }. Please make sure node has been setup correctly.
     Expected=${JSON.stringify(validSchema)}
     Actual=${JSON.stringify(actualSchema)}
         `

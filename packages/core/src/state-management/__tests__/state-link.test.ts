@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { CommitType, StreamState } from '@ceramicnetwork/common'
+import { EventType, StreamState } from '@ceramicnetwork/common'
 import { StateLink } from '../state-link.js'
 import { Observable } from 'rxjs'
 
@@ -11,7 +11,7 @@ test('emit on distinct changes', async () => {
     type: 0,
     log: [
       {
-        type: CommitType.GENESIS,
+        type: EventType.INIT,
         cid: FAKE_CID_1,
       },
     ],
@@ -21,7 +21,7 @@ test('emit on distinct changes', async () => {
     log: [
       ...initial.log,
       {
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
         cid: FAKE_CID2,
       },
     ],

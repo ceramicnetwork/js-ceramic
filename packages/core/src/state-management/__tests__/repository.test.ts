@@ -11,12 +11,13 @@ import {
 import {
   AnchorEvent,
   AnchorStatus,
-  CommitType,
+  EventType,
   IpfsApi,
   SignatureStatus,
   StreamState,
   StreamUtils,
   SyncOptions,
+  AnchorRequestStatusName,
 } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '../../utils.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -32,7 +33,6 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { StateLink } from '../state-link.js'
 import { OperationType } from '../operation-type.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { generateFakeCarFile } from '../../anchor/ethereum/__tests__/generateFakeCarFile.js'
 import type { FeedDocument } from '../../feed.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
@@ -128,7 +128,7 @@ describe('#load', () => {
       type: TileDocument.STREAM_TYPE_ID,
       log: [
         {
-          type: CommitType.GENESIS,
+          type: EventType.INIT,
           cid: genesisCid,
         },
       ],
@@ -779,7 +779,7 @@ describe('_registerRunningState', () => {
         log: [
           {
             cid: TestUtils.randomCID(),
-            type: CommitType.GENESIS,
+            type: EventType.INIT,
           },
         ],
         signature: 3,

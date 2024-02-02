@@ -8,14 +8,18 @@ import {
   jest,
   test,
 } from '@jest/globals'
-import { AnchorStatus, IpfsApi, SignatureStatus } from '@ceramicnetwork/common'
+import {
+  AnchorStatus,
+  IpfsApi,
+  AnchorRequestStatusName,
+  SignatureStatus,
+} from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const INITIAL_CONTENT = { abc: 123, def: 456 }

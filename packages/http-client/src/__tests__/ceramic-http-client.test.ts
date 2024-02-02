@@ -1,7 +1,7 @@
 import { DID } from 'dids'
 import { CID } from 'multiformats/cid'
 import { jest } from '@jest/globals'
-import { fetchJson, CommitType, StreamState } from '@ceramicnetwork/common'
+import { fetchJson, EventType, StreamState } from '@ceramicnetwork/common'
 import { CeramicClient } from '../ceramic-http-client.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { randomBytes } from '@stablelib/random'
@@ -23,7 +23,7 @@ const initial = {
   type: 0,
   log: [
     {
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       cid: FAKE_CID_1,
     },
   ],

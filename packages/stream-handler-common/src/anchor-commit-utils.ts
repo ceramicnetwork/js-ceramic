@@ -1,7 +1,7 @@
 import {
   AnchorStatus,
   CommitData,
-  CommitType,
+  EventType,
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -19,7 +19,7 @@ function applyAnchorTimestampsToLog(state: StreamState): void {
   let timestamp
   for (let i = state.log.length - 1; i >= 0; i--) {
     const logEntry = state.log[i]
-    if (logEntry.type == CommitType.ANCHOR) {
+    if (logEntry.type == EventType.TIME) {
       timestamp = logEntry.timestamp
     } else {
       logEntry.timestamp = timestamp
@@ -43,7 +43,7 @@ export async function applyAnchorCommit(
   state.anchorProof = commitData.proof
   state.log.push({
     cid: commitData.cid,
-    type: CommitType.ANCHOR,
+    type: EventType.TIME,
     timestamp: commitData.timestamp,
   })
 

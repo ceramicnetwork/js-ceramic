@@ -4,7 +4,7 @@ import type {
   DiagnosticsLogger,
   UnappliableStreamLog,
 } from '@ceramicnetwork/common'
-import { CommitType } from '@ceramicnetwork/common'
+import { EventType } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
 import type { AnchorValidator } from '../anchor/anchor-service.js'
 
@@ -71,7 +71,7 @@ export class AnchorTimestampExtractor {
     let timestamp = null
     for (let i = log.commits.length - 1; i >= 0; i--) {
       const commitData = log.commits[i]
-      if (commitData.type == CommitType.ANCHOR) {
+      if (commitData.type == EventType.TIME) {
         try {
           timestamp = await this.verifyAnchorCommit(commitData)
         } catch (err) {

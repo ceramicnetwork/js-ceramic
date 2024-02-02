@@ -5,10 +5,10 @@ import type {
   DiagnosticsLogger,
   CeramicSigner,
 } from '@ceramicnetwork/common'
+import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
 import type { CAR } from 'cartonne'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { EthereumAnchorValidator } from './ethereum-anchor-validator.js'
 import type {
   AnchorService,

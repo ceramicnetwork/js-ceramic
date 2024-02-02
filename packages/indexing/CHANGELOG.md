@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.4.0...@ceramicnetwork/indexing@3.1.0-rc.0) (2024-02-01)
+
+
+### Bug Fixes
+
+* **indexing:** Handle `null` stream content value in indexing logic ([#3130](https://github.com/ceramicnetwork/js-ceramic/issues/3130)) ([42af0bc](https://github.com/ceramicnetwork/js-ceramic/commit/42af0bc422bc50b9837219bc3abefb2b4578e6ff))
+
+
+### Features
+
+* Bump major verison on all packages except common, core, and http-client ([#3139](https://github.com/ceramicnetwork/js-ceramic/issues/3139)) ([aafe0ef](https://github.com/ceramicnetwork/js-ceramic/commit/aafe0ef4187935ac7f842b3ed8c8a481e8d418bf))
+
+
+
+
+
+# [3.0.0](/compare/@ceramicnetwork/indexing@2.4.0...@ceramicnetwork/indexing@3.0.0) (2024-02-01)
+
+
+### Bug Fixes
+
+* **indexing:** Handle `null` stream content value in indexing logic (#3130) 42af0bc, closes #3130
+
+
+
+
+
+# [2.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.4.0-rc.1...@ceramicnetwork/indexing@2.4.0) (2024-01-31)
+
+**Note:** Version bump only for package @ceramicnetwork/indexing
+
+
+
+
+
+# [2.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.4.0-rc.0...@ceramicnetwork/indexing@2.4.0-rc.1) (2024-01-30)
+
+
+### Bug Fixes
+
+* Supposed to alter only existing columns ([#3120](https://github.com/ceramicnetwork/js-ceramic/issues/3120)) ([b5ee70e](https://github.com/ceramicnetwork/js-ceramic/commit/b5ee70ee59f9472eee87dc8377a6897155f0347b))
+
+
+
+
+
 # [2.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@2.2.0...@ceramicnetwork/indexing@2.4.0-rc.0) (2024-01-25)
 
 
