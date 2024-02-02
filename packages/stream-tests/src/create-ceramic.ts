@@ -28,7 +28,7 @@ export async function createCeramic(
     config
   )
 
-  const [modules, params] = Ceramic._processConfig(ipfs, appliedConfig)
+  const [modules, params] = await Ceramic._processConfig(ipfs, appliedConfig)
   if (providersCache) {
     modules.providersCache = providersCache
   }

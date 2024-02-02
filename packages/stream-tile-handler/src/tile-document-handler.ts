@@ -39,6 +39,14 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     this._schemaValidator = new SchemaValidation()
   }
 
+  init(): Promise<void> {
+    return Promise.resolve()
+  }
+
+  shutdown(): Promise<void> {
+    return Promise.resolve()
+  }
+
   get type(): number {
     return TileDocument.STREAM_TYPE_ID
   }

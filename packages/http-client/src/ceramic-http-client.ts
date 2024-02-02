@@ -256,6 +256,10 @@ export class CeramicClient implements StreamReaderWriter {
     return supportedChains
   }
 
+  signerFromDID(did: DID): CeramicSigner {
+    return CeramicSigner.fromDID(did)
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async close(): Promise<void> {}
 }

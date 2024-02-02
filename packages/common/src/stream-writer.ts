@@ -1,7 +1,8 @@
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CreateOpts, LoadOpts, UpdateOpts, CeramicCommit, Stream, AnchorOpts } from './index.js'
-import type { IntoSigner } from './ceramic-signer.js'
+import type { CeramicSigner, IntoSigner } from './ceramic-signer.js'
 import type { AnchorStatus } from './index.js'
+import type { DID } from 'dids'
 
 export interface StreamWriter extends IntoSigner {
   /**
@@ -35,4 +36,9 @@ export interface StreamWriter extends IntoSigner {
    * @param opts used to load the current Stream state
    */
   requestAnchor(streamId: StreamID | string, opts?: LoadOpts & AnchorOpts): Promise<AnchorStatus>
+
+  /**
+   * Create a signer from a DID
+   */
+  signerFromDID(did: DID): CeramicSigner
 }

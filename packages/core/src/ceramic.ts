@@ -32,7 +32,7 @@ import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 import { LocalPinApi } from './local-pin-api.js'
 import { LocalAdminApi } from './local-admin-api.js'
 import { Repository } from './state-management/repository.js'
-import { HandlersMap } from './handlers-map.js'
+import { defaultHandlers, HandlersMap, Registry } from './handlers-map.js'
 import { streamFromState } from './state-management/stream-from-state.js'
 import * as fs from 'fs'
 import os from 'os'
@@ -57,6 +57,8 @@ import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
 import { IReconApi, ReconApi } from './recon.js'
+import { DidVerifier } from 'dids-threads'
+import { ThreadedCeramicSigner } from './threaded-underlying-signer.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -141,6 +143,8 @@ export interface CeramicModules {
   providersCache: ProvidersCache
   anchorRequestCarBuilder: AnchorRequestCarBuilder
   feed: Feed
+  handlers: Registry
+  verifier: DidVerifier
   signer: CeramicSigner
   reconApi: IReconApi
 }
@@ -190,11 +194,8 @@ const tryStreamId = (id: string): StreamID | null => {
  * `$ npm install --save @ceramicnetwork/core`
  */
 export class Ceramic implements StreamReaderWriter, StreamStateLoader {
-  // Primarily for backwards compatibility around the get did call, any usages for signing
-  // or verification should be done using `_signer`. See `get did` and `get signer` for more
-  // information
-  private _did?: DID
   private _ipfs?: IpfsApi
+  private _verifier: DidVerifier
   private _signer: CeramicSigner
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider
@@ -218,6 +219,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
   private readonly _startTime: Date
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
+    this._verifier = modules.verifier
     this._signer = modules.signer
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
@@ -243,7 +245,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
     this._ipfs = modules.ipfs
 
-    this._streamHandlers = new HandlersMap(this._logger)
+    this._streamHandlers = new HandlersMap(this._logger, modules.handlers)
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
@@ -328,7 +330,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * and verifying signatures.
    */
   get did(): DID | undefined {
-    return this._did
+    return this._signer.did
   }
 
   /**
@@ -337,7 +339,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * @param did
    */
   set did(did: DID) {
-    this._did = did
     this._signer.withDid(did)
   }
 
@@ -346,7 +347,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
    * to call `Ceramic.create()` instead which calls this internally.
    */
-  static _processConfig(ipfs: IpfsApi, config: CeramicConfig): [CeramicModules, CeramicParameters] {
+  static async _processConfig(
+    ipfs: IpfsApi,
+    config: CeramicConfig
+  ): Promise<[CeramicModules, CeramicParameters]> {
     // Initialize ceramic loggers
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
@@ -358,7 +362,9 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     )
 
     const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
-    const signer = CeramicSigner.invalid()
+    const verifier = new DidVerifier()
+    await verifier.init((err) => logger.imp(err))
+    const signer = ThreadedCeramicSigner.invalid(verifier)
     const anchorService = makeAnchorService(
       config,
       ethereumRpcUrl,
@@ -432,6 +438,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       sync: config.indexing?.enableHistoricalSync,
     }
 
+    const handlers = await defaultHandlers()
+
     const modules: CeramicModules = {
       anchorService,
       dispatcher,
@@ -444,6 +452,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       providersCache,
       anchorRequestCarBuilder,
       feed,
+      handlers,
+      verifier,
       signer,
       reconApi,
     }
@@ -457,7 +467,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [modules, params] = Ceramic._processConfig(ipfs, config)
+    const [modules, params] = await Ceramic._processConfig(ipfs, config)
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
@@ -874,6 +884,12 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     return this._supportedChains
   }
 
+  signerFromDID(did: DID): CeramicSigner {
+    const signer = ThreadedCeramicSigner.invalid(this._verifier)
+    signer.withDid(did)
+    return signer
+  }
+
   /**
    * Turns +state+ into a Stream instance of the appropriate StreamType.
    * Does not add the resulting instance to a cache.
@@ -888,6 +904,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
+    await this._streamHandlers.shutdown()
+    await this._verifier.shutdown()
     await this.anchorService.close()
     this._shutdownSignal.abort()
     await this.syncApi.shutdown()

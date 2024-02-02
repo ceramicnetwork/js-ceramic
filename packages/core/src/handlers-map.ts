@@ -6,13 +6,17 @@ import { Stream, StreamHandler } from '@ceramicnetwork/common'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamType } from '@ceramicnetwork/streamid'
 
-type Registry = Map<number, StreamHandler<Stream>>
+export type Registry = Map<number, StreamHandler<Stream>>
 
-function defaultHandlers(): Registry {
+export async function defaultHandlers(): Promise<Registry> {
   const tile = new TileDocumentHandler()
+  await tile.init()
   const caip10Link = new Caip10LinkHandler()
+  await caip10Link.init()
   const model = new ModelHandler()
+  await model.init()
   const instance = new ModelInstanceDocumentHandler()
+  await instance.init()
   const handlers = new Map<number, StreamHandler<Stream>>()
   handlers.set(tile.type, tile)
   handlers.set(caip10Link.type, caip10Link)
@@ -27,8 +31,12 @@ function defaultHandlers(): Registry {
 export class HandlersMap {
   private readonly handlers: Registry
 
-  constructor(private readonly logger: DiagnosticsLogger, handlers?: Registry) {
-    this.handlers = handlers || defaultHandlers()
+  constructor(private readonly logger: DiagnosticsLogger, handlers: Registry) {
+    this.handlers = handlers
+  }
+
+  async shutdown(): Promise<void> {
+    await Promise.all(Array.from(this.handlers.values()).map((handler) => handler.shutdown()))
   }
 
   /**

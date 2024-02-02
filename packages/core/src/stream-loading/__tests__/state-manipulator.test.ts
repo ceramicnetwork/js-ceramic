@@ -17,7 +17,7 @@ import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LogSyncer } from '../log-syncer.js'
 import { StateManipulator } from '../state-manipulator.js'
-import { HandlersMap } from '../../handlers-map.js'
+import { defaultHandlers, HandlersMap } from '../../handlers-map.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
@@ -59,7 +59,7 @@ describeIfV3('StateManipulator test', () => {
 
     const logger = new LoggerProvider().getDiagnosticsLogger()
     logSyncer = new LogSyncer(dispatcher)
-    const handlers = new HandlersMap(logger)
+    const handlers = new HandlersMap(logger, await defaultHandlers())
     stateManipulator = new StateManipulator(logger, handlers, logSyncer, ceramic)
 
     await swarmConnect(dispatcherIpfs, ceramicIpfs)

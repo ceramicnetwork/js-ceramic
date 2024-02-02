@@ -19,6 +19,7 @@ export async function makeCeramicCore(
   })
 
   const handler = new TileDocumentHandler()
+  await handler.init()
   ;(handler as any).verifyJWS = (): Promise<void> => {
     return
   }

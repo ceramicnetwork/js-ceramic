@@ -49,7 +49,7 @@ describe('Ceramic integration', () => {
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
     const tmpDirectory = await tmp.tmpName()
     const databaseConnectionString = new URL(`sqlite://${tmpDirectory}/ceramic.sqlite`)
-    const [modules, params] = Ceramic._processConfig(ipfs1, {
+    const [modules, params] = await Ceramic._processConfig(ipfs1, {
       networkName: 'local',
       indexing: { db: databaseConnectionString.href, models: [] },
     })

@@ -28,6 +28,52 @@ export interface UnderlyingCeramicSigner {
   createDagJWS(payload: Record<string, any>, options?: CreateJWSOptions): Promise<DagJWSResult>
   verifyJWS(jws: string | DagJWS, options?: VerifyJWSOptions): Promise<VerifyJWSResult>
   asController(): Promise<string>
+  withDid(did: DID): void
+  did: DID
+}
+
+class DidUnderlyingCeramicSigner implements UnderlyingCeramicSigner {
+  private _did?: DID
+
+  constructor(did?: DID) {
+    this._did = did
+  }
+
+  ensureDid(): void {
+    if (!this._did) {
+      throw new Error('No DID')
+    }
+  }
+
+  async ensureAuthenticated(): Promise<void> {
+    this.ensureDid()
+    if (!this._did.authenticated) {
+      await this._did.authenticate()
+    }
+  }
+  createJWS<T extends string | Record<string, any>>(
+    payload: T,
+    options?: CreateJWSOptions
+  ): Promise<DagJWS> {
+    return this._did.createJWS(payload, options)
+  }
+  createDagJWS(payload: Record<string, any>, options?: CreateJWSOptions): Promise<DagJWSResult> {
+    return this._did.createDagJWS(payload, options)
+  }
+  verifyJWS(jws: string | DagJWS, options?: VerifyJWSOptions): Promise<VerifyJWSResult> {
+    this.ensureDid()
+    return this._did.verifyJWS(jws, options)
+  }
+  async asController(): Promise<string> {
+    return this._did.hasParent ? this._did.parent : this._did.id
+  }
+  withDid(did: DID): void {
+    this._did = did
+  }
+  get did(): DID {
+    this.ensureDid()
+    return this._did
+  }
 }
 
 export interface IntoSigner {
@@ -36,11 +82,15 @@ export interface IntoSigner {
 
 export class CeramicSigner implements IntoSigner {
   private isAuthenticated: boolean
-  private reqs?: UnderlyingCeramicSigner
+  private reqs: UnderlyingCeramicSigner
 
-  constructor(reqs?: UnderlyingCeramicSigner) {
+  constructor(reqs: UnderlyingCeramicSigner) {
     this.isAuthenticated = false
     this.reqs = reqs
+  }
+
+  get did(): DID {
+    return this.reqs.did
   }
 
   get signer(): CeramicSigner {
@@ -48,42 +98,23 @@ export class CeramicSigner implements IntoSigner {
   }
 
   static invalid(): CeramicSigner {
-    return new CeramicSigner()
+    return new CeramicSigner(new DidUnderlyingCeramicSigner())
   }
 
   static fromDID(did: DID): CeramicSigner {
-    const signer = new CeramicSigner()
+    const signer = new CeramicSigner(new DidUnderlyingCeramicSigner())
     signer.withDid(did)
     return signer
   }
 
-  public withDid(did: DID) {
-    this.reqs = {
-      createDagJWS: (payload, options) => did.createDagJWS(payload, options),
-      createJWS: (payload, options) => did.createJWS(payload, options),
-      verifyJWS: (payload, options) => did.verifyJWS(payload, options),
-      async ensureAuthenticated(): Promise<void> {
-        if (!did.authenticated) {
-          await did.authenticate()
-        }
-      },
-      async asController(): Promise<string> {
-        return did.hasParent ? did.parent : did.id
-      },
-    }
-  }
-
-  private assertRequirements(): Promise<void> {
-    if (!this.reqs) {
-      return Promise.reject('Requirements not met for signing. Was a DID set?')
-    }
+  public withDid(did: DID): void {
+    this.reqs.withDid(did)
   }
 
   async createJWS<T extends string | Record<string, any>>(
     payload: T,
     options?: CreateJWSOptions
   ): Promise<DagJWS> {
-    await this.assertRequirements()
     if (!this.isAuthenticated) {
       await this.reqs.ensureAuthenticated()
       this.isAuthenticated = true
@@ -95,7 +126,6 @@ export class CeramicSigner implements IntoSigner {
     payload: Record<string, any>,
     options?: CreateJWSOptions
   ): Promise<DagJWSResult> {
-    await this.assertRequirements()
     if (!this.isAuthenticated) {
       await this.reqs.ensureAuthenticated()
       this.isAuthenticated = true
@@ -104,7 +134,6 @@ export class CeramicSigner implements IntoSigner {
   }
 
   async asController(): Promise<string> {
-    await this.assertRequirements()
     if (!this.isAuthenticated) {
       await this.reqs.ensureAuthenticated()
       this.isAuthenticated = true
@@ -113,7 +142,6 @@ export class CeramicSigner implements IntoSigner {
   }
 
   async verifyJWS(jws: string | DagJWS, options?: VerifyJWSOptions): Promise<VerifyJWSResult> {
-    await this.assertRequirements()
     return this.reqs.verifyJWS(jws, options)
   }
 }

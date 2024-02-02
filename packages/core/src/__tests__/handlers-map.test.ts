@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { HandlersMap } from '../handlers-map.js'
+import { defaultHandlers, HandlersMap } from '../handlers-map.js'
 import { Stream, StreamHandler, LoggerProvider } from '@ceramicnetwork/common'
 import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler'
 import { ModelHandler } from '@ceramicnetwork/stream-model-handler'
@@ -10,8 +10,8 @@ const loggerProvider = new LoggerProvider()
 const logger = loggerProvider.getDiagnosticsLogger()
 
 describe('constructor', () => {
-  test('default handlers', () => {
-    const handlers = new HandlersMap(logger)
+  test('default handlers', async () => {
+    const handlers = new HandlersMap(logger, await defaultHandlers())
     expect(handlers.get('tile')).toBeInstanceOf(TileDocumentHandler)
     expect(handlers.get('caip10-link')).toBeInstanceOf(Caip10LinkHandler)
     expect(handlers.get('model')).toBeInstanceOf(ModelHandler)
@@ -24,16 +24,16 @@ describe('constructor', () => {
   })
 })
 
-test('set and get', () => {
+test('set and get', async () => {
   const customHandler = { name: 'custom', type: 13 } as unknown as StreamHandler<Stream>
-  const handlers = new HandlersMap(logger)
+  const handlers = new HandlersMap(logger, await defaultHandlers())
   expect(() => handlers.get('custom')).toThrow()
   handlers.add(customHandler)
   expect(() => handlers.get('custom')).toThrow()
   expect(handlers.get(13)).toBe(customHandler)
 })
 
-test('get non-existing', () => {
-  const handlers = new HandlersMap(logger)
+test('get non-existing', async () => {
+  const handlers = new HandlersMap(logger, await defaultHandlers())
   expect(() => handlers.get('custom')).toThrow()
 })

@@ -15,6 +15,14 @@ import {
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
+  init(): Promise<void> {
+    return Promise.resolve()
+  }
+
+  shutdown(): Promise<void> {
+    return Promise.resolve()
+  }
+
   get type(): number {
     return Caip10Link.STREAM_TYPE_ID
   }
