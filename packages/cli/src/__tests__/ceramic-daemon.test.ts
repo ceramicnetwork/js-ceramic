@@ -513,7 +513,7 @@ describe('Ceramic interop: core <> http-client', () => {
       schema: { type: 'object', additionalProperties: false },
       accountRelation: { type: 'list' },
     }
-    // create model on different node
+
     const model = await Model.create(client, MODEL_DEFINITION)
 
     expect(messageEvent).toBeDefined()
