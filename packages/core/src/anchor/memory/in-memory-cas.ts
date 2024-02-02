@@ -66,6 +66,10 @@ export class InMemoryCAS implements CASClient {
     })
   }
 
+  assertCASAccessible(): void {
+    // no-op
+  }
+
   async supportedChains(): Promise<Array<string>> {
     return [this.#chainId]
   }

@@ -645,19 +645,14 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     opts: CreateOpts = {}
   ): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride }
-    const genesisCid = await this.dispatcher.storeCommit(genesis)
-    const streamId = new StreamID(type, genesisCid)
-    this._logger.verbose(
-      `Created stream from genesis, StreamID: ${streamId.toString()}, genesis CID: ${genesisCid.toString()}`
-    )
-    const state$ = await this.repository.applyCreateOpts(streamId, opts)
+    const state$ = await this.repository.createStreamFromGenesis(type, genesis, opts)
     const stream = streamFromState<T>(
       this,
       this._streamHandlers,
       state$.value,
       this.repository.updates$
     )
-    this._logger.verbose(`Created stream ${streamId.toString()} from state`)
+    this._logger.verbose(`Created stream ${stream.id.toString()} from state`)
     return stream
   }
 

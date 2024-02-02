@@ -35,6 +35,14 @@ export interface AnchorService {
   url: string
 
   /**
+   * Throws an error if we have consistently failed to contact the CAS for any requests for an
+   * extended period of time.  This most likely points to either a networking failure or a
+   * misconfiguration of the Ceramic node, though it could also indicate that the anchor service
+   * itself is down for some reason.
+   */
+  assertCASAccessible(): void
+
+  /**
    * Send request to the anchoring service
    * @param carFile - CAR file containing all necessary data for the CAS to anchor
    */
@@ -115,6 +123,14 @@ export interface CASClient {
    * Return supported chains by CAS as array of CAIP-2 identifiers.
    */
   supportedChains(): Promise<Array<string>>
+
+  /**
+   * Throws an error if we have consistently failed to contact the CAS for any requests for an
+   * extended period of time.  This most likely points to either a networking failure or a
+   * misconfiguration of the Ceramic node, though it could also indicate that the anchor service
+   * itself is down for some reason.
+   */
+  assertCASAccessible(): void
 
   /**
    * Create an anchor request on CAS through `fetch`.

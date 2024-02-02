@@ -58,7 +58,7 @@ export class EthereumAnchorService implements AnchorService {
   ) {
     this.#logger = logger
     this.#events = new Subject()
-    this.#cas = new RemoteCAS(anchorServiceUrl, sendRequest)
+    this.#cas = new RemoteCAS(logger, anchorServiceUrl, sendRequest)
     this.events = this.#events
     this.url = anchorServiceUrl
     this.validator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
@@ -95,6 +95,10 @@ export class EthereumAnchorService implements AnchorService {
     if (this.#enableAnchorPollingLoop) {
       this.#loop.start()
     }
+  }
+
+  assertCASAccessible(): void {
+    this.#cas.assertCASAccessible()
   }
 
   /**
