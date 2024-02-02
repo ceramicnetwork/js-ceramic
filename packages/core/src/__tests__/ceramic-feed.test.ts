@@ -124,7 +124,7 @@ describe('Ceramic feed', () => {
       s.unsubscribe()
     })
   })
-  
+
   // Should pass once Recon is integrated and cross node-syncing is enabled
   const testIfV3ShouldPass = process.env.CERAMIC_ENABLE_V4_MODE ? test.skip : test
 
