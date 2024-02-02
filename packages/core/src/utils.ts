@@ -2,7 +2,7 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'mapmoize'
 
-import { AnchorStatus, CommitData, CommitType, Stream, StreamUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitData, EventType, Stream, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
@@ -63,7 +63,7 @@ export class Utils {
     const commit = await dispatcher.retrieveCommit(cid, streamId)
     if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
     // The default applies to all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
-    const commitData: CommitData = { cid, type: CommitType.SIGNED, commit, timestamp }
+    const commitData: CommitData = { cid, type: EventType.DATA, commit, timestamp }
     if (StreamUtils.isSignedCommit(commit)) {
       const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
       if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
@@ -71,10 +71,10 @@ export class Utils {
       commitData.envelope = commit
       commitData.capability = await this.extractCapability(commit, dispatcher)
     } else if (StreamUtils.isAnchorCommit(commit)) {
-      commitData.type = CommitType.ANCHOR
+      commitData.type = EventType.TIME
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
     }
-    if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
+    if (!commitData.commit.prev) commitData.type = EventType.INIT
     return commitData
   }
 

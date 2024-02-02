@@ -1,5 +1,7 @@
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
-import { type Context, Type, refinement, string } from 'codeco'
+import { EventType } from '@ceramicnetwork/common'
+import { type Context, Type, refinement, string, sparse, array, optional, boolean } from 'codeco'
+import { enumCodec } from './enum.js'
 
 /**
  * Verify if `input` is a StreamID string.
@@ -67,3 +69,18 @@ export const commitIdAsString = new Type<CommitID, string, string>(
   },
   (commitId) => commitId.toString()
 )
+
+/**
+ * codeco for StreamMetadata
+ */
+export const StreamMetadata = sparse({
+  controllers: array(string),
+  model: optional(streamIdAsString),
+  context: optional(streamIdAsString),
+  family: optional(string),
+  schema: optional(string),
+  tags: optional(array(string)),
+  forbidControllerChange: optional(boolean),
+})
+
+export const EventTypeAsNumber = enumCodec<EventType>('EventType', EventType)

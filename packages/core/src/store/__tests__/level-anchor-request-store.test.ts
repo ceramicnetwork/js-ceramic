@@ -2,7 +2,7 @@ import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { LevelDbStore } from '../level-db-store.js'
 import {
   CeramicApi,
-  CommitType,
+  EventType,
   DiagnosticsLogger,
   GenesisCommit,
   IpfsApi,
@@ -104,7 +104,7 @@ describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
     streamId: StreamID
   ): Promise<GenesisCommit> {
     const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
-    expect(commit.type).toEqual(CommitType.GENESIS)
+    expect(commit.type).toEqual(EventType.INIT)
     return commit.commit as GenesisCommit
   }
 

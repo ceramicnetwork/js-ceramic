@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { CommitType, StreamState } from '@ceramicnetwork/common'
+import { EventType, StreamState } from '@ceramicnetwork/common'
 import { RunningState } from '../running-state.js'
 
 const FAKE_CID1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -9,7 +9,7 @@ const initial = {
   type: 0,
   log: [
     {
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       cid: FAKE_CID1,
     },
   ],
@@ -19,7 +19,7 @@ const second = {
   log: [
     ...initial.log,
     {
-      type: CommitType.SIGNED,
+      type: EventType.DATA,
       cid: FAKE_CID2,
     },
   ],

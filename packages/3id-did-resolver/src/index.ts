@@ -22,7 +22,7 @@ import * as u8a from 'uint8arrays'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { errorRepresentation, withResolutionError } from './error-representation.js'
-import { CommitType, type Stream } from '@ceramicnetwork/common'
+import { EventType, type Stream } from '@ceramicnetwork/common'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
@@ -92,7 +92,7 @@ function lastAnchorOrGenesisEntry(log: NonEmptyArray<LogEntry>): LogEntry {
   // Look for last anchor
   for (let index = log.length - 1; index >= 0; index--) {
     const entry = log[index]!
-    if (entry.type === CommitType.ANCHOR) {
+    if (entry.type === EventType.TIME) {
       return entry
     }
   }

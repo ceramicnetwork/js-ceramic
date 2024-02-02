@@ -7,7 +7,7 @@ import {
   Stream,
   PinningBackend,
   StreamState,
-  CommitType,
+  EventType,
   JSONToBase64Url,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -65,9 +65,7 @@ const state: StreamState = {
   },
   signature: SignatureStatus.GENESIS,
   anchorStatus: AnchorStatus.NOT_REQUESTED,
-  log: [
-    { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: CommitType.GENESIS },
-  ],
+  log: [{ cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: EventType.INIT }],
 }
 
 class FakeType extends Stream {

@@ -1,8 +1,22 @@
 import type { CID } from 'multiformats/cid'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CAR } from 'cartonne'
-import type { NotCompleteStatusName } from '@ceramicnetwork/codecs'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+
+export enum AnchorRequestStatusName {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  READY = 'READY',
+  REPLACED = 'REPLACED',
+}
+
+export type NotCompleteStatusName =
+  | AnchorRequestStatusName.PENDING
+  | AnchorRequestStatusName.PROCESSING
+  | AnchorRequestStatusName.FAILED
+  | AnchorRequestStatusName.READY
+  | AnchorRequestStatusName.REPLACED
 
 /**
  * Describes all anchor statuses

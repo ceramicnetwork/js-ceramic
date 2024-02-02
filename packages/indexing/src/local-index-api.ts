@@ -159,7 +159,7 @@ export class LocalIndexApi implements IndexApi {
     return this.databaseIndexApi?.getIndexedModels() ?? []
   }
 
-  convertModelDataToIndexModelsArgs(
+  async convertModelDataToIndexModelsArgs(
     modelsNoLongerIndexed: Array<ModelData>,
     modelData: ModelData,
     loading: LoadingInterfaceImplements = {}
@@ -167,9 +167,9 @@ export class LocalIndexApi implements IndexApi {
     const modelStreamId = modelData.streamID
     this.logger.imp(`Starting indexing for Model ${modelStreamId.toString()}`)
 
-    const modelNoLongerIndexed = modelsNoLongerIndexed.some((oldIdx) =>
-      oldIdx.streamID.equals(modelStreamId)
-    )
+    const modelNoLongerIndexed = modelsNoLongerIndexed.some(function (oldIdx) {
+      return oldIdx.streamID.equals(modelStreamId)
+    })
     // TODO(CDB-2297): Handle a model's historical sync after re-indexing
     if (modelNoLongerIndexed) {
       throw new Error(
@@ -177,7 +177,7 @@ export class LocalIndexApi implements IndexApi {
       )
     }
 
-    return _getIndexModelArgs(this.reader, modelData, loading)
+    return await _getIndexModelArgs(this.reader, modelData, loading)
   }
 
   async indexModels(models: Array<ModelData>): Promise<void> {
@@ -185,9 +185,9 @@ export class LocalIndexApi implements IndexApi {
     const loading = {}
 
     const indexModelsArgs = await Promise.all(
-      models.map((idx) =>
-        this.convertModelDataToIndexModelsArgs(modelsNoLongerIndexed, idx, loading)
-      )
+      models.map(async (idx) => {
+        return await this.convertModelDataToIndexModelsArgs(modelsNoLongerIndexed, idx, loading)
+      })
     )
 
     await this.databaseIndexApi?.indexModels(indexModelsArgs)

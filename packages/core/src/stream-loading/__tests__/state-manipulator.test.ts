@@ -6,7 +6,7 @@ import {
   AnchorStatus,
   AppliableStreamLog,
   CommitData,
-  CommitType,
+  EventType,
   IpfsApi,
   LogEntry,
   LoggerProvider,
@@ -393,12 +393,12 @@ describeIfV3('StateManipulator test', () => {
 
       test('Neither log is anchored, same log lengths', async () => {
         const log1: Array<LogEntry> = [
-          { cid: cids[1], type: CommitType.SIGNED },
-          { cid: cids[2], type: CommitType.SIGNED },
+          { cid: cids[1], type: EventType.DATA },
+          { cid: cids[2], type: EventType.DATA },
         ]
         const log2: Array<LogEntry> = [
-          { cid: cids[4], type: CommitType.SIGNED },
-          { cid: cids[0], type: CommitType.SIGNED },
+          { cid: cids[4], type: EventType.DATA },
+          { cid: cids[0], type: EventType.DATA },
         ]
 
         // When neither log is anchored and log lengths are the same we should pick the log whose last entry has the
@@ -409,13 +409,13 @@ describeIfV3('StateManipulator test', () => {
 
       test('Neither log is anchored, different log lengths', async () => {
         const log1: Array<LogEntry> = [
-          { cid: cids[1], type: CommitType.SIGNED },
-          { cid: cids[2], type: CommitType.SIGNED },
-          { cid: cids[3], type: CommitType.SIGNED },
+          { cid: cids[1], type: EventType.DATA },
+          { cid: cids[2], type: EventType.DATA },
+          { cid: cids[3], type: EventType.DATA },
         ]
         const log2: Array<LogEntry> = [
-          { cid: cids[4], type: CommitType.SIGNED },
-          { cid: cids[0], type: CommitType.SIGNED },
+          { cid: cids[4], type: EventType.DATA },
+          { cid: cids[0], type: EventType.DATA },
         ]
 
         // When neither log is anchored and log lengths are different we should pick the log with
@@ -425,8 +425,8 @@ describeIfV3('StateManipulator test', () => {
       })
 
       test('One log anchored before the other', async () => {
-        const log1: Array<LogEntry> = [{ cid: cids[1], type: CommitType.SIGNED }]
-        const log2: Array<LogEntry> = [{ cid: cids[2], type: CommitType.ANCHOR }]
+        const log1: Array<LogEntry> = [{ cid: cids[1], type: EventType.DATA }]
+        const log2: Array<LogEntry> = [{ cid: cids[2], type: EventType.TIME }]
 
         // When only one of the logs has been anchored, we pick the anchored one
         expect(stateManipulator._pickLogToAccept(log1, log2)).toEqual(log2)
@@ -438,12 +438,12 @@ describeIfV3('StateManipulator test', () => {
         const earlierTime = now - 10000
         const laterTime = now - 5000
         const log1: Array<LogEntry> = [
-          { cid: cids[0], type: CommitType.SIGNED, timestamp: laterTime },
-          { cid: cids[1], type: CommitType.ANCHOR, timestamp: laterTime },
+          { cid: cids[0], type: EventType.DATA, timestamp: laterTime },
+          { cid: cids[1], type: EventType.TIME, timestamp: laterTime },
         ]
         const log2: Array<LogEntry> = [
-          { cid: cids[2], type: CommitType.SIGNED, timestamp: earlierTime },
-          { cid: cids[3], type: CommitType.ANCHOR, timestamp: earlierTime },
+          { cid: cids[2], type: EventType.DATA, timestamp: earlierTime },
+          { cid: cids[3], type: EventType.TIME, timestamp: earlierTime },
         ]
 
         // When both logs are anchored, take the one anchored in the earlier block.
@@ -454,13 +454,13 @@ describeIfV3('StateManipulator test', () => {
       test('Both logs anchored in same block blocks - different log lengths', async () => {
         const timestamp = new Date().getTime()
         const log1: Array<LogEntry> = [
-          { cid: cids[1], type: CommitType.SIGNED, timestamp },
-          { cid: cids[2], type: CommitType.SIGNED, timestamp },
-          { cid: cids[3], type: CommitType.ANCHOR, timestamp },
+          { cid: cids[1], type: EventType.DATA, timestamp },
+          { cid: cids[2], type: EventType.DATA, timestamp },
+          { cid: cids[3], type: EventType.TIME, timestamp },
         ]
         const log2: Array<LogEntry> = [
-          { cid: cids[4], type: CommitType.SIGNED, timestamp },
-          { cid: cids[0], type: CommitType.ANCHOR, timestamp },
+          { cid: cids[4], type: EventType.DATA, timestamp },
+          { cid: cids[0], type: EventType.TIME, timestamp },
         ]
 
         // When anchored in the same block, and with different log lengths, we should choose the one
@@ -474,15 +474,15 @@ describeIfV3('StateManipulator test', () => {
         const earlierTime = now - 10000
         const laterTime = now - 5000
         const log1: Array<LogEntry> = [
-          { cid: cids[1], type: CommitType.SIGNED, timestamp: earlierTime },
-          { cid: cids[2], type: CommitType.SIGNED, timestamp: earlierTime },
-          { cid: cids[3], type: CommitType.ANCHOR, timestamp: earlierTime },
+          { cid: cids[1], type: EventType.DATA, timestamp: earlierTime },
+          { cid: cids[2], type: EventType.DATA, timestamp: earlierTime },
+          { cid: cids[3], type: EventType.TIME, timestamp: earlierTime },
         ]
         const log2: Array<LogEntry> = [
-          { cid: cids[4], type: CommitType.SIGNED, timestamp: earlierTime },
-          { cid: cids[0], type: CommitType.ANCHOR, timestamp: earlierTime },
-          { cid: cids[5], type: CommitType.SIGNED, timestamp: laterTime },
-          { cid: cids[6], type: CommitType.ANCHOR, timestamp: laterTime },
+          { cid: cids[4], type: EventType.DATA, timestamp: earlierTime },
+          { cid: cids[0], type: EventType.TIME, timestamp: earlierTime },
+          { cid: cids[5], type: EventType.DATA, timestamp: laterTime },
+          { cid: cids[6], type: EventType.TIME, timestamp: laterTime },
         ]
 
         // When first anchor is in the same block, break tie only with log length until first anchor,
@@ -494,12 +494,12 @@ describeIfV3('StateManipulator test', () => {
       test('Both logs anchored in the same block with the same log lengths', async () => {
         const timestamp = new Date().getTime()
         const log1: Array<LogEntry> = [
-          { cid: cids[1], type: CommitType.SIGNED, timestamp },
-          { cid: cids[2], type: CommitType.ANCHOR, timestamp },
+          { cid: cids[1], type: EventType.DATA, timestamp },
+          { cid: cids[2], type: EventType.TIME, timestamp },
         ]
         const log2: Array<LogEntry> = [
-          { cid: cids[4], type: CommitType.SIGNED, timestamp },
-          { cid: cids[0], type: CommitType.ANCHOR, timestamp },
+          { cid: cids[4], type: EventType.DATA, timestamp },
+          { cid: cids[0], type: EventType.TIME, timestamp },
         ]
 
         // When anchored in the same block, and with same log lengths, we should use

@@ -1,12 +1,11 @@
 import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
-import { AnchorStatus, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, IpfsApi, AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '../utils.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const SEED = '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83'

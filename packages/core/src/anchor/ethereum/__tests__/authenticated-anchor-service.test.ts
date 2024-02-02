@@ -1,11 +1,15 @@
 import { expect, jest } from '@jest/globals'
-import { LoggerProvider, type fetchJson, IpfsApi } from '@ceramicnetwork/common'
+import {
+  LoggerProvider,
+  AnchorRequestStatusName,
+  type fetchJson,
+  type IpfsApi,
+} from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../../__tests__/create-ceramic.js'
 import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
 import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
 import type { AnchorLoopHandler } from '../../anchor-service.js'
 import { CARFactory, type CAR } from 'cartonne'
@@ -52,13 +56,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(
-      auth,
-      url,
-      url,
-      diagnosticsLogger,
-      100
-    )
+    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
 
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
@@ -87,13 +85,7 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
 
     const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(
-      auth,
-      url,
-      url,
-      diagnosticsLogger,
-      100
-    )
+    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
     })

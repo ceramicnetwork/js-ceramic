@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import getPort from 'get-port'
-import { AnchorStatus, CommitType, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
@@ -111,7 +111,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
       model: midMetadata.model,
     })
     expect(doc.state.log.length).toEqual(1)
-    expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
@@ -123,8 +123,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await doc.replace(CONTENT0)
     expect(doc.content).toEqual(CONTENT0)
     expect(doc.state.log.length).toEqual(2)
-    expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
-    expect(doc.state.log[1].type).toEqual(CommitType.SIGNED)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
+    expect(doc.state.log[1].type).toEqual(EventType.DATA)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
@@ -136,8 +136,8 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await doc.replace(CONTENT0)
     expect(doc.content).toEqual(CONTENT0)
     expect(doc.state.log.length).toEqual(2)
-    expect(doc.state.log[0].type).toEqual(CommitType.GENESIS)
-    expect(doc.state.log[1].type).toEqual(CommitType.SIGNED)
+    expect(doc.state.log[0].type).toEqual(EventType.INIT)
+    expect(doc.state.log[1].type).toEqual(EventType.DATA)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 

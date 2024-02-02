@@ -4,7 +4,7 @@ import * as dagCBOR from '@ipld/dag-cbor'
 import {
   CeramicSigner,
   CommitData,
-  CommitType,
+  EventType,
   IpfsApi,
   SignedCommitContainer,
   StreamReaderWriter,
@@ -216,7 +216,7 @@ describeIfV3('TileDocument with 3ID', () => {
 
     const signedCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: commit.jws,
     }
@@ -231,7 +231,7 @@ describeIfV3('TileDocument with 3ID', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: COMMITS.genesisGenerated.linkedBlock,
       envelope: COMMITS.genesisGenerated.jws,
     }
@@ -266,7 +266,7 @@ describeIfV3('TileDocument with 3ID', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -287,7 +287,7 @@ describeIfV3('TileDocument with 3ID', () => {
     // apply signed
     const signedCommitData = {
       cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
+      type: EventType.DATA,
       commit: sPayload,
       envelope: signedCommit.jws,
     }
@@ -309,7 +309,7 @@ describeIfV3('TileDocument with 3ID', () => {
 
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -332,7 +332,7 @@ describeIfV3('TileDocument with 3ID', () => {
     // apply genesis
     const genesisCommitData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: payload,
       envelope: genesisCommit.jws,
     }
@@ -353,7 +353,7 @@ describeIfV3('TileDocument with 3ID', () => {
     // apply signed
     const signedCommitData = {
       cid: FAKE_CID_2,
-      type: CommitType.SIGNED,
+      type: EventType.DATA,
       commit: sPayload,
       envelope: signedCommit.jws,
     }
@@ -363,7 +363,7 @@ describeIfV3('TileDocument with 3ID', () => {
     // apply anchor
     const anchorCommitData = {
       cid: FAKE_CID_3,
-      type: CommitType.ANCHOR,
+      type: EventType.TIME,
       commit: COMMITS.r2.commit,
       proof: COMMITS.proof,
       timestamp: 1615799679,
