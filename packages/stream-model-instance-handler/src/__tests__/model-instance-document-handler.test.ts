@@ -97,6 +97,9 @@ const FAKE_MID_ID2 = StreamID.fromString(
 const FAKE_MID_ID3 = StreamID.fromString(
   'k2t6wzhkh1dbrv7qx7oii5uwjngvzgatek9lzvqnv2wq87jvfhafvi1lxbx203'
 )
+const FAKE_MODEL_IMMUTABLE_ID = StreamID.fromString(
+  'kjzl6hvfrbw6c6a53c3qh6mxliozys6ef0njomyg1t1k26xkfe757olhr84rkka'
+)
 
 const CONTENT0 = { myData: 0 }
 const CONTENT1 = { myData: 1 }
@@ -310,6 +313,43 @@ const MODEL_DEFINITION_IMPLEMENTS_RELATION: ModelDefinition = {
   },
 }
 
+const MODEL_DEFINITION_IMMUTABLE: ModelDefinition = {
+  name: 'Person',
+  views: {},
+  schema: {
+    type: 'object',
+    $defs: {
+      Address: {
+        type: 'object',
+        title: 'Address',
+        required: ['street', 'city', 'zipCode'],
+        properties: {
+          city: { type: 'string', maxLength: 100, minLength: 5 },
+          street: { type: 'string', maxLength: 100, minLength: 5 },
+          zipCode: { type: 'string', maxLength: 100, minLength: 5 },
+        },
+        additionalProperties: false,
+      },
+    },
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    required: ['name', 'address'],
+    properties: {
+      name: { type: 'string', maxLength: 100, minLength: 10 },
+      address: { $ref: '#/$defs/Address' },
+      myArray: { type: 'array', maxItems: 3, items: { type: 'integer' } },
+      myMultipleType: { oneOf: [{ type: 'integer' }, { type: 'string' }] },
+    },
+    additionalProperties: false,
+  },
+  version: '2.0',
+  interface: false,
+  relations: {},
+  implements: [],
+  description: 'Simple person with immutable field',
+  accountRelation: { type: 'list' },
+  immutableFields: ['address', 'name', 'myArray', 'myMultipleType'],
+}
+
 const STREAMS = {
   [FAKE_MODEL_ID.toString()]: {
     content: MODEL_DEFINITION,
@@ -364,6 +404,11 @@ const STREAMS = {
   [FAKE_MID_ID3.toString()]: {
     content: {},
     metadata: { model: FAKE_MODEL_IMPLEMENTS_RELATION_ID },
+  },
+  [FAKE_MODEL_IMMUTABLE_ID.toString()]: {
+    id: FAKE_MODEL_IMMUTABLE_ID,
+    content: MODEL_DEFINITION_IMMUTABLE,
+    commitId: FAKE_MODEL_ID,
   },
 }
 
@@ -977,6 +1022,164 @@ describe('ModelInstanceDocumentHandler', () => {
     expect(state2).toMatchSnapshot()
   })
 
+  describe('Immutable checks', () => {
+    let state
+    beforeEach(async () => {
+      const customContent = {
+        name: 'Foo Bar FooBar',
+        address: { city: 'FooVille', street: 'Bar St', zipCode: '10111' },
+        myArray: [1, 2],
+        myMultipleType: 1,
+      }
+      const genesisCommit = (await ModelInstanceDocument._makeGenesis(
+        context.signer,
+        customContent,
+        {
+          controller: DID_ID,
+          model: FAKE_MODEL_IMMUTABLE_ID,
+        }
+      )) as SignedCommitContainer
+      await ipfs.dag.put(genesisCommit, FAKE_CID_1)
+
+      const payload = dagCBOR.decode(genesisCommit.linkedBlock)
+      await ipfs.dag.put(payload, genesisCommit.jws.link)
+
+      // apply genesis
+      const genesisCommitData = {
+        cid: FAKE_CID_1,
+        type: EventType.INIT,
+        commit: payload,
+        envelope: genesisCommit.jws,
+      }
+
+      state = await handler.applyCommit(genesisCommitData, context)
+    })
+
+    it('Rejects commit if scalar field is immutable', async () => {
+      const state$ = TestUtils.runningState(state)
+      const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.name = 'Foo Bar FooFoo'
+      const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+        context.signer,
+        doc.commitId,
+        doc.content,
+        customNewContent
+      )) as SignedCommitContainer
+
+      await ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+      // apply signed
+      const signedCommitData = {
+        cid: FAKE_CID_2,
+        type: EventType.DATA,
+        commit: sPayload,
+        envelope: signedCommit.jws,
+      }
+
+      await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+        `Immutable field "name" cannot be updated`
+      )
+    })
+
+    it('Rejects commit if nested field is immutable', async () => {
+      const state$ = TestUtils.runningState(state)
+      const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.address = { city: 'BarVille', street: 'Bar St', zipCode: '10111' }
+      const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+        context.signer,
+        doc.commitId,
+        doc.content,
+        customNewContent
+      )) as SignedCommitContainer
+
+      await ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+      // apply signed
+      const signedCommitData = {
+        cid: FAKE_CID_2,
+        type: EventType.DATA,
+        commit: sPayload,
+        envelope: signedCommit.jws,
+      }
+
+      await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+        `Immutable field "address" cannot be updated`
+      )
+    })
+
+    it('Rejects commit if array field is immutable', async () => {
+      const state$ = TestUtils.runningState(state)
+      const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.myArray = [1, 2, 3]
+      const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+        context.signer,
+        doc.commitId,
+        doc.content,
+        customNewContent
+      )) as SignedCommitContainer
+
+      await ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+      // apply signed
+      const signedCommitData = {
+        cid: FAKE_CID_2,
+        type: EventType.DATA,
+        commit: sPayload,
+        envelope: signedCommit.jws,
+      }
+
+      await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+        `Immutable field "myArray" cannot be updated`
+      )
+    })
+
+    it('Rejects commit on schema that allows multiple types', async () => {
+      const state$ = TestUtils.runningState(state)
+      const doc = new ModelInstanceDocument(state$, context)
+
+      const customNewContent = doc.content
+      customNewContent.myMultipleType = '1'
+      const signedCommit = (await ModelInstanceDocument.makeUpdateCommit(
+        context.signer,
+        doc.commitId,
+        doc.content,
+        customNewContent
+      )) as SignedCommitContainer
+
+      await ipfs.dag.put(signedCommit, FAKE_CID_2)
+
+      const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
+      await ipfs.dag.put(sPayload, signedCommit.jws.link)
+
+      // apply signed
+      const signedCommitData = {
+        cid: FAKE_CID_2,
+        type: EventType.DATA,
+        commit: sPayload,
+        envelope: signedCommit.jws,
+      }
+
+      await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
+        `Immutable field "myMultipleType" cannot be updated`
+      )
+    })
+  })
+
   test('throws error when applying genesis commit with invalid schema', async () => {
     const commit = (await ModelInstanceDocument._makeGenesis(
       context.signer,
@@ -1502,6 +1705,7 @@ describe('ModelInstanceDocumentHandler', () => {
       commit: payload,
       envelope: genesisCommit.jws,
     }
+
     await expect(handler.applyCommit(genesisCommitData, context)).resolves.not.toThrow()
   })
 })

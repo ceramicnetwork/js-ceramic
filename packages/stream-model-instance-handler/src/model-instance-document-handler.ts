@@ -27,6 +27,17 @@ import { toString } from 'uint8arrays'
 // Hardcoding the model streamtype id to avoid introducing a dependency on the stream-model package
 const MODEL_STREAM_TYPE_ID = 2
 
+type Payload = {
+  data: JsonPatchOperation[]
+}
+
+type JsonPatchOperation = {
+  op: string
+  path: string
+  value?: any
+  from?: string
+}
+
 interface ModelInstanceDocumentHeader extends ModelInstanceDocumentMetadata {
   unique?: Uint8Array
 }
@@ -173,7 +184,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const oldContent = state.content ?? {}
     const newContent = jsonpatch.applyPatch(oldContent, payload.data).newDocument
     const modelStream = await context.loadStream<Model>(metadata.model)
-    await this._validateContent(context, modelStream, newContent, false)
+    await this._validateContent(context, modelStream, newContent, false, payload)
     await this._validateUnique(
       modelStream,
       metadata as unknown as ModelInstanceDocumentMetadata,
@@ -223,7 +234,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     ceramic: StreamReader,
     model: Model,
     content: any,
-    genesis: boolean
+    genesis: boolean,
+    payload?: Payload
   ): Promise<void> {
     if (
       genesis &&
@@ -248,6 +260,9 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
+    if (!genesis) {
+      await this._validateLockedFieldsUpdate(model, payload)
+    }
   }
 
   async _validateRelationsContent(ceramic: StreamReader, model: Model, content: any) {
@@ -329,6 +344,23 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   }
 
   /**
+   *  Helper function to validate if immutable fields are being mutated
+   */
+  async _validateLockedFieldsUpdate(model: Model, payload: Payload): Promise<void> {
+    // No locked fields
+    if (!('immutableFields' in model.content) || model.content.immutableFields.length == 0) return
+
+    for (const lockedField of model.content.immutableFields) {
+      const mutated = payload.data.some(
+        (entry) => entry.path.slice(1).split('/').shift() === lockedField
+      )
+      if (mutated) {
+        throw new Error(`Immutable field "${lockedField}" cannot be updated`)
+      }
+    }
+  }
+
+  /*
    * Validates the ModelInstanceDocument unique constraints against the Model definition.
    * @param model - model that this ModelInstanceDocument belongs to
    * @param metadata - ModelInstanceDocument metadata to validate

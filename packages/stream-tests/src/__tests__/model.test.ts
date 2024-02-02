@@ -703,7 +703,7 @@ describe('Model API http-client tests', () => {
     ).resolves.toBeInstanceOf(Model)
   })
 
-  test('Can create model with relations to any documet', async () => {
+  test('Can create model with relations to any document', async () => {
     await expect(
       Model.create(ceramic, {
         version: '2.0',
