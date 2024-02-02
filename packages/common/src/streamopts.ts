@@ -1,4 +1,5 @@
 import type { DID } from 'dids'
+import type { CeramicSigner } from './ceramic-signer.js'
 
 /**
  * Options that are related to pinning streams.
@@ -93,6 +94,7 @@ export interface AnchorOpts {
  */
 export interface UpdateOpts extends PublishOpts, AnchorOpts {
   asDID?: DID
+  signer?: CeramicSigner
 }
 
 /**

@@ -1,9 +1,10 @@
 import { describe, expect, jest, test } from '@jest/globals'
 import { RemoteCAS } from '../remote-cas.js'
-import { fetchJson, LoggerProvider, TestUtils } from '@ceramicnetwork/common'
+import { fetchJson, LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { AnchorRequestCarFileReader } from '../../anchor-request-car-file-reader.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
-import { AnchorRequestStatusName, dateAsUnix } from '@ceramicnetwork/codecs'
+import { dateAsUnix } from '@ceramicnetwork/codecs'
 import MockDate from 'mockdate'
 
 const ANCHOR_SERVICE_URL = 'http://example.com'

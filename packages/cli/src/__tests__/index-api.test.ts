@@ -4,12 +4,13 @@ import tmp from 'tmp-promise'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { randomString } from '@stablelib/random'
-import { CommitType, IpfsApi, StreamState, TestUtils } from '@ceramicnetwork/common'
+import { EventType, IpfsApi, StreamState } from '@ceramicnetwork/common'
 import { CeramicDaemon } from '../ceramic-daemon.js'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { makeDID } from './make-did.js'
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const SEED = randomString(32)
 
@@ -54,8 +55,8 @@ beforeEach(async () => {
   const apiUrl = `http://localhost:${daemon.port}`
   client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
-  await core.setDID(makeDID(core, SEED))
-  await client.setDID(makeDID(client, SEED))
+  core.did = makeDID(core, SEED)
+  client.did = makeDID(client, SEED)
 
   const model = await Model.create(core, MODEL_DEFINITION)
   modelStreamId = model.id
@@ -132,7 +133,7 @@ test('serialize StreamState', async () => {
     type: 0,
     log: [
       {
-        type: CommitType.GENESIS,
+        type: EventType.INIT,
         cid: TestUtils.randomCID(),
       },
     ],

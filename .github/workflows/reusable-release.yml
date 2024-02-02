@@ -33,12 +33,12 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
         name: Checkout main branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.GH_TOKEN }}
@@ -114,12 +114,12 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
         name: Checkout rc branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: release-candidate
           token: ${{ secrets.GH_TOKEN }}
@@ -194,7 +194,7 @@ jobs:
     steps:
       -
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       -
@@ -205,7 +205,7 @@ jobs:
           exit 1
       -
         name: Checkout hotfix branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ secrets.GH_TOKEN }}
@@ -266,3 +266,67 @@ jobs:
       -
         name: Create deployment job
         run: dagger do -l error deploy -w "actions:deploy:\"${{ env.AWS_REGION }}\":prod:\"${{ env.SHA }}\":\"${{ env.SHA_TAG }}\":_" -p ${{ env.DAGGER_PLAN }}
+
+  publish_nightly:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.release_type == 'nightly' }}
+    steps:
+      -
+        name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      -
+        name: Checkout nightly branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch || 'develop' }}
+          token: ${{ secrets.GH_TOKEN }}
+          # Ref: https://github.com/lerna/lerna/issues/2532
+          fetch-depth: 0
+      -
+        name: Configure git
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
+      -
+        name: Install Dagger
+        uses: dagger/dagger-for-github@v3
+        with:
+          install-only: true
+          version: "0.2.36"
+      -
+        name: Verify Docker image
+        run: |
+          dagger project init
+          dagger project update
+          dagger project update "github.com/3box/pipeline-tools/ci"
+          dagger do verify -p ${{ env.DAGGER_PLAN }}
+      -
+        name: Initialize and build code
+        run: npm ci && npm run build
+      -
+        # These steps explicitly do not push the release commit, so the specified nightly branch will not be impacted.
+        name: Publish all packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          # First try to publish all the packages. Once a release or RC is made, all the package versions get bumped
+          # and we want to publish nightly packages for the new versions. If this fails, presumably because some
+          # packages have not changed since the last release, we'll try to publish only the packages that did change.
+          npm run publish:nightly -- --force-publish --yes
+          # If we reached here then the publish succeeded and we can exit the workflow
+          exit 0
+        continue-on-error: true
+      -
+        # Now reset the branch and try to publish only the packages that have changed since the last release
+        name: Publish updated packages to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          git reset --hard HEAD^
+          npm run publish:nightly -- --yes || true

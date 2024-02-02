@@ -9,19 +9,18 @@ import {
   test,
 } from '@jest/globals'
 import {
-  type AnchorEvent,
   AnchorStatus,
   IpfsApi,
+  AnchorRequestStatusName,
   SignatureStatus,
-  TestUtils,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { Subject } from 'rxjs'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const INITIAL_CONTENT = { abc: 123, def: 456 }
 const STRING_MAP_SCHEMA = {
@@ -33,7 +32,10 @@ const STRING_MAP_SCHEMA = {
   },
 }
 
-describe('anchor', () => {
+//should pass in v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('anchor', () => {
   let realHandleTip
   let ipfs: IpfsApi
   let ceramic: Ceramic
@@ -146,12 +148,14 @@ describe('anchor', () => {
 
     test('enforces schema in update that assigns schema', async () => {
       const schemaDoc = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
+      await CoreUtils.anchorUpdate(ceramic, schemaDoc)
 
       const stream = await TileDocument.create(ceramic, { stuff: 1 })
       const streamState = await ceramic.repository.load(stream.id, {})
-      await TestUtils.anchorUpdate(ceramic, stream)
-      const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId })
+      await CoreUtils.anchorUpdate(ceramic, stream)
+      const updateRec = await stream.makeCommit(ceramic.signer, null, {
+        schema: schemaDoc.commitId,
+      })
 
       await expect(
         ceramic.repository.applyCommit(streamState.id, updateRec, {
@@ -163,7 +167,7 @@ describe('anchor', () => {
 
     test('enforce previously assigned schema during future update', async () => {
       const schemaDoc = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
+      await CoreUtils.anchorUpdate(ceramic, schemaDoc)
 
       const conformingContent = { stuff: 'foo' }
       const nonConformingContent = { stuff: 1 }
@@ -171,9 +175,9 @@ describe('anchor', () => {
         schema: schemaDoc.commitId,
       })
       const streamState = await ceramic.repository.load(stream.id, {})
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
-      const updateRec = await stream.makeCommit(ceramic, nonConformingContent)
+      const updateRec = await stream.makeCommit(ceramic.signer, nonConformingContent)
       await expect(
         ceramic.repository.applyCommit(streamState.id, updateRec, {
           anchor: false,
@@ -192,7 +196,7 @@ describe('anchor', () => {
       const streamState1 = await ceramic.repository.load(stream1.id, {})
       expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip, undefined)
       publishTip.mockClear()
-      const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
+      const updateRec = await stream1.makeCommit(ceramic.signer, { foo: 34 })
       await ceramic.repository.applyCommit(streamState1.id, updateRec, {
         anchor: false,
         publish: true,
@@ -222,7 +226,7 @@ describe('anchor', () => {
       await ceramic.repository.anchor(stream$, {})
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
@@ -240,7 +244,7 @@ describe('anchor', () => {
       await ceramic.repository.anchor(stream$, {})
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       expect(stream$.value.log.length).toEqual(2)
@@ -267,7 +271,7 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Check that fakeHandleTip was called only two times
       expect(handleTipSpy).toHaveBeenCalledTimes(2)
@@ -288,7 +292,7 @@ describe('anchor', () => {
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       // Check that fakeHandleTip was called only three times
       expect(fakeHandleTip).toHaveBeenCalledTimes(3)
@@ -308,7 +312,7 @@ describe('anchor', () => {
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.PENDING)
       expect(await anchorRequestStore.load(stream.id)).not.toBeNull()
 
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
       expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 

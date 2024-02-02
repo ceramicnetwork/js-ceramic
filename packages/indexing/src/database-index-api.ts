@@ -28,7 +28,7 @@ export interface IndexStreamArgs {
   readonly streamID: StreamID
   readonly model: StreamID
   readonly controller: string
-  readonly streamContent: Record<string, any>
+  readonly streamContent: Record<string, any> | null
   readonly tip: CID
   readonly lastAnchor: Date | null
   readonly firstAnchor: Date | null
@@ -110,7 +110,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   }
 
   /**
-   * Prepare the database to begin indexing the given models.  This generally involves creating
+   * Prepare the database to begin indexing the given models. This generally involves creating
    * the necessary database tables and indexes.
    * @param models
    */
@@ -218,7 +218,7 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
     const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
     const relations = this.modelRelations.get(indexingArgs.model.toString()) ?? []
     for (const relation of relations) {
-      indexedData[addColumnPrefix(relation)] = indexingArgs.streamContent[relation]
+      indexedData[addColumnPrefix(relation)] = indexingArgs.streamContent?.[relation]
     }
     const toMerge = cloneDeep(indexedData)
     delete toMerge['created_at']
@@ -442,7 +442,7 @@ export class PostgresIndexApi extends DatabaseIndexApi<Date> {
     return {
       stream_id: indexingArgs.streamID.toString(),
       controller_did: indexingArgs.controller.toString(),
-      stream_content: indexingArgs.streamContent,
+      stream_content: indexingArgs.streamContent ?? {},
       tip: indexingArgs.tip.toString(),
       last_anchored_at: indexingArgs.lastAnchor,
       first_anchored_at: indexingArgs.firstAnchor,
@@ -493,7 +493,7 @@ export class SqliteIndexApi extends DatabaseIndexApi<number> {
     return {
       stream_id: indexingArgs.streamID.toString(),
       controller_did: indexingArgs.controller.toString(),
-      stream_content: JSON.stringify(indexingArgs.streamContent),
+      stream_content: JSON.stringify(indexingArgs.streamContent ?? {}),
       tip: indexingArgs.tip.toString(),
       last_anchored_at: asTimestamp(indexingArgs.lastAnchor),
       first_anchored_at: asTimestamp(indexingArgs.firstAnchor),

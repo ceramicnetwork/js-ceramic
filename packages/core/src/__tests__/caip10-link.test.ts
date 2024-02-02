@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { AnchorStatus, StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import MockDate from 'mockdate'
 import type { Ceramic } from '../ceramic.js'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -38,6 +39,9 @@ const EMPTY_DID_PROOF = {
   timestamp: 1641462800,
 }
 
+// These tests are not expected to run in v4 mode
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
 describe('Ceramic API', () => {
   jest.setTimeout(60000)
   let ipfs: IpfsApi
@@ -52,7 +56,7 @@ describe('Ceramic API', () => {
     await ipfs.stop()
   })
 
-  describe('Caip10Link test', () => {
+  describeIfV3('Caip10Link test', () => {
     let ceramic: Ceramic
     let authProvider
     let tmpFolder: tmp.DirectoryResult
@@ -167,12 +171,12 @@ describe('Ceramic API', () => {
 
       const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await TestUtils.anchorUpdate(ceramic, link)
+      await CoreUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       await link.setDid(DID_USED, authProvider, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await TestUtils.anchorUpdate(ceramic, link)
+      await CoreUtils.anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       expect(link.did).toEqual(DID_USED)

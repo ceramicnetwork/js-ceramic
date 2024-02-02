@@ -2,14 +2,14 @@ import { jest, expect, it, beforeEach, describe, test } from '@jest/globals'
 import tmp from 'tmp-promise'
 import {
   AnchorStatus,
-  CommitType,
+  EventType,
   StreamState,
   IpfsApi,
   SignatureStatus,
-  TestUtils,
   LoggerProvider,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store.js'
 import { PinStoreFactory } from '../pin-store-factory.js'
@@ -37,6 +37,9 @@ const repository = {
   load: jest.fn(),
 } as unknown as Repository
 
+// should pass when updated from tile document
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 describe('Level data store', () => {
   let store: PinStore
   let logger: DiagnosticsLogger
@@ -48,7 +51,7 @@ describe('Level data store', () => {
     metadata: { controllers: ['foo'] },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+    log: [{ cid: FAKE_CID, type: EventType.INIT }],
   }
 
   beforeEach(async () => {
@@ -79,7 +82,7 @@ describe('Level data store', () => {
   it('pins not anchored stream correctly with IPFS pinning', async () => {
     const state: StreamState = {
       ...streamState,
-      log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+      log: [{ cid: FAKE_CID, type: EventType.INIT }],
     }
     await expect(store.stateStore.load(streamId)).resolves.toBeNull()
     const pinSpy = jest.spyOn(store.pinning, 'pin')
@@ -89,60 +92,68 @@ describe('Level data store', () => {
     await expect(store.stateStore.load(streamId)).resolves.toEqual(state)
   })
 
-  it('adds and removes pinned stream', async () => {
-    const realIpfs = await createIPFS()
-    const ceramic = await createCeramic(realIpfs)
+  testIfV3(
+    'adds and removes pinned stream',
+    async () => {
+      const realIpfs = await createIPFS()
+      const ceramic = await createCeramic(realIpfs)
 
-    const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
-    await TestUtils.anchorUpdate(ceramic, stream)
+      const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
+      await CoreUtils.anchorUpdate(ceramic, stream)
 
-    const pinSpy = jest.spyOn(realIpfs.pin, 'add')
-    await ceramic.admin.pin.add(stream.id)
-    expect(pinSpy).toBeCalledTimes(5)
+      const pinSpy = jest.spyOn(realIpfs.pin, 'add')
+      await ceramic.admin.pin.add(stream.id)
+      expect(pinSpy).toBeCalledTimes(5)
 
-    const unpinSpy = jest.spyOn(realIpfs.pin, 'rm')
-    await ceramic.admin.pin.rm(stream.id)
-    expect(unpinSpy).toBeCalledTimes(3) // genesis commit envelope, genesis commit payload, and anchor commit
+      const unpinSpy = jest.spyOn(realIpfs.pin, 'rm')
+      await ceramic.admin.pin.rm(stream.id)
+      expect(unpinSpy).toBeCalledTimes(3) // genesis commit envelope, genesis commit payload, and anchor commit
 
-    await ceramic.close()
-    await realIpfs.stop()
-  }, 20000)
+      await ceramic.close()
+      await realIpfs.stop()
+    },
+    20000
+  )
 
-  test('list pinned streams', async () => {
-    const realIpfs = await createIPFS()
-    const ceramic = await createCeramic(realIpfs)
+  testIfV3(
+    'list pinned streams',
+    async () => {
+      const realIpfs = await createIPFS()
+      const ceramic = await createCeramic(realIpfs)
 
-    const stream1 = await TileDocument.create(ceramic, { stuff: 1 }, null, {
-      anchor: false,
-      publish: false,
-    })
-    await ceramic.admin.pin.add(stream1.id)
+      const stream1 = await TileDocument.create(ceramic, { stuff: 1 }, null, {
+        anchor: false,
+        publish: false,
+      })
+      await ceramic.admin.pin.add(stream1.id)
 
-    const stream2 = await TileDocument.create(ceramic, { stuff: 2 }, null, {
-      anchor: false,
-      publish: false,
-    })
-    await ceramic.admin.pin.add(stream2.id)
+      const stream2 = await TileDocument.create(ceramic, { stuff: 2 }, null, {
+        anchor: false,
+        publish: false,
+      })
+      await ceramic.admin.pin.add(stream2.id)
 
-    const pinned = []
-    const iterator = await ceramic.admin.pin.ls()
-    for await (const id of iterator) {
-      pinned.push(id)
-    }
+      const pinned = []
+      const iterator = await ceramic.admin.pin.ls()
+      for await (const id of iterator) {
+        pinned.push(id)
+      }
 
-    expect(pinned.includes(stream1.id.toString())).toBeTruthy()
-    expect(pinned.includes(stream2.id.toString())).toBeTruthy()
+      expect(pinned.includes(stream1.id.toString())).toBeTruthy()
+      expect(pinned.includes(stream2.id.toString())).toBeTruthy()
 
-    const pinnedSingle = []
-    for await (const id of await ceramic.admin.pin.ls(new StreamID('tile', FAKE_CID))) {
-      pinned.push(id)
-    }
+      const pinnedSingle = []
+      for await (const id of await ceramic.admin.pin.ls(new StreamID('tile', FAKE_CID))) {
+        pinned.push(id)
+      }
 
-    expect(pinnedSingle).toEqual([])
+      expect(pinnedSingle).toEqual([])
 
-    await ceramic.close()
-    await realIpfs.stop()
-  }, 10000)
+      await ceramic.close()
+      await realIpfs.stop()
+    },
+    10000
+  )
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path

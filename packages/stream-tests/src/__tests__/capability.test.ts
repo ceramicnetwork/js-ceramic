@@ -1,4 +1,5 @@
-import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CeramicApi, IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
@@ -70,6 +71,10 @@ async function addCapToDid(wallet: Wallet, didKey: DID, resource: string, expira
   return didKeyWithCapability
 }
 
+// should pass on v4 if updated from TileDocument
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
 describe('CACAO Integration test', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicApi
@@ -121,7 +126,7 @@ describe('CACAO Integration test', () => {
     await ipfs.stop()
   }, 30000)
 
-  describe('Updates without CACAO should fail', () => {
+  describeIfV3('Updates without CACAO should fail', () => {
     test('can not update with stream without capability', async () => {
       // Create a determinstic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
@@ -159,7 +164,7 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describe('Resources using StreamId', () => {
+  describeIfV3('Resources using StreamId', () => {
     test('can update with streamId in capability', async () => {
       // Create a determinstic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
@@ -379,7 +384,7 @@ describe('CACAO Integration test', () => {
     }, 30000)
   })
 
-  describe('Resources using wildcard', () => {
+  describeIfV3('Resources using wildcard', () => {
     test('update using capability with wildcard * resource', async () => {
       // Create a deterministic tiledocument owned by the user
       const deterministicDocument = await TileDocument.deterministic(ceramic, {
@@ -420,28 +425,32 @@ describe('CACAO Integration test', () => {
   })
 
   describe('Ceramic dids instance with capability/parent', () => {
-    test('can update tile stream with streamId in capability', async () => {
-      ceramic.did = didKeyWithParent
-      // Create a determinstic tiledocument owned by the user
-      const deterministicDocument = await TileDocument.deterministic(ceramic, {
-        deterministic: true,
-        family: 'testCapabilities1',
-      })
-      const streamId = deterministicDocument.id
-      const didKeyWithCapability = await addCapToDid(
-        wallet,
-        didKey,
-        `ceramic://${streamId.toString()}`
-      )
-      ceramic.did = didKeyWithCapability
+    testIfV3(
+      'can update tile stream with streamId in capability',
+      async () => {
+        ceramic.did = didKeyWithParent
+        // Create a determinstic tiledocument owned by the user
+        const deterministicDocument = await TileDocument.deterministic(ceramic, {
+          deterministic: true,
+          family: 'testCapabilities1',
+        })
+        const streamId = deterministicDocument.id
+        const didKeyWithCapability = await addCapToDid(
+          wallet,
+          didKey,
+          `ceramic://${streamId.toString()}`
+        )
+        ceramic.did = didKeyWithCapability
 
-      await deterministicDocument.update({ foo: 'bar' }, null, {
-        anchor: false,
-        publish: false,
-      })
+        await deterministicDocument.update({ foo: 'bar' }, null, {
+          anchor: false,
+          publish: false,
+        })
 
-      expect(deterministicDocument.content).toEqual({ foo: 'bar' })
-    }, 30000)
+        expect(deterministicDocument.content).toEqual({ foo: 'bar' })
+      },
+      30000
+    )
 
     test('can create and update new model stream with model resource', async () => {
       const didKeyWithCapability = await addCapToDid(
@@ -467,25 +476,29 @@ describe('CACAO Integration test', () => {
       expect(doc.content).toEqual(CONTENT1)
     }, 30000)
 
-    test('create with wildcard * resource', async () => {
-      const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
-      ceramic.did = didKeyWithCapability
-      const doc = await TileDocument.create(
-        ceramic,
-        { foo: 'bar' },
-        {},
-        {
-          anchor: false,
-          publish: false,
-        }
-      )
+    testIfV3(
+      'create with wildcard * resource',
+      async () => {
+        const didKeyWithCapability = await addCapToDid(wallet, didKey, `ceramic://*`)
+        ceramic.did = didKeyWithCapability
+        const doc = await TileDocument.create(
+          ceramic,
+          { foo: 'bar' },
+          {},
+          {
+            anchor: false,
+            publish: false,
+          }
+        )
 
-      expect(doc.content).toEqual({ foo: 'bar' })
-      expect(doc.metadata.controllers).toEqual([PARENT_WALLET_ADDRESS])
-    }, 30000)
+        expect(doc.content).toEqual({ foo: 'bar' })
+        expect(doc.metadata.controllers).toEqual([PARENT_WALLET_ADDRESS])
+      },
+      30000
+    )
   })
 
-  describe('CACAO Expiration', () => {
+  describeIfV3('CACAO Expiration', () => {
     let didKeyWithCapability
     let opts
     const CACAO_EXPIRATION_WINDOW = 1000 * 60 * 10 // 10 minutes
@@ -560,7 +573,7 @@ describe('CACAO Integration test', () => {
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await TestUtils.anchorUpdate(ceramic, tile)
+      await CoreUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
       // 1. While CACAO is valid: Loading is ok
@@ -587,7 +600,7 @@ describe('CACAO Integration test', () => {
         opts
       )
       await tile.update({ a: 2 }, null, { ...opts, anchor: true })
-      await TestUtils.anchorUpdate(ceramic, tile)
+      await CoreUtils.anchorUpdate(ceramic, tile)
       await tile.update({ a: 3 }, null, opts)
 
       // 1. While CACAO is valid: Loading is ok
@@ -619,7 +632,7 @@ describe('CACAO Integration test', () => {
           opts
         )
         await doc.update(content1, null, { ...opts, anchor: true })
-        await TestUtils.anchorUpdate(ceramic, doc)
+        await CoreUtils.anchorUpdate(ceramic, doc)
 
         expireCacao()
 
@@ -773,7 +786,7 @@ describe('CACAO Integration test', () => {
           },
           { ...opts, anchor: true }
         )
-        await TestUtils.anchorUpdate(ceramic, doc)
+        await CoreUtils.anchorUpdate(ceramic, doc)
 
         await doc.update(CONTENT1, null, opts)
 

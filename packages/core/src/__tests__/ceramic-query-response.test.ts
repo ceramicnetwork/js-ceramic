@@ -1,5 +1,6 @@
 import { jest, expect, describe, test, afterEach, beforeEach } from '@jest/globals'
-import { type IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { type IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -7,7 +8,7 @@ import { createCeramic } from './create-ceramic.js'
 import { MsgType, PubsubMessage, QueryMessage, ResponseMessage } from '../pubsub/pubsub-message.js'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 import { CID } from 'multiformats/cid'
-import { asIpfsMessage } from '../pubsub/__tests__/as-ipfs-message.js'
+import { asIpfsMessage } from './test-utils.js'
 import { Ceramic } from '../ceramic.js'
 
 const LONG_SYNC_TIME = 60 * 1000
@@ -40,7 +41,10 @@ function getQueryPublishedPromise(
   })
 }
 
-describe('Response to pubsub queries handling', () => {
+// These tests will likely pass in a way on v4, but there is no pubsub
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Response to pubsub queries handling', () => {
   jest.setTimeout(30 * 1000)
 
   let ceramicIpfs: IpfsApi
@@ -74,14 +78,14 @@ describe('Response to pubsub queries handling', () => {
 
     // Make sure we have some random valid CIDs to respond to pubsub queries with
     for (let i = 0; i < 10; i++) {
-      const commit = await TileDocument.makeGenesis(ceramic, { foo: i }, null)
+      const commit = await TileDocument.makeGenesis(ceramic.signer, { foo: i }, null)
       const cid = await ceramic.dispatcher.storeCommit(commit)
       cids.push(cid)
     }
   })
 
   beforeEach(async () => {
-    const genesisCommit = await TileDocument.makeGenesis(ceramic, { foo: 'bar' }, null)
+    const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
     const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit)
     streamID = new StreamID(0, genesisCID)
   })

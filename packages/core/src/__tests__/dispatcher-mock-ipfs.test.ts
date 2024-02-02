@@ -1,8 +1,9 @@
-import { expect, jest, it, test, describe, beforeEach, afterEach } from '@jest/globals'
+import { expect, jest, it, describe, beforeEach, afterEach } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { EventType, StreamState, IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository } from '../state-management/repository.js'
 import { RunningState } from '../state-management/running-state.js'
@@ -55,6 +56,8 @@ const mock_ipfs = {
 
 const carFactory = new CARFactory()
 
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? it.skip : it
+
 describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher
   let repository: Repository
@@ -76,7 +79,7 @@ describe('Dispatcher with mock ipfs', () => {
     jest.clearAllMocks()
   })
 
-  it('is constructed correctly', async () => {
+  testIfV3('is constructed correctly', async () => {
     expect((dispatcher as any).repository).toBeInstanceOf(Repository)
     await TestUtils.delay(100) // Wait for plumbing
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything(), {
@@ -84,7 +87,7 @@ describe('Dispatcher with mock ipfs', () => {
     })
   })
 
-  it('closes correctly', async () => {
+  testIfV3('closes correctly', async () => {
     await dispatcher.close()
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
@@ -175,7 +178,7 @@ describe('Dispatcher with mock ipfs', () => {
     expect(blockGetSpy.mock.calls[1][0]).toEqual(barCid)
   })
 
-  it('publishes tip correctly', async () => {
+  testIfV3('publishes tip correctly', async () => {
     const tip = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     // Test if subscription ends. It always will, but better be on the safe side.
     await new Promise<void>((resolve) => {
@@ -201,7 +204,7 @@ describe('Dispatcher with mock ipfs', () => {
     await expect(dispatcher.handleMessage(message)).rejects.toThrow(/Unsupported message type/)
   })
 
-  it('handle message correctly without model', async () => {
+  testIfV3('handle message correctly without model', async () => {
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
       repository._registerRunningState(runningState)
@@ -214,7 +217,7 @@ describe('Dispatcher with mock ipfs', () => {
       log: [
         {
           cid: FAKE_STREAM_ID.cid,
-          type: CommitType.GENESIS,
+          type: EventType.INIT,
         },
       ],
     } as unknown as StreamState
@@ -242,7 +245,7 @@ describe('Dispatcher with mock ipfs', () => {
       ...initialState,
       log: initialState.log.concat({
         cid: FAKE_CID,
-        type: CommitType.SIGNED,
+        type: EventType.DATA,
       }),
     } as unknown as StreamState
     const stream2 = await register(continuationState)
@@ -266,7 +269,7 @@ describe('Dispatcher with mock ipfs', () => {
     )
   })
 
-  it('handle message correctly with model', async () => {
+  testIfV3('handle message correctly with model', async () => {
     async function register(state: StreamState) {
       const runningState = new RunningState(state, false)
       repository._registerRunningState(runningState)
@@ -279,7 +282,7 @@ describe('Dispatcher with mock ipfs', () => {
       log: [
         {
           cid: FAKE_STREAM_ID.cid,
-          type: CommitType.GENESIS,
+          type: EventType.INIT,
         },
       ],
     } as unknown as StreamState
@@ -300,7 +303,7 @@ describe('Dispatcher with mock ipfs', () => {
     )
   })
 
-  test('init', async () => {
+  testIfV3('init', async () => {
     const subscribeSpy = jest.spyOn(dispatcher.messageBus, 'subscribe')
     await dispatcher.init()
     expect(subscribeSpy).toBeCalled()

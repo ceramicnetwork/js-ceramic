@@ -2,17 +2,22 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../../dispatcher.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createDispatcher } from '../../__tests__/create-dispatcher.js'
-import { IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../../utils.js'
 import { Ceramic } from '../../ceramic.js'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { CID } from 'multiformats/cid'
 import { LogSyncer } from '../log-syncer.js'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { IpfsApi } from '@ceramicnetwork/common'
 
 const TOPIC = '/ceramic/test12345'
 
-describe('LogSyncer test', () => {
+// Should pass in v4 if we update from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('LogSyncer test', () => {
   jest.setTimeout(1000 * 30)
 
   let dispatcher: Dispatcher
@@ -40,9 +45,9 @@ describe('LogSyncer test', () => {
 
     const stream = await TileDocument.create(ceramic, { step: 0 }, null, { anchor: false })
     await stream.update({ step: 1 })
-    await TestUtils.anchorUpdate(ceramic, stream)
+    await CoreUtils.anchorUpdate(ceramic, stream)
     await stream.update({ step: 2 })
-    await TestUtils.anchorUpdate(ceramic, stream)
+    await CoreUtils.anchorUpdate(ceramic, stream)
 
     commits = stream.state.log.map((logEntry) => logEntry.cid)
     expect(commits.length).toEqual(5)

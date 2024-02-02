@@ -2,7 +2,8 @@ import { jest } from '@jest/globals'
 import { Dispatcher } from '../../dispatcher.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createDispatcher } from '../../__tests__/create-dispatcher.js'
-import { IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { deserialize, MsgType, PubsubMessage, serialize } from '../../pubsub/pubsub-message.js'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
 import { TipFetcher } from '../tip-fetcher.js'
@@ -10,7 +11,10 @@ import { lastValueFrom } from 'rxjs'
 
 const TOPIC = '/ceramic/test12345'
 
-describe('TipFetcher test', () => {
+// No pubsub in V4
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('TipFetcher test', () => {
   jest.setTimeout(1000 * 30)
 
   let dispatcher: Dispatcher

@@ -4,10 +4,11 @@ import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { CeramicApi, CommitType, Context, TestUtils } from '@ceramicnetwork/common'
+import { CeramicApi, EventType, Context } from '@ceramicnetwork/common'
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 import { AccountId } from 'caip'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const digest = (input: string) =>
   uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
@@ -67,7 +68,10 @@ const COMMITS = {
   },
 }
 
-describe('Caip10LinkHandler', () => {
+// These tests are never expected to be run in v4 mode
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Caip10LinkHandler', () => {
   let context: Context
   let handler: Caip10LinkHandler
 
@@ -118,7 +122,7 @@ describe('Caip10LinkHandler', () => {
 
   it('throws an error if genesis commit has data', async () => {
     const commitWithData = { ...COMMITS.genesis, data: {} }
-    const genesisWithData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: commitWithData }
+    const genesisWithData = { cid: FAKE_CID_1, type: EventType.INIT, commit: commitWithData }
     await expect(handler.applyCommit(genesisWithData, context)).rejects.toThrow(/cannot have data/)
   })
 
@@ -127,7 +131,7 @@ describe('Caip10LinkHandler', () => {
     delete commitWithoutControllers.header.controllers
     const genesisWithoutControllers = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: commitWithoutControllers,
     }
     await expect(handler.applyCommit(genesisWithoutControllers, context)).rejects.toThrow(
@@ -142,7 +146,7 @@ describe('Caip10LinkHandler', () => {
     )
     const genesisWithMultipleControllers = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: commitWithMultipleControllers,
     }
     await expect(handler.applyCommit(genesisWithMultipleControllers, context)).rejects.toThrow(
@@ -151,13 +155,13 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies genesis commit correctly', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     expect(state).toMatchSnapshot()
   })
 
   it('makes update commit correctly', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const state$ = TestUtils.runningState(state)
     const stream = new Caip10Link(state$, context)
@@ -170,20 +174,20 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies signed commit correctly', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     let state = await handler.applyCommit(genesisCommitData, context)
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: COMMITS.r1.commit }
+    const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit: COMMITS.r1.commit }
     state = await handler.applyCommit(signedCommitData, context, state)
     expect(state).toMatchSnapshot()
   })
 
   it('throws an error of the proof is invalid', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const badRecord = cloneDeep(COMMITS.r1.commit)
     badRecord.data.signature =
       '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e8302348762387462387648726346877884d9cb8a9303f5d92ea4df0d1c'
-    const badCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: badRecord }
+    const badCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit: badRecord }
     await expect(handler.applyCommit(badCommitData, context, state)).rejects.toThrow(
       /Invalid proof/i
     )
@@ -194,33 +198,33 @@ describe('Caip10LinkHandler', () => {
     badAddressGenesis.header.controllers = ['0xffffffffffffffffffffffffffffffffffffffff@eip155:1']
     const badAddressGenesisData = {
       cid: FAKE_CID_1,
-      type: CommitType.GENESIS,
+      type: EventType.INIT,
       commit: badAddressGenesis,
     }
     const state = await handler.applyCommit(badAddressGenesisData, context)
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: COMMITS.r1.commit }
+    const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit: COMMITS.r1.commit }
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       `Address '${COMMITS.r1.commit.data.account.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${badAddressGenesis.header.controllers[0].toLowerCase()}'`
     )
   })
 
   it('fails to apply commit with invalid prev link', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const commit = { ...COMMITS.r1.commit }
     commit.prev = FAKE_CID_3
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit }
+    const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit }
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /Commit doesn't properly point to previous commit in log/
     )
   })
 
   it('fails to apply commit with invalid id property', async () => {
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     const state = await handler.applyCommit(genesisCommitData, context)
     const commit = { ...COMMITS.r1.commit }
     commit.id = FAKE_CID_3
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit }
+    const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit }
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
       /Invalid genesis CID in commit/
     )
@@ -235,15 +239,15 @@ describe('Caip10LinkHandler', () => {
     await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
 
     // Apply genesis
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: COMMITS.genesis }
     let state = await handler.applyCommit(genesisCommitData, context)
     // Apply signed record
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: COMMITS.r1.commit }
+    const signedCommitData = { cid: FAKE_CID_2, type: EventType.DATA, commit: COMMITS.r1.commit }
     state = await handler.applyCommit(signedCommitData, context, state)
     // Apply anchor record
     const anchorCommitData = {
       cid: FAKE_CID_3,
-      type: CommitType.ANCHOR,
+      type: EventType.TIME,
       commit: COMMITS.r2.commit,
       proof: COMMITS.proof.value,
       timestamp: 1666728832,
@@ -310,20 +314,20 @@ describe('Caip10LinkHandler', () => {
     await context.ipfs.dag.put(commits.r2proof, FAKE_CID_4)
     await context.ipfs.dag.put(commits.r4proof, FAKE_CID_7)
 
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: commits.genesis }
+    const genesisCommitData = { cid: FAKE_CID_1, type: EventType.INIT, commit: commits.genesis }
     let state = await handler.applyCommit(genesisCommitData, context)
-    const signedCommitData_1 = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: commits.r1 }
+    const signedCommitData_1 = { cid: FAKE_CID_2, type: EventType.DATA, commit: commits.r1 }
     state = await handler.applyCommit(signedCommitData_1, context, state)
     const anchorCommitData_1 = {
       cid: FAKE_CID_3,
-      type: CommitType.ANCHOR,
+      type: EventType.TIME,
       commit: commits.r2,
       proof: commits.r2proof.value,
       timestamp: 1608116723,
     }
     state = await handler.applyCommit(anchorCommitData_1, context, state)
     expect(state.content).toEqual('did:3:testdid1')
-    const signedCommitData_2 = { cid: FAKE_CID_5, type: CommitType.SIGNED, commit: commits.r3 }
+    const signedCommitData_2 = { cid: FAKE_CID_5, type: EventType.DATA, commit: commits.r3 }
     state = await handler.applyCommit(signedCommitData_2, context, state)
 
     // create a fake update based on the r1 data to try a replay attack
@@ -332,14 +336,14 @@ describe('Caip10LinkHandler', () => {
       id: FAKE_CID_1,
       prev: FAKE_CID_5,
     }
-    const signedCommitData_3 = { cid: FAKE_CID_8, type: CommitType.SIGNED, commit: r4 }
+    const signedCommitData_3 = { cid: FAKE_CID_8, type: EventType.DATA, commit: r4 }
     await expect(handler.applyCommit(signedCommitData_3, context, state)).rejects.toThrow(
       'Invalid commit, proof timestamp too old'
     )
 
     const anchorCommitData_2 = {
       cid: FAKE_CID_6,
-      type: CommitType.ANCHOR,
+      type: EventType.TIME,
       commit: commits.r4,
       proof: commits.r4proof.value,
     }
@@ -352,7 +356,7 @@ describe('Caip10LinkHandler', () => {
       id: FAKE_CID_1,
       prev: FAKE_CID_6,
     }
-    const signedCommitData_4 = { cid: FAKE_CID_8, type: CommitType.SIGNED, commit: r5 }
+    const signedCommitData_4 = { cid: FAKE_CID_8, type: EventType.DATA, commit: r5 }
     await expect(handler.applyCommit(signedCommitData_4, context, state)).rejects.toThrow(
       'Invalid commit, proof timestamp too old'
     )

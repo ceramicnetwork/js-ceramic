@@ -1,14 +1,19 @@
 import { expect, jest } from '@jest/globals'
-import { LoggerProvider, type fetchJson } from '@ceramicnetwork/common'
+import {
+  LoggerProvider,
+  AnchorRequestStatusName,
+  type fetchJson,
+  type IpfsApi,
+} from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../../__tests__/create-ceramic.js'
 import { createDidAnchorServiceAuth } from '../../../__tests__/create-did-anchor-service-auth.js'
 import { AuthenticatedEthereumAnchorService } from '../ethereum-anchor-service.js'
 import { generateFakeCarFile } from './generateFakeCarFile.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
 import { AnchorRequestStore } from '../../../store/anchor-request-store.js'
 import type { AnchorLoopHandler } from '../../anchor-service.js'
 import { CARFactory, type CAR } from 'cartonne'
+import { Ceramic } from '../../../ceramic.js'
 
 const FAUX_ANCHOR_STORE = {
   save: jest.fn(),
@@ -28,8 +33,8 @@ const FAUX_HANDLER: AnchorLoopHandler = {
 const diagnosticsLogger = new LoggerProvider().getDiagnosticsLogger()
 
 describe('AuthenticatedEthereumAnchorServiceTest', () => {
-  let ipfs: any
-  let ceramic: any
+  let ipfs: IpfsApi
+  let ceramic: Ceramic
 
   beforeAll(async () => {
     ipfs = await createIPFS()
@@ -49,15 +54,9 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const url = 'http://example.com'
     const chainIdUrl = url + '/api/v0/service-info/supported_chains'
 
-    const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger, fauxFetchJson)
+    const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(
-      auth,
-      url,
-      url,
-      diagnosticsLogger,
-      100
-    )
+    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
 
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
@@ -84,15 +83,9 @@ describe('AuthenticatedEthereumAnchorServiceTest', () => {
     const url = 'http://example.com'
     const requestsUrl = url + '/api/v0/requests'
 
-    const auth = createDidAnchorServiceAuth(url, ceramic, diagnosticsLogger, fauxFetchJson)
+    const auth = createDidAnchorServiceAuth(url, ceramic.signer, diagnosticsLogger, fauxFetchJson)
     const signRequestSpy = jest.spyOn(auth, 'signRequest')
-    const anchorService = new AuthenticatedEthereumAnchorService(
-      auth,
-      url,
-      url,
-      diagnosticsLogger,
-      100
-    )
+    const anchorService = new AuthenticatedEthereumAnchorService(auth, url, url, diagnosticsLogger)
     jest.spyOn(anchorService.validator, 'init').mockImplementation(async () => {
       // Do Nothing
     })

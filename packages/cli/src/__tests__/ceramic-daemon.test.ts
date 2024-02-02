@@ -11,7 +11,6 @@ import {
   IpfsApi,
   TimedAbortSignal,
   GenesisCommit,
-  TestUtils,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { firstValueFrom } from 'rxjs'
@@ -23,10 +22,14 @@ import { makeDID } from './make-did.js'
 import { makeCeramicCore } from './make-ceramic-core.js'
 import { makeCeramicDaemon } from './make-ceramic-daemon.js'
 import { DID } from 'dids'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const seed = 'SEED'
 
-describe('Ceramic interop: core <> http-client', () => {
+// Should  pass on v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(30000)
   let ipfs: IpfsApi
   let tmpFolder: tmp.DirectoryResult
@@ -53,8 +56,8 @@ describe('Ceramic interop: core <> http-client', () => {
     })
     const apiUrl = `http://localhost:${daemon.port}`
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
-    await core.setDID(makeDID(core, seed))
-    await client.setDID(makeDID(client, seed))
+    core.did = makeDID(core, seed)
+    client.did = makeDID(client, seed)
   })
 
   afterEach(async () => {

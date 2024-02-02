@@ -37,20 +37,34 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 10000)
 
-test('happy path', async () => {
-  const near = await nearApiJs.connect(config)
-  const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
-  await happyPath(ceramic, authProvider)
-}, 20000)
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
-test('wrong proof', async () => {
-  const near = await nearApiJs.connect(config)
-  const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
-  await wrongProof(ceramic, authProvider)
-}, 20000)
+testIfV3(
+  'happy path',
+  async () => {
+    const near = await nearApiJs.connect(config)
+    const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
+    await happyPath(ceramic, authProvider)
+  },
+  20000
+)
 
-test('clear Did', async () => {
-  const near = await nearApiJs.connect(config)
-  const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
-  await clearDid(ceramic, authProvider)
-}, 20000)
+testIfV3(
+  'wrong proof',
+  async () => {
+    const near = await nearApiJs.connect(config)
+    const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
+    await wrongProof(ceramic, authProvider)
+  },
+  20000
+)
+
+testIfV3(
+  'clear Did',
+  async () => {
+    const near = await nearApiJs.connect(config)
+    const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
+    await clearDid(ceramic, authProvider)
+  },
+  20000
+)

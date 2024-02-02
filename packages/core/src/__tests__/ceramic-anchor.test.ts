@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
-import { AnchorStatus, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, IpfsApi, AnchorRequestStatusName } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../utils.js'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const SEED = '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83'
 
@@ -16,7 +17,10 @@ const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Cera
   })
 }
 
-describe('Ceramic anchoring', () => {
+// these should pass in v4 mode when recon integrated (need to be updated from TileDocument)
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Ceramic anchoring', () => {
   jest.setTimeout(60000)
   let ipfs1: IpfsApi
   let ipfs2: IpfsApi
@@ -49,7 +53,7 @@ describe('Ceramic anchoring', () => {
     await stream1.update({ a: 2 })
     await stream1.update({ a: 3 })
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ a: 3 })
     expect(stream1.state.log.length).toEqual(4)
@@ -99,7 +103,7 @@ describe('Ceramic anchoring', () => {
 
     expect(stream1.state.log.length).toEqual(3)
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ a: 123, b: 4567 })
     expect(stream1.state.log.length).toEqual(2)
@@ -123,7 +127,7 @@ describe('Ceramic anchoring', () => {
 
     expect(stream1.state.log.length).toEqual(2)
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ a: 4567 })
     expect(stream1.state.log.length).toEqual(3)
@@ -146,7 +150,7 @@ describe('Ceramic anchoring', () => {
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
@@ -172,7 +176,7 @@ describe('Ceramic anchoring', () => {
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
@@ -202,7 +206,7 @@ describe('Ceramic anchoring', () => {
 
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
@@ -211,7 +215,7 @@ describe('Ceramic anchoring', () => {
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ x: 6 })
     expect(stream1.state.log.length).toEqual(8)
@@ -242,7 +246,7 @@ describe('Ceramic anchoring', () => {
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
     await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await TestUtils.anchorUpdate(ceramic1, stream1)
+    await CoreUtils.anchorUpdate(ceramic1, stream1)
 
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
@@ -280,7 +284,7 @@ describe('Ceramic anchoring', () => {
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // fulfill anchor
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       await ceramic.close()
@@ -315,7 +319,7 @@ describe('Ceramic anchoring', () => {
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
       // fulfill anchor
-      await TestUtils.anchorUpdate(ceramic, stream)
+      await CoreUtils.anchorUpdate(ceramic, stream)
       expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       expect(stream.state.log.length).toEqual(2)
 

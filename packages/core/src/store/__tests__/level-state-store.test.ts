@@ -3,12 +3,12 @@ import tmp from 'tmp-promise'
 import {
   Stream,
   StreamUtils,
-  TestUtils,
   StreamState,
   LoggerProvider,
   Networks,
   DiagnosticsLogger,
 } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { LevelDbStore, OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
 
@@ -25,7 +25,9 @@ const streamFromState = function (state: StreamState) {
   return new FakeType(TestUtils.runningState(state), {})
 }
 
-describe('LevelDB-backed StateStore', () => {
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('LevelDB-backed StateStore', () => {
   let tmpFolder: any
   let levelStore: LevelDbStore
   let stateStore: StreamStateStore

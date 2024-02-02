@@ -3,11 +3,11 @@ import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import {
   AnchorStatus,
   CommitData,
-  CommitType,
-  Context,
+  EventType,
   SignatureStatus,
   StreamConstructor,
   StreamHandler,
+  StreamReaderWriter,
   StreamState,
   StreamUtils,
   toLegacyAccountId,
@@ -30,14 +30,18 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   /**
    * Applies commit (genesis|signed|anchor)
    * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param context - Ceramic context
+   * @param context - Interface to read and write to ceramic network
    * @param state - Stream state
    */
   async applyCommit(
     commitData: CommitData,
-    context: Context,
+    context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
+    if (process.env.CERAMIC_RECON_MODE) {
+      throw new Error(`Caip10Link is not supported in Ceramic v4 mode`)
+    }
+
     if (state == null) {
       return this._applyGenesis(commitData)
     }
@@ -75,7 +79,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       metadata,
       signature: SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
+      log: [{ cid: commitData.cid, type: EventType.INIT }],
     }
 
     return state
@@ -129,7 +133,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
         `Address '${legacyAccountCaip10.toLowerCase()}' used to sign update to Caip10Link doesn't match stream controller '${legacyControllerCaip10.toLowerCase()}'`
       )
     }
-    state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
+    state.log.push({ cid: commitData.cid, type: EventType.DATA })
     return {
       ...state,
       signature: SignatureStatus.SIGNED,

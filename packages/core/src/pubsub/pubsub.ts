@@ -120,7 +120,13 @@ export class Pubsub extends Observable<PubsubMessage> {
               topic: this.topic,
               message: logMessage,
             })
-            this.logger.err(error)
+            if (error.message.includes('validation ignored')) {
+              this.logger.err(
+                `HTTP validation error received while publishing message to pubsub, this usually indicates there was a duplicate message published and should be safe to ignore: ${error}`
+              )
+            } else {
+              this.logger.err(`Error received while publishing message to pubsub: ${error}`)
+            }
           }
         })
       )

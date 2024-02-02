@@ -22,6 +22,8 @@ mocker.mock({
   },
 })
 
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 beforeAll(async () => {
   const signer = await InMemorySigner.fromSecretKey(privateKey)
   provider = {
@@ -39,17 +41,29 @@ afterAll(async () => {
   jest.clearAllMocks()
 }, 120000)
 
-test('happy path', async () => {
-  const authProvider = new TezosAuthProvider(provider)
-  await happyPath(ceramic, authProvider)
-}, 120000)
+testIfV3(
+  'happy path',
+  async () => {
+    const authProvider = new TezosAuthProvider(provider)
+    await happyPath(ceramic, authProvider)
+  },
+  120000
+)
 
-test('wrong proof', async () => {
-  const authProvider = new TezosAuthProvider(provider)
-  await wrongProof(ceramic, authProvider)
-}, 120000)
+testIfV3(
+  'wrong proof',
+  async () => {
+    const authProvider = new TezosAuthProvider(provider)
+    await wrongProof(ceramic, authProvider)
+  },
+  120000
+)
 
-test('clear did', async () => {
-  const authProvider = new TezosAuthProvider(provider)
-  await clearDid(ceramic, authProvider)
-}, 120000)
+testIfV3(
+  'clear did',
+  async () => {
+    const authProvider = new TezosAuthProvider(provider)
+    await clearDid(ceramic, authProvider)
+  },
+  120000
+)

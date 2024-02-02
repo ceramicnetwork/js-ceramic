@@ -7,8 +7,7 @@ import {
   Stream,
   PinningBackend,
   StreamState,
-  CommitType,
-  TestUtils,
+  EventType,
   JSONToBase64Url,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -17,6 +16,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { IKVStore } from '../ikv-store.js'
 import { StreamStateStore } from '../stream-state-store.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 let stateStore: StreamStateStore
 let storeWrapperTemplate: IKVStore
@@ -65,9 +65,7 @@ const state: StreamState = {
   },
   signature: SignatureStatus.GENESIS,
   anchorStatus: AnchorStatus.NOT_REQUESTED,
-  log: [
-    { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: CommitType.GENESIS },
-  ],
+  log: [{ cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: EventType.INIT }],
 }
 
 class FakeType extends Stream {

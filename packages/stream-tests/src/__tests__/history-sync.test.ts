@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { jest } from '@jest/globals'
 import type { Block, BlockTag, Filter, Log, TransactionResponse } from '@ethersproject/providers'
-import { TestUtils } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import type { IpfsApi, AnchorProof, Page, StreamState, Stream } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import knex, { Knex } from 'knex'
@@ -9,6 +9,7 @@ import * as uint8arrays from 'uint8arrays'
 import { hash } from '@stablelib/sha256'
 import pgSetup from '@databases/pg-test/jest/globalSetup'
 import pgTeardown from '@databases/pg-test/jest/globalTeardown'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 import {
   BLOCK_CONFIRMATIONS,
@@ -258,7 +259,11 @@ const mockProvidersCache = {
   },
 }
 
-describe('Sync tests', () => {
+// should pass when blocks are stored (one needs update from tile document)
+// config issue with sync disabled and HDS enabled
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Sync tests', () => {
   jest.setTimeout(150000)
   const logger = new LoggerProvider().getDiagnosticsLogger()
 
@@ -288,7 +293,7 @@ describe('Sync tests', () => {
     creatingCeramic = await createCeramic(ipfs2 as any)
     createdModel = await Model.create(creatingCeramic, MODEL_DEFINITION)
     expect(createdModel.id.toString()).toEqual(MODEL_STREAM_ID.toString())
-    await TestUtils.anchorUpdate(creatingCeramic, createdModel)
+    await CoreUtils.anchorUpdate(creatingCeramic, createdModel)
     await creatingCeramic.admin.startIndexingModels([MODEL_STREAM_ID])
 
     const ipfsMerge: MergeFunction<CIDHolder, TreeMetadata> = new IpfsMerge(

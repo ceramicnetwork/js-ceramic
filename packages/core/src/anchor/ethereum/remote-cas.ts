@@ -1,12 +1,8 @@
 import type { CASClient } from '../anchor-service.js'
 import type { AnchorEvent, FetchRequest } from '@ceramicnetwork/common'
+import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import type { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import {
-  AnchorRequestStatusName,
-  CASResponseOrError,
-  ErrorResponse,
-  SupportedChainsResponse,
-} from '@ceramicnetwork/codecs'
+import { CASResponseOrError, ErrorResponse, SupportedChainsResponse } from '@ceramicnetwork/codecs'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
 import { validate, isValid, decode } from 'codeco'

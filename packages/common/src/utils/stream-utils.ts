@@ -7,7 +7,7 @@ import {
   AnchorStatus,
   CeramicCommit,
   CommitData,
-  CommitType,
+  EventType,
   LogEntry,
   RawCommit,
   SignedCommit,
@@ -74,6 +74,10 @@ export class StreamUtils {
       cloned.header.model = uint8arrays.toString(commit.header.model, 'base64')
     }
 
+    if (commit.header?.unique) {
+      cloned.header.unique = uint8arrays.toString(commit.header.unique, 'base64')
+    }
+
     return cloned
   }
 
@@ -111,6 +115,10 @@ export class StreamUtils {
 
     if (cloned.header?.model) {
       cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
+    }
+
+    if (cloned.header?.unique) {
+      cloned.header.unique = uint8arrays.fromString(cloned.header.unique, 'base64')
     }
 
     return cloned
@@ -321,10 +329,10 @@ export class StreamUtils {
     return commitData && commitData.proof !== undefined
   }
 
-  static commitDataToLogEntry(commitData: CommitData, commitType: CommitType): LogEntry {
+  static commitDataToLogEntry(commitData: CommitData, eventType: EventType): LogEntry {
     const logEntry: LogEntry = {
       cid: commitData.cid,
-      type: commitType,
+      type: eventType,
     }
     if (commitData?.capability?.p?.exp) {
       logEntry.expirationTime = Math.floor(Date.parse(commitData.capability.p.exp) / 1000)

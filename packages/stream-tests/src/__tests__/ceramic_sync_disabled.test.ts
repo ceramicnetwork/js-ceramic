@@ -3,7 +3,8 @@ import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon, DaemonConfig, makeDID } from '@ceramicnetwork/cli'
-import { IpfsApi, StreamUtils, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, StreamUtils, SyncOptions } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -29,7 +30,10 @@ const makeCeramicCore = async (
   return core
 }
 
-describe('Cross node syncing disabled', () => {
+// should pass on v4 when updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Cross node syncing disabled', () => {
   jest.setTimeout(20000)
 
   let ipfs1: IpfsApi

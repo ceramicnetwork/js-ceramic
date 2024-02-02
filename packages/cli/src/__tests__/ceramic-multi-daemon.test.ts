@@ -35,7 +35,10 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
   return core
 }
 
-describe('Ceramic interop between multiple daemons and http clients', () => {
+// Should  pass on v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Ceramic interop between multiple daemons and http clients', () => {
   jest.setTimeout(20000)
 
   let ipfs1: IpfsApi
@@ -93,12 +96,12 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     client1Admin = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
     client2Admin = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
 
-    await core1.setDID(makeDID(core1, seed))
-    await client1.setDID(makeDID(client1, seed))
-    await core2.setDID(makeDID(core2, seed))
-    await client2.setDID(makeDID(client2, seed))
-    await client1Admin.setDID(adminDID)
-    await client2Admin.setDID(adminDID)
+    core1.did = makeDID(core1, seed)
+    client1.did = makeDID(client1, seed)
+    core2.did = makeDID(core2, seed)
+    client2.did = makeDID(client2, seed)
+    client1Admin.did = adminDID
+    client2Admin.did = adminDID
   })
 
   afterEach(async () => {

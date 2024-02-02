@@ -1,16 +1,15 @@
 import type { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
-import type { Context } from './context.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CommitID } from '@ceramicnetwork/streamid'
 import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
 import type { RunningStateLike } from './running-state-like.js'
-import type { CeramicApi } from './ceramic-api.js'
 import { LoadOpts, SyncOptions } from './streamopts.js'
 import type { Cacao } from '@didtools/cacao'
 import { NonEmptyArray } from './non-empty-array.js'
 import type { AnchorProof, AnchorStatus } from './anchor-service.js'
+import { StreamReaderWriter } from './ceramic-api.js'
 
 export { AnchorStatus } from './anchor-service.js'
 
@@ -32,9 +31,10 @@ export interface CommitHeader {
 
   [index: string]: any // allow support for future changes
 }
-
+// TODO use latest naming convention genesis -> init
 export interface GenesisHeader extends CommitHeader {
   unique?: Uint8Array | string // Model and ModelInstanceDocument use Uint8Array, Caip10Link and TileDocument use 'string'
+  context?: Uint8Array // used in ModelInstanceDocument
   forbidControllerChange?: boolean // deprecated, only used by TileDocument
 }
 
@@ -56,7 +56,7 @@ export interface AnchorCommit {
   proof: CID
   path: string
 }
-
+// TODO use latest naming convention genesis -> init, signed -> data, anchor -> time
 export type SignedCommit = DagJWS
 
 export type SignedCommitContainer = DagJWSResult
@@ -74,6 +74,7 @@ export type CeramicCommit =
 export interface StreamMetadata {
   controllers: Array<string>
   model?: StreamID
+  context?: StreamID
   family?: string // deprecated
   schema?: string // deprecated
   tags?: Array<string> // deprecated
@@ -89,10 +90,13 @@ export interface StreamNext {
   metadata?: StreamMetadata
 }
 
-export enum CommitType {
-  GENESIS,
-  SIGNED,
-  ANCHOR,
+/**
+ * These were called genesis, signed, and anchor, and may still be referred to this way by other code and comments.
+ */
+export enum EventType {
+  INIT,
+  DATA,
+  TIME,
 }
 
 /**
@@ -102,8 +106,8 @@ export interface LogEntry {
   // CID of the stream commit
   cid: CID
 
-  // Type of the commit (e.g. genesis, signed, anchor)
-  type: CommitType
+  // Type of the commit (e.g. init, data, time)
+  type: EventType
 
   // Timestamp (in seconds) of when this commit was anchored (if available)
   timestamp?: number
@@ -119,6 +123,7 @@ export interface LogEntry {
  * to load anything else from ipfs or the p2p Ceramic network.
  */
 export interface CommitData extends LogEntry {
+  // TODO use latest naming convention genesis -> init, signed -> data, anchor -> time
   /**
    * The underlying payload of the commit
    */
@@ -203,18 +208,21 @@ export interface StreamStateHolder {
  * Describes common stream attributes
  */
 export abstract class Stream extends Observable<StreamState> implements StreamStateHolder {
-  constructor(protected readonly state$: RunningStateLike, private _context: Context) {
+  private readonly _api: StreamReaderWriter
+
+  constructor(protected readonly state$: RunningStateLike, api: StreamReaderWriter) {
     super((subscriber) => {
       state$.subscribe(subscriber)
     })
+    this._api = api
   }
 
   get id(): StreamID {
     return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
-  get api(): CeramicApi {
-    return this._context.api
+  get api(): StreamReaderWriter {
+    return this._api
   }
 
   abstract get metadata(): Record<string, any>
@@ -244,7 +252,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
    */
   get anchorCommitIds(): Array<CommitID> {
     return this.state$.value.log
-      .filter(({ type }) => type === CommitType.ANCHOR)
+      .filter(({ type }) => type === EventType.TIME)
       .map(({ cid }) => CommitID.make(this.id, cid))
   }
 
@@ -291,9 +299,9 @@ export interface StreamConstructor<T extends Stream> {
   /**
    * Constructor signature
    * @param state$ - Stream state
-   * @param context - Ceramic context
+   * @param api - Interface for reading from and writing streams to ceramic network
    */
-  new (state$: RunningStateLike, context: Context): T
+  new (state$: RunningStateLike, api: StreamReaderWriter): T
 }
 
 /**
@@ -316,13 +324,17 @@ export interface StreamHandler<T extends Stream> {
   stream_constructor: StreamConstructor<T>
 
   /**
-   * Applies commit to the stream (genesis|signed|anchored) and returns the new StreamState.
+   * Applies commit to the stream (init|data|time) and returns the new StreamState.
    * StreamHandler implementations of applyCommit are allowed to modify the input state, it is up to
    * callers to clone the input state before calling into applyCommit if they don't want the input
    * state modified.
    * @param commitData - Commit data
-   * @param context - Ceramic context
+   * @param api - Interface for reading from and writing streams to ceramic network
    * @param state - The existing state to apply the commit to.
    */
-  applyCommit(commitData: CommitData, context: Context, state?: StreamState): Promise<StreamState>
+  applyCommit(
+    commitData: CommitData,
+    api: StreamReaderWriter,
+    state?: StreamState
+  ): Promise<StreamState>
 }

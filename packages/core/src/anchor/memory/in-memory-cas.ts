@@ -1,13 +1,18 @@
 import type { CASClient } from '../anchor-service.js'
-import { AnchorCommit, AnchorEvent, AnchorProof, TestUtils } from '@ceramicnetwork/common'
-import { AnchorRequestStatusName, NotCompleteStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/common'
+import type {
+  AnchorCommit,
+  AnchorEvent,
+  NotCompleteStatusName,
+  AnchorProof,
+} from '@ceramicnetwork/common'
 import { AnchorRequestCarFileReader } from '../anchor-request-car-file-reader.js'
-import { TRANSACTION_CACHE } from './in-memory-anchor-validator.js'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { randomCID, StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
 import * as DAG_JOSE from 'dag-jose'
 import { CID } from 'multiformats/cid'
 import { Subject } from 'rxjs'
+import type { LRUCache } from 'least-recent'
 
 class Candidate {
   static fromCarFileReader(reader: AnchorRequestCarFileReader): Candidate {
@@ -44,9 +49,15 @@ export class InMemoryCAS implements CASClient {
   readonly #events: Subject<AnchorEvent>
   readonly #anchors: Map<string, AnchorEvent> = new Map() // Maps CID of a specific anchor request to the current status of that request
   readonly #chainId: string
+  readonly #transactionCache: LRUCache<string, number>
 
-  constructor(chainId: string, anchorOnRequest: boolean) {
+  constructor(
+    chainId: string,
+    transactionCache: LRUCache<string, number>,
+    anchorOnRequest: boolean
+  ) {
     this.#chainId = chainId
+    this.#transactionCache = transactionCache
     this.#anchorOnRequest = anchorOnRequest
     this.#queue = []
     this.#events = new Subject()
@@ -148,7 +159,7 @@ export class InMemoryCAS implements CASClient {
     })
     // creates fake anchor commit
     const timestamp = Math.floor(Date.now() / 1000)
-    const txHashCid = TestUtils.randomCID()
+    const txHashCid = randomCID()
     const proofData: AnchorProof = {
       chainId: this.#chainId,
       txHash: txHashCid,
@@ -156,7 +167,7 @@ export class InMemoryCAS implements CASClient {
       //TODO (NET-1657): Update the InMemoryAnchorService to mirror the behavior of the contract-based anchoring system
       txType: V1_PROOF_TYPE,
     }
-    TRANSACTION_CACHE.set(txHashCid.toString(), timestamp)
+    this.#transactionCache.set(txHashCid.toString(), timestamp)
     const witnessCar = carFactory.build()
     const proofCid = witnessCar.put(proofData)
     const commit: AnchorCommit = {

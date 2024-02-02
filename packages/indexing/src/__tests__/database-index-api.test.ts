@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { expect, jest, test } from '@jest/globals'
 import { StreamID } from '@ceramicnetwork/streamid'
 import knex, { Knex } from 'knex'
 import tmp from 'tmp-promise'
@@ -142,6 +142,19 @@ describe('postgres', () => {
           .table(asTableName(INDEXED_MODEL_CONFIG_TABLE_NAME))
           .columnInfo()
         expect(JSON.stringify(columns)).toEqual(JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX))
+      })
+
+      test('change only existing columns', async () => {
+        const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
+        const indexApi = new PostgresIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
+        await indexApi.init()
+        await indexApi.indexModels(modelsToIndex)
+        await expect(
+          indexApi.tablesManager.initMidTables([
+            { model: modelsToIndex[0].model, relations: { foo: { type: 'account' } } },
+          ])
+        ).resolves.not.toThrow()
       })
 
       test('create new table with indices', async () => {
@@ -777,6 +790,14 @@ describe('postgres', () => {
       expect(closeDates(updatedAt, now)).toBeTruthy()
     })
 
+    test('new stream with null content', async () => {
+      await indexApi.indexStream({ ...STREAM_CONTENT_A, streamContent: null })
+      const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
+      expect(result.length).toEqual(1)
+      const raw = result[0]
+      expect(raw.stream_content).toEqual({})
+    })
+
     test('override stream', async () => {
       const createTime = new Date()
       await indexApi.indexStream(STREAM_CONTENT_A)
@@ -1005,6 +1026,19 @@ describe('sqlite', () => {
         expect(JSON.stringify(configTableColumns)).toEqual(
           JSON.stringify(STRUCTURE.CONFIG_TABLE_MODEL_INDEX)
         )
+      })
+
+      test('change only existing columns', async () => {
+        const modelsToIndex = [{ model: StreamID.fromString(STREAM_ID_A) }, { model: Model.MODEL }]
+        const indexApi = new SqliteIndexApi(dbConnection, true, logger, Networks.INMEMORY)
+        indexApi.setSyncQueryApi(new CompleteQueryApi())
+        await indexApi.init()
+        await indexApi.indexModels(modelsToIndex)
+        await expect(
+          indexApi.tablesManager.initMidTables([
+            { model: modelsToIndex[0].model, relations: { foo: { type: 'account' } } },
+          ])
+        ).resolves.not.toThrow()
       })
 
       test('create new table with indices', async () => {
@@ -1599,6 +1633,14 @@ describe('sqlite', () => {
       const updatedAt = new Date(raw.updated_at)
       expect(closeDates(createdAt, now)).toBeTruthy()
       expect(closeDates(updatedAt, now)).toBeTruthy()
+    })
+
+    test('new stream with null content', async () => {
+      await indexApi.indexStream({ ...STREAM_CONTENT, streamContent: null })
+      const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
+      expect(result.length).toEqual(1)
+      const raw = result[0]
+      expect(raw.stream_content).toEqual('{}')
     })
 
     test('override stream', async () => {

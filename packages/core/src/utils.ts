@@ -2,13 +2,16 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'mapmoize'
 
-import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
+import { AnchorStatus, CommitData, EventType, Stream, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import type { Cacao } from '@didtools/cacao'
+import { Ceramic } from './ceramic.js'
+import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
+import { filter, firstValueFrom } from 'rxjs'
 
 /**
  * Various utility functions
@@ -19,23 +22,6 @@ export class Utils {
     const ajv = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })
     addFormats(ajv)
     return ajv
-  }
-
-  /**
-   * Awaits on condition for certain amount of time
-   */
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  static async awaitCondition(
-    conditionFn: () => boolean,
-    stopFunction: () => boolean,
-    awaitInterval: number
-  ): Promise<void> {
-    while (conditionFn()) {
-      if (stopFunction()) {
-        return
-      }
-      await new Promise((resolve) => setTimeout(resolve, awaitInterval))
-    }
   }
 
   /**
@@ -77,7 +63,7 @@ export class Utils {
     const commit = await dispatcher.retrieveCommit(cid, streamId)
     if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
     // The default applies to all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
-    const commitData: CommitData = { cid, type: CommitType.SIGNED, commit, timestamp }
+    const commitData: CommitData = { cid, type: EventType.DATA, commit, timestamp }
     if (StreamUtils.isSignedCommit(commit)) {
       const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
       if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
@@ -85,10 +71,10 @@ export class Utils {
       commitData.envelope = commit
       commitData.capability = await this.extractCapability(commit, dispatcher)
     } else if (StreamUtils.isAnchorCommit(commit)) {
-      commitData.type = CommitType.ANCHOR
+      commitData.type = EventType.TIME
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
     }
-    if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
+    if (!commitData.commit.prev) commitData.type = EventType.INIT
     return commitData
   }
 
@@ -112,6 +98,28 @@ export class Utils {
       throw new Error(
         `Error while loading capability from IPFS with CID ${capCID.toString()}: ${error}`
       )
+    }
+  }
+
+  /**
+   * Trigger anchor for a stream.
+   * @param ceramic Ceramic Core instance.
+   * @param stream Stream to trigger anchor on.
+   */
+  static async anchorUpdate(ceramic: Ceramic, stream: Stream): Promise<void> {
+    if ('anchor' in ceramic.anchorService) {
+      const anchorService = ceramic.anchorService as InMemoryAnchorService
+      const tillAnchored = firstValueFrom(
+        stream.pipe(
+          filter((state) =>
+            [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus)
+          )
+        )
+      )
+      await anchorService.anchor()
+      await tillAnchored
+    } else {
+      return Promise.reject('Not InMemoryAnchorService')
     }
   }
 }

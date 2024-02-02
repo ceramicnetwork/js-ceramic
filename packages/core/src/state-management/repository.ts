@@ -3,8 +3,7 @@ import {
   AnchorEvent,
   AnchorOpts,
   AnchorStatus,
-  CommitType,
-  Context,
+  EventType,
   CreateOpts,
   DiagnosticsLogger,
   LoadOpts,
@@ -22,7 +21,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { Observable } from 'rxjs'
+import { distinctUntilKeyChanged, map, Observable } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -34,9 +33,10 @@ import { StreamUpdater } from '../stream-loading/stream-updater.js'
 import { CID } from 'multiformats/cid'
 import type { AnchorLoopHandler, AnchorService } from '../anchor/anchor-service.js'
 import type { AnchorRequestCarBuilder } from '../anchor/anchor-request-car-builder.js'
-import { AnchorRequestStatusName } from '@ceramicnetwork/codecs'
+import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CAR } from 'cartonne'
-import type { Feed } from '../feed.js'
+import { FeedDocument, type Feed } from '../feed.js'
+import { doNotWait } from '../ancillary/do-not-wait.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -52,7 +52,6 @@ export type RepositoryDependencies = {
   pinStore: PinStore
   keyValueStore: IKVStore
   anchorRequestStore: AnchorRequestStore
-  context: Context
   handlers: HandlersMap
   anchorService: AnchorService
   indexing: LocalIndexApi
@@ -73,7 +72,7 @@ function shouldIndex(state$: RunningState, index: LocalIndexApi): boolean {
 function commitAtTime(state: StreamState, timestamp: number): CommitID {
   let commitCid: CID = state.log[0].cid
   for (const entry of state.log) {
-    if (entry.type === CommitType.ANCHOR) {
+    if (entry.type === EventType.TIME) {
       if (entry.timestamp <= timestamp) {
         commitCid = entry.cid
       } else {
@@ -227,6 +226,22 @@ export class Repository {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
     const [state$, syncStatus] = await this.loadingQ.forStream(streamId).run(async () => {
+      if (process.env.CERAMIC_RECON_MODE) {
+        // When in v4 mode we are never syncing the stream but acting as if it
+        // was already synced previously. This is safe because we know Recon will always be syncing
+        // the stream in the background (or the stream isn't part of an indexed model in which case
+        // we still don't want to sync it).
+        // TODO(WS1-1450): If the user explicitly asked for the stream to be synced, we should
+        // probably throw an error. Also once we don't have to support v3 operation mode anymore, a
+        // lot of this code can be simplified.
+        const existingState$ = await this.fromMemoryOrStore_UNSAFE(streamId)
+        if (!existingState$) {
+          // We don't have the stream in our cache or state store.
+          return [await this._genesisFromNetwork(streamId), SyncStatus.ALREADY_SYNCED]
+        }
+        return [existingState$, SyncStatus.ALREADY_SYNCED]
+      }
+
       const [existingState$, alreadySynced] = await this._fromMemoryOrStoreWithSyncStatus(streamId)
 
       switch (opts.sync) {
@@ -322,27 +337,6 @@ export class Repository {
     } else {
       return undefined
     }
-  }
-
-  /**
-   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
-   * Adds the stream to cache.
-   */
-  private async _fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const fromMemory = this._fromMemory(streamId)
-    if (fromMemory) return fromMemory
-    return this._fromStreamStateStore(streamId)
-  }
-
-  /**
-   * Load a stream from memory or state store, guarded by a loading queue.
-   * Usual `_fromMemoryOrStore` might create a duplicate instance of RunningState for the same StreamId.
-   * "safe" version makes sure we still have one instance of RunningState in memory per StreamId.
-   */
-  private _fromMemoryOrStoreSafe(streamId: StreamID): Promise<RunningState | undefined> {
-    return this.loadingQ.forStream(streamId).run(() => {
-      return this._fromMemoryOrStore(streamId)
-    })
   }
 
   /**
@@ -472,10 +466,11 @@ export class Repository {
       // Since we skipped CACAO expiration checking earlier we need to make sure to do it here.
       StreamUtils.checkForCacaoExpiration(stateAtCommit)
 
-      // If the provided CommitID is ahead of what we have in the cache, then we should update
-      // the cache to include it.
+      // If the provided CommitID is ahead of what we have in the cache and state store, then we
+      // should update them to include it.
       if (StreamUtils.isStateSupersetOf(stateAtCommit, existingState$.value)) {
         existingState$.next(stateAtCommit)
+        await this._updateStateIfPinned(existingState$)
       }
       return new SnapshotState(stateAtCommit)
     })
@@ -533,7 +528,16 @@ export class Repository {
    * @param model - Model Stream ID
    */
   async handleUpdateFromNetwork(streamId: StreamID, tip: CID, model?: StreamID): Promise<void> {
-    let state$ = await this._fromMemoryOrStore(streamId)
+    // TODO: It isn't safe to load the RunningState from the state store outside of the LoadingQueue
+    // as we do here.  We risk a race condition where we can wind up with multiple RunnigStates
+    // coexisting for the same Stream.  Doing this simple fix of just using the LoadingQueue here
+    // risks introducing a big performance degradation. The right thing to do would be to do this
+    // load in two phases, first check the cache and state store for the streamid (but without
+    // creating or registering a RunningState), and then only if there actually is something in the
+    // state store, then load it again but from within the LoadingQueue.  Given that pubsub is about
+    // to be removed though, instead of doing that work now, we're leaving this as-is even though
+    // there's a race condition here, understanding that this code will be removed very soon anyway.
+    let state$ = await this.fromMemoryOrStore_UNSAFE(streamId)
     const shouldIndex = model && this.index.shouldIndexStream(model)
     if (!shouldIndex && !state$) {
       // stream isn't pinned or indexed, nothing to do
@@ -570,7 +574,8 @@ export class Repository {
   }
 
   /**
-   * Request anchor for the latest stream state
+   * Request anchor for the latest stream state.
+   * BEWARE: It acquires an anchorStoreQueue per-streamId mutex inside.
    */
   async anchor(state$: RunningState, opts: AnchorOpts): Promise<void> {
     if (!this.anchorService) {
@@ -583,7 +588,7 @@ export class Repository {
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
     // Don't wait on handling the anchor event, let that happen in the background.
-    void this.handleAnchorEvent(state$, anchorEvent)
+    doNotWait(this.handleAnchorEvent(state$, anchorEvent), this.logger)
   }
 
   /**
@@ -830,6 +835,7 @@ export class Repository {
     const opType = state$.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
 
     return this.executionQ.forStream(streamId).run(async () => {
+      await this._updateStateIfPinned(state$)
       await this._applyWriteOpts(state$, opts, opType)
       return state$
     })
@@ -838,9 +844,25 @@ export class Repository {
   /**
    * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the stream to cache.
+   * Must be called from within the LoadingQueue (or else there's a race condition where it can
+   * override the RunningState from the cache).
    */
-  fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
-    return this._fromMemoryOrStore(streamId)
+  async fromMemoryOrStore(streamId: StreamID): Promise<RunningState | undefined> {
+    return this.loadingQ.forStream(streamId).run(() => {
+      return this.fromMemoryOrStore_UNSAFE(streamId)
+    })
+  }
+
+  /**
+   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
+   * Adds the stream to cache.
+   * "unsafe" because calling this outside of the LoadingQueue might create a duplicate instance of
+   * RunningState for the same StreamId. Must be called from inside the LoadingQueue to be used safely.
+   */
+  async fromMemoryOrStore_UNSAFE(streamId: StreamID): Promise<RunningState | undefined> {
+    const fromMemory = this._fromMemory(streamId)
+    if (fromMemory) return fromMemory
+    return this._fromStreamStateStore(streamId)
   }
 
   /**
@@ -860,7 +882,19 @@ export class Repository {
    * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   private _registerRunningState(state$: RunningState): void {
-    state$.subscribe(this.feed.aggregation.documents)
+    state$
+      .pipe(
+        distinctUntilKeyChanged('log', (currentLog, proposedLog) => {
+          // Consider distinct if proposed log length differs
+          if (proposedLog.length !== currentLog.length) return false
+          // Or let's see if the tip is different
+          const currentTip = currentLog[currentLog.length - 1].cid
+          const proposedTip = proposedLog[proposedLog.length - 1].cid
+          return currentTip.equals(proposedTip)
+        }),
+        map(FeedDocument.fromStreamState)
+      )
+      .subscribe(this.feed.aggregation.documents)
     this.inmemory.set(state$.id.toString(), state$)
   }
 
@@ -958,7 +992,7 @@ export class Repository {
     // TODO(NET-1614) Test that the timestamps are correctly passed to the Index API.
     const lastAnchor = asDate(StreamUtils.anchorTimestampFromState(state$.value))
     const firstAnchor = asDate(
-      state$.value.log.find((log) => log.type == CommitType.ANCHOR)?.timestamp
+      state$.value.log.find((log) => log.type == EventType.TIME)?.timestamp
     )
     const streamContent = {
       model: state$.value.metadata.model,
@@ -1015,7 +1049,7 @@ export class Repository {
 
   anchorLoopHandler(): AnchorLoopHandler {
     const carBuilder = this.#deps.anchorRequestCarBuilder
-    const fromMemoryOrStoreSafe = this._fromMemoryOrStoreSafe.bind(this)
+    const fromMemoryOrStoreSafe = this.fromMemoryOrStore.bind(this)
     const handleAnchorEvent = this.handleAnchorEvent.bind(this)
     return {
       buildRequestCar(streamId: StreamID, tip: CID): Promise<CAR> {

@@ -72,7 +72,7 @@ export class TaskQueue implements TaskQueueLike {
    * Note "fire-and-forget" comment for the `add` method.
    */
   run<T>(task: Task<T>): Promise<T> {
-    return this.#pq.add(task)
+    return this.#pq.add(task) as Promise<T>
   }
 
   /**

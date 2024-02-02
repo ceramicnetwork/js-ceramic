@@ -1,4 +1,5 @@
-import { StreamUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common'
+import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -6,6 +7,10 @@ import { Ceramic } from '../../ceramic.js'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
+
+// Should  pass on v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 beforeAll(async () => {
   ipfs = await createIPFS()
@@ -24,17 +29,17 @@ afterAll(async () => {
 const INITIAL = { stage: 'initial' }
 const UPDATED = { stage: 'updated' }
 
-test('cache eviction', async () => {
+testIfV3('cache eviction', async () => {
   await TileDocument.create(ceramic, INITIAL)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
   await TileDocument.create(ceramic, UPDATED)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
 })
 
-test('Stream not subscribed, RunningState in cache', async () => {
+testIfV3('Stream not subscribed, RunningState in cache', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
   const state$ = await ceramic.repository.load(stream.id, {})
-  const updateCommit = await stream.makeCommit(ceramic, UPDATED)
+  const updateCommit = await stream.makeCommit(ceramic.signer, UPDATED)
   await ceramic.repository.applyCommit(state$.id, updateCommit, {
     anchor: false,
     publish: false,
@@ -47,13 +52,16 @@ test('Stream not subscribed, RunningState in cache', async () => {
   expect(state$.state.content).toEqual(INITIAL)
 })
 
-test('Stream not subscribed, RunningState evicted', async () => {
+testIfV3('Stream not subscribed, RunningState evicted', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
   const state$ = await ceramic.repository.load(stream.id, {})
   await TileDocument.create(ceramic, { evict: true })
 
   const state2$ = await ceramic.repository.load(stream.id, {})
-  const updateCommit = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED)
+  const updateCommit = await new TileDocument(state$, ceramic.context).makeCommit(
+    ceramic.signer,
+    UPDATED
+  )
   await ceramic.repository.applyCommit(state2$.id, updateCommit, {
     anchor: false,
     publish: false,
@@ -67,11 +75,11 @@ test('Stream not subscribed, RunningState evicted', async () => {
   expect(state$.state.next).toBeUndefined()
 })
 
-test('Stream subscribed, RunningState in cache', async () => {
+testIfV3('Stream subscribed, RunningState in cache', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
   stream.subscribe()
   const state$ = await ceramic.repository.load(stream.id, {})
-  const updateCommit = await stream.makeCommit(ceramic, UPDATED)
+  const updateCommit = await stream.makeCommit(ceramic.signer, UPDATED)
   await ceramic.repository.applyCommit(state$.id, updateCommit, {
     anchor: false,
     publish: false,
@@ -84,7 +92,7 @@ test('Stream subscribed, RunningState in cache', async () => {
   expect(state$.state.content).toEqual(INITIAL)
 })
 
-test('Stream subscribed, RunningState not evicted', async () => {
+testIfV3('Stream subscribed, RunningState not evicted', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
   stream.subscribe()
   const state$ = await ceramic.repository.load(stream.id, {})
@@ -92,7 +100,10 @@ test('Stream subscribed, RunningState not evicted', async () => {
 
   const state2$ = await ceramic.repository.load(stream.id, {})
   expect(state2$).toBe(state$)
-  const updateCommit = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED)
+  const updateCommit = await new TileDocument(state$, ceramic.context).makeCommit(
+    ceramic.signer,
+    UPDATED
+  )
   await ceramic.repository.applyCommit(state2$.id, updateCommit, {
     anchor: false,
     publish: false,
@@ -106,50 +117,58 @@ test('Stream subscribed, RunningState not evicted', async () => {
   expect(state$.state.next.content).toEqual(UPDATED)
 })
 
-test('RunningState stops updating after evicted', async () => {
-  const stream1 = await TileDocument.create(ceramic, INITIAL, null, { syncTimeoutSeconds: 0 })
-  const runningState1 = await ceramic.repository.load(stream1.id, {})
-  await stream1.update({ stage: 'changed-1' })
-  expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state gets update
+testIfV3(
+  'RunningState stops updating after evicted',
+  async () => {
+    const stream1 = await TileDocument.create(ceramic, INITIAL, null, { syncTimeoutSeconds: 0 })
+    const runningState1 = await ceramic.repository.load(stream1.id, {})
+    await stream1.update({ stage: 'changed-1' })
+    expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state gets update
 
-  expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
-  await TileDocument.create(ceramic, { evict: true }) // Now stream1 is evicted
-  expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
-  expect(runningState1.isStopped).toBeTruthy() // RunningState is stopped after eviction
+    expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
+    await TileDocument.create(ceramic, { evict: true }) // Now stream1 is evicted
+    expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
+    expect(runningState1.isStopped).toBeTruthy() // RunningState is stopped after eviction
 
-  const stream2 = await TileDocument.load(ceramic, stream1.id)
-  await stream2.update({ stage: 'changed-concurrently' })
-  expect(stream2.content).toEqual({ stage: 'changed-concurrently' })
-  expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state did not get update
+    const stream2 = await TileDocument.load(ceramic, stream1.id)
+    await stream2.update({ stage: 'changed-concurrently' })
+    expect(stream2.content).toEqual({ stage: 'changed-concurrently' })
+    expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state did not get update
 
-  const runningState2 = await ceramic.repository.load(stream2.id, {}) // Running state for stream2 AKA stream1
-  expect(runningState2.state.next.content).toEqual({ stage: 'changed-concurrently' }) // It is updated
+    const runningState2 = await ceramic.repository.load(stream2.id, {}) // Running state for stream2 AKA stream1
+    expect(runningState2.state.next.content).toEqual({ stage: 'changed-concurrently' }) // It is updated
 
-  const stream3 = await ceramic.loadStream(stream2.id)
-  expect(stream3.state).toEqual(stream2.state)
-}, 10000)
+    const stream3 = await ceramic.loadStream(stream2.id)
+    expect(stream3.state).toEqual(stream2.state)
+  },
+  10000
+)
 
-test('StateLink receives updates', async () => {
-  const stream1 = await TileDocument.create(ceramic, INITIAL, null, { syncTimeoutSeconds: 0 })
-  const runningState1 = await ceramic.repository.load(stream1.id, {})
-  await stream1.update({ stage: 'changed-1' })
-  expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state gets update
+testIfV3(
+  'StateLink receives updates',
+  async () => {
+    const stream1 = await TileDocument.create(ceramic, INITIAL, null, { syncTimeoutSeconds: 0 })
+    const runningState1 = await ceramic.repository.load(stream1.id, {})
+    await stream1.update({ stage: 'changed-1' })
+    expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state gets update
 
-  expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
-  await TileDocument.create(ceramic, { evict: true }) // Now stream1 is evicted
-  expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
-  expect(runningState1.isStopped).toBeTruthy() // RunningState is stopped after eviction
+    expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
+    await TileDocument.create(ceramic, { evict: true }) // Now stream1 is evicted
+    expect(ceramic.repository.inmemory.volatile.size).toEqual(1)
+    expect(runningState1.isStopped).toBeTruthy() // RunningState is stopped after eviction
 
-  const stream2 = await TileDocument.load(ceramic, stream1.id)
-  const changedConcurrently = { stage: 'changed-concurrently' }
-  stream1.subscribe()
-  await stream2.update(changedConcurrently)
-  expect(stream2.content).toEqual(changedConcurrently)
-  expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state 1 did not get update
-  expect(stream1.state).toEqual(stream2.state) // But thanks to subscription, streamtype still is aware of the update
-}, 10000)
+    const stream2 = await TileDocument.load(ceramic, stream1.id)
+    const changedConcurrently = { stage: 'changed-concurrently' }
+    stream1.subscribe()
+    await stream2.update(changedConcurrently)
+    expect(stream2.content).toEqual(changedConcurrently)
+    expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state 1 did not get update
+    expect(stream1.state).toEqual(stream2.state) // But thanks to subscription, streamtype still is aware of the update
+  },
+  10000
+)
 
-test('free if no one subscribed', async () => {
+testIfV3('free if no one subscribed', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size
   const volatileStart = ceramic.repository.inmemory.volatile.size
   const stream1 = await TileDocument.create(ceramic, INITIAL, undefined, { anchor: false })
@@ -174,7 +193,7 @@ test('free if no one subscribed', async () => {
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
 })
 
-describe('evicted then subscribed', () => {
+describeIfV3('evicted then subscribed', () => {
   test('not pinned', async () => {
     const stream1 = await TileDocument.create(ceramic, INITIAL)
     // Evict

@@ -1,6 +1,7 @@
 import type { Ceramic } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import getPort from 'get-port'
 import { CeramicDaemon, DaemonConfig } from '@ceramicnetwork/cli'
@@ -9,7 +10,9 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../create-ceramic.js'
 import MockDate from 'mockdate'
 
-describe('multiquery API http-client tests', () => {
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('multiquery API http-client tests', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicClient
   let core: Ceramic
@@ -65,14 +68,14 @@ describe('multiquery API http-client tests', () => {
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     advanceTime()
     await stream.update({ ...stream.content, update: 'new stuff' })
-    await TestUtils.anchorUpdate(core, stream)
+    await CoreUtils.anchorUpdate(core, stream)
     advanceTime()
     // timestamp between the first and the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
     advanceTime()
     await stream.update({ ...stream.content, update: 'newer stuff' })
-    await TestUtils.anchorUpdate(core, stream)
+    await CoreUtils.anchorUpdate(core, stream)
     advanceTime()
     // timestamp after the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
@@ -125,14 +128,14 @@ describe('multiquery API http-client tests', () => {
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     advanceTime()
     await stream.update({ ...stream.content, update: 'new stuff' })
-    await TestUtils.anchorUpdate(core, stream)
+    await CoreUtils.anchorUpdate(core, stream)
     advanceTime()
     // timestamp between the first and the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))
     streamStates.push(stream.state)
     advanceTime()
     await stream.update({ ...stream.content, update: 'newer stuff' })
-    await TestUtils.anchorUpdate(core, stream)
+    await CoreUtils.anchorUpdate(core, stream)
     advanceTime()
     // timestamp after the second anchor commit
     streamTimestamps.push(Math.floor(Date.now() / 1000))

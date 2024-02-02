@@ -1,7 +1,6 @@
 import { jest, expect, describe, it, test, beforeEach, afterEach } from '@jest/globals'
 import {
   StreamUtils,
-  TestUtils,
   SyncOptions,
   type StreamState,
   type GenesisCommit,
@@ -9,11 +8,13 @@ import {
   type CeramicApi,
   type IpfsApi,
 } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '../index.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { createIPFS, swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
 import type { Ceramic } from '../ceramic.js'
 import { createCeramic as vanillaCreateCeramic } from './create-ceramic.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const TEST_TIMEOUT = 1000 * 60 * 12 // 12 minutes
 
@@ -32,7 +33,10 @@ function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
 
-describe('IPFS caching', () => {
+// These tests are expected to pass when running in V4 mode when recon is integrated if updated from tile documents
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('IPFS caching', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicApi
   beforeEach(async () => {
@@ -55,7 +59,7 @@ describe('IPFS caching', () => {
   })
 })
 
-describe('Ceramic integration', () => {
+describeIfV3('Ceramic integration', () => {
   jest.setTimeout(TEST_TIMEOUT)
 
   it(
@@ -89,7 +93,7 @@ describe('Ceramic integration', () => {
 
         const stream1 = await TileDocument.create(ceramic1, { test: 456 })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         // we can't load stream from id since nodes are not connected
         // so we won't find the genesis object from it's CID
@@ -161,7 +165,7 @@ describe('Ceramic integration', () => {
         const stream1 = await TileDocument.create(ceramic1, null, metadata)
         await stream1.update({ test: 321 })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         // Through a different ceramic instance create a new stream with the same contents that will
         // therefore resolve to the same genesis commit and thus the same streamId.  Make sure the new
@@ -173,7 +177,7 @@ describe('Ceramic integration', () => {
 
         await stream1.update({ test: 'abcde' })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         expect(stream1.content).toEqual({ test: 'abcde' })
         await TestUtils.waitForState(
@@ -203,11 +207,11 @@ describe('Ceramic integration', () => {
 
         const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         await stream1.update({ test: 'abcde' })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         const logCommits = await ceramic1.loadStreamCommits(stream1.id)
 
@@ -272,7 +276,7 @@ describe('Ceramic integration', () => {
         // knows about an existing tip, if we hear about a conflicting tip via pubsub, we need to consider it. The node
         // that created it may not have known about the existing tip when it did, and so now we need to use our conflict
         // resolution rules to decide between the two equally valid tips.
-        const commit = await streamOg.makeCommit(ceramic1, content2)
+        const commit = await streamOg.makeCommit(ceramic1.signer, content2)
         const content2Cid = await ceramic2.dispatcher.storeCommit(commit)
         await ceramic2.dispatcher.publishTip(streamOg.id, content2Cid)
 
@@ -335,7 +339,7 @@ describe('Ceramic integration', () => {
         })
         expect(stream1).toBeDefined()
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         expect(addSpy1).toBeCalledTimes(1)
         expect(loadSpy1).toBeCalledTimes(1)
@@ -345,7 +349,7 @@ describe('Ceramic integration', () => {
 
         await stream1.update({ test: 'abcde' }, null, { publish: false })
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
         expect(addSpy2).not.toBeCalled()
@@ -383,7 +387,7 @@ describe('Ceramic integration', () => {
         expect(addSpy1).toBeCalledTimes(1)
         expect(stream1).toBeDefined()
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         addSpy1.mockClear()
         loadSpy1.mockClear()
@@ -392,7 +396,7 @@ describe('Ceramic integration', () => {
         expect(loadSpy1).toBeCalledTimes(1)
         expect(addSpy1).toBeCalledTimes(0)
 
-        await TestUtils.anchorUpdate(ceramic1, stream1)
+        await CoreUtils.anchorUpdate(ceramic1, stream1)
 
         const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
         expect(addSpy2).not.toBeCalled()
@@ -636,7 +640,7 @@ describe('Ceramic integration', () => {
         await stream1.update(content)
 
         // Create (off-chain) the deterministic TileDocument genesis commit
-        const genesisCommit = (await TileDocument.makeGenesis(ceramic1, null, {
+        const genesisCommit = (await TileDocument.makeGenesis(ceramic1.signer, null, {
           ...metadata,
           deterministic: true,
         })) as GenesisCommit
@@ -676,7 +680,7 @@ describe('Ceramic integration', () => {
         }
 
         // Create (off-chain) the deterministic TileDocument genesis commit
-        const genesisCommit = (await TileDocument.makeGenesis(ceramic1, content, {
+        const genesisCommit = (await TileDocument.makeGenesis(ceramic1.signer, content, {
           ...metadata,
           deterministic: true,
         })) as GenesisCommit
@@ -695,7 +699,7 @@ describe('Ceramic integration', () => {
         const resolvedStream = res[streamID.toString()]
         expect(resolvedStream.content).toEqual({})
         expect(resolvedStream.metadata).toEqual(metadata)
-        const pinned = await TestUtils.isPinned(ceramic2, streamID)
+        const pinned = await TestUtils.isPinned(ceramic2.admin, streamID)
         expect(pinned).toBeTruthy()
 
         await ceramic1.close()
@@ -737,7 +741,7 @@ describe('Ceramic integration', () => {
 
         // Create (off-chain) deterministic TileDocument genesis commit with contentB
         const genesisCommit = (await TileDocument.makeGenesis(
-          ceramic2,
+          ceramic2.signer,
           contentA,
           metadata2
         )) as GenesisCommit
@@ -785,7 +789,7 @@ describe('Ceramic integration', () => {
 
         // Create (off-chain) non-deterministic TileDocument genesis commit with content
         const genesisCommit = (await TileDocument.makeGenesis(
-          ceramic2,
+          ceramic2.signer,
           content,
           metadata
         )) as GenesisCommit
@@ -845,9 +849,9 @@ describe('Ceramic integration', () => {
   )
 })
 
-describe('buildStreamFromState', () => {
+describeIfV3('buildStreamFromState', () => {
   let ipfs: IpfsApi
-  let ceramic: CeramicApi
+  let ceramic: Ceramic
   beforeEach(async () => {
     ipfs = await createIPFS()
     ceramic = await createCeramic(ipfs)

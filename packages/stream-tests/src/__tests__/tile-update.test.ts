@@ -11,6 +11,8 @@ import { createCeramic } from '../create-ceramic.js'
 let ipfs: IpfsApi
 let ceramic: CeramicApi
 
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
@@ -21,24 +23,32 @@ afterAll(async () => {
   await ipfs.stop()
 })
 
-test('can update a tile document with valid asDID', async () => {
-  const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
-  await newTile.update({ foo: 'baz' }, null, { asDID: ceramic.did })
+testIfV3(
+  'can update a tile document with valid asDID',
+  async () => {
+    const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
+    await newTile.update({ foo: 'baz' }, null, { asDID: ceramic.did })
 
-  expect(newTile.content).toMatchObject({
-    foo: 'baz',
-  })
-}, 10000)
+    expect(newTile.content).toMatchObject({
+      foo: 'baz',
+    })
+  },
+  10000
+)
 
-test('cannot update a tile document with invalid asDID', async () => {
-  const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
+testIfV3(
+  'cannot update a tile document with invalid asDID',
+  async () => {
+    const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
 
-  const provider = new Ed25519Provider(randomBytes(32))
-  const did = new DID({ provider, resolver: KeyResolver.getResolver() })
+    const provider = new Ed25519Provider(randomBytes(32))
+    const did = new DID({ provider, resolver: KeyResolver.getResolver() })
 
-  await did.authenticate()
+    await did.authenticate()
 
-  await expect(newTile.update({ foo: 'baz' }, null, { asDID: did })).rejects.toThrow()
+    await expect(newTile.update({ foo: 'baz' }, null, { asDID: did })).rejects.toThrow()
 
-  expect(newTile.content).toMatchObject({ foo: 'bar' })
-}, 10000)
+    expect(newTile.content).toMatchObject({ foo: 'bar' })
+  },
+  10000
+)

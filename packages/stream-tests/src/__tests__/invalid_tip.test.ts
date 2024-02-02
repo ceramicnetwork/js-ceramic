@@ -1,13 +1,16 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, SyncOptions, TestUtils } from '@ceramicnetwork/common'
+import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic, MsgType, deserialize, serialize } from '@ceramicnetwork/core'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { SignedMessage } from '@libp2p/interface-pubsub'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
-describe('Test loading a stream when pubsub replies with an invalid tip', () => {
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Test loading a stream when pubsub replies with an invalid tip', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi
@@ -28,7 +31,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
 
   test('No pubsub response', async () => {
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
@@ -48,7 +51,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
@@ -83,7 +86,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
@@ -118,7 +121,7 @@ describe('Test loading a stream when pubsub replies with an invalid tip', () => 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
     const content = { test: 123 }
-    const genesis = await TileDocument.makeGenesis(ceramic, content, null)
+    const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
     const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 

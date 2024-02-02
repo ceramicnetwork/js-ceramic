@@ -11,9 +11,10 @@ import type {
 import type {
   StreamState,
   MultiQuery,
-  CeramicApi,
   LogEntry,
   NonEmptyArray,
+  StreamReader,
+  StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { LegacyResolver } from './legacyResolver.js'
@@ -21,7 +22,7 @@ import * as u8a from 'uint8arrays'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { errorRepresentation, withResolutionError } from './error-representation.js'
-import { CommitType, type Stream } from '@ceramicnetwork/common'
+import { EventType, type Stream } from '@ceramicnetwork/common'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
@@ -91,7 +92,7 @@ function lastAnchorOrGenesisEntry(log: NonEmptyArray<LogEntry>): LogEntry {
   // Look for last anchor
   for (let index = log.length - 1; index >= 0; index--) {
     const entry = log[index]!
-    if (entry.type === CommitType.ANCHOR) {
+    if (entry.type === EventType.TIME) {
       return entry
     }
   }
@@ -156,7 +157,7 @@ function getVersionInfo(query = ''): VersionInfo {
 }
 
 async function legacyResolve(
-  ceramic: CeramicApi,
+  ceramic: StreamReaderWriter,
   didId: string,
   verNfo: VersionInfo
 ): Promise<DIDResolutionResult> {
@@ -178,7 +179,7 @@ async function legacyResolve(
 }
 
 async function resolve(
-  ceramic: CeramicApi,
+  ceramic: StreamReader,
   didId: string,
   verNfo: VersionInfo,
   v03ID?: string
@@ -228,7 +229,7 @@ async function resolve(
   }
 }
 
-export function getResolver(ceramic: CeramicApi): ResolverRegistry {
+export function getResolver(ceramic: StreamReaderWriter): ResolverRegistry {
   return {
     '3': (
       _did: string,

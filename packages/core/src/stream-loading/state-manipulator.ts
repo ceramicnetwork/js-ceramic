@@ -1,7 +1,6 @@
 import {
   AppliableStreamLog,
-  CommitType,
-  Context,
+  EventType,
   DiagnosticsLogger,
   LogEntry,
   Stream,
@@ -9,6 +8,7 @@ import {
   StreamState,
   StreamUtils,
   UnappliableStreamLog,
+  StreamReaderWriter,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { HandlersMap } from '../handlers-map.js'
@@ -49,8 +49,8 @@ export class StateManipulator {
   constructor(
     private readonly logger: DiagnosticsLogger,
     private readonly streamTypeHandlers: HandlersMap,
-    private readonly context: Context,
-    private readonly logSyncer: LogSyncer
+    private readonly logSyncer: LogSyncer,
+    private readonly context: StreamReaderWriter
   ) {}
 
   /**
@@ -130,7 +130,7 @@ export class StateManipulator {
   ): AppliableStreamLog {
     let timestamp = null
     for (let i = dest.commits.length - 1; i >= 0; i--) {
-      if (copyTimestampsFromRemovedAnchors || source[i].type == CommitType.ANCHOR) {
+      if (copyTimestampsFromRemovedAnchors || source[i].type == EventType.TIME) {
         timestamp = source[i].timestamp
       }
       if (!source[i].cid.equals(dest.commits[i].cid)) {
@@ -147,7 +147,7 @@ export class StateManipulator {
   }
 
   _findAnchorIndex(log: Array<LogEntry>): number {
-    return log.findIndex((logEntry) => logEntry.type == CommitType.ANCHOR)
+    return log.findIndex((logEntry) => logEntry.type == EventType.TIME)
   }
 
   /**

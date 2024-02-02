@@ -11,13 +11,8 @@ import {
 import tmp from 'tmp-promise'
 import type { Ceramic } from '../ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import {
-  AnchorStatus,
-  IpfsApi,
-  StreamUtils,
-  TestUtils,
-  LoggerProvider,
-} from '@ceramicnetwork/common'
+import { AnchorStatus, IpfsApi, StreamUtils, LoggerProvider } from '@ceramicnetwork/common'
+import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
@@ -41,6 +36,8 @@ const generateStringOfSize = (size): string => {
   }
   return random_data.join('')
 }
+// Should  pass on v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('Ceramic API', () => {
   jest.setTimeout(1000 * 30)
@@ -121,93 +118,191 @@ describe('Ceramic API', () => {
       })
     })
 
-    it('can load the previous stream commit', async () => {
-      const streamOg = await TileDocument.create<any>(ceramic, { test: 321 })
+    describeIfV3('tile document', () => {
+      it('can load the previous stream commit', async () => {
+        const streamOg = await TileDocument.create<any>(ceramic, { test: 321 })
 
-      // wait for anchor (new commit)
-      await TestUtils.anchorUpdate(ceramic, streamOg)
+        // wait for anchor (new commit)
+        await CoreUtils.anchorUpdate(ceramic, streamOg)
 
-      expect(streamOg.state.log.length).toEqual(2)
-      expect(streamOg.content).toEqual({ test: 321 })
-      expect(streamOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+        expect(streamOg.state.log.length).toEqual(2)
+        expect(streamOg.content).toEqual({ test: 321 })
+        expect(streamOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const stateOg = streamOg.state
+        const stateOg = streamOg.state
 
-      await streamOg.update({ test: 'abcde' })
+        await streamOg.update({ test: 'abcde' })
 
-      // wait for anchor (new commit)
-      await TestUtils.anchorUpdate(ceramic, streamOg)
+        // wait for anchor (new commit)
+        await CoreUtils.anchorUpdate(ceramic, streamOg)
 
-      expect(streamOg.state.log.length).toEqual(4)
-      expect(streamOg.content).toEqual({ test: 'abcde' })
-      expect(streamOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+        expect(streamOg.state.log.length).toEqual(4)
+        expect(streamOg.content).toEqual({ test: 'abcde' })
+        expect(streamOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const streamV1Id = CommitID.make(streamOg.id, streamOg.state.log[1].cid)
-      const streamV1 = await ceramic.loadStream<TileDocument>(streamV1Id)
-      expect(streamV1.state).toEqual(stateOg)
-      expect(streamV1.content).toEqual({ test: 321 })
-      expect(streamV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+        const streamV1Id = CommitID.make(streamOg.id, streamOg.state.log[1].cid)
+        const streamV1 = await ceramic.loadStream<TileDocument>(streamV1Id)
+        expect(streamV1.state).toEqual(stateOg)
+        expect(streamV1.content).toEqual({ test: 321 })
+        expect(streamV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      // try to call streamtype.update
-      try {
-        await streamV1.update({ test: 'fghj' })
-        throw new Error('Should not be able to update commit')
-      } catch (e) {
-        expect(e.message).toEqual(
-          'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
+        // try to call streamtype.update
+        try {
+          await streamV1.update({ test: 'fghj' })
+          throw new Error('Should not be able to update commit')
+        } catch (e) {
+          expect(e.message).toEqual(
+            'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
+          )
+        }
+
+        await expect(async () => {
+          const updateCommit = await streamV1.makeCommit(ceramic.signer, { test: 'fghj' })
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          await ceramic.applyCommit(streamV1Id, updateCommit, { anchor: false, publish: false })
+        }).rejects.toThrow(/Not StreamID/)
+
+        // checkout not anchored commit
+        const streamV2Id = CommitID.make(streamOg.id, streamOg.state.log[2].cid)
+        const streamV2 = await TileDocument.load(ceramic, streamV2Id)
+        expect(streamV2.content).toEqual({ test: 'abcde' })
+        expect(streamV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      })
+
+      it('Throw on rejected update', async () => {
+        const contentOg = { test: 123 }
+        const contentRejected = { test: 'rejected' }
+
+        const streamOg = await TileDocument.create<any>(ceramic, contentOg)
+
+        // Create an anchor commit that the original stream handle won't know about
+        const streamCopy = await TileDocument.load(ceramic, streamOg.id)
+        await CoreUtils.anchorUpdate(ceramic, streamCopy)
+        expect(streamCopy.state.log.length).toEqual(2)
+
+        // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+        // should be rejected by conflict resolution
+        expect(streamOg.state.log.length).toEqual(1)
+        await expect(streamOg.update(contentRejected)).rejects.toThrow(
+          /rejected because it builds on stale state/
         )
-      }
+        expect(streamOg.state.log.length).toEqual(1)
 
-      await expect(async () => {
-        const updateCommit = await streamV1.makeCommit(ceramic, { test: 'fghj' })
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await ceramic.applyCommit(streamV1Id, updateCommit, { anchor: false, publish: false })
-      }).rejects.toThrow(/Not StreamID/)
+        await streamOg.sync()
+        expect(streamOg.state.log.length).toEqual(2)
+      })
 
-      // checkout not anchored commit
-      const streamV2Id = CommitID.make(streamOg.id, streamOg.state.log[2].cid)
-      const streamV2 = await TileDocument.load(ceramic, streamV2Id)
-      expect(streamV2.content).toEqual({ test: 'abcde' })
-      expect(streamV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      it('cannot create stream with invalid schema', async () => {
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+        await expect(
+          TileDocument.create(ceramic, { a: 1 }, { schema: schemaDoc.commitId })
+        ).rejects.toThrow('Validation Error: data/a must be string')
+      })
+
+      it('can create stream with valid schema', async () => {
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+        await TileDocument.create(ceramic, { a: 'test' }, { schema: schemaDoc.commitId })
+      })
+
+      it('must assign schema with specific commit', async () => {
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+        await expect(
+          TileDocument.create(ceramic, { a: 1 }, { schema: schemaDoc.id.toString() })
+        ).rejects.toThrow('Schema must be a CommitID')
+      })
+
+      it('can assign schema if content is valid', async () => {
+        const stream = await TileDocument.create(ceramic, { a: 'x' })
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+        await stream.update(stream.content, { schema: schemaDoc.commitId })
+
+        expect(stream.content).toEqual({ a: 'x' })
+        expect(stream.metadata.schema).toEqual(schemaDoc.commitId.toString())
+      })
+
+      it('cannot assign schema if content is not valid', async () => {
+        const stream = await TileDocument.create(ceramic, { a: 1 })
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+        await expect(stream.update(stream.content, { schema: schemaDoc.commitId })).rejects.toThrow(
+          `Validation Error: data/a must be string`
+        )
+      })
+
+      it('can update valid content and assign schema at the same time', async () => {
+        const stream = await TileDocument.create<any>(ceramic, { a: 1 })
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+
+        await stream.update({ a: 'x' }, { schema: schemaDoc.commitId })
+
+        expect(stream.content).toEqual({ a: 'x' })
+      })
+
+      it('can update schema and then assign to stream with now valid content', async () => {
+        // Create stream with content that has type 'number'.
+        const stream = await TileDocument.create(ceramic, { a: 1 })
+        await CoreUtils.anchorUpdate(ceramic, stream)
+
+        // Create schema that enforces that the content value is a string, which would reject
+        // the stream created above.
+        const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+
+        // wait for anchor
+        await CoreUtils.anchorUpdate(ceramic, schemaDoc)
+        expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+        // Update the schema to expect a number, so now the original stream should conform to the new
+        // commit of the schema
+        const updatedSchema = cloneDeep(stringMapSchema)
+        updatedSchema.additionalProperties.type = 'number'
+        await schemaDoc.update(updatedSchema)
+        // wait for anchor
+        await CoreUtils.anchorUpdate(ceramic, schemaDoc)
+        expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+        // Test that we can assign the updated schema to the stream without error.
+        await stream.update(stream.content, { schema: schemaDoc.commitId })
+        await CoreUtils.anchorUpdate(ceramic, stream)
+        expect(stream.content).toEqual({ a: 1 })
+
+        // Test that we can reload the stream without issue
+        const stream2 = await ceramic.loadStream(stream.id)
+        expect(stream2.content).toEqual(stream.content)
+        expect(stream2.metadata).toEqual(stream.metadata)
+      })
+
+      it('can list log commits', async () => {
+        const stream = await TileDocument.create(ceramic, { a: 1 })
+        const logCommits = await ceramic.loadStreamCommits(stream.id)
+        expect(logCommits).toBeDefined()
+
+        const expected = []
+        for (const { cid } of stream.state.log) {
+          const commit = await ceramic.dispatcher.retrieveCommit(cid, stream.id)
+          expected.push({
+            cid: cid.toString(),
+            value: await StreamUtils.convertCommitToSignedCommitContainer(commit, ipfs),
+          })
+        }
+
+        expect(logCommits).toEqual(expected)
+      })
+
+      it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
+        const streamtype = await TileDocument.create(ceramic, {
+          test: generateStringOfSize(200000),
+        })
+        expect(streamtype).not.toBeNull()
+      })
+
+      it('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
+        await expect(
+          TileDocument.create(ceramic, { test: generateStringOfSize(300000) })
+        ).rejects.toThrow(/exceeds the maximum block size of/)
+      })
     })
 
-    it('Throw on rejected update', async () => {
-      const contentOg = { test: 123 }
-      const contentRejected = { test: 'rejected' }
-
-      const streamOg = await TileDocument.create<any>(ceramic, contentOg)
-
-      // Create an anchor commit that the original stream handle won't know about
-      const streamCopy = await TileDocument.load(ceramic, streamOg.id)
-      await TestUtils.anchorUpdate(ceramic, streamCopy)
-      expect(streamCopy.state.log.length).toEqual(2)
-
-      // Do an update via the stale stream handle.  Its view of the log is out of date so its update
-      // should be rejected by conflict resolution
-      expect(streamOg.state.log.length).toEqual(1)
-      await expect(streamOg.update(contentRejected)).rejects.toThrow(
-        /rejected because it builds on stale state/
-      )
-      expect(streamOg.state.log.length).toEqual(1)
-
-      await streamOg.sync()
-      expect(streamOg.state.log.length).toEqual(2)
-    })
-
-    it('cannot create stream with invalid schema', async () => {
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-      await expect(
-        TileDocument.create(ceramic, { a: 1 }, { schema: schemaDoc.commitId })
-      ).rejects.toThrow('Validation Error: data/a must be string')
-    })
-
-    it('can create stream with valid schema', async () => {
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-      await TileDocument.create(ceramic, { a: 'test' }, { schema: schemaDoc.commitId })
-    })
-
-    it('can create and update stream with valid model to trigger indexing', async () => {
+    test('can create and update stream with valid model to trigger indexing', async () => {
       const CONTENT0 = { myData: 0 }
       const CONTENT1 = { myData: 1 }
       // TODO (NET-1614): Extend with targeted payload comparison
@@ -219,21 +314,27 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
       const model = await Model.create(ceramic, MODEL_DEFINITION)
 
-      expect(addIndexSpy).toBeCalledTimes(1)
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
       await doc.replace(CONTENT1, { anchor: false })
       expect(doc.content).toEqual(CONTENT1)
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2 + 1)
       addIndexSpy.mockRestore()
     })
 
-    it('will fail to create stream over size limits', async () => {
+    test('will fail to create stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdefghijklmn' }
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 10
       const addIndexSpy = jest.spyOn(ceramic.repository, '_indexStreamIfNeeded')
@@ -244,7 +345,14 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      expect(addIndexSpy).toBeCalledTimes(1)
+
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       await expect(ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)).rejects.toThrow(
         /which exceeds maximum size/
@@ -252,7 +360,7 @@ describe('Ceramic API', () => {
       addIndexSpy.mockRestore()
     })
 
-    it('will update stream if under size limits', async () => {
+    test('will update stream if under size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefgh' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 30
@@ -264,23 +372,28 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(1)
+
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
       await doc.patch(CONTENT1, { anchor: false })
       expect(doc.content).toEqual({ myData: 'abcdefgh' })
-      expect(addIndexSpy).toBeCalledTimes(3)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2 + 1)
       addIndexSpy.mockRestore()
     })
 
-    it('will fail to update stream over size limits', async () => {
+    test('will fail to update stream over size limits', async () => {
       const CONTENT0 = { myData: 'abcdef' }
       const CONTENT1 = [{ op: 'replace', path: '/myData', value: 'abcdefghijkl' } as AddOperation]
       ModelInstanceDocument.MAX_DOCUMENT_SIZE = 20
@@ -292,116 +405,27 @@ describe('Ceramic API', () => {
       handleAnchorEventSpy.mockImplementation(() => Promise.resolve(false))
 
       const model = await Model.create(ceramic, MODEL_DEFINITION_BLOB)
-      // there's an extra call to indexStreamIfNeeded every time the anchor state
-      // is changed.
-      expect(addIndexSpy).toBeCalledTimes(1)
+
+      // In v3 mode we call into update the state store and index twice as part of creating a
+      // Stream. Once from loading the genesis commit, a second from applying the handling the
+      // create. In v4 mode and going forward, there is only 1 call into the index since we don't
+      // update persisted state on stream loads.
+      const NUM_INDEX_CALLS_PER_STREAM_CREATE = process.env.CERAMIC_RECON_MODE ? 1 : 2
+
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE)
       const midMetadata = { model: model.id }
       const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
         anchor: false,
         pin: false,
       })
       expect(doc.content).toEqual(CONTENT0)
-      expect(addIndexSpy).toBeCalledTimes(2)
+      expect(addIndexSpy).toBeCalledTimes(NUM_INDEX_CALLS_PER_STREAM_CREATE * 2)
       await expect(doc.patch(CONTENT1)).rejects.toThrow(/which exceeds maximum size/)
       addIndexSpy.mockRestore()
     })
-
-    it('must assign schema with specific commit', async () => {
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-      await expect(
-        TileDocument.create(ceramic, { a: 1 }, { schema: schemaDoc.id.toString() })
-      ).rejects.toThrow('Schema must be a CommitID')
-    })
-
-    it('can assign schema if content is valid', async () => {
-      const stream = await TileDocument.create(ceramic, { a: 'x' })
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-      await stream.update(stream.content, { schema: schemaDoc.commitId })
-
-      expect(stream.content).toEqual({ a: 'x' })
-      expect(stream.metadata.schema).toEqual(schemaDoc.commitId.toString())
-    })
-
-    it('cannot assign schema if content is not valid', async () => {
-      const stream = await TileDocument.create(ceramic, { a: 1 })
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-      await expect(stream.update(stream.content, { schema: schemaDoc.commitId })).rejects.toThrow(
-        `Validation Error: data/a must be string`
-      )
-    })
-
-    it('can update valid content and assign schema at the same time', async () => {
-      const stream = await TileDocument.create<any>(ceramic, { a: 1 })
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-
-      await stream.update({ a: 'x' }, { schema: schemaDoc.commitId })
-
-      expect(stream.content).toEqual({ a: 'x' })
-    })
-
-    it('can update schema and then assign to stream with now valid content', async () => {
-      // Create stream with content that has type 'number'.
-      const stream = await TileDocument.create(ceramic, { a: 1 })
-      await TestUtils.anchorUpdate(ceramic, stream)
-
-      // Create schema that enforces that the content value is a string, which would reject
-      // the stream created above.
-      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-
-      // wait for anchor
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
-      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-      // Update the schema to expect a number, so now the original stream should conform to the new
-      // commit of the schema
-      const updatedSchema = cloneDeep(stringMapSchema)
-      updatedSchema.additionalProperties.type = 'number'
-      await schemaDoc.update(updatedSchema)
-      // wait for anchor
-      await TestUtils.anchorUpdate(ceramic, schemaDoc)
-      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-      // Test that we can assign the updated schema to the stream without error.
-      await stream.update(stream.content, { schema: schemaDoc.commitId })
-      await TestUtils.anchorUpdate(ceramic, stream)
-      expect(stream.content).toEqual({ a: 1 })
-
-      // Test that we can reload the stream without issue
-      const stream2 = await ceramic.loadStream(stream.id)
-      expect(stream2.content).toEqual(stream.content)
-      expect(stream2.metadata).toEqual(stream.metadata)
-    })
-
-    it('can list log commits', async () => {
-      const stream = await TileDocument.create(ceramic, { a: 1 })
-      const logCommits = await ceramic.loadStreamCommits(stream.id)
-      expect(logCommits).toBeDefined()
-
-      const expected = []
-      for (const { cid } of stream.state.log) {
-        const commit = await ceramic.dispatcher.retrieveCommit(cid, stream.id)
-        expected.push({
-          cid: cid.toString(),
-          value: await StreamUtils.convertCommitToSignedCommitContainer(commit, ipfs),
-        })
-      }
-
-      expect(logCommits).toEqual(expected)
-    })
-
-    it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
-      const streamtype = await TileDocument.create(ceramic, { test: generateStringOfSize(200000) })
-      expect(streamtype).not.toBeNull()
-    })
-
-    it('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
-      await expect(
-        TileDocument.create(ceramic, { test: generateStringOfSize(300000) })
-      ).rejects.toThrow(/exceeds the maximum block size of/)
-    })
   })
 
-  describe('API MultiQueries', () => {
+  describeIfV3('API MultiQueries', () => {
     let ceramic: Ceramic
     let tmpFolder: tmp.DirectoryResult
     let streamA: TileDocument,

@@ -2,12 +2,12 @@ import { Model } from '@ceramicnetwork/stream-model'
 import {
   AnchorStatus,
   CommitData,
-  CommitType,
-  Context,
+  EventType,
   SignatureStatus,
   SignatureUtils,
   StreamConstructor,
   StreamHandler,
+  StreamReaderWriter,
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
@@ -16,6 +16,7 @@ import { SchemaValidation } from './schema-utils.js'
 import { ViewsValidation } from './views-utils.js'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { validateInterface, validateImplementedInterfaces } from './interfaces-utils.js'
+import { validateSetFields } from './account-relations-utils.js'
 
 // Keys of the 'ModelDefinition' type.  Unfortunately typescript doesn't provide a way to access
 // these programmatically.
@@ -69,12 +70,12 @@ export class ModelHandler implements StreamHandler<Model> {
   /**
    * Applies commit (genesis|signed|anchor)
    * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param context - Ceramic context
+   * @param context - Interface to read and write data to ceramic network
    * @param state - Document state
    */
   async applyCommit(
     commitData: CommitData,
-    context: Context,
+    context: StreamReaderWriter,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
@@ -92,10 +93,10 @@ export class ModelHandler implements StreamHandler<Model> {
   /**
    * Applies genesis commit
    * @param commitData - Genesis commit
-   * @param context - Ceramic context
+   * @param context - Interface to read and write data from ceramic network
    * @private
    */
-  async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+  async _applyGenesis(commitData: CommitData, context: StreamReaderWriter): Promise<StreamState> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (!isSigned) {
@@ -113,7 +114,7 @@ export class ModelHandler implements StreamHandler<Model> {
 
     await SignatureUtils.verifyCommitSignature(
       commitData,
-      context.did,
+      context.signer,
       controller,
       modelStreamID,
       streamId
@@ -139,10 +140,13 @@ export class ModelHandler implements StreamHandler<Model> {
       metadata,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [StreamUtils.commitDataToLogEntry(commitData, CommitType.GENESIS)],
+      log: [StreamUtils.commitDataToLogEntry(commitData, EventType.INIT)],
     }
 
     await this._schemaValidator.validateSchema(state.content.schema)
+    if (state.content.accountRelation.type === 'set') {
+      validateSetFields(state.content.accountRelation.fields, state.content.schema)
+    }
     if (state.content.views) {
       this._viewsValidator.validateViews(state.content.views, state.content.schema)
     }
