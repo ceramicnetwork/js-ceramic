@@ -11,7 +11,10 @@ import { lastValueFrom } from 'rxjs'
 
 const TOPIC = '/ceramic/test12345'
 
-describe('TipFetcher test', () => {
+// No pubsub in V4
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('TipFetcher test', () => {
   jest.setTimeout(1000 * 30)
 
   let dispatcher: Dispatcher

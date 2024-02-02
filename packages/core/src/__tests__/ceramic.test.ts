@@ -33,7 +33,10 @@ function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
 
-describe('IPFS caching', () => {
+// These tests are expected to pass when running in V4 mode when recon is integrated if updated from tile documents
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('IPFS caching', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicApi
   beforeEach(async () => {
@@ -56,7 +59,7 @@ describe('IPFS caching', () => {
   })
 })
 
-describe('Ceramic integration', () => {
+describeIfV3('Ceramic integration', () => {
   jest.setTimeout(TEST_TIMEOUT)
 
   it(
@@ -846,7 +849,7 @@ describe('Ceramic integration', () => {
   )
 })
 
-describe('buildStreamFromState', () => {
+describeIfV3('buildStreamFromState', () => {
   let ipfs: IpfsApi
   let ceramic: Ceramic
   beforeEach(async () => {

@@ -30,7 +30,10 @@ const makeCeramicCore = async (
   return core
 }
 
-describe('Cross node syncing disabled', () => {
+// should pass on v4 when updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Cross node syncing disabled', () => {
   jest.setTimeout(20000)
 
   let ipfs1: IpfsApi

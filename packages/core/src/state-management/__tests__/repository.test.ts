@@ -68,7 +68,11 @@ afterEach(async () => {
   await ceramic.close()
 })
 
-describe('#load', () => {
+// All tests should pass with v4 if updated from tile document
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
+describeIfV3('#load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
     const fromMemorySpy = jest.spyOn(repository, '_fromMemory')
@@ -238,7 +242,7 @@ describe('#load', () => {
     expect(loadFromNetworkSpy).toBeCalledTimes(2)
   }, 30000)
 
-  describe('loadAtCommit', () => {
+  describeIfV3('loadAtCommit', () => {
     const INITIAL_CONTENT = { abc: 123, def: 456 }
 
     test('commit history and loadAtCommit', async () => {
@@ -561,7 +565,7 @@ describe('#load', () => {
       })
     })
 
-    describe('unpinned', () => {
+    describeIfV3('unpinned', () => {
       test('revalidate current state, do not rewrite', async () => {
         const stream1 = await TileDocument.create(ceramic, { a: 1 }, null, {
           anchor: false,
@@ -592,7 +596,7 @@ describe('#load', () => {
   })
 })
 
-describe('validation', () => {
+describeIfV3('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA)
@@ -627,7 +631,7 @@ describe('validation', () => {
   }, 20000)
 })
 
-test('subscribe makes state endured', async () => {
+testIfV3('subscribe makes state endured', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size
   const volatileStart = ceramic.repository.inmemory.volatile.size
   const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
@@ -639,7 +643,7 @@ test('subscribe makes state endured', async () => {
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
 })
 
-describe('applyWriteOpts', () => {
+describeIfV3('applyWriteOpts', () => {
   test('dont publish on LOAD', async () => {
     const publishSpy = jest.spyOn(repository, '_publishTip')
     await repository._applyWriteOpts(
@@ -666,7 +670,7 @@ describe('applyWriteOpts', () => {
   })
 })
 
-describe('handleAnchorEvent', () => {
+describeIfV3('handleAnchorEvent', () => {
   describe('for tip', () => {
     test('Anchor COMPLETED for tip should update the stream state and be removed from the anchorRequestStore', async () => {
       const tile = await TileDocument.create(ceramic, { text: 1 }, undefined, { anchor: true })

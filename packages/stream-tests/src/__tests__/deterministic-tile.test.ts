@@ -7,6 +7,8 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 let ipfs: IpfsApi
 let ceramic: CeramicApi
 
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
@@ -17,7 +19,7 @@ afterAll(async () => {
   await ceramic.close()
 })
 
-test('can create and retreive deterministic tile document', async () => {
+testIfV3('can create and retreive deterministic tile document', async () => {
   const createdTile = await TileDocument.deterministic(ceramic, { family: 'test123' })
   await createdTile.update({ foo: 'bar' })
 
@@ -31,8 +33,11 @@ test('can create and retreive deterministic tile document', async () => {
   expect(createdTile.content).toMatchObject(retrievedTile.content)
 })
 
-test('cannot create or retreive deterministic tile document if family or tag not set', async () => {
-  await expect(
-    TileDocument.deterministic(ceramic, { forbidControllerChange: false })
-  ).rejects.toThrow(/Family and\/or tags are required/)
-})
+testIfV3(
+  'cannot create or retreive deterministic tile document if family or tag not set',
+  async () => {
+    await expect(
+      TileDocument.deterministic(ceramic, { forbidControllerChange: false })
+    ).rejects.toThrow(/Family and\/or tags are required/)
+  }
+)

@@ -25,6 +25,9 @@ jest.setTimeout(10000)
 let ipfs: IpfsApi
 let stateStoreDirectoryName: string
 
+// Should  pass on v4 if updated from TileDocument
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 beforeAll(async () => {
   ipfs = await createIPFS()
 })
@@ -41,7 +44,7 @@ afterEach(async () => {
   jest.resetAllMocks()
 })
 
-test('resume anchors from AnchorRequestStore', async () => {
+testIfV3('resume anchors from AnchorRequestStore', async () => {
   const numberOfStreams = 3
 
   const ceramic = await createCeramic(ipfs, {
@@ -120,7 +123,7 @@ test('resume anchors from AnchorRequestStore', async () => {
   await newCeramic.close()
 })
 
-test('Cleans up entries from store for already anchored tips', async () => {
+testIfV3('Cleans up entries from store for already anchored tips', async () => {
   const ceramic = await createCeramic(ipfs, {
     stateStoreDirectory: stateStoreDirectoryName,
   })

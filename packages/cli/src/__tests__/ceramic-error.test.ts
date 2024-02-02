@@ -29,6 +29,8 @@ function safeRead(filepath: string): string {
   }
 }
 
+const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 beforeAll(async () => {
   ipfs = await createIPFS()
 
@@ -73,7 +75,7 @@ afterAll(async () => {
   await tmpFolder.cleanup()
 })
 
-test('write to http-access', async () => {
+testIfV3('write to http-access', async () => {
   const httpAccessLogPath = path.resolve(tmpFolder.path, 'http-access.log')
   await TileDocument.create(client, { test: 123 }, null, {
     anchor: false,

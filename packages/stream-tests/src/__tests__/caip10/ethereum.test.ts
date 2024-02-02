@@ -74,6 +74,8 @@ let contractAddress: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
 beforeEach(async () => {
   addresses = await send(provider, encodeRpcMessage('eth_accounts'))
   // ganache-core doesn't support personal_sign -.-
@@ -112,7 +114,11 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 120000)
 
-describe('externally-owned account', () => {
+test('fake test avoids jest crashing with "import after tests torn down" due to mocking', () => {
+  return new Promise((resolve) => setTimeout(resolve, 100))
+})
+
+describeIfV3('externally-owned account', () => {
   test('happy scenario', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
     await happyPath(ceramic, authProvider)
@@ -132,7 +138,7 @@ describe('externally-owned account', () => {
   }, 120000)
 })
 
-describe('contract account', () => {
+describeIfV3('contract account', () => {
   test('happy scenario', async () => {
     const contract = new Contract(
       contractAddress,

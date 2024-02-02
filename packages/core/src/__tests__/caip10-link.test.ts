@@ -39,6 +39,9 @@ const EMPTY_DID_PROOF = {
   timestamp: 1641462800,
 }
 
+// These tests are not expected to run in v4 mode
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
 describe('Ceramic API', () => {
   jest.setTimeout(60000)
   let ipfs: IpfsApi
@@ -53,7 +56,7 @@ describe('Ceramic API', () => {
     await ipfs.stop()
   })
 
-  describe('Caip10Link test', () => {
+  describeIfV3('Caip10Link test', () => {
     let ceramic: Ceramic
     let authProvider
     let tmpFolder: tmp.DirectoryResult

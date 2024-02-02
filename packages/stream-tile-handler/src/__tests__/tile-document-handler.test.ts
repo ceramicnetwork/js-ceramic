@@ -56,8 +56,10 @@ jest.unstable_mockModule('did-jwt', () => {
     },
   }
 })
+// These tests are never expected to be run in v4 mode
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
-describe('TileDocumentHandler', () => {
+describeIfV3('TileDocumentHandler', () => {
   let tileDocumentHandler: TileDocumentHandler
   let context: StreamReaderWriter
   let defaultSigner: RotatingSigner

@@ -504,10 +504,14 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       )
     }
 
-    if (!this.dispatcher.enableSync) {
-      this._logger.warn(
-        `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
-      )
+    if (process.env.CERAMIC_RECON_MODE) {
+      this._logger.warn(`Running Ceramic in v4 mode. This mode is still experimental.`)
+    } else {
+      if (!this.dispatcher.enableSync) {
+        this._logger.warn(
+          `IPFS peer data sync is disabled. This node will be unable to load data from any other Ceramic nodes on the network`
+        )
+      }
     }
   }
 

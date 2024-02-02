@@ -78,7 +78,10 @@ async function createDeterministicStream(
   )
 }
 
-describe('Ceramic stream pinning', () => {
+// should pass on v4 if updated from tile document (possibly with adjustments for recon)
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Ceramic stream pinning', () => {
   jest.setTimeout(60000)
   let ipfs1: IpfsApi
   let tmpFolder: any

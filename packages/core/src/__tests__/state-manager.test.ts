@@ -32,7 +32,10 @@ const STRING_MAP_SCHEMA = {
   },
 }
 
-describe('anchor', () => {
+//should pass in v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('anchor', () => {
   let realHandleTip
   let ipfs: IpfsApi
   let ceramic: Ceramic

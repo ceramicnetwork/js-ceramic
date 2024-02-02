@@ -727,7 +727,10 @@ describe('Model API http-client tests', () => {
   })
 })
 
-describe('Model API multi-node tests', () => {
+// should pass on v4 as soon as recon is integrated and cross-node syncing works.
+const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3ShouldPass('Model API multi-node tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs0: IpfsApi

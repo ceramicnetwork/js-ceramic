@@ -226,6 +226,22 @@ export class Repository {
     const opts = { ...DEFAULT_LOAD_OPTS, ...loadOptions }
 
     const [state$, syncStatus] = await this.loadingQ.forStream(streamId).run(async () => {
+      if (process.env.CERAMIC_RECON_MODE) {
+        // When in v4 mode we are never syncing the stream but acting as if it
+        // was already synced previously. This is safe because we know Recon will always be syncing
+        // the stream in the background (or the stream isn't part of an indexed model in which case
+        // we still don't want to sync it).
+        // TODO(WS1-1450): If the user explicitly asked for the stream to be synced, we should
+        // probably throw an error. Also once we don't have to support v3 operation mode anymore, a
+        // lot of this code can be simplified.
+        const existingState$ = await this.fromMemoryOrStore_UNSAFE(streamId)
+        if (!existingState$) {
+          // We don't have the stream in our cache or state store.
+          return [await this._genesisFromNetwork(streamId), SyncStatus.ALREADY_SYNCED]
+        }
+        return [existingState$, SyncStatus.ALREADY_SYNCED]
+      }
+
       const [existingState$, alreadySynced] = await this._fromMemoryOrStoreWithSyncStatus(streamId)
 
       switch (opts.sync) {
@@ -798,15 +814,16 @@ export class Repository {
    * @param opts
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
-    const state = await this.load(streamId, opts)
+    const state$ = await this.load(streamId, opts)
 
     // Create operations can actually be load operations when using deterministic streams, so we
     // ensure that the stream only has a single commit in its log to properly consider it a create.
-    const opType = state.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
+    const opType = state$.state.log.length == 1 ? OperationType.CREATE : OperationType.LOAD
 
     return this.executionQ.forStream(streamId).run(async () => {
-      await this._applyWriteOpts(state, opts, opType)
-      return state
+      await this._updateStateIfPinned(state$)
+      await this._applyWriteOpts(state$, opts, opType)
+      return state$
     })
   }
 

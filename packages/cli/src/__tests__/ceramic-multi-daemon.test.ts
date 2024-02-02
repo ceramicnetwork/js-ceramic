@@ -35,7 +35,10 @@ const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Prom
   return core
 }
 
-describe('Ceramic interop between multiple daemons and http clients', () => {
+// Should  pass on v4 if updated from TileDocument
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('Ceramic interop between multiple daemons and http clients', () => {
   jest.setTimeout(20000)
 
   let ipfs1: IpfsApi

@@ -21,7 +21,10 @@ const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
 const PEER_ID = 'PEER_ID'
 const LATE_MESSAGE_AFTER = 1000
 
-describe('connection', () => {
+// v4 doesn't support the full ipfs api
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('connection', () => {
   let ipfs: IpfsApi
 
   beforeEach(async () => {

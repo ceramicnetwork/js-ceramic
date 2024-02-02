@@ -68,7 +68,10 @@ async function countResults(ceramic: Ceramic, query: PaginationQuery): Promise<n
   return results.length
 }
 
-describe.each(envs)(
+// should pass on v4 as soon as we actually store/retrieve blocks
+const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3ShouldPass.each(envs)(
   'Cross-node indexing and query test with ceramic$ceramicInstanceWithPostgres running postgres',
   (env) => {
     jest.setTimeout(1000 * 30)

@@ -10,7 +10,9 @@ import { jest } from '@jest/globals'
 import { createCeramic } from '../create-ceramic.js'
 import MockDate from 'mockdate'
 
-describe('multiquery API http-client tests', () => {
+const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
+
+describeIfV3('multiquery API http-client tests', () => {
   let ipfs: IpfsApi
   let ceramic: CeramicClient
   let core: Ceramic
