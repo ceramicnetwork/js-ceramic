@@ -6,6 +6,9 @@ import type { AnchorLoopHandler } from './anchor-service.js'
 import type { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
+import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
+
+const METRICS_REPORTING_INTERVAL_MS = 10000  // 10 second reporting interval
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -20,6 +23,7 @@ export class AnchorProcessingLoop {
    * Linearizes requests to AnchorRequestStore by stream id. Shared with the AnchorService.
    */
   readonly #anchorStoreQueue: NamedTaskQueue
+  readonly #anchorPollingMetrics: TimeableMetric
 
   constructor(
     batchSize: number,
@@ -30,6 +34,7 @@ export class AnchorProcessingLoop {
     anchorStoreQueue: NamedTaskQueue
   ) {
     this.#anchorStoreQueue = anchorStoreQueue
+    this.#anchorPollingMetrics = new TimeableMetric(SinceField.TIMESTAMP, 'anchorPollingDelay', METRICS_REPORTING_INTERVAL_MS)
     this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), async (streamId) => {
       try {
         logger.verbose(
@@ -46,6 +51,7 @@ export class AnchorProcessingLoop {
           `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
         )
         if (isTerminal) {
+          this.#anchorPollingMetrics.record(entry)
           // Remove iff tip stored equals to the tip we processed
           // Sort of Compare-and-Swap.
           await this.#anchorStoreQueue.run(streamId.toString(), async () => {
@@ -71,6 +77,7 @@ export class AnchorProcessingLoop {
    * Start looping.
    */
   start(): void {
+    this.#anchorPollingMetrics.startPublishingStats()
     this.#loop.start()
   }
 
@@ -78,6 +85,7 @@ export class AnchorProcessingLoop {
    * Stop looping.
    */
   async stop(): Promise<void> {
+    this.#anchorPollingMetrics.stopPublishingStats()
     return this.#loop.stop()
   }
 }
