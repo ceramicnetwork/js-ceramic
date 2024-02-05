@@ -8,7 +8,7 @@ import type { NamedTaskQueue } from '../state-management/named-task-queue.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
 
-const METRICS_REPORTING_INTERVAL_MS = 10000  // 10 second reporting interval
+const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -34,7 +34,11 @@ export class AnchorProcessingLoop {
     anchorStoreQueue: NamedTaskQueue
   ) {
     this.#anchorStoreQueue = anchorStoreQueue
-    this.#anchorPollingMetrics = new TimeableMetric(SinceField.TIMESTAMP, 'anchorPollingDelay', METRICS_REPORTING_INTERVAL_MS)
+    this.#anchorPollingMetrics = new TimeableMetric(
+      SinceField.TIMESTAMP,
+      'anchorPollingDelay',
+      METRICS_REPORTING_INTERVAL_MS
+    )
     this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), async (streamId) => {
       try {
         logger.verbose(
