@@ -697,7 +697,18 @@ export class Repository {
     ) {
       try {
         if (witnessCAR) {
-          await this.dispatcher.importCAR(witnessCAR)
+          const anchorCommit = witnessCAR.get(anchorCommitCID)
+          const height = StreamUtils.getCommitHeight(state$.state, anchorCommit)
+
+          await this.dispatcher.importAnchorWitnessCar(
+            witnessCAR,
+            anchorCommitCID,
+            streamId,
+            state$.state.metadata.controllers,
+            height,
+            state$.state.metadata.model
+          )
+
           this.logger.verbose(`successfully imported CAR file for ${streamId}`)
         }
 

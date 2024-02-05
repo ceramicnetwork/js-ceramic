@@ -1,4 +1,4 @@
-import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
+import { IpfsApi, LoggerProvider, Networks } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import { Dispatcher } from '../dispatcher.js'
 import { LevelDbStore } from '../store/level-db-store.js'
@@ -8,6 +8,7 @@ import { PinStore } from '../store/pin-store.js'
 import { ShutdownSignal } from '../shutdown-signal.js'
 import { TaskQueue } from '../ancillary/task-queue.js'
 import { Feed } from '../feed.js'
+import { IReconApi } from '../recon.js'
 
 export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Promise<Dispatcher> {
   const loggerProvider = new LoggerProvider()
@@ -23,16 +24,18 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   } as unknown as PinStore
   repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
   const shutdownSignal = new ShutdownSignal()
+  const fauxReconApi = {} as IReconApi
 
   return new Dispatcher(
     ipfs,
-    pubsubTopic,
+    { pubsubTopic, offset: 0, name: Networks.INMEMORY },
     repository,
     logger,
     loggerProvider.makeServiceLogger('pubsub'),
     shutdownSignal,
     true,
     10,
+    fauxReconApi,
     new TaskQueue()
   )
 }

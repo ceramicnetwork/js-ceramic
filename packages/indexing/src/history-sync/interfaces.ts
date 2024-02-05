@@ -45,7 +45,7 @@ export type HandleCommit = (streamId: StreamID, commit: CID, model?: StreamID) =
 export interface IpfsService {
   retrieveFromIPFS(cid: CID | string, path?: string): Promise<any>
   retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any>
-  storeCommit(data: any, streamId?: StreamID): Promise<CID>
+  ipfsStoreCommit(data: any, streamId?: StreamID): Promise<CID>
   storeRecord(record: Record<string, unknown>): Promise<CID>
 }
 

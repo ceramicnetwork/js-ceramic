@@ -248,7 +248,7 @@ describeIfV3('Streamloader', () => {
         await stream.update(CONTENT1)
         await CoreUtils.anchorUpdate(ceramic, stream)
 
-        const conflictingUpdateCID = await dispatcher.storeCommit(conflictingUpdate)
+        const conflictingUpdateCID = await dispatcher.storeCommit(conflictingUpdate, 1)
 
         await expect(
           streamLoader.stateAtCommit(stream.state, CommitID.make(stream.id, conflictingUpdateCID))

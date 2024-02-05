@@ -202,9 +202,9 @@ describeIfV3('StateManipulator test', () => {
     beforeAll(async () => {
       conflictingCommits = cloneDeep(commits.slice(3))
       conflictingCommits[0].commit.header.randomField = 'this changes the hash of the commit!'
-      conflictingCommits[0].cid = await dispatcher.storeCommit(conflictingCommits[0].commit)
+      conflictingCommits[0].cid = await dispatcher.storeCommit(conflictingCommits[0].commit, 0)
       conflictingCommits[1].commit.prev = conflictingCommits[0].cid
-      conflictingCommits[1].cid = await dispatcher.storeCommit(conflictingCommits[1].commit)
+      conflictingCommits[1].cid = await dispatcher.storeCommit(conflictingCommits[1].commit, 1)
 
       expect(conflictingCommits[0].cid.toString()).not.toEqual(commits[3].cid.toString())
       expect(conflictingCommits[1].cid.toString()).not.toEqual(commits[4].cid.toString())

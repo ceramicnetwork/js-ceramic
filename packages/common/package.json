@@ -49,6 +49,7 @@
     "@didtools/pkh-solana": "^0.2.0",
     "@didtools/pkh-stacks": "^0.2.0",
     "@didtools/pkh-tezos": "^0.3.0",
+    "@ipld/dag-cbor": "^9.1.0",
     "@stablelib/random": "^1.0.1",
     "caip": "~1.1.0",
     "flat": "^5.0.2",

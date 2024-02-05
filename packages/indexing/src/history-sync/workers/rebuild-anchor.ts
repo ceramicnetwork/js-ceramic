@@ -128,7 +128,7 @@ export class RebuildAnchorWorker implements Worker<RebuildAnchorJobData> {
               path: pathString(path),
             }
 
-            const anchorCommitCid = await this.ipfsService.storeCommit(anchorCommit)
+            const anchorCommitCid = await this.ipfsService.ipfsStoreCommit(anchorCommit)
 
             await this.handleCommit(streamId, anchorCommitCid, model!)
 

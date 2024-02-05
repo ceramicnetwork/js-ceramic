@@ -10,8 +10,10 @@ import {
   IpfsNodeStatus,
   toCID,
 } from '@ceramicnetwork/common'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { StreamID, EventID } from '@ceramicnetwork/streamid'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { Model } from '@ceramicnetwork/stream-model'
 import { Repository } from './state-management/repository.js'
 import {
   MsgType,
@@ -31,6 +33,8 @@ import type { ShutdownSignal } from './shutdown-signal.js'
 import { CARFactory, CarBlock, type CAR } from 'cartonne'
 import all from 'it-all'
 import { IPFS_CACHE_HIT, IPFS_CACHE_MISS, IPLDRecordsCache } from './store/ipld-records-cache.js'
+import { IReconApi } from './recon.js'
+import { type CeramicNetworkOptions } from './initialization/network-options.js'
 
 const IPFS_GET_RETRIES = 3
 const DEFAULT_IPFS_GET_SYNC_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -118,13 +122,14 @@ export class Dispatcher {
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
     readonly _ipfs: IpfsApi,
-    private readonly topic: string,
+    private readonly networkOptions: CeramicNetworkOptions,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     private readonly _shutdownSignal: ShutdownSignal,
     enableSync: boolean,
     maxQueriesPerSecond: number,
+    private readonly recon: IReconApi,
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     this.enableSync = process.env.CERAMIC_RECON_MODE ? false : enableSync
@@ -132,7 +137,7 @@ export class Dispatcher {
     if (!process.env.CERAMIC_RECON_MODE) {
       const pubsub = new Pubsub(
         _ipfs,
-        topic,
+        networkOptions.pubsubTopic,
         IPFS_RESUBSCRIBE_INTERVAL_DELAY,
         IPFS_NO_MESSAGE_INTERVAL,
         _pubsubLogger,
@@ -212,63 +217,109 @@ export class Dispatcher {
   }
 
   /**
-   * Stores all the blocks in the given CAR file into the local IPFS node.
-   * @param car
+   * Imports an anchor witness CAR.
+   * @param car - The anchor witness CAR to import.
+   * @param cid - The CID of the anchor witness CAR.
+   * @param streamId - The ID of the stream to associate the anchor witness CAR with.
+   * @param controllers - An array of controller IDs for the stream.
+   * @param eventHeight - The height of the event associated with the anchor witness CAR commit
+   * @param model - The ID of the model stream, if applicable.
    */
-  importCAR(car: CAR): Promise<void> {
-    return this._shutdownSignal.abortable(async (signal) => {
-      await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
-    })
+  async importAnchorWitnessCar(
+    car: CAR,
+    cid: CID,
+    streamId: StreamID,
+    controllers: Array<string>,
+    eventHeight: number,
+    model?: StreamID
+  ): Promise<void> {
+    const eventId =
+      this.recon.enabled && model
+        ? EventID.create(
+            this.networkOptions.name,
+            this.networkOptions.offset,
+            'model',
+            model.toString(),
+            controllers[0],
+            streamId.cid,
+            eventHeight,
+            cid
+          )
+        : undefined
+
+    await this.importCAR(car, eventId)
+    Metrics.count(COMMITS_STORED, 1)
   }
 
   /**
-   * Store Ceramic commit (genesis|signed|anchor).
-   *
-   * @param data - Ceramic commit data
-   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
+   * Stores all the blocks in the given CAR file into the local IPFS node or recon node
+   * @param car
+   * @param eventId eventId needed to store blocks in recon mode
    */
-  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
-    const carFile = this.carFactory.build()
-    try {
-      if (StreamUtils.isSignedCommitContainer(data)) {
-        const { jws, linkedBlock, cacaoBlock } = data
-        // if cacao is present, put it into ipfs dag
-        if (cacaoBlock) {
-          const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
-          const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
-          carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
-          restrictBlockSize(cacaoBlock, capCID)
-          this.ipldCache.set(capCID, {
-            record: carFile.get(capCID),
-            block: cacaoBlock,
-          })
-        }
+  importCAR(car: CAR, eventId?: EventID): Promise<void> {
+    if (eventId) {
+      return this.recon.put({ eventId, eventData: car })
+    } else {
+      return this._shutdownSignal.abortable(async (signal) => {
+        await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
+      })
+    }
+  }
 
-        const payloadCID = jws.link
-        carFile.blocks.put(new CarBlock(payloadCID, linkedBlock)) // Encode payload
-        restrictBlockSize(linkedBlock, jws.link)
-        this.ipldCache.set(payloadCID, {
-          record: carFile.get(payloadCID),
-          block: linkedBlock,
+  _addCommitToCar(carFile: CAR, data: any): CID {
+    if (StreamUtils.isSignedCommitContainer(data)) {
+      const { jws, linkedBlock, cacaoBlock } = data
+      // if cacao is present, put it into ipfs dag
+      if (cacaoBlock) {
+        const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
+        const capCID = CID.parse(decodedProtectedHeader.cap.replace('ipfs://', ''))
+        carFile.blocks.put(new CarBlock(capCID, cacaoBlock))
+        restrictBlockSize(cacaoBlock, capCID)
+        this.ipldCache.set(capCID, {
+          record: carFile.get(capCID),
+          block: cacaoBlock,
         })
-        const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
-        const cidBlock = carFile.blocks.get(cid).payload
-        restrictBlockSize(cidBlock, cid)
-        this.ipldCache.set(cid, {
-          record: carFile.get(cid),
-          block: cidBlock,
-        })
-        await this.importCAR(carFile)
-        Metrics.count(COMMITS_STORED, 1)
-        return cid
       }
-      const cid = carFile.put(data, { isRoot: true })
+
+      const payloadCID = jws.link
+      carFile.blocks.put(new CarBlock(payloadCID, linkedBlock)) // Encode payload
+      restrictBlockSize(linkedBlock, jws.link)
+      this.ipldCache.set(payloadCID, {
+        record: carFile.get(payloadCID),
+        block: linkedBlock,
+      })
+      const cid = carFile.put(jws, { codec: 'dag-jose', hasher: 'sha2-256', isRoot: true }) // Encode JWS itself
       const cidBlock = carFile.blocks.get(cid).payload
       restrictBlockSize(cidBlock, cid)
       this.ipldCache.set(cid, {
         record: carFile.get(cid),
         block: cidBlock,
       })
+      return cid
+    }
+
+    const cid = carFile.put(data, { isRoot: true })
+    const cidBlock = carFile.blocks.get(cid).payload
+    restrictBlockSize(cidBlock, cid)
+    this.ipldCache.set(cid, {
+      record: carFile.get(cid),
+      block: cidBlock,
+    })
+    return cid
+  }
+
+  /**
+   * TODO: remove
+   * Store Ceramic commit (genesis|signed|anchor).
+   * This is the old pre recon way to store commits
+   *
+   * @param data - Ceramic commit data
+   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
+   */
+  async ipfsStoreCommit(data: any, streamId?: StreamID): Promise<CID> {
+    const carFile = this.carFactory.build()
+    const cid = this._addCommitToCar(carFile, data)
+    try {
       await this.importCAR(carFile)
       Metrics.count(COMMITS_STORED, 1)
       return cid
@@ -280,6 +331,72 @@ export class Dispatcher {
       } else {
         this._logger.err(`Error while storing commit to IPFS: ${e}`)
       }
+      Metrics.count(ERROR_STORING_COMMIT, 1)
+      throw e
+    }
+  }
+
+  /**
+   * Store Ceramic commit (genesis|signed|anchor).
+   *
+   * @param data - Ceramic commit data
+   * @param commitHeight - The height of the commit
+   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
+   * @param controllers - An array of controller IDs for the stream.
+   * @param model - The ID of the model stream, if applicable.
+   */
+  async storeCommit(
+    data: any,
+    commitHeight: number,
+    streamId?: StreamID,
+    controllers?: Array<string>,
+    model?: StreamID
+  ): Promise<CID> {
+    const carFile = this.carFactory.build()
+    const cid = this._addCommitToCar(carFile, data)
+
+    try {
+      if (this.recon.enabled) {
+        const header = StreamUtils.isSignedCommitContainer(data)
+          ? data.linkedBlock.header
+          : data.header
+        model = model || StreamID.fromBytes(header.model)
+        controllers = controllers || header.controllers
+
+        if (model) {
+          if (!commitHeight) {
+            throw new Error(
+              'commitHeight is required for storing commits for mid and model streams in recon mode'
+            )
+          }
+
+          const type = model.equals(Model.MODEL)
+            ? Model.STREAM_TYPE_ID
+            : ModelInstanceDocument.STREAM_TYPE_ID
+
+          streamId = streamId || new StreamID(type, cid)
+          const eventId = EventID.create(
+            this.networkOptions.name,
+            this.networkOptions.offset,
+            'model',
+            model.toString(),
+            controllers[0],
+            streamId.cid,
+            commitHeight,
+            cid
+          )
+
+          await this.importCAR(carFile, eventId)
+          Metrics.count(COMMITS_STORED, 1)
+          return cid
+        }
+      }
+
+      await this.importCAR(carFile)
+      Metrics.count(COMMITS_STORED, 1)
+      return cid
+    } catch (e) {
+      this._logger.err(`Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
       throw e
     }
@@ -374,6 +491,8 @@ export class Dispatcher {
               timeout: this._ipfsTimeout,
               path: path,
               signal: signal,
+              // @ts-ignore
+              offline: this.recon.enabled,
             })
           )
           // TODO(CORE-137) - Replace ipfs-core-types to get consistent multiformats version
@@ -385,7 +504,7 @@ export class Dispatcher {
             timeout: this._ipfsTimeout,
             signal: signal,
             // @ts-ignore
-            offline: !this.enableSync,
+            offline: !this.enableSync || this.recon.enabled,
           })
         )
         restrictBlockSize(block, blockCid)
@@ -426,10 +545,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (
-      process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' ||
-      process.env.CERAMIC_RECON_MODE
-    ) {
+    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || process.env.CERAMIC_RECON_MODE) {
       return empty().subscribe()
     }
 

@@ -56,6 +56,7 @@ import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
+import { ReconApi } from './recon.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -94,6 +95,7 @@ const ERROR_LOADING_STREAM = 'error_loading_stream'
  * Ceramic configuration
  */
 export interface CeramicConfig {
+  reconUrl?: string
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
   anchorServiceAuthMethod?: string
@@ -373,17 +375,22 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const feed = new Feed()
+    const reconApi = new ReconApi(
+      { enabled: Boolean(process.env.CERAMIC_RECON_MODE), url: config.reconUrl },
+      logger
+    )
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
-      networkOptions.pubsubTopic,
+      networkOptions,
       repository,
       logger,
       pubsubLogger,
       shutdownSignal,
       !config.disablePeerDataSync,
-      maxQueriesPerSecond
+      maxQueriesPerSecond,
+      reconApi
     )
     const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
     const pinStoreOptions = {
