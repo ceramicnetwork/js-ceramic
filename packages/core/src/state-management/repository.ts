@@ -833,7 +833,7 @@ export class Repository {
   ): Promise<RunningState> {
     this.anchorService.assertCASAccessible()
 
-    const genesisCid = await this.dispatcher.storeCommit(genesis)
+    const genesisCid = await this.dispatcher.storeCommit(genesis, 0)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.load(streamId, opts)
 
