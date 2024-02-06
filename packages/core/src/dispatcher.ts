@@ -360,8 +360,8 @@ export class Dispatcher {
         const header = StreamUtils.isSignedCommitContainer(data)
           ? data.linkedBlock.header
           : data.header
-        model = model || StreamID.fromBytes(header.model)
-        controllers = controllers || header.controllers
+        model = model || (header?.model && StreamID.fromBytes(header.model))
+        controllers = controllers || header?.controllers
 
         if (model) {
           if (!commitHeight) {
@@ -396,7 +396,13 @@ export class Dispatcher {
       Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {
-      this._logger.err(`Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`)
+      if (streamId) {
+        this._logger.err(
+          `Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`
+        )
+      } else {
+        this._logger.err(`Error while storing commit to IPFS: ${e}`)
+      }
       Metrics.count(ERROR_STORING_COMMIT, 1)
       throw e
     }
