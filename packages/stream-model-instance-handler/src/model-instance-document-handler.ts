@@ -174,11 +174,18 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     )
 
     if (payload.header) {
-      throw new Error(
-        `Updating metadata for ModelInstanceDocument Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
-          state.metadata
-        )} to ${JSON.stringify(payload.header)}\``
-      )
+      const { shouldIndex, ...others } = payload.header
+      const otherKeys = Object.keys(others)
+      if (otherKeys.length) {
+        throw new Error(
+          `Updating metadata for ModelInstanceDocument Streams is not allowed.  Tried to change metadata for Stream ${streamId} from ${JSON.stringify(
+            state.metadata
+          )} to ${JSON.stringify(payload.header)}\``
+        )
+      }
+      if (shouldIndex != null) {
+        state.metadata.shouldIndex = shouldIndex
+      }
     }
 
     const oldContent = state.content ?? {}
@@ -252,11 +259,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     validateContentLength(content)
 
-    await this._schemaValidator.validateSchema(
-      content,
-      model.content.schema,
-      model.commitId.toString()
-    )
+    this._schemaValidator.validateSchema(content, model.content.schema, model.commitId.toString())
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
