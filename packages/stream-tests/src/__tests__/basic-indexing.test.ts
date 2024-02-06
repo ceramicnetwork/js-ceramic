@@ -247,6 +247,8 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
   })
 
   beforeEach(async () => {
+    console.log(`Setting up for test: ${expect.getState().currentTestName}`)
+
     switch (env.dbEngine) {
       case DBEngine.sqlite: {
         const indexingDirectory = await tmp.tmpName()
@@ -273,6 +275,7 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
     midRelationMetadata = { model: modelWithRelation.id }
 
     await core.index.indexModels([{ streamID: model.id }, { streamID: modelWithRelation.id }])
+    console.log(`Starting test: ${expect.getState().currentTestName}`)
   }, 30 * 1000)
 
   afterEach(async () => {
