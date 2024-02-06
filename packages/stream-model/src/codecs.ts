@@ -193,6 +193,7 @@ export const ModelRelationViewDefinitionV2 = union(
     strict({ type: literal('relationDocument'), model: optionalModelString, property: string }),
     strict({ type: literal('relationFrom'), model: streamIdString, property: string }),
     strict({ type: literal('relationCountFrom'), model: streamIdString, property: string }),
+    strict({ type: literal('relationSetFrom'), model: streamIdString, property: string }),
   ],
   'ModelRelationViewDefinitionV2'
 )
@@ -228,6 +229,7 @@ export type ModelViewDefinition = TypeOf<typeof ModelViewDefinition>
  * - 'relationDocument': view properties of this type represent document relations identified by the given 'property' field
  * - 'relationFrom': view properties of this type represent inverse relations identified by the given 'model' and 'property' fields
  * - 'relationCountFrom': view properties of this type represent the number of inverse relations identified by the given 'model' and 'property' fields
+ * - 'relationSetFrom': view properties of this type represent a single inverse relation identified by the given 'model' and 'property' fields for models using the SET account relation
  *
  */
 export const ModelViewDefinitionV2 = union(
