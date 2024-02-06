@@ -232,19 +232,31 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   /**
    * Update an existing Model Instance Document by replacing its content
    * @param content - New content to replace old content
+   * @param metadata
    * @param opts - Additional options
    */
-  async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
+  async replace(
+    content: T | null,
+    metadata: Partial<ModelInstanceDocumentMetadataArgs> | undefined | null = undefined,
+    opts: UpdateOpts = {}
+  ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
     const signer: CeramicSigner = opts.asDID
       ? CeramicSigner.fromDID(opts.asDID)
       : opts.signer || this.api.signer
+    let header: Partial<CommitHeader> | undefined = undefined
+    if (metadata && metadata.shouldIndex != null) {
+      header = {
+        shouldIndex: metadata.shouldIndex,
+      }
+    }
     const updateCommit = await ModelInstanceDocument.makeUpdateCommit(
       signer,
       this.commitId,
       this.content,
-      content
+      content,
+      header
     )
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
@@ -254,6 +266,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * Update the contents of an existing Model Instance Document based on a JSON-patch diff from the existing
    * contents to the desired new contents
    * @param jsonPatch - JSON patch diff of document contents
+   * @param metadata - Metadata change
    * @param opts - Additional options
    */
   async patch(
@@ -327,14 +340,16 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param prev - The CommitID of the current tip of the Stream that the update should be applied on top of.
    * @param oldContent - The current content of the Stream.
    * @param newContent - The new content to update the Stream with.
+   * @param header - New commit header
    */
   static makeUpdateCommit<T>(
     signer: CeramicSigner,
     prev: CommitID,
     oldContent: T | null,
-    newContent: T | null
+    newContent: T | null,
+    header?: Partial<CommitHeader>
   ): Promise<CeramicCommit> {
-    const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent)
+    const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent, header)
     return signer.createDagJWS(commit)
   }
 
