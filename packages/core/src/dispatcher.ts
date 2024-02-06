@@ -248,7 +248,6 @@ export class Dispatcher {
         : undefined
 
     await this.importCAR(car, eventId)
-    Metrics.count(COMMITS_STORED, 1)
   }
 
   /**
