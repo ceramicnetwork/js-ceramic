@@ -364,7 +364,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
       anchor: false,
     })
-    await doc.replace(CONTENT1, { anchor: false })
+    await doc.replace(CONTENT1, undefined, { anchor: false })
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
 
