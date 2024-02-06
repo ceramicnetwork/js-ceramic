@@ -30,6 +30,7 @@ const ALLOWED_CONTENT_KEYS = new Set([
   'views',
   'interface',
   'implements',
+  'immutableFields',
 ])
 
 /**
