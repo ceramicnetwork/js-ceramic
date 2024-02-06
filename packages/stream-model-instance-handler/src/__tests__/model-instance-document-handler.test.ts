@@ -1320,7 +1320,7 @@ describe('ModelInstanceDocumentHandler', () => {
       envelope: signedCommit.jws,
     }
     await expect(handler.applyCommit(signedCommitData, context, state)).rejects.toThrow(
-      `Unsupported metadata changes for ModelInstanceDocument Stream ${doc.id}: controllers. Only the shouldIndex argument can be changed.`
+      /Updating metadata for ModelInstanceDocument Streams is not allowed/
     )
   })
 
