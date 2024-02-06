@@ -923,6 +923,21 @@ and indexname in (${expectedIndices});
       expect(raw.dark_mode).toEqual(STREAM_TEST_DATA_PROFILE_A.settings.dark_mode)
       expect(raw.id).toEqual(STREAM_TEST_DATA_PROFILE_A.id)
     })
+
+    test('unindex', async () => {
+      await indexApi.indexStream(STREAM_CONTENT_A)
+      const count = () =>
+        dbConnection
+          .from(`${MODELS_TO_INDEX[0]}`)
+          .select('*')
+          .then((r) => r.length)
+      await expect(count()).resolves.toEqual(1)
+      const shouldUnindex = { ...STREAM_CONTENT_A, shouldIndex: false }
+      await indexApi.indexStream(shouldUnindex)
+      await expect(count()).resolves.toEqual(0)
+      await indexApi.indexStream(shouldUnindex)
+      await expect(count()).resolves.toEqual(0)
+    })
   })
 
   describe('page', () => {
