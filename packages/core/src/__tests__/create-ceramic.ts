@@ -30,6 +30,7 @@ export async function createCeramic(
       disableComposedb: false,
       enableHistoricalSync: false,
     },
+    reconUrl: (await ipfs.config.get('Addresses.API')).toString(),
     ...config,
   }
   const ceramic = await Ceramic.create(ipfs, appliedConfig)
