@@ -321,7 +321,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(
       ModelInstanceDocument.single(ceramic, {
         ...midSingleMetadata,
-        controller: { invalid: 'object' },
+        controller: 'invalid',
       })
     ).rejects.toThrow(/Attempting to create a ModelInstanceDocument with an invalid DID string/)
   })

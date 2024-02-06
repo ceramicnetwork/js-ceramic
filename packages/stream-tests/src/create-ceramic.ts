@@ -23,6 +23,7 @@ export async function createCeramic(
         enableHistoricalSync: false,
       },
       sync: false,
+      reconUrl: await ipfs.config.get('Addresses.API'),
     },
     config
   )

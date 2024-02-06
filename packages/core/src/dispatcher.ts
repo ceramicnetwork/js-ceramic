@@ -364,12 +364,6 @@ export class Dispatcher {
         controllers = controllers || header?.controllers
 
         if (model) {
-          if (!commitHeight) {
-            throw new Error(
-              'commitHeight is required for storing commits for mid and model streams in recon mode'
-            )
-          }
-
           const type = model.equals(Model.MODEL)
             ? Model.STREAM_TYPE_ID
             : ModelInstanceDocument.STREAM_TYPE_ID

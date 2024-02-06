@@ -98,6 +98,12 @@ async function binary(binary_path?: string, port?: number): Promise<RunningIpfs>
     host: '127.0.0.1',
     port: apiPort,
   })
+  ipfs.config.get = async (key: string): Promise<string | object> => {
+    if (key === 'Addresses.API') {
+      return `http://127.0.0.1:${apiPort}`
+    }
+    return ''
+  }
 
   let ipfsOnline = false
   while (!ipfsOnline) {
@@ -139,6 +145,12 @@ async function remote(host?: string, port?: number): Promise<RunningIpfs> {
     host: resolvedHost,
     port: resolvedPort,
   })
+  ipfs.config.get = async (key: string): Promise<string | object> => {
+    if (key === 'Addresses.API') {
+      return `https://${resolvedHost}:${resolvedPort}`
+    }
+    return ''
+  }
   const p = new Proxy(ipfs, {
     get(target: any, p: PropertyKey): any {
       if (p === 'stop') {

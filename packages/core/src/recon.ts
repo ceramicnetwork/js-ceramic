@@ -45,16 +45,18 @@ export class ReconApi implements IReconApi {
   }
 
   async put(event: Event): Promise<void> {
+    const body = {
+      eventId: event.eventId.toString(),
+      eventData: event.eventData.toString(),
+    }
     try {
       const result = await this.#sendRequest(this.#config.url + '/ceramic/events', {
         method: 'POST',
-        body: {
-          eventId: event.eventId.toString(),
-        },
+        body,
       })
-      this.#logger.debug(`CeramicOne: put event ${event.eventId}`)
+      this.#logger.debug(`Recon: put event ${event.eventId}`)
     } catch (err) {
-      this.#logger.err(`CeramicOne: failed to add event ${event.eventId} with error ${err}`)
+      this.#logger.err(`Recon: failed to add event ${event.eventId} with error ${err}`)
     }
   }
 
