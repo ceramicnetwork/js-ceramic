@@ -7,7 +7,7 @@ import pgTeardown from '@databases/pg-test/jest/globalTeardown'
 import { asTableName } from '../as-table-name.util.js'
 import { IndexQueryNotAvailableError } from '../index-query-not-available.error.js'
 import { Model } from '@ceramicnetwork/stream-model'
-import { LoggerProvider, Networks, type CeramicCoreApi } from '@ceramicnetwork/common'
+import { LoggerProvider, Networks } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import {
   asTimestamp,
