@@ -188,6 +188,20 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).resolves.toBeTruthy()
   })
 
+  test(`Can set and access context`, async () => {
+    const ctx = TestUtils.randomStreamID()
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+      ...midMetadata,
+      context: ctx,
+    })
+
+    const loaded = await ModelInstanceDocument.load(ceramic, doc.id)
+
+    expect(loaded.id.toString()).toEqual(doc.id.toString())
+    expect(doc.metadata.context.toString()).toEqual(ctx.toString())
+    expect(loaded.metadata.context.toString()).toEqual(ctx.toString())
+  })
+
   test('Create and update doc', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.content).toEqual(CONTENT0)

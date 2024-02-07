@@ -68,6 +68,11 @@ export interface ModelInstanceDocumentMetadata {
    * Unique bytes
    */
   unique?: Uint8Array
+
+  /**
+   * The "context" StreamID for this ModelInstanceDocument.
+   */
+  context?: StreamID
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -107,7 +112,12 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { controller: metadata.controllers[0], model: metadata.model, unique: metadata.unique }
+    return {
+      controller: metadata.controllers[0],
+      model: metadata.model,
+      unique: metadata.unique,
+      context: metadata.context,
+    }
   }
 
   /**
