@@ -36,7 +36,7 @@ export class AnchorProcessingLoop {
     this.#anchorStoreQueue = anchorStoreQueue
     this.#anchorPollingMetrics = new TimeableMetric(
       SinceField.TIMESTAMP,
-      'anchorPollingDelay',
+      'anchorRequestAge',
       METRICS_REPORTING_INTERVAL_MS
     )
     this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), async (streamId) => {
