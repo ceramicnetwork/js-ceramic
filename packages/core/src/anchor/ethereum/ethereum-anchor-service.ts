@@ -162,13 +162,6 @@ export class AuthenticatedEthereumAnchorService
     this.auth = auth
   }
 
-  /**
-   * @inheritDoc
-   */
-  set ceramic(signer: CeramicSigner) {
-    this.auth.signer = signer
-  }
-
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
     await this.auth.init()
     await super.init(store, eventHandler)
