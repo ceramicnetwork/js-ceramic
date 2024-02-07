@@ -133,7 +133,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           this.#logger.debug(
             `Anchor polling loop processed ${numEntries} entries from the AnchorRequestStore. Restarting loop.`
           )
-          Metrics.observe(ANCHOR_POLLING_PROCESSED, numEntries) 
+          Metrics.observe(ANCHOR_POLLING_PROCESSED, numEntries)
           await new Promise((resolve) => setTimeout(resolve, restartDelay))
           gt = undefined
           numEntries = 0
