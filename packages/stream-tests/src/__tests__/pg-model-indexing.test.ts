@@ -55,7 +55,12 @@ const SINGLE_INDEXED_MODEL_DEFINITION: ModelDefinition = {
   },
 }
 
-describe('Postgres Model indexing tests', () => {
+// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
+const describeIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE
+  ? describe.skip
+  : describe
+
+describeIfV3ShouldPassWithAnchoring('Postgres Model indexing tests', () => {
   jest.setTimeout(1000 * 30)
 
   let ipfs: IpfsApi

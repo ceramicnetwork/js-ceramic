@@ -81,6 +81,9 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   },
 }
 
+// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
+const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -153,7 +156,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).rejects.toThrow(/data must have required property 'myData'/)
   })
 
-  test(`Create a valid doc`, async () => {
+  testIfV3ShouldPassWithAnchoring(`Create a valid doc`, async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
@@ -262,7 +265,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
   })
 
-  test('Anchor genesis', async () => {
+  testIfV3ShouldPassWithAnchoring('Anchor genesis', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -276,7 +279,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.content).toEqual(CONTENT0)
   })
 
-  test('Anchor after updating', async () => {
+  testIfV3ShouldPassWithAnchoring('Anchor after updating', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     await doc.replace(CONTENT1)
@@ -293,7 +296,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.content).toEqual(CONTENT1)
   })
 
-  test('multiple updates', async () => {
+  testIfV3ShouldPassWithAnchoring('multiple updates', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
@@ -340,7 +343,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).rejects.toThrow(/Attempting to create a ModelInstanceDocument with an invalid DID string/)
   })
 
-  test('Can load a stream', async () => {
+  testIfV3ShouldPassWithAnchoring('Can load a stream', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(core, doc)

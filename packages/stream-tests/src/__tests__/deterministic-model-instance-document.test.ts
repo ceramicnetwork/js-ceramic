@@ -59,6 +59,9 @@ const MODEL_DEFINITION_SET: ModelDefinition = {
   },
 }
 
+// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
+const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -118,7 +121,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
   })
 
-  test(`Create doc and set content`, async () => {
+  testIfV3ShouldPassWithAnchoring(`Create doc and set content`, async () => {
     const doc = await ModelInstanceDocument.single(ceramic, midMetadata)
     await doc.replace(CONTENT0)
     expect(doc.content).toEqual(CONTENT0)
@@ -128,7 +131,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
-  test(`Can create deterministic doc with create method`, async () => {
+  testIfV3ShouldPassWithAnchoring(`Can create deterministic doc with create method`, async () => {
     const doc = await ModelInstanceDocument.create(ceramic, null, {
       ...midMetadata,
       deterministic: true,

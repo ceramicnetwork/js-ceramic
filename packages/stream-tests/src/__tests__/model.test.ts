@@ -76,6 +76,12 @@ const MODEL_DEFINITION_WITH_RELATION: ModelDefinition = {
   relations: { linkedDoc: { type: 'document', model: MODEL_STREAM_ID } },
 }
 
+// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
+const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
+const describeIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE
+  ? describe.skip
+  : describe
+
 describe('Model API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -122,7 +128,7 @@ describe('Model API http-client tests', () => {
     await expect(ceramic.loadStream(Model.MODEL)).rejects.toThrow(/4 is not a valid stream type/)
   })
 
-  test('Create valid model', async () => {
+  testIfV3ShouldPassWithAnchoring('Create valid model', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
 
     expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
@@ -134,7 +140,7 @@ describe('Model API http-client tests', () => {
     expect(model.id.toString()).toEqual(MODEL_STREAM_ID)
   })
 
-  describe('model indexing', () => {
+  describeIfV3ShouldPassWithAnchoring('model indexing', () => {
     test('Create and index valid model', async () => {
       const model = await Model.create(ceramic, INDEXED_MODEL_DEFINITION)
 
@@ -540,7 +546,7 @@ describe('Model API http-client tests', () => {
     })
   })
 
-  test('Create valid model with relation', async () => {
+  testIfV3ShouldPassWithAnchoring('Create valid model with relation', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION_WITH_RELATION)
 
     expect(model.id.type).toEqual(Model.STREAM_TYPE_ID)
@@ -551,7 +557,7 @@ describe('Model API http-client tests', () => {
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   })
 
-  test('Anchor genesis', async () => {
+  testIfV3ShouldPassWithAnchoring('Anchor genesis', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
     expect(model.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -634,7 +640,7 @@ describe('Model API http-client tests', () => {
     )
   })
 
-  test('Can load a complete stream', async () => {
+  testIfV3ShouldPassWithAnchoring('Can load a complete stream', async () => {
     const model = await Model.create(ceramic, MODEL_DEFINITION)
     await CoreUtils.anchorUpdate(core, model)
     await model.sync()
@@ -646,7 +652,7 @@ describe('Model API http-client tests', () => {
     expect(JSON.stringify(loaded.state)).toEqual(JSON.stringify(model.state))
   })
 
-  test('Checks interface implementation on model creation', async () => {
+  testIfV3ShouldPassWithAnchoring('Checks interface implementation on model creation', async () => {
     const interfaceModel = await Model.create(ceramic, {
       version: '2.0',
       name: 'TestInterface',
