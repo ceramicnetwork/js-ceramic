@@ -48,23 +48,18 @@ export async function fetchJson(url: URL | string, opts: Partial<FetchOpts> = {}
     ? mergeAbortSignals([opts.signal, timedAbortSignal.signal])
     : timedAbortSignal.signal
 
-  try {
-    const res = await abortable(signal, (abortSignal) => {
-      return fetch(String(url), { ...opts, signal: abortSignal, credentials: 'include' })
-    }).finally(() => timedAbortSignal.clear())
+  const res = await abortable(signal, (abortSignal) => {
+    return fetch(String(url), { ...opts, signal: abortSignal, credentials: 'include' })
+  }).finally(() => timedAbortSignal.clear())
 
-    if (!res.ok) {
-      const text = await res.text()
-      throw new Error(`HTTP request to '${url}' failed with status '${res.statusText}': ${text}`)
-    }
-
-    if (res.status === 204) {
-      return {}
-    }
-
-    return res.json()
-  } catch (err) {
-    console.log('common/src/utils: fetch error: ', err)
-    throw err
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`HTTP request to '${url}' failed with status '${res.statusText}': ${text}`)
   }
+
+  if (res.status === 204) {
+    return {}
+  }
+
+  return res.json()
 }

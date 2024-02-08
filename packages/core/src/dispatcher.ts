@@ -357,7 +357,7 @@ export class Dispatcher {
     try {
       if (this.recon.enabled) {
         const header = StreamUtils.isSignedCommitContainer(data)
-          ? data.linkedBlock.header
+          ? carFile.get(data.jws.link).header
           : data.header
         model = model || (header?.model && StreamID.fromBytes(header.model))
         controllers = controllers || header?.controllers
