@@ -135,7 +135,9 @@ export class ProcessingLoop<T> {
             .finally(() => {
               this.#runningTasks.delete(curTaskId)
             })
-          this.#runningTasks.set(taskId++, task)
+          this.#runningTasks.set(taskId, task)
+          // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
+          taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
         } catch (e) {
           this.#logger.err(`Error in ProcessingLoop: ${e}`)
         }
