@@ -14,6 +14,7 @@
  * ```
  */
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { Semaphore } from 'await-semaphore'
 
 export class Deferred<T = void> implements PromiseLike<T> {
   /**
@@ -75,14 +76,21 @@ export class ProcessingLoop<T> {
    */
   #abortController: AbortController
 
+  /**
+   * Controls how many values can be processed concurrently
+   */
+  #semaphore: Semaphore
+
   constructor(
     logger: DiagnosticsLogger,
+    concurrencyLimit: number,
     source: ProcessingLoop<T>['source'],
     onValue: ProcessingLoop<T>['handleValue']
   ) {
     this.source = source
     this.handleValue = onValue
     this.#logger = logger
+    this.#semaphore = new Semaphore(concurrencyLimit)
     this.#processing = undefined
     this.#whenComplete = new Deferred()
     this.#abortController = new AbortController()
@@ -112,7 +120,8 @@ export class ProcessingLoop<T> {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             continue
           }
-          await Promise.race([this.handleValue(value), rejectOnAbortSignal])
+          const task = Promise.race([this.handleValue(value), rejectOnAbortSignal])
+          void this.#semaphore.use(() => task)
         } while (!isDone)
         this.#whenComplete.resolve()
         this.#logger.debug(`ProcessingLoop complete`)
