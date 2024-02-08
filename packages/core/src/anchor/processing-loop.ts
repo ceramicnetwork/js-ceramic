@@ -81,6 +81,11 @@ export class ProcessingLoop<T> {
    */
   #semaphore: Semaphore
 
+  /**
+   * The tasks that are currently being processed, keyed by task id.
+   */
+  #runningTasks: Map<number, Promise<void>>
+
   constructor(
     logger: DiagnosticsLogger,
     concurrencyLimit: number,
@@ -94,6 +99,7 @@ export class ProcessingLoop<T> {
     this.#processing = undefined
     this.#whenComplete = new Deferred()
     this.#abortController = new AbortController()
+    this.#runningTasks = new Map()
   }
 
   start() {
@@ -108,6 +114,7 @@ export class ProcessingLoop<T> {
       this.#abortController.signal.addEventListener('abort', done)
     })
     const processing = async (): Promise<void> => {
+      let taskId = 0
       try {
         let isDone = false
         do {
@@ -120,9 +127,28 @@ export class ProcessingLoop<T> {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             continue
           }
-          const task = Promise.race([this.handleValue(value), rejectOnAbortSignal])
-          void this.#semaphore.use(() => task)
+          const curTaskId = taskId
+
+          // console.log(`Semaphore count: ${this.#semaphore.count}`)
+          // void this.#semaphore.use(() => {
+          //   console.log('AAAAAAA!!!!!')
+          //   return Promise.resolve()
+          // })
+          const task = this.#semaphore
+            .use(async () => {
+              await Promise.race([this.handleValue(value), rejectOnAbortSignal])
+            })
+            .catch((e) => {
+              this.#logger.err(`Error in ProcessingLoop: ${e}`)
+              this.#whenComplete.reject(e)
+              this.#abortController.abort('ERROR')
+            })
+            .finally(() => {
+              this.#runningTasks.delete(curTaskId)
+            })
+          this.#runningTasks.set(taskId++, task)
         } while (!isDone)
+        await Promise.all(this.#runningTasks.values())
         this.#whenComplete.resolve()
         this.#logger.debug(`ProcessingLoop complete`)
       } catch (e) {

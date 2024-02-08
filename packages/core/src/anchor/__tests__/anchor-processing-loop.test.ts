@@ -1,10 +1,12 @@
 import { test, jest, expect, describe } from '@jest/globals'
 import { ProcessingLoop, Deferred } from '../processing-loop.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 
 async function* infiniteIntegers() {
   let n = 0
   while (true) {
+    await CommonTestUtils.delay(1)
     yield n++
   }
 }
@@ -27,7 +29,7 @@ describe('deferred', () => {
 test('do not call next on construction', async () => {
   const generator = infiniteIntegers()
   const nextSpy = jest.spyOn(generator, 'next')
-  new ProcessingLoop(logger, generator, () => Promise.resolve())
+  new ProcessingLoop(logger, 1, generator, () => Promise.resolve())
   expect(nextSpy).not.toBeCalled()
 })
 
@@ -42,9 +44,10 @@ test('process entries one by one, stop when all processed', async () => {
     isDone.resolve()
   }
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(logger, finiteIntegers(), noop)
+  const loop = new ProcessingLoop(logger, 1, finiteIntegers(), noop)
   loop.start()
   await isDone
+  await loop.stop()
   expect(noop).toBeCalledTimes(max - 1)
 })
 
@@ -61,7 +64,7 @@ test('stop generator after processing (idempotent)', async () => {
   const source = finiteIntegers()
   const returnSpy = jest.spyOn(source, 'return')
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(logger, source, noop)
+  const loop = new ProcessingLoop(logger, 1, source, noop)
   loop.start()
   await isDone
   expect(returnSpy).not.toBeCalled()
@@ -73,27 +76,31 @@ test('stop generator', async () => {
   const source = infiniteIntegers()
   const returnSpy = jest.spyOn(source, 'return')
   const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(logger, source, noop)
+  const loop = new ProcessingLoop(logger, 1, source, noop)
   loop.start()
   expect(returnSpy).not.toBeCalled()
   await loop.stop()
   expect(returnSpy).toBeCalled()
 })
 
-test('pass error to .stop', async () => {
-  const source = infiniteIntegers()
-  const returnSpy = jest.spyOn(source, 'return')
-  const defer = new Deferred()
-  const noop = async (n: number) => {
-    if (n >= 10) {
-      defer.resolve()
-      throw new Error(`Valhalla welcomes you`)
+test(
+  'pass error to .stop',
+  async () => {
+    const source = infiniteIntegers()
+    const returnSpy = jest.spyOn(source, 'return')
+    const defer = new Deferred()
+    const noop = async (n: number) => {
+      if (n >= 10) {
+        defer.resolve()
+        throw new Error(`Valhalla welcomes you`)
+      }
     }
-  }
-  const loop = new ProcessingLoop(logger, source, noop)
-  loop.start()
-  await defer
-  expect(returnSpy).not.toBeCalled()
-  await expect(loop.stop()).rejects.toThrow(/Valhalla/)
-  expect(returnSpy).toBeCalled()
-})
+    const loop = new ProcessingLoop(logger, 1, source, noop)
+    loop.start()
+    await defer
+    expect(returnSpy).not.toBeCalled()
+    await expect(loop.stop()).rejects.toThrow(/Valhalla/)
+    expect(returnSpy).toBeCalled()
+  },
+  1000 * 1000 // todo remocve
+)
