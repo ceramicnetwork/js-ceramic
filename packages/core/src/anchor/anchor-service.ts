@@ -23,13 +23,6 @@ export interface AnchorService {
   init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void>
 
   /**
-   * Set Ceramic signer instance
-   *
-   * @param signer - Ceramic signer
-   */
-  signer: CeramicSigner
-
-  /**
    * URL of the connected anchor service
    */
   url: string

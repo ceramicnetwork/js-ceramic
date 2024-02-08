@@ -23,6 +23,11 @@ export type IndexingConfig = {
    * Setting this to true allows a Ceramic node to sync historical data for actively indexed models
    */
   enableHistoricalSync: boolean
+
+  /**
+   * Setting this will increase the max connection pool size
+   */
+  maxConnectionPoolSize?: number
 }
 
 export class UnsupportedDatabaseProtocolError extends Error {
@@ -84,11 +89,12 @@ export function buildIndexing(
     }
     case 'postgres':
     case 'postgresql': {
-      logger.imp('Initializing PostgreSQL connection')
+      const max = indexingConfig.maxConnectionPoolSize || 10
+      logger.imp(`Initializing PostgreSQL connection with ${max} max connections`)
       const dataSource = knex({
         client: 'pg',
         connection: connectionString.toString(),
-        pool: { min: 0 },
+        pool: { min: 0, max },
       })
       return new PostgresIndexApi(
         dataSource,

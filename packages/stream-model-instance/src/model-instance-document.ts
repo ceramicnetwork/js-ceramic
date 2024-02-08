@@ -77,6 +77,11 @@ export interface ModelInstanceDocumentMetadata {
   unique?: Uint8Array
 
   /**
+   * The "context" StreamID for this ModelInstanceDocument.
+   */
+  context?: StreamID
+
+  /**
    * Whether the stream should be indexed or not.
    */
   shouldIndex?: boolean
@@ -123,6 +128,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       controller: metadata.controllers[0],
       model: metadata.model,
       unique: metadata.unique,
+      context: metadata.context,
       shouldIndex: metadata.shouldIndex,
     }
   }
@@ -299,7 +305,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       id: this.id.cid,
     }
     // Null check is necessary to avoid `undefined` value that can't be encoded with IPLD
-    if (metadata.shouldIndex != null) {
+    if (metadata?.shouldIndex != null) {
       rawCommit.header = {
         shouldIndex: metadata.shouldIndex,
       }
@@ -340,7 +346,7 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param prev - The CommitID of the current tip of the Stream that the update should be applied on top of.
    * @param oldContent - The current content of the Stream.
    * @param newContent - The new content to update the Stream with.
-   * @param header - New commit header
+   * @param header - New commit header, used to update the stream's metadata.  Metadata fields not specified will be left alone with their current values.
    */
   static makeUpdateCommit<T>(
     signer: CeramicSigner,

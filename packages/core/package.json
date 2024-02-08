@@ -51,7 +51,7 @@
     "@ceramicnetwork/indexing": "^3.1.0",
     "@ceramicnetwork/ipfs-topology": "^4.1.0",
     "@ceramicnetwork/job-queue": "^3.1.0",
-    "@ceramicnetwork/observability": "^1.4.1",
+    "@ceramicnetwork/observability": "^1.4.4",
     "@ceramicnetwork/pinning-aggregation": "^4.1.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^4.1.0",
     "@ceramicnetwork/stream-caip10-link": "^4.1.0",

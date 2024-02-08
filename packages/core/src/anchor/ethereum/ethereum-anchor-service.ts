@@ -68,13 +68,6 @@ export class EthereumAnchorService implements AnchorService {
     })
   }
 
-  /**
-   * @inheritDoc
-   */
-  set signer(signer: CeramicSigner) {
-    // Do Nothing
-  }
-
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
     this.#store = store
     // Get the chainIds supported by our anchor service
@@ -167,13 +160,6 @@ export class AuthenticatedEthereumAnchorService
       enableAnchorPollingLoop
     )
     this.auth = auth
-  }
-
-  /**
-   * @inheritDoc
-   */
-  set ceramic(signer: CeramicSigner) {
-    this.auth.signer = signer
   }
 
   async init(store: AnchorRequestStore, eventHandler: AnchorLoopHandler): Promise<void> {
