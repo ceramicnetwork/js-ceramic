@@ -156,7 +156,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).rejects.toThrow(/data must have required property 'myData'/)
   })
 
-  testIfV3ShouldPassWithAnchoring(`Create a valid doc`, async () => {
+  test(`Create a valid doc`, async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.id.type).toEqual(ModelInstanceDocument.STREAM_TYPE_ID)
     expect(doc.content).toEqual(CONTENT0)
@@ -165,7 +165,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
@@ -183,7 +186,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(docWithRelation.state.log.length).toEqual(1)
     expect(docWithRelation.state.log[0].type).toEqual(EventType.INIT)
-    expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
     expect(docWithRelation.metadata.model.toString()).toEqual(modelWithRelation.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, docWithRelation.id)).resolves.toBeTruthy()
     await expect(

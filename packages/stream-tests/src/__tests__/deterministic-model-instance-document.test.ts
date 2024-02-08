@@ -59,9 +59,6 @@ const MODEL_DEFINITION_SET: ModelDefinition = {
   },
 }
 
-// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
-const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -121,17 +118,20 @@ describe('ModelInstanceDocument API http-client tests', () => {
     await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
   })
 
-  testIfV3ShouldPassWithAnchoring(`Create doc and set content`, async () => {
+  test(`Create doc and set content`, async () => {
     const doc = await ModelInstanceDocument.single(ceramic, midMetadata)
     await doc.replace(CONTENT0)
     expect(doc.content).toEqual(CONTENT0)
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
   })
 
-  testIfV3ShouldPassWithAnchoring(`Can create deterministic doc with create method`, async () => {
+  test(`Can create deterministic doc with create method`, async () => {
     const doc = await ModelInstanceDocument.create(ceramic, null, {
       ...midMetadata,
       deterministic: true,
@@ -141,7 +141,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
   })
 
   test(`Creating doc with SINGLE accountRelation non-deterministically should fail `, async () => {
