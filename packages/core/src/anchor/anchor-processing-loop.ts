@@ -55,6 +55,10 @@ export class AnchorProcessingLoop {
           `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
         )
         if (isTerminal) {
+          // Record the latency of how long this particular anchor request existed in the
+          // AnchorRequestStore.  The "record" function will compare the current time to the
+          // "timestamp" field from "entry", which was set as the current time when the request was
+          // first written into the AnchorRequestStore.
           this.#anchorPollingMetrics.record(entry)
           // Remove iff tip stored equals to the tip we processed
           // Sort of Compare-and-Swap.
