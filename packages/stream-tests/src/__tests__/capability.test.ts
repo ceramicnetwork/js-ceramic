@@ -335,7 +335,7 @@ describe('CACAO Integration test', () => {
       )
 
       await expect(
-        doc.replace(CONTENT1, {
+        doc.replace(CONTENT1, undefined, {
           asDID: didKeyWithBadCapability,
           anchor: false,
           publish: false,

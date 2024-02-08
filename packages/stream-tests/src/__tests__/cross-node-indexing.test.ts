@@ -194,7 +194,7 @@ describeIfV3ShouldPass.each(envs)(
       expect(results[0].state).toEqual(doc1.state)
 
       // Now update an existing stream and create a new stream and make sure the index updates properly
-      await doc1.replace(CONTENT1, { anchor: false })
+      await doc1.replace(CONTENT1, undefined, { anchor: false })
       const doc2 = await ModelInstanceDocument.create(ceramic1, CONTENT2, midMetadata, {
         anchor: false,
       })

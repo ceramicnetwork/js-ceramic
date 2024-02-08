@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/base-test-utils": "^2.1.0",
-    "ts-essentials": "^9.3.2"
+    "ts-essentials": "^9.4.1"
   },
   "publishConfig": {
     "access": "public"
