@@ -2,10 +2,14 @@ import { test, jest, expect, describe } from '@jest/globals'
 import { ProcessingLoop, Deferred } from '../processing-loop.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
 
-async function* infiniteIntegers() {
+async function* infiniteIntegers(batchSize = 2) {
   let n = 0
   while (true) {
-    yield n++
+    const toYield: Array<number> = []
+    for (let i = 0; i < batchSize; i++) {
+      toYield.push(n++)
+    }
+    yield toYield
   }
 }
 
@@ -34,27 +38,27 @@ test('do not call next on construction', async () => {
 test('process entries one by one, stop when all processed', async () => {
   const isDone = new Deferred()
   const max = 10
+  let n = 0
   async function* finiteIntegers() {
-    let n = 0
     while (n < max) {
-      yield n++
+      yield [n++, n++]
     }
     isDone.resolve()
   }
-  const noop = jest.fn(() => Promise.resolve())
-  const loop = new ProcessingLoop(logger, finiteIntegers(), noop)
+  const noopHandler = jest.fn(() => Promise.resolve())
+  const loop = new ProcessingLoop(logger, finiteIntegers(), noopHandler)
   loop.start()
   await isDone
-  expect(noop).toBeCalledTimes(max - 1)
+  expect(noopHandler).toBeCalledTimes(n)
 })
 
 test('stop generator after processing (idempotent)', async () => {
   const isDone = new Deferred()
   const max = 10
+  let n = 0
   async function* finiteIntegers() {
-    let n = 0
     while (n < max) {
-      yield n++
+      yield [n++, n++]
     }
     isDone.resolve()
   }

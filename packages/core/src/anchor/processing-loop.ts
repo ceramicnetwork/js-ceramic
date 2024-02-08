@@ -49,7 +49,7 @@ export class ProcessingLoop<T> {
   /**
    * Source of entries we process in a loop.
    */
-  private readonly source: AsyncGenerator<T>
+  private readonly source: AsyncGenerator<Array<T>>
 
   /**
    * External action that processes an entry.
@@ -107,12 +107,13 @@ export class ProcessingLoop<T> {
           const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
           isDone = next.done
           if (isDone) break
-          const value = next.value
-          if (!value) {
+          const values = next.value
+          if (!values) {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             continue
           }
-          await Promise.race([this.handleValue(value), rejectOnAbortSignal])
+          const handlersP = values.map((value) => this.handleValue(value))
+          await Promise.race(handlersP.concat(rejectOnAbortSignal))
         } while (!isDone)
         this.#whenComplete.resolve()
         this.#logger.debug(`ProcessingLoop complete`)

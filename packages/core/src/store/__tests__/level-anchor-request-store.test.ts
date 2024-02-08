@@ -1,7 +1,6 @@
 import { Model, ModelDefinition } from '@ceramicnetwork/stream-model'
 import { LevelDbStore } from '../level-db-store.js'
 import {
-  CeramicApi,
   EventType,
   DiagnosticsLogger,
   GenesisCommit,
@@ -24,6 +23,7 @@ import all from 'it-all'
 import { OLD_ELP_DEFAULT_LOCATION } from '../level-db-store.js'
 import { Utils } from '../../utils.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import type { Ceramic } from '../../ceramic.js'
 
 const BATCH_TIMEOUT = 100
 
@@ -87,7 +87,7 @@ describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
   let levelStore: LevelDbStore
   let anchorRequestStore: AnchorRequestStore
   let ipfs: IpfsApi
-  let ceramic: CeramicApi
+  let ceramic: Ceramic
   let logger: DiagnosticsLogger
   let streamId1: StreamID
   let genesisCommit1: GenesisCommit
@@ -99,10 +99,7 @@ describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
   // use Utils to load the genesis commit for a stream so it converts CIDs for us
   // and we avoid any issues with one having `Symbol(Symbol.toStringTag): "CID"` and one not
   // because the getter function isn't copied by _.cloneDeep.
-  async function loadGenesisCommit(
-    ceramic: CeramicApi,
-    streamId: StreamID
-  ): Promise<GenesisCommit> {
+  async function loadGenesisCommit(ceramic: Ceramic, streamId: StreamID): Promise<GenesisCommit> {
     const commit = await Utils.getCommitData(ceramic.dispatcher, streamId.cid, streamId)
     expect(commit.type).toEqual(EventType.INIT)
     return commit.commit as GenesisCommit
@@ -295,13 +292,13 @@ describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
     const generator = anchorRequestStore.infiniteList(1, 10)
 
     // List should repeat indefinitely
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[0]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[1]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[2]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[0]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[1]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[2]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[0]])
 
     // Generator still not finished
     expect((await generator.next()).done).toBeFalsy()
@@ -359,9 +356,9 @@ describeIfV3('LevelDB-backed AnchorRequestStore state store', () => {
     // Create infinite iterator over the AnchorRequestStore
     const generator = anchorRequestStore.infiniteList(1, 10)
 
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[0])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[1])
-    expect((await generator.next()).value.toString()).toEqual(sortedStreamIds[2])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[0]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[1]])
+    expect((await generator.next()).value.map(String)).toEqual([sortedStreamIds[2]])
 
     // It takes two tries to get the first batch
     expect(findSpy).toHaveBeenCalledTimes(4)

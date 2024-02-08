@@ -1,10 +1,5 @@
 import { fetchJson } from '@ceramicnetwork/common'
-import type {
-  AnchorEvent,
-  FetchRequest,
-  DiagnosticsLogger,
-  CeramicSigner,
-} from '@ceramicnetwork/common'
+import type { AnchorEvent, FetchRequest, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { Subject, type Observable } from 'rxjs'
 import type { CAR } from 'cartonne'
@@ -24,9 +19,10 @@ import { RemoteCAS } from './remote-cas.js'
 import { doNotWait } from '../../ancillary/do-not-wait.js'
 import { NamedTaskQueue } from '../../state-management/named-task-queue.js'
 
-// BATCH_SIZE controls the number of keys fetched from the AnchorRequestStore at once.
-// It does not affect the parallelism/concurrency of actually processing the entries in those batches.
-const BATCH_SIZE = 1000
+/**
+ * Controls the number of keys fetched from the AnchorRequestStore and retrieved from CAS at once.
+ */
+const BATCH_SIZE = 100
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain

@@ -103,7 +103,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
   async *infiniteList(
     batchSize = 1,
     restartDelay = 1000 // Milliseconds
-  ): AsyncGenerator<StreamID> {
+  ): AsyncGenerator<Array<StreamID>> {
     let gt: StreamID | undefined = undefined
     let numEntries = 0
     do {
@@ -125,10 +125,8 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
         clearTimeout(timeout)
         if (batch && batch.length > 0) {
           gt = StreamID.fromString(batch[batch.length - 1].key)
-          for (const item of batch) {
-            numEntries++
-            yield StreamID.fromString(item.key)
-          }
+          const streamIds = batch.map((item) => StreamID.fromString(item.key))
+          yield streamIds
         } else {
           this.#logger.debug(
             `Anchor polling loop processed ${numEntries} entries from the AnchorRequestStore. Restarting loop.`
