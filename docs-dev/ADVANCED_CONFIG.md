@@ -16,27 +16,27 @@ Do NOT copy the following code it is for reference only.
     },
     "http-api": {
         "admin-dids": ARRAY               // array of string DIDs with access to Admin API
-        "cors-allowed-origins": [ ".*" ]  // allow all origins
+        "cors-allowed-origins": ARRAY     // set to [ ".*" ] to allow all origins
         "hostname": STRING                // hostname to bind and listen on
         "port": INTEGER                   // port to listen on
     },
     "indexing": {
-        "allow-queries-before-historical-sync": false  // set to true to allow queries without sync
+        "allow-queries-before-historical-sync": BOOL   // set to true to allow queries without sync
         "db": STRING                                   // URL to the indexing database.  
                                                        // only sqlite and postgres are supported
-        "disable-composedb": false                     // set to true to run ceramic node without composedb
-        "enable-historical-sync": false                // set to tru to enable historical data sync
+        "disable-composedb": BOOL                      // set to true to run ceramic node without composedb
+        "enable-historical-sync": BOOL                 // set to true to enable historical data sync
     },
     "ipfs": {
         "host": STRING                   // complete URI of the IPFS node; used with 'remote'
         "mode": STRING "remote|bundled"  // mode to run IPFS node in
         "pinning-endpoints": ARRAY       // array of string endpoints for pinning IPFS data
-        "disable-peer-data-sync": false  // CAUTION- setting to true isolates the node
+        "disable-peer-data-sync": BOOL   // CAUTION- setting to true isolates the node
     },
     "logger": {
         "log-directory": STRING          // path on local filesystem when log-to-files is set
         "log-level": NUMBER              // Log level. 0 is most verbose
-        "log-to-files": true             // Log to files, default is true
+        "log-to-files": BOOL             // Log to files, default is true
     },
     "metrics": {
          "collector-host": STRING               // hostname of OTLP collector when push exporter enabled
@@ -51,13 +51,13 @@ Do NOT copy the following code it is for reference only.
     "node": {
         "disable-composedb": BOOLEAN  // CAUTION if true, turns off composedb indexing
         "private-seed-url": STRING    // the private seed for this node, or will be randomly generated
-        "readOnly": false             // run the node in read-only mode
+        "readOnly": BOOL              // set to true to run the node in read-only mode
         "stream-cache-limit": INTEGER // Max number of streams to keep in memory
         "sync-override": STRING       // CAUTION overrides internal sync setting for stream loads
     },
     "state-store": { 
 				"local-directory": STRING // Defaults to $HOME/.ceramic/statestore
-        "mode": "fs|s3",          // volume storage option shared here, fs=>filesystem, s3=>s3 bucket
+        "mode": STRING "fs|s3",           // volume storage option shared here, fs=>filesystem, s3=>s3 bucket
         "s3-bucket": STRING       // Name of S3 bucket
         "s3-endpoint": STRING     // URL of S3 endpoint
     }
