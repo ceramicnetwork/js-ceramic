@@ -1,12 +1,10 @@
 import { test, jest, expect, describe } from '@jest/globals'
 import { ProcessingLoop, Deferred } from '../processing-loop.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 
 async function* infiniteIntegers() {
   let n = 0
   while (true) {
-    await CommonTestUtils.delay(1)
     yield n++
   }
 }
@@ -83,35 +81,31 @@ test('stop generator', async () => {
   expect(returnSpy).toBeCalled()
 })
 
-test(
-  'Errors are swallowed',
-  async () => {
-    const isDone = new Deferred()
-    const max = 2
-    const errorAfter = 1
+test('Errors are swallowed', async () => {
+  const isDone = new Deferred()
+  const max = 2
+  const errorAfter = 1
 
-    async function* finiteIntegers() {
-      let n = 0
-      while (n < max) {
-        yield n++
-      }
-      isDone.resolve()
+  async function* finiteIntegers() {
+    let n = 0
+    while (n < max) {
+      yield n++
     }
-    const source = finiteIntegers()
-    const returnSpy = jest.spyOn(source, 'return')
-    const noop = jest.fn().mockImplementation((n: number) => {
-      if (n >= errorAfter) {
-        throw new Error(`Valhalla welcomes you`)
-      }
-    })
-    const loop = new ProcessingLoop(logger, 1, source, noop)
-    const whenComplete = loop.start()
-    await isDone
-    await whenComplete
-    expect(noop).toHaveBeenCalledTimes(max)
-    expect(returnSpy).not.toBeCalled()
-    await loop.stop()
-    expect(returnSpy).toBeCalled()
-  },
-  1000 * 1000 // todo remove
-)
+    isDone.resolve()
+  }
+  const source = finiteIntegers()
+  const returnSpy = jest.spyOn(source, 'return')
+  const noop = jest.fn().mockImplementation((n: number) => {
+    if (n >= errorAfter) {
+      throw new Error(`Valhalla welcomes you`)
+    }
+  })
+  const loop = new ProcessingLoop(logger, 1, source, noop)
+  const whenComplete = loop.start()
+  await isDone
+  await whenComplete
+  expect(noop).toHaveBeenCalledTimes(max)
+  expect(returnSpy).not.toBeCalled()
+  await loop.stop()
+  expect(returnSpy).toBeCalled()
+})

@@ -95,6 +95,9 @@ export class ProcessingLoop<T> {
     this.#runningTasks = new Map()
   }
 
+  /**
+   * Start the loop processing.  Returns a promise that resolves when the loop completes.
+   */
   start(): Promise<void> {
     const rejectOnAbortSignal = new Promise<IteratorResult<T>>((resolve) => {
       if (this.#abortController.signal.aborted) {

@@ -10,7 +10,7 @@ import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
-const DEFAULT_CONCURRENCY = 10
+const DEFAULT_CONCURRENCY = 25
 
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
@@ -96,7 +96,7 @@ export class AnchorProcessingLoop {
    */
   start(): void {
     this.#anchorPollingMetrics.startPublishingStats()
-    this.#loop.start()
+    void this.#loop.start()
   }
 
   /**
