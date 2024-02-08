@@ -5,7 +5,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@4.1.0...@ceramicnetwork/common@5.0.0) (2024-02-08)
 
-
 ### Bug Fixes
 
 * proper serialization/deserialization of context field ([#3149](https://github.com/ceramicnetwork/js-ceramic/issues/3149)) ([f2bd440](https://github.com/ceramicnetwork/js-ceramic/commit/f2bd4407a638d1e3278ee98d5803dd9cc83c0cfe))
