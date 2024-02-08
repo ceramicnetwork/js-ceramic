@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@4.1.0...@ceramicnetwork/stream-tests@5.0.0) (2024-02-08)
+
+
+### Bug Fixes
+
+* proper serialization/deserialization of context field ([#3149](https://github.com/ceramicnetwork/js-ceramic/issues/3149)) ([f2bd440](https://github.com/ceramicnetwork/js-ceramic/commit/f2bd4407a638d1e3278ee98d5803dd9cc83c0cfe))
+
+
+### Features
+
+* Add CERAMIC_RECON_MODE env var that disables specific features ([#3121](https://github.com/ceramicnetwork/js-ceramic/issues/3121)) ([e1885de](https://github.com/ceramicnetwork/js-ceramic/commit/e1885deea27f96758d885a03d93d6b0de201d1e0))
+* Add shouldIndex metadata flag ([#3146](https://github.com/ceramicnetwork/js-ceramic/issues/3146)) ([0ce377a](https://github.com/ceramicnetwork/js-ceramic/commit/0ce377af46a49d1fb3391b6fd2b4d2f72a93e58a))
+
+
+
+
+
 # [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@4.1.0-rc.0...@ceramicnetwork/stream-tests@4.1.0) (2024-02-02)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tests

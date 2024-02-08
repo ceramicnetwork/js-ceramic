@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@4.1.0...@ceramicnetwork/cli@5.0.0) (2024-02-08)
+
+
+### Features
+
+* Add CERAMIC_RECON_MODE env var that disables specific features ([#3121](https://github.com/ceramicnetwork/js-ceramic/issues/3121)) ([e1885de](https://github.com/ceramicnetwork/js-ceramic/commit/e1885deea27f96758d885a03d93d6b0de201d1e0))
+
+
+
+
+
 # [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@4.1.0-rc.0...@ceramicnetwork/cli@4.1.0) (2024-02-02)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

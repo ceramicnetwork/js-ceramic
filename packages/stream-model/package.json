@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-model",
-  "version": "3.2.0",
+  "version": "4.0.0",
   "description": "Ceramic Model stream type",
   "keywords": [
     "ceramic",
@@ -37,9 +37,9 @@
     "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/codecs": "^3.1.0",
-    "@ceramicnetwork/common": "^4.1.0",
-    "@ceramicnetwork/streamid": "^4.1.0",
+    "@ceramicnetwork/codecs": "^4.0.0",
+    "@ceramicnetwork/common": "^5.0.0",
+    "@ceramicnetwork/streamid": "^5.0.0",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "ajv": "^8.8.2",

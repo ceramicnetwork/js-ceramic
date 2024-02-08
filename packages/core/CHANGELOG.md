@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@4.1.0...@ceramicnetwork/core@5.0.0) (2024-02-08)
+
+
+### Bug Fixes
+
+* Respect opts in multiquery with explicit genesis commit contents ([#3150](https://github.com/ceramicnetwork/js-ceramic/issues/3150)) ([91f2002](https://github.com/ceramicnetwork/js-ceramic/commit/91f2002f8c62a176ddb8346c4525dee7b4a8e9b7))
+
+
+### Features
+
+* Add CERAMIC_RECON_MODE env var that disables specific features ([#3121](https://github.com/ceramicnetwork/js-ceramic/issues/3121)) ([e1885de](https://github.com/ceramicnetwork/js-ceramic/commit/e1885deea27f96758d885a03d93d6b0de201d1e0))
+* Add concurrency to ProcessingLoop ([#3153](https://github.com/ceramicnetwork/js-ceramic/issues/3153)) ([1a8fee2](https://github.com/ceramicnetwork/js-ceramic/commit/1a8fee2ac591267d25f5158b6aafce6e23170264))
+* Add shouldIndex metadata flag ([#3146](https://github.com/ceramicnetwork/js-ceramic/issues/3146)) ([0ce377a](https://github.com/ceramicnetwork/js-ceramic/commit/0ce377af46a49d1fb3391b6fd2b4d2f72a93e58a))
+* Fail incoming writes if the CAS has been consistently unavailable ([#3080](https://github.com/ceramicnetwork/js-ceramic/issues/3080)) ([2032f42](https://github.com/ceramicnetwork/js-ceramic/commit/2032f421597d2b8b61a96d561f312d5b25c4e44f))
+
+
+
+
+
 # [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@4.1.0-rc.0...@ceramicnetwork/core@4.1.0) (2024-02-02)
 
 **Note:** Version bump only for package @ceramicnetwork/core
