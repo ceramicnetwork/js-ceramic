@@ -112,8 +112,8 @@ export class ProcessingLoop<T> {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             continue
           }
-          const handlersP = values.map((value) => this.handleValue(value))
-          await Promise.race(handlersP.concat(rejectOnAbortSignal))
+          const handlersP = Promise.all(values.map((value) => this.handleValue(value)))
+          await Promise.race([handlersP, rejectOnAbortSignal])
         } while (!isDone)
         this.#whenComplete.resolve()
         this.#logger.debug(`ProcessingLoop complete`)
