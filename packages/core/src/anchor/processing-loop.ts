@@ -14,6 +14,7 @@
  * ```
  */
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { Semaphore } from 'await-semaphore'
 
 export class Deferred<T = void> implements PromiseLike<T> {
   /**
@@ -65,30 +66,39 @@ export class ProcessingLoop<T> {
   #processing: Promise<void> | undefined
 
   /**
-   * Used to intercept fulfillment inside `#processing`. Node.js forces you to handle Promise errors by
-   * issuing a warning to console. Passing an error to an instance of `Deferred` solves that.
-   */
-  #whenComplete: Deferred
-
-  /**
    * Stop promises in `#processing` by issuing abort signal.
    */
   #abortController: AbortController
 
+  /**
+   * Controls how many values can be processed concurrently
+   */
+  #semaphore: Semaphore
+
+  /**
+   * The tasks that are currently being processed, keyed by task id.
+   */
+  #runningTasks: Map<number, Promise<void>>
+
   constructor(
     logger: DiagnosticsLogger,
+    concurrencyLimit: number,
     source: ProcessingLoop<T>['source'],
     onValue: ProcessingLoop<T>['handleValue']
   ) {
     this.source = source
     this.handleValue = onValue
     this.#logger = logger
+    this.#semaphore = new Semaphore(concurrencyLimit)
     this.#processing = undefined
-    this.#whenComplete = new Deferred()
     this.#abortController = new AbortController()
+    this.#runningTasks = new Map()
   }
 
-  start() {
+  /**
+   * Start the loop processing.  Returns a promise that resolves when the loop completes.
+   */
+  start(): Promise<void> {
     const rejectOnAbortSignal = new Promise<IteratorResult<T>>((resolve) => {
       if (this.#abortController.signal.aborted) {
         resolve({ done: true, value: undefined })
@@ -100,28 +110,43 @@ export class ProcessingLoop<T> {
       this.#abortController.signal.addEventListener('abort', done)
     })
     const processing = async (): Promise<void> => {
-      try {
-        let isDone = false
-        do {
+      let taskId = 0
+      let isDone = false
+      do {
+        try {
           this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
           const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
           isDone = next.done
           if (isDone) break
           const value = next.value
-          if (!value) {
+          if (value === undefined) {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             continue
           }
-          await Promise.race([this.handleValue(value), rejectOnAbortSignal])
-        } while (!isDone)
-        this.#whenComplete.resolve()
-        this.#logger.debug(`ProcessingLoop complete`)
-      } catch (e) {
-        this.#logger.err(`Error in ProcessingLoop: ${e}`)
-        this.#whenComplete.reject(e)
-      }
+          const curTaskId = taskId
+          const task = this.#semaphore
+            .use(async () => {
+              await Promise.race([this.handleValue(value), rejectOnAbortSignal])
+            })
+            .catch((e) => {
+              this.#logger.err(`Error in ProcessingLoop: ${e}`)
+              this.#abortController.abort('ERROR')
+            })
+            .finally(() => {
+              this.#runningTasks.delete(curTaskId)
+            })
+          this.#runningTasks.set(taskId, task)
+          // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
+          taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
+        } catch (e) {
+          this.#logger.err(`Error in ProcessingLoop: ${e}`)
+        }
+      } while (!isDone)
+      await Promise.all(this.#runningTasks.values())
+      this.#logger.debug(`ProcessingLoop complete`)
     }
     this.#processing = processing()
+    return this.#processing
   }
 
   /**
@@ -137,7 +162,7 @@ export class ProcessingLoop<T> {
     this.#abortController.abort('STOP')
     await this.source.return(undefined)
     await this.#processing
-    await this.#whenComplete
+    await Promise.all(this.#runningTasks.values())
     this.#processing = undefined
   }
 }

@@ -10,6 +10,8 @@ import { TimeableMetric, SinceField } from '@ceramicnetwork/observability'
 
 const METRICS_REPORTING_INTERVAL_MS = 10000 // 10 second reporting interval
 
+const DEFAULT_CONCURRENCY = 25
+
 /**
  * Get anchor request entries from AnchorRequestStore one by one. For each entry, get CAS response,
  * and handle the response via `eventHandler.handle`.
@@ -39,46 +41,54 @@ export class AnchorProcessingLoop {
       'anchorRequestAge',
       METRICS_REPORTING_INTERVAL_MS
     )
-    this.#loop = new ProcessingLoop(logger, store.infiniteList(batchSize), async (streamId) => {
-      try {
-        logger.verbose(
-          `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
-        )
-        const entry = await store.load(streamId)
-        const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
-          logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
-          const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
-          return cas.create(new AnchorRequestCarFileReader(requestCAR))
-        })
-        const isTerminal = await eventHandler.handle(event)
-        logger.verbose(
-          `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
-        )
-        if (isTerminal) {
-          // Record the latency of how long this particular anchor request existed in the
-          // AnchorRequestStore.  The "record" function will compare the current time to the
-          // "timestamp" field from "entry", which was set as the current time when the request was
-          // first written into the AnchorRequestStore.
-          this.#anchorPollingMetrics.record(entry)
-          // Remove iff tip stored equals to the tip we processed
-          // Sort of Compare-and-Swap.
-          await this.#anchorStoreQueue.run(streamId.toString(), async () => {
-            const loaded = await store.load(streamId)
-            if (loaded.cid.equals(entry.cid)) {
-              await store.remove(streamId)
-            }
-          })
+
+    const concurrency =
+      Number(process.env.CERAMIC_ANCHOR_POLLING_CONCURRENCY) || DEFAULT_CONCURRENCY
+    this.#loop = new ProcessingLoop(
+      logger,
+      concurrency,
+      store.infiniteList(batchSize),
+      async (streamId) => {
+        try {
           logger.verbose(
-            `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
+            `Loading pending anchor metadata for Stream ${streamId} from AnchorRequestStore`
           )
+          const entry = await store.load(streamId)
+          const event = await cas.getStatusForRequest(streamId, entry.cid).catch(async (error) => {
+            logger.warn(`No request present on CAS for ${entry.cid} of ${streamId}: ${error}`)
+            const requestCAR = await eventHandler.buildRequestCar(streamId, entry.cid)
+            return cas.create(new AnchorRequestCarFileReader(requestCAR))
+          })
+          const isTerminal = await eventHandler.handle(event)
+          logger.verbose(
+            `Anchor event with status ${event.status} for commit CID ${entry.cid} of Stream ${streamId} handled successfully`
+          )
+          if (isTerminal) {
+            // Record the latency of how long this particular anchor request existed in the
+            // AnchorRequestStore.  The "record" function will compare the current time to the
+            // "timestamp" field from "entry", which was set as the current time when the request was
+            // first written into the AnchorRequestStore.
+            this.#anchorPollingMetrics.record(entry)
+            // Remove iff tip stored equals to the tip we processed
+            // Sort of Compare-and-Swap.
+            await this.#anchorStoreQueue.run(streamId.toString(), async () => {
+              const loaded = await store.load(streamId)
+              if (loaded.cid.equals(entry.cid)) {
+                await store.remove(streamId)
+              }
+            })
+            logger.verbose(
+              `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
+            )
+          }
+        } catch (err) {
+          logger.err(
+            `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
+          )
+          // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
         }
-      } catch (err) {
-        logger.err(
-          `Error while processing entry from the AnchorRequestStore for StreamID ${streamId}: ${err}`
-        )
-        // Swallow the error and leave the entry in the store, it will get retries the next time through the loop.
       }
-    })
+    )
   }
 
   /**
@@ -86,7 +96,7 @@ export class AnchorProcessingLoop {
    */
   start(): void {
     this.#anchorPollingMetrics.startPublishingStats()
-    this.#loop.start()
+    void this.#loop.start()
   }
 
   /**
