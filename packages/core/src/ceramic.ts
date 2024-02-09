@@ -95,7 +95,6 @@ const ERROR_LOADING_STREAM = 'error_loading_stream'
  * Ceramic configuration
  */
 export interface CeramicConfig {
-  reconUrl?: string
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
   anchorServiceAuthMethod?: string
@@ -119,6 +118,8 @@ export interface CeramicConfig {
   syncOverride?: SyncOptions
 
   disablePeerDataSync?: boolean
+
+  networkId?: number
 
   [index: string]: any // allow arbitrary properties
 }
@@ -348,7 +349,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
+    const networkOptions = networkOptionsByName(
+      config.networkName,
+      config.pubsubTopic,
+      config.networkId
+    )
 
     const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
     const signer = CeramicSigner.invalid()
@@ -376,7 +381,10 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const feed = new Feed()
     const reconApi = new ReconApi(
-      { enabled: Boolean(process.env.CERAMIC_RECON_MODE), url: config.reconUrl },
+      {
+        enabled: Boolean(process.env.CERAMIC_RECON_MODE),
+        url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
+      },
       logger
     )
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)

@@ -173,6 +173,7 @@ export class Dispatcher {
 
   async init() {
     if (process.env.CERAMIC_RECON_MODE) {
+      await this.recon.init()
       return
     }
     this.messageBus.subscribe(this.handleMessage.bind(this))
@@ -237,7 +238,7 @@ export class Dispatcher {
       this.recon.enabled && model
         ? EventID.create(
             this.networkOptions.name,
-            this.networkOptions.offset,
+            this.networkOptions.id,
             'model',
             model.toString(),
             controllers[0],
@@ -257,7 +258,9 @@ export class Dispatcher {
    */
   importCAR(car: CAR, eventId?: EventID): Promise<void> {
     if (eventId) {
-      return this.recon.put({ eventId, eventData: car })
+      return this._shutdownSignal.abortable(async (signal) => {
+        await this.recon.put({ id: eventId, data: car }, { signal })
+      })
     } else {
       return this._shutdownSignal.abortable(async (signal) => {
         await all(this._ipfs.dag.import(car, { signal, pinRoots: false }))
@@ -308,14 +311,13 @@ export class Dispatcher {
   }
 
   /**
-   * TODO: remove
    * Store Ceramic commit (genesis|signed|anchor).
    * This is the old pre recon way to store commits
    *
    * @param data - Ceramic commit data
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async ipfsStoreCommit(data: any, streamId?: StreamID): Promise<CID> {
+  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
     const carFile = this.carFactory.build()
     const cid = this._addCommitToCar(carFile, data)
     try {
@@ -336,66 +338,82 @@ export class Dispatcher {
   }
 
   /**
-   * Store Ceramic commit (genesis|signed|anchor).
-   *
-   * @param data - Ceramic commit data
-   * @param commitHeight - The height of the commit
-   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
-   * @param controllers - An array of controller IDs for the stream.
-   * @param model - The ID of the model stream, if applicable.
+   * Store Ceramic init event (genesis commit)
+   * @param data init event (genesis commit)
+   * @returns cid of the stored event/commit
    */
-  async storeCommit(
-    data: any,
-    commitHeight: number,
-    streamId?: StreamID,
-    controllers?: Array<string>,
-    model?: StreamID
-  ): Promise<CID> {
-    const carFile = this.carFactory.build()
-    const cid = this._addCommitToCar(carFile, data)
-
+  async storeInitEvent(data: any): Promise<CID> {
     try {
-      if (this.recon.enabled) {
-        const header = StreamUtils.isSignedCommitContainer(data)
-          ? carFile.get(data.jws.link).header
-          : data.header
-        model = model || (header?.model && StreamID.fromBytes(header.model))
-        controllers = controllers || header?.controllers
+      const carFile = this.carFactory.build()
+      const cid = this._addCommitToCar(carFile, data)
 
-        if (model) {
-          const type = model.equals(Model.MODEL)
-            ? Model.STREAM_TYPE_ID
-            : ModelInstanceDocument.STREAM_TYPE_ID
-
-          streamId = streamId || new StreamID(type, cid)
-          const eventId = EventID.create(
-            this.networkOptions.name,
-            this.networkOptions.offset,
-            'model',
-            model.toString(),
-            controllers[0],
-            streamId.cid,
-            commitHeight,
-            cid
-          )
-
-          await this.importCAR(carFile, eventId)
-          Metrics.count(COMMITS_STORED, 1)
-          return cid
-        }
+      const header = StreamUtils.isSignedCommitContainer(data)
+        ? carFile.get(data.jws.link).header
+        : data.header
+      if (!header) {
+        throw Error('Header is missing in the genesis commit')
       }
 
-      await this.importCAR(carFile)
+      const eventId =
+        header.model && this.recon.enabled
+          ? EventID.create(
+              this.networkOptions.name,
+              this.networkOptions.id,
+              'model',
+              StreamID.fromBytes(header.model).toString(),
+              header.controllers[0],
+              cid,
+              0,
+              cid
+            )
+          : undefined
+      await this.importCAR(carFile, eventId)
       Metrics.count(COMMITS_STORED, 1)
       return cid
     } catch (e) {
-      if (streamId) {
-        this._logger.err(
-          `Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`
-        )
-      } else {
-        this._logger.err(`Error while storing commit to IPFS: ${e}`)
-      }
+      this._logger.err(`Error while storing commit to IPFS: ${e}`)
+      Metrics.count(ERROR_STORING_COMMIT, 1)
+      throw e
+    }
+  }
+
+  /**
+   * Store data event (signed|anchor commit).
+   *
+   * @param data - Ceramic data event
+   * @param eventHeight - The height of the event
+   * @param streamId - StreamID of the stream the event belongs to, used for logging.
+   * @param controllers - An array of controller IDs for the stream.
+   * @param model - The ID of the model stream, if applicable.
+   */
+  async storeDataEvent(
+    data: any,
+    eventHeight: number,
+    streamId: StreamID,
+    controllers: Array<string>,
+    model?: StreamID
+  ): Promise<CID> {
+    try {
+      const carFile = this.carFactory.build()
+      const cid = this._addCommitToCar(carFile, data)
+      const eventId =
+        model && this.recon.enabled
+          ? EventID.create(
+              this.networkOptions.name,
+              this.networkOptions.id,
+              'model',
+              model.toString(),
+              controllers[0],
+              streamId.cid,
+              eventHeight,
+              cid
+            )
+          : undefined
+      await this.importCAR(carFile, eventId)
+      Metrics.count(COMMITS_STORED, 1)
+      return cid
+    } catch (e) {
+      this._logger.err(`Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`)
       Metrics.count(ERROR_STORING_COMMIT, 1)
       throw e
     }

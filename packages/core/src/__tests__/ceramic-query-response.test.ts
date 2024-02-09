@@ -79,14 +79,14 @@ describeIfV3('Response to pubsub queries handling', () => {
     // Make sure we have some random valid CIDs to respond to pubsub queries with
     for (let i = 0; i < 10; i++) {
       const commit = await TileDocument.makeGenesis(ceramic.signer, { foo: i }, null)
-      const cid = await ceramic.dispatcher.storeCommit(commit, 0)
+      const cid = await ceramic.dispatcher.storeCommit(commit)
       cids.push(cid)
     }
   })
 
   beforeEach(async () => {
     const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
-    const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit, 0)
+    const genesisCID = await ceramic.dispatcher.storeCommit(genesisCommit)
     streamID = new StreamID(0, genesisCID)
   })
 

@@ -1,6 +1,6 @@
 import { type CAR } from 'cartonne'
 
-import { DiagnosticsLogger, FetchRequest, fetchJson } from '@ceramicnetwork/common'
+import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
 import { EventID } from '@ceramicnetwork/streamid'
 
 /**
@@ -9,23 +9,24 @@ import { EventID } from '@ceramicnetwork/streamid'
 export type ReconApiConfig = {
   // Whether the Recon API is enabled
   enabled: boolean
-  // URL of the Recon API
-  url: string
+  // URL of the Recon API or a promise that resolves to the URL
+  url: string | Promise<string>
 }
 
 /**
  * Recon Event
  */
-export interface Event {
-  eventId: EventID
-  eventData: CAR
+export interface ReconEvent {
+  id: EventID
+  data: CAR
 }
 
 /**
  * Recon API Interface
  */
 export interface IReconApi {
-  put(event: Event): Promise<void>
+  init(): Promise<void>
+  put(event: ReconEvent, opts?: AbortOptions): Promise<void>
   enabled: boolean
 }
 
@@ -33,6 +34,7 @@ export class ReconApi implements IReconApi {
   readonly #config: ReconApiConfig
   readonly #logger: DiagnosticsLogger
   readonly #sendRequest: FetchRequest
+  #url: string
 
   constructor(
     config: ReconApiConfig,
@@ -44,19 +46,24 @@ export class ReconApi implements IReconApi {
     this.#sendRequest = sendRequest
   }
 
-  async put(event: Event): Promise<void> {
+  async init(): Promise<void> {
+    this.#url = await this.#config.url
+  }
+
+  async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
     const body = {
-      eventId: event.eventId.toString(),
-      eventData: event.eventData.toString(),
+      eventId: event.id.toString(),
+      eventData: event.data.toString(),
     }
     try {
-      await this.#sendRequest(this.#config.url + '/ceramic/events', {
+      await this.#sendRequest(this.#url + '/ceramic/events', {
         method: 'POST',
         body,
+        signal: opts.signal,
       })
-      this.#logger.imp(`Recon: put event ${event.eventId}`)
+      this.#logger.debug(`Recon: put event ${event.id}`)
     } catch (err) {
-      this.#logger.err(`Recon: failed to add event ${event.eventId} with error ${err}`)
+      this.#logger.err(`Recon: failed to add event ${event.id} with error ${err}`)
       throw err
     }
   }

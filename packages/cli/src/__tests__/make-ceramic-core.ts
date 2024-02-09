@@ -16,7 +16,6 @@ export async function makeCeramicCore(
       disableComposedb: false,
       enableHistoricalSync: false,
     },
-    reconUrl: (await ipfs.config.get('Addresses.API')).toString(),
   })
 
   const handler = new TileDocumentHandler()

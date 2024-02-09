@@ -35,7 +35,7 @@ describeIfV3('Test loading a stream when pubsub replies with an invalid tip', ()
 
     // Make sure genesis commit is available to IPFS, but without the Ceramic node knowing about
     // the stream yet.
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesis, 0)
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
     // With no pubsub response we just get the genesis commit contents.
@@ -52,7 +52,7 @@ describeIfV3('Test loading a stream when pubsub replies with an invalid tip', ()
     // the stream yet.
     const content = { test: 123 }
     const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesis, 0)
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
     const ipfs2 = await createIPFS()
@@ -87,7 +87,7 @@ describeIfV3('Test loading a stream when pubsub replies with an invalid tip', ()
     // the stream yet.
     const content = { test: 123 }
     const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesis, 0)
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
     const ipfs2 = await createIPFS()
@@ -122,7 +122,7 @@ describeIfV3('Test loading a stream when pubsub replies with an invalid tip', ()
     // the stream yet.
     const content = { test: 123 }
     const genesis = await TileDocument.makeGenesis(ceramic.signer, content, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesis, 0)
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesis)
     const streamID = new StreamID('tile', genesisCid)
 
     // make a second random stream

@@ -126,7 +126,7 @@ describeIfV3('#load', () => {
   test('Sync pinned stream first time loaded from state store', async () => {
     const content = { foo: 'bar' }
     const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit, 0)
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamId = new StreamID('tile', genesisCid)
     const streamState = {
       type: TileDocument.STREAM_TYPE_ID,
@@ -175,7 +175,7 @@ describeIfV3('#load', () => {
   test('Pinning a stream prevents it from needing to be synced', async () => {
     const content = { foo: 'bar' }
     const genesisCommit = await TileDocument.makeGenesis(ceramic.signer, { foo: 'bar' }, null)
-    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit, 0)
+    const genesisCid = await ceramic.dispatcher.storeCommit(genesisCommit)
     const streamId = new StreamID('tile', genesisCid)
     const syncSpy = jest.spyOn(repository, '_sync')
     const loadFromNetworkSpy = jest.spyOn(repository, '_loadStreamFromNetwork')
@@ -434,7 +434,7 @@ describeIfV3('#load', () => {
       // Provide a new commit that the repository doesn't currently know about
       const newContent = { abc: 321, def: 456, gh: 987 }
       const updateCommit = await stream.makeCommit(ceramic.signer, newContent)
-      const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit, 0)
+      const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
       const futureCommitID = CommitID.make(stream.id, futureCommitCID)
 
       // Now load the stream at a commitID ahead of what is currently in the state in the repository.

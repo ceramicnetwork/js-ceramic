@@ -115,7 +115,6 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     streamCacheLimit: opts.node.streamCacheLimit,
     indexing: opts.indexing,
     disablePeerDataSync: opts.ipfs.disablePeerDataSync,
-    reconUrl: opts.ipfs.host,
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory

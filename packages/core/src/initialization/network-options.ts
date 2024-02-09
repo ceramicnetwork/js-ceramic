@@ -3,7 +3,6 @@ import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_NETWORK = Networks.INMEMORY
 
-const NETWORK_OFFSET = randomUint32()
 const TOPIC_BY_NETWORK = {
   [Networks.MAINNET]: '/ceramic/mainnet',
   [Networks.TESTNET_CLAY]: '/ceramic/testnet-clay',
@@ -11,8 +10,8 @@ const TOPIC_BY_NETWORK = {
   // Default to a random pub/sub topic so that local deployments are isolated from each other
   // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
   // be made to talk to each other if needed.
-  [Networks.LOCAL]: `/ceramic/local-${NETWORK_OFFSET}`,
-  [Networks.INMEMORY]: `/ceramic/inmemory-${NETWORK_OFFSET}`,
+  [Networks.LOCAL]: `/ceramic/local-${randomUint32()}`,
+  [Networks.INMEMORY]: `/ceramic/inmemory-${randomUint32()}`,
 }
 
 const ALLOW_CUSTOM_TOPIC = [Networks.INMEMORY, Networks.LOCAL]
@@ -23,7 +22,7 @@ const ALLOW_CUSTOM_TOPIC = [Networks.INMEMORY, Networks.LOCAL]
 export type CeramicNetworkOptions = {
   name: Networks // Must be one of the supported network names
   pubsubTopic: string // The topic that will be used for broadcasting protocol messages
-  offset: number // A random offset that is added to the pubsub topic to isolate local/inmemory deployments
+  id: number // the id of the network if using a LOCAL network
 }
 
 export class CustomTopicError extends Error {
@@ -54,13 +53,19 @@ export function pubsubTopicFromNetwork(network: Networks, customTopic: string | 
 
 export function networkOptionsByName(
   networkName: string = DEFAULT_NETWORK,
-  customTopic: string | undefined
+  customTopic: string | undefined,
+  id = 0
 ): CeramicNetworkOptions {
   assertNetwork(networkName)
   const pubsubTopic = pubsubTopicFromNetwork(networkName, customTopic)
+
+  if (id > 0 && networkName !== Networks.LOCAL) {
+    throw Error('Cannot set network id for non-local networks')
+  }
+
   return {
     name: networkName,
     pubsubTopic: pubsubTopic,
-    offset: networkName === Networks.LOCAL ? NETWORK_OFFSET : 0,
+    id,
   }
 }

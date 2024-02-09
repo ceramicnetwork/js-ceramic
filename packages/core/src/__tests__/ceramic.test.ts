@@ -277,7 +277,7 @@ describeIfV3('Ceramic integration', () => {
         // that created it may not have known about the existing tip when it did, and so now we need to use our conflict
         // resolution rules to decide between the two equally valid tips.
         const commit = await streamOg.makeCommit(ceramic1.signer, content2)
-        const content2Cid = await ceramic2.dispatcher.storeCommit(commit, 1)
+        const content2Cid = await ceramic2.dispatcher.storeCommit(commit)
         await ceramic2.dispatcher.publishTip(streamOg.id, content2Cid)
 
         // wait for the update to propagate to ceramic1
