@@ -173,7 +173,6 @@ export class Dispatcher {
 
   async init() {
     if (process.env.CERAMIC_RECON_MODE) {
-      await this.recon.init()
       return
     }
     this.messageBus.subscribe(this.handleMessage.bind(this))

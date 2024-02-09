@@ -2,6 +2,7 @@ import { type CAR } from 'cartonne'
 
 import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
 import { EventID } from '@ceramicnetwork/streamid'
+import { Model } from '@ceramicnetwork/stream-model'
 
 /**
  * Configuration for the Recon API
@@ -48,6 +49,13 @@ export class ReconApi implements IReconApi {
 
   async init(): Promise<void> {
     this.#url = await this.#config.url
+    await this.registerInterest(Model.MODEL.toString())
+  }
+
+  registerInterest(model: string): Promise<void> {
+    return this.#sendRequest(this.#config.url + `/ceramic/subscribe/model/${model}`, {
+      method: 'GET',
+    })
   }
 
   async put(event: ReconEvent, opts: AbortOptions): Promise<void> {

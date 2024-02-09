@@ -18,13 +18,13 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   const stateStore = new StreamStateStore(logger)
   await stateStore.open(levelStore)
   const feed = new Feed()
-  const repository = new Repository(100, 100, feed, logger)
+  const fauxReconApi = {} as IReconApi
+  const repository = new Repository(100, 100, feed, fauxReconApi, logger)
   const pinStore = {
     stateStore,
   } as unknown as PinStore
   repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
   const shutdownSignal = new ShutdownSignal()
-  const fauxReconApi = {} as IReconApi
 
   return new Dispatcher(
     ipfs,

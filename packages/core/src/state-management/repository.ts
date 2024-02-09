@@ -37,6 +37,7 @@ import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CAR } from 'cartonne'
 import { FeedDocument, type Feed } from '../feed.js'
 import { doNotWait } from '../ancillary/do-not-wait.js'
+import { IReconApi } from '../recon.js'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -139,6 +140,7 @@ export class Repository {
     cacheLimit: number,
     concurrencyLimit: number,
     feed: Feed,
+    private readonly recon: IReconApi,
     private readonly logger: DiagnosticsLogger
   ) {
     this.loadingQ = new ExecutionQueue('loading', concurrencyLimit, logger)
@@ -171,6 +173,7 @@ export class Repository {
     await this.pinStore.open(this.#deps.keyValueStore)
     await this.anchorRequestStore.open(this.#deps.keyValueStore) // Initialization hell
     await this.index.init()
+    await this.recon.init()
   }
 
   get pinStore(): PinStore {
