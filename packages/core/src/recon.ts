@@ -1,7 +1,7 @@
 import { type CAR } from 'cartonne'
 
 import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
-import { EventID } from '@ceramicnetwork/streamid'
+import { EventID, StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 
 /**
@@ -48,17 +48,31 @@ export class ReconApi implements IReconApi {
   }
 
   async init(): Promise<void> {
+    if (!this.enabled) {
+      return
+    }
+
     this.#url = await this.#config.url
-    await this.registerInterest(Model.MODEL.toString())
+    await this.registerInterest(Model.MODEL)
   }
 
-  registerInterest(model: string): Promise<void> {
-    return this.#sendRequest(this.#config.url + `/ceramic/subscribe/model/${model}`, {
+  registerInterest(model: StreamID): Promise<void> {
+    if (!this.enabled) {
+      this.#logger.imp(`Recon: disabled, not registering interest in model ${model.toString()}`)
+      return
+    }
+
+    return this.#sendRequest(this.#url + `/ceramic/subscribe/model/${model.toString()}`, {
       method: 'GET',
     })
   }
 
   async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
+    if (!this.enabled) {
+      this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
+      return
+    }
+
     const body = {
       eventId: event.id.toString(),
       eventData: event.data.toString(),
