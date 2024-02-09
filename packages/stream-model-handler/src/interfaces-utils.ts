@@ -661,6 +661,9 @@ export function validateInterfaceImplementation(
   if (!isValidViewsImplementation(expected.views, implemented.views)) {
     errors.push(new Error(`Invalid views implementation of interface ${interfaceID}`))
   }
+  if (!isValidImmutabilityImplementation(expected, implemented)) {
+    errors.push(new Error(`Invalid immutable fields implementation of interface ${interfaceID}`))
+  }
 
   if (errors.length) {
     throw new AggregateError(errors, `Invalid implementation of interface ${interfaceID}`)
@@ -686,4 +689,12 @@ export async function validateImplementedInterfaces(
   if (errors.length) {
     throw new AggregateError(errors, `Interfaces validation failed for model ${model.name}`)
   }
+}
+function isValidImmutabilityImplementation(
+  expected: ModelDefinition,
+  implemented: ModelDefinition
+): boolean {
+  if (implemented.version == '1.0') return true
+  const implementedSet = new Set(implemented.immutableFields)
+  return (expected as ModelDefinitionV2).immutableFields.every((item) => implementedSet.has(item))
 }

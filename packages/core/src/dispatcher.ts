@@ -426,10 +426,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip(streamId: StreamID, tip: CID, model?: StreamID): Subscription {
-    if (
-      process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' ||
-      process.env.CERAMIC_RECON_MODE
-    ) {
+    if (process.env.CERAMIC_DISABLE_PUBSUB_UPDATES == 'true' || process.env.CERAMIC_RECON_MODE) {
       return empty().subscribe()
     }
 
