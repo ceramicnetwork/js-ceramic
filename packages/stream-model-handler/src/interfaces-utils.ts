@@ -690,11 +690,16 @@ export async function validateImplementedInterfaces(
     throw new AggregateError(errors, `Interfaces validation failed for model ${model.name}`)
   }
 }
-function isValidImmutabilityImplementation(
+
+export function isValidImmutabilityImplementation(
   expected: ModelDefinition,
   implemented: ModelDefinition
 ): boolean {
-  if (implemented.version == '1.0') return true
-  const implementedSet = new Set(implemented.immutableFields)
-  return (expected as ModelDefinitionV2).immutableFields.every((item) => implementedSet.has(item))
+  const expectedModelV2 = expected as ModelDefinitionV2
+  const implementedModelV2 = implemented as ModelDefinitionV2
+  // No immutable fields
+  if (!expectedModelV2.immutableFields && !implementedModelV2.immutableFields) return true
+
+  const implementedSet = new Set(implementedModelV2.immutableFields ?? [])
+  return (expectedModelV2.immutableFields ?? []).every((item) => implementedSet.has(item))
 }
