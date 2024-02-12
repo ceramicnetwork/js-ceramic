@@ -27,6 +27,7 @@ export interface ReconEvent {
  */
 export interface IReconApi {
   init(): Promise<void>
+  registerInterest(model: StreamID): Promise<void>
   put(event: ReconEvent, opts?: AbortOptions): Promise<void>
   enabled: boolean
 }
@@ -56,15 +57,23 @@ export class ReconApi implements IReconApi {
     await this.registerInterest(Model.MODEL)
   }
 
-  registerInterest(model: StreamID): Promise<void> {
+  async registerInterest(model: StreamID): Promise<void> {
     if (!this.enabled) {
       this.#logger.imp(`Recon: disabled, not registering interest in model ${model.toString()}`)
       return
     }
 
-    return this.#sendRequest(this.#url + `/ceramic/subscribe/model/${model.toString()}`, {
-      method: 'GET',
-    })
+    try {
+      await this.#sendRequest(this.#url + `/ceramic/subscribe/model/${model.toString()}`, {
+        method: 'GET',
+      })
+      this.#logger.debug(`Recon: added interest for model ${model.toString()}`)
+    } catch (err) {
+      this.#logger.err(
+        `Recon: failed to register interest in model ${model.toString()} with error ${err}`
+      )
+      throw err
+    }
   }
 
   async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
