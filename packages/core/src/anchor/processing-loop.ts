@@ -123,19 +123,26 @@ export class ProcessingLoop<T> {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             continue
           }
+
           const curTaskId = taskId
-          const task = this.#semaphore
-            .use(async () => {
-              await Promise.race([this.handleValue(value), rejectOnAbortSignal])
-            })
-            .catch((e) => {
-              this.#logger.err(`Error in ProcessingLoop: ${e}`)
-              this.#abortController.abort('ERROR')
-            })
-            .finally(() => {
-              this.#runningTasks.delete(curTaskId)
-            })
-          this.#runningTasks.set(taskId, task)
+          await this.#semaphore.acquire().then((semRelease) => {
+            const task = Promise.race([
+              this.handleValue(value),
+              // eslint-disable-next-line @typescript-eslint/no-empty-function
+              rejectOnAbortSignal.then(() => {}), // swallow return value
+            ])
+              .catch((e) => {
+                this.#logger.err(`Error in ProcessingLoop: ${e}`)
+                this.#abortController.abort('ERROR')
+              })
+              .finally(() => {
+                this.#runningTasks.delete(curTaskId)
+                semRelease()
+              })
+
+            this.#runningTasks.set(taskId, task)
+          })
+
           // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
           taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
         } catch (e) {
