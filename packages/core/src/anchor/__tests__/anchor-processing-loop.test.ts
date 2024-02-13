@@ -140,3 +140,36 @@ test('Processing loop blocks on concurrency limit', async () => {
   await whenComplete
   expect(process).toBeCalledTimes(MAX)
 })
+
+test('Dont process the same entry multiple times concurrently', async () => {
+  const isDone = new Deferred()
+  const max = 10
+  const entries = []
+  for (let i = 0; i < max; i++) {
+    entries.push({ i, processed: false })
+  }
+  // Will regenerate the same entries until they get processed.
+  async function* entryGenerator() {
+    let didAnything = false
+    do {
+      didAnything = false
+      for (let i = 0; i < max; i++) {
+        const entry = entries[i]
+        if (!entry.processed) {
+          didAnything = true
+          yield entry
+        }
+      }
+    } while (didAnything)
+    isDone.resolve()
+  }
+  const process = jest.fn(async (entry) => {
+    await CommonTestUtils.delay(10)
+    entry.processed = true
+  })
+  const loop = new ProcessingLoop(logger, max * 2, entryGenerator(), process)
+  const whenComplete = loop.start()
+  await isDone
+  await whenComplete
+  expect(process).toBeCalledTimes(max)
+})
