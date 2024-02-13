@@ -57,5 +57,9 @@ export async function fetchJson(url: URL | string, opts: Partial<FetchOpts> = {}
     throw new Error(`HTTP request to '${url}' failed with status '${res.statusText}': ${text}`)
   }
 
+  if (res.status === 204) {
+    return {}
+  }
+
   return res.json()
 }

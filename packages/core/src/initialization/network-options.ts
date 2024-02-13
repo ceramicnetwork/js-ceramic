@@ -22,6 +22,7 @@ const ALLOW_CUSTOM_TOPIC = [Networks.INMEMORY, Networks.LOCAL]
 export type CeramicNetworkOptions = {
   name: Networks // Must be one of the supported network names
   pubsubTopic: string // The topic that will be used for broadcasting protocol messages
+  id: number // the id of the network if using a LOCAL network
 }
 
 export class CustomTopicError extends Error {
@@ -52,12 +53,19 @@ export function pubsubTopicFromNetwork(network: Networks, customTopic: string | 
 
 export function networkOptionsByName(
   networkName: string = DEFAULT_NETWORK,
-  customTopic: string | undefined
+  customTopic: string | undefined,
+  id = 0
 ): CeramicNetworkOptions {
   assertNetwork(networkName)
   const pubsubTopic = pubsubTopicFromNetwork(networkName, customTopic)
+
+  if (id > 0 && networkName !== Networks.LOCAL) {
+    throw Error('Cannot set network id for non-local networks')
+  }
+
   return {
     name: networkName,
     pubsubTopic: pubsubTopic,
+    id,
   }
 }

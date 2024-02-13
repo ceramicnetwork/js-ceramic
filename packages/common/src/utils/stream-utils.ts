@@ -1,7 +1,7 @@
 import cloneDeep from 'lodash.clonedeep'
 import * as uint8arrays from 'uint8arrays'
 import { toCID } from './cid-utils.js'
-
+import * as dagCBOR from '@ipld/dag-cbor'
 import {
   AnchorCommit,
   AnchorStatus,
@@ -417,5 +417,37 @@ export class StreamUtils {
     const tipCID = streamState.log[streamState.log.length - 1].cid
     const genesisCID = streamState.log[0].cid
     return new CommitID(streamState.type, genesisCID, tipCID)
+  }
+
+  /**
+   * Returns the height of the commit
+   * @param state StreamState
+   * @param commit commit we are looking for the height of
+   * @returns number representing the height of the commit
+   */
+  static getCommitHeight(state: StreamState, commit: any): number {
+    let prev
+    if (StreamUtils.isSignedCommitContainer(commit)) {
+      const payload = dagCBOR.decode(commit.linkedBlock) as any
+      prev = payload.prev
+    } else {
+      prev = commit.prev
+    }
+
+    // assumes this is the genesis commit
+    if (!prev) {
+      return 0
+    }
+
+    const indexOfPrev = state.log.findIndex(({ cid }) => {
+      return cid.toString() === prev.toString()
+    })
+
+    // this commit is not part of this stream
+    if (indexOfPrev === -1) {
+      throw Error('Commit prev not found in the log')
+    }
+
+    return indexOfPrev + 1
   }
 }

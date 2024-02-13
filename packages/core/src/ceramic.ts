@@ -56,6 +56,7 @@ import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
+import { ReconApi } from './recon.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -117,6 +118,8 @@ export interface CeramicConfig {
   syncOverride?: SyncOptions
 
   disablePeerDataSync?: boolean
+
+  networkId?: number
 
   [index: string]: any // allow arbitrary properties
 }
@@ -346,7 +349,11 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-    const networkOptions = networkOptionsByName(config.networkName, config.pubsubTopic)
+    const networkOptions = networkOptionsByName(
+      config.networkName,
+      config.pubsubTopic,
+      config.networkId
+    )
 
     const ethereumRpcUrl = makeEthereumRpcUrl(config.ethereumRpcUrl, networkOptions.name, logger)
     const signer = CeramicSigner.invalid()
@@ -373,17 +380,25 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const feed = new Feed()
+    const reconApi = new ReconApi(
+      {
+        enabled: Boolean(process.env.CERAMIC_RECON_MODE),
+        url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
+      },
+      logger
+    )
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,
-      networkOptions.pubsubTopic,
+      networkOptions,
       repository,
       logger,
       pubsubLogger,
       shutdownSignal,
       !config.disablePeerDataSync,
-      maxQueriesPerSecond
+      maxQueriesPerSecond,
+      reconApi
     )
     const anchorRequestCarBuilder = new AnchorRequestCarBuilder(dispatcher)
     const pinStoreOptions = {

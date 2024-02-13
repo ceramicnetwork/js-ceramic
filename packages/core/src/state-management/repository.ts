@@ -702,7 +702,17 @@ export class Repository {
     ) {
       try {
         if (witnessCAR) {
-          await this.dispatcher.importCAR(witnessCAR)
+          const anchorCommit = witnessCAR.get(anchorCommitCID)
+          const height = StreamUtils.getCommitHeight(state$.state, anchorCommit)
+
+          await this.dispatcher.storeTimeEvent(
+            witnessCAR,
+            streamId,
+            state$.state.metadata.controllers,
+            height,
+            state$.state.metadata.model
+          )
+
           this.logger.verbose(`successfully imported CAR file for ${streamId}`)
         }
 
@@ -827,7 +837,7 @@ export class Repository {
   ): Promise<RunningState> {
     this.anchorService.assertCASAccessible()
 
-    const genesisCid = await this.dispatcher.storeCommit(genesis)
+    const genesisCid = await this.dispatcher.storeInitEvent(genesis)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.load(streamId, opts)
 
