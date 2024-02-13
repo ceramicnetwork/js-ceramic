@@ -101,7 +101,7 @@ test('Errors are swallowed', async () => {
       throw new Error(`Valhalla welcomes you`)
     }
   })
-  const loop = new ProcessingLoop(logger, 1, source, noop)
+  const loop = new ProcessingLoop(logger, max, source, noop)
   const whenComplete = loop.start()
   await isDone
   await whenComplete
