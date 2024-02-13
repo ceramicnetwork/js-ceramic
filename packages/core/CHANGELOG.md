@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.0.1-rc.0...@ceramicnetwork/core@5.1.0-rc.0) (2024-02-13)
+
+
+### Bug Fixes
+
+* Block ProcessingLoop when we've hit the concurrency limit of running tasks. ([#3158](https://github.com/ceramicnetwork/js-ceramic/issues/3158)) ([a64e8c5](https://github.com/ceramicnetwork/js-ceramic/commit/a64e8c5174a6f43744a4b23096bf827829435777))
+
+
+### Features
+
+* Disable anchoring when CERAMIC_RECON_MODE env var is set ([#3154](https://github.com/ceramicnetwork/js-ceramic/issues/3154)) ([0baa9dc](https://github.com/ceramicnetwork/js-ceramic/commit/0baa9dc1b9f9ab4ffe7312b77ae46f5bcf150a53))
+
+
+
+
+
 ## [5.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@5.0.0...@ceramicnetwork/core@5.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/core
