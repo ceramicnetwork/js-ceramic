@@ -52,8 +52,8 @@ export class ReconApi implements IReconApi {
 
   async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
     const body = {
-      eventId: event.id.toString(),
-      eventData: event.data.toString(),
+      id: event.id.toString(),
+      data: event.data.toString(),
     }
     try {
       await this.#sendRequest(this.#url + '/ceramic/events', {

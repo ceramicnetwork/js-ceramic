@@ -700,9 +700,8 @@ export class Repository {
           const anchorCommit = witnessCAR.get(anchorCommitCID)
           const height = StreamUtils.getCommitHeight(state$.state, anchorCommit)
 
-          await this.dispatcher.importAnchorWitnessCar(
+          await this.dispatcher.storeTimeEvent(
             witnessCAR,
-            anchorCommitCID,
             streamId,
             state$.state.metadata.controllers,
             height,
