@@ -1,6 +1,7 @@
 import { test, jest, expect, describe } from '@jest/globals'
 import { ProcessingLoop, Deferred } from '../processing-loop.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
+import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
 
 async function* infiniteIntegers() {
   let n = 0
@@ -100,7 +101,7 @@ test('Errors are swallowed', async () => {
       throw new Error(`Valhalla welcomes you`)
     }
   })
-  const loop = new ProcessingLoop(logger, 1, source, noop)
+  const loop = new ProcessingLoop(logger, max, source, noop)
   const whenComplete = loop.start()
   await isDone
   await whenComplete
@@ -108,4 +109,34 @@ test('Errors are swallowed', async () => {
   expect(returnSpy).not.toBeCalled()
   await loop.stop()
   expect(returnSpy).toBeCalled()
+})
+
+test('Processing loop blocks on concurrency limit', async () => {
+  const isDone = new Deferred()
+  const MAX = 10
+  const CONCURRENT = 3
+  async function* finiteIntegers() {
+    let n = 0
+    while (n < MAX) {
+      yield n++
+    }
+    isDone.resolve()
+  }
+
+  const allowProcessing = new Deferred()
+  const process = jest.fn(async () => {
+    await allowProcessing
+  })
+  const loop = new ProcessingLoop(logger, CONCURRENT, finiteIntegers(), process)
+  const whenComplete = loop.start()
+
+  await CommonTestUtils.delay(1000)
+  // while the processing work is blocked, only allow a number of tasks to begin processing up to
+  // the concurrency limit.
+  expect(process).toBeCalledTimes(CONCURRENT)
+  allowProcessing.resolve()
+
+  await isDone
+  await whenComplete
+  expect(process).toBeCalledTimes(MAX)
 })

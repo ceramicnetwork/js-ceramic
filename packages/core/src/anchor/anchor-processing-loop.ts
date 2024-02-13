@@ -75,11 +75,11 @@ export class AnchorProcessingLoop {
               const loaded = await store.load(streamId)
               if (loaded.cid.equals(entry.cid)) {
                 await store.remove(streamId)
+                logger.verbose(
+                  `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
+                )
               }
             })
-            logger.verbose(
-              `Entry from AnchorRequestStore for Stream ${streamId} removed successfully`
-            )
           }
         } catch (err) {
           logger.err(

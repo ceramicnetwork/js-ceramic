@@ -114,28 +114,39 @@ export class ProcessingLoop<T> {
       let isDone = false
       do {
         try {
-          this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
-          const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
-          isDone = next.done
-          if (isDone) break
-          const value = next.value
-          if (value === undefined) {
-            this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
-            continue
-          }
           const curTaskId = taskId
-          const task = this.#semaphore
-            .use(async () => {
-              await Promise.race([this.handleValue(value), rejectOnAbortSignal])
-            })
-            .catch((e) => {
-              this.#logger.err(`Error in ProcessingLoop: ${e}`)
-              this.#abortController.abort('ERROR')
-            })
-            .finally(() => {
-              this.#runningTasks.delete(curTaskId)
-            })
-          this.#runningTasks.set(taskId, task)
+          await this.#semaphore.acquire().then(async (semRelease) => {
+            this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
+            const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
+            isDone = next.done
+            if (isDone) return
+            const value = next.value
+            if (value === undefined) {
+              this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
+              return
+            }
+
+            const task = Promise.race([
+              this.handleValue(value),
+              // eslint-disable-next-line @typescript-eslint/no-empty-function
+              rejectOnAbortSignal.then(() => {}), // swallow return value
+            ])
+              .catch((e) => {
+                this.#logger.err(`Error in ProcessingLoop: ${e}`)
+                this.#abortController.abort('ERROR')
+              })
+              .finally(() => {
+                this.#runningTasks.delete(curTaskId)
+                // Semaphore is released only when the actual work of processing the item is
+                // complete.
+                semRelease()
+              })
+
+            // It's important that the semaphore guards adding the task to the running task set,
+            // so that we won't get more tasks created than the concurrency limit.
+            this.#runningTasks.set(taskId, task)
+          })
+
           // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
           taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
         } catch (e) {
