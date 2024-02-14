@@ -30,7 +30,7 @@ export type ReconApiConfig = {
   enabled: boolean
   // URL of the Recon API or a promise that resolves to the URL
   url: string | Promise<string>
-
+  // Whether the event feed is enabled
   feedEnabled: boolean
 }
 
@@ -42,6 +42,9 @@ export interface ReconEvent {
   data: CAR
 }
 
+/**
+ * Recon Event Feed Response
+ */
 export interface ReconEventFeedResponse {
   events: Array<ReconEvent>
   cursor: number
@@ -63,9 +66,9 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
   readonly #logger: DiagnosticsLogger
   readonly #sendRequest: FetchRequest
   #url: string
+  #initialized: boolean = false
 
   readonly #pollInterval: number
-  readonly models = new Set()
   #eventsSubscription: Subscription
   private readonly feed$: Subject<ReconEventFeedResponse> = new Subject<ReconEventFeedResponse>()
   readonly #stopSignal: Subject<void> = new Subject<void>()
@@ -86,7 +89,18 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     this.#pollInterval = pollInterval
   }
 
+  /**
+   * Initialization tasks. Registers interest in the model and starts polling the feed for new events to emit to subscribers.
+   * @param initialCursor
+   * @returns
+   */
   async init(initialCursor = 0): Promise<void> {
+    if (this.#initialized) {
+      return
+    }
+
+    this.#initialized = true
+
     if (!this.enabled) {
       return
     }
@@ -99,6 +113,10 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     }
   }
 
+  /**
+   * Registers interest in a model
+   * @param model stream id of the model to register interest in
+   */
   async registerInterest(model: StreamID): Promise<void> {
     if (!this.enabled) {
       throw new Error(`Recon: disabled, not registering interest in model ${model.toString()}`)
@@ -117,6 +135,12 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     }
   }
 
+  /**
+   * Put an event to the Recon API
+   * @param event The event to put
+   * @param opts Abort options
+   * @returns
+   */
   async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
     if (!this.enabled) {
       this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
@@ -140,10 +164,16 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     }
   }
 
+  /**
+   * Whether the Recon API is enabled
+   */
   get enabled(): boolean {
     return this.#config.enabled
   }
 
+  /**
+   * Stops the Recon API. This stops the polling and sends a complete signal to subscribers.
+   */
   stop(): void {
     this.#stopSignal.next()
     this.#stopSignal.complete()
@@ -153,11 +183,21 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
     this.feed$.complete()
   }
 
+  /**
+   * Polls the Recon API for new events using the feed endpoint. This is a turned into an observable that emits the events.
+   * @param initialCursor The cursor to start polling from
+   * @returns An observable that emits the events and cursor so it can be stored and used to resume polling during restart
+   */
   private createSubscription(initialCursor: number): Observable<ReconEventFeedResponse> {
+    // start event
     return of({ events: [], cursor: initialCursor, first: true }).pipe(
+      // projects the starting event to an Observable that emits the next events. Then it recursively projects each event to an Observable that emits the next event
       expand((prev) => {
+        // creates an observable that emits the next event after a ceratin delay (pollInterval) unless this is the first event
         return timer(prev.first ? 0 : this.#pollInterval).pipe(
+          // concat map is used to ensure that the next event is only emitted after the previous event has been processed
           concatMap(() =>
+            // defer allows lazy creation of the observable
             defer(async () => {
               const response = await this.#sendRequest(
                 this.#url + `/ceramic/feed/events?resumeAt=${prev.cursor}`,
@@ -176,6 +216,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
                 first: false,
               }
             }).pipe(
+              // if the request fails retry after a certain delay (pollInterval)
               retry({
                 delay: (err) => {
                   this.#logger.warn(
@@ -190,7 +231,9 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
           )
         )
       }),
+      // filter out events with no data
       filter(({ events }) => events.length > 0),
+      // stop the polling when the stop signal is emitted
       takeUntil(this.#stopSignal)
     )
   }
