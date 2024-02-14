@@ -66,7 +66,7 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
   readonly #logger: DiagnosticsLogger
   readonly #sendRequest: FetchRequest
   #url: string
-  #initialized: boolean = false
+  #initialized = false
 
   readonly #pollInterval: number
   #eventsSubscription: Subscription
