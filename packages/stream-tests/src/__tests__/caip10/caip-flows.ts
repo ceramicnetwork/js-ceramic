@@ -5,6 +5,7 @@ import { AccountId } from 'caip'
 import { Ceramic } from '@ceramicnetwork/core'
 
 export async function happyPath(ceramic: Ceramic, authProvider: AuthProvider) {
+  if (!ceramic.did) throw new Error(`No ceramic.did present`)
   const accountId = await authProvider.accountId()
   const caip = await Caip10Link.fromAccount(ceramic, accountId)
   await caip.setDid(ceramic.did, authProvider)
@@ -27,6 +28,7 @@ export async function wrongProof(
   const legacyLinkAccountId = toLegacyAccountId(wrongAccountId.toString()).toLowerCase()
 
   const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
+  if (!ceramic.did) throw new Error(`No ceramic.did present`)
   await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
     `Address '${legacySigningAccountId}' used to sign update to Caip10Link doesn't match stream controller '${legacyLinkAccountId}'`
   )
