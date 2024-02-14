@@ -2,9 +2,11 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { ObjectStore } from './object-store.js'
 import { CID } from 'multiformats/cid'
 import { DiagnosticsLogger, GenesisCommit, StreamUtils } from '@ceramicnetwork/common'
+import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
 
 // How long to wait for the store to return a batch from a find request.
 const DEFAULT_BATCH_TIMEOUT_MS = 60 * 1000 // 1 minute
+const ANCHOR_POLLING_PROCESSED = 'anchor_polling_processed'
 
 export type AnchorRequestData = {
   cid: CID
@@ -113,7 +115,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
             resolve(null)
           }, this.#infiniteListBatchTimeoutMs)
         })
-        this.#logger.verbose(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
+        this.#logger.debug(`Fetching batch from AnchorRequestStore starting at key ${gt}`)
         const batchPromise = this.store.find({
           limit: batchSize,
           useCaseName: this.useCaseName,
@@ -131,6 +133,7 @@ export class AnchorRequestStore extends ObjectStore<StreamID, AnchorRequestData>
           this.#logger.debug(
             `Anchor polling loop processed ${numEntries} entries from the AnchorRequestStore. Restarting loop.`
           )
+          Metrics.observe(ANCHOR_POLLING_PROCESSED, numEntries)
           await new Promise((resolve) => setTimeout(resolve, restartDelay))
           gt = undefined
           numEntries = 0

@@ -125,7 +125,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
   })
 
   test(`Can create deterministic doc with create method`, async () => {
@@ -138,7 +141,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.state.log.length).toEqual(2)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
     expect(doc.state.log[1].type).toEqual(EventType.DATA)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
   })
 
   test(`Creating doc with SINGLE accountRelation non-deterministically should fail `, async () => {

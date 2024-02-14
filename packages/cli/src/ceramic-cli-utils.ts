@@ -144,6 +144,10 @@ export class CeramicCliUtils {
       config.metrics.metricsExporterEnabled = process.env.CERAMIC_METRICS_EXPORTER_ENABLED == 'true'
     if (process.env.COLLECTOR_HOSTNAME)
       config.metrics.collectorHost = process.env.COLLECTOR_HOSTNAME
+    if (process.env.CERAMIC_PROMETHEUS_EXPORTER_PORT)
+      config.metrics.prometheusExporterPort = Number(process.env.CERAMIC_PROMETHEUS_EXPORTER_PORT)
+    if (process.env.CERAMIC_PROMETHEUS_EXPORTER_ENABLED)
+      config.metrics.prometheusExporterEnabled = process.env.CERAMIC_PROMETHEUS_EXPORTER_ENABLED == 'true'
     if (process.env.CERAMIC_NODE_PRIVATE_SEED_URL)
       config.node.privateSeedUrl = process.env.CERAMIC_NODE_PRIVATE_SEED_URL
     if (process.env.CERAMIC_DISABLE_IPFS_PEER_DATA_SYNC == 'true')

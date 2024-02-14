@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { jest, test, expect, describe, beforeAll, afterAll } from '@jest/globals'
 import getPort from 'get-port'
 import { AnchorStatus, EventType, IpfsApi } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
@@ -81,6 +81,9 @@ const MODEL_WITH_RELATION_DEFINITION: ModelDefinition = {
   },
 }
 
+// TODO(WS1-1471): These tests should be enabled once anchoring works in Recon mode
+const testIfV3ShouldPassWithAnchoring = process.env.CERAMIC_RECON_MODE ? test.skip : test
+
 describe('ModelInstanceDocument API http-client tests', () => {
   jest.setTimeout(1000 * 30)
 
@@ -162,7 +165,10 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(doc.state.log.length).toEqual(1)
     expect(doc.state.log[0].type).toEqual(EventType.INIT)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
     expect(doc.metadata.model.toString()).toEqual(model.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic.admin, doc.metadata.model)).resolves.toBeTruthy()
@@ -180,12 +186,29 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.metadata.unique).toBeInstanceOf(Uint8Array)
     expect(docWithRelation.state.log.length).toEqual(1)
     expect(docWithRelation.state.log[0].type).toEqual(EventType.INIT)
-    expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    if (!process.env.CERAMIC_RECON_MODE) {
+      // TODO (WS1-1471): Re-enable this check even in Recon mode
+      expect(docWithRelation.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+    }
     expect(docWithRelation.metadata.model.toString()).toEqual(modelWithRelation.id.toString())
     await expect(TestUtils.isPinned(ceramic.admin, docWithRelation.id)).resolves.toBeTruthy()
     await expect(
       TestUtils.isPinned(ceramic.admin, docWithRelation.metadata.model)
     ).resolves.toBeTruthy()
+  })
+
+  test(`Can set and access context`, async () => {
+    const ctx = TestUtils.randomStreamID()
+    const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, {
+      ...midMetadata,
+      context: ctx,
+    })
+
+    const loaded = await ModelInstanceDocument.load(ceramic, doc.id)
+
+    expect(loaded.id.toString()).toEqual(doc.id.toString())
+    expect(doc.metadata.context.toString()).toEqual(ctx.toString())
+    expect(loaded.metadata.context.toString()).toEqual(ctx.toString())
   })
 
   test('Create and update doc', async () => {
@@ -248,7 +271,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(docWithRelation.content.optionalLinkedDoc).toBe(docID)
   })
 
-  test('Anchor genesis', async () => {
+  testIfV3ShouldPassWithAnchoring('Anchor genesis', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
@@ -262,7 +285,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.content).toEqual(CONTENT0)
   })
 
-  test('Anchor after updating', async () => {
+  testIfV3ShouldPassWithAnchoring('Anchor after updating', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
     await doc.replace(CONTENT1)
@@ -279,7 +302,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     expect(doc.content).toEqual(CONTENT1)
   })
 
-  test('multiple updates', async () => {
+  testIfV3ShouldPassWithAnchoring('multiple updates', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
 
@@ -326,7 +349,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     ).rejects.toThrow(/Attempting to create a ModelInstanceDocument with an invalid DID string/)
   })
 
-  test('Can load a stream', async () => {
+  testIfV3ShouldPassWithAnchoring('Can load a stream', async () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await doc.replace(CONTENT1)
     await CoreUtils.anchorUpdate(core, doc)
@@ -364,7 +387,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata, {
       anchor: false,
     })
-    await doc.replace(CONTENT1, { anchor: false })
+    await doc.replace(CONTENT1, undefined, { anchor: false })
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
   })
 
@@ -386,6 +409,21 @@ describe('ModelInstanceDocument API http-client tests', () => {
     const doc = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
     await expect(TestUtils.isPinned(ceramic.admin, doc.id)).resolves.toBeTruthy()
     await expect(TestUtils.isPinned(ceramic.admin, model.id)).resolves.toBeTruthy()
+  })
+
+  test('unindex and reindex', async () => {
+    const indexApi = core.index
+    const count = () => indexApi.count({ models: [model.id] })
+    const start = await count()
+    // Index as usual
+    const document = await ModelInstanceDocument.create(ceramic, CONTENT0, midMetadata)
+    await expect(count()).resolves.toEqual(start + 1)
+    // Unindex
+    await document.shouldIndex(false)
+    await expect(count()).resolves.toEqual(start)
+    // Reindex
+    await document.shouldIndex(true)
+    await expect(count()).resolves.toEqual(start + 1)
   })
 })
 

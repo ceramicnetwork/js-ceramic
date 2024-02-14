@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@4.0.0...@ceramicnetwork/indexing@4.0.1-rc.0) (2024-02-08)
+
+**Note:** Version bump only for package @ceramicnetwork/indexing
+
+
+
+
+
+# [4.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@3.1.0...@ceramicnetwork/indexing@4.0.0) (2024-02-08)
+
+
+### Features
+
+* Add shouldIndex metadata flag ([#3146](https://github.com/ceramicnetwork/js-ceramic/issues/3146)) ([0ce377a](https://github.com/ceramicnetwork/js-ceramic/commit/0ce377af46a49d1fb3391b6fd2b4d2f72a93e58a))
+* allow database connection pool max size to be configurable ([#3148](https://github.com/ceramicnetwork/js-ceramic/issues/3148)) ([03e9f0f](https://github.com/ceramicnetwork/js-ceramic/commit/03e9f0f8a5fe92a66dca010c7173df27263b8b0a))
+
+
+
+
+
 # [3.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/indexing@3.1.0-rc.0...@ceramicnetwork/indexing@3.1.0) (2024-02-02)
 
 **Note:** Version bump only for package @ceramicnetwork/indexing

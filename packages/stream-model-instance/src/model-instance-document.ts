@@ -20,6 +20,7 @@ import {
   StreamWriter,
   StreamReader,
   IntoSigner,
+  CommitHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { fromString } from 'uint8arrays'
@@ -48,6 +49,12 @@ export interface ModelInstanceDocumentMetadataArgs {
    * ModelInstanceDocuments whose Model has an accountRelation of 'SINGLE'.
    */
   deterministic?: boolean
+
+  /**
+   * Whether the stream should be stored by indexers or not. When undefined, indexers could
+   * index the stream if wanted.
+   */
+  shouldIndex?: boolean
 }
 
 /**
@@ -68,6 +75,16 @@ export interface ModelInstanceDocumentMetadata {
    * Unique bytes
    */
   unique?: Uint8Array
+
+  /**
+   * The "context" StreamID for this ModelInstanceDocument.
+   */
+  context?: StreamID
+
+  /**
+   * Whether the stream should be indexed or not.
+   */
+  shouldIndex?: boolean
 }
 
 const DEFAULT_CREATE_OPTS = {
@@ -107,7 +124,13 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
 
   get metadata(): ModelInstanceDocumentMetadata {
     const metadata = this.state$.value.metadata
-    return { controller: metadata.controllers[0], model: metadata.model, unique: metadata.unique }
+    return {
+      controller: metadata.controllers[0],
+      model: metadata.model,
+      unique: metadata.unique,
+      context: metadata.context,
+      shouldIndex: metadata.shouldIndex,
+    }
   }
 
   /**
@@ -215,19 +238,31 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   /**
    * Update an existing Model Instance Document by replacing its content
    * @param content - New content to replace old content
+   * @param metadata
    * @param opts - Additional options
    */
-  async replace(content: T | null, opts: UpdateOpts = {}): Promise<void> {
+  async replace(
+    content: T | null,
+    metadata: Partial<ModelInstanceDocumentMetadataArgs> | undefined | null = undefined,
+    opts: UpdateOpts = {}
+  ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     validateContentLength(content)
     const signer: CeramicSigner = opts.asDID
       ? CeramicSigner.fromDID(opts.asDID)
       : opts.signer || this.api.signer
+    let header: Partial<CommitHeader> | undefined = undefined
+    if (metadata && metadata.shouldIndex != null) {
+      header = {
+        shouldIndex: metadata.shouldIndex,
+      }
+    }
     const updateCommit = await ModelInstanceDocument.makeUpdateCommit(
       signer,
       this.commitId,
       this.content,
-      content
+      content,
+      header
     )
     const updated = await this.api.applyCommit(this.id, updateCommit, opts)
     this.state$.next(updated.state)
@@ -237,9 +272,14 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * Update the contents of an existing Model Instance Document based on a JSON-patch diff from the existing
    * contents to the desired new contents
    * @param jsonPatch - JSON patch diff of document contents
+   * @param metadata - Metadata change
    * @param opts - Additional options
    */
-  async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
+  async patch(
+    jsonPatch: Operation[],
+    metadata: Partial<ModelInstanceDocumentMetadataArgs> | undefined | null = undefined,
+    opts: UpdateOpts = {}
+  ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const signer: CeramicSigner = opts.asDID
       ? CeramicSigner.fromDID(opts.asDID)
@@ -264,9 +304,24 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.id.cid,
     }
+    // Null check is necessary to avoid `undefined` value that can't be encoded with IPLD
+    if (metadata?.shouldIndex != null) {
+      rawCommit.header = {
+        shouldIndex: metadata.shouldIndex,
+      }
+    }
     const commit = await signer.createDagJWS(rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
+  }
+
+  /**
+   * Set the index metadata field for the stream
+   * @param shouldIndex - Whether the stream should be indexed or not
+   * @param opts - Additional options
+   */
+  shouldIndex(shouldIndex: boolean, opts: UpdateOpts = {}): Promise<void> {
+    return this.patch([], { shouldIndex: shouldIndex }, opts)
   }
 
   /**
@@ -291,14 +346,16 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
    * @param prev - The CommitID of the current tip of the Stream that the update should be applied on top of.
    * @param oldContent - The current content of the Stream.
    * @param newContent - The new content to update the Stream with.
+   * @param header - New commit header, used to update the stream's metadata.  Metadata fields not specified will be left alone with their current values.
    */
   static makeUpdateCommit<T>(
     signer: CeramicSigner,
     prev: CommitID,
     oldContent: T | null,
-    newContent: T | null
+    newContent: T | null,
+    header?: Partial<CommitHeader>
   ): Promise<CeramicCommit> {
-    const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent)
+    const commit = ModelInstanceDocument._makeRawCommit(prev, oldContent, newContent, header)
     return signer.createDagJWS(commit)
   }
 
@@ -308,14 +365,20 @@ export class ModelInstanceDocument<T = Record<string, any>> extends Stream {
   private static _makeRawCommit<T>(
     prev: CommitID,
     oldContent: T | null,
-    newContent: T | null
+    newContent: T | null,
+    header?: Partial<CommitHeader>
   ): RawCommit {
     const patch = jsonpatch.compare(oldContent ?? {}, newContent ?? {})
-    return {
+    const rawCommit: RawCommit = {
       data: patch,
       prev: prev.commit,
       id: prev.baseID.cid,
     }
+    // Null check is necessary to avoid `undefined` value that can't be encoded with IPLD
+    if (header != null) {
+      rawCommit.header = header
+    }
+    return rawCommit
   }
 
   /**

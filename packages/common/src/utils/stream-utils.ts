@@ -74,6 +74,10 @@ export class StreamUtils {
       cloned.header.model = uint8arrays.toString(commit.header.model, 'base64')
     }
 
+    if (commit.header?.context) {
+      cloned.header.context = uint8arrays.toString(commit.header.context, 'base64')
+    }
+
     if (commit.header?.unique) {
       cloned.header.unique = uint8arrays.toString(commit.header.unique, 'base64')
     }
@@ -117,6 +121,10 @@ export class StreamUtils {
       cloned.header.model = uint8arrays.fromString(cloned.header.model, 'base64')
     }
 
+    if (cloned.header?.context) {
+      cloned.header.context = uint8arrays.fromString(cloned.header.context, 'base64')
+    }
+
     if (cloned.header?.unique) {
       cloned.header.unique = uint8arrays.fromString(cloned.header.unique, 'base64')
     }
@@ -142,8 +150,8 @@ export class StreamUtils {
     if (state.metadata?.model) {
       cloned.metadata.model = state.metadata.model.toString()
     }
-    if (state.next?.metadata?.model) {
-      cloned.next.metadata.model = state.next.metadata.model.toString()
+    if (state.metadata?.context) {
+      cloned.metadata.context = state.metadata.context.toString()
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
       cloned.metadata.unique = uint8arrays.toString(cloned.metadata.unique, 'base64')
@@ -181,8 +189,8 @@ export class StreamUtils {
     if (state.metadata?.model) {
       cloned.metadata.model = StreamID.fromString(state.metadata.model)
     }
-    if (state.next?.metadata?.model) {
-      cloned.next.metadata.model = StreamID.fromString(state.next.metadata.model)
+    if (state.metadata?.context) {
+      cloned.metadata.context = StreamID.fromString(state.metadata.context)
     }
     if (state.metadata?.unique && state.type != TILE_TYPE_ID) {
       cloned.metadata.unique = uint8arrays.fromString(state.metadata.unique, 'base64')

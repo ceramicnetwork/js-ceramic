@@ -173,6 +173,7 @@ export class Dispatcher {
 
   async init() {
     if (process.env.CERAMIC_RECON_MODE) {
+      await this.recon.init()
       return
     }
     this.messageBus.subscribe(this.handleMessage.bind(this))
@@ -219,20 +220,19 @@ export class Dispatcher {
   /**
    * Imports an anchor witness CAR.
    * @param car - The anchor witness CAR to import.
-   * @param cid - The CID of the anchor witness CAR.
    * @param streamId - The ID of the stream to associate the anchor witness CAR with.
    * @param controllers - An array of controller IDs for the stream.
    * @param eventHeight - The height of the event associated with the anchor witness CAR commit
    * @param model - The ID of the model stream, if applicable.
    */
-  async importAnchorWitnessCar(
+  async storeTimeEvent(
     car: CAR,
-    cid: CID,
     streamId: StreamID,
     controllers: Array<string>,
     eventHeight: number,
     model?: StreamID
   ): Promise<void> {
+    const cid = car.roots[0]
     const eventId =
       this.recon.enabled && model
         ? EventID.create(

@@ -484,7 +484,6 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
         await this._ipfsTopology.start()
       }
 
-      this.anchorService.signer = this._signer
       if (!this._readOnly) {
         await this.anchorService.init(
           this.repository.anchorRequestStore,
@@ -729,13 +728,14 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
    * out trying to load it.
    * @param genesis
    * @param streamRef
+   * @param opts
    */
-  async _ensureGenesis(genesis: CeramicCommit, streamRef: StreamRef) {
+  async _ensureGenesis(genesis: CeramicCommit, streamRef: StreamRef, opts: LoadOpts) {
     if (StreamUtils.isSignedCommitContainer(genesis) || StreamUtils.isSignedCommit(genesis)) {
       throw new Error('Given genesis commit is not deterministic')
     }
 
-    const stream = await this.createStreamFromGenesis(streamRef.type, genesis)
+    const stream = await this.createStreamFromGenesis(streamRef.type, genesis, opts)
     if (!streamRef.equals(stream.id)) {
       throw new Error(
         `StreamID ${stream.id.toString()} generated does not match expected StreamID ${streamRef.toString()} determined from genesis content in multiquery request`
@@ -758,7 +758,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
     query.paths?.forEach((path) => pathTrie.add(path))
 
     if (query.genesis) {
-      await this._ensureGenesis(query.genesis, id)
+      await this._ensureGenesis(query.genesis, id, query.opts)
     }
 
     const index = {}

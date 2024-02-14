@@ -588,6 +588,11 @@ export class Repository {
       return
     }
 
+    if (process.env.CERAMIC_RECON_MODE) {
+      // TODO(WS1-1471): Enable anchoring when in Recon (Prime) mode.
+      return
+    }
+
     const carFile = await this.#deps.anchorRequestCarBuilder.build(state$.id, state$.tip)
     const anchorEvent = await this.anchorService.requestAnchor(carFile)
     // Don't wait on handling the anchor event, let that happen in the background.
@@ -703,9 +708,8 @@ export class Repository {
           const anchorCommit = witnessCAR.get(anchorCommitCID)
           const height = StreamUtils.getCommitHeight(state$.state, anchorCommit)
 
-          await this.dispatcher.importAnchorWitnessCar(
+          await this.dispatcher.storeTimeEvent(
             witnessCAR,
-            anchorCommitCID,
             streamId,
             state$.state.metadata.controllers,
             height,
@@ -1016,6 +1020,7 @@ export class Repository {
       tip: state$.tip,
       lastAnchor: lastAnchor,
       firstAnchor: firstAnchor,
+      shouldIndex: state$.value.metadata.shouldIndex,
     }
 
     await this.index.indexStream(streamContent)

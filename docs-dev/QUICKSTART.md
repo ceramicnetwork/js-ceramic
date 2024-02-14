@@ -4,8 +4,8 @@ This document is a quick start for launching a Ceramic node.  It is recommended 
 
 ## PRE-REQUISITES
 
-* Node `v16`
-* npm `v8`
+* Node `v20`
+* npm `v10`
 
 ## Install Ceramic
 

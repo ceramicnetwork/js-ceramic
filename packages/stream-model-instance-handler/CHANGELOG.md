@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@4.0.0...@ceramicnetwork/stream-model-instance-handler@4.0.1-rc.0) (2024-02-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler
+
+
+
+
+
+# [4.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@3.1.0...@ceramicnetwork/stream-model-instance-handler@4.0.0) (2024-02-08)
+
+
+### Features
+
+* Add shouldIndex metadata flag ([#3146](https://github.com/ceramicnetwork/js-ceramic/issues/3146)) ([0ce377a](https://github.com/ceramicnetwork/js-ceramic/commit/0ce377af46a49d1fb3391b6fd2b4d2f72a93e58a))
+
+
+
+
+
 # [3.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-model-instance-handler@3.1.0-rc.0...@ceramicnetwork/stream-model-instance-handler@3.1.0) (2024-02-02)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-model-instance-handler

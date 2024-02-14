@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/anchor-listener",
-  "version": "3.1.0",
+  "version": "4.0.1-rc.0",
   "description": "Ceramic anchor events listener",
   "keywords": [
     "ceramic",
@@ -30,12 +30,12 @@
   "author": "3Box Labs",
   "license": "(Apache-2.0 OR MIT)",
   "dependencies": {
-    "@ceramicnetwork/anchor-utils": "^3.1.0",
+    "@ceramicnetwork/anchor-utils": "^4.0.1-rc.0",
     "@ethersproject/providers": "^5.5.1",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^4.1.0",
+    "@ceramicnetwork/common": "^5.0.1-rc.0",
     "@ethersproject/abi": "^5.7.0",
     "@jest/globals": "^29.7.0",
     "multiformats": "^13.0.0",

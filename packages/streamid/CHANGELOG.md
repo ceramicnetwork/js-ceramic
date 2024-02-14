@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@4.1.0...@ceramicnetwork/streamid@5.0.0) (2024-02-08)
+
+
+### Features
+
+* **streamid:** Event id can parse hex string ([#3133](https://github.com/ceramicnetwork/js-ceramic/issues/3133)) ([55b7b39](https://github.com/ceramicnetwork/js-ceramic/commit/55b7b393f0f7e98f0ddc0ac88aa51bad09ccaa49))
+
+
+
+
+
 # [4.1.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@4.1.0-rc.0...@ceramicnetwork/streamid@4.1.0) (2024-02-02)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
