@@ -59,13 +59,12 @@ export class ReconApi implements IReconApi {
 
   async registerInterest(model: StreamID): Promise<void> {
     if (!this.enabled) {
-      this.#logger.imp(`Recon: disabled, not registering interest in model ${model.toString()}`)
-      return
+      throw new Error(`Recon: disabled, not registering interest in model ${model.toString()}`)
     }
 
     try {
-      await this.#sendRequest(this.#url + `/ceramic/subscribe/model/${model.toString()}`, {
-        method: 'GET',
+      await this.#sendRequest(this.#url + `/ceramic/interests/model/${model.toString()}`, {
+        method: 'POST',
       })
       this.#logger.debug(`Recon: added interest for model ${model.toString()}`)
     } catch (err) {

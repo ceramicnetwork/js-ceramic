@@ -25,7 +25,6 @@ export async function createDispatcher(ipfs: IpfsApi, pubsubTopic: string): Prom
   } as unknown as PinStore
   repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
   const shutdownSignal = new ShutdownSignal()
-  const fauxReconApi = {} as IReconApi
 
   return new Dispatcher(
     ipfs,
