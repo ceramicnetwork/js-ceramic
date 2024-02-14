@@ -13,6 +13,7 @@ import { convertCidToEthHash } from '@ceramicnetwork/anchor-utils'
 import type { LocalIndexApi, ISyncApi } from '@ceramicnetwork/indexing'
 import { ProvidersCache } from './providers-cache.js'
 import { Provider } from '@ethersproject/providers'
+import { IReconApi } from './recon.js'
 
 type NodeStatusFn = () => Promise<NodeStatusResponse>
 type LoadStreamFn<T> = (streamId: StreamID | CommitID | string, opts?: LoadOpts) => Promise<T>
@@ -31,7 +32,8 @@ export class LocalAdminApi implements AdminApi {
     private readonly nodeStatusFn: NodeStatusFn, // TODO(CDB-2293): circular dependency back into Ceramic
     private readonly pinApi: PinApi,
     private readonly providersCache: ProvidersCache,
-    private readonly loadStream: LoadStreamFn<Model> // TODO(CDB-2293): circular dependency back into Ceramic
+    private readonly loadStream: LoadStreamFn<Model>, // TODO(CDB-2293): circular dependency back into Ceramic
+    private readonly recon: IReconApi
   ) {}
 
   async nodeStatus(): Promise<NodeStatusResponse> {
@@ -91,6 +93,10 @@ export class LocalAdminApi implements AdminApi {
 
   async startIndexingModelData(modelData: Array<ModelData>): Promise<void> {
     await this.indexApi.indexModels(modelData)
+
+    if (this.recon.enabled) {
+      await Promise.all(modelData.map(({ streamID }) => this.recon.registerInterest(streamID)))
+    }
 
     if (!this.syncApi.enabled) {
       return

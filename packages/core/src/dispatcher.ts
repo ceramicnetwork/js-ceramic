@@ -424,13 +424,18 @@ export class Dispatcher {
    * @param cid - Commit CID
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async retrieveCommit(cid: CID | string, streamId: StreamID): Promise<any> {
+  async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
     try {
       return await this._getFromIpfs(cid)
     } catch (e) {
-      this._logger.err(
-        `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
-      )
+      if (streamId) {
+        this._logger.err(
+          `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
+        )
+      } else {
+        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      }
+
       throw e
     }
   }

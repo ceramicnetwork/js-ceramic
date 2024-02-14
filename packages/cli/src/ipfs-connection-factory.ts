@@ -18,11 +18,20 @@ export class IpfsConnectionFactory {
     ipfsEndpoint?: string
   ): Promise<IpfsApi> {
     if (mode == IpfsMode.REMOTE) {
-      return ipfsClient.create({
+      const ipfsApi = ipfsClient.create({
         url: ipfsEndpoint,
         timeout: IPFS_GET_TIMEOUT,
         agent: this.ipfsHttpAgent(ipfsEndpoint),
       })
+
+      ipfsApi.config.get = async (key: string): Promise<string | object> => {
+        if (key === 'Addresses.API') {
+          return ipfsEndpoint
+        }
+        return ''
+      }
+
+      return ipfsApi
     } else {
       return this.createGoIPFS()
     }

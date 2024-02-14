@@ -212,6 +212,8 @@ describe.each(envs)('Basic end-to-end indexing query test for $dbEngine', (env) 
         enableHistoricalSync: false,
       },
       stateStoreDirectory: stateStoreURL,
+      // TODO: WS1-1487 not an official ceramic config option
+      reconFeedEnabled: false,
     })
 
     port = await getPort()

@@ -56,7 +56,7 @@ import type { AnchorService } from './anchor/anchor-service.js'
 import { AnchorRequestCarBuilder } from './anchor/anchor-request-car-builder.js'
 import { makeStreamLoaderAndUpdater } from './initialization/stream-loading.js'
 import { Feed, type PublicFeed } from './feed.js'
-import { ReconApi } from './recon.js'
+import { IReconApi, ReconApi } from './recon.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
@@ -142,6 +142,7 @@ export interface CeramicModules {
   anchorRequestCarBuilder: AnchorRequestCarBuilder
   feed: Feed
   signer: CeramicSigner
+  reconApi: IReconApi
 }
 
 /**
@@ -292,7 +293,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       this.nodeStatus.bind(this),
       pinApi,
       this.providersCache,
-      this.loadStream.bind(this)
+      this.loadStream.bind(this),
+      modules.reconApi
     )
   }
 
@@ -384,6 +386,8 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       {
         enabled: Boolean(process.env.CERAMIC_RECON_MODE),
         url: ipfs.config.get('Addresses.API').then((url) => url.toString()),
+        // TODO: WS1-1487 not an official ceramic config option
+        feedEnabled: config.reconFeedEnabled ?? true,
       },
       logger
     )
@@ -441,6 +445,7 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       anchorRequestCarBuilder,
       feed,
       signer,
+      reconApi,
     }
 
     return [modules, params]
