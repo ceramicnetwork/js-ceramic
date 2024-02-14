@@ -146,7 +146,6 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
       this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
       return
     }
-
     const body = {
       id: event.id.toString(),
       data: event.data.toString(),
