@@ -695,15 +695,22 @@ export function isValidImmutabilityImplementation(
   expected: ModelDefinition,
   implemented: ModelDefinition
 ): boolean {
-  if (expected.version === '2.0') {
-    const expectedModelV2 = expected as ModelDefinitionV2
-    const implementedModelV2 = implemented as ModelDefinitionV2
-    // No immutable fields
-    if (!expectedModelV2.immutableFields && !implementedModelV2.immutableFields) return true
-
-    const implementedSet = new Set(implementedModelV2.immutableFields ?? [])
-    return (expectedModelV2.immutableFields ?? []).every((item) => implementedSet.has(item))
-  } else {
+  if (
+    expected.version === '1.0' ||
+    expected.immutableFields == null ||
+    expected.immutableFields.length === 0
+  ) {
+    // No immutable field expected
     return true
   }
+  if (
+    implemented.version === '1.0' ||
+    implemented.immutableFields == null ||
+    implemented.immutableFields.length === 0
+  ) {
+    // No immutable field implemented
+    return false
+  }
+  // Check all expected fields are implemented
+  return expected.immutableFields.every((field) => implemented.immutableFields.includes(field))
 }
