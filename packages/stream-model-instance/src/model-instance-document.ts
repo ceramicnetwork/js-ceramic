@@ -21,6 +21,7 @@ import {
   StreamReader,
   IntoSigner,
   CommitHeader,
+  NonEmptyArray,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { fromString } from 'uint8arrays'
@@ -53,6 +54,32 @@ export interface ModelInstanceDocumentMetadataArgs {
   /**
    * Whether the stream should be stored by indexers or not. When undefined, indexers could
    * index the stream if wanted.
+   */
+  shouldIndex?: boolean
+}
+
+/**
+ * Represents the metadata associated with a model instance document state.
+ */
+export type ModelInstanceDocumentStateMetadata = {
+  /**
+   * The DIDs that is allowed to author updates to this ModelInstanceDocument.
+   */
+  controllers: NonEmptyArray<string>
+  /**
+   * The StreamID of the Model that this ModelInstanceDocument belongs to.
+   */
+  model: StreamID
+  /**
+   * The "context" StreamID for this ModelInstanceDocument.
+   */
+  context?: StreamID
+  /**
+   * Unique bytes
+   */
+  unique?: Uint8Array
+  /**
+   * A flag indicating whether the stream should be indexed or not.
    */
   shouldIndex?: boolean
 }
