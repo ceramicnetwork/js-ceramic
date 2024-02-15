@@ -99,15 +99,18 @@ export class ProcessingLoop<T> {
    * Start the loop processing.  Returns a promise that resolves when the loop completes.
    */
   start(): Promise<void> {
-    const rejectOnAbortSignal = new Promise<IteratorResult<T>>((resolve) => {
+    const waitForAbortSignal = new Promise<void>((resolve) => {
       if (this.#abortController.signal.aborted) {
-        resolve({ done: true, value: undefined })
+        return resolve()
       }
       const done = () => {
         this.#abortController.signal.removeEventListener('abort', done)
-        resolve({ done: true, value: undefined })
+        resolve()
       }
       this.#abortController.signal.addEventListener('abort', done)
+    })
+    const doneOnAbortSignal = waitForAbortSignal.then(() => {
+      return { done: true, value: undefined }
     })
     const processing = async (): Promise<void> => {
       let taskId = 0
@@ -115,37 +118,32 @@ export class ProcessingLoop<T> {
       do {
         try {
           const curTaskId = taskId
-          await this.#semaphore.acquire().then(async (semRelease) => {
-            this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
-            const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
-            isDone = next.done
-            if (isDone) return
-            const value = next.value
-            if (value === undefined) {
-              this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
-              return
-            }
+          const release = await this.#semaphore.acquire()
+          this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
+          const next = await Promise.race([this.source.next(), doneOnAbortSignal])
+          isDone = next.done
+          if (isDone) return
+          const value = next.value
+          if (value === undefined) {
+            this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
+            return
+          }
 
-            const task = Promise.race([
-              this.handleValue(value),
-              // eslint-disable-next-line @typescript-eslint/no-empty-function
-              rejectOnAbortSignal.then(() => {}), // swallow return value
-            ])
-              .catch((e) => {
-                this.#logger.err(`Error in ProcessingLoop: ${e}`)
-                this.#abortController.abort('ERROR')
-              })
-              .finally(() => {
-                this.#runningTasks.delete(curTaskId)
-                // Semaphore is released only when the actual work of processing the item is
-                // complete.
-                semRelease()
-              })
+          const task = Promise.race([this.handleValue(value), waitForAbortSignal])
+            .catch((e) => {
+              this.#logger.err(`Error in ProcessingLoop: ${e}`)
+              this.#abortController.abort('ERROR')
+            })
+            .finally(() => {
+              this.#runningTasks.delete(curTaskId)
+              // Semaphore is released only when the actual work of processing the item is
+              // complete.
+              release()
+            })
 
-            // It's important that the semaphore guards adding the task to the running task set,
-            // so that we won't get more tasks created than the concurrency limit.
-            this.#runningTasks.set(taskId, task)
-          })
+          // It's important that the semaphore guards adding the task to the running task set,
+          // so that we won't get more tasks created than the concurrency limit.
+          this.#runningTasks.set(taskId, task)
 
           // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
           taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
