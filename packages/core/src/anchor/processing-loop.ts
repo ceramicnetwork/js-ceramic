@@ -80,11 +80,16 @@ export class ProcessingLoop<T> {
    */
   #runningTasks: Map<number, Promise<void>>
 
+  #toUniqueString: (value: T) => string
+
+  private readonly processing: Set<string> = new Set()
+
   constructor(
     logger: DiagnosticsLogger,
     concurrencyLimit: number,
     source: ProcessingLoop<T>['source'],
-    onValue: ProcessingLoop<T>['handleValue']
+    onValue: ProcessingLoop<T>['handleValue'],
+    toUniqueString: (value: T) => string = String
   ) {
     this.source = source
     this.handleValue = onValue
@@ -93,6 +98,7 @@ export class ProcessingLoop<T> {
     this.#processing = undefined
     this.#abortController = new AbortController()
     this.#runningTasks = new Map()
+    this.#toUniqueString = toUniqueString
   }
 
   /**
@@ -128,25 +134,29 @@ export class ProcessingLoop<T> {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             return
           }
+          const id = this.#toUniqueString(value)
+          if (!this.processing.has(id)) {
+            const task = Promise.race([this.handleValue(value), waitForAbortSignal])
+              .catch((e) => {
+                this.#logger.err(`Error in ProcessingLoop: ${e}`)
+                this.#abortController.abort('ERROR')
+              })
+              .finally(() => {
+                this.processing.delete(id)
+                this.#runningTasks.delete(curTaskId)
+                // Semaphore is released only when the actual work of processing the item is
+                // complete.
+                release()
+              })
 
-          const task = Promise.race([this.handleValue(value), waitForAbortSignal])
-            .catch((e) => {
-              this.#logger.err(`Error in ProcessingLoop: ${e}`)
-              this.#abortController.abort('ERROR')
-            })
-            .finally(() => {
-              this.#runningTasks.delete(curTaskId)
-              // Semaphore is released only when the actual work of processing the item is
-              // complete.
-              release()
-            })
+            // It's important that the semaphore guards adding the task to the running task set,
+            // so that we won't get more tasks created than the concurrency limit.
+            this.#runningTasks.set(taskId, task)
+            this.processing.add(id)
 
-          // It's important that the semaphore guards adding the task to the running task set,
-          // so that we won't get more tasks created than the concurrency limit.
-          this.#runningTasks.set(taskId, task)
-
-          // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
-          taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
+            // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
+            taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
+          }
         } catch (e) {
           this.#logger.err(`Error in ProcessingLoop: ${e}`)
         }
