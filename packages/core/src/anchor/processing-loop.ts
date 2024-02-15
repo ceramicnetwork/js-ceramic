@@ -82,8 +82,6 @@ export class ProcessingLoop<T> {
 
   #toUniqueString: (value: T) => string
 
-  private readonly processing: Set<string> = new Set()
-
   constructor(
     logger: DiagnosticsLogger,
     concurrencyLimit: number,
@@ -152,7 +150,6 @@ export class ProcessingLoop<T> {
           // It's important that the semaphore guards adding the task to the running task set,
           // so that we won't get more tasks created than the concurrency limit.
           this.#runningTasks.set(uniqueTaskId, task)
-          this.processing.add(uniqueTaskId)
         } catch (e) {
           this.#logger.err(`Error in ProcessingLoop: ${e}`)
         }
