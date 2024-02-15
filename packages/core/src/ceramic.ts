@@ -387,7 +387,13 @@ export class Ceramic implements StreamReaderWriter, StreamStateLoader {
       },
       logger
     )
-    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, feed, logger)
+    const repository = new Repository(
+      streamCacheLimit,
+      concurrentRequestsLimit,
+      feed,
+      reconApi,
+      logger
+    )
     const shutdownSignal = new ShutdownSignal()
     const dispatcher = new Dispatcher(
       ipfs,

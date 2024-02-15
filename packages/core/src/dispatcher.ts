@@ -12,8 +12,6 @@ import {
 } from '@ceramicnetwork/common'
 import { StreamID, EventID } from '@ceramicnetwork/streamid'
 import { ServiceMetrics as Metrics } from '@ceramicnetwork/observability'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { Model } from '@ceramicnetwork/stream-model'
 import { Repository } from './state-management/repository.js'
 import {
   MsgType,

@@ -1,7 +1,8 @@
 import { type CAR } from 'cartonne'
 
 import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
-import { EventID } from '@ceramicnetwork/streamid'
+import { EventID, StreamID } from '@ceramicnetwork/streamid'
+import { Model } from '@ceramicnetwork/stream-model'
 
 /**
  * Configuration for the Recon API
@@ -26,6 +27,7 @@ export interface ReconEvent {
  */
 export interface IReconApi {
   init(): Promise<void>
+  registerInterest(model: StreamID): Promise<void>
   put(event: ReconEvent, opts?: AbortOptions): Promise<void>
   enabled: boolean
 }
@@ -47,10 +49,37 @@ export class ReconApi implements IReconApi {
   }
 
   async init(): Promise<void> {
+    if (!this.enabled) {
+      return
+    }
+
     this.#url = await this.#config.url
+    await this.registerInterest(Model.MODEL)
+  }
+
+  async registerInterest(model: StreamID): Promise<void> {
+    if (!this.enabled) {
+      throw new Error(`Recon: disabled, not registering interest in model ${model.toString()}`)
+    }
+
+    try {
+      await this.#sendRequest(this.#url + `/ceramic/interests/model/${model.toString()}`, {
+        method: 'POST',
+      })
+      this.#logger.debug(`Recon: added interest for model ${model.toString()}`)
+    } catch (err) {
+      this.#logger.err(
+        `Recon: failed to register interest in model ${model.toString()} with error ${err}`
+      )
+      throw err
+    }
   }
 
   async put(event: ReconEvent, opts: AbortOptions): Promise<void> {
+    if (!this.enabled) {
+      this.#logger.imp(`Recon: disabled, not putting event ${event.id}`)
+      return
+    }
     const body = {
       id: event.id.toString(),
       data: event.data.toString(),
