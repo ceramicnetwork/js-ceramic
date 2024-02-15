@@ -78,7 +78,7 @@ export class ProcessingLoop<T> {
   /**
    * The tasks that are currently being processed, keyed by task id.
    */
-  #runningTasks: Map<number, Promise<void>>
+  #runningTasks: Map<string, Promise<void>>
 
   #toUniqueString: (value: T) => string
 
@@ -119,11 +119,9 @@ export class ProcessingLoop<T> {
       return { done: true, value: undefined }
     })
     const processing = async (): Promise<void> => {
-      let taskId = 0
       let isDone = false
       do {
         try {
-          const curTaskId = taskId
           const release = await this.#semaphore.acquire()
           this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
           const next = await Promise.race([this.source.next(), doneOnAbortSignal])
@@ -134,29 +132,27 @@ export class ProcessingLoop<T> {
             this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
             return
           }
-          const id = this.#toUniqueString(value)
-          if (!this.processing.has(id)) {
-            const task = Promise.race([this.handleValue(value), waitForAbortSignal])
-              .catch((e) => {
-                this.#logger.err(`Error in ProcessingLoop: ${e}`)
-                this.#abortController.abort('ERROR')
-              })
-              .finally(() => {
-                this.processing.delete(id)
-                this.#runningTasks.delete(curTaskId)
-                // Semaphore is released only when the actual work of processing the item is
-                // complete.
-                release()
-              })
-
-            // It's important that the semaphore guards adding the task to the running task set,
-            // so that we won't get more tasks created than the concurrency limit.
-            this.#runningTasks.set(taskId, task)
-            this.processing.add(id)
-
-            // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
-            taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
+          const uniqueTaskId = this.#toUniqueString(value)
+          if (this.#runningTasks.has(uniqueTaskId)) {
+            // We have it processing
+            continue
           }
+          const task = Promise.race([this.handleValue(value), waitForAbortSignal])
+            .catch((e) => {
+              this.#logger.err(`Error in ProcessingLoop: ${e}`)
+              this.#abortController.abort('ERROR')
+            })
+            .finally(() => {
+              this.#runningTasks.delete(uniqueTaskId)
+              // Semaphore is released only when the actual work of processing the item is
+              // complete.
+              release()
+            })
+
+          // It's important that the semaphore guards adding the task to the running task set,
+          // so that we won't get more tasks created than the concurrency limit.
+          this.#runningTasks.set(uniqueTaskId, task)
+          this.processing.add(uniqueTaskId)
         } catch (e) {
           this.#logger.err(`Error in ProcessingLoop: ${e}`)
         }
