@@ -106,6 +106,7 @@ describe('ModelInstanceDocument API http-client tests', () => {
         disableComposedb: false,
         enableHistoricalSync: false,
       },
+      reconFeedEnabled: false,
     })
 
     const port = await getPort()
