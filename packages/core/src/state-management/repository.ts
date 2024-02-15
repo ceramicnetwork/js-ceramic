@@ -21,7 +21,7 @@ import { ExecutionQueue } from './execution-queue.js'
 import { RunningState } from './running-state.js'
 import type { Dispatcher } from '../dispatcher.js'
 import type { HandlersMap } from '../handlers-map.js'
-import { distinctUntilKeyChanged, map, Observable } from 'rxjs'
+import { distinctUntilKeyChanged, map, Observable, Subscription, concatMap } from 'rxjs'
 import { StateCache } from './state-cache.js'
 import { SnapshotState } from './snapshot-state.js'
 import { IKVStore } from '../store/ikv-store.js'
@@ -37,7 +37,10 @@ import { AnchorRequestStatusName } from '@ceramicnetwork/common'
 import { CAR } from 'cartonne'
 import { FeedDocument, type Feed } from '../feed.js'
 import { doNotWait } from '../ancillary/do-not-wait.js'
-import { IReconApi } from '../recon.js'
+import { IReconApi, ReconEventFeedResponse } from '../recon.js'
+import { Utils } from '../utils.js'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { Model } from '@ceramicnetwork/stream-model'
 
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
@@ -47,6 +50,9 @@ const CACHE_HIT_LOCAL = 'cache_hit_local'
 const CACHE_HIT_MEMORY = 'cache_hit_memory'
 const CACHE_HIT_REMOTE = 'cache_hit_remote'
 const STREAM_SYNC = 'stream_sync'
+
+const RECON_STORE_USECASE_NAME = 'recon'
+const RECON_STORE_CURSOR_KEY = 'cursor'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -115,6 +121,8 @@ export class Repository {
 
   private readonly feed: Feed
 
+  private reconEventFeedSubscription: Subscription | undefined
+
   /**
    * Various dependencies.
    */
@@ -173,7 +181,17 @@ export class Repository {
     await this.pinStore.open(this.#deps.keyValueStore)
     await this.anchorRequestStore.open(this.#deps.keyValueStore) // Initialization hell
     await this.index.init()
-    await this.recon.init()
+
+    const cursor = (await this.#deps.keyValueStore.exists(
+      RECON_STORE_CURSOR_KEY,
+      RECON_STORE_USECASE_NAME
+    ))
+      ? await this.#deps.keyValueStore.get(RECON_STORE_CURSOR_KEY, RECON_STORE_USECASE_NAME)
+      : 0
+    await this.recon.init(cursor)
+    this.reconEventFeedSubscription = this.recon
+      .pipe(concatMap(this.handleReconEvents.bind(this)))
+      .subscribe()
   }
 
   get pinStore(): PinStore {
@@ -521,6 +539,41 @@ export class Repository {
 
       return state$
     })
+  }
+
+  async handleReconEvents(response: ReconEventFeedResponse): Promise<void> {
+    const { events, cursor } = response
+
+    for (const event of events) {
+      const { id: eventId } = event
+      const commitData = await Utils.getCommitData(this.dispatcher, eventId.event)
+
+      const genesisCid = commitData.commit.id ? commitData.commit.id : eventId.event
+      const genesisCommitData = commitData.commit.header
+        ? commitData
+        : await Utils.getCommitData(this.dispatcher, genesisCid)
+
+      if (!genesisCommitData.commit.header.model) {
+        this.logger.err(
+          `Model not found in genesis commit header ${genesisCid.toString()} for eventId ${eventId.toString()} for cid ${eventId.event.toString()}`
+        )
+        return
+      }
+
+      const model = StreamID.fromBytes(genesisCommitData.commit.header.model)
+      const type =
+        model.toString() === Model.MODEL.toString()
+          ? Model.STREAM_TYPE_ID
+          : ModelInstanceDocument.STREAM_TYPE_ID
+
+      await this.handleUpdateFromNetwork(new StreamID(type, genesisCid), eventId.event, model)
+    }
+
+    await this.#deps.keyValueStore.put(
+      RECON_STORE_CURSOR_KEY,
+      cursor.toString(),
+      RECON_STORE_USECASE_NAME
+    )
   }
 
   /**
@@ -1083,6 +1136,9 @@ export class Repository {
   }
 
   async close(): Promise<void> {
+    if (this.reconEventFeedSubscription) this.reconEventFeedSubscription.unsubscribe()
+    await this.recon.stop()
+
     await this.loadingQ.close()
     await this.executionQ.close()
     Array.from(this.inmemory).forEach(([id, stream]) => {

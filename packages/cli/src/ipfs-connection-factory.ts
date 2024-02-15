@@ -18,11 +18,21 @@ export class IpfsConnectionFactory {
     ipfsEndpoint?: string
   ): Promise<IpfsApi> {
     if (mode == IpfsMode.REMOTE) {
-      return ipfsClient.create({
+      const ipfsApi = ipfsClient.create({
         url: ipfsEndpoint,
         timeout: IPFS_GET_TIMEOUT,
         agent: this.ipfsHttpAgent(ipfsEndpoint),
       })
+
+      // TODO: WS1-1483 We utilize the `ipfs.config.get` method to retrieve the api address to use for recon calls. This prevents us from making unneccessary config changes until we are able to retrieve config data from the recon/rust-ceramic node.
+      ipfsApi.config.get = async (key: string): Promise<string | object> => {
+        if (key === 'Addresses.API') {
+          return ipfsEndpoint
+        }
+        return ''
+      }
+
+      return ipfsApi
     } else {
       return this.createGoIPFS()
     }
