@@ -17,6 +17,7 @@ import {
   StreamReaderWriter,
   StreamState,
   StreamUtils,
+  UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
@@ -278,7 +279,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     for (const [fieldName, relationDefinition] of Object.entries(model.content.relations)) {
-      switch (relationDefinition.type) {
+      const relationType = relationDefinition.type
+      switch (relationType) {
         case 'account':
           continue
         case 'document': {
@@ -325,6 +327,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
             `Relation on field ${fieldName} points to Stream ${midStreamId.toString()}, which belongs to Model ${foundModelStreamId}, but this Stream's Model (${model.id.toString()}) specifies that this relation must be to a Stream in the Model ${expectedModelStreamId}`
           )
         }
+        default:
+          throw new UnreachableCaseError(relationType, 'Unknown relation type')
       }
     }
   }
