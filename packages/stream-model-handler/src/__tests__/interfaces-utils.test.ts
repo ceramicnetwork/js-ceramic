@@ -762,6 +762,7 @@ describe('interfaces validation', () => {
       views: {
         bar: { type: 'documentAccount' },
       },
+      immutableFields: ['foo'],
     }
 
     const loadStream = jest.fn(() => ({ content: interfaceModel }))
@@ -779,11 +780,23 @@ describe('interfaces validation', () => {
             type: 'object',
             properties: { foo: { type: 'string' } },
           },
+          immutableFields: [],
         },
         context
       )
     } catch (error) {
       expect(error.errors).toHaveLength(2)
+      const model1Errors = error.errors[0].errors
+      expect(model1Errors).toHaveLength(3)
+      expect(model1Errors[0].toString()).toBe(
+        `Error: Invalid relations implementation of interface ${MODEL_ID_1}`
+      )
+      expect(model1Errors[1].toString()).toBe(
+        `Error: Invalid views implementation of interface ${MODEL_ID_1}`
+      )
+      expect(model1Errors[2].toString()).toBe(
+        `Error: Invalid immutable fields implementation of interface ${MODEL_ID_1}`
+      )
     }
     expect(loadStream).toHaveBeenCalledTimes(2)
 
@@ -805,6 +818,7 @@ describe('interfaces validation', () => {
           views: {
             bar: { type: 'documentAccount' },
           },
+          immutableFields: ['foo'],
         },
         context
       )
