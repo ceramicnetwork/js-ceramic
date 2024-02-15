@@ -893,6 +893,7 @@ export class Repository {
   ): Promise<RunningState> {
     this.anchorService.assertCASAccessible()
 
+    // TODO: WS1-1494 validate genesis commit before storing
     const genesisCid = await this.dispatcher.storeInitEvent(genesis)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.load(streamId, opts)

@@ -1,6 +1,6 @@
 import getPort from 'get-port'
 import tmp from 'tmp-promise'
-import type { IpfsApi } from '@ceramicnetwork/common'
+import { type IpfsApi, Networks } from '@ceramicnetwork/common'
 import { create as createIpfsClient } from 'ipfs-http-client'
 import { RunningIpfs } from './create-ipfs.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
@@ -16,8 +16,10 @@ export type RustIpfsRemoteOptions = {
 
 export type RustIpfsBinaryOptions = {
   type: 'binary'
-  path: string | undefined
-  port: number | undefined
+  path?: string
+  port?: number
+  network?: Networks
+  networkId?: number
 }
 
 export type RustIpfsOptions = RustIpfsRemoteOptions | RustIpfsBinaryOptions
@@ -57,7 +59,12 @@ class BinaryRunningIpfs implements RunningIpfs {
   }
 }
 
-async function binary(binary_path?: string, port?: number): Promise<RunningIpfs> {
+async function binary(
+  binary_path?: string,
+  port?: number,
+  networkName: Networks = Networks.LOCAL,
+  networkId = 0
+): Promise<RunningIpfs> {
   const bin = binary_path || process.env.CERAMIC_ONE_PATH
 
   const apiPort = port || (await getPort())
@@ -81,11 +88,11 @@ async function binary(binary_path?: string, port?: number): Promise<RunningIpfs>
       '--swarm-addresses',
       '/ip4/0.0.0.0/udp/0/quic-v1',
       '--network',
-      'local',
+      networkName === Networks.INMEMORY ? 'in-memory' : networkName,
       // We can use a hard coded local network id since
       // nodes that should not be in the same network will never discover each other
       '--local-network-id',
-      '0',
+      networkId.toString(),
     ],
     {
       env: {
@@ -181,7 +188,12 @@ export class RustIpfs {
           break
         }
         case 'binary': {
-          this.api = await binary(this.opts.path, this.opts.port)
+          this.api = await binary(
+            this.opts.path,
+            this.opts.port,
+            this.opts.network,
+            this.opts.networkId
+          )
           break
         }
       }
