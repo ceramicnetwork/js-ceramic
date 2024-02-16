@@ -2,6 +2,7 @@ import jsonpatch from 'fast-json-patch'
 import {
   ModelInstanceDocument,
   ModelInstanceDocumentMetadata,
+  ModelInstanceDocumentStateMetadata,
   validateContentLength,
 } from '@ceramicnetwork/stream-model-instance'
 import {
@@ -15,12 +16,12 @@ import {
   StreamReader,
   StreamReaderWriter,
   StreamState,
-  StreamMetadata,
   StreamUtils,
+  UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { SchemaValidation } from './schema-utils.js'
-import { Model } from '@ceramicnetwork/stream-model'
+import { Model, ModelDefinitionV2 } from '@ceramicnetwork/stream-model'
 import { applyAnchorCommit } from '@ceramicnetwork/stream-handler-common'
 import { toString } from 'uint8arrays'
 
@@ -73,7 +74,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
   async applyCommit(
     commitData: CommitData,
     context: StreamReaderWriter,
-    state?: StreamState
+    state?: StreamState<ModelInstanceDocumentStateMetadata>
   ): Promise<StreamState> {
     if (state == null) {
       // apply genesis
@@ -99,7 +100,11 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const controller = controllers[0]
     const modelStreamID = StreamID.fromBytes(model)
     const streamId = new StreamID(ModelInstanceDocument.STREAM_TYPE_ID, commitData.cid)
-    const metadata = { controllers: [controller], model: modelStreamID, unique } as StreamMetadata
+    const metadata: ModelInstanceDocumentStateMetadata = {
+      controllers: [controller],
+      model: modelStreamID,
+      unique,
+    }
     if (ctx) {
       metadata.context = StreamID.fromBytes(ctx)
     }
@@ -153,7 +158,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    */
   async _applySigned(
     commitData: CommitData,
-    state: StreamState,
+    state: StreamState<ModelInstanceDocumentStateMetadata>,
     context: StreamReaderWriter
   ): Promise<StreamState> {
     // Retrieve the payload
@@ -263,7 +268,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
 
     // Now validate the relations
     await this._validateRelationsContent(ceramic, model, content)
-    if (!genesis) {
+    if (!genesis && payload) {
       await this._validateLockedFieldsUpdate(model, payload)
     }
   }
@@ -274,7 +279,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     }
 
     for (const [fieldName, relationDefinition] of Object.entries(model.content.relations)) {
-      switch (relationDefinition.type) {
+      const relationType = relationDefinition.type
+      switch (relationType) {
         case 'account':
           continue
         case 'document': {
@@ -287,7 +293,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
           let midStreamId
           try {
             midStreamId = StreamID.fromString(content[fieldName])
-          } catch (err) {
+          } catch (err: any) {
             throw new Error(
               `Error while parsing relation from field ${fieldName}: Invalid StreamID: ${err.toString()}`
             )
@@ -321,6 +327,8 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
             `Relation on field ${fieldName} points to Stream ${midStreamId.toString()}, which belongs to Model ${foundModelStreamId}, but this Stream's Model (${model.id.toString()}) specifies that this relation must be to a Stream in the Model ${expectedModelStreamId}`
           )
         }
+        default:
+          throw new UnreachableCaseError(relationType, 'Unknown relation type')
       }
     }
   }
@@ -350,10 +358,12 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
    *  Helper function to validate if immutable fields are being mutated
    */
   async _validateLockedFieldsUpdate(model: Model, payload: Payload): Promise<void> {
-    // No locked fields
-    if (!('immutableFields' in model.content) || model.content.immutableFields.length == 0) return
+    if (!ModelDefinitionV2.is(model.content)) return
+    const immutableFields = model.content.immutableFields
+    const hasImmutableFields = immutableFields && immutableFields.length > 0
+    if (!hasImmutableFields) return
 
-    for (const lockedField of model.content.immutableFields) {
+    for (const lockedField of immutableFields) {
       const mutated = payload.data.some(
         (entry) => entry.path.slice(1).split('/').shift() === lockedField
       )
@@ -388,7 +398,7 @@ export class ModelInstanceDocumentHandler implements StreamHandler<ModelInstance
     const unique = model.content.accountRelation.fields
       .map((field) => {
         const value = content[field]
-        return value ? value.toString() : ''
+        return value ? String(value) : ''
       })
       .join('|')
     if (unique !== toString(metadata.unique)) {

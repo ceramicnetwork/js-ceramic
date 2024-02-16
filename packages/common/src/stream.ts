@@ -184,11 +184,11 @@ export type SyncedStreamLog = AppliableStreamLog | UnappliableStreamLog
 /**
  * Stream state
  */
-export interface StreamState {
+export interface StreamState<TMetadata = StreamMetadata> {
   type: number
   content: any
   next?: StreamNext
-  metadata: StreamMetadata
+  metadata: TMetadata
   signature: SignatureStatus
   anchorStatus: AnchorStatus
   anchorProof?: AnchorProof // the anchor proof of the latest anchor, only present when anchor status is anchored
