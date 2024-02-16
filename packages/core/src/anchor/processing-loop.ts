@@ -14,7 +14,7 @@
  * ```
  */
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { Semaphore } from 'await-semaphore'
+import { TaskQueue } from '../ancillary/task-queue.js'
 
 export class Deferred<T = void> implements PromiseLike<T> {
   /**
@@ -31,12 +31,20 @@ export class Deferred<T = void> implements PromiseLike<T> {
   readonly then: Promise<T>['then']
   readonly catch: Promise<T>['catch']
 
+  /**
+   * Returns true if resolved without an error.
+   */
+  isResolved = false
+
   constructor() {
     let dResolve: Deferred<T>['resolve']
     let dReject: Deferred<T>['reject']
 
     const promise = new Promise<T>((resolve, reject) => {
-      dResolve = resolve
+      dResolve = (...args) => {
+        this.isResolved = true
+        resolve(...args)
+      }
       dReject = reject
     })
     this.resolve = dResolve
@@ -70,90 +78,77 @@ export class ProcessingLoop<T> {
    */
   #abortController: AbortController
 
-  /**
-   * Controls how many values can be processed concurrently
-   */
-  #semaphore: Semaphore
+  #toUniqueString: (value: T) => string
 
-  /**
-   * The tasks that are currently being processed, keyed by task id.
-   */
-  #runningTasks: Map<number, Promise<void>>
+  readonly #taskQueue: TaskQueue
 
   constructor(
     logger: DiagnosticsLogger,
     concurrencyLimit: number,
     source: ProcessingLoop<T>['source'],
-    onValue: ProcessingLoop<T>['handleValue']
+    onValue: ProcessingLoop<T>['handleValue'],
+    toUniqueString: (value: T) => string = String
   ) {
     this.source = source
     this.handleValue = onValue
     this.#logger = logger
-    this.#semaphore = new Semaphore(concurrencyLimit)
     this.#processing = undefined
     this.#abortController = new AbortController()
-    this.#runningTasks = new Map()
+    this.#toUniqueString = toUniqueString
+    this.#taskQueue = new TaskQueue(concurrencyLimit)
   }
 
   /**
    * Start the loop processing.  Returns a promise that resolves when the loop completes.
    */
   start(): Promise<void> {
-    const rejectOnAbortSignal = new Promise<IteratorResult<T>>((resolve) => {
+    const waitForAbortSignal = new Promise<void>((resolve) => {
       if (this.#abortController.signal.aborted) {
-        resolve({ done: true, value: undefined })
+        return resolve()
       }
       const done = () => {
         this.#abortController.signal.removeEventListener('abort', done)
-        resolve({ done: true, value: undefined })
+        resolve()
       }
       this.#abortController.signal.addEventListener('abort', done)
     })
+    const doneOnAbortSignal = waitForAbortSignal.then(() => {
+      return { done: true, value: undefined }
+    })
     const processing = async (): Promise<void> => {
-      let taskId = 0
       let isDone = false
+      const taskIds = new Set<string>()
       do {
-        try {
-          const curTaskId = taskId
-          await this.#semaphore.acquire().then(async (semRelease) => {
-            this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
-            const next = await Promise.race([this.source.next(), rejectOnAbortSignal])
-            isDone = next.done
-            if (isDone) return
-            const value = next.value
-            if (value === undefined) {
-              this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
-              return
-            }
-
-            const task = Promise.race([
-              this.handleValue(value),
-              // eslint-disable-next-line @typescript-eslint/no-empty-function
-              rejectOnAbortSignal.then(() => {}), // swallow return value
-            ])
-              .catch((e) => {
-                this.#logger.err(`Error in ProcessingLoop: ${e}`)
-                this.#abortController.abort('ERROR')
-              })
-              .finally(() => {
-                this.#runningTasks.delete(curTaskId)
-                // Semaphore is released only when the actual work of processing the item is
-                // complete.
-                semRelease()
-              })
-
-            // It's important that the semaphore guards adding the task to the running task set,
-            // so that we won't get more tasks created than the concurrency limit.
-            this.#runningTasks.set(taskId, task)
-          })
-
-          // Mod by MAX_SAFE_INTEGER just in case taskId gets really large and needs to wrap around
-          taskId = (taskId + 1) % Number.MAX_SAFE_INTEGER
-        } catch (e) {
-          this.#logger.err(`Error in ProcessingLoop: ${e}`)
+        this.#taskQueue.add(async () => {
+          this.#logger.verbose(`ProcessingLoop: Fetching next event from source`)
+          const next = await Promise.race([this.source.next(), doneOnAbortSignal])
+          isDone = next.done
+          if (isDone) return
+          const value = next.value
+          if (value === undefined) {
+            this.#logger.verbose(`No value received in ProcessingLoop, skipping this iteration`)
+            return
+          }
+          const uniqueTaskId = this.#toUniqueString(value)
+          if (taskIds.has(uniqueTaskId)) {
+            // We have it processing already
+            return
+          }
+          taskIds.add(uniqueTaskId)
+          try {
+            await Promise.race([this.handleValue(value), waitForAbortSignal])
+          } catch (e) {
+            this.#logger.err(`Error in ProcessingLoop: ${e}`)
+            this.#abortController.abort('ERROR')
+          } finally {
+            taskIds.delete(uniqueTaskId)
+          }
+        })
+        if (this.#taskQueue.size >= this.#taskQueue.concurrency) {
+          await this.#taskQueue.onIdle() // Wait till we process the batch
         }
       } while (!isDone)
-      await Promise.all(this.#runningTasks.values())
+      await this.#taskQueue.onIdle()
       this.#logger.debug(`ProcessingLoop complete`)
     }
     this.#processing = processing()
@@ -173,7 +168,7 @@ export class ProcessingLoop<T> {
     this.#abortController.abort('STOP')
     await this.source.return(undefined)
     await this.#processing
-    await Promise.all(this.#runningTasks.values())
+    await this.#taskQueue.onIdle()
     this.#processing = undefined
   }
 }

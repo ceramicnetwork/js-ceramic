@@ -56,6 +56,13 @@ export class TaskQueue implements TaskQueueLike {
   }
 
   /**
+   * Number of concurrent tasks allowed to run.
+   */
+  get concurrency(): number {
+    return this.#pq.concurrency
+  }
+
+  /**
    * Add task to queue. Fire-and-forget semantics.
    */
   add(task, onFinally?): void {

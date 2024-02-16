@@ -2,6 +2,7 @@ import { test, jest, expect, describe } from '@jest/globals'
 import { ProcessingLoop, Deferred } from '../processing-loop.js'
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
+import { doNotWait } from '../../ancillary/do-not-wait.js'
 
 async function* infiniteIntegers() {
   let n = 0
@@ -139,4 +140,31 @@ test('Processing loop blocks on concurrency limit', async () => {
   await isDone
   await whenComplete
   expect(process).toBeCalledTimes(MAX)
+})
+
+test('Dont process the same entry multiple times concurrently', async () => {
+  const isDone = new Deferred()
+  const max = 10
+  const entries = Array.from({ length: max }).map((_, index) => index)
+  const processed = new Set<number>()
+
+  // Will regenerate the same entries until they get processed.
+  async function* overEntries(): AsyncGenerator<number> {
+    do {
+      for (const e of entries) yield e
+    } while (true)
+  }
+
+  const process = jest.fn(async (entry) => {
+    await CommonTestUtils.delay(10)
+    processed.add(entry)
+    if (entries.every((e) => processed.has(e))) {
+      isDone.resolve()
+    }
+  })
+  const loop = new ProcessingLoop(logger, max * 2, overEntries(), process)
+  doNotWait(loop.start(), logger)
+  await isDone
+  await loop.stop()
+  expect(process).toBeCalledTimes(max)
 })
