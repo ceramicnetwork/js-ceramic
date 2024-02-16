@@ -135,21 +135,24 @@ export class ProcessingLoop<T> {
             // We have it processing
             continue
           }
-          const task = Promise.race([this.handleValue(value), waitForAbortSignal])
-            .catch((e) => {
+
+          const t0 = async () => {
+            try {
+              await Promise.race([this.handleValue(value), waitForAbortSignal])
+            } catch (e) {
               this.#logger.err(`Error in ProcessingLoop: ${e}`)
               this.#abortController.abort('ERROR')
-            })
-            .finally(() => {
+            } finally {
               this.#runningTasks.delete(uniqueTaskId)
               // Semaphore is released only when the actual work of processing the item is
               // complete.
               release()
-            })
+            }
+          }
 
           // It's important that the semaphore guards adding the task to the running task set,
           // so that we won't get more tasks created than the concurrency limit.
-          this.#runningTasks.set(uniqueTaskId, task)
+          this.#runningTasks.set(uniqueTaskId, t0())
         } catch (e) {
           this.#logger.err(`Error in ProcessingLoop: ${e}`)
         }
