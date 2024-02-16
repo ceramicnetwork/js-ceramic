@@ -136,7 +136,7 @@ export class ProcessingLoop<T> {
             continue
           }
 
-          const t0 = async () => {
+          const task = async () => {
             try {
               await Promise.race([this.handleValue(value), waitForAbortSignal])
             } catch (e) {
@@ -152,7 +152,7 @@ export class ProcessingLoop<T> {
 
           // It's important that the semaphore guards adding the task to the running task set,
           // so that we won't get more tasks created than the concurrency limit.
-          this.#runningTasks.set(uniqueTaskId, t0())
+          this.#runningTasks.set(uniqueTaskId, task())
         } catch (e) {
           this.#logger.err(`Error in ProcessingLoop: ${e}`)
         }
