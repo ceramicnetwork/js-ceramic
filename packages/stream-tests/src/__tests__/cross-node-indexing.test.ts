@@ -1,6 +1,13 @@
 import { jest } from '@jest/globals'
-import { IpfsApi, Page, PaginationQuery, StreamState, StreamUtils } from '@ceramicnetwork/common'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import {
+  IpfsApi,
+  Page,
+  PaginationQuery,
+  StreamState,
+  StreamUtils,
+  Networks,
+} from '@ceramicnetwork/common'
+import { CommonTestUtils as TestUtils, testIfV3 } from '@ceramicnetwork/common-test-utils'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import {
   ModelInstanceDocument,
@@ -68,10 +75,7 @@ async function countResults(ceramic: Ceramic, query: PaginationQuery): Promise<n
   return results.length
 }
 
-// should pass on v4 as soon as we actually store/retrieve blocks
-const describeIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3ShouldPass.each(envs)(
+describe.each(envs)(
   'Cross-node indexing and query test with ceramic$ceramicInstanceWithPostgres running postgres',
   (env) => {
     jest.setTimeout(1000 * 30)
@@ -93,8 +97,14 @@ describeIfV3ShouldPass.each(envs)(
     beforeAll(async () => {
       await pgSetup()
 
-      ipfs1 = await createIPFS()
-      ipfs2 = await createIPFS()
+      ipfs1 = await createIPFS(undefined, undefined, {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      })
+      ipfs2 = await createIPFS(undefined, undefined, {
+        type: 'binary',
+        network: Networks.INMEMORY,
+      })
       await swarmConnect(ipfs1, ipfs2)
 
       // Temporarily start a Ceramic node and use it to create the Model that will be used in the
@@ -102,10 +112,12 @@ describeIfV3ShouldPass.each(envs)(
       if (env.ceramicInstanceWithPostgres === 1) {
         ceramic1 = await createCeramic(ipfs1, {
           indexing: {
-            db: process.env.DATABASE_URL,
+            db: process.env.DATABASE_URL!,
             allowQueriesBeforeHistoricalSync: true,
             enableHistoricalSync: false,
+            disableComposedb: false,
           },
+          networkName: Networks.INMEMORY,
         })
       } else {
         ceramic1 = await createCeramic(ipfs1)
@@ -137,11 +149,11 @@ describeIfV3ShouldPass.each(envs)(
 
       switch (env.ceramicInstanceWithPostgres) {
         case 1:
-          ceramic1DbUrl = process.env.DATABASE_URL
+          ceramic1DbUrl = process.env.DATABASE_URL!
           ceramic2DbUrl = `sqlite://${indexingDirectory}/ceramic.sqlite`
           break
         case 2:
-          ceramic2DbUrl = process.env.DATABASE_URL
+          ceramic2DbUrl = process.env.DATABASE_URL!
           ceramic1DbUrl = `sqlite://${indexingDirectory}/ceramic.sqlite`
           break
       }
@@ -153,8 +165,17 @@ describeIfV3ShouldPass.each(envs)(
           allowQueriesBeforeHistoricalSync: true,
           enableHistoricalSync: false,
         },
+        networkName: Networks.INMEMORY,
       })
-      await ceramic1.index.indexModels([{ streamID: model.id }])
+      // wait for model to be received
+      await TestUtils.waitForConditionOrTimeout(async () =>
+        ceramic1
+          .loadStream(model.id)
+          .then((_) => true)
+          .catch((_) => false)
+      )
+
+      await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
       ceramic2 = await createCeramic(ipfs2, {
         indexing: {
@@ -162,8 +183,18 @@ describeIfV3ShouldPass.each(envs)(
           allowQueriesBeforeHistoricalSync: true,
           enableHistoricalSync: false,
         },
+        networkName: Networks.INMEMORY,
       })
-      await ceramic2.index.indexModels([{ streamID: model.id }])
+
+      // wait for model to be received
+      await TestUtils.waitForConditionOrTimeout(async () =>
+        ceramic2
+          .loadStream(model.id)
+          .then((_) => true)
+          .catch((_) => false)
+      )
+
+      await ceramic2.admin.startIndexingModelData([{ streamID: model.id }])
     }, 30 * 1000)
 
     afterEach(async () => {
@@ -185,6 +216,7 @@ describeIfV3ShouldPass.each(envs)(
         return count > 0
       })
 
+      await expect(TestUtils.isPinned(ceramic2.admin, doc1.id)).toBeTruthy()
       let resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
       let results = extractDocuments(ceramic2, resultObj)
 
@@ -206,6 +238,8 @@ describeIfV3ShouldPass.each(envs)(
         return count > 1
       })
 
+      await expect(TestUtils.isPinned(ceramic2.admin, doc1.id)).toBeTruthy()
+      await expect(TestUtils.isPinned(ceramic2.admin, doc2.id)).toBeTruthy()
       resultObj = await ceramic2.index.query({ model: model.id, first: 100 })
       results = extractDocuments(ceramic2, resultObj)
 
@@ -221,7 +255,7 @@ describeIfV3ShouldPass.each(envs)(
       expect(results[1].state).toEqual(doc2.state)
     })
 
-    test('Loading a stream adds it to the index', async () => {
+    testIfV3('Loading a stream adds it to the index', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic1, CONTENT0, midMetadata, {
         publish: false,
         anchor: false,
