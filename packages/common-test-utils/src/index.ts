@@ -152,8 +152,6 @@ export class CommonTestUtils {
     timeoutMs = 1000 * 30
   ): Promise<void> {
     const hasEventForCID = ({ events }: Events) => {
-      console.log(events.map((event) => event.id.event.toString()))
-      console.log(cid.toString())
       return events.some((event) => event.id.event.toString() === cid.toString())
     }
     await this.waitFor(reconFeed, hasEventForCID, timeoutMs)
