@@ -25,9 +25,7 @@ const streamFromState = function (state: StreamState) {
   return new FakeType(TestUtils.runningState(state), {})
 }
 
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3('LevelDB-backed StateStore', () => {
+describe('LevelDB-backed StateStore', () => {
   let tmpFolder: any
   let levelStore: LevelDbStore
   let stateStore: StreamStateStore

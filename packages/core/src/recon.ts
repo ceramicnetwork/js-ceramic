@@ -14,6 +14,7 @@ import {
   takeUntil,
   Subscriber,
   TeardownLogic,
+  ReplaySubject,
 } from 'rxjs'
 
 import { DiagnosticsLogger, FetchRequest, fetchJson, AbortOptions } from '@ceramicnetwork/common'
@@ -70,7 +71,8 @@ export class ReconApi extends Observable<ReconEventFeedResponse> implements IRec
 
   readonly #pollInterval: number
   #eventsSubscription: Subscription
-  private readonly feed$: Subject<ReconEventFeedResponse> = new Subject<ReconEventFeedResponse>()
+  private readonly feed$: Subject<ReconEventFeedResponse> =
+    new ReplaySubject<ReconEventFeedResponse>(5)
   readonly #stopSignal: Subject<void> = new Subject<void>()
 
   constructor(

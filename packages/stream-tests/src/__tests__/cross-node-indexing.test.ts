@@ -167,13 +167,6 @@ describe.each(envs)(
         },
         networkName: Networks.INMEMORY,
       })
-      // wait for model to be received
-      await TestUtils.waitForConditionOrTimeout(async () =>
-        ceramic1
-          .loadStream(model.id)
-          .then((_) => true)
-          .catch((_) => false)
-      )
 
       await ceramic1.admin.startIndexingModelData([{ streamID: model.id }])
 
@@ -187,12 +180,7 @@ describe.each(envs)(
       })
 
       // wait for model to be received
-      await TestUtils.waitForConditionOrTimeout(async () =>
-        ceramic2
-          .loadStream(model.id)
-          .then((_) => true)
-          .catch((_) => false)
-      )
+      await TestUtils.waitForEvent(ceramic2.repository.recon, model.tip)
 
       await ceramic2.admin.startIndexingModelData([{ streamID: model.id }])
     }, 30 * 1000)
@@ -255,6 +243,7 @@ describe.each(envs)(
       expect(results[1].state).toEqual(doc2.state)
     })
 
+    // This test will not be able to run in V' mode because there will be no way to disable publishing
     testIfV3('Loading a stream adds it to the index', async () => {
       const doc1 = await ModelInstanceDocument.create(ceramic1, CONTENT0, midMetadata, {
         publish: false,

@@ -1,5 +1,5 @@
 import { expect, describe, test, beforeAll, afterAll } from '@jest/globals'
-import { EventType, type IpfsApi } from '@ceramicnetwork/common'
+import { EventType, type IpfsApi, Networks } from '@ceramicnetwork/common'
 import { Utils as CoreUtils } from '@ceramicnetwork/core'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
@@ -10,6 +10,7 @@ import { FeedDocument } from '../feed.js'
 import { createCeramic } from './create-ceramic.js'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
+// Should  pass on v4 if updated from TileDocument
 const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
 
 describe('Ceramic feed', () => {
@@ -18,8 +19,14 @@ describe('Ceramic feed', () => {
   let ceramic1: Ceramic
   let ceramic2: Ceramic
   beforeAll(async () => {
-    ipfs1 = await createIPFS()
-    ipfs2 = await createIPFS()
+    ipfs1 = await createIPFS(undefined, undefined, {
+      type: 'binary',
+      network: Networks.INMEMORY,
+    })
+    ipfs2 = await createIPFS(undefined, undefined, {
+      type: 'binary',
+      network: Networks.INMEMORY,
+    })
     ceramic1 = await createCeramic(ipfs1)
     ceramic2 = await createCeramic(ipfs2)
     await swarmConnect(ipfs2, ipfs1)
@@ -125,10 +132,7 @@ describe('Ceramic feed', () => {
     })
   })
 
-  // Should pass once Recon is integrated and cross node-syncing is enabled
-  const testIfV3ShouldPass = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
-  testIfV3ShouldPass('add entry after creating/loading indexed model', async () => {
+  test('add entry after creating/loading indexed model', async () => {
     const MODEL_DEFINITION: ModelDefinition = {
       name: 'myModel',
       version: '1.0',
@@ -142,6 +146,9 @@ describe('Ceramic feed', () => {
     })
     // create model on different node
     const model = await Model.create(ceramic2, MODEL_DEFINITION)
+
+    // wait for model to be received
+    await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
 
     // load model
     await Model.load(ceramic1, model.id)

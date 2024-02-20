@@ -76,10 +76,7 @@ test('unsubscribe', async () => {
   expect(messageBus.closed).toBeTruthy()
 })
 
-// no pubsub in v4
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
-describeIfV3('queryNetwork', () => {
+describe('queryNetwork', () => {
   const FAKE_CID1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
   const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
   const queryMessage = buildQueryMessage(FAKE_STREAM_ID)

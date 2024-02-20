@@ -1,5 +1,5 @@
 import type { CID } from 'multiformats/cid'
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable, filter, timeout, throwError, firstValueFrom } from 'rxjs'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { StreamState, Stream } from '@ceramicnetwork/common'
 import {
@@ -14,6 +14,7 @@ import first from 'it-first'
 import { BaseTestUtils } from '@ceramicnetwork/base-test-utils'
 
 export const testIfV3 = process.env['CERAMIC_RECON_MODE'] ? test.skip : test
+export const describeIfV3 = process.env['CERAMIC_RECON_MODE'] ? describe.skip : describe
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
   readonly id: StreamID
@@ -128,4 +129,37 @@ export class CommonTestUtils {
       ],
     }
   }
+
+  static async waitFor<T>(
+    observable: Observable<T>,
+    predicate: (value: T) => boolean,
+    timeoutMs = 1000 * 30
+  ): Promise<void> {
+    await firstValueFrom(
+      observable.pipe(
+        filter(predicate),
+        timeout({
+          each: timeoutMs,
+          with: () => throwError(() => new Error(`Timeout waiting to receive cid ${cid}`)),
+        })
+      )
+    )
+  }
+
+  static async waitForEvent(
+    reconFeed: Observable<Events>,
+    cid: CID,
+    timeoutMs = 1000 * 30
+  ): Promise<void> {
+    const hasEventForCID = ({ events }: Events) => {
+      console.log(events.map((event) => event.id.event.toString()))
+      console.log(cid.toString())
+      return events.some((event) => event.id.event.toString() === cid.toString())
+    }
+    await this.waitFor(reconFeed, hasEventForCID, timeoutMs)
+  }
+}
+
+type Events = {
+  events: Array<{ id: { event: CID } }>
 }

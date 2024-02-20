@@ -643,7 +643,7 @@ testIfV3('subscribe makes state endured', async () => {
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
 })
 
-describeIfV3('applyWriteOpts', () => {
+describe('applyWriteOpts', () => {
   test('dont publish on LOAD', async () => {
     const publishSpy = jest.spyOn(repository, '_publishTip')
     await repository._applyWriteOpts(

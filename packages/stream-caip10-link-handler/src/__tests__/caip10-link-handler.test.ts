@@ -8,7 +8,7 @@ import { CeramicApi, EventType, Context } from '@ceramicnetwork/common'
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 import { AccountId } from 'caip'
-import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
+import { CommonTestUtils as TestUtils, describeIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const digest = (input: string) =>
   uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
@@ -69,8 +69,6 @@ const COMMITS = {
 }
 
 // These tests are never expected to be run in v4 mode
-const describeIfV3 = process.env.CERAMIC_RECON_MODE ? describe.skip : describe
-
 describeIfV3('Caip10LinkHandler', () => {
   let context: Context
   let handler: Caip10LinkHandler

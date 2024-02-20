@@ -28,7 +28,7 @@ function safeRead(filepath: string): string {
     return ''
   }
 }
-
+// TODO: Tests marked with IfV3 should passed in V' if updated from TileDocuments to Models/MIDs
 const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
 
 beforeAll(async () => {
