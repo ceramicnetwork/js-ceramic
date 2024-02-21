@@ -4,6 +4,7 @@ import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { happyPath, wrongProof, clearDid } from './caip-flows.js'
 import * as nearApiJs from 'near-api-js'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const privateKey =
   'ed25519:9hB3onqC56qBSHpHJaE6EyxKPyFxCxzRBkmjuVx6UqXwygvAmFbwnsLuZ2YHsYJqkPTCygVBwXpNzssvWvUySbd'
@@ -37,8 +38,7 @@ afterAll(async () => {
   await ipfs?.stop()
 }, 10000)
 
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
+// These tests are never expected to be run in V' mode as caip10 will not be supported
 testIfV3(
   'happy path',
   async () => {

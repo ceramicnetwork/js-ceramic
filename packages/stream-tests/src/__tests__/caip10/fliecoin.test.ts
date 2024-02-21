@@ -5,6 +5,7 @@ import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { LocalManagedProvider } from '@glif/local-managed-provider'
 import { Network } from '@glif/filecoin-address'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const testnetPrivateKey =
   '7b2254797065223a22736563703235366b31222c22507269766174654b6579223a2257587362654d5176487a366f5668344b637262633045642b31362b3150766a6a504f3753514931355031343d227d'
@@ -19,8 +20,7 @@ const blsMainnetProvider = new LocalManagedProvider(blsPrivateKey, Network.MAIN)
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
+// These tests are never expected to be run in V' mode as caip10 will not be supported
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)

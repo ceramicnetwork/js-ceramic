@@ -5,6 +5,7 @@ import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
 import HttpRequestMock from 'http-request-mock'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
 
@@ -22,8 +23,7 @@ mocker.mock({
   },
 })
 
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
+// These tests are never expected to be run in V' mode as caip10 will not be supported
 beforeAll(async () => {
   const signer = await InMemorySigner.fromSecretKey(privateKey)
   provider = {

@@ -3,12 +3,12 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { createCeramic } from '../create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { testIfV3 } from '@ceramicnetwork/common-test-utils'
 
 let ipfs: IpfsApi
 let ceramic: CeramicApi
 
-const testIfV3 = process.env.CERAMIC_RECON_MODE ? test.skip : test
-
+// These tests are never expected to be run in V' mode as tile documents will not be supported
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
