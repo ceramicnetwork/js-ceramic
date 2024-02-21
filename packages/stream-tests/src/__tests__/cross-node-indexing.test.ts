@@ -184,7 +184,8 @@ describe.each(envs)(
       })
 
       // wait for model to be received
-      await TestUtils.waitForEvent(ceramic2.repository.recon, model.tip)
+      if (process.env.CERAMIC_RECON_MODE)
+        await TestUtils.waitForEvent(ceramic2.repository.recon, model.tip)
 
       await ceramic2.admin.startIndexingModelData([{ streamID: model.id }])
     }, 30 * 1000)
