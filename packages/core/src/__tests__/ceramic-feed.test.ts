@@ -152,7 +152,9 @@ describe('Ceramic feed', () => {
     const model = await Model.create(ceramic2, MODEL_DEFINITION)
 
     // wait for model to be received
-    await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+    if (process.env.CERAMIC_RECON_MODE) {
+      await TestUtils.waitForEvent(ceramic1.repository.recon, model.tip)
+    }
 
     // load model
     await Model.load(ceramic1, model.id)
