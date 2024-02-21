@@ -216,15 +216,15 @@ export abstract class DatabaseIndexApi<DateType = Date | number> {
   async indexStream(
     indexingArgs: IndexStreamArgs & { createdAt?: Date; updatedAt?: Date }
   ): Promise<void> {
-    if (indexingArgs.streamContent == null) {
-      // Don't index streams with no content (deterministic streams created from genesis)
-      return
-    }
     const tableName = asTableName(indexingArgs.model)
     if (indexingArgs.shouldIndex === false) {
       await this.dbConnection(tableName)
         .where('stream_id', indexingArgs.streamID.toString())
         .delete()
+      return
+    }
+    if (indexingArgs.streamContent == null) {
+      // Don't index streams with no content (deterministic streams created from genesis)
       return
     }
     const indexedData = this.getIndexedData(indexingArgs) as Record<string, unknown>
