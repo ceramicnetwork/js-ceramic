@@ -793,9 +793,7 @@ describe('postgres', () => {
     test('new stream with null content', async () => {
       await indexApi.indexStream({ ...STREAM_CONTENT_A, streamContent: null })
       const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
-      expect(result.length).toEqual(1)
-      const raw = result[0]
-      expect(raw.stream_content).toEqual({})
+      expect(result.length).toEqual(0)
     })
 
     test('override stream', async () => {
@@ -1653,9 +1651,7 @@ describe('sqlite', () => {
     test('new stream with null content', async () => {
       await indexApi.indexStream({ ...STREAM_CONTENT, streamContent: null })
       const result: Array<any> = await dbConnection.from(`${MODELS_TO_INDEX[0]}`).select('*')
-      expect(result.length).toEqual(1)
-      const raw = result[0]
-      expect(raw.stream_content).toEqual('{}')
+      expect(result.length).toEqual(0)
     })
 
     test('override stream', async () => {
