@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.1.0-rc.0...@ceramicnetwork/stream-tests@5.1.0-rc.1) (2024-02-21)
+
+
+### Bug Fixes
+
+* **indexing:** don't index empty deterministic streams ([#3168](https://github.com/ceramicnetwork/js-ceramic/issues/3168)) ([e86b745](https://github.com/ceramicnetwork/js-ceramic/commit/e86b7451dd11db7e4347ee0c02a53ccd303b35a3))
+
+
+### Features
+
+* create recon feed and consume events ([#3161](https://github.com/ceramicnetwork/js-ceramic/issues/3161)) ([0317921](https://github.com/ceramicnetwork/js-ceramic/commit/0317921e0ee52408bd3d303c4b5dbb53f70d483c))
+* recon put events ([#3143](https://github.com/ceramicnetwork/js-ceramic/issues/3143)) ([7cd8dea](https://github.com/ceramicnetwork/js-ceramic/commit/7cd8deab4d4426a28a8b20504ac7709865e1be3b))
+* turn on cross-node sync test in recon mode ([#3165](https://github.com/ceramicnetwork/js-ceramic/issues/3165)) ([e65c8b7](https://github.com/ceramicnetwork/js-ceramic/commit/e65c8b7af2ebaebe5a97fdec58f1ed3654691aba))
+
+
+
+
+
 # [5.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tests@5.0.1-rc.0...@ceramicnetwork/stream-tests@5.1.0-rc.0) (2024-02-13)
 
 

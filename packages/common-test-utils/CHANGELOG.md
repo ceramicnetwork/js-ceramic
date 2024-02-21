@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.0.1-rc.0...@ceramicnetwork/common-test-utils@3.1.0-rc.0) (2024-02-21)
+
+
+### Features
+
+* turn on cross-node sync test in recon mode ([#3165](https://github.com/ceramicnetwork/js-ceramic/issues/3165)) ([e65c8b7](https://github.com/ceramicnetwork/js-ceramic/commit/e65c8b7af2ebaebe5a97fdec58f1ed3654691aba))
+
+
+
+
+
 ## [3.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common-test-utils@3.0.0...@ceramicnetwork/common-test-utils@3.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/common-test-utils

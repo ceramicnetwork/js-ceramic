@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.0.1-rc.1...@ceramicnetwork/cli@5.1.0-rc.1) (2024-02-21)
+
+
+### Features
+
+* create recon feed and consume events ([#3161](https://github.com/ceramicnetwork/js-ceramic/issues/3161)) ([0317921](https://github.com/ceramicnetwork/js-ceramic/commit/0317921e0ee52408bd3d303c4b5dbb53f70d483c))
+* enforce immutability constraints when working with interfaces ([#3156](https://github.com/ceramicnetwork/js-ceramic/issues/3156)) ([4ef22a7](https://github.com/ceramicnetwork/js-ceramic/commit/4ef22a726cc0e2920175ded85ac6f41c37f3539a))
+
+
+
+
+
 ## [5.0.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@5.0.1-rc.0...@ceramicnetwork/cli@5.0.1-rc.1) (2024-02-13)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

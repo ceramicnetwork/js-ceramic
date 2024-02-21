@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@5.0.1-rc.0...@ceramicnetwork/ipfs-daemon@5.1.0-rc.0) (2024-02-21)
+
+
+### Features
+
+* recon put events ([#3143](https://github.com/ceramicnetwork/js-ceramic/issues/3143)) ([7cd8dea](https://github.com/ceramicnetwork/js-ceramic/commit/7cd8deab4d4426a28a8b20504ac7709865e1be3b))
+* turn on cross-node sync test in recon mode ([#3165](https://github.com/ceramicnetwork/js-ceramic/issues/3165)) ([e65c8b7](https://github.com/ceramicnetwork/js-ceramic/commit/e65c8b7af2ebaebe5a97fdec58f1ed3654691aba))
+
+
+
+
+
 ## [5.0.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@5.0.0...@ceramicnetwork/ipfs-daemon@5.0.1-rc.0) (2024-02-08)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
